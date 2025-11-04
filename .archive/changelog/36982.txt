@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudformation_stack_set: Add retry when creating to potentially help with eventual consistency problems
+```

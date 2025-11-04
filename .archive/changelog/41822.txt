@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lb:  Add `ipam_pools` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_lb: Add `ipam_pools` attribute
+```

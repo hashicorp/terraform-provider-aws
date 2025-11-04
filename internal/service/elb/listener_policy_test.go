@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBListenerPolicy_basic(t *testing.T) {
@@ -25,7 +26,7 @@ func TestAccELBListenerPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -51,7 +52,7 @@ func TestAccELBListenerPolicy_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -63,6 +64,11 @@ func TestAccELBListenerPolicy_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test", "policy_name"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccListenerPolicyConfig_update(rName, key, certificate, 1),
@@ -72,10 +78,22 @@ func TestAccELBListenerPolicy_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test", "policy_name"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
-				Config:   testAccListenerPolicyConfig_update(rName, key, certificate, 1),
-				PlanOnly: true,
+				Config: testAccListenerPolicyConfig_update(rName, key, certificate, 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -88,7 +106,7 @@ func TestAccELBListenerPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -106,7 +124,7 @@ func TestAccELBListenerPolicy_disappears(t *testing.T) {
 
 func testAccCheckListenerPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_load_balancer_listener_policy" {
@@ -153,7 +171,7 @@ func testAccCheckListenerPolicyExists(ctx context.Context, n string) resource.Te
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		_, err = tfelb.FindLoadBalancerListenerPolicyByTwoPartKey(ctx, conn, lbName, lbPort)
 
@@ -204,6 +222,10 @@ resource "aws_iam_server_certificate" "test" {
   name_prefix      = %[1]q
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
+
+  timeouts {
+    delete = "30m"
+  }
 }
 
 resource "aws_elb" "test" {

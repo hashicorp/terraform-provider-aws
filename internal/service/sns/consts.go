@@ -5,6 +5,8 @@ package sns
 
 import (
 	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -36,7 +38,7 @@ const (
 
 const (
 	subscriptionProtocolApplication = "application"
-	subscriptionProtocolEmail       = "email"
+	subscriptionProtocolEmail       = names.AttrEmail
 	subscriptionProtocolEmailJSON   = "email-json"
 	subscriptionProtocolFirehose    = "firehose"
 	subscriptionProtocolHTTP        = "http"
@@ -87,6 +89,7 @@ const (
 	topicAttributeNameDeliveryPolicy                       = "DeliveryPolicy"
 	topicAttributeNameDisplayName                          = "DisplayName"
 	topicAttributeNameFIFOTopic                            = "FifoTopic"
+	topicAttributeNameFIFOThroughputScope                  = "FifoThroughputScope"
 	topicAttributeNameFirehoseFailureFeedbackRoleARN       = "FirehoseFailureFeedbackRoleArn"
 	topicAttributeNameFirehoseSuccessFeedbackRoleARN       = "FirehoseSuccessFeedbackRoleArn"
 	topicAttributeNameFirehoseSuccessFeedbackSampleRate    = "FirehoseSuccessFeedbackSampleRate"
@@ -132,5 +135,17 @@ func topicTracingConfig_Values() []string {
 	return []string{
 		topicTracingConfigActive,
 		topicTracingConfigPassThrough,
+	}
+}
+
+const (
+	topicFIFOThroughputScopeTopic        = "Topic"
+	topicFIFOThroughputScopeMessageGroup = "MessageGroup"
+)
+
+func topicFIFOThroughputScope_Values() []string {
+	return []string{
+		topicFIFOThroughputScopeTopic,
+		topicFIFOThroughputScopeMessageGroup,
 	}
 }

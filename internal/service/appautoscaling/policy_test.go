@@ -11,19 +11,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestValidatePolicyImportInput(t *testing.T) {
+func TestPolicyParseImportID(t *testing.T) {
 	t.Parallel()
 
+	// lintignore:AWSAT003,AWSAT005
 	testCases := []struct {
 		input         string
 		errorExpected bool
@@ -68,47 +70,63 @@ func TestValidatePolicyImportInput(t *testing.T) {
 			input:         "dynamodb/missing/parts",
 			errorExpected: true,
 		},
+		{
+			input:         "kafka/arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3/kafka:broker-storage:VolumeSize/KafkaBrokerStorageUtilization-scaling-policy:arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3",
+			expected:      []string{"kafka", "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3", "kafka:broker-storage:VolumeSize", "KafkaBrokerStorageUtilization-scaling-policy:arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"},
+			errorExpected: false,
+		},
+		{
+			input:         "kafka/arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3/kafka:broker-storage:VolumeSize/some-autoscaler-name",
+			expected:      []string{"kafka", "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3", "kafka:broker-storage:VolumeSize", "some-autoscaler-name"},
+			errorExpected: false,
+		},
+		{
+			input:         "kafka/missing/parts",
+			errorExpected: true,
+		},
 	}
 
 	for _, tc := range testCases {
-		idParts, err := tfappautoscaling.ValidPolicyImportInput(tc.input)
+		idParts, err := tfappautoscaling.PolicyParseImportID(tc.input)
 		if tc.errorExpected == false && err != nil {
-			t.Errorf("tfappautoscaling.ValidPolicyImportInput(%q): resulted in an unexpected error: %s", tc.input, err)
+			t.Errorf("tfappautoscaling.PolicyParseImportID(%q): resulted in an unexpected error: %s", tc.input, err)
 		}
 
 		if tc.errorExpected == true && err == nil {
-			t.Errorf("tfappautoscaling.ValidPolicyImportInput(%q): expected an error, but returned successfully", tc.input)
+			t.Errorf("tfappautoscaling.PolicyParseImportID(%q): expected an error, but returned successfully", tc.input)
 		}
 
 		if !reflect.DeepEqual(tc.expected, idParts) {
-			t.Errorf("tfappautoscaling.ValidPolicyImportInput(%q): expected %q, but got %q", tc.input, strings.Join(tc.expected, "/"), strings.Join(idParts, "/"))
+			t.Errorf("tfappautoscaling.PolicyParseImportID(%q): expected %q, but got %q", tc.input, strings.Join(tc.expected, "/"), strings.Join(idParts, "/"))
 		}
 	}
 }
 
 func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy applicationautoscaling.ScalingPolicy
+	var policy awstypes.ScalingPolicy
 	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
 	resourceName := "aws_appautoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "alarm_arns.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_type", "StepScaling"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", appAutoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_policy_configuration.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, appAutoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", appAutoscalingTargetResourceName, "scalable_dimension"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appAutoscalingTargetResourceName, "service_namespace"),
+					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.0.adjustment_type", "ChangeInCapacity"),
 					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.0.cooldown", "60"),
 					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.0.step_adjustment.#", "1"),
@@ -117,6 +135,7 @@ func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 						"metric_interval_lower_bound": "0",
 						"metric_interval_upper_bound": "",
 					}),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_scaling_policy_configuration.#", "0"),
 				),
 			},
 			{
@@ -131,13 +150,13 @@ func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 
 func TestAccAppAutoScalingPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy applicationautoscaling.ScalingPolicy
+	var policy awstypes.ScalingPolicy
 	resourceName := "aws_appautoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -155,14 +174,14 @@ func TestAccAppAutoScalingPolicy_disappears(t *testing.T) {
 
 func TestAccAppAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy applicationautoscaling.ScalingPolicy
+	var policy awstypes.ScalingPolicy
 
 	randClusterName := fmt.Sprintf("cluster%s", sdkacctest.RandString(10))
 	randPolicyNamePrefix := fmt.Sprintf("terraform-test-foobar-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -188,9 +207,9 @@ func TestAccAppAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 						"metric_interval_upper_bound": "1",
 						"scaling_adjustment":          "1",
 					}),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", "name", fmt.Sprintf("%s-out", randPolicyNamePrefix)),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", names.AttrName, fmt.Sprintf("%s-out", randPolicyNamePrefix)),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", "policy_type", "StepScaling"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", "resource_id", fmt.Sprintf("service/%s/foobar", randClusterName)),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", names.AttrResourceID, fmt.Sprintf("service/%s/foobar", randClusterName)),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", "service_namespace", "ecs"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_out", "scalable_dimension", "ecs:service:DesiredCount"),
 					testAccCheckPolicyExists(ctx, "aws_appautoscaling_policy.foobar_in", &policy),
@@ -212,9 +231,9 @@ func TestAccAppAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 						"metric_interval_upper_bound": "-3",
 						"scaling_adjustment":          "-3",
 					}),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", "name", fmt.Sprintf("%s-in", randPolicyNamePrefix)),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", names.AttrName, fmt.Sprintf("%s-in", randPolicyNamePrefix)),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", "policy_type", "StepScaling"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", "resource_id", fmt.Sprintf("service/%s/foobar", randClusterName)),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", names.AttrResourceID, fmt.Sprintf("service/%s/foobar", randClusterName)),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", "service_namespace", "ecs"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", "scalable_dimension", "ecs:service:DesiredCount"),
 				),
@@ -237,14 +256,14 @@ func TestAccAppAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 
 func TestAccAppAutoScalingPolicy_spotFleetRequest(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy applicationautoscaling.ScalingPolicy
+	var policy awstypes.ScalingPolicy
 
 	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", sdkacctest.RandString(5))
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -252,7 +271,7 @@ func TestAccAppAutoScalingPolicy_spotFleetRequest(t *testing.T) {
 				Config: testAccPolicyConfig_spotFleetRequest(randPolicyName, validUntil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, "aws_appautoscaling_policy.test", &policy),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.test", "name", randPolicyName),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.test", names.AttrName, randPolicyName),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.test", "service_namespace", "ec2"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.test", "scalable_dimension", "ec2:spot-fleet-request:TargetCapacity"),
 				),
@@ -271,30 +290,30 @@ func TestAccAppAutoScalingPolicy_spotFleetRequest(t *testing.T) {
 // The field doesn't seem to be accessible for common AWS customers (yet?)
 func TestAccAppAutoScalingPolicy_DynamoDB_table(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy applicationautoscaling.ScalingPolicy
-
-	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", sdkacctest.RandString(5))
+	var policy awstypes.ScalingPolicy
+	resourceName := "aws_appautoscaling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_dynamoDB(randPolicyName),
+				Config: testAccPolicyConfig_dynamoDB(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, "aws_appautoscaling_policy.dynamo_test", &policy),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "name", fmt.Sprintf("DynamoDBWriteCapacityUtilization:table/%s", randPolicyName)),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "policy_type", "TargetTrackingScaling"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "service_namespace", "dynamodb"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("DynamoDBWriteCapacityUtilization:table/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "policy_type", "TargetTrackingScaling"),
+					resource.TestCheckResourceAttr(resourceName, "service_namespace", "dynamodb"),
+					resource.TestCheckResourceAttr(resourceName, "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
 				),
 			},
 			{
-				ResourceName:      "aws_appautoscaling_policy.dynamo_test",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc("aws_appautoscaling_policy.dynamo_test"),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -303,14 +322,14 @@ func TestAccAppAutoScalingPolicy_DynamoDB_table(t *testing.T) {
 
 func TestAccAppAutoScalingPolicy_DynamoDB_index(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy applicationautoscaling.ScalingPolicy
+	var policy awstypes.ScalingPolicy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appautoscalingTargetResourceName := "aws_appautoscaling_target.test"
 	resourceName := "aws_appautoscaling_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -318,7 +337,7 @@ func TestAccAppAutoScalingPolicy_DynamoDB_index(t *testing.T) {
 				Config: testAccPolicyConfig_dynamoDBIndex(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("DynamoDBWriteCapacityUtilization:table/%s/index/GameTitleIndex", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("DynamoDBWriteCapacityUtilization:table/%s/index/GameTitleIndex", rName)),
 					resource.TestCheckResourceAttr(resourceName, "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appautoscalingTargetResourceName, "service_namespace"),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", appautoscalingTargetResourceName, "scalable_dimension"),
@@ -336,8 +355,8 @@ func TestAccAppAutoScalingPolicy_DynamoDB_index(t *testing.T) {
 
 func TestAccAppAutoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var readPolicy1 applicationautoscaling.ScalingPolicy
-	var readPolicy2 applicationautoscaling.ScalingPolicy
+	var readPolicy1 awstypes.ScalingPolicy
+	var readPolicy2 awstypes.ScalingPolicy
 
 	tableName1 := fmt.Sprintf("tf-autoscaled-table-%s", sdkacctest.RandString(5))
 	tableName2 := fmt.Sprintf("tf-autoscaled-table-%s", sdkacctest.RandString(5))
@@ -345,7 +364,7 @@ func TestAccAppAutoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -353,14 +372,14 @@ func TestAccAppAutoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
 				Config: testAccPolicyConfig_multiplePoliciesSameName(tableName1, tableName2, namePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, "aws_appautoscaling_policy.read1", &readPolicy1),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read1", "name", namePrefix+"-read"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read1", "resource_id", "table/"+tableName1),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read1", names.AttrName, namePrefix+"-read"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read1", names.AttrResourceID, "table/"+tableName1),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read1", "service_namespace", "dynamodb"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read1", "scalable_dimension", "dynamodb:table:ReadCapacityUnits"),
 
 					testAccCheckPolicyExists(ctx, "aws_appautoscaling_policy.read2", &readPolicy2),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read2", "name", namePrefix+"-read"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read2", "resource_id", "table/"+tableName2),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read2", names.AttrName, namePrefix+"-read"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read2", names.AttrResourceID, "table/"+tableName2),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read2", "service_namespace", "dynamodb"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read2", "scalable_dimension", "dynamodb:table:ReadCapacityUnits"),
 				),
@@ -371,15 +390,15 @@ func TestAccAppAutoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
 
 func TestAccAppAutoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 	ctx := acctest.Context(t)
-	var readPolicy applicationautoscaling.ScalingPolicy
-	var writePolicy applicationautoscaling.ScalingPolicy
+	var readPolicy awstypes.ScalingPolicy
+	var writePolicy awstypes.ScalingPolicy
 
 	tableName := fmt.Sprintf("tf-autoscaled-table-%s", sdkacctest.RandString(5))
 	namePrefix := fmt.Sprintf("tf-appautoscaling-policy-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -387,14 +406,14 @@ func TestAccAppAutoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 				Config: testAccPolicyConfig_multiplePoliciesSameResource(tableName, namePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, "aws_appautoscaling_policy.read", &readPolicy),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read", "name", namePrefix+"-read"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read", "resource_id", "table/"+tableName),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read", names.AttrName, namePrefix+"-read"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read", names.AttrResourceID, "table/"+tableName),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read", "service_namespace", "dynamodb"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.read", "scalable_dimension", "dynamodb:table:ReadCapacityUnits"),
 
 					testAccCheckPolicyExists(ctx, "aws_appautoscaling_policy.write", &writePolicy),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.write", "name", namePrefix+"-write"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.write", "resource_id", "table/"+tableName),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.write", names.AttrName, namePrefix+"-write"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.write", names.AttrResourceID, "table/"+tableName),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.write", "service_namespace", "dynamodb"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.write", "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
 				),
@@ -418,14 +437,14 @@ func TestAccAppAutoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7963
 func TestAccAppAutoScalingPolicy_ResourceID_forceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy applicationautoscaling.ScalingPolicy
+	var policy awstypes.ScalingPolicy
 	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
 	resourceName := "aws_appautoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -433,7 +452,7 @@ func TestAccAppAutoScalingPolicy_ResourceID_forceNew(t *testing.T) {
 				Config: testAccPolicyConfig_resourceIDForceNew1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", appAutoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, appAutoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", appAutoscalingTargetResourceName, "scalable_dimension"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appAutoscalingTargetResourceName, "service_namespace"),
 				),
@@ -442,7 +461,7 @@ func TestAccAppAutoScalingPolicy_ResourceID_forceNew(t *testing.T) {
 				Config: testAccPolicyConfig_resourceIDForceNew2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", appAutoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, appAutoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", appAutoscalingTargetResourceName, "scalable_dimension"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appAutoscalingTargetResourceName, "service_namespace"),
 				),
@@ -453,14 +472,14 @@ func TestAccAppAutoScalingPolicy_ResourceID_forceNew(t *testing.T) {
 
 func TestAccAppAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy applicationautoscaling.ScalingPolicy
+	var policy awstypes.ScalingPolicy
 	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
 	resourceName := "aws_appautoscaling_policy.metric_math_test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -468,7 +487,7 @@ func TestAccAppAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
 				Config: testAccPolicyConfig_targetTrackingMetricMath(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", appAutoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, appAutoscalingTargetResourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", appAutoscalingTargetResourceName, "scalable_dimension"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appAutoscalingTargetResourceName, "service_namespace"),
 					resource.TestCheckResourceAttr(resourceName, "target_tracking_scaling_policy_configuration.0.target_value", "12.3"),
@@ -484,89 +503,98 @@ func TestAccAppAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
 	})
 }
 
-func testAccPolicyConfig_targetTrackingMetricMath(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_basic(rName), fmt.Sprintf(`
-resource "aws_appautoscaling_policy" "metric_math_test" {
-  name               = "%[1]s-tracking"
-  policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.test.resource_id
-  scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.test.service_namespace
+func TestAccAppAutoScalingPolicy_predictiveScalingSimple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.ScalingPolicy
+	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
+	resourceName := "aws_appautoscaling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-  target_tracking_scaling_policy_configuration {
-    customized_metric_specification {
-      metrics {
-        id          = "m1"
-        expression  = "TIME_SERIES(20)"
-        return_data = false
-      }
-      metrics {
-        id = "m2"
-        metric_stat {
-          metric {
-            namespace   = "foo"
-            metric_name = "bar"
-          }
-          unit = "Percent"
-          stat = "Sum"
-        }
-        return_data = false
-      }
-      metrics {
-        id = "m3"
-        metric_stat {
-          metric {
-            namespace   = "foo"
-            metric_name = "bar"
-            dimensions {
-              name  = "x"
-              value = "y"
-            }
-            dimensions {
-              name  = "y"
-              value = "x"
-            }
-          }
-          unit = "Percent"
-          stat = "Sum"
-        }
-        return_data = false
-      }
-      metrics {
-        id          = "e1"
-        expression  = "m1 + m2 + m3"
-        return_data = true
-      }
-    }
-    target_value = 12.3
-  }
-}
-`, rName))
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_predictiveScalingSimple(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "alarm_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "policy_type", "PredictiveScaling"),
+					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_policy_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, appAutoscalingTargetResourceName, names.AttrResourceID),
+					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", appAutoscalingTargetResourceName, "scalable_dimension"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appAutoscalingTargetResourceName, "service_namespace"),
+					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_scaling_policy_configuration.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
-func testAccCheckPolicyExists(ctx context.Context, n string, policy *applicationautoscaling.ScalingPolicy) resource.TestCheckFunc {
+func TestAccAppAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.ScalingPolicy
+	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
+	resourceName := "aws_appautoscaling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_predictiveScalingCustom(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "alarm_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "policy_type", "PredictiveScaling"),
+					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_policy_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, appAutoscalingTargetResourceName, names.AttrResourceID),
+					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", appAutoscalingTargetResourceName, "scalable_dimension"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appAutoscalingTargetResourceName, "service_namespace"),
+					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_scaling_policy_configuration.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.ScalingPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
-		params := &applicationautoscaling.DescribeScalingPoliciesInput{
-			PolicyNames:       []*string{aws.String(rs.Primary.ID)},
-			ResourceId:        aws.String(rs.Primary.Attributes["resource_id"]),
-			ScalableDimension: aws.String(rs.Primary.Attributes["scalable_dimension"]),
-			ServiceNamespace:  aws.String(rs.Primary.Attributes["service_namespace"]),
-		}
-		resp, err := conn.DescribeScalingPoliciesWithContext(ctx, params)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingClient(ctx)
+
+		output, err := tfappautoscaling.FindScalingPolicyByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["scalable_dimension"])
+
 		if err != nil {
 			return err
 		}
-		if len(resp.ScalingPolicies) == 0 {
-			return fmt.Errorf("ScalingPolicy %s not found", rs.Primary.ID)
-		}
 
-		*policy = *resp.ScalingPolicies[0]
+		*v = *output
 
 		return nil
 	}
@@ -574,26 +602,32 @@ func testAccCheckPolicyExists(ctx context.Context, n string, policy *application
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			params := applicationautoscaling.DescribeScalingPoliciesInput{
-				ServiceNamespace: aws.String(rs.Primary.Attributes["service_namespace"]),
-				PolicyNames:      []*string{aws.String(rs.Primary.ID)},
+			if rs.Type != "aws_appautoscaling_policy" {
+				continue
 			}
 
-			resp, err := conn.DescribeScalingPoliciesWithContext(ctx, &params)
+			_, err := tfappautoscaling.FindScalingPolicyByFourPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["scalable_dimension"])
 
-			if err == nil {
-				if len(resp.ScalingPolicies) != 0 &&
-					*resp.ScalingPolicies[0].PolicyName == rs.Primary.ID {
-					return fmt.Errorf("Application autoscaling policy still exists: %s", rs.Primary.ID)
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Application Auto Scaling Scaling Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
+}
+
+func testAccPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrsImportStateIdFunc(resourceName, "/", "service_namespace", names.AttrResourceID, "scalable_dimension", names.AttrName)
 }
 
 func testAccPolicyConfig_basic(rName string) string {
@@ -622,7 +656,7 @@ resource "aws_ecs_service" "test" {
   cluster                            = aws_ecs_cluster.test.id
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 50
-  desired_count                      = 0
+  desired_count                      = 2
   name                               = %[1]q
   task_definition                    = aws_ecs_task_definition.test.arn
 }
@@ -655,26 +689,11 @@ resource "aws_appautoscaling_policy" "test" {
 `, rName)
 }
 
-func testAccPolicyConfig_spotFleetRequest(randPolicyName, validUntil string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
+func testAccPolicyConfig_spotFleetRequest(rName, validUntil string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "fleet_role" {
+resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -694,13 +713,13 @@ resource "aws_iam_role" "fleet_role" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "fleet_role_policy" {
-  role       = aws_iam_role.fleet_role.name
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
 resource "aws_spot_fleet_request" "test" {
-  iam_fleet_role                      = aws_iam_role.fleet_role.arn
+  iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.005"
   target_capacity                     = 2
   valid_until                         = %[2]q
@@ -708,7 +727,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.medium"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   }
 }
 
@@ -737,14 +756,13 @@ resource "aws_appautoscaling_policy" "test" {
     }
   }
 }
-`, randPolicyName, validUntil)
+`, rName, validUntil))
 }
 
-func testAccPolicyConfig_dynamoDB(
-	randPolicyName string) string {
+func testAccPolicyConfig_dynamoDB(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dynamodb_table" "dynamodb_table_test" {
-  name           = "%s"
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
   read_capacity  = 5
   write_capacity = 5
   hash_key       = "FooKey"
@@ -755,19 +773,19 @@ resource "aws_dynamodb_table" "dynamodb_table_test" {
   }
 }
 
-resource "aws_appautoscaling_target" "dynamo_test" {
+resource "aws_appautoscaling_target" "test" {
   service_namespace  = "dynamodb"
-  resource_id        = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
+  resource_id        = "table/${aws_dynamodb_table.test.name}"
   scalable_dimension = "dynamodb:table:WriteCapacityUnits"
   min_capacity       = 1
   max_capacity       = 10
 }
 
-resource "aws_appautoscaling_policy" "dynamo_test" {
-  name               = "DynamoDBWriteCapacityUtilization:${aws_appautoscaling_target.dynamo_test.resource_id}"
+resource "aws_appautoscaling_policy" "test" {
+  name               = "DynamoDBWriteCapacityUtilization:${aws_appautoscaling_target.test.resource_id}"
   policy_type        = "TargetTrackingScaling"
   service_namespace  = "dynamodb"
-  resource_id        = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
+  resource_id        = "table/${aws_dynamodb_table.test.name}"
   scalable_dimension = "dynamodb:table:WriteCapacityUnits"
 
   target_tracking_scaling_policy_configuration {
@@ -780,15 +798,15 @@ resource "aws_appautoscaling_policy" "dynamo_test" {
     target_value       = 70
   }
 
-  depends_on = [aws_appautoscaling_target.dynamo_test]
+  depends_on = [aws_appautoscaling_target.test]
 }
-`, randPolicyName)
+`, rName)
 }
 
 func testAccPolicyConfig_dynamoDBIndex(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%[1]s"
+  name           = %[1]q
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "UserId"
@@ -851,7 +869,7 @@ resource "aws_appautoscaling_policy" "test" {
 func testAccPolicyConfig_multiplePoliciesSameName(tableName1, tableName2, namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "dynamodb_table_test1" {
-  name           = "%[1]s"
+  name           = %[1]q
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "FooKey"
@@ -863,7 +881,7 @@ resource "aws_dynamodb_table" "dynamodb_table_test1" {
 }
 
 resource "aws_dynamodb_table" "dynamodb_table_test2" {
-  name           = "%[2]s"
+  name           = %[2]q
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "FooKey"
@@ -931,7 +949,7 @@ resource "aws_appautoscaling_policy" "read2" {
 func testAccPolicyConfig_multiplePoliciesSameResource(tableName, namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "dynamodb_table_test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 5
   write_capacity = 5
   hash_key       = "FooKey"
@@ -1150,7 +1168,7 @@ resource "aws_ecs_service" "test2" {
 }
 
 func testAccPolicyConfig_resourceIDForceNew1(rName string) string {
-	return testAccPolicyConfig_resourceIDForceNewBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_resourceIDForceNewBase(rName), fmt.Sprintf(`
 resource "aws_appautoscaling_target" "test" {
   max_capacity       = 4
   min_capacity       = 0
@@ -1195,11 +1213,11 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     ClusterName = aws_ecs_cluster.test.name
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccPolicyConfig_resourceIDForceNew2(rName string) string {
-	return testAccPolicyConfig_resourceIDForceNewBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPolicyConfig_resourceIDForceNewBase(rName), fmt.Sprintf(`
 resource "aws_appautoscaling_target" "test" {
   max_capacity       = 4
   min_capacity       = 0
@@ -1244,22 +1262,226 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     ClusterName = aws_ecs_cluster.test.name
   }
 }
+`, rName))
+}
+
+func testAccPolicyConfig_targetTrackingMetricMath(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfig_basic(rName), fmt.Sprintf(`
+resource "aws_appautoscaling_policy" "metric_math_test" {
+  name               = "%[1]s-tracking"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.test.resource_id
+  scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.test.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    customized_metric_specification {
+      metrics {
+        id          = "m1"
+        expression  = "TIME_SERIES(20)"
+        return_data = false
+      }
+      metrics {
+        id = "m2"
+        metric_stat {
+          metric {
+            namespace   = "foo"
+            metric_name = "bar"
+          }
+          unit = "Percent"
+          stat = "Sum"
+        }
+        return_data = false
+      }
+      metrics {
+        id = "m3"
+        metric_stat {
+          metric {
+            namespace   = "foo"
+            metric_name = "bar"
+            dimensions {
+              name  = "x"
+              value = "y"
+            }
+            dimensions {
+              name  = "y"
+              value = "x"
+            }
+          }
+          unit = "Percent"
+          stat = "Sum"
+        }
+        return_data = false
+      }
+      metrics {
+        id          = "e1"
+        expression  = "m1 + m2 + m3"
+        return_data = true
+      }
+    }
+    target_value = 12.3
+  }
+}
+`, rName))
+}
+
+func testAccPolicyConfig_predictiveScalingSimple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<EOF
+[
+  {
+    "name": "busybox",
+    "image": "busybox:latest",
+    "cpu": 10,
+    "memory": 128,
+    "essential": true
+  }
+]
+EOF
+}
+
+resource "aws_ecs_service" "test" {
+  cluster                            = aws_ecs_cluster.test.id
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 50
+  desired_count                      = 2
+  name                               = %[1]q
+  task_definition                    = aws_ecs_task_definition.test.arn
+}
+
+resource "aws_appautoscaling_target" "test" {
+  max_capacity       = 4
+  min_capacity       = 0
+  resource_id        = "service/${aws_ecs_cluster.test.name}/${aws_ecs_service.test.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "test" {
+  name               = %[1]q
+  resource_id        = aws_appautoscaling_target.test.resource_id
+  scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.test.service_namespace
+  policy_type        = "PredictiveScaling"
+
+  predictive_scaling_policy_configuration {
+    metric_specification {
+      target_value = 40
+
+      predefined_metric_pair_specification {
+        predefined_metric_type = "ECSServiceMemoryUtilization"
+      }
+    }
+  }
+}
 `, rName)
 }
 
-func testAccPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
+func testAccPolicyConfig_predictiveScalingCustom(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
 
-		id := fmt.Sprintf("%s/%s/%s/%s",
-			rs.Primary.Attributes["service_namespace"],
-			rs.Primary.Attributes["resource_id"],
-			rs.Primary.Attributes["scalable_dimension"],
-			rs.Primary.Attributes["name"])
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
 
-		return id, nil
-	}
+  container_definitions = <<EOF
+[
+  {
+    "name": "busybox",
+    "image": "busybox:latest",
+    "cpu": 10,
+    "memory": 128,
+    "essential": true
+  }
+]
+EOF
+}
+
+resource "aws_ecs_service" "test" {
+  cluster                            = aws_ecs_cluster.test.id
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 50
+  desired_count                      = 2
+  name                               = %[1]q
+  task_definition                    = aws_ecs_task_definition.test.arn
+}
+
+resource "aws_appautoscaling_target" "test" {
+  max_capacity       = 4
+  min_capacity       = 0
+  resource_id        = "service/${aws_ecs_cluster.test.name}/${aws_ecs_service.test.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "test" {
+  name               = %[1]q
+  resource_id        = aws_appautoscaling_target.test.resource_id
+  scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.test.service_namespace
+  policy_type        = "PredictiveScaling"
+
+  predictive_scaling_policy_configuration {
+    scheduling_buffer_time       = 600
+    max_capacity_breach_behavior = "HonorMaxCapacity"
+    mode                         = "ForecastAndScale"
+
+    metric_specification {
+      target_value = 50
+
+      customized_scaling_metric_specification {
+        metric_data_query {
+          id          = "scaling_metric"
+          label       = "MyCustomMetricLabel"
+          return_data = true
+
+          metric_stat {
+            metric {
+              namespace   = "MyNameSpace"
+              metric_name = "MyUtilizationMetric"
+
+              dimension {
+                name  = "MyOptionalMetricDimensionName"
+                value = "MyOptionalMetricDimensionValue"
+              }
+            }
+
+            stat = "Average"
+          }
+        }
+      }
+
+      customized_load_metric_specification {
+        metric_data_query {
+          id          = "load_metric"
+          return_data = true
+
+          metric_stat {
+            metric {
+              namespace   = "MyNameSpace"
+              metric_name = "MyLoadMetric"
+
+              dimension {
+                name  = "MyOptionalMetricDimensionName"
+                value = "MyOptionalMetricDimensionValue"
+              }
+            }
+
+            stat = "Sum"
+          }
+        }
+      }
+    }
+  }
+}
+`, rName)
 }

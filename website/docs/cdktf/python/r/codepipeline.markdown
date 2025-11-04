@@ -195,6 +195,7 @@ An `action` block supports the following arguments:
 * `run_order` - (Optional) The order in which actions are run.
 * `region` - (Optional) The region in which to run the action.
 * `namespace` - (Optional) The namespace all output variables will be accessed from.
+* `timeout_in_minutes` - (Optional) A timeout duration in minutes that can be applied against the action type's default timeout value specified in [Quotas for AWS CodePipeline](https://docs.aws.amazon.com/codepipeline/latest/userguide/limits.html). This argument is available only to the manual approval action type.
 
 ~> **Note:** The input artifact of an action must exactly match the output artifact declared in a preceding action, but the input artifact does not have to be the next action in strict sequence from the action that provided the output artifact. Actions in parallel can declare different output artifacts, which are in turn consumed by different following actions.
 

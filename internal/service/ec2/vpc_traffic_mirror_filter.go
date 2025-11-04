@@ -5,44 +5,45 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_traffic_mirror_filter", name="Traffic Mirror Filter")
 // @Tags(identifierAttribute="id")
-func ResourceTrafficMirrorFilter() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceTrafficMirrorFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficMirrorFilterCreate,
 		ReadWithoutTimeout:   resourceTrafficMirrorFilterRead,
 		UpdateWithoutTimeout: resourceTrafficMirrorFilterUpdate,
 		DeleteWithoutTimeout: resourceTrafficMirrorFilterDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -51,7 +52,8 @@ func ResourceTrafficMirrorFilter() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.TrafficMirrorNetworkService](),
 					ValidateFunc: validation.StringInSlice([]string{
 						"amazon-dns",
 					}, false),
@@ -63,33 +65,34 @@ func ResourceTrafficMirrorFilter() *schema.Resource {
 	}
 }
 
-func resourceTrafficMirrorFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorFilterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateTrafficMirrorFilterInput{
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTrafficMirrorFilter),
+		ClientToken:       aws.String(id.UniqueId()),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTrafficMirrorFilter),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateTrafficMirrorFilterWithContext(ctx, input)
+	output, err := conn.CreateTrafficMirrorFilter(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Traffic Mirror Filter: %s", err)
 	}
 
-	d.SetId(aws.StringValue(out.TrafficMirrorFilter.TrafficMirrorFilterId))
+	d.SetId(aws.ToString(output.TrafficMirrorFilter.TrafficMirrorFilterId))
 
 	if v, ok := d.GetOk("network_services"); ok && v.(*schema.Set).Len() > 0 {
 		input := &ec2.ModifyTrafficMirrorFilterNetworkServicesInput{
-			AddNetworkServices:    flex.ExpandStringSet(v.(*schema.Set)),
+			AddNetworkServices:    flex.ExpandStringyValueSet[awstypes.TrafficMirrorNetworkService](v.(*schema.Set)),
 			TrafficMirrorFilterId: aws.String(d.Id()),
 		}
 
-		_, err := conn.ModifyTrafficMirrorFilterNetworkServicesWithContext(ctx, input)
+		_, err := conn.ModifyTrafficMirrorFilterNetworkServices(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Traffic Mirror Filter (%s) network services: %s", d.Id(), err)
@@ -99,11 +102,12 @@ func resourceTrafficMirrorFilterCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceTrafficMirrorFilterRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
-	trafficMirrorFilter, err := FindTrafficMirrorFilterByID(ctx, conn, d.Id())
+	trafficMirrorFilter, err := findTrafficMirrorFilterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Traffic Mirror Filter %s not found, removing from state", d.Id())
@@ -115,25 +119,18 @@ func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Traffic Mirror Filter (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("traffic-mirror-filter/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
-	d.Set("description", trafficMirrorFilter.Description)
-	d.Set("network_services", aws.StringValueSlice(trafficMirrorFilter.NetworkServices))
+	d.Set(names.AttrARN, trafficMirrorFilterARN(ctx, c, d.Id()))
+	d.Set(names.AttrDescription, trafficMirrorFilter.Description)
+	d.Set("network_services", trafficMirrorFilter.NetworkServices)
 
 	setTagsOut(ctx, trafficMirrorFilter.Tags)
 
 	return diags
 }
 
-func resourceTrafficMirrorFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorFilterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChange("network_services") {
 		input := &ec2.ModifyTrafficMirrorFilterNetworkServicesInput{
@@ -143,14 +140,14 @@ func resourceTrafficMirrorFilterUpdate(ctx context.Context, d *schema.ResourceDa
 		o, n := d.GetChange("network_services")
 		add := n.(*schema.Set).Difference(o.(*schema.Set))
 		if add.Len() > 0 {
-			input.AddNetworkServices = flex.ExpandStringSet(add)
+			input.AddNetworkServices = flex.ExpandStringyValueSet[awstypes.TrafficMirrorNetworkService](add)
 		}
 		del := o.(*schema.Set).Difference(n.(*schema.Set))
 		if del.Len() > 0 {
-			input.RemoveNetworkServices = flex.ExpandStringSet(del)
+			input.RemoveNetworkServices = flex.ExpandStringyValueSet[awstypes.TrafficMirrorNetworkService](del)
 		}
 
-		_, err := conn.ModifyTrafficMirrorFilterNetworkServicesWithContext(ctx, input)
+		_, err := conn.ModifyTrafficMirrorFilterNetworkServices(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Traffic Mirror Filter (%s) network services: %s", d.Id(), err)
@@ -160,14 +157,15 @@ func resourceTrafficMirrorFilterUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceTrafficMirrorFilterRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorFilterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Filter: %s", d.Id())
-	_, err := conn.DeleteTrafficMirrorFilterWithContext(ctx, &ec2.DeleteTrafficMirrorFilterInput{
+	input := ec2.DeleteTrafficMirrorFilterInput{
 		TrafficMirrorFilterId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrafficMirrorFilter(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorFilterIdNotFound) {
 		return diags
@@ -178,4 +176,8 @@ func resourceTrafficMirrorFilterDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return diags
+}
+
+func trafficMirrorFilterARN(ctx context.Context, c *conns.AWSClient, trafficMirrorFilterID string) string {
+	return c.RegionalARN(ctx, names.EC2, "traffic-mirror-filter/"+trafficMirrorFilterID)
 }

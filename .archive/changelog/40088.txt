@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_autoscaling_group: Handle eventual consistency issues that occur when using a `launch_template` that is updated causing `ValidationError: You must use a valid fully-formed launch template.`
+```
+
+```release-note:bug
+resource/aws_iam_instance_profile: Handle eventual consistency issues that occur when this resource is updated and has dependents
+```
+
+```release-note:bug
+resource/aws_launch_template: Handle eventual consistency issues that occur when this resource is updated and has dependents
+```

@@ -5,7 +5,7 @@ AMP (Managed Prometheus)
 API Gateway
 API Gateway V2
 Account Management
-Amazon Bedrock
+Amazon Q Business
 Amplify
 App Mesh
 App Runner
@@ -16,13 +16,22 @@ AppIntegrations
 AppStream 2.0
 AppSync
 Application Auto Scaling
+Application Migration (Mgn)
+Application Resilience Controller Region Switch
+Application Signals
 Athena
 Audit Manager
 Auto Scaling
 Auto Scaling Plans
+BCM Data Exports
 Backup
 Batch
+Bedrock
+Bedrock AgentCore
+Bedrock Agents
+Billing
 CE (Cost Explorer)
+Chatbot
 Chime
 Chime SDK Media Pipelines
 Chime SDK Voice
@@ -32,6 +41,7 @@ Cloud Map
 Cloud9
 CloudFormation
 CloudFront
+CloudFront KeyValueStore
 CloudHSM
 CloudSearch
 CloudTrail
@@ -40,13 +50,17 @@ CloudWatch Application Insights
 CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
+CloudWatch Network Monitor
+CloudWatch NetworkFlow Monitor
 CloudWatch Observability Access Manager
+CloudWatch Observability Admin
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
 CodeBuild
 CodeCatalyst
 CodeCommit
+CodeConnections
 CodeDeploy
 CodeGuru Profiler
 CodeGuru Reviewer
@@ -62,13 +76,18 @@ Connect
 Connect Cases
 Connect Customer Profiles
 Control Tower
+Cost Optimization Hub
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
+DRS (Elastic Disaster Recovery)
+DSQL
 Data Exchange
 Data Pipeline
 DataSync
+DataZone
 Detective
+DevOps Guru
 Device Farm
 Direct Connect
 Directory Service
@@ -92,13 +111,16 @@ EMR Serverless
 ElastiCache
 Elastic Beanstalk
 Elastic Transcoder
+Elastic VMware
 Elasticsearch
 Elemental MediaConnect
 Elemental MediaConvert
 Elemental MediaLive
 Elemental MediaPackage
+Elemental MediaPackage VOD
 Elemental MediaPackage Version 2
 Elemental MediaStore
+End User Messaging SMS
 EventBridge
 EventBridge Pipes
 EventBridge Scheduler
@@ -110,6 +132,8 @@ FinSpace
 GameLift
 Global Accelerator
 Glue
+Glue DataBrew
+Ground Station
 GuardDuty
 HealthLake
 IAM (Identity & Access Management)
@@ -118,9 +142,8 @@ IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
-IoT Analytics
+Invoicing
 IoT Core
-IoT Events
 IoT Greengrass
 KMS (Key Management)
 Kendra
@@ -132,6 +155,7 @@ Kinesis Firehose
 Kinesis Video
 Lake Formation
 Lambda
+Launch Wizard
 Lex Model Building
 Lex V2 Models
 License Manager
@@ -141,24 +165,29 @@ Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
 Macie
+Mainframe Modernization
 Managed Grafana
 Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
-MemoryDB for Redis
+MemoryDB
 Meta Data Sources
 Neptune
+Neptune Analytics
 Network Firewall
 Network Manager
 OpenSearch
 OpenSearch Ingestion
 OpenSearch Serverless
-OpsWorks
+Oracle Database@AWS
 Organizations
 Outposts
 Outposts (EC2)
+Parallel Computing Service
+Payment Cryptography Control Plane
 Pinpoint
 Polly
 Pricing Calculator
+Private CA Connector for Active Directory
 QLDB (Quantum Ledger Database)
 QuickSight
 RAM (Resource Access Manager)
@@ -167,20 +196,24 @@ Recycle Bin (RBin)
 Redshift
 Redshift Data
 Redshift Serverless
+Rekognition
+Resilience Hub
 Resource Explorer
 Resource Groups
 Resource Groups Tagging
 Roles Anywhere
 Route 53
 Route 53 Domains
+Route 53 Profiles
 Route 53 Recovery Control Config
 Route 53 Recovery Readiness
 Route 53 Resolver
 S3 (Simple Storage)
 S3 Control
 S3 Glacier
+S3 Tables
+S3 Vectors
 S3 on Outposts
-SDB (SimpleDB)
 SES (Simple Email)
 SESv2 (Simple Email V2)
 SFN (Step Functions)
@@ -189,24 +222,32 @@ SQS (Simple Queue)
 SSM (Systems Manager)
 SSM Contacts
 SSM Incident Manager Incidents
+SSM Quick Setup
 SSO Admin
 SSO Identity Store
 STS (Security Token)
 SWF (Simple Workflow)
-SageMaker
+SageMaker AI
 Secrets Manager
 Security Hub
 Security Lake
 Serverless Application Repository
 Service Catalog
+Service Catalog AppRegistry
 Service Quotas
 Shield
 Signer
 Storage Gateway
+Systems Manager for SAP
+Tax Settings
+Timestream Query
 Timestream Write
+Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
+User Notifications
+User Notifications Contacts
 VPC (Virtual Private Cloud)
 VPC IPAM (IP Address Manager)
 VPC Lattice
@@ -219,6 +260,8 @@ WAF Classic
 WAF Classic Regional
 Wavelength
 Web Services Budgets
-WorkLink
+Well-Architected Tool
+WorkMail
 WorkSpaces
+WorkSpaces Web
 X-Ray

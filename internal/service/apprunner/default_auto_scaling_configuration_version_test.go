@@ -22,7 +22,7 @@ func TestAccAppRunnerDefaultAutoScalingConfigurationVersion_serial(t *testing.T)
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic": testAccDefaultAutoScalingConfigurationVersion_basic,
+		acctest.CtBasic: testAccDefaultAutoScalingConfigurationVersion_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -36,7 +36,7 @@ func testAccDefaultAutoScalingConfigurationVersion_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -52,7 +52,7 @@ func testAccDefaultAutoScalingConfigurationVersion_basic(t *testing.T) {
 				},
 				Config: testAccDefaultAutoScalingConfigurationVersionConfig_basic(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_configuration_arn", "aws_apprunner_auto_scaling_configuration_version.test.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_configuration_arn", "aws_apprunner_auto_scaling_configuration_version.test.0", names.AttrARN),
 				),
 			},
 			{
@@ -63,7 +63,7 @@ func testAccDefaultAutoScalingConfigurationVersion_basic(t *testing.T) {
 			{
 				Config: testAccDefaultAutoScalingConfigurationVersionConfig_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_configuration_arn", "aws_apprunner_auto_scaling_configuration_version.test.1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_configuration_arn", "aws_apprunner_auto_scaling_configuration_version.test.1", names.AttrARN),
 				),
 			},
 			// Restore the prior default, else "InvalidRequestException: You can't delete a reserved auto scaling configuration".

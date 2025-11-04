@@ -36,10 +36,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `exportType` - (Required) Type of export. Acceptable values are `oas30` for OpenAPI 3.0.x and `swagger` for Swagger/OpenAPI 2.0.
 * `restApiId` - (Required) Identifier of the associated REST API.
 * `stageName` - (Required) Name of the Stage that will be exported.
-* `accepts` - (Optional) Content-type of the export. Valid values are `application/json` and `application/yaml` are supported for `export_type` `ofoas30` and `swagger`.
+* `accepts` - (Optional) Content-type of the export. Valid values are `application/json` and `application/yaml` are supported for `exportType` `ofoas30` and `swagger`.
 * `parameters` - (Optional) Key-value map of query string parameters that specify properties of the export. the following parameters are supported: `extensions='integrations'` or `extensions='apigateway'` will export the API with x-amazon-apigateway-integration extensions. `extensions='authorizers'` will export the API with x-amazon-apigateway-authorizer extensions.
 
 ## Attribute Reference
@@ -51,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `contentType` - Content-type header value in the HTTP response.
 * `contentDisposition` - Content-disposition header value in the HTTP response.
 
-<!-- cache-key: cdktf-0.19.0 input-c510075eea42189371d3ef965a6842b44146a7635515b8e6bc3e2af00098b481 -->
+<!-- cache-key: cdktf-0.20.8 input-7734eafd60f2bf19ef44e597d19531101cd49a7e271dae8b9929b39da2491144 -->

@@ -14,9 +14,11 @@ import (
 )
 
 func Context(t *testing.T) context.Context {
+	t.Helper()
+
 	helperlogging.SetOutput(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	ctx = tfsdklog.RegisterTestSink(ctx, t)
 	ctx = logger(ctx, t, "acctest")
 	ctx = awsSDKLogger(ctx)
@@ -25,6 +27,8 @@ func Context(t *testing.T) context.Context {
 }
 
 func logger(ctx context.Context, t *testing.T, name string) context.Context {
+	t.Helper()
+
 	ctx = tfsdklog.NewRootProviderLogger(ctx,
 		tfsdklog.WithLevelFromEnv("TF_LOG"),
 		tfsdklog.WithLogName(name),

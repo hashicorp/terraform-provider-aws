@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the launch configuration.
 
 ## Attribute Reference
@@ -52,9 +53,9 @@ This data source exports the following attributes in addition to the arguments a
 * `iamInstanceProfile` - The IAM Instance Profile to associate with launched instances.
 * `keyName` - Key Name that should be used for the instance.
 * `metadataOptions` - Metadata options for the instance.
-    * `http_endpoint` - State of the metadata service: `enabled`, `disabled`.
-    * `http_tokens` - If session tokens are required: `optional`, `required`.
-    * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
+    * `httpEndpoint` - State of the metadata service: `enabled`, `disabled`.
+    * `httpTokens` - If session tokens are required: `optional`, `required`.
+    * `httpPutResponseHopLimit` - The desired HTTP PUT response hop limit for instance metadata requests.
 * `securityGroups` - List of associated Security Group IDS.
 * `associatePublicIpAddress` - Whether a Public IP address is associated with the instance.
 * `userData` - User Data of the instance.
@@ -92,4 +93,4 @@ This data source exports the following attributes in addition to the arguments a
 * `deviceName` - Name of the device.
 * `virtualName` - Virtual Name of the device.
 
-<!-- cache-key: cdktf-0.19.0 input-e1cd93bfea359bae7e967acc82a26e1a08ef38531f91dbee6e143392ac081f6b -->
+<!-- cache-key: cdktf-0.20.8 input-e77f7ae32f77902c5234633543a1e6eac439822247bcf1e76904c859e6a09199 -->

@@ -7,31 +7,36 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccTransitGatewayConnectDataSource_Filter(t *testing.T) {
+func testAccTransitGatewayConnectDataSource_Filter(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_connect.test"
 	resourceName := "aws_ec2_transit_gateway_connect.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGatewayConnect(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGatewayConnect(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "protocol", resourceName, "protocol"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", resourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrProtocol, resourceName, names.AttrProtocol),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTransitGatewayID, resourceName, names.AttrTransitGatewayID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transport_attachment_id", resourceName, "transport_attachment_id"),
 				),
 			},
@@ -39,25 +44,29 @@ func testAccTransitGatewayConnectDataSource_Filter(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayConnectDataSource_ID(t *testing.T) {
+func testAccTransitGatewayConnectDataSource_ID(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway_connect.test"
 	resourceName := "aws_ec2_transit_gateway_connect.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGatewayConnect(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGatewayConnect(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectDataSourceConfig_id(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "protocol", resourceName, "protocol"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", resourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrProtocol, resourceName, names.AttrProtocol),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTransitGatewayID, resourceName, names.AttrTransitGatewayID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transport_attachment_id", resourceName, "transport_attachment_id"),
 				),
 			},

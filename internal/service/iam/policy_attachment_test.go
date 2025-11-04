@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMPolicyAttachment_basic(t *testing.T) {
@@ -33,7 +33,7 @@ func TestAccIAMPolicyAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -66,7 +66,7 @@ func TestAccIAMPolicyAttachment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,7 +91,7 @@ func TestAccIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,7 +108,7 @@ func TestAccIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 
 func testAccCheckPolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_policy_attachment" {
@@ -139,7 +139,7 @@ func testAccCheckPolicyAttachmentExists(ctx context.Context, n string) resource.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		_, _, _, err := tfiam.FindEntitiesForPolicyByARN(ctx, conn, rs.Primary.Attributes["policy_arn"])
 
@@ -154,7 +154,7 @@ func testAccCheckPolicyAttachmentCounts(ctx context.Context, n string, wantGroup
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		groups, roles, users, err := tfiam.FindEntitiesForPolicyByARN(ctx, conn, rs.Primary.Attributes["policy_arn"])
 

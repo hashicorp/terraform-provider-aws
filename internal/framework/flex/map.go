@@ -14,7 +14,7 @@ import (
 func ExpandFrameworkStringMap(ctx context.Context, v basetypes.MapValuable) map[string]*string {
 	var output map[string]*string
 
-	panicOnError(Expand(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
@@ -22,23 +22,7 @@ func ExpandFrameworkStringMap(ctx context.Context, v basetypes.MapValuable) map[
 func ExpandFrameworkStringValueMap(ctx context.Context, v basetypes.MapValuable) map[string]string {
 	var output map[string]string
 
-	panicOnError(Expand(ctx, v, &output))
-
-	return output
-}
-
-// FlattenFrameworkStringMap converts a map of string pointers to a framework Map value.
-//
-// A nil map is converted to a null Map.
-// An empty map is converted to a null Map.
-func FlattenFrameworkStringMap(ctx context.Context, v map[string]*string) types.Map {
-	if len(v) == 0 {
-		return types.MapNull(types.StringType)
-	}
-
-	var output types.Map
-
-	panicOnError(Flatten(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
@@ -54,7 +38,7 @@ func FlattenFrameworkStringValueMap(ctx context.Context, v map[string]string) ty
 
 	var output types.Map
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }

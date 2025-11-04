@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_networkfirewall_firewall: Add `enabled_analysis_types` argument
+```
+
+```release-note:enhancement
+data-source/aws_networkfirewall_firewall: Add `enabled_analysis_types` attribute
+```

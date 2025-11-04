@@ -53,12 +53,13 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repositoryName` - (Required) The name for the repository. This needs to be less than 100 characters.
 * `trigger` - (Required) The name of the trigger.
     * `name` - (Required) The name of the trigger.
-    * `destination_arn` - (Required) The ARN of the resource that is the target for a trigger. For example, the ARN of a topic in Amazon Simple Notification Service (SNS).
+    * `destinationArn` - (Required) The ARN of the resource that is the target for a trigger. For example, the ARN of a topic in Amazon Simple Notification Service (SNS).
     * `events` - (Required) The repository events that will cause the trigger to run actions in another service, such as sending a notification through Amazon Simple Notification Service (SNS). If no events are specified, the trigger will run for all repository events. Event types include: `all`, `updateReference`, `createReference`, `deleteReference`.
-    * `custom_data` - (Optional) Any custom data associated with the trigger that will be included in the information sent to the target of the trigger.
+    * `customData` - (Optional) Any custom data associated with the trigger that will be included in the information sent to the target of the trigger.
     * `branches` - (Optional) The branches that will be included in the trigger configuration. If no branches   are specified, the trigger will apply to all branches.
 
 ## Attribute Reference
@@ -67,4 +68,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `configurationId` - System-generated unique identifier.
 
-<!-- cache-key: cdktf-0.19.0 input-64d0507dd9a3e74264f53d83bdf059ff3d9ad3e20d558761501e6dbf7e913d3f -->
+<!-- cache-key: cdktf-0.20.8 input-03b73247a90115655a8ba2b39b287bf34f98cf448ed2e8b9dcaf1e57d192cbc6 -->

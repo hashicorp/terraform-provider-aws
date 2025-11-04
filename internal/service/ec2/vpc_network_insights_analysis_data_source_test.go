@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCNetworkInsightsAnalysisDataSource_basic(t *testing.T) {
@@ -21,25 +21,25 @@ func TestAccVPCNetworkInsightsAnalysisDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsAnalysisDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "alternate_path_hints.#", resourceName, "alternate_path_hints.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "explanations.#", resourceName, "explanations.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "filter_in_arns.#", resourceName, "filter_in_arns.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "forward_path_components.#", resourceName, "forward_path_components.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "network_insights_analysis_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "network_insights_analysis_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "network_insights_path_id", resourceName, "network_insights_path_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "path_found", resourceName, "path_found"),
 					resource.TestCheckResourceAttrPair(datasourceName, "return_path_components.#", resourceName, "return_path_components.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "start_date", resourceName, "start_date"),
-					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
-					resource.TestCheckResourceAttrPair(datasourceName, "status_message", resourceName, "status_message"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStatus, resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStatusMessage, resourceName, names.AttrStatusMessage),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "warning_message", resourceName, "warning_message"),
 				),
 			},

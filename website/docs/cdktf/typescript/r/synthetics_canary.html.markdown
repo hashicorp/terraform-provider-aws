@@ -51,24 +51,25 @@ The following arguments are required:
 * `artifactS3Location` - (Required) Location in Amazon S3 where Synthetics stores artifacts from the test runs of this canary.
 * `executionRoleArn` - (Required) ARN of the IAM role to be used to run the canary. see [AWS Docs](https://docs.aws.amazon.com/AmazonSynthetics/latest/APIReference/API_CreateCanary.html#API_CreateCanary_RequestSyntax) for permissions needs for IAM Role.
 * `handler` - (Required) Entry point to use for the source code when running the canary. This value must end with the string `.handler` .
-* `name` - (Required) Name for this canary. Has a maximum length of 21 characters. Valid characters are lowercase alphanumeric, hyphen, or underscore.
+* `name` - (Required) Name for this canary. Has a maximum length of 255 characters. Valid characters are lowercase alphanumeric, hyphen, or underscore.
 * `runtimeVersion` - (Required) Runtime version to use for the canary. Versions change often so consult the [Amazon CloudWatch documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html) for the latest valid versions. Values include `syn-python-selenium-1.0`, `syn-nodejs-puppeteer-3.0`, `syn-nodejs-2.2`, `syn-nodejs-2.1`, `syn-nodejs-2.0`, and `syn-1.0`.
-* `schedule` -  (Required) Configuration block providing how often the canary is to run and when these test runs are to stop. Detailed below.
+* `schedule` -  (Required) Configuration block providing how often the canary is to run and when these test runs are to stop. Detailed [below](#schedule).
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `artifactConfig` - (Optional) configuration for canary artifacts, including the encryption-at-rest settings for artifacts that the canary uploads to Amazon S3. See [Artifact Config](#artifact_config).
 * `deleteLambda` - (Optional)  Specifies whether to also delete the Lambda functions and layers used by this canary. The default is `false`.
-* `vpcConfig` - (Optional) Configuration block. Detailed below.
 * `failureRetentionPeriod` - (Optional) Number of days to retain data about failed runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
-* `runConfig` - (Optional) Configuration block for individual canary runs. Detailed below.
-* `s3Bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. **Conflicts with `zip_file`.**
-* `s3Key` - (Optional) S3 key of your script. **Conflicts with `zip_file`.**
-* `s3Version` - (Optional) S3 version ID of your script. **Conflicts with `zip_file`.**
+* `runConfig` - (Optional) Configuration block for individual canary runs. Detailed [below](#run_config).
+* `s3Bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. **Conflicts with `zipFile`.**
+* `s3Key` - (Optional) S3 key of your script. **Conflicts with `zipFile`.**
+* `s3Version` - (Optional) S3 version ID of your script. **Conflicts with `zipFile`.**
 * `startCanary` - (Optional) Whether to run or stop the canary.
 * `successRetentionPeriod` - (Optional) Number of days to retain data about successful runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `artifactConfig` - (Optional) configuration for canary artifacts, including the encryption-at-rest settings for artifacts that the canary uploads to Amazon S3. See [Artifact Config](#artifact_config).
-* `zipFile` - (Optional) ZIP file that contains the script, if you input your canary script directly into the canary instead of referring to an S3 location. It can be up to 225KB. **Conflicts with `s3_bucket`, `s3_key`, and `s3_version`.**
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpcConfig` - (Optional) Configuration block. Detailed [below](#vpc_config).
+* `zipFile` - (Optional) ZIP file that contains the script, if you input your canary script directly into the canary instead of referring to an S3 location. It can be up to 225KB. **Conflicts with `s3Bucket`, `s3Key`, and `s3Version`.**
 
 ### artifact_config
 
@@ -77,12 +78,17 @@ The following arguments are optional:
 ### s3_encryption
 
 * `encryptionMode` - (Optional) The encryption method to use for artifacts created by this canary. Valid values are: `SSE_S3` and `SSE_KMS`.
-* `kmsKeyArn` - (Optional) The ARN of the customer-managed KMS key to use, if you specify `SSE_KMS` for `encryption_mode`.
+* `kmsKeyArn` - (Optional) The ARN of the customer-managed KMS key to use, if you specify `SSE_KMS` for `encryptionMode`.
 
 ### schedule
 
 * `expression` - (Required) Rate expression or cron expression that defines how often the canary is to run. For rate expression, the syntax is `rate(number unit)`. _unit_ can be `minute`, `minutes`, or `hour`. For cron expression, the syntax is `cron(expression)`. For more information about the syntax for cron expressions, see [Scheduling canary runs using cron](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_cron.html).
 * `durationInSeconds` - (Optional) Duration in seconds, for the canary to continue making regular runs according to the schedule in the Expression value.
+* `retryConfig` - (Optional) Configuration block for canary retries. Detailed [below](#retry_config).
+
+### retry_config
+
+* `maxRetries` - (Required) Maximum number of retries. The value must be less than or equal to `2`. If `maxRetries` is `2`, `run_config.timeout_in_seconds` should be less than 600 seconds. Defaults to `0`.
 
 ### run_config
 
@@ -90,6 +96,7 @@ The following arguments are optional:
 * `memoryInMb` - (Optional) Maximum amount of memory available to the canary while it is running, in MB. The value you specify must be a multiple of 64.
 * `activeTracing` - (Optional) Whether this canary is to use active AWS X-Ray tracing when it runs. You can enable active tracing only for canaries that use version syn-nodejs-2.0 or later for their canary runtime.
 * `environmentVariables` - (Optional) Map of environment variables that are accessible from the canary during execution. Please see [AWS Docs](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-runtime) for variables reserved for Lambda.
+* `ephemeralStorage` - (Optional) Amount of ephemeral storage (in MB) allocated for the canary run during execution. Defaults to 1024.
 
 ### vpc_config
 
@@ -97,6 +104,7 @@ If this canary tests an endpoint in a VPC, this structure contains information a
 
 * `subnetIds` - (Required) IDs of the subnets where this canary is to run.
 * `securityGroupIds` - (Required) IDs of the security groups for this canary.
+* `ipv6AllowedForDualStack` - (Optional)  If `true`, allow outbound IPv6 traffic on VPC canaries that are connected to dual-stack subnets. The default is `false`.
 
 ## Attribute Reference
 
@@ -107,7 +115,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Name for this canary.
 * `sourceLocationArn` - ARN of the Lambda layer where Synthetics stores the canary script code.
 * `status` - Canary status.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `timeline` - Structure that contains information about when the canary was created, modified, and most recently run. see [Timeline](#timeline).
 
 ### vpc_config
@@ -118,8 +126,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `created` - Date and time the canary was created.
 * `lastModified` - Date and time the canary was most recently modified.
-* `lastStarted` - Date and time that the canary's most recent run started.
-* `lastStopped` - Date and time that the canary's most recent run ended.
+* `last_started` - Date and time that the canary's most recent run started.
+* `last_stopped` - Date and time that the canary's most recent run ended.
 
 ## Import
 
@@ -129,9 +137,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { SyntheticsCanary } from "./.gen/providers/aws/synthetics-canary";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    SyntheticsCanary.generateConfigForImport(this, "some", "some-canary");
   }
 }
 
@@ -143,4 +157,4 @@ Using `terraform import`, import Synthetics Canaries using the `name`. For examp
 % terraform import aws_synthetics_canary.some some-canary
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-7a9e3e1413440a0151e0d113031ae787861be1f778da70a162639b9434cfd1fb -->
+<!-- cache-key: cdktf-0.20.8 input-05ba0a7112390909e166b1b357db2e99908a15660f37475ca4ce1115bab5423d -->

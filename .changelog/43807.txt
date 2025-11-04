@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_user_profile: Fix incomplete regex for `user_profile_name`
+```

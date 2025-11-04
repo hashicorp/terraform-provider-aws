@@ -62,13 +62,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `hoursOfOperationId` is required.
+This data source supports the following arguments:
 
-This argument supports the following arguments:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `hoursOfOperationId` - (Optional) Returns information on a specific Hours of Operation by hours of operation id
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Hours of Operation by name
+
+~> **NOTE:** `instanceId` and one of either `name` or `hoursOfOperationId` is required.
 
 ## Attribute Reference
 
@@ -86,8 +87,8 @@ This data source exports the following attributes in addition to the arguments a
 A `config` block supports the following arguments:
 
 * `day` - Day that the hours of operation applies to.
-* `endTime` - End time block specifies the time that your contact center closes. The `end_time` is documented below.
-* `startTime` - Start time block specifies the time that your contact center opens. The `start_time` is documented below.
+* `endTime` - End time block specifies the time that your contact center closes. The `endTime` is documented below.
+* `startTime` - Start time block specifies the time that your contact center opens. The `startTime` is documented below.
 
 A `endTime` block supports the following arguments:
 
@@ -99,4 +100,4 @@ A `startTime` block supports the following arguments:
 * `hours` - Hour of opening.
 * `minutes` - Minute of opening.
 
-<!-- cache-key: cdktf-0.19.0 input-69f2eddaf1ae71ae8b2382f108eed67e1baf19a25a016f4a6cd6db210fa55e83 -->
+<!-- cache-key: cdktf-0.20.8 input-903781c484ef31ae66896d35ef03020a625b6c3ac57d96c246cf8533e9338257 -->

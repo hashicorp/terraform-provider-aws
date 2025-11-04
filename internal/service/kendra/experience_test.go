@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,7 +36,7 @@ func TestAccKendraExperience_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,13 +44,13 @@ func TestAccKendraExperience_basic(t *testing.T) {
 				Config: testAccExperienceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexache.MustCompile(`index/.+/experience/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/experience/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "experience_id"),
 				),
 			},
@@ -77,7 +78,7 @@ func TestAccKendraExperience_disappears(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,7 +109,7 @@ func TestAccKendraExperience_Description(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,7 +117,7 @@ func TestAccKendraExperience_Description(t *testing.T) {
 				Config: testAccExperienceConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 				),
 			},
@@ -129,11 +130,11 @@ func TestAccKendraExperience_Description(t *testing.T) {
 				Config: testAccExperienceConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 					// Update should return a default "configuration" block
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
 				),
 			},
 			{
@@ -142,7 +143,7 @@ func TestAccKendraExperience_Description(t *testing.T) {
 				Config: testAccExperienceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 				),
 			},
@@ -166,7 +167,7 @@ func TestAccKendraExperience_Name(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -174,7 +175,7 @@ func TestAccKendraExperience_Name(t *testing.T) {
 				Config: testAccExperienceConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 				),
 			},
@@ -182,11 +183,11 @@ func TestAccKendraExperience_Name(t *testing.T) {
 				Config: testAccExperienceConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					// Update should return a default "configuration" block
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
 				),
 			},
 			{
@@ -213,7 +214,7 @@ func TestAccKendraExperience_roleARN(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -221,7 +222,7 @@ func TestAccKendraExperience_roleARN(t *testing.T) {
 				Config: testAccExperienceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 				),
 			},
@@ -229,11 +230,11 @@ func TestAccKendraExperience_roleARN(t *testing.T) {
 				Config: testAccExperienceConfig_roleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test2", names.AttrARN),
 					// Update should return a default "configuration" block
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
 				),
 			},
 			{
@@ -260,7 +261,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_DirectPutC
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -270,7 +271,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_DirectPutC
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
 				),
 			},
 			{
@@ -284,7 +285,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_DirectPutC
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtTrue),
 				),
 			},
 			{
@@ -293,7 +294,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_DirectPutC
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
 				),
 			},
 		},
@@ -315,7 +316,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_FaqIDs(t *
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -325,7 +326,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_FaqIDs(t *
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.faq_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "configuration.0.content_source_configuration.0.faq_ids.*", "aws_kendra_faq.test", "faq_id"),
 				),
@@ -354,7 +355,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_updateFaqI
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -364,7 +365,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_updateFaqI
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.faq_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "configuration.0.content_source_configuration.0.faq_ids.*", "aws_kendra_faq.test", "faq_id"),
 				),
@@ -375,7 +376,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_updateFaqI
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.faq_ids.#", "0"),
 				),
 			},
@@ -408,7 +409,7 @@ func TestAccKendraExperience_Configuration_UserIdentityConfiguration(t *testing.
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -450,7 +451,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationAndUserIden
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -460,7 +461,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationAndUserIden
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.0.identity_attribute_name", userId),
 				),
@@ -494,7 +495,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationWithUserIde
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -504,7 +505,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationWithUserIde
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.0.identity_attribute_name", userId),
 				),
@@ -515,7 +516,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationWithUserIde
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.#", "0"),
 				),
 			},
@@ -548,7 +549,7 @@ func TestAccKendraExperience_Configuration_UserIdentityConfigurationWithContentS
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperienceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -558,16 +559,27 @@ func TestAccKendraExperience_Configuration_UserIdentityConfigurationWithContentS
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.0.identity_attribute_name", userId),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				// Since configuration.content_source_configuration is Optional+Computed, removal in the test config should not trigger changes
-				PlanOnly:           true,
-				Config:             testAccExperienceConfig_configuration_userIdentityConfiguration(rName, userId),
-				ExpectNonEmptyPlan: false,
+				Config: testAccExperienceConfig_configuration_userIdentityConfiguration(rName, userId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -680,7 +692,7 @@ data "aws_iam_policy_document" "test" {
       "logs:CreateLogGroup"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
+      "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
     ]
   }
   statement {
@@ -691,7 +703,7 @@ data "aws_iam_policy_document" "test" {
       "logs:PutLogEvents"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
+      "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
     ]
   }
 }
@@ -716,7 +728,7 @@ data "aws_iam_policy_document" "experience" {
       "kendra:DescribeFaq"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:kendra:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:index/${aws_kendra_index.test.id}"
+      "arn:${data.aws_partition.current.partition}:kendra:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:index/${aws_kendra_index.test.id}"
     ]
   }
 }

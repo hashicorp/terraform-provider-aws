@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_efs_file_system: Add `protection` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_efs_file_system: Add `protection` attribute
+```

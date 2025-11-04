@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_sagemaker_domain: Add `default_user_settings.jupyter_lab_app_settings.app_lifecycle_management`, `default_user_settings.jupyter_lab_app_settings.built_in_lifecycle_config_arn`, `default_user_settings.jupyter_lab_app_settings.emr_settings`, `default_space_settings.jupyter_lab_app_settings.app_lifecycle_management`, `default_space_settings.jupyter_lab_app_settings.built_in_lifecycle_config_arn`, `default_space_settings.jupyter_lab_app_settings.emr_settings`, `default_user_settings.auto_mount_home_efs`, `default_user_settings.canvas_app_settings.emr_serverless_settings`, `default_user_settings.studio_web_portal_settings.hidden_instance_types`, `default_user_settings.code_editor_app_settings.app_lifecycle_management`, `default_user_settings.code_editor_app_settings.built_in_lifecycle_config_arn`, and `tag_propagation` arguments
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_domain: Allow `app_network_access_type` and `app_security_group_management` to be updated in-place
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_user_profile: Add `user_settings.auto_mount_home_efs`, `user_settings.canvas_app_settings.emr_serverless_settings`, `user_settings.code_editor_app_settings.app_lifecycle_management`, `user_settings.code_editor_app_settings.built_in_lifecycle_config_arn`, `user_settings.jupyter_lab_app_settings.app_lifecycle_management`, `user_settings.jupyter_lab_app_settings.built_in_lifecycle_config_arn`, `user_settings.jupyter_lab_app_settings.emr_settings` and `user_settings.studio_web_portal_settings.hidden_instance_types` arguments
+```

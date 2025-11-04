@@ -67,6 +67,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the API. Must be less than or equal to 128 characters in length.
 * `protocolType` - (Required) API protocol. Valid values: `HTTP`, `WEBSOCKET`.
 * `apiKeySelectionExpression` - (Optional) An [API key selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions).
@@ -78,10 +79,11 @@ Applicable for WebSocket APIs.
 * `disableExecuteApiEndpoint` - (Optional) Whether clients can invoke the API by using the default `execute-api` endpoint.
 By default, clients can invoke the API with the default `{api_id}.execute-api.{region}.amazonaws.com endpoint`.
 To require that clients use a custom domain name to invoke the API, disable the default endpoint.
+* `ipAddressType` - (Optional) The IP address types that can invoke the API. Valid values: `ipv4`, `dualstack`. Use `ipv4` to allow only IPv4 addresses to invoke your API, or use `dualstack` to allow both IPv4 and IPv6 addresses to invoke your API. Defaults to `ipv4`.
 * `routeKey` - (Optional) Part of _quick create_. Specifies any [route key](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-routes.html). Applicable for HTTP APIs.
 * `routeSelectionExpression` - (Optional) The [route selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-selection-expressions) for the API.
 Defaults to `$request.method $request.path`.
-* `tags` - (Optional) Map of tags to assign to the API. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the API. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Part of _quick create_. Quick create produces an API with an integration, a default catch-all route, and a default stage which is configured to automatically deploy changes.
 For HTTP integrations, specify a fully qualified URL. For Lambda integrations, specify a function ARN.
 The type of the integration will be `HTTP_PROXY` or `AWS_PROXY`, respectively. Applicable for HTTP APIs.
@@ -91,8 +93,8 @@ The type of the integration will be `HTTP_PROXY` or `AWS_PROXY`, respectively. A
 
 __Note__: If the `body` argument is provided, the OpenAPI specification will be used to configure the integrations and route for the HTTP API. If this argument is provided, the following resources should not be managed as separate ones, as updates may cause manual resource updates to be overwritten:
 
-* `awsApigatewayv2Integration`
-* `awsApigatewayv2Route`
+* `aws_apigatewayv2_integration`
+* `aws_apigatewayv2_route`
 
 Further more, the `name`, `description`, `corsConfiguration`, `tags` and `version` fields should be specified in the Terraform configuration and the values will override any values specified in the OpenAPI document.
 
@@ -112,31 +114,37 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - API identifier.
 * `apiEndpoint` - URI of the API, of the form `https://{api-id}.execute-api.{region}.amazonaws.com` for HTTP APIs and `wss://{api-id}.execute-api.{region}.amazonaws.com` for WebSocket APIs.
 * `arn` - ARN of the API.
-* `executionArn` - ARN prefix to be used in an [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn` attribute
+* `executionArn` - ARN prefix to be used in an [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `sourceArn` attribute
 or in an [`aws_iam_policy`](/docs/providers/aws/r/iam_policy.html) to authorize access to the [`@connections` API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html).
 See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-control-access-iam.html) for details.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsApigatewayv2Api` using the API identifier. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_api` using the API identifier. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { Apigatewayv2Api } from "./.gen/providers/aws/apigatewayv2-api";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    Apigatewayv2Api.generateConfigForImport(this, "example", "aabbccddee");
   }
 }
 
 ```
 
-Using `terraform import`, import `awsApigatewayv2Api` using the API identifier. For example:
+Using `terraform import`, import `aws_apigatewayv2_api` using the API identifier. For example:
 
 ```console
 % terraform import aws_apigatewayv2_api.example aabbccddee
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-aa8c33d1b4534c72e0765acdfd063cd72de93dec3553988cad57b268051e01d2 -->
+<!-- cache-key: cdktf-0.20.8 input-98d6e7b7b70154ad6c2106a94f00cf739e406da481a9585c8e450c28f6152114 -->

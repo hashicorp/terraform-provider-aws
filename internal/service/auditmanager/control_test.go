@@ -5,7 +5,6 @@ package auditmanager_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfauditmanager "github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,7 +31,7 @@ func TestAccAuditManagerControl_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,12 +39,12 @@ func TestAccAuditManagerControl_basic(t *testing.T) {
 				Config: testAccControlConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_set_up_option", string(types.SourceSetUpOptionProceduralControlsMapping)),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_type", string(types.SourceTypeManual)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "auditmanager", regexache.MustCompile(`control/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "auditmanager", regexache.MustCompile(`control/.+$`)),
 				),
 			},
 			{
@@ -68,7 +67,7 @@ func TestAccAuditManagerControl_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,17 +94,17 @@ func TestAccAuditManagerControl_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccControlConfig_tags1(rName, "key1", "value1"),
+				Config: testAccControlConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -114,22 +113,22 @@ func TestAccAuditManagerControl_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccControlConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccControlConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccControlConfig_tags1(rName, "key2", "value2"),
+				Config: testAccControlConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -147,7 +146,7 @@ func TestAccAuditManagerControl_optional(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -155,14 +154,14 @@ func TestAccAuditManagerControl_optional(t *testing.T) {
 				Config: testAccControlConfig_optional(rName, "text1", "text1", "text1", "text1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_set_up_option", string(types.SourceSetUpOptionProceduralControlsMapping)),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_type", string(types.SourceTypeManual)),
 					resource.TestCheckResourceAttr(resourceName, "action_plan_instructions", "text1"),
 					resource.TestCheckResourceAttr(resourceName, "action_plan_title", "text1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "text1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text1"),
 					resource.TestCheckResourceAttr(resourceName, "testing_information", "text1"),
 				),
 			},
@@ -175,14 +174,14 @@ func TestAccAuditManagerControl_optional(t *testing.T) {
 				Config: testAccControlConfig_optional(rName, "text2", "text2", "text2", "text2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_set_up_option", string(types.SourceSetUpOptionProceduralControlsMapping)),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_type", string(types.SourceTypeManual)),
 					resource.TestCheckResourceAttr(resourceName, "action_plan_instructions", "text2"),
 					resource.TestCheckResourceAttr(resourceName, "action_plan_title", "text2"),
-					resource.TestCheckResourceAttr(resourceName, "description", "text2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text2"),
 					resource.TestCheckResourceAttr(resourceName, "testing_information", "text2"),
 				),
 			},
@@ -205,7 +204,7 @@ func TestAccAuditManagerControl_optionalSources(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -215,7 +214,7 @@ func TestAccAuditManagerControl_optionalSources(t *testing.T) {
 					string(types.KeywordInputTypeSelectFromList), keywordValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_description", "text1"),
@@ -239,7 +238,7 @@ func TestAccAuditManagerControl_optionalSources(t *testing.T) {
 					string(types.KeywordInputTypeSelectFromList), keywordValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "control_mapping_sources.0.source_description", "text2"),
@@ -266,39 +265,38 @@ func testAccCheckControlDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfauditmanager.FindControlByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.AuditManager, create.ErrActionCheckingDestroyed, tfauditmanager.ResNameControl, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Audit Manager Control %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckControlExists(ctx context.Context, name string, control *types.Control) resource.TestCheckFunc {
+func testAccCheckControlExists(ctx context.Context, n string, v *types.Control) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameControl, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameControl, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
-		resp, err := tfauditmanager.FindControlByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfauditmanager.FindControlByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameControl, rs.Primary.ID, err)
+			return err
 		}
 
-		*control = *resp
+		*v = *output
 
 		return nil
 	}

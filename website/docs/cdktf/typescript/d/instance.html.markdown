@@ -46,24 +46,32 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `instanceId` - (Optional) Specify the exact Instance ID with which to populate the data source.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `instanceId` - (Optional) Specify the exact Instance ID with which to populate the data source.
 * `instanceTags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on the desired Instance.
-
-* `filter` - (Optional) One or more name/value pairs to use as filters. There are
-several valid keys, for a full reference, check out
-[describe-instances in the AWS CLI reference][1].
-
-* `getPasswordData` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
-
-* `getUserData` - (Optional) Retrieve Base64 encoded User Data contents into the `user_data_base64` attribute. A SHA-1 hash of the User Data contents will always be present in the `user_data` attribute. Defaults to `false`.
+* `filter` - (Optional) One or more filters to apply to the search.
+  If multiple `filter` blocks are provided, they all must be true.
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+  See [`filter` Block](#filter-block) below.
+* `getPasswordData` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `passwordData` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
+* `getUserData` - (Optional) Retrieve Base64 encoded User Data contents into the `userDataBase64` attribute. A SHA-1 hash of the User Data contents will always be present in the `userData` attribute. Defaults to `false`.
 
 ~> **NOTE:** At least one of `filter`, `instanceTags`, or `instanceId` must be specified.
 
 ~> **NOTE:** If anything other than a single match is returned by the search,
 Terraform will fail. Ensure that your search is specific enough to return
 a single Instance ID only.
+
+### `filter` Block
+
+The `filter` block supports the following arguments:
+
+* `name` - (Required) Name of the filter.
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+* `values` - (Required) One or more values to match.
 
 ## Attribute Reference
 
@@ -81,22 +89,22 @@ interpolation.
 * `disableApiStop` - Whether or not EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection) is enabled (Boolean).
 * `disableApiTermination` - Whether or not [EC2 Instance Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination) is enabled (Boolean).
 * `ebsBlockDevice` - EBS block device mappings of the Instance.
-    * `delete_on_termination` - If the EBS volume will be deleted on termination.
-    * `device_name` - Physical name of the device.
+    * `deleteOnTermination` - If the EBS volume will be deleted on termination.
+    * `deviceName` - Physical name of the device.
     * `encrypted` - If the EBS volume is encrypted.
     * `iops` - `0` If the EBS volume is not a provisioned IOPS image, otherwise the supported IOPS count.
-    * `kms_key_arn` - ARN of KMS Key, if EBS volume is encrypted.
-    * `snapshot_id` - ID of the snapshot.
+    * `kmsKeyArn` - ARN of KMS Key, if EBS volume is encrypted.
+    * `snapshotId` - ID of the snapshot.
     * `throughput` - Throughput of the volume, in MiB/s.
-    * `volume_size` - Size of the volume, in GiB.
-    * `volume_type` - Volume type.
+    * `volumeSize` - Size of the volume, in GiB.
+    * `volumeType` - Volume type.
 * `ebsOptimized` - Whether the Instance is EBS optimized or not (Boolean).
 * `enclaveOptions` - Enclave options of the instance.
     * `enabled` - Whether Nitro Enclaves are enabled.
 * `ephemeralBlockDevice` - Ephemeral block device mappings of the Instance.
-    * `device_name` - Physical name of the device.
-    * `no_device` - Whether the specified device included in the device mapping was suppressed or not (Boolean).
-    * `virtual_name` - Virtual device name.
+    * `deviceName` - Physical name of the device.
+    * `noDevice` - Whether the specified device included in the device mapping was suppressed or not (Boolean).
+    * `virtualName` - Virtual device name.
 * `hostId` - ID of the dedicated host the instance will be assigned to.
 * `hostResourceGroupArn` - ARN of the host resource group the instance is associated with.
 * `iamInstanceProfile` - Name of the instance profile associated with the Instance.
@@ -104,37 +112,39 @@ interpolation.
 * `instanceType` - Type of the Instance.
 * `ipv6Addresses` - IPv6 addresses associated to the Instance, if applicable. **NOTE**: Unlike the IPv4 address, this doesn't change if you attach an EIP to the instance.
 * `keyName` - Key name of the Instance.
+* `launchTime` - Time the instance was launched.
 * `maintenanceOptions` - Maintenance and recovery options for the instance.
-    * `auto_recovery` - Automatic recovery behavior of the instance.
+    * `autoRecovery` - Automatic recovery behavior of the instance.
 * `metadataOptions` - Metadata options of the Instance.
-    * `http_endpoint` - State of the metadata service: `enabled`, `disabled`.
-    * `http_protocol_ipv6` - Whether the IPv6 endpoint for the instance metadata service is `enabled` or `disabled`
-    * `http_tokens` - If session tokens are required: `optional`, `required`.
-    * `http_put_response_hop_limit` - Desired HTTP PUT response hop limit for instance metadata requests.
-    * `instance_metadata_tags` - If access to instance tags is allowed from the metadata service: `enabled`, `disabled`.
+    * `httpEndpoint` - State of the metadata service: `enabled`, `disabled`.
+    * `httpProtocolIpv6` - Whether the IPv6 endpoint for the instance metadata service is `enabled` or `disabled`
+    * `httpTokens` - If session tokens are required: `optional`, `required`.
+    * `httpPutResponseHopLimit` - Desired HTTP PUT response hop limit for instance metadata requests.
+    * `instanceMetadataTags` - If access to instance tags is allowed from the metadata service: `enabled`, `disabled`.
 * `monitoring` - Whether detailed monitoring is enabled or disabled for the Instance (Boolean).
 * `networkInterfaceId` - ID of the network interface that was created with the Instance.
 * `outpostArn` - ARN of the Outpost.
-* `passwordData` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `get_password_data` is true. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
+* `passwordData` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `getPasswordData` is true. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `placementGroup` - Placement group of the Instance.
+* `placementGroupId` - Placement group ID of the Instance.
 * `placementPartitionNumber` - Number of the partition the instance is in.
 * `privateDns` - Private DNS name assigned to the Instance. Can only be used inside the Amazon EC2, and only available if you've enabled DNS hostnames for your VPC.
 * `privateDnsNameOptions` - Options for the instance hostname.
-    * `enable_resource_name_dns_aaaa_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
-    * `enable_resource_name_dns_a_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
-    * `hostname_type` - Type of hostname for EC2 instances.
+    * `enableResourceNameDnsAaaaRecord` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
+    * `enableResourceNameDnsARecord` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
+    * `hostnameType` - Type of hostname for EC2 instances.
 * `privateIp` - Private IP address assigned to the Instance.
 * `publicDns` - Public DNS name assigned to the Instance. For EC2-VPC, this is only available if you've enabled DNS hostnames for your VPC.
-* `publicIp` - Public IP address assigned to the Instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `public_ip`, as this field will change after the EIP is attached.
+* `publicIp` - Public IP address assigned to the Instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `publicIp`, as this field will change after the EIP is attached.
 * `rootBlockDevice` - Root block device mappings of the Instance
-    * `device_name` - Physical name of the device.
-    * `delete_on_termination` - If the root block device will be deleted on termination.
+    * `deviceName` - Physical name of the device.
+    * `deleteOnTermination` - If the root block device will be deleted on termination.
     * `encrypted` - If the EBS volume is encrypted.
     * `iops` - `0` If the volume is not a provisioned IOPS image, otherwise the supported IOPS count.
-    * `kms_key_arn` - ARN of KMS Key, if EBS volume is encrypted.
+    * `kmsKeyArn` - ARN of KMS Key, if EBS volume is encrypted.
     * `throughput` - Throughput of the volume, in MiB/s.
-    * `volume_size` - Size of the volume, in GiB.
-    * `volume_type` - Type of the volume.
+    * `volumeSize` - Size of the volume, in GiB.
+    * `volumeType` - Type of the volume.
 * `secondaryPrivateIps` - Secondary private IPv4 addresses assigned to the instance's primary network interface (eth0) in a VPC.
 * `securityGroups` - Associated security groups.
 * `sourceDestCheck` - Whether the network interface performs source/destination checking (Boolean).
@@ -142,7 +152,7 @@ interpolation.
 * `tags` - Map of tags assigned to the Instance.
 * `tenancy` - Tenancy of the instance: `dedicated`, `default`, `host`.
 * `userData` - SHA-1 hash of User Data supplied to the Instance.
-* `userDataBase64` - Base64 encoded contents of User Data supplied to the Instance. Valid UTF-8 contents can be decoded with the [`base64decode` function](https://www.terraform.io/docs/configuration/functions/base64decode.html). This attribute is only exported if `get_user_data` is true.
+* `userDataBase64` - Base64 encoded contents of User Data supplied to the Instance. Valid UTF-8 contents can be decoded with the [`base64decode` function](https://www.terraform.io/docs/configuration/functions/base64decode.html). This attribute is only exported if `getUserData` is true.
 * `vpcSecurityGroupIds` - Associated security groups in a non-default VPC.
 
 ## Timeouts
@@ -153,4 +163,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.19.0 input-58a6dcf6b973aceef047b6a5f4da20044aa0391cf4a6935de6e8bdc7dc78ba4c -->
+<!-- cache-key: cdktf-0.20.8 input-ed6e521db41b817385667c08fd033cfa8c8a6d0d71f3b15abc6035031718d8b8 -->

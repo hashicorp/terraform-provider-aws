@@ -33,7 +33,6 @@ func TestTrimLogGroupARNWildcardSuffix(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 

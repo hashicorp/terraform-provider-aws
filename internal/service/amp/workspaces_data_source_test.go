@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAMPWorkspacesDataSource_basic(t *testing.T) { // nosemgrep:ci.caps0-in-func-name
@@ -22,9 +22,9 @@ func TestAccAMPWorkspacesDataSource_basic(t *testing.T) { // nosemgrep:ci.caps0-
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:                acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.AMPServiceID),
 		PreventPostDestroyRefresh: true,
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -52,9 +52,9 @@ func TestAccAMPWorkspacesDataSource_aliasPrefix(t *testing.T) { // nosemgrep:ci.
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:                acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.AMPServiceID),
 		PreventPostDestroyRefresh: true,
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

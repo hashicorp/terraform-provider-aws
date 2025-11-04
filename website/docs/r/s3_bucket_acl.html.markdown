@@ -123,9 +123,10 @@ resource "aws_s3_bucket_acl" "example" {
 
 This resource supports the following arguments:
 
-* `acl` - (Optional, Conflicts with `access_control_policy`) Canned ACL to apply to the bucket.
-* `access_control_policy` - (Optional, Conflicts with `acl`) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
-* `bucket` - (Required, Forces new resource) Name of the bucket.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `acl` - (Optional, either `access_control_policy` or `acl` is required) Specifies the Canned ACL to apply to the bucket. Valid values: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`, `log-delivery-write`. Full details are available on the [AWS documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl).
+* `access_control_policy` - (Optional, either `access_control_policy` or `acl` is required) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
+* `bucket` - (Required, Forces new resource) Bucket to which to apply the ACL.
 * `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 
 ### access_control_policy
@@ -133,14 +134,14 @@ This resource supports the following arguments:
 The `access_control_policy` configuration block supports the following arguments:
 
 * `grant` - (Required) Set of `grant` configuration blocks. [See below](#grant).
-* `owner` - (Required) Configuration block of the bucket owner's display name and ID. [See below](#owner).
+* `owner` - (Required) Configuration block for the bucket owner's display name and ID. [See below](#owner).
 
 ### grant
 
 The `grant` configuration block supports the following arguments:
 
 * `grantee` - (Required) Configuration block for the person being granted permissions. [See below](#grantee).
-* `permission` - (Required) Logging permissions assigned to the grantee for the bucket.
+* `permission` - (Required) Logging permissions assigned to the grantee for the bucket. Valid values: `FULL_CONTROL`, `WRITE`, `WRITE_ACP`, `READ`, `READ_ACP`. See [What permissions can I grant?](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#permissions) for more details about what each permission means in the context of buckets.
 
 ### owner
 
@@ -165,6 +166,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The `bucket`, `expected_bucket_owner` (if configured), and `acl` (if configured) separated by commas (`,`).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_acl.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `acl` (String) Canned ACL to apply to the bucket.
+* `expected_bucket_owner` (String) Account ID of the expected bucket owner.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket ACL using `bucket`, `expected_bucket_owner`, and/or `acl`, depending on your situation. For example:
 

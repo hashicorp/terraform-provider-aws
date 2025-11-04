@@ -6,7 +6,11 @@ rules:
     message: Do not use "AWS" in func name inside AWS Provider
     paths:
       include:
-        - internal
+        - "/internal"
+      exclude:
+        - "/internal/service/securitylake/aws_log_source.go"
+        - "/internal/service/securitylake/aws_log_source_test.go"
+        - "/internal/service/*/service_endpoints_gen_test.go"
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -15,20 +19,23 @@ rules:
             - pattern-regex: "(?i)AWS"
       - focus-metavariable: $NAME
     severity: WARNING
-
   - id: aws-in-const-name
     languages:
       - go
     message: Do not use "AWS" in const name inside AWS Provider
     paths:
       include:
-        - internal
+        - "/internal"
+      exclude:
+        - "/internal/service/securitylake/aws_log_source.go"
+        - "/internal/service/*/service_endpoints_gen_test.go"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AWS"
+            - pattern-not-regex: "[Aa]wsSdkId"
     severity: WARNING
   - id: aws-in-var-name
     languages:
@@ -36,13 +43,18 @@ rules:
     message: Do not use "AWS" in var name inside AWS Provider
     paths:
       include:
-        - internal
+        - "/internal"
+      exclude:
+        - "/internal/service/securitylake/aws_log_source.go"
+        - "/internal/service/securitylake/exports_test.go"
+        - "/internal/service/*/service_endpoints_gen_test.go"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AWS"
+            - pattern-not-regex: "[Aa]wsSdkId"
     severity: WARNING
   - id: caps0-in-func-name
     languages:
@@ -50,13 +62,14 @@ rules:
     message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(Cloudformation|ElasticSearch|Autoscaling|Elasticache|ApiGateway|Cloudfront|Cloudwatch|Workspaces|Appconfig|Guardduty|Sagemaker|DynamoDb|Dynamodb|Gamelift|Opsworks|Precheck|Rabbitmq|Worklink|Appmesh|Appsync|Graphql)"
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: caps0-in-const-name
     languages:
@@ -64,7 +77,7 @@ rules:
     message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -78,7 +91,7 @@ rules:
     message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -92,13 +105,14 @@ rules:
     message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(Haproxy|AcmPca|Acmpca|Dnssec|Byoip|Cname|DocDb|Docdb|Fqdns|Https|Ipset|Iscsi|Mysql|Oauth|Posix|Wafv2|Cidr|Coip|Dhcp|Dkim|Ecmp)"
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: caps1-in-const-name
     languages:
@@ -106,7 +120,7 @@ rules:
     message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -120,7 +134,7 @@ rules:
     message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -134,13 +148,14 @@ rules:
     message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(Fifo|Grpc|Http|Ipam|Jdbc|Json|Mwaa|Oidc|Pitr|Qldb|Sasl|Smtp|Voip|Xray|Yaml|Acl|Acm|Ami|Api|Arn|Asg)"
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: caps2-in-const-name
     languages:
@@ -148,7 +163,7 @@ rules:
     message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -162,7 +177,7 @@ rules:
     message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -176,13 +191,14 @@ rules:
     message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|FSX|Fms)"
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: caps3-in-const-name
     languages:
@@ -190,7 +206,7 @@ rules:
     message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -204,7 +220,7 @@ rules:
     message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -218,13 +234,14 @@ rules:
     message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
+            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sdk|Sfn|Smb|Sms|Sns|Sql)"
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: caps4-in-const-name
     languages:
@@ -232,13 +249,13 @@ rules:
     message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
+            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sdk|Sfn|Smb|Sms|Sns|Sql)"
     severity: WARNING
   - id: caps4-in-var-name
     languages:
@@ -246,13 +263,13 @@ rules:
     message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
+            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sdk|Sfn|Smb|Sms|Sns|Sql)"
     severity: WARNING
   - id: caps5-in-func-name
     languages:
@@ -260,13 +277,14 @@ rules:
     message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: caps5-in-const-name
     languages:
@@ -274,13 +292,13 @@ rules:
     message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
     severity: WARNING
   - id: caps5-in-var-name
     languages:
@@ -288,13 +306,13 @@ rules:
     message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
-        - internal
+        - "/internal"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
     severity: WARNING
   - id: ec2-in-func-name
     languages:
@@ -302,14 +320,15 @@ rules:
     message: Do not use "EC2" in func name inside ec2 package
     paths:
       include:
-        - internal/service/ec2
+        - "/internal/service/ec2"
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)EC2"
-            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: ec2-in-const-name
     languages:
@@ -317,7 +336,7 @@ rules:
     message: Do not use "EC2" in const name inside ec2 package
     paths:
       include:
-        - internal/service/ec2
+        - "/internal/service/ec2"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -331,7 +350,7 @@ rules:
     message: Do not use "EC2" in var name inside ec2 package
     paths:
       include:
-        - internal/service/ec2
+        - "/internal/service/ec2"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:

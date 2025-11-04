@@ -30,6 +30,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auth_type` - (Optional) Type of IAM policy. Either `NONE` or `AWS_IAM`.
 * `certificate_arn` - (Optional) Amazon Resource Name (ARN) of the certificate.
 * `custom_domain_name` - (Optional) Custom domain name of the service.
@@ -39,8 +40,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the service. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `dns_entry` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the service.
+* `dns_entry` - DNS name of the service.
 * `id` - Unique identifier for the service.
 * `status` - Status of the service.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).

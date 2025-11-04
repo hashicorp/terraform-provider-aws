@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_eks_access_entry: Mark `type` and `user_name` as Optional, allowing values to be configured
+```
+
+```release-note:bug
+resource/aws_eks_access_entry: Mark `kubernetes_groups` as Computed
+```

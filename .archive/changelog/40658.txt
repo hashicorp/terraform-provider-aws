@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_lb_listener: Add `mutual_authentication.advertise_trust_store_ca_names` attribute. This fixes a regression introduced in [v5.82.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5820-december-19-2024) causing `setting mutual_authentication: Invalid address to set: []string{"mutual_authentication", "0", "advertise_trust_store_ca_names"}` errors
+```

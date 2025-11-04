@@ -26,7 +26,7 @@ func sweepKxEnvironments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.FinSpaceClient(ctx)
 	input := &finspace.ListKxEnvironmentsInput{}
@@ -48,7 +48,8 @@ func sweepKxEnvironments(region string) error {
 		for _, v := range page.Environments {
 			id := aws.ToString(v.EnvironmentId)
 
-			if status := v.Status; status == types.EnvironmentStatusDeleted || status == types.EnvironmentStatusDeleting || status == types.EnvironmentStatusCreating {
+			switch status := v.Status; status {
+			case types.EnvironmentStatusDeleted, types.EnvironmentStatusDeleting, types.EnvironmentStatusCreating, types.EnvironmentStatusFailedDeletion:
 				log.Printf("[INFO] Skipping FinSpace Kx Environment %s: Status=%s", id, status)
 				continue
 			}

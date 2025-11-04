@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_efs_replication_configuration: Increase Create timeout to 20 minutes
+```
+
+```release-note:enhancement
+resource/aws_efs_replication_configuration: Mark `destination.file_system_id` as Optional, enabling [EFS replication fallback](https://docs.aws.amazon.com/efs/latest/ug/replication-use-cases.html#replicate-existing-destination)
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_eks_access_entry: Always send `kubernetes_groups` and `user_name` values on update when configured
+```

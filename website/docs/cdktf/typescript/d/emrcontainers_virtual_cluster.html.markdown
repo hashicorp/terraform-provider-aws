@@ -42,6 +42,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `virtualClusterId` - (Required) ID of the cluster.
 
 ## Attribute Reference
@@ -54,11 +57,11 @@ This data source exports the following attributes in addition to the arguments a
 * `containerProvider` - Nested attribute containing information about the underlying container provider (EKS cluster) for your EMR Containers cluster.
     * `id` - The name of the container provider that is running your EMR Containers cluster
     * `info` - Nested list containing information about the configuration of the container provider
-        * `eks_info` - Nested list containing EKS-specific information about the cluster where the EMR Containers cluster is running
+        * `eksInfo` - Nested list containing EKS-specific information about the cluster where the EMR Containers cluster is running
             * `namespace` - The namespace where the EMR Containers cluster is running
     * `type` - The type of the container provider
 * `createdAt` - Unix epoch time stamp in seconds for when the cluster was created.
 * `state` - Status of the EKS cluster. One of `RUNNING`, `TERMINATING`, `TERMINATED`, `ARRESTED`.
 * `tags` - Key-value mapping of resource tags.
 
-<!-- cache-key: cdktf-0.19.0 input-b68b876212554fb1c28230029578a838320e08a00b6bc270b81195566fe1902f -->
+<!-- cache-key: cdktf-0.20.8 input-493ee07bc735014de653e26defab56c8d780c161054096685641402620f6eae1 -->

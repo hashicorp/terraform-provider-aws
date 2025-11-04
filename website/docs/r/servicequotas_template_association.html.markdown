@@ -23,6 +23,7 @@ resource "aws_servicequotas_template_association" "example" {}
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skip_destroy` - (Optional) Skip disassociating the quota increase template upon destruction. This will remove the resource from Terraform state, but leave the remote association in place.
 
 ## Attribute Reference
@@ -39,12 +40,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_servicequotas_template_association.example
-  id = "012345678901"
+  id = "123456789012"
 }
 ```
 
 Using `terraform import`, import Service Quotas Template Association using the `id`. For example:
 
 ```console
-% terraform import aws_servicequotas_template_association.example 012345678901 
+% terraform import aws_servicequotas_template_association.example 123456789012 
 ```

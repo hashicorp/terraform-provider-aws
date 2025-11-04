@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPrincipalPortfolioAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,8 +33,8 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 				Config: testAccPrincipalPortfolioAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrincipalPortfolioAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -53,7 +53,7 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_iam_pattern(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPrincipalPortfolioAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -61,7 +61,7 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_iam_pattern(t *testing.T
 				Config: testAccPrincipalPortfolioAssociationConfig_iam_pattern(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrincipalPortfolioAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "IAM_PATTERN"),
 				),
 			},
@@ -80,7 +80,7 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPrincipalPortfolioAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +103,7 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_migrateV0(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPrincipalPortfolioAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_migrateV0(t *testing.T) 
 
 func testAccCheckPrincipalPortfolioAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_principal_portfolio_association" {
@@ -174,7 +174,7 @@ func testAccCheckPrincipalPortfolioAssociationExists(ctx context.Context, n stri
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		_, err = tfservicecatalog.FindPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 

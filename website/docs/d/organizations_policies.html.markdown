@@ -29,7 +29,7 @@ data "aws_organizations_policy" "example" {
 
 The following arguments are required:
 
-* `filter` - (Required) The type of policies to be returned in the response. Valid values are `SERVICE_CONTROL_POLICY | TAG_POLICY | BACKUP_POLICY | AISERVICES_OPT_OUT_POLICY`
+* `filter` - (Required) The type of policies to be returned in the response. Valid values are `AISERVICES_OPT_OUT_POLICY | BACKUP_POLICY | RESOURCE_CONTROL_POLICY | SERVICE_CONTROL_POLICY | TAG_POLICY`
 
 ## Attribute Reference
 

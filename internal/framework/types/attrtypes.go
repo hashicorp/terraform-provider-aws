@@ -9,12 +9,15 @@ import (
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
 // AttributeTypes returns a map of attribute types for the specified type T.
 // T must be a struct and reflection is used to find exported fields of T with the `tfsdk` tag.
-func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, error) {
+func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	var t T
 	val := reflect.ValueOf(t)
 	typ := val.Type()
@@ -25,24 +28,22 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, error) {
 	}
 
 	if typ.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("%T has unsupported type: %s", t, typ)
+		diags.Append(diag.NewErrorDiagnostic("Invalid type", fmt.Sprintf("%T has unsupported type: %s", t, typ)))
+		return nil, diags
 	}
 
 	attributeTypes := make(map[string]attr.Type)
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		if field.PkgPath != "" {
-			continue // Skip unexported fields.
-		}
+	for field := range tfreflect.ExportedStructFields(typ) {
 		tag := field.Tag.Get(`tfsdk`)
 		if tag == "-" {
 			continue // Skip explicitly excluded fields.
 		}
 		if tag == "" {
-			return nil, fmt.Errorf(`%T needs a struct tag for "tfsdk" on %s`, t, field.Name)
+			diags.Append(diag.NewErrorDiagnostic("Invalid type", fmt.Sprintf(`%T needs a struct tag for "tfsdk" on %s`, t, field.Name)))
+			return nil, diags
 		}
 
-		if v, ok := val.Field(i).Interface().(attr.Value); ok {
+		if v, ok := val.FieldByIndex(field.Index).Interface().(attr.Value); ok {
 			attributeTypes[tag] = v.Type(ctx)
 		}
 	}
@@ -51,5 +52,10 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, error) {
 }
 
 func AttributeTypesMust[T any](ctx context.Context) map[string]attr.Type {
-	return errs.Must(AttributeTypes[T](ctx))
+	return fwdiag.Must(AttributeTypes[T](ctx))
+}
+
+func newAttrTypeOf[T attr.Value](ctx context.Context) attr.Type {
+	var zero T
+	return zero.Type(ctx)
 }

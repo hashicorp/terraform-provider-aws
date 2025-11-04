@@ -6,55 +6,24 @@ package flex
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-func ExpandFrameworkStringSet(ctx context.Context, v basetypes.SetValuable) []*string {
-	var output []*string
-
-	panicOnError(Expand(ctx, v, &output))
-
-	return output
+func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) inttypes.Set[string] {
+	return ExpandFrameworkStringyValueSet[string](ctx, v)
 }
 
-func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) Set[string] {
-	var output []string
+func ExpandFrameworkStringyValueSet[E ~string](ctx context.Context, v basetypes.SetValuable) inttypes.Set[E] {
+	var output []E
 
-	panicOnError(Expand(ctx, v, &output))
-
-	return output
-}
-
-// FlattenFrameworkStringSet converts a slice of string pointers to a framework Set value.
-//
-// A nil slice is converted to a null Set.
-// An empty slice is converted to a null Set.
-func FlattenFrameworkStringSet(ctx context.Context, v []*string) types.Set {
-	if len(v) == 0 {
-		return types.SetNull(types.StringType)
-	}
-
-	var output types.Set
-
-	panicOnError(Flatten(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
-}
-
-// FlattenFrameworkStringSetLegacy converts a slice of string pointers to a framework Set value.
-//
-// A nil slice is converted to an empty (non-null) Set.
-func FlattenFrameworkStringSetLegacy(_ context.Context, vs []*string) types.Set {
-	elems := make([]attr.Value, len(vs))
-
-	for i, v := range vs {
-		elems[i] = types.StringValue(aws.ToString(v))
-	}
-
-	return types.SetValueMust(types.StringType, elems)
 }
 
 // FlattenFrameworkStringValueSet converts a slice of string values to a framework Set value.
@@ -68,9 +37,17 @@ func FlattenFrameworkStringValueSet[T ~string](ctx context.Context, v []T) types
 
 	var output types.Set
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
+}
+
+func FlattenFrameworkStringValueSetOfString(ctx context.Context, vs []string) fwtypes.SetOfString {
+	return fwtypes.SetValueOf[basetypes.StringValue]{SetValue: FlattenFrameworkStringValueSet(ctx, vs)}
+}
+
+func FlattenFrameworkStringyValueSetOfStringEnum[T enum.Valueser[T]](ctx context.Context, vs []T) fwtypes.SetOfStringEnum[T] {
+	return fwtypes.SetValueOf[fwtypes.StringEnum[T]]{SetValue: FlattenFrameworkStringValueSet(ctx, vs)}
 }
 
 // FlattenFrameworkStringValueSetLegacy is the Plugin Framework variant of FlattenStringValueSet.
@@ -83,4 +60,8 @@ func FlattenFrameworkStringValueSetLegacy[T ~string](_ context.Context, vs []T) 
 	}
 
 	return types.SetValueMust(types.StringType, elems)
+}
+
+func FlattenFrameworkStringValueSetOfStringLegacy(ctx context.Context, vs []string) fwtypes.SetOfString {
+	return fwtypes.SetValueOf[basetypes.StringValue]{SetValue: FlattenFrameworkStringValueSetLegacy(ctx, vs)}
 }

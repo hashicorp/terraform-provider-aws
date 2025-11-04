@@ -15,6 +15,7 @@ type AIsZero struct {
 func TestIsZero(t *testing.T) {
 	t.Parallel()
 
+	zero := Zero[AIsZero]()
 	testCases := []struct {
 		Name     string
 		Ptr      *AIsZero
@@ -26,7 +27,7 @@ func TestIsZero(t *testing.T) {
 		},
 		{
 			Name:     "pointer to zero value",
-			Ptr:      &AIsZero{},
+			Ptr:      &zero,
 			Expected: true,
 		},
 		{
@@ -40,8 +41,52 @@ func TestIsZero(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
 
+			got := IsZero(testCase.Ptr)
+
+			if got != testCase.Expected {
+				t.Errorf("got %t, expected %t", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestIsZeroPointerToAny(t *testing.T) {
+	t.Parallel()
+
+	var (
+		a, b, c any
+	)
+	b = 0
+	c = 42
+	testCases := []struct {
+		Name     string
+		Ptr      *any
+		Expected bool
+	}{
+		{
+			Name:     "nil pointer",
+			Expected: true,
+		},
+		{
+			Name:     "pointer to nil",
+			Ptr:      &a,
+			Expected: true,
+		},
+		{
+			Name:     "pointer to zero value",
+			Ptr:      &b,
+			Expected: true,
+		},
+		{
+			Name: "pointer to non-zero value",
+			Ptr:  &c,
+		},
+	}
+
+	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 

@@ -38,13 +38,14 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `hierarchyStructure` - Block that defines the hierarchy structure's levels. The `hierarchy_structure` block is documented below.
+* `hierarchyStructure` - Block that defines the hierarchy structure's levels. The `hierarchyStructure` block is documented below.
 
 A `hierarchyStructure` block supports the following attributes:
 
@@ -60,4 +61,4 @@ Each level block supports the following attributes:
 * `id` -  The identifier of the hierarchy level.
 * `name` - Name of the user hierarchy level. Must not be more than 50 characters.
 
-<!-- cache-key: cdktf-0.19.0 input-67c7477b2b97d10d20fdb501a7e53bda8c43d8444a8ca3ea500fed342e44089c -->
+<!-- cache-key: cdktf-0.20.8 input-057a475fcc2c78f12a7e922a64aaa7372a8f47d5749aa3b4763c7f6f108960d2 -->

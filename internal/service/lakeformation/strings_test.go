@@ -6,62 +6,61 @@ package lakeformation_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
 func TestStringSlicesEqualIgnoreOrder(t *testing.T) {
 	t.Parallel()
 
-	equal := []interface{}{
-		[]interface{}{
+	equal := []any{
+		[]any{
 			[]string{"a", "b", "c"},
 			[]string{"a", "b", "c"},
 		},
-		[]interface{}{
+		[]any{
 			[]string{"b", "a", "c"},
 			[]string{"a", "b", "c"},
 		},
-		[]interface{}{
+		[]any{
 			[]string{"apple", "carrot", "tomato"},
 			[]string{"tomato", "apple", "carrot"},
 		},
-		[]interface{}{
+		[]any{
 			[]string{"Application", "Barrier", "Chilly", "Donut"},
 			[]string{"Barrier", "Application", "Donut", "Chilly"},
 		},
 	}
 	for _, v := range equal {
-		if !tflakeformation.StringSlicesEqualIgnoreOrder(aws.StringSlice(v.([]interface{})[0].([]string)), aws.StringSlice(v.([]interface{})[1].([]string))) {
-			t.Fatalf("%v should be equal: %v", v.([]interface{})[0].([]string), v.([]interface{})[1].([]string))
+		if !tflakeformation.StringSlicesEqualIgnoreOrder(v.([]any)[0].([]string), v.([]any)[1].([]string)) {
+			t.Fatalf("%v should be equal: %v", v.([]any)[0].([]string), v.([]any)[1].([]string))
 		}
 	}
 
-	notEqual := []interface{}{
-		[]interface{}{
+	notEqual := []any{
+		[]any{
 			[]string{"c", "b", "c"},
 			[]string{"a", "b", "c"},
 		},
-		[]interface{}{
+		[]any{
 			[]string{"b", "a", "c"},
 			[]string{"a", "bread", "c"},
 		},
-		[]interface{}{
+		[]any{
 			[]string{"apple", "carrot", "tomato"},
 			[]string{"tomato", "apple"},
 		},
-		[]interface{}{
+		[]any{
 			[]string{"Application", "Barrier", "Chilly", "Donut"},
 			[]string{"Barrier", "Applications", "Donut", "Chilly"},
 		},
-		[]interface{}{
+		[]any{
 			[]string{},
 			[]string{"Barrier", "Applications", "Donut", "Chilly"},
 		},
 	}
 	for _, v := range notEqual {
-		if tflakeformation.StringSlicesEqualIgnoreOrder(aws.StringSlice(v.([]interface{})[0].([]string)), aws.StringSlice(v.([]interface{})[1].([]string))) {
-			t.Fatalf("%v should not be equal: %v", v.([]interface{})[0].([]string), v.([]interface{})[1].([]string))
+		if tflakeformation.StringSlicesEqualIgnoreOrder(v.([]any)[0].([]string), v.([]any)[1].([]string)) {
+			t.Fatalf("%v should not be equal: %v", v.([]any)[0].([]string), v.([]any)[1].([]string))
 		}
 	}
 }

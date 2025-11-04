@@ -6,28 +6,36 @@ package ssoadmin
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	retry_sdkv2 "github.com/aws/aws-sdk-go-v2/aws/retry"
-	ssoadmin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssoadmin"
-	ssoadmin_sdkv2_types "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 )
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ssoadmin_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string]any) []func(*ssoadmin.Options) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return ssoadmin_sdkv2.NewFromConfig(cfg, func(o *ssoadmin_sdkv2.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		}
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
-			if errs.IsA[*ssoadmin_sdkv2_types.ConflictException](err) ||
-				errs.IsA[*ssoadmin_sdkv2_types.ThrottlingException](err) {
-				return aws_sdkv2.TrueTernary
+	return []func(*ssoadmin.Options){
+		func(o *ssoadmin.Options) {
+			retryables := []retry.IsErrorRetryable{
+				retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+					if errs.IsA[*types.ConflictException](err) || errs.IsA[*types.ThrottlingException](err) {
+						return aws.TrueTernary
+					}
+					return aws.UnknownTernary // Delegate to configured Retryer.
+				}),
 			}
-			return aws_sdkv2.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+			// Include go-vcr retryable to prevent generated client retryer from being overridden
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				retryables = append(retryables, vcr.InteractionNotFoundRetryableFunc)
+			}
+
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retryables...)
+		},
+	}
 }

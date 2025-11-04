@@ -8,9 +8,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -18,12 +18,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_emr_security_configuration")
-func ResourceSecurityConfiguration() *schema.Resource {
+// @SDKResource("aws_emr_security_configuration", name="Security Configuration")
+func resourceSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityConfigurationCreate,
 		ReadWithoutTimeout:   resourceSecurityConfigurationRead,
@@ -34,66 +36,66 @@ func ResourceSecurityConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsJSON,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringLenBetween(0, 10280),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(0, 10280-id.UniqueIDSuffixLength),
 			},
 		},
 	}
 }
 
-func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	name := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("name").(string)),
-		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-emr-sc-"),
 	).Generate()
 	input := &emr.CreateSecurityConfigurationInput{
 		Name:                  aws.String(name),
-		SecurityConfiguration: aws.String(d.Get("configuration").(string)),
+		SecurityConfiguration: aws.String(d.Get(names.AttrConfiguration).(string)),
 	}
 
-	output, err := conn.CreateSecurityConfigurationWithContext(ctx, input)
+	output, err := conn.CreateSecurityConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EMR Security Configuration (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Name))
+	d.SetId(aws.ToString(output.Name))
 
 	return append(diags, resourceSecurityConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	output, err := FindSecurityConfigurationByName(ctx, conn, d.Id())
+	output, err := findSecurityConfigurationByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Security Configuration (%s) not found, removing from state", d.Id())
@@ -105,24 +107,24 @@ func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading EMR Security Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("configuration", output.SecurityConfiguration)
-	d.Set("creation_date", aws.TimeValue(output.CreationDateTime).Format(time.RFC3339))
-	d.Set("name", output.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
+	d.Set(names.AttrConfiguration, output.SecurityConfiguration)
+	d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDateTime).Format(time.RFC3339))
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
 
 	return diags
 }
 
-func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	log.Printf("[INFO] Deleting EMR Security Configuration: %s", d.Id())
-	_, err := conn.DeleteSecurityConfigurationWithContext(ctx, &emr.DeleteSecurityConfigurationInput{
+	_, err := conn.DeleteSecurityConfiguration(ctx, &emr.DeleteSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "does not exist") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return diags
 	}
 
@@ -133,14 +135,14 @@ func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func FindSecurityConfigurationByName(ctx context.Context, conn *emr.EMR, name string) (*emr.DescribeSecurityConfigurationOutput, error) {
+func findSecurityConfigurationByName(ctx context.Context, conn *emr.Client, name string) (*emr.DescribeSecurityConfigurationOutput, error) {
 	input := &emr.DescribeSecurityConfigurationInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeSecurityConfigurationWithContext(ctx, input)
+	output, err := conn.DescribeSecurityConfiguration(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "does not exist") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKendraExperienceDataSource_basic(t *testing.T) {
@@ -31,7 +31,7 @@ func TestAccKendraExperienceDataSource_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -41,22 +41,22 @@ func TestAccKendraExperienceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccExperienceDataSourceConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "configuration.#", resourceName, "configuration.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "configuration.0.content_source_configuration.#", resourceName, "configuration.0.content_source_configuration.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "configuration.0.content_source_configuration.0.faq_ids.#", resourceName, "configuration.0.content_source_configuration.0.faq_ids.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "configuration.0.content_source_configuration.0.faq_ids.0", resourceName, "configuration.0.content_source_configuration.0.faq_ids.0"),
-					resource.TestCheckResourceAttrSet(datasourceName, "created_at"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoints.#", resourceName, "endpoints.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoints.0.endpoint", resourceName, "endpoints.0.endpoint"),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoints.0.endpoint_type", resourceName, "endpoints.0.endpoint_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "experience_id", resourceName, "experience_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "index_id", resourceName, "index_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "role_arn", resourceName, "role_arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrRoleARN, resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStatus, resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(datasourceName, "updated_at"),
 				)},
 		},

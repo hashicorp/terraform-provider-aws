@@ -4,12 +4,17 @@
 package schema
 
 import (
+	"reflect"
+	"sync"
+
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TemplateDefinitionSchema() *schema.Schema {
@@ -36,7 +41,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							"role":                 stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
+							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
 					},
 				},
@@ -47,11 +52,11 @@ func TemplateDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       stringSchema(true, validation.StringInSlice(quicksight.CrossDatasetTypes_Values(), false)),
+							"cross_dataset":       stringEnumSchema[awstypes.CrossDatasetTypes](attrRequired),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							"status":              stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+							names.AttrStatus:      stringEnumSchema[awstypes.Status](attrOptional),
 						},
 					},
 				},
@@ -76,17 +81,12 @@ func TemplateDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"sheet_id": idSchema(),
-							"content_type": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Computed:     true,
-								ValidateFunc: validation.StringInSlice(quicksight.SheetContentType_Values(), false),
-							},
-							"description":           stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"sheet_id":              idSchema(),
+							names.AttrContentType:   stringEnumSchema[awstypes.SheetContentType](attrOptionalComputed),
+							names.AttrDescription:   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							"name":                  stringSchema(false, validation.StringLenBetween(1, 2048)),
+							names.AttrName:          stringLenBetweenSchema(attrOptional, 1, 2048),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -97,11 +97,11 @@ func TemplateDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										"content":           stringSchema(false, validation.StringLenBetween(1, 150000)),
+										names.AttrContent:   stringLenBetweenSchema(attrOptional, 1, 150000),
 									},
 								},
 							},
-							"title":   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"title":   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -111,60 +111,320 @@ func TemplateDefinitionSchema() *schema.Schema {
 	}
 }
 
-func stringOptionalComputedSchema(validateFunc schema.SchemaValidateFunc) *schema.Schema {
-	return &schema.Schema{
-		Type:         schema.TypeString,
-		Optional:     true,
-		Computed:     true,
-		ValidateFunc: validateFunc,
+type attrHandling int
+
+const (
+	attrElem     attrHandling = 0
+	attrRequired attrHandling = 1 << iota
+	attrOptional
+	attrComputed
+	attrOptionalComputed = attrOptional | attrComputed
+)
+
+func (x attrHandling) isRequired() bool {
+	return x&attrRequired != 0
+}
+
+func (x attrHandling) isOptional() bool {
+	return x&attrOptional != 0
+}
+
+func (x attrHandling) isComputed() bool {
+	return x&attrComputed != 0
+}
+
+var arnStringSchemaCache syncMap[attrHandling, *schema.Schema]
+
+func arnStringSchema(handling attrHandling) *schema.Schema {
+	s, ok := arnStringSchemaCache.Load(handling)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = arnStringSchemaCache.LoadOrStore(
+		handling,
+		&schema.Schema{
+			Type:         schema.TypeString,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
+			ValidateFunc: verify.ValidARN,
+		},
+	)
+	return s
+}
+
+var utcTimestampStringSchemaCache syncMap[attrHandling, *schema.Schema]
+
+func utcTimestampStringSchema(handling attrHandling) *schema.Schema {
+	s, ok := utcTimestampStringSchemaCache.Load(handling)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = utcTimestampStringSchemaCache.LoadOrStore(
+		handling,
+		&schema.Schema{
+			Type:         schema.TypeString,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
+			ValidateFunc: verify.ValidUTCTimestamp,
+		},
+	)
+	return s
+}
+
+type stringLenBetweenIdentity struct {
+	handling attrHandling
+	min, max int
+}
+
+var stringLenBetweenSchemaCache syncMap[stringLenBetweenIdentity, *schema.Schema]
+
+func stringLenBetweenSchema(handling attrHandling, min, max int) *schema.Schema {
+	id := stringLenBetweenIdentity{
+		handling: handling,
+		min:      min,
+		max:      max,
+	}
+
+	s, ok := stringLenBetweenSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = stringLenBetweenSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{
+			Type:         schema.TypeString,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
+			ValidateFunc: validation.StringLenBetween(min, max),
+		},
+	)
+	return s
+}
+
+type stringMatchIdentity struct {
+	handling    attrHandling
+	re, message string
+}
+
+var stringMatchSchemaCache syncMap[stringMatchIdentity, *schema.Schema]
+
+func stringMatchSchema(handling attrHandling, re, message string) *schema.Schema {
+	id := stringMatchIdentity{
+		handling: handling,
+		re:       re,
+		message:  message,
+	}
+
+	s, ok := stringMatchSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = stringMatchSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{
+			Type:         schema.TypeString,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
+			ValidateFunc: validation.StringMatch(regexache.MustCompile(re), message),
+		},
+	)
+	return s
+}
+
+type stringEnumIdentity struct {
+	handling attrHandling
+	typ      reflect.Type
+}
+
+var stringEnumSchemaCache syncMap[stringEnumIdentity, *schema.Schema]
+
+func stringEnumSchema[T enum.Valueser[T]](handling attrHandling) *schema.Schema {
+	id := stringEnumIdentity{
+		handling: handling,
+		typ:      reflect.TypeFor[T](),
+	}
+
+	s, ok := stringEnumSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = stringEnumSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{
+			Type:             schema.TypeString,
+			Required:         handling.isRequired(),
+			Optional:         handling.isOptional(),
+			Computed:         handling.isComputed(),
+			ValidateDiagFunc: enum.Validate[T](),
+		},
+	)
+	return s
+}
+
+// syncMap is a type-safe wrapper around `sync.Map`
+type syncMap[K comparable, V any] struct {
+	m sync.Map
+}
+
+func (m *syncMap[K, V]) Load(k K) (V, bool) {
+	if a, b := m.m.Load(k); b {
+		return a.(V), true
+	} else {
+		var zero V
+		return zero, false
 	}
 }
 
-func stringSchema(required bool, validateFunc schema.SchemaValidateFunc) *schema.Schema {
-	return &schema.Schema{
-		Type:         schema.TypeString,
-		Required:     required,
-		Optional:     !required,
-		ValidateFunc: validateFunc,
-	}
+func (m *syncMap[K, V]) LoadOrStore(k K, v V) (V, bool) {
+	a, b := m.m.LoadOrStore(k, v)
+	return a.(V), b
 }
 
-func intSchema(required bool, validateFunc schema.SchemaValidateFunc) *schema.Schema {
-	return &schema.Schema{
-		Type:         schema.TypeInt,
-		Required:     required,
-		Optional:     !required,
-		ValidateFunc: validateFunc,
-	}
+type intBetweenIdentity struct {
+	handling attrHandling
+	min, max int
 }
 
-func floatSchema(required bool, validateFunc schema.SchemaValidateFunc) *schema.Schema {
-	return &schema.Schema{
-		Type:         schema.TypeFloat,
-		Required:     required,
-		Optional:     !required,
-		ValidateFunc: validateFunc,
+var intBetweenSchemaCache syncMap[intBetweenIdentity, *schema.Schema]
+
+func intBetweenSchema(handling attrHandling, min, max int) *schema.Schema {
+	id := intBetweenIdentity{
+		handling: handling,
+		min:      min,
+		max:      max,
 	}
+
+	s, ok := intBetweenSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = intBetweenSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{
+			Type:         schema.TypeInt,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
+			ValidateFunc: validation.IntBetween(min, max),
+		},
+	)
+	return s
 }
+
+func intAtLeastSchema(handling attrHandling, min int) *schema.Schema {
+	id := intBetweenIdentity{
+		handling: handling,
+		min:      min,
+		max:      -1,
+	}
+
+	s, ok := intBetweenSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = intBetweenSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{
+			Type:         schema.TypeInt,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
+			ValidateFunc: validation.IntAtLeast(min),
+		},
+	)
+	return s
+}
+
+type floatBetweenIdentity struct {
+	handling attrHandling
+	min, max float64
+}
+
+var floatBetweenSchemaCache syncMap[floatBetweenIdentity, *schema.Schema]
+
+func floatBetweenSchema(handling attrHandling, min, max float64) *schema.Schema {
+	id := floatBetweenIdentity{
+		handling: handling,
+		min:      min,
+		max:      max,
+	}
+
+	s, ok := floatBetweenSchemaCache.Load(id)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = floatBetweenSchemaCache.LoadOrStore(
+		id,
+		&schema.Schema{
+			Type:         schema.TypeFloat,
+			Required:     handling.isRequired(),
+			Optional:     handling.isOptional(),
+			Computed:     handling.isComputed(),
+			ValidateFunc: validation.FloatBetween(min, max),
+		},
+	)
+	return s
+}
+
+var aggregationFunctionSchemaCache syncMap[bool, *schema.Schema]
 
 func aggregationFunctionSchema(required bool) *schema.Schema {
-	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
-		Type:     schema.TypeList,
-		Required: required,
-		Optional: !required,
-		MinItems: 1,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"categorical_aggregation_function": stringSchema(false, validation.StringInSlice(quicksight.CategoricalAggregationFunction_Values(), false)),
-				"date_aggregation_function":        stringSchema(false, validation.StringInSlice(quicksight.DateAggregationFunction_Values(), false)),
-				"numerical_aggregation_function":   numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+	s, ok := aggregationFunctionSchemaCache.Load(required)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = aggregationFunctionSchemaCache.LoadOrStore(
+		required,
+		&schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
+			Type:     schema.TypeList,
+			Required: required,
+			Optional: !required,
+			MinItems: 1,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"categorical_aggregation_function": stringEnumSchema[awstypes.CategoricalAggregationFunction](attrOptional),
+					"date_aggregation_function":        stringEnumSchema[awstypes.DateAggregationFunction](attrOptional),
+					"numerical_aggregation_function":   numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+				},
 			},
 		},
-	}
+	)
+	return s
 }
 
-func calculatedFieldsSchema() *schema.Schema {
+var calculatedFieldsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
 		Type:     schema.TypeSet,
 		MinItems: 1,
@@ -172,45 +432,54 @@ func calculatedFieldsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
-				"expression":          stringSchema(true, validation.StringLenBetween(1, 32000)),
-				"name":                stringSchema(true, validation.StringLenBetween(1, 128)),
+				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+				names.AttrExpression:  stringLenBetweenSchema(attrRequired, 1, 32000),
+				names.AttrName:        stringLenBetweenSchema(attrRequired, 1, 128),
 			},
 		},
 	}
-}
+})
+
+var numericalAggregationFunctionSchemaCache syncMap[bool, *schema.Schema]
 
 func numericalAggregationFunctionSchema(required bool) *schema.Schema {
-	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
-		Type:     schema.TypeList,
-		Required: required,
-		Optional: !required,
-		MinItems: 1,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"percentile_aggregation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PercentileAggregation.html
-					Type:     schema.TypeList,
-					Optional: true,
-					MinItems: 1,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"percentile_value": {
-								Type:         schema.TypeFloat,
-								Optional:     true,
-								ValidateFunc: validation.IntBetween(0, 100),
+	s, ok := numericalAggregationFunctionSchemaCache.Load(required)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = numericalAggregationFunctionSchemaCache.LoadOrStore(
+		required,
+		&schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+			Type:     schema.TypeList,
+			Required: required,
+			Optional: !required,
+			MinItems: 1,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"percentile_aggregation": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PercentileAggregation.html
+						Type:     schema.TypeList,
+						Optional: true,
+						MinItems: 1,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"percentile_value": floatBetweenSchema(attrOptional, 0, 100),
 							},
 						},
 					},
+					"simple_numerical_aggregation": stringEnumSchema[awstypes.SimpleNumericalAggregationFunction](attrOptional),
 				},
-				"simple_numerical_aggregation": stringSchema(false, validation.StringInSlice(quicksight.SimpleNumericalAggregationFunction_Values(), false)),
 			},
 		},
-	}
+	)
+	return s
 }
 
-func idSchema() *schema.Schema {
+var idSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
@@ -219,22 +488,35 @@ func idSchema() *schema.Schema {
 			validation.StringMatch(regexache.MustCompile(`[\w\-]+`), "must contain only alphanumeric, hyphen, and underscore characters"),
 		),
 	}
-}
+})
+
+var columnSchemaCache syncMap[bool, *schema.Schema]
 
 func columnSchema(required bool) *schema.Schema {
-	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-		Type:     schema.TypeList,
-		MinItems: 1,
-		MaxItems: 1,
-		Required: required,
-		Optional: !required,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"column_name":         stringSchema(true, validation.StringLenBetween(1, 128)),
-				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+	s, ok := columnSchemaCache.Load(required)
+	if ok {
+		return s
+	}
+
+	// Use a separate `LoadOrStore` to avoid allocation if item is already in the cache
+	// Use `LoadOrStore` instead of `Store` in case there is a race
+	s, _ = columnSchemaCache.LoadOrStore(
+		required,
+		&schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+			Type:     schema.TypeList,
+			MinItems: 1,
+			MaxItems: 1,
+			Required: required,
+			Optional: !required,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
+					"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+				},
 			},
 		},
-	}
+	)
+	return s
 }
 
 func dataSetConfigurationSchema() *schema.Schema {
@@ -258,14 +540,14 @@ func dataSetConfigurationSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"name": {
+										names.AttrName: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
 									},
 								},
 							},
-							"name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
@@ -294,7 +576,7 @@ func dataSetConfigurationSchema() *schema.Schema {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"name": {
+										names.AttrName: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
@@ -313,7 +595,7 @@ func dataSetConfigurationSchema() *schema.Schema {
 	}
 }
 
-func rollingDateConfigurationSchema() *schema.Schema {
+var rollingDateConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RollingDateConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -321,12 +603,12 @@ func rollingDateConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringSchema(false, validation.StringLenBetween(1, 2048)),
-				"expression":          stringSchema(true, validation.StringLenBetween(1, 4096)),
+				"data_set_identifier": stringLenBetweenSchema(attrOptional, 1, 2048),
+				names.AttrExpression:  stringLenBetweenSchema(attrRequired, 1, 4096),
 			},
 		},
 	}
-}
+})
 
 func TemplateSourceEntitySchema() *schema.Schema {
 	return &schema.Schema{
@@ -346,11 +628,7 @@ func TemplateSourceEntitySchema() *schema.Schema {
 					ExactlyOneOf: []string{"source_entity.0.source_analysis", "source_entity.0.source_template"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"arn": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							names.AttrARN:         arnStringSchema(attrRequired),
 							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
 					},
@@ -362,11 +640,7 @@ func TemplateSourceEntitySchema() *schema.Schema {
 					ExactlyOneOf: []string{"source_entity.0.source_analysis", "source_entity.0.source_template"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"arn": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							names.AttrARN: arnStringSchema(attrRequired),
 						},
 					},
 				},
@@ -375,226 +649,232 @@ func TemplateSourceEntitySchema() *schema.Schema {
 	}
 }
 
-func ExpandTemplateSourceEntity(tfList []interface{}) *quicksight.TemplateSourceEntity {
+func ExpandTemplateSourceEntity(tfList []any) *awstypes.TemplateSourceEntity {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	sourceEntity := &quicksight.TemplateSourceEntity{}
+	apiObject := &awstypes.TemplateSourceEntity{}
 
-	if v, ok := tfMap["source_analysis"].([]interface{}); ok && len(v) > 0 {
-		sourceEntity.SourceAnalysis = expandSourceAnalysis(v[0].(map[string]interface{}))
-	} else if v, ok := tfMap["source_template"].([]interface{}); ok && len(v) > 0 {
-		sourceEntity.SourceTemplate = expandTemplateSourceTemplate(v[0].(map[string]interface{}))
+	if v, ok := tfMap["source_analysis"].([]any); ok && len(v) > 0 {
+		apiObject.SourceAnalysis = expandSourceAnalysis(v[0].(map[string]any))
+	} else if v, ok := tfMap["source_template"].([]any); ok && len(v) > 0 {
+		apiObject.SourceTemplate = expandTemplateSourceTemplate(v[0].(map[string]any))
 	}
 
-	return sourceEntity
+	return apiObject
 }
 
-func expandSourceAnalysis(tfMap map[string]interface{}) *quicksight.TemplateSourceAnalysis {
+func expandSourceAnalysis(tfMap map[string]any) *awstypes.TemplateSourceAnalysis {
 	if tfMap == nil {
 		return nil
 	}
 
-	sourceAnalysis := &quicksight.TemplateSourceAnalysis{}
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
-		sourceAnalysis.Arn = aws.String(v)
+	apiObject := &awstypes.TemplateSourceAnalysis{}
+
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
+		apiObject.Arn = aws.String(v)
 	}
-	if v, ok := tfMap["data_set_references"].([]interface{}); ok && len(v) > 0 {
-		sourceAnalysis.DataSetReferences = expandDataSetReferences(v)
+	if v, ok := tfMap["data_set_references"].([]any); ok && len(v) > 0 {
+		apiObject.DataSetReferences = expandDataSetReferences(v)
 	}
 
-	return sourceAnalysis
+	return apiObject
 }
 
-func expandDataSetReferences(tfList []interface{}) []*quicksight.DataSetReference {
+func expandDataSetReferences(tfList []any) []awstypes.DataSetReference {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var dataSetReferences []*quicksight.DataSetReference
+	var apiObjects []awstypes.DataSetReference
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		dataSetReference := expandDataSetReference(tfMap)
-		if dataSetReference == nil {
+		apiObject := expandDataSetReference(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		dataSetReferences = append(dataSetReferences, dataSetReference)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return dataSetReferences
+	return apiObjects
 }
 
-func expandDataSetReference(tfMap map[string]interface{}) *quicksight.DataSetReference {
+func expandDataSetReference(tfMap map[string]any) *awstypes.DataSetReference {
 	if tfMap == nil {
 		return nil
 	}
 
-	dataSetReference := &quicksight.DataSetReference{}
+	apiObject := &awstypes.DataSetReference{}
+
 	if v, ok := tfMap["data_set_arn"].(string); ok {
-		dataSetReference.DataSetArn = aws.String(v)
+		apiObject.DataSetArn = aws.String(v)
 	}
 	if v, ok := tfMap["data_set_placeholder"].(string); ok {
-		dataSetReference.DataSetPlaceholder = aws.String(v)
+		apiObject.DataSetPlaceholder = aws.String(v)
 	}
 
-	return dataSetReference
+	return apiObject
 }
 
-func expandTemplateSourceTemplate(tfMap map[string]interface{}) *quicksight.TemplateSourceTemplate {
+func expandTemplateSourceTemplate(tfMap map[string]any) *awstypes.TemplateSourceTemplate {
 	if tfMap == nil {
 		return nil
 	}
 
-	sourceTemplate := &quicksight.TemplateSourceTemplate{}
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
-		sourceTemplate.Arn = aws.String(v)
+	apiObject := &awstypes.TemplateSourceTemplate{}
+
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
+		apiObject.Arn = aws.String(v)
 	}
 
-	return sourceTemplate
+	return apiObject
 }
 
-func ExpandTemplateDefinition(tfList []interface{}) *quicksight.TemplateVersionDefinition {
+func ExpandTemplateDefinition(tfList []any) *awstypes.TemplateVersionDefinition {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	definition := &quicksight.TemplateVersionDefinition{}
+	apiObject := &awstypes.TemplateVersionDefinition{}
 
-	if v, ok := tfMap["analysis_defaults"].([]interface{}); ok && len(v) > 0 {
-		definition.AnalysisDefaults = expandAnalysisDefaults(v)
+	if v, ok := tfMap["analysis_defaults"].([]any); ok && len(v) > 0 {
+		apiObject.AnalysisDefaults = expandAnalysisDefaults(v)
 	}
 	if v, ok := tfMap["calculated_fields"].(*schema.Set); ok && v.Len() > 0 {
-		definition.CalculatedFields = expandCalculatedFields(v.List())
+		apiObject.CalculatedFields = expandCalculatedFields(v.List())
 	}
-	if v, ok := tfMap["column_configurations"].([]interface{}); ok && len(v) > 0 {
-		definition.ColumnConfigurations = expandColumnConfigurations(v)
+	if v, ok := tfMap["column_configurations"].([]any); ok && len(v) > 0 {
+		apiObject.ColumnConfigurations = expandColumnConfigurations(v)
 	}
-	if v, ok := tfMap["data_set_configuration"].([]interface{}); ok && len(v) > 0 {
-		definition.DataSetConfigurations = expandDataSetConfigurations(v)
+	if v, ok := tfMap["data_set_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.DataSetConfigurations = expandDataSetConfigurations(v)
 	}
-	if v, ok := tfMap["filter_groups"].([]interface{}); ok && len(v) > 0 {
-		definition.FilterGroups = expandFilterGroups(v)
+	if v, ok := tfMap["filter_groups"].([]any); ok && len(v) > 0 {
+		apiObject.FilterGroups = expandFilterGroups(v)
 	}
 	if v, ok := tfMap["parameters_declarations"].(*schema.Set); ok && v.Len() > 0 {
-		definition.ParameterDeclarations = expandParameterDeclarations(v.List())
+		apiObject.ParameterDeclarations = expandParameterDeclarations(v.List())
 	}
-	if v, ok := tfMap["sheets"].([]interface{}); ok && len(v) > 0 {
-		definition.Sheets = expandSheetDefinitions(v)
+	if v, ok := tfMap["sheets"].([]any); ok && len(v) > 0 {
+		apiObject.Sheets = expandSheetDefinitions(v)
 	}
 
-	return definition
+	return apiObject
 }
 
-func expandCalculatedFields(tfList []interface{}) []*quicksight.CalculatedField {
+func expandCalculatedFields(tfList []any) []awstypes.CalculatedField {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var fields []*quicksight.CalculatedField
+	var apiObjects []awstypes.CalculatedField
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		field := expandCalculatedField(tfMap)
-		if field == nil {
+		apiObject := expandCalculatedField(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		fields = append(fields, field)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return fields
+	return apiObjects
 }
 
-func expandCalculatedField(tfMap map[string]interface{}) *quicksight.CalculatedField {
+func expandCalculatedField(tfMap map[string]any) *awstypes.CalculatedField {
 	if tfMap == nil {
 		return nil
 	}
 
-	field := &quicksight.CalculatedField{}
+	apiObject := &awstypes.CalculatedField{}
 
 	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
-		field.DataSetIdentifier = aws.String(v)
+		apiObject.DataSetIdentifier = aws.String(v)
 	}
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
-		field.Expression = aws.String(v)
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
+		apiObject.Expression = aws.String(v)
 	}
-	if v, ok := tfMap["name"].(string); ok && v != "" {
-		field.Name = aws.String(v)
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
 	}
 
-	return field
+	return apiObject
 }
 
-func expandColumnConfigurations(tfList []interface{}) []*quicksight.ColumnConfiguration {
+func expandColumnConfigurations(tfList []any) []awstypes.ColumnConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var configs []*quicksight.ColumnConfiguration
+	var apiObjects []awstypes.ColumnConfiguration
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		column := expandColumnConfiguration(tfMap)
-		if column == nil {
+		apiObject := expandColumnConfiguration(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		configs = append(configs, column)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return configs
+	return apiObjects
 }
 
-func expandColumnConfiguration(tfMap map[string]interface{}) *quicksight.ColumnConfiguration {
+func expandColumnConfiguration(tfMap map[string]any) *awstypes.ColumnConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	column := &quicksight.ColumnConfiguration{}
+	apiObject := &awstypes.ColumnConfiguration{}
 
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
-		column.Column = expandColumnIdentifier(v)
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
+		apiObject.Column = expandColumnIdentifier(v)
 	}
 
-	if v, ok := tfMap["format_configuration"].([]interface{}); ok && len(v) > 0 {
-		column.FormatConfiguration = expandFormatConfiguration(v)
+	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.FormatConfiguration = expandFormatConfiguration(v)
 	}
 
-	if v, ok := tfMap["role"].(string); ok && v != "" {
-		column.Role = aws.String(v)
+	if v, ok := tfMap[names.AttrRole].(string); ok && v != "" {
+		apiObject.Role = awstypes.ColumnRole(v)
 	}
 
-	return column
+	return apiObject
 }
 
-func expandColumnIdentifier(tfList []interface{}) *quicksight.ColumnIdentifier {
+func expandColumnIdentifier(tfList []any) *awstypes.ColumnIdentifier {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -602,435 +882,445 @@ func expandColumnIdentifier(tfList []interface{}) *quicksight.ColumnIdentifier {
 	return expandColumnIdentifierInternal(tfMap)
 }
 
-func expandColumnIdentifierInternal(tfMap map[string]interface{}) *quicksight.ColumnIdentifier {
-	column := &quicksight.ColumnIdentifier{}
+func expandColumnIdentifierInternal(tfMap map[string]any) *awstypes.ColumnIdentifier {
+	apiObject := &awstypes.ColumnIdentifier{}
 
 	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
-		column.DataSetIdentifier = aws.String(v)
+		apiObject.DataSetIdentifier = aws.String(v)
 	}
 	if v, ok := tfMap["column_name"].(string); ok && v != "" {
-		column.ColumnName = aws.String(v)
+		apiObject.ColumnName = aws.String(v)
 	}
 
-	return column
+	return apiObject
 }
 
-func expandColumnIdentifiers(tfList []interface{}) []*quicksight.ColumnIdentifier {
+func expandColumnIdentifiers(tfList []any) []awstypes.ColumnIdentifier {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var columns []*quicksight.ColumnIdentifier
+	var apiObjects []awstypes.ColumnIdentifier
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		col := expandColumnIdentifierInternal(tfMap)
-		if col == nil {
+		apiObject := expandColumnIdentifierInternal(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		columns = append(columns, col)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return columns
+	return apiObjects
 }
 
-func expandDataSetConfigurations(tfList []interface{}) []*quicksight.DataSetConfiguration {
+func expandDataSetConfigurations(tfList []any) []awstypes.DataSetConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var configs []*quicksight.DataSetConfiguration
+	var apiObjects []awstypes.DataSetConfiguration
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		config := expandDataSetConfiguration(tfMap)
-		if config == nil {
+		apiObject := expandDataSetConfiguration(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		configs = append(configs, config)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return configs
+	return apiObjects
 }
 
-func expandDataSetConfiguration(tfMap map[string]interface{}) *quicksight.DataSetConfiguration {
+func expandDataSetConfiguration(tfMap map[string]any) *awstypes.DataSetConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	config := &quicksight.DataSetConfiguration{}
+	apiObject := &awstypes.DataSetConfiguration{}
 
-	if v, ok := tfMap["column_group_schema_list"].([]interface{}); ok && len(v) > 0 {
-		config.ColumnGroupSchemaList = expandColumnGroupSchemas(v)
+	if v, ok := tfMap["column_group_schema_list"].([]any); ok && len(v) > 0 {
+		apiObject.ColumnGroupSchemaList = expandColumnGroupSchemas(v)
 	}
-	if v, ok := tfMap["data_set_schema"].([]interface{}); ok && len(v) > 0 {
-		config.DataSetSchema = expandDataSetSchema(v)
+	if v, ok := tfMap["data_set_schema"].([]any); ok && len(v) > 0 {
+		apiObject.DataSetSchema = expandDataSetSchema(v)
 	}
 	if v, ok := tfMap["placeholder"].(string); ok && v != "" {
-		config.Placeholder = aws.String(v)
+		apiObject.Placeholder = aws.String(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandColumnGroupSchemas(tfList []interface{}) []*quicksight.ColumnGroupSchema {
+func expandColumnGroupSchemas(tfList []any) []awstypes.ColumnGroupSchema {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var groups []*quicksight.ColumnGroupSchema
+	var apiObjects []awstypes.ColumnGroupSchema
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		group := expandColumnGroupSchema(tfMap)
-		if group == nil {
+		apiObject := expandColumnGroupSchema(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		groups = append(groups, group)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return groups
+	return apiObjects
 }
 
-func expandColumnGroupSchema(tfMap map[string]interface{}) *quicksight.ColumnGroupSchema {
+func expandColumnGroupSchema(tfMap map[string]any) *awstypes.ColumnGroupSchema {
 	if tfMap == nil {
 		return nil
 	}
 
-	group := &quicksight.ColumnGroupSchema{}
+	apiObject := &awstypes.ColumnGroupSchema{}
 
-	if v, ok := tfMap["column_group_schema_list"].([]interface{}); ok && len(v) > 0 {
-		group.ColumnGroupColumnSchemaList = expandColumnGroupColumnSchemas(v)
+	if v, ok := tfMap["column_group_schema_list"].([]any); ok && len(v) > 0 {
+		apiObject.ColumnGroupColumnSchemaList = expandColumnGroupColumnSchemas(v)
 	}
-	if v, ok := tfMap["name"].(string); ok && v != "" {
-		group.Name = aws.String(v)
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
 	}
 
-	return group
+	return apiObject
 }
 
-func expandColumnGroupColumnSchemas(tfList []interface{}) []*quicksight.ColumnGroupColumnSchema {
+func expandColumnGroupColumnSchemas(tfList []any) []awstypes.ColumnGroupColumnSchema {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var columns []*quicksight.ColumnGroupColumnSchema
+	var apiObjects []awstypes.ColumnGroupColumnSchema
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		column := expandColumnGroupColumnSchema(tfMap)
-		if column == nil {
+		apiObject := expandColumnGroupColumnSchema(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		columns = append(columns, column)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return columns
+	return apiObjects
 }
 
-func expandColumnGroupColumnSchema(tfMap map[string]interface{}) *quicksight.ColumnGroupColumnSchema {
+func expandColumnGroupColumnSchema(tfMap map[string]any) *awstypes.ColumnGroupColumnSchema {
 	if tfMap == nil {
 		return nil
 	}
 
-	column := &quicksight.ColumnGroupColumnSchema{}
+	apiObject := &awstypes.ColumnGroupColumnSchema{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
-		column.Name = aws.String(v)
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
 	}
 
-	return column
+	return apiObject
 }
 
-func expandDataSetSchema(tfList []interface{}) *quicksight.DataSetSchema {
+func expandDataSetSchema(tfList []any) *awstypes.DataSetSchema {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
-	schema := &quicksight.DataSetSchema{}
 
-	if v, ok := tfMap["column_schema_list"].([]interface{}); ok && len(v) > 0 {
-		schema.ColumnSchemaList = expandColumnSchemas(v)
+	apiObject := &awstypes.DataSetSchema{}
+
+	if v, ok := tfMap["column_schema_list"].([]any); ok && len(v) > 0 {
+		apiObject.ColumnSchemaList = expandColumnSchemas(v)
 	}
 
-	return schema
+	return apiObject
 }
 
-func expandColumnSchemas(tfList []interface{}) []*quicksight.ColumnSchema {
+func expandColumnSchemas(tfList []any) []awstypes.ColumnSchema {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var columns []*quicksight.ColumnSchema
+	var apiObjects []awstypes.ColumnSchema
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		column := expandColumnSchema(tfMap)
-		if column == nil {
+		apiObject := expandColumnSchema(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		columns = append(columns, column)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return columns
+	return apiObjects
 }
 
-func expandColumnSchema(tfMap map[string]interface{}) *quicksight.ColumnSchema {
+func expandColumnSchema(tfMap map[string]any) *awstypes.ColumnSchema {
 	if tfMap == nil {
 		return nil
 	}
 
-	column := &quicksight.ColumnSchema{}
+	apiObject := &awstypes.ColumnSchema{}
 
 	if v, ok := tfMap["data_type"].(string); ok && v != "" {
-		column.DataType = aws.String(v)
+		apiObject.DataType = aws.String(v)
 	}
 	if v, ok := tfMap["geographic_role"].(string); ok && v != "" {
-		column.GeographicRole = aws.String(v)
+		apiObject.GeographicRole = aws.String(v)
 	}
-	if v, ok := tfMap["name"].(string); ok && v != "" {
-		column.Name = aws.String(v)
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
 	}
 
-	return column
+	return apiObject
 }
 
-func expandFilterGroups(tfList []interface{}) []*quicksight.FilterGroup {
+func expandFilterGroups(tfList []any) []awstypes.FilterGroup {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var groups []*quicksight.FilterGroup
+	var apiObjects []awstypes.FilterGroup
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		group := expandFilterGroup(tfMap)
-		if group == nil {
+		apiObject := expandFilterGroup(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		groups = append(groups, group)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return groups
+	return apiObjects
 }
 
-func expandFilterGroup(tfMap map[string]interface{}) *quicksight.FilterGroup {
+func expandFilterGroup(tfMap map[string]any) *awstypes.FilterGroup {
 	if tfMap == nil {
 		return nil
 	}
 
-	group := &quicksight.FilterGroup{}
+	apiObject := &awstypes.FilterGroup{}
 
 	if v, ok := tfMap["cross_dataset"].(string); ok && v != "" {
-		group.CrossDataset = aws.String(v)
+		apiObject.CrossDataset = awstypes.CrossDatasetTypes(v)
 	}
 	if v, ok := tfMap["filter_group_id"].(string); ok && v != "" {
-		group.FilterGroupId = aws.String(v)
+		apiObject.FilterGroupId = aws.String(v)
 	}
-	if v, ok := tfMap["status"].(string); ok && v != "" {
-		group.Status = aws.String(v)
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
+		apiObject.Status = awstypes.WidgetStatus(v)
 	}
-	if v, ok := tfMap["filters"].([]interface{}); ok && len(v) > 0 {
-		group.Filters = expandFilters(v)
+	if v, ok := tfMap["filters"].([]any); ok && len(v) > 0 {
+		apiObject.Filters = expandFilters(v)
 	}
-	if v, ok := tfMap["scope_configuration"].([]interface{}); ok && len(v) > 0 {
-		group.ScopeConfiguration = expandFilterScopeConfiguration(v)
+	if v, ok := tfMap["scope_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.ScopeConfiguration = expandFilterScopeConfiguration(v)
 	}
 
-	return group
+	return apiObject
 }
 
-func expandAggregationFunction(tfList []interface{}) *quicksight.AggregationFunction {
+func expandAggregationFunction(tfList []any) *awstypes.AggregationFunction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	function := &quicksight.AggregationFunction{}
+	apiObject := &awstypes.AggregationFunction{}
 
 	if v, ok := tfMap["categorical_aggregation_function"].(string); ok && v != "" {
-		function.CategoricalAggregationFunction = aws.String(v)
+		apiObject.CategoricalAggregationFunction = awstypes.CategoricalAggregationFunction(v)
 	}
 	if v, ok := tfMap["date_aggregation_function"].(string); ok && v != "" {
-		function.DateAggregationFunction = aws.String(v)
+		apiObject.DateAggregationFunction = awstypes.DateAggregationFunction(v)
 	}
-	if v, ok := tfMap["numerical_aggregation_function"].([]interface{}); ok && len(v) > 0 {
-		function.NumericalAggregationFunction = expandNumericalAggregationFunction(v)
+	if v, ok := tfMap["numerical_aggregation_function"].([]any); ok && len(v) > 0 {
+		apiObject.NumericalAggregationFunction = expandNumericalAggregationFunction(v)
 	}
 
-	return function
+	return apiObject
 }
 
-func expandNumericalAggregationFunction(tfList []interface{}) *quicksight.NumericalAggregationFunction {
+func expandNumericalAggregationFunction(tfList []any) *awstypes.NumericalAggregationFunction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	function := &quicksight.NumericalAggregationFunction{}
+	apiObject := &awstypes.NumericalAggregationFunction{}
 
 	if v, ok := tfMap["simple_numerical_aggregation"].(string); ok && v != "" {
-		function.SimpleNumericalAggregation = aws.String(v)
+		apiObject.SimpleNumericalAggregation = awstypes.SimpleNumericalAggregationFunction(v)
 	}
-	if v, ok := tfMap["percentile_aggregation"].([]interface{}); ok && len(v) > 0 {
-		function.PercentileAggregation = expandPercentileAggregation(v)
+	if v, ok := tfMap["percentile_aggregation"].([]any); ok && len(v) > 0 {
+		apiObject.PercentileAggregation = expandPercentileAggregation(v)
 	}
 
-	return function
+	return apiObject
 }
 
-func expandPercentileAggregation(tfList []interface{}) *quicksight.PercentileAggregation {
+func expandPercentileAggregation(tfList []any) *awstypes.PercentileAggregation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	agg := &quicksight.PercentileAggregation{}
+	apiObject := &awstypes.PercentileAggregation{}
 
 	if v, ok := tfMap["simple_numerical_aggregation"].(float64); ok {
-		agg.PercentileValue = aws.Float64(v)
+		apiObject.PercentileValue = aws.Float64(v)
 	}
 
-	return agg
+	return apiObject
 }
 
-func expandRollingDateConfiguration(tfList []interface{}) *quicksight.RollingDateConfiguration {
+func expandRollingDateConfiguration(tfList []any) *awstypes.RollingDateConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	config := &quicksight.RollingDateConfiguration{}
+	apiObject := &awstypes.RollingDateConfiguration{}
 
 	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
-		config.DataSetIdentifier = aws.String(v)
+		apiObject.DataSetIdentifier = aws.String(v)
 	}
-	if v, ok := tfMap["expression"].(string); ok {
-		config.Expression = aws.String(v)
+	if v, ok := tfMap[names.AttrExpression].(string); ok {
+		apiObject.Expression = aws.String(v)
 	}
 
-	return config
+	return apiObject
 }
 
-func expandParameterDeclarations(tfList []interface{}) []*quicksight.ParameterDeclaration {
+func expandParameterDeclarations(tfList []any) []awstypes.ParameterDeclaration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var params []*quicksight.ParameterDeclaration
+	var apiObjects []awstypes.ParameterDeclaration
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		param := expandParameterDeclaration(tfMap)
-		if param == nil {
+		apiObject := expandParameterDeclaration(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		params = append(params, param)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return params
+	return apiObjects
 }
 
-func expandParameterDeclaration(tfMap map[string]interface{}) *quicksight.ParameterDeclaration {
+func expandParameterDeclaration(tfMap map[string]any) *awstypes.ParameterDeclaration {
 	if tfMap == nil {
 		return nil
 	}
 
-	param := &quicksight.ParameterDeclaration{}
+	apiObject := &awstypes.ParameterDeclaration{}
 
-	if v, ok := tfMap["date_time_parameter_declaration"].([]interface{}); ok && len(v) > 0 {
-		param.DateTimeParameterDeclaration = expandDateTimeParameterDeclaration(v)
+	if v, ok := tfMap["date_time_parameter_declaration"].([]any); ok && len(v) > 0 {
+		apiObject.DateTimeParameterDeclaration = expandDateTimeParameterDeclaration(v)
 	}
-	if v, ok := tfMap["decimal_parameter_declaration"].([]interface{}); ok && len(v) > 0 {
-		param.DecimalParameterDeclaration = expandDecimalParameterDeclaration(v)
+	if v, ok := tfMap["decimal_parameter_declaration"].([]any); ok && len(v) > 0 {
+		apiObject.DecimalParameterDeclaration = expandDecimalParameterDeclaration(v)
 	}
-	if v, ok := tfMap["integer_parameter_declaration"].([]interface{}); ok && len(v) > 0 {
-		param.IntegerParameterDeclaration = expandIntegerParameterDeclaration(v)
+	if v, ok := tfMap["integer_parameter_declaration"].([]any); ok && len(v) > 0 {
+		apiObject.IntegerParameterDeclaration = expandIntegerParameterDeclaration(v)
 	}
-	if v, ok := tfMap["string_parameter_declaration"].([]interface{}); ok && len(v) > 0 {
-		param.StringParameterDeclaration = expandStringParameterDeclaration(v)
+	if v, ok := tfMap["string_parameter_declaration"].([]any); ok && len(v) > 0 {
+		apiObject.StringParameterDeclaration = expandStringParameterDeclaration(v)
 	}
 
-	return param
+	return apiObject
 }
 
-func expandSheetDefinitions(tfList []interface{}) []*quicksight.SheetDefinition {
+func expandSheetDefinitions(tfList []any) []awstypes.SheetDefinition {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var sheets []*quicksight.SheetDefinition
+	var apiObjects []awstypes.SheetDefinition
+
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		sheet := expandSheetDefinition(tfMap)
-		if sheet == nil {
+		apiObject := expandSheetDefinition(tfMap)
+		if apiObject == nil {
 			continue
 		}
 
-		sheets = append(sheets, sheet)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return sheets
+	return apiObjects
 }
 
-func FlattenTemplateDefinition(apiObject *quicksight.TemplateVersionDefinition) []interface{} {
+func FlattenTemplateDefinition(apiObject *awstypes.TemplateVersionDefinition) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.AnalysisDefaults != nil {
 		tfMap["analysis_defaults"] = flattenAnalysisDefaults(apiObject.AnalysisDefaults)
 	}
@@ -1053,311 +1343,295 @@ func FlattenTemplateDefinition(apiObject *quicksight.TemplateVersionDefinition) 
 		tfMap["sheets"] = flattenSheetDefinitions(apiObject.Sheets)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCalculatedFields(apiObject []*quicksight.CalculatedField) []interface{} {
-	if len(apiObject) == 0 {
+func flattenCalculatedFields(apiObjects []awstypes.CalculatedField) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, field := range apiObject {
-		if field == nil {
-			continue
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.DataSetIdentifier != nil {
+			tfMap["data_set_identifier"] = aws.ToString(apiObject.DataSetIdentifier)
+		}
+		if apiObject.Expression != nil {
+			tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
+		}
+		if apiObject.Name != nil {
+			tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 		}
 
-		tfMap := map[string]interface{}{}
-		if field.DataSetIdentifier != nil {
-			tfMap["data_set_identifier"] = aws.StringValue(field.DataSetIdentifier)
-		}
-		if field.Expression != nil {
-			tfMap["expression"] = aws.StringValue(field.Expression)
-		}
-		if field.Name != nil {
-			tfMap["name"] = aws.StringValue(field.Name)
-		}
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenColumnConfigurations(apiObject []*quicksight.ColumnConfiguration) []interface{} {
-	if len(apiObject) == 0 {
+func flattenColumnConfigurations(apiObjects []awstypes.ColumnConfiguration) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, column := range apiObject {
-		if column == nil {
-			continue
-		}
+	var tfList []any
 
-		tfMap := map[string]interface{}{}
-		if column.Column != nil {
-			tfMap["column"] = flattenColumnIdentifier(column.Column)
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.Column != nil {
+			tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 		}
-		if column.FormatConfiguration != nil {
-			tfMap["format_configuration"] = flattenFormatConfiguration(column.FormatConfiguration)
+		if apiObject.FormatConfiguration != nil {
+			tfMap["format_configuration"] = flattenFormatConfiguration(apiObject.FormatConfiguration)
 		}
-		if column.Role != nil {
-			tfMap["role"] = aws.StringValue(column.Role)
-		}
+		tfMap[names.AttrRole] = apiObject.Role
+
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenColumnIdentifier(apiObject *quicksight.ColumnIdentifier) []interface{} {
+func flattenColumnIdentifier(apiObject *awstypes.ColumnIdentifier) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	if apiObject.ColumnName != nil {
-		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
+		tfMap["column_name"] = aws.ToString(apiObject.ColumnName)
 	}
 	if apiObject.DataSetIdentifier != nil {
-		tfMap["data_set_identifier"] = aws.StringValue(apiObject.DataSetIdentifier)
+		tfMap["data_set_identifier"] = aws.ToString(apiObject.DataSetIdentifier)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataSetConfigurations(apiObject []*quicksight.DataSetConfiguration) []interface{} {
-	if len(apiObject) == 0 {
+func flattenDataSetConfigurations(apiObjects []awstypes.DataSetConfiguration) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, config := range apiObject {
-		if config == nil {
-			continue
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.ColumnGroupSchemaList != nil {
+			tfMap["column_group_schema_list"] = flattenColumnGroupSchemas(apiObject.ColumnGroupSchemaList)
+		}
+		if apiObject.DataSetSchema != nil {
+			tfMap["data_set_schema"] = flattenDataSetSchema(apiObject.DataSetSchema)
+		}
+		if apiObject.Placeholder != nil {
+			tfMap["placeholder"] = aws.ToString(apiObject.Placeholder)
 		}
 
-		tfMap := map[string]interface{}{}
-		if config.ColumnGroupSchemaList != nil {
-			tfMap["column_group_schema_list"] = flattenColumnGroupSchemas(config.ColumnGroupSchemaList)
-		}
-		if config.DataSetSchema != nil {
-			tfMap["data_set_schema"] = flattenDataSetSchema(config.DataSetSchema)
-		}
-		if config.Placeholder != nil {
-			tfMap["placeholder"] = aws.StringValue(config.Placeholder)
-		}
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenColumnGroupSchemas(apiObject []*quicksight.ColumnGroupSchema) []interface{} {
-	if len(apiObject) == 0 {
+func flattenColumnGroupSchemas(apiObjects []awstypes.ColumnGroupSchema) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, schema := range apiObject {
-		if schema == nil {
-			continue
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.ColumnGroupColumnSchemaList != nil {
+			tfMap["column_group_column_schema_list"] = flattenColumnGroupColumnSchemas(apiObject.ColumnGroupColumnSchemaList)
+		}
+		if apiObject.Name != nil {
+			tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 		}
 
-		tfMap := map[string]interface{}{}
-		if schema.ColumnGroupColumnSchemaList != nil {
-			tfMap["column_group_column_schema_list"] = flattenColumnGroupColumnSchemas(schema.ColumnGroupColumnSchemaList)
-		}
-		if schema.Name != nil {
-			tfMap["name"] = aws.StringValue(schema.Name)
-		}
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenColumnGroupColumnSchemas(apiObject []*quicksight.ColumnGroupColumnSchema) []interface{} {
-	if len(apiObject) == 0 {
+func flattenColumnGroupColumnSchemas(apiObjects []awstypes.ColumnGroupColumnSchema) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, schema := range apiObject {
-		if schema == nil {
-			continue
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.Name != nil {
+			tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 		}
 
-		tfMap := map[string]interface{}{}
-		if schema.Name != nil {
-			tfMap["name"] = aws.StringValue(schema.Name)
-		}
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenDataSetSchema(apiObject *quicksight.DataSetSchema) []interface{} {
+func flattenDataSetSchema(apiObject *awstypes.DataSetSchema) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.ColumnSchemaList != nil {
 		tfMap["column_schema_list"] = flattenColumnSchemas(apiObject.ColumnSchemaList)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenColumnSchemas(apiObject []*quicksight.ColumnSchema) []interface{} {
-	if len(apiObject) == 0 {
+func flattenColumnSchemas(apiObjects []awstypes.ColumnSchema) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, column := range apiObject {
-		if column == nil {
-			continue
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.DataType != nil {
+			tfMap["data_type"] = aws.ToString(apiObject.DataType)
+		}
+		if apiObject.GeographicRole != nil {
+			tfMap["geographic_role"] = aws.ToString(apiObject.GeographicRole)
+		}
+		if apiObject.Name != nil {
+			tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 		}
 
-		tfMap := map[string]interface{}{}
-		if column.DataType != nil {
-			tfMap["data_type"] = aws.StringValue(column.DataType)
-		}
-		if column.GeographicRole != nil {
-			tfMap["geographic_role"] = aws.StringValue(column.GeographicRole)
-		}
-		if column.Name != nil {
-			tfMap["name"] = aws.StringValue(column.Name)
-		}
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenFilterGroups(apiObject []*quicksight.FilterGroup) []interface{} {
-	if len(apiObject) == 0 {
+func flattenFilterGroups(apiObjects []awstypes.FilterGroup) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, group := range apiObject {
-		if group == nil {
-			continue
-		}
+	var tfList []any
 
-		tfMap := map[string]interface{}{}
-		if group.CrossDataset != nil {
-			tfMap["cross_dataset"] = aws.StringValue(group.CrossDataset)
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		tfMap["cross_dataset"] = apiObject.CrossDataset
+		if apiObject.FilterGroupId != nil {
+			tfMap["filter_group_id"] = aws.ToString(apiObject.FilterGroupId)
 		}
-		if group.FilterGroupId != nil {
-			tfMap["filter_group_id"] = aws.StringValue(group.FilterGroupId)
+		if apiObject.Filters != nil {
+			tfMap["filters"] = flattenFilters(apiObject.Filters)
 		}
-		if group.Filters != nil {
-			tfMap["filters"] = flattenFilters(group.Filters)
+		if apiObject.ScopeConfiguration != nil {
+			tfMap["scope_configuration"] = flattenFilterScopeConfiguration(apiObject.ScopeConfiguration)
 		}
-		if group.ScopeConfiguration != nil {
-			tfMap["scope_configuration"] = flattenFilterScopeConfiguration(group.ScopeConfiguration)
-		}
-		if group.Status != nil {
-			tfMap["status"] = aws.StringValue(group.Status)
-		}
+		tfMap[names.AttrStatus] = apiObject.Status
+
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenAggregationFunction(apiObject *quicksight.AggregationFunction) []interface{} {
+func flattenAggregationFunction(apiObject *awstypes.AggregationFunction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	if apiObject.CategoricalAggregationFunction != nil {
-		tfMap["categorical_aggregation_function"] = aws.StringValue(apiObject.CategoricalAggregationFunction)
-	}
-	if apiObject.DateAggregationFunction != nil {
-		tfMap["date_aggregation_function"] = aws.StringValue(apiObject.DateAggregationFunction)
-	}
+	tfMap := map[string]any{}
+
+	tfMap["categorical_aggregation_function"] = apiObject.CategoricalAggregationFunction
+	tfMap["date_aggregation_function"] = apiObject.DateAggregationFunction
 	if apiObject.NumericalAggregationFunction != nil {
 		tfMap["numerical_aggregation_function"] = flattenNumericalAggregationFunction(apiObject.NumericalAggregationFunction)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNumericalAggregationFunction(apiObject *quicksight.NumericalAggregationFunction) []interface{} {
+func flattenNumericalAggregationFunction(apiObject *awstypes.NumericalAggregationFunction) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.PercentileAggregation != nil {
 		tfMap["percentile_aggregation"] = flattenPercentileAggregation(apiObject.PercentileAggregation)
 	}
-	if apiObject.SimpleNumericalAggregation != nil {
-		tfMap["simple_numerical_aggregation"] = aws.StringValue(apiObject.SimpleNumericalAggregation)
-	}
+	tfMap["simple_numerical_aggregation"] = apiObject.SimpleNumericalAggregation
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPercentileAggregation(apiObject *quicksight.PercentileAggregation) []interface{} {
+func flattenPercentileAggregation(apiObject *awstypes.PercentileAggregation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.PercentileValue != nil {
-		tfMap["percentile_value"] = aws.Float64Value(apiObject.PercentileValue)
+		tfMap["percentile_value"] = aws.ToFloat64(apiObject.PercentileValue)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRollingDateConfiguration(apiObject *quicksight.RollingDateConfiguration) []interface{} {
+func flattenRollingDateConfiguration(apiObject *awstypes.RollingDateConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
 	if apiObject.DataSetIdentifier != nil {
-		tfMap["data_set_identifier"] = aws.StringValue(apiObject.DataSetIdentifier)
+		tfMap["data_set_identifier"] = aws.ToString(apiObject.DataSetIdentifier)
 	}
 	if apiObject.Expression != nil {
-		tfMap["expression"] = aws.StringValue(apiObject.Expression)
+		tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenParameterDeclarations(apiObject []*quicksight.ParameterDeclaration) []interface{} {
-	if len(apiObject) == 0 {
+func flattenParameterDeclarations(apiObjects []awstypes.ParameterDeclaration) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
+	var tfList []any
 
-		tfMap := map[string]interface{}{}
-		if config.DateTimeParameterDeclaration != nil {
-			tfMap["date_time_parameter_declaration"] = flattenDateTimeParameterDeclaration(config.DateTimeParameterDeclaration)
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.DateTimeParameterDeclaration != nil {
+			tfMap["date_time_parameter_declaration"] = flattenDateTimeParameterDeclaration(apiObject.DateTimeParameterDeclaration)
 		}
-		if config.DecimalParameterDeclaration != nil {
-			tfMap["decimal_parameter_declaration"] = flattenDecimalParameterDeclaration(config.DecimalParameterDeclaration)
+		if apiObject.DecimalParameterDeclaration != nil {
+			tfMap["decimal_parameter_declaration"] = flattenDecimalParameterDeclaration(apiObject.DecimalParameterDeclaration)
 		}
-		if config.IntegerParameterDeclaration != nil {
-			tfMap["integer_parameter_declaration"] = flattenIntegerParameterDeclaration(config.IntegerParameterDeclaration)
+		if apiObject.IntegerParameterDeclaration != nil {
+			tfMap["integer_parameter_declaration"] = flattenIntegerParameterDeclaration(apiObject.IntegerParameterDeclaration)
 		}
-		if config.StringParameterDeclaration != nil {
-			tfMap["string_parameter_declaration"] = flattenStringParameterDeclaration(config.StringParameterDeclaration)
+		if apiObject.StringParameterDeclaration != nil {
+			tfMap["string_parameter_declaration"] = flattenStringParameterDeclaration(apiObject.StringParameterDeclaration)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -1365,73 +1639,69 @@ func flattenParameterDeclarations(apiObject []*quicksight.ParameterDeclaration) 
 	return tfList
 }
 
-func flattenSheetDefinitions(apiObject []*quicksight.SheetDefinition) []interface{} {
-	if len(apiObject) == 0 {
+func flattenSheetDefinitions(apiObjects []awstypes.SheetDefinition) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, config := range apiObject {
-		if config == nil {
-			continue
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"sheet_id": aws.ToString(apiObject.SheetId),
 		}
 
-		tfMap := map[string]interface{}{
-			"sheet_id": aws.StringValue(config.SheetId),
+		tfMap[names.AttrContentType] = apiObject.ContentType
+		if apiObject.Description != nil {
+			tfMap[names.AttrDescription] = aws.ToString(apiObject.Description)
 		}
-		if config.ContentType != nil {
-			tfMap["content_type"] = aws.StringValue(config.ContentType)
+		if apiObject.FilterControls != nil {
+			tfMap["filter_controls"] = flattenFilterControls(apiObject.FilterControls)
 		}
-		if config.Description != nil {
-			tfMap["description"] = aws.StringValue(config.Description)
+		if apiObject.Layouts != nil {
+			tfMap["layouts"] = flattenLayouts(apiObject.Layouts)
 		}
-		if config.FilterControls != nil {
-			tfMap["filter_controls"] = flattenFilterControls(config.FilterControls)
+		if apiObject.Name != nil {
+			tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 		}
-		if config.Layouts != nil {
-			tfMap["layouts"] = flattenLayouts(config.Layouts)
+		if apiObject.ParameterControls != nil {
+			tfMap["parameter_controls"] = flattenParameterControls(apiObject.ParameterControls)
 		}
-		if config.Name != nil {
-			tfMap["name"] = aws.StringValue(config.Name)
+		if apiObject.SheetControlLayouts != nil {
+			tfMap["sheet_control_layouts"] = flattenSheetControlLayouts(apiObject.SheetControlLayouts)
 		}
-		if config.ParameterControls != nil {
-			tfMap["parameter_controls"] = flattenParameterControls(config.ParameterControls)
+		if apiObject.TextBoxes != nil {
+			tfMap["text_boxes"] = flattenTextBoxes(apiObject.TextBoxes)
 		}
-		if config.SheetControlLayouts != nil {
-			tfMap["sheet_control_layouts"] = flattenSheetControlLayouts(config.SheetControlLayouts)
+		if apiObject.Title != nil {
+			tfMap["title"] = aws.ToString(apiObject.Title)
 		}
-		if config.TextBoxes != nil {
-			tfMap["text_boxes"] = flattenTextBoxes(config.TextBoxes)
+		if apiObject.Visuals != nil {
+			tfMap["visuals"] = flattenVisuals(apiObject.Visuals)
 		}
-		if config.Title != nil {
-			tfMap["title"] = aws.StringValue(config.Title)
-		}
-		if config.Visuals != nil {
-			tfMap["visuals"] = flattenVisuals(config.Visuals)
-		}
+
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenTextBoxes(apiObject []*quicksight.SheetTextBox) []interface{} {
-	if len(apiObject) == 0 {
+func flattenTextBoxes(apiObjects []awstypes.SheetTextBox) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
-	for _, config := range apiObject {
-		if config == nil {
-			continue
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"sheet_text_box_id": aws.ToString(apiObject.SheetTextBoxId),
 		}
 
-		tfMap := map[string]interface{}{
-			"sheet_text_box_id": aws.StringValue(config.SheetTextBoxId),
+		if apiObject.Content != nil {
+			tfMap[names.AttrContent] = aws.ToString(apiObject.Content)
 		}
-		if config.Content != nil {
-			tfMap["content"] = aws.StringValue(config.Content)
-		}
+
 		tfList = append(tfList, tfMap)
 	}
 

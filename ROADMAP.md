@@ -1,4 +1,4 @@
-# Roadmap:  May 2023 - July 2023
+# Roadmap:  October 2025 - December 2025
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
@@ -8,85 +8,76 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning January to April 2023 the AWS Provider added support for the following (among many others):
+In the period spanning July to September 2025 the AWS Provider added support for the following (among many others):
 
-- AWS VPC Lattice
-- AWS Quicksight
-- AWS Directory Service “Trust”
-- AWS Observability Access Manager
+- Oracle Database on AWS
+- DynamoDB Warm Throughput
+- Amazon Workspaces Web
 
-From May - July 2023, we will be prioritizing the following areas of work:
+From October - December 2025, we will be prioritizing the following areas of work (and more):
 
-## New Services  
+## New Services / Features
 
-### Amazon OpenSearch Serverless
+### Amazon Bedrock AgentCore
 
-Issue: [#28313](https://github.com/hashicorp/terraform-provider-aws/issues/28313)
+Issue: [#43424](https://github.com/hashicorp/terraform-provider-aws/issues/43424)
 
-[Amazon OpenSearch Serverless](https://aws.amazon.com/opensearch-service/features/serverless/) makes it easy for customers to run large-scale search and analytics workloads without managing clusters. It automatically provisions and scales the underlying resources to deliver fast data ingestion and query responses for even the most demanding and unpredictable workloads, eliminating the need to configure and optimize clusters.
+[Amazon Bedrock AgentCore](https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-bedrock-agentcore-available/) Amazon Bedrock AgentCore is an agentic platform to build, deploy and operate highly capable agents securely at scale using any framework, model, or protocol. AgentCore lets you build agents faster, enable agents to take actions across tools and data, run agents securely with low-latency and extended runtimes, and monitor agents in production - all without any infrastructure management.
 
-Support for Amazon OpenSearch Serverless may include:
-
-New Resource(s):
-
-- `aws_opensearchserverless_collection`
-- `aws_opensearchserverless_access_policy`
-- `aws_opensearchserverless_security_config`
-- `aws_opensearchserverless_security_policy`
-- `aws_opensearchserverless_vpc_endpoint`
-
-### AWS Clean Rooms
-
-Issue: [#30024](https://github.com/hashicorp/terraform-provider-aws/issues/30024)
-
-[AWS Clean Rooms](https://aws.amazon.com/clean-rooms/) helps companies and their partners more easily and securely analyze and collaborate on their collective datasets–without sharing or copying one another's underlying data. With AWS Clean Rooms, customers can create a secure data clean room in minutes, and collaborate with any other company on the AWS Cloud to generate unique insights about advertising campaigns, investment decisions, and research and development.
-
-Support for AWS Clean Rooms may include:
+Support for Amazon Bedrock AgentCore includes the following new resources:
 
 New Resource(s):
 
-- `aws_cleanrooms_collaboration`
-- `aws_cleanrooms_configured_table`
-- `aws_cleanrooms_configured_table_analysis_rule`
-- `aws_cleanrooms_configured_table_association`
-- `aws_cleanrooms_membership`
+- `aws_bedrockagentcore_agent_runtime`
+- `aws_bedrockagentcore_runtime_endpoint`
+- `aws_bedrockagentcore_gateway`
+- `aws_bedrockagentcore_browser`
+- `aws_bedrockagentcore_code_interpreter`
+- `aws_bedrockagentcore_gateway_target`
+- `aws_bedrockagentcore_memory`
+- `aws_bedrockagentcore_oauth2_credential_provider`
+- `aws_bedrockagentcore_workload_provider`
+- `aws_bedrockagentcore_apikey_credential_provider`
+
+### AWS Transfer Family Web Apps
+
+Issue: [#40996](https://github.com/hashicorp/terraform-provider-aws/issues/40996)
+
+[AWS Transfer Family Web Apps](https://aws.amazon.com/aws-transfer-family/web-apps/) Transfer Family web apps offer a no-code, fully managed browser-based experience that enables secure file transfers to and from Amazon S3. Transfer Family web apps enable your authenticated users to perform essential file operations—including listing, uploading, downloading, and deleting—while maintaining security, reliability, and compliance.
+
+Support for AWS Transfer Family Web Apps includes:
+
+New Resource(s):
+
+- `aws_transfer_web_app`
+- `aws_transfer_web_app_customization`
+
+### Amazon SaaS Manager for Amazon CloudFront
+
+Issue: [#42409](https://github.com/hashicorp/terraform-provider-aws/issues/42409)
+
+[Amazon SaaS Manager for Amazon CloudFront](https://aws.amazon.com/about-aws/whats-new/2025/04/saas-manager-amazon-cloudfront/) Amazon SaaS Manager for Amazon CloudFront is a new Amazon CloudFront feature designed to efficiently manage content delivery across multiple websites for Software-as-a-Service (SaaS) providers, web development platforms, and companies with multiple brands/websites. CloudFront SaaS Manager provides a unified experience, alleviating the operational burden of managing multiple websites at scale, including TLS certificate management, DDoS protection, and observability.
+
+New Resource(s):
+
+- `aws_cloudfront_distribution_tenant`
+- `aws_cloudfront_connection_group`
+
+Affected Resource:
+
+- `aws_cloudfront_distribution`
 
 ## Enhancements to Existing Services
 
 This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-- [Lack of support for sso-session in .aws/config](https://github.com/hashicorp/terraform-provider-aws/issues/28263)
-- [Cognito User Pool: cannot modify or remove schema items](https://github.com/hashicorp/terraform-provider-aws/issues/21654)
-- [aws_wafv2_web_acl - Error: Provider produced inconsistent final plan](https://github.com/hashicorp/terraform-provider-aws/issues/23992)
-- [aws_lb_target_group_attachment: target_id should be a list](https://github.com/hashicorp/terraform-provider-aws/issues/9901)
-- [Extend Secrets Manager Rotation Configuration](https://github.com/hashicorp/terraform-provider-aws/issues/22969)
-
-## Major Release v5
-
-The release of version 5.0 of the Terraform AWS provider will bring highly anticipated updates to default tags, and make changes and deprecations.
-
-### Default Tags
-
-Default tags in the Terraform AWS provider allow practitioners to define common metadata tags at the provider level. These tags are then applied to all supported resources in the Terraform configuration. Previously, assumptions and restrictions were made to allow this feature to function across as many resources as possible. However, it could be difficult to retrofit existing code, causing frustrating manual intervention.
-Thanks to new features available in the [Terraform plugin SDK](https://developer.hashicorp.com/terraform/plugin/sdkv2) and the [Terraform plugin framework](https://developer.hashicorp.com/terraform/plugin/framework), we have removed several limitations which made default tags difficult to integrate with existing resources and modules.
-
-The updates in version 5.0 solve for:
-
-- Inconsistent final plans that cause failures when tags are computed.
-- Identical tags in both default tags and resource tags.
-- Perpetual diffs within tag configurations.
-
-### Remove EC2 Classic Functionality
-
-In 2021 AWS [announced](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) the retirement of EC2 Classic Networking functionality. This was scheduled to occur on August 15th, 2022. Support for the functionality was extended until late September when any AWS customers who had qualified for extension finished their migration. At that time those features were marked as deprecated and it is now time to remove them as the functionality is no longer available through AWS. While this is a standard deprecation, this is a major feature removal.
-
-### Updating RDS Identifiers In–Place
-
-Allow DB names to be updated in place. This is now supported by AWS, so we should allow its use. Practitioners will now be able to change names without a recreation. Details for this issue can be tracked in issue [#507](https://github.com/hashicorp/terraform-provider-aws/issues/507).
-
-### Remove Default Value from Engine Parameters
-
-Removes a default value that does not have a parallel with AWS and causes unexpected behavior for end users. Practitioners will now have to specify a value. Details for this issue can be tracked in issue [#27960](https://github.com/hashicorp/terraform-provider-aws/issues/27960).
+- [Allow to set preferred_cache_cluster_azs for ElastiCache Redis Сluster](https://github.com/hashicorp/terraform-provider-aws/issues/37497)
+- [AWS_Route53_zone: support attribute-only search](https://github.com/hashicorp/terraform-provider-aws/pull/39671)
+- [Add support for concurrency cross channel behaviour to aws_connect_routing_profile](https://github.com/hashicorp/terraform-provider-aws/issues/35018)
+- [Parameter to enable Certificate-based-authentication in the directory configuration of Appstream](https://github.com/hashicorp/terraform-provider-aws/issues/31766)
+- [Resources for Custom Billing View](https://github.com/hashicorp/terraform-provider-aws/issues/40677)
+- [Support CHALLENGE WAF actions and overrides on individual WAF Rule Group Rules](https://github.com/hashicorp/terraform-provider-aws/issues/27862)
+- [Add required suffix when specifying log group ARN](https://github.com/hashicorp/terraform-provider-aws/pull/35941)
 
 ## Disclosures
 

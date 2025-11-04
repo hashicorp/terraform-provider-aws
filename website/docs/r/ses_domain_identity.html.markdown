@@ -40,6 +40,7 @@ resource "aws_route53_record" "example_amazonses_verification_record" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) The domain name to assign to SES
 
 ## Attribute Reference
@@ -47,14 +48,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the domain identity.
-* `verification_token` - A code which when added to the domain as a TXT record
-  will signal to SES that the owner of the domain has authorised SES to act on
-  their behalf. The domain identity will be in state "verification pending"
-  until this is done. See the [With Route53 Record](#with-route53-record) example
-  for how this might be achieved when the domain is hosted in Route 53 and
-  managed by Terraform.  Find out more about verifying domains in Amazon
-  SES in the [AWS SES
-  docs](http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-domains.html).
+* `verification_token` - A code which when added to the domain as a TXT record will signal to SES that the owner of the domain has authorized SES to act on their behalf. The domain identity will be in state "verification pending" until this is done. See the [With Route53 Record](#with-route53-record) example for how this might be achieved when the domain is hosted in Route 53 and managed by Terraform.  Find out more about verifying domains in Amazon SES in the [AWS SES docs](http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-domains.html).
 
 ## Import
 

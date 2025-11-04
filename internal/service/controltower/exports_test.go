@@ -5,7 +5,11 @@ package controltower
 
 // Exports for use in tests only.
 var (
-	ResourceControl = resourceControl
+	ResourceControl     = resourceControl
+	ResourceLandingZone = resourceLandingZone
+	ResourceBaseline    = newResourceBaseline
 
+	FindBaselineByID               = findBaselineByID
 	FindEnabledControlByTwoPartKey = findEnabledControlByTwoPartKey
+	FindLandingZoneByID            = findLandingZoneByID
 )

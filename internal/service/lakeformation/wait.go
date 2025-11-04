@@ -7,7 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/lakeformation"
+	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
@@ -21,17 +22,17 @@ const (
 	statusIAMDelay  = "IAM DELAY"
 )
 
-func waitPermissionsReady(ctx context.Context, conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) ([]*lakeformation.PrincipalResourcePermissions, error) {
+func waitPermissionsReady(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, principalIdentifier string, tableType TableType, columnNames []string, excludedColumnNames []string, columnWildcard bool) ([]awstypes.PrincipalResourcePermissions, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNotFound, statusIAMDelay},
 		Target:  []string{statusAvailable},
-		Refresh: statusPermissions(ctx, conn, input, tableType, columnNames, excludedColumnNames, columnWildcard),
+		Refresh: statusPermissions(ctx, conn, input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard),
 		Timeout: permissionsReadyTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.([]*lakeformation.PrincipalResourcePermissions); ok {
+	if output, ok := outputRaw.([]awstypes.PrincipalResourcePermissions); ok {
 		return output, err
 	}
 

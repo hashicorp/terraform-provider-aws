@@ -174,6 +174,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the flow.
 * `destinationFlowConfig` - (Required) A [Destination Flow Config](#destination-flow-config) that controls how Amazon AppFlow places data in the destination connector.
 * `sourceFlowConfig` - (Required) The [Source Flow Config](#source-flow-config) that controls how Amazon AppFlow retrieves data from the source connector.
@@ -181,8 +182,8 @@ This resource supports the following arguments:
 * `triggerConfig` - (Required) A [Trigger](#trigger-config) that determine how and when the flow runs.
 * `description` - (Optional) Description of the flow you want to create.
 * `kmsArn` - (Optional) ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `metadataCatalogConfig` - (Optional) A [Catalog](#metadata-catalog-config) that determines the configuration that Amazon AppFlow uses when it catalogs the data that’s transferred by the associated flow. When Amazon AppFlow catalogs the data from a flow, it stores metadata in a data catalog.
 
 ### Destination Flow Config
 
@@ -251,7 +252,8 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `object` - (Required) Object specified in the flow destination.
 * `errorHandlingConfig` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `idFieldNames` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
-* `writeOperationType` - (Optional) This specifies the type of write operation to be performed in Salesforce. When the value is `UPSERT`, then `id_field_names` is required. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
+* `writeOperationType` - (Optional) This specifies the type of write operation to be performed in Salesforce. When the value is `UPSERT`, then `idFieldNames` is required. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
+* `dataTransferApi` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
 
 ##### SAPOData Destination Properties
 
@@ -259,7 +261,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `errorHandlingConfig` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `idFieldNames` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
 * `successResponseHandlingConfig` - (Optional) Determines how Amazon AppFlow handles the success response that it gets from the connector after placing data. See [Success Response Handling Config](#success-response-handling-config) for more details.
-* `writeOperation` - (Optional) Possible write operations in the destination connector. When this value is not provided, this defaults to the `INSERT` operation. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
+* `write_operation` - (Optional) Possible write operations in the destination connector. When this value is not provided, this defaults to the `INSERT` operation. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
 
 ###### Success Response Handling Config
 
@@ -288,18 +290,20 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 ###### Aggregation Config
 
 * `aggregationType` - (Optional) Whether Amazon AppFlow aggregates the flow records into a single file, or leave them unaggregated. Valid values are `None` and `SingleFile`.
+* `targetFileSize` - (Optional) The desired file size, in MB, for each output file that Amazon AppFlow writes to the flow destination. Integer value.
 
 ###### Prefix Config
 
 * `prefixFormat` - (Optional) Determines the level of granularity that's included in the prefix. Valid values are `YEAR`, `MONTH`, `DAY`, `HOUR`, and `MINUTE`.
 * `prefixType` - (Optional) Determines the format of the prefix, and whether it applies to the file name, file path, or both. Valid values are `FILENAME`, `PATH`, and `PATH_AND_FILENAME`.
+* `prefixHierarchy` - (Optional) Determines whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`
 
 ##### Zendesk Destination Properties
 
 * `object` - (Required) Object specified in the flow destination.
 * `errorHandlingConfig` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `idFieldNames` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
-* `writeOperationType` - (Optional) This specifies the type of write operation to be performed in Zendesk. When the value is `UPSERT`, then `id_field_names` is required. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
+* `writeOperationType` - (Optional) This specifies the type of write operation to be performed in Zendesk. When the value is `UPSERT`, then `idFieldNames` is required. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
 
 ###### Error Handling Config
 
@@ -329,7 +333,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `serviceNow` - (Optional) Information that is required for querying ServiceNow. See [Generic Source Properties](#generic-source-properties) for more details.
 * `singular` - (Optional) Information that is required for querying Singular. See [Generic Source Properties](#generic-source-properties) for more details.
 * `slack` - (Optional) Information that is required for querying Slack. See [Generic Source Properties](#generic-source-properties) for more details.
-* `trendMicro` - (Optional) Information that is required for querying Trend Micro. See [Generic Source Properties](#generic-source-properties) for more details.
+* `trend_micro` - (Optional) Information that is required for querying Trend Micro. See [Generic Source Properties](#generic-source-properties) for more details.
 * `veeva` - (Optional) Information that is required for querying Veeva. See [Veeva Source Properties](#veeva-source-properties) for more details.
 * `zendesk` - (Optional) Information that is required for querying Zendesk. See [Generic Source Properties](#generic-source-properties) for more details.
 
@@ -359,10 +363,15 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 * `object` - (Required) Object specified in the Salesforce flow source.
 * `enableDynamicFieldUpdate` - (Optional, boolean) Flag that enables dynamic fetching of new (recently added) fields in the Salesforce objects while running a flow.
 * `includeDeletedRecords` - (Optional, boolean) Whether Amazon AppFlow includes deleted files in the flow run.
+* `dataTransferApi` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
 
 ##### SAPOData Source Properties
 
 * `objectPath` - (Required) Object path specified in the SAPOData flow source.
+* `paginationConfig` - (Optional) Sets the page size for each concurrent process that transfers OData records from your SAP instance.
+    * `maxPageSize` - (Optional) he maximum number of records that Amazon AppFlow receives in each page of the response from your SAP application.
+* `parallelismConfig` - (Optional) Sets the number of concurrent processes that transfers OData records from your SAP instance.
+    * `max_parallelism` - (Optional) The maximum number of processes that Amazon AppFlow runs at the same time when it retrieves your data from your SAP application.
 
 ##### Veeva Source Properties
 
@@ -458,32 +467,74 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+### Metadata Catalog Config
+
+The `metadataCatalogConfig` block only supports one attribute: `glueDataCatalog`, a block which in turn supports the following:
+
+* `databaseName` - (Required) The name of an existing Glue database to store the metadata tables that Amazon AppFlow creates.
+* `roleArn` - (Required) The ARN of an IAM role that grants AppFlow the permissions it needs to create Data Catalog tables, databases, and partitions.
+* `tablePrefix` - (Required) A naming prefix for each Data Catalog table that Amazon AppFlow creates
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Flow's ARN.
+* `flowStatus` - The current status of the flow.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow flows using the `arn`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_appflow_flow.example
+  identity = {
+    name = "example-flow"
+  }
+}
+
+resource "aws_appflow_flow" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the AppFlow flow.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow flows using the `name`. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { AppflowFlow } from "./.gen/providers/aws/appflow-flow";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    AppflowFlow.generateConfigForImport(this, "example", "example-flow");
   }
 }
 
 ```
 
-Using `terraform import`, import AppFlow flows using the `arn`. For example:
+Using `terraform import`, import AppFlow flows using the `name`. For example:
 
 ```console
-% terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
+% terraform import aws_appflow_flow.example example-flow
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-52dd4f526d94aeed3592adc8cf2c2d9b7f68ae1b371ede9d06457cd4223725bf -->
+<!-- cache-key: cdktf-0.20.8 input-f1afa0438567a4cf1bea584d95bfbe21248a909997ec51fdcb4db8e0cbd12d93 -->

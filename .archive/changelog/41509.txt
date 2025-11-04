@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_servicequotas_service_quota: Does not leave stuck resource in state when service quota not supported in current region.
+```

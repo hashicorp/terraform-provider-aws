@@ -21,7 +21,10 @@ resource "aws_auditmanager_framework" "test" {
   control_sets {
     name = "example"
     controls {
-      id = aws_auditmanager_control.test.id
+      id = aws_auditmanager_control.test_1.id
+    }
+    controls {
+      id = aws_auditmanager_control.test_2.id
     }
   }
 }
@@ -32,20 +35,25 @@ resource "aws_auditmanager_framework" "test" {
 The following arguments are required:
 
 * `name` - (Required) Name of the framework.
-* `control_sets` - (Required) Control sets that are associated with the framework. See [`control_sets`](#control_sets) below.
+* `control_sets` - (Required) Configuration block(s) for the control sets that are associated with the framework. See [`control_sets` Block](#control_sets-block) below for details.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `compliance_type` - (Optional) Compliance type that the new custom framework supports, such as `CIS` or `HIPAA`.
 * `description` - (Optional) Description of the framework.
 * `tags` - (Optional) A map of tags to assign to the framework. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### control_sets
+### `control_sets` Block
+
+The `control_sets` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the control set.
-* `controls` - (Required) List of controls within the control set. See [`controls`](#controls) below.
+* `controls` - (Required) Configuration block(s) for the controls within the control set. See [`controls` Block](#controls-block) below for details.
 
-### controls
+### `controls` Block
+
+The `controls` configuration block supports the following arguments:
 
 * `id` - (Required) Unique identifier of the control.
 

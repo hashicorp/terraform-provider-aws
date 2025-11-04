@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBV2TargetGroupAttachment_basic(t *testing.T) {
@@ -27,7 +29,7 @@ func TestAccELBV2TargetGroupAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -48,7 +50,7 @@ func TestAccELBV2TargetGroupAttachment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +73,7 @@ func TestAccELBV2TargetGroupAttachment_backwardsCompatibility(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -92,7 +94,7 @@ func TestAccELBV2TargetGroupAttachment_port(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,7 +115,7 @@ func TestAccELBV2TargetGroupAttachment_ipAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -134,7 +136,7 @@ func TestAccELBV2TargetGroupAttachment_lambda(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -155,21 +157,21 @@ func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-		input := &elbv2.DescribeTargetHealthInput{
+		input := &elasticloadbalancingv2.DescribeTargetHealthInput{
 			TargetGroupArn: aws.String(rs.Primary.Attributes["target_group_arn"]),
-			Targets: []*elbv2.TargetDescription{{
+			Targets: []awstypes.TargetDescription{{
 				Id: aws.String(rs.Primary.Attributes["target_id"]),
 			}},
 		}
 
-		if v := rs.Primary.Attributes["availability_zone"]; v != "" {
+		if v := rs.Primary.Attributes[names.AttrAvailabilityZone]; v != "" {
 			input.Targets[0].AvailabilityZone = aws.String(v)
 		}
 
-		if v := rs.Primary.Attributes["port"]; v != "" {
-			input.Targets[0].Port = flex.StringValueToInt64(v)
+		if v := rs.Primary.Attributes[names.AttrPort]; v != "" {
+			input.Targets[0].Port = flex.StringValueToInt32(v)
 		}
 
 		_, err := tfelbv2.FindTargetHealthDescription(ctx, conn, input)
@@ -180,26 +182,26 @@ func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) reso
 
 func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_target_group_attachment" && rs.Type != "aws_alb_target_group_attachment" {
 				continue
 			}
 
-			input := &elbv2.DescribeTargetHealthInput{
+			input := &elasticloadbalancingv2.DescribeTargetHealthInput{
 				TargetGroupArn: aws.String(rs.Primary.Attributes["target_group_arn"]),
-				Targets: []*elbv2.TargetDescription{{
+				Targets: []awstypes.TargetDescription{{
 					Id: aws.String(rs.Primary.Attributes["target_id"]),
 				}},
 			}
 
-			if v := rs.Primary.Attributes["availability_zone"]; v != "" {
+			if v := rs.Primary.Attributes[names.AttrAvailabilityZone]; v != "" {
 				input.Targets[0].AvailabilityZone = aws.String(v)
 			}
 
-			if v := rs.Primary.Attributes["port"]; v != "" {
-				input.Targets[0].Port = flex.StringValueToInt64(v)
+			if v := rs.Primary.Attributes[names.AttrPort]; v != "" {
+				input.Targets[0].Port = flex.StringValueToInt32(v)
 			}
 
 			_, err := tfelbv2.FindTargetHealthDescription(ctx, conn, input)
@@ -220,9 +222,9 @@ func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.Test
 }
 
 func testAccTargetGroupAttachmentCongig_baseEC2Instance(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.test[0].id
 
@@ -324,7 +326,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "lambda_elb.lambda_handler"
-  runtime       = "python3.7"
+  runtime       = "python3.12"
 }
 
 resource "aws_lambda_alias" "test" {

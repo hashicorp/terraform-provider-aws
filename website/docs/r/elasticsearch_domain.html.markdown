@@ -55,7 +55,7 @@ resource "aws_elasticsearch_domain" "example" {
       "Action": "es:*",
       "Principal": "*",
       "Effect": "Allow",
-      "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*",
+      "Resource": "arn:aws:es:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*",
       "Condition": {
         "IpAddress": {"aws:SourceIp": ["66.193.100.22/32"]}
       }
@@ -187,7 +187,7 @@ resource "aws_elasticsearch_domain" "es" {
 			"Action": "es:*",
 			"Principal": "*",
 			"Effect": "Allow",
-			"Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"
+			"Resource": "arn:aws:es:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"
 		}
 	]
 }
@@ -209,6 +209,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain.
 * `advanced_options` - (Optional) Key-value string pairs to specify advanced configuration options. Note that the values for these configuration options must be strings (wrapped in quotes) or they may be wrong and cause a perpetual diff, causing Terraform to want to recreate your Elasticsearch domain on every apply.
 * `advanced_security_options` - (Optional) Configuration block for [fine-grained access control](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/fgac.html). Detailed below.
@@ -291,7 +292,7 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 * `custom_endpoint_enabled` - (Optional) Whether to enable custom endpoint for the Elasticsearch domain.
 * `custom_endpoint` - (Optional) Fully qualified domain for your custom endpoint.
 * `enforce_https` - (Optional) Whether or not to require HTTPS. Defaults to `true`.
-* `tls_security_policy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `Policy-Min-TLS-1-0-2019-07` and `Policy-Min-TLS-1-2-2019-07`. Terraform will only perform drift detection if a configuration value is provided.
+* `tls_security_policy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `Policy-Min-TLS-1-0-2019-07`, `Policy-Min-TLS-1-2-2019-07`, and `Policy-Min-TLS-1-2-PFS-2023-10`. Terraform will only perform drift detection if a configuration value is provided.
 
 ### ebs_options
 
@@ -341,7 +342,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the domain.
 * `domain_id` - Unique identifier for the domain.
-* `domain_name` - Name of the Elasticsearch domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `kibana_endpoint` - Domain-specific endpoint for kibana without https scheme.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

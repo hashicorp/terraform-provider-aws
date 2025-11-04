@@ -38,6 +38,7 @@ resource "aws_ses_receipt_rule" "store" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the rule
 * `rule_set_name` - (Required) The name of the rule set
 * `after` - (Optional) The name of the rule to place this rule after
@@ -78,6 +79,7 @@ Lambda actions support the following:
 S3 actions support the following:
 
 * `bucket_name` - (Required) The name of the S3 bucket
+* `iam_role_arn` - (Optional) The ARN of the IAM role to be used by Amazon Simple Email Service while writing to the Amazon S3 bucket, optionally encrypting your mail via the provided customer managed key, and publishing to the Amazon SNS topic
 * `kms_key_arn` - (Optional) The ARN of the KMS key
 * `object_key_prefix` - (Optional) The key prefix of the S3 bucket
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify

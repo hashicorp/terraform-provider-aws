@@ -9,7 +9,7 @@ description: |-
 # Resource: aws_ami_from_instance
 
 The "AMI from instance" resource allows the creation of an Amazon Machine
-Image (AMI) modelled after an existing EBS-backed EC2 instance.
+Image (AMI) modeled after an existing EBS-backed EC2 instance.
 
 The created AMI will refer to implicitly-created snapshots of the instance's
 EBS volumes and mimick its assigned block device configuration at the time
@@ -39,6 +39,7 @@ resource "aws_ami_from_instance" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Region-unique name for the AMI.
 * `source_instance_id` - (Required) ID of the instance to use as the basis of the AMI.
 * `snapshot_without_reboot` - (Optional) Boolean that overrides the behavior of stopping

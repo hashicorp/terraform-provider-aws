@@ -5,7 +5,7 @@ package kafka
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -16,9 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_msk_replicator", name="Replicator")
 // @Tags(identifierAttribute="id")
-func ResourceReplicator() *schema.Resource {
+func resourceReplicator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicatorCreate,
 		ReadWithoutTimeout:   resourceReplicatorRead,
@@ -46,7 +46,7 @@ func ResourceReplicator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func ResourceReplicator() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -80,7 +80,7 @@ func ResourceReplicator() *schema.Resource {
 								},
 							},
 						},
-						"vpc_config": {
+						names.AttrVPCConfig: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -93,7 +93,7 @@ func ResourceReplicator() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"subnet_ids": {
+									names.AttrSubnetIDs: {
 										Type:     schema.TypeSet,
 										Required: true,
 										ForceNew: true,
@@ -159,6 +159,38 @@ func ResourceReplicator() *schema.Resource {
 										Optional: true,
 										Default:  true,
 									},
+									"starting_position": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrType: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[types.ReplicationStartingPositionType](),
+												},
+											},
+										},
+									},
+									"topic_name_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrType: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[types.ReplicationTopicNameConfigurationType](),
+												},
+											},
+										},
+									},
 									"topics_to_exclude": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -223,55 +255,47 @@ func ResourceReplicator() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-const (
-	ResNameReplicator = "Replicator"
-)
-
-func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	in := &kafka.CreateReplicatorInput{
-		KafkaClusters:           expandClusters(d.Get("kafka_cluster").([]interface{})),
-		ReplicationInfoList:     expandReplicationInfoList(d.Get("replication_info_list").([]interface{})),
-		ReplicatorName:          aws.String(d.Get("replicator_name").(string)),
+	name := d.Get("replicator_name").(string)
+	input := &kafka.CreateReplicatorInput{
+		KafkaClusters:           expandKafkaClusters(d.Get("kafka_cluster").([]any)),
+		ReplicationInfoList:     expandReplicationInfos(d.Get("replication_info_list").([]any)),
+		ReplicatorName:          aws.String(name),
 		ServiceExecutionRoleArn: aws.String(d.Get("service_execution_role_arn").(string)),
-		Tags:                    getTagsInV2(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		in.Description = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateReplicator(ctx, in)
+	output, err := conn.CreateReplicator(ctx, input)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.Kafka, create.ErrActionCreating, ResNameReplicator, d.Get("replicator_name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating MSK Replicator (%s): %s", name, err)
 	}
 
-	if out == nil {
-		return create.AppendDiagError(diags, names.Kafka, create.ErrActionCreating, ResNameReplicator, d.Get("replicator_name").(string), errors.New("empty output"))
-	}
-
-	d.SetId(aws.ToString(out.ReplicatorArn))
+	d.SetId(aws.ToString(output.ReplicatorArn))
 
 	if _, err := waitReplicatorCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.Kafka, create.ErrActionWaitingForCreation, ResNameReplicator, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Replicator (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceReplicatorRead(ctx, d, meta)...)
 }
 
-func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	out, err := findReplicatorByARN(ctx, conn, d.Id())
+	output, err := findReplicatorByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kafka Replicator (%s) not found, removing from state", d.Id())
@@ -280,85 +304,78 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Kafka, create.ErrActionReading, ResNameReplicator, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Replicator (%s): %s", d.Id(), err)
 	}
 
-	sourceAlias := out.ReplicationInfoList[0].SourceKafkaClusterAlias
-	targetAlias := out.ReplicationInfoList[0].TargetKafkaClusterAlias
-	clustersArn := out.KafkaClusters
+	sourceAlias := aws.ToString(output.ReplicationInfoList[0].SourceKafkaClusterAlias)
+	targetAlias := aws.ToString(output.ReplicationInfoList[0].TargetKafkaClusterAlias)
+	var sourceARN, targetARN *string
 
-	var sourceARN *string
-	var targetARN *string
-
-	for _, arn := range clustersArn {
-		clusterAlias := aws.ToString(arn.KafkaClusterAlias)
-		if clusterAlias == aws.ToString(sourceAlias) {
-			sourceARN = arn.AmazonMskCluster.MskClusterArn
-		} else if clusterAlias == aws.ToString(targetAlias) {
-			targetARN = arn.AmazonMskCluster.MskClusterArn
+	for _, cluster := range output.KafkaClusters {
+		if clusterAlias := aws.ToString(cluster.KafkaClusterAlias); clusterAlias == sourceAlias {
+			sourceARN = cluster.AmazonMskCluster.MskClusterArn
+		} else if clusterAlias == targetAlias {
+			targetARN = cluster.AmazonMskCluster.MskClusterArn
 		}
 	}
 
-	d.Set("arn", out.ReplicatorArn)
-	d.Set("current_version", out.CurrentVersion)
-	d.Set("replicator_name", out.ReplicatorName)
-	d.Set("description", out.ReplicatorDescription)
-	d.Set("service_execution_role_arn", out.ServiceExecutionRoleArn)
-	d.Set("kafka_cluster", flattenClusters(out.KafkaClusters))
-	d.Set("replication_info_list", flattenReplicationInfoList(out.ReplicationInfoList, sourceARN, targetARN))
+	d.Set(names.AttrARN, output.ReplicatorArn)
+	d.Set("current_version", output.CurrentVersion)
+	d.Set(names.AttrDescription, output.ReplicatorDescription)
+	d.Set("kafka_cluster", flattenKafkaClusterDescriptions(output.KafkaClusters))
+	d.Set("replication_info_list", flattenReplicationInfoDescriptions(output.ReplicationInfoList, sourceARN, targetARN))
+	d.Set("replicator_name", output.ReplicatorName)
+	d.Set("service_execution_role_arn", output.ServiceExecutionRoleArn)
 
-	setTagsOutV2(ctx, out.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
-func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		in := &kafka.UpdateReplicationInfoInput{
-			ReplicatorArn:         aws.String(d.Id()),
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &kafka.UpdateReplicationInfoInput{
 			CurrentVersion:        aws.String(d.Get("current_version").(string)),
+			ReplicatorArn:         aws.String(d.Id()),
 			SourceKafkaClusterArn: aws.String(d.Get("replication_info_list.0.source_kafka_cluster_arn").(string)),
 			TargetKafkaClusterArn: aws.String(d.Get("replication_info_list.0.target_kafka_cluster_arn").(string)),
 		}
 
 		if d.HasChanges("replication_info_list.0.consumer_group_replication") {
-			if v, ok := d.GetOk("replication_info_list.0.consumer_group_replication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				in.ConsumerGroupReplication = expandConsumerGroupReplicationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("replication_info_list.0.consumer_group_replication"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ConsumerGroupReplication = expandConsumerGroupReplicationUpdate(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChanges("replication_info_list.0.topic_replication") {
-			if v, ok := d.GetOk("replication_info_list.0.topic_replication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				in.TopicReplication = expandTopicReplicationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("replication_info_list.0.topic_replication"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.TopicReplication = expandTopicReplicationUpdate(v.([]any)[0].(map[string]any))
 			}
 		}
 
-		log.Printf("[DEBUG] Updating Kafka Replicator (%s): %#v", d.Id(), in)
-
-		out, err := conn.UpdateReplicationInfo(ctx, in)
+		_, err := conn.UpdateReplicationInfo(ctx, input)
 
 		if err != nil {
-			return create.AppendDiagError(diags, names.Kafka, create.ErrActionUpdating, ResNameReplicator, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Replicator (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitReplicatorUpdated(ctx, conn, aws.ToString(out.ReplicatorArn), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.AppendDiagError(diags, names.Kafka, create.ErrActionWaitingForUpdate, ResNameReplicator, d.Id(), err)
+		if _, err := waitReplicatorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Replicator (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceReplicatorRead(ctx, d, meta)...)
 }
 
-func resourceReplicatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicatorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	log.Printf("[INFO] Deleting Kafka Replicator %s", d.Id())
-
+	log.Printf("[INFO] Deleting MSK Replicator: %s", d.Id())
 	_, err := conn.DeleteReplicator(ctx, &kafka.DeleteReplicatorInput{
 		ReplicatorArn: aws.String(d.Id()),
 	})
@@ -366,12 +383,13 @@ func resourceReplicatorDelete(ctx context.Context, d *schema.ResourceData, meta 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.Kafka, create.ErrActionDeleting, ResNameReplicator, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MSK Replicator (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitReplicatorDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.AppendDiagError(diags, names.Kafka, create.ErrActionWaitingForDeletion, ResNameReplicator, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Replicator (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -386,8 +404,12 @@ func waitReplicatorCreated(ctx context.Context, conn *kafka.Client, arn string, 
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*kafka.DescribeReplicatorOutput); ok {
-		return out, err
+	if output, ok := outputRaw.(*kafka.DescribeReplicatorOutput); ok {
+		if stateInfo := output.StateInfo; stateInfo != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+		}
+
+		return output, err
 	}
 
 	return nil, err
@@ -402,8 +424,12 @@ func waitReplicatorUpdated(ctx context.Context, conn *kafka.Client, arn string, 
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*kafka.DescribeReplicatorOutput); ok {
-		return out, err
+	if output, ok := outputRaw.(*kafka.DescribeReplicatorOutput); ok {
+		if stateInfo := output.StateInfo; stateInfo != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+		}
+
+		return output, err
 	}
 
 	return nil, err
@@ -418,16 +444,21 @@ func waitReplicatorDeleted(ctx context.Context, conn *kafka.Client, arn string, 
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*kafka.DescribeReplicatorOutput); ok {
-		return out, err
+	if output, ok := outputRaw.(*kafka.DescribeReplicatorOutput); ok {
+		if stateInfo := output.StateInfo; stateInfo != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+		}
+
+		return output, err
 	}
 
 	return nil, err
 }
 
 func statusReplicator(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findReplicatorByARN(ctx, conn, arn)
+	return func() (any, string, error) {
+		output, err := findReplicatorByARN(ctx, conn, arn)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -436,21 +467,21 @@ func statusReplicator(ctx context.Context, conn *kafka.Client, arn string) retry
 			return nil, "", err
 		}
 
-		return out, string(out.ReplicatorState), nil
+		return output, string(output.ReplicatorState), nil
 	}
 }
 
 func findReplicatorByARN(ctx context.Context, conn *kafka.Client, arn string) (*kafka.DescribeReplicatorOutput, error) {
-	in := &kafka.DescribeReplicatorInput{
+	input := &kafka.DescribeReplicatorInput{
 		ReplicatorArn: aws.String(arn),
 	}
 
-	out, err := conn.DescribeReplicator(ctx, in)
+	output, err := conn.DescribeReplicator(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -458,29 +489,29 @@ func findReplicatorByARN(ctx context.Context, conn *kafka.Client, arn string) (*
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
-func flattenReplicationInfoList(apiObjects []types.ReplicationInfoDescription, sourceCluster, targetCluster *string) []interface{} {
+func flattenReplicationInfoDescriptions(apiObjects []types.ReplicationInfoDescription, sourceCluster, targetCluster *string) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenReplicationInfo(apiObject, sourceCluster, targetCluster))
+		tfList = append(tfList, flattenReplicationInfoDescription(apiObject, sourceCluster, targetCluster))
 	}
 
 	return tfList
 }
 
-func flattenReplicationInfo(apiObject types.ReplicationInfoDescription, sourceCluster, targetCluster *string) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenReplicationInfoDescription(apiObject types.ReplicationInfoDescription, sourceCluster, targetCluster *string) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := sourceCluster; v != nil {
 		tfMap["source_kafka_cluster_arn"] = aws.ToString(v)
@@ -503,131 +534,167 @@ func flattenReplicationInfo(apiObject types.ReplicationInfoDescription, sourceCl
 	}
 
 	if v := apiObject.TopicReplication; v != nil {
-		tfMap["topic_replication"] = []interface{}{flattenTopicReplication(v)}
+		tfMap["topic_replication"] = []any{flattenTopicReplication(v)}
 	}
 
 	if v := apiObject.ConsumerGroupReplication; v != nil {
-		tfMap["consumer_group_replication"] = []interface{}{flattenConsumerGroupReplication(v)}
+		tfMap["consumer_group_replication"] = []any{flattenConsumerGroupReplication(v)}
 	}
 
 	return tfMap
 }
 
-func flattenConsumerGroupReplication(apiObject *types.ConsumerGroupReplication) map[string]interface{} {
+func flattenConsumerGroupReplication(apiObject *types.ConsumerGroupReplication) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ConsumerGroupsToReplicate; v != nil {
-		tfMap["consumer_groups_to_replicate"] = flex.FlattenStringValueSet(v)
+		tfMap["consumer_groups_to_replicate"] = v
 	}
 
 	if v := apiObject.ConsumerGroupsToExclude; v != nil {
-		tfMap["consumer_groups_to_exclude"] = flex.FlattenStringValueSet(v)
-	}
-
-	if aws.ToBool(apiObject.SynchroniseConsumerGroupOffsets) {
-		tfMap["synchronise_consumer_group_offsets"] = apiObject.SynchroniseConsumerGroupOffsets
+		tfMap["consumer_groups_to_exclude"] = v
 	}
 
 	if aws.ToBool(apiObject.DetectAndCopyNewConsumerGroups) {
 		tfMap["detect_and_copy_new_consumer_groups"] = apiObject.DetectAndCopyNewConsumerGroups
 	}
 
+	if aws.ToBool(apiObject.SynchroniseConsumerGroupOffsets) {
+		tfMap["synchronise_consumer_group_offsets"] = apiObject.SynchroniseConsumerGroupOffsets
+	}
+
 	return tfMap
 }
 
-func flattenTopicReplication(apiObject *types.TopicReplication) map[string]interface{} {
+func flattenTopicReplication(apiObject *types.TopicReplication) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if v := apiObject.TopicsToReplicate; v != nil {
-		tfMap["topics_to_replicate"] = flex.FlattenStringValueSet(v)
-	}
-
-	if v := apiObject.TopicsToExclude; v != nil {
-		tfMap["topics_to_exclude"] = flex.FlattenStringValueSet(v)
+	if aws.ToBool(apiObject.CopyAccessControlListsForTopics) {
+		tfMap["copy_access_control_lists_for_topics"] = apiObject.CopyAccessControlListsForTopics
 	}
 
 	if aws.ToBool(apiObject.CopyTopicConfigurations) {
 		tfMap["copy_topic_configurations"] = apiObject.CopyTopicConfigurations
 	}
 
-	if aws.ToBool(apiObject.CopyAccessControlListsForTopics) {
-		tfMap["copy_access_control_lists_for_topics"] = apiObject.CopyAccessControlListsForTopics
+	if aws.ToBool(apiObject.DetectAndCopyNewTopics) {
+		tfMap["detect_and_copy_new_topics"] = apiObject.DetectAndCopyNewTopics
 	}
 
-	if aws.ToBool(apiObject.DetectAndCopyNewTopics) {
-		tfMap["detect_and_copy_new_topics"] = apiObject.CopyAccessControlListsForTopics
+	if v := apiObject.StartingPosition; v != nil {
+		tfMap["starting_position"] = []any{flattenReplicationStartingPosition(v)}
+	}
+
+	if v := apiObject.TopicNameConfiguration; v != nil {
+		tfMap["topic_name_configuration"] = []any{flattenReplicationTopicNameConfiguration(v)}
+	}
+
+	if v := apiObject.TopicsToReplicate; v != nil {
+		tfMap["topics_to_replicate"] = v
+	}
+
+	if v := apiObject.TopicsToExclude; v != nil {
+		tfMap["topics_to_exclude"] = v
 	}
 
 	return tfMap
 }
 
-func flattenClusters(apiObjects []types.KafkaClusterDescription) []interface{} {
+func flattenReplicationStartingPosition(apiObject *types.ReplicationStartingPosition) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Type; v != "" {
+		tfMap[names.AttrType] = v
+	}
+
+	return tfMap
+}
+
+func flattenReplicationTopicNameConfiguration(apiObject *types.ReplicationTopicNameConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Type; v != "" {
+		tfMap[names.AttrType] = v
+	}
+
+	return tfMap
+}
+
+func flattenKafkaClusterDescriptions(apiObjects []types.KafkaClusterDescription) []any { // nosemgrep:ci.kafka-in-func-name
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenCluster(apiObject))
+		tfList = append(tfList, flattenKafkaClusterDescription(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenCluster(apiObject types.KafkaClusterDescription) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenKafkaClusterDescription(apiObject types.KafkaClusterDescription) map[string]any { // nosemgrep:ci.kafka-in-func-name
+	tfMap := map[string]any{}
 
 	if v := apiObject.AmazonMskCluster; v != nil {
-		tfMap["amazon_msk_cluster"] = []interface{}{flattenAmazonCluster(v)}
+		tfMap["amazon_msk_cluster"] = []any{flattenAmazonMSKCluster(v)}
 	}
 
 	if v := apiObject.VpcConfig; v != nil {
-		tfMap["vpc_config"] = []interface{}{flattenClusterClientVPCConfig(v)}
+		tfMap[names.AttrVPCConfig] = []any{flattenKafkaClusterClientVPCConfig(v)}
 	}
 
 	return tfMap
 }
 
-func flattenClusterClientVPCConfig(apiObject *types.KafkaClusterClientVpcConfig) map[string]interface{} {
+func flattenKafkaClusterClientVPCConfig(apiObject *types.KafkaClusterClientVpcConfig) map[string]any { // nosemgrep:ci.kafka-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_groups_ids"] = flex.FlattenStringValueSet(v)
+		tfMap["security_groups_ids"] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = flex.FlattenStringValueSet(v)
+		tfMap[names.AttrSubnetIDs] = v
 	}
 
 	return tfMap
 }
 
-func flattenAmazonCluster(apiObject *types.AmazonMskCluster) map[string]interface{} {
+func flattenAmazonMSKCluster(apiObject *types.AmazonMskCluster) map[string]any { // nosemgrep:ci.msk-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"msk_cluster_arn": apiObject.MskClusterArn,
 	}
 
 	return tfMap
 }
 
-func expandConsumerGroupReplicationUpdate(tfMap map[string]interface{}) *types.ConsumerGroupReplicationUpdate {
+func expandConsumerGroupReplicationUpdate(tfMap map[string]any) *types.ConsumerGroupReplicationUpdate {
 	apiObject := &types.ConsumerGroupReplicationUpdate{}
 
 	if v, ok := tfMap["consumer_groups_to_replicate"].(*schema.Set); ok {
@@ -649,16 +716,8 @@ func expandConsumerGroupReplicationUpdate(tfMap map[string]interface{}) *types.C
 	return apiObject
 }
 
-func expandTopicReplicationUpdate(tfMap map[string]interface{}) *types.TopicReplicationUpdate {
+func expandTopicReplicationUpdate(tfMap map[string]any) *types.TopicReplicationUpdate {
 	apiObject := &types.TopicReplicationUpdate{}
-
-	if v, ok := tfMap["topics_to_replicate"].(*schema.Set); ok {
-		apiObject.TopicsToReplicate = flex.ExpandStringValueSet(v)
-	}
-
-	if v, ok := tfMap["topics_to_exclude"].(*schema.Set); ok {
-		apiObject.TopicsToExclude = flex.ExpandStringValueSet(v)
-	}
 
 	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
 		apiObject.CopyTopicConfigurations = aws.Bool(v)
@@ -672,10 +731,18 @@ func expandTopicReplicationUpdate(tfMap map[string]interface{}) *types.TopicRepl
 		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["topics_to_exclude"].(*schema.Set); ok {
+		apiObject.TopicsToExclude = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := tfMap["topics_to_replicate"].(*schema.Set); ok {
+		apiObject.TopicsToReplicate = flex.ExpandStringValueSet(v)
+	}
+
 	return apiObject
 }
 
-func expandReplicationInfoList(tfList []interface{}) []types.ReplicationInfo {
+func expandReplicationInfos(tfList []any) []types.ReplicationInfo {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -683,7 +750,7 @@ func expandReplicationInfoList(tfList []interface{}) []types.ReplicationInfo {
 	var apiObjects []types.ReplicationInfo
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -697,7 +764,7 @@ func expandReplicationInfoList(tfList []interface{}) []types.ReplicationInfo {
 	return apiObjects
 }
 
-func expandReplicationInfo(tfMap map[string]interface{}) types.ReplicationInfo {
+func expandReplicationInfo(tfMap map[string]any) types.ReplicationInfo {
 	apiObject := types.ReplicationInfo{}
 
 	if v, ok := tfMap["source_kafka_cluster_arn"].(string); ok {
@@ -712,18 +779,18 @@ func expandReplicationInfo(tfMap map[string]interface{}) types.ReplicationInfo {
 		apiObject.TargetCompressionType = types.TargetCompressionType(v)
 	}
 
-	if v, ok := tfMap["topic_replication"].([]interface{}); ok {
-		apiObject.TopicReplication = expandTopicReplication(v[0].(map[string]interface{}))
+	if v, ok := tfMap["topic_replication"].([]any); ok {
+		apiObject.TopicReplication = expandTopicReplication(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["consumer_group_replication"].([]interface{}); ok {
-		apiObject.ConsumerGroupReplication = expandConsumerGroupReplication(v[0].(map[string]interface{}))
+	if v, ok := tfMap["consumer_group_replication"].([]any); ok {
+		apiObject.ConsumerGroupReplication = expandConsumerGroupReplication(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandConsumerGroupReplication(tfMap map[string]interface{}) *types.ConsumerGroupReplication {
+func expandConsumerGroupReplication(tfMap map[string]any) *types.ConsumerGroupReplication {
 	apiObject := &types.ConsumerGroupReplication{}
 
 	if v, ok := tfMap["consumer_groups_to_replicate"].(*schema.Set); ok && v.Len() > 0 {
@@ -745,8 +812,28 @@ func expandConsumerGroupReplication(tfMap map[string]interface{}) *types.Consume
 	return apiObject
 }
 
-func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplication {
+func expandTopicReplication(tfMap map[string]any) *types.TopicReplication {
 	apiObject := &types.TopicReplication{}
+
+	if v, ok := tfMap["copy_access_control_lists_for_topics"].(bool); ok {
+		apiObject.CopyAccessControlListsForTopics = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
+		apiObject.CopyTopicConfigurations = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["detect_and_copy_new_topics"].(bool); ok {
+		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["starting_position"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.StartingPosition = expandReplicationStartingPosition(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["topic_name_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.TopicNameConfiguration = expandReplicationTopicNameConfiguration(v[0].(map[string]any))
+	}
 
 	if v, ok := tfMap["topics_to_replicate"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.TopicsToReplicate = flex.ExpandStringValueSet(v)
@@ -756,22 +843,30 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 		apiObject.TopicsToExclude = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
-		apiObject.CopyTopicConfigurations = aws.Bool(v)
-	}
+	return apiObject
+}
 
-	if v, ok := tfMap["copy_access_control_lists_for_topics"].(bool); ok {
-		apiObject.CopyAccessControlListsForTopics = aws.Bool(v)
-	}
+func expandReplicationStartingPosition(tfMap map[string]any) *types.ReplicationStartingPosition {
+	apiObject := &types.ReplicationStartingPosition{}
 
-	if v, ok := tfMap["detect_and_copy_new_topics"].(bool); ok {
-		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
+	if v, ok := tfMap[names.AttrType].(string); ok {
+		apiObject.Type = types.ReplicationStartingPositionType(v)
 	}
 
 	return apiObject
 }
 
-func expandClusters(tfList []interface{}) []types.KafkaCluster {
+func expandReplicationTopicNameConfiguration(tfMap map[string]any) *types.ReplicationTopicNameConfiguration {
+	apiObject := &types.ReplicationTopicNameConfiguration{}
+
+	if v, ok := tfMap[names.AttrType].(string); ok {
+		apiObject.Type = types.ReplicationTopicNameConfigurationType(v)
+	}
+
+	return apiObject
+}
+
+func expandKafkaClusters(tfList []any) []types.KafkaCluster { // nosemgrep:ci.kafka-in-func-name
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -779,13 +874,13 @@ func expandClusters(tfList []interface{}) []types.KafkaCluster {
 	var apiObjects []types.KafkaCluster
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
-		apiObject := expandCluster(tfMap)
+		apiObject := expandKafkaCluster(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -793,35 +888,35 @@ func expandClusters(tfList []interface{}) []types.KafkaCluster {
 	return apiObjects
 }
 
-func expandCluster(tfMap map[string]interface{}) types.KafkaCluster {
+func expandKafkaCluster(tfMap map[string]any) types.KafkaCluster { // nosemgrep:ci.kafka-in-func-name
 	apiObject := types.KafkaCluster{}
 
-	if v, ok := tfMap["vpc_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.VpcConfig = expandClusterClientVPCConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap[names.AttrVPCConfig].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.VpcConfig = expandKafkaClusterClientVPCConfig(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["amazon_msk_cluster"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AmazonMskCluster = expandAmazonCluster(v[0].(map[string]interface{}))
+	if v, ok := tfMap["amazon_msk_cluster"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AmazonMskCluster = expandAmazonMSKCluster(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandClusterClientVPCConfig(tfMap map[string]interface{}) *types.KafkaClusterClientVpcConfig {
+func expandKafkaClusterClientVPCConfig(tfMap map[string]any) *types.KafkaClusterClientVpcConfig { // nosemgrep:ci.kafka-in-func-name
 	apiObject := &types.KafkaClusterClientVpcConfig{}
 
 	if v, ok := tfMap["security_groups_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
 }
 
-func expandAmazonCluster(tfMap map[string]interface{}) *types.AmazonMskCluster {
+func expandAmazonMSKCluster(tfMap map[string]any) *types.AmazonMskCluster { // nosemgrep:ci.msk-in-func-name
 	apiObject := &types.AmazonMskCluster{}
 
 	if v, ok := tfMap["msk_cluster_arn"].(string); ok && v != "" {

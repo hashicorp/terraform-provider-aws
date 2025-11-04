@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccServiceCatalogProvisioningArtifactsDataSource_basic(t *testing.T) {
@@ -22,20 +23,20 @@ func TestAccServiceCatalogProvisioningArtifactsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningArtifactsDataSourceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					resource.TestCheckResourceAttrPair(dataSourceName, "product_id", "aws_servicecatalog_product.test", "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.active", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(dataSourceName, "provisioning_artifact_details.0.description"),
-					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
+					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.guidance", string(awstypes.ProvisioningArtifactGuidanceDefault)),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.name", rName),
-					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.type", servicecatalog.ProductTypeCloudFormationTemplate),
+					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.type", string(awstypes.ProductTypeCloudFormationTemplate)),
 				),
 			},
 		},

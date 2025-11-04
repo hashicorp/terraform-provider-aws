@@ -31,6 +31,8 @@ resource "aws_default_subnet" "default_az1" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 The arguments of an `aws_default_subnet` differ slightly from those of [`aws_subnet`](subnet.html):
 
 * `availability_zone` is required

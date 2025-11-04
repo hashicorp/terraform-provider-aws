@@ -3,11 +3,11 @@ package kinesisanalyticsv2
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
-	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2/kinesisanalyticsv2iface"
+	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -19,27 +19,27 @@ import (
 // listTags lists kinesisanalyticsv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn kinesisanalyticsv2iface.KinesisAnalyticsV2API, identifier string) (tftags.KeyValueTags, error) {
-	input := &kinesisanalyticsv2.ListTagsForResourceInput{
+func listTags(ctx context.Context, conn *kinesisanalyticsv2.Client, identifier string, optFns ...func(*kinesisanalyticsv2.Options)) (tftags.KeyValueTags, error) {
+	input := kinesisanalyticsv2.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 // ListTags lists kinesisanalyticsv2 service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -51,12 +51,12 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns kinesisanalyticsv2 service tags.
-func Tags(tags tftags.KeyValueTags) []*kinesisanalyticsv2.Tag {
-	result := make([]*kinesisanalyticsv2.Tag, 0, len(tags))
+// svcTags returns kinesisanalyticsv2 service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &kinesisanalyticsv2.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -67,12 +67,12 @@ func Tags(tags tftags.KeyValueTags) []*kinesisanalyticsv2.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from kinesisanalyticsv2 service tags.
-func KeyValueTags(ctx context.Context, tags []*kinesisanalyticsv2.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from kinesisanalyticsv2 service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
@@ -80,9 +80,9 @@ func KeyValueTags(ctx context.Context, tags []*kinesisanalyticsv2.Tag) tftags.Ke
 
 // getTagsIn returns kinesisanalyticsv2 service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*kinesisanalyticsv2.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -91,16 +91,16 @@ func getTagsIn(ctx context.Context) []*kinesisanalyticsv2.Tag {
 }
 
 // setTagsOut sets kinesisanalyticsv2 service tags in Context.
-func setTagsOut(ctx context.Context, tags []*kinesisanalyticsv2.Tag) {
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
 // updateTags updates kinesisanalyticsv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn kinesisanalyticsv2iface.KinesisAnalyticsV2API, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *kinesisanalyticsv2.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*kinesisanalyticsv2.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -109,30 +109,30 @@ func updateTags(ctx context.Context, conn kinesisanalyticsv2iface.KinesisAnalyti
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.KinesisAnalyticsV2)
 	if len(removedTags) > 0 {
-		input := &kinesisanalyticsv2.UntagResourceInput{
+		input := kinesisanalyticsv2.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.KinesisAnalyticsV2)
 	if len(updatedTags) > 0 {
-		input := &kinesisanalyticsv2.TagResourceInput{
+		input := kinesisanalyticsv2.TagResourceInput{
 			ResourceARN: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -142,5 +142,5 @@ func updateTags(ctx context.Context, conn kinesisanalyticsv2iface.KinesisAnalyti
 // UpdateTags updates kinesisanalyticsv2 service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx), identifier, oldTags, newTags)
 }

@@ -36,6 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the image pipeline.
 
 ## Attribute Reference
@@ -52,20 +55,20 @@ This data source exports the following attributes in addition to the arguments a
 * `enhancedImageMetadataEnabled` - Whether additional information about the image being created is collected.
 * `imageRecipeArn` - ARN of the image recipe.
 * `imageTestsConfiguration` - List of an object with image scanning configuration.
-    * `image_scanning_enabled`  - Whether image scanning is enabled.
-    * `ecr_configuration`  - List if an object with ecr configuration for image scanning
-        * `container_tags`  - Tags that are added to the output containers that are scanned
-        * `repository_name`  - The name of the container repository that Amazon Inspector scans
+    * `imageScanningEnabled`  - Whether image scanning is enabled.
+    * `ecrConfiguration`  - List if an object with ecr configuration for image scanning
+        * `containerTags`  - Tags that are added to the output containers that are scanned
+        * `repositoryName`  - The name of the container repository that Amazon Inspector scans
 * `imageTestsConfiguration` - List of an object with image tests configuration.
-    * `image_tests_enabled` - Whether image tests are enabled.
-    * `timeout_minutes` - Number of minutes before image tests time out.
+    * `imageTestsEnabled` - Whether image tests are enabled.
+    * `timeoutMinutes` - Number of minutes before image tests time out.
 * `infrastructureConfigurationArn` - ARN of the Image Builder Infrastructure Configuration.
 * `name` - Name of the image pipeline.
 * `platform` - Platform of the image pipeline.
 * `schedule` - List of an object with schedule settings.
-    * `pipeline_execution_start_condition` - Condition when the pipeline should trigger a new image build.
-    * `schedule_expression` - Cron expression of how often the pipeline start condition is evaluated.
+    * `pipelineExecutionStartCondition` - Condition when the pipeline should trigger a new image build.
+    * `scheduleExpression` - Cron expression of how often the pipeline start condition is evaluated.
 * `status` - Status of the image pipeline.
 * `tags` - Key-value map of resource tags for the image pipeline.
 
-<!-- cache-key: cdktf-0.19.0 input-86d00bfacbf8211ac391b618aacd3783f3887b1dc59f3fa49b15ed84f7aa629d -->
+<!-- cache-key: cdktf-0.20.8 input-d5d03781924755f5381999acbc42b183a3019bcc194111a7ca7d85a7878a7112 -->

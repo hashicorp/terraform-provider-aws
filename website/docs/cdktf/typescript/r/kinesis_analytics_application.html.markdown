@@ -15,7 +15,9 @@ allows processing and analyzing streaming data using standard SQL.
 
 For more details, see the [Amazon Kinesis Analytics Documentation][1].
 
--> **Note:** To manage Amazon Kinesis Data Analytics for Apache Flink applications, use the [`awsKinesisanalyticsv2Application`](/docs/providers/aws/r/kinesisanalyticsv2_application.html) resource.
+!> **WARNING:** _This resource is deprecated and will be removed in a future version._ [Effective January 27, 2026](https://aws.amazon.com/blogs/big-data/migrate-from-amazon-kinesis-data-analytics-for-sql-to-amazon-managed-service-for-apache-flink-and-amazon-managed-service-for-apache-flink-studio/), AWS will [no longer support](https://docs.aws.amazon.com/kinesisanalytics/latest/dev/discontinuation.html) Amazon Kinesis Data Analytics for SQL. Use the `aws_kinesisanalyticsv2_application` resource instead to manage Amazon Kinesis Data Analytics for Apache Flink applications. AWS provides guidance for migrating from [Amazon Kinesis Data Analytics for SQL Applications to Amazon Managed Service for Apache Flink Studio](https://aws.amazon.com/blogs/big-data/migrate-from-amazon-kinesis-data-analytics-for-sql-applications-to-amazon-managed-service-for-apache-flink-studio/) including [examples](https://docs.aws.amazon.com/kinesisanalytics/latest/dev/migrating-to-kda-studio-overview.html).
+
+-> **Note:** To manage Amazon Kinesis Data Analytics for Apache Flink applications, use the [`aws_kinesisanalyticsv2_application`](/docs/providers/aws/r/kinesisanalyticsv2_application.html) resource.
 
 ## Example Usage
 
@@ -180,6 +182,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Kinesis Analytics Application.
 * `code` - (Optional) SQL Code to transform input data, and generate output.
 * `description` - (Optional) Description of the application.
@@ -189,9 +192,9 @@ See [CloudWatch Logging Options](#cloudwatch-logging-options) below for more det
 * `outputs` - (Optional) Output destination configuration of the application. See [Outputs](#outputs) below for more details.
 * `referenceDataSources` - (Optional) An S3 Reference Data Source for the application.
 See [Reference Data Sources](#reference-data-sources) below for more details.
-* `startApplication` - (Optional) Whether to start or stop the Kinesis Analytics Application. To start an application, an input with a defined `starting_position` must be configured.
-To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
-* `tags` - Key-value map of tags for the Kinesis Analytics Application. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `startApplication` - (Optional) Whether to start or stop the Kinesis Analytics Application. To start an application, an input with a defined `startingPosition` must be configured.
+To modify an application's starting position, first stop the application by setting `start_application = false`, then update `startingPosition` and set `start_application = true`.
+* `tags` - Key-value map of tags for the Kinesis Analytics Application. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### CloudWatch Logging Options
 
@@ -210,9 +213,9 @@ The `inputs` block supports the following:
 
 * `namePrefix` - (Required) The Name Prefix to use when creating an in-application stream.
 * `schema` - (Required) The Schema format of the data in the streaming source. See [Source Schema](#source-schema) below for more details.
-* `kinesisFirehose` - (Optional) The Kinesis Firehose configuration for the streaming source. Conflicts with `kinesis_stream`.
+* `kinesisFirehose` - (Optional) The Kinesis Firehose configuration for the streaming source. Conflicts with `kinesisStream`.
 See [Kinesis Firehose](#kinesis-firehose) below for more details.
-* `kinesisStream` - (Optional) The Kinesis Stream configuration for the streaming source. Conflicts with `kinesis_firehose`.
+* `kinesisStream` - (Optional) The Kinesis Stream configuration for the streaming source. Conflicts with `kinesisFirehose`.
 See [Kinesis Stream](#kinesis-stream) below for more details.
 * `parallelism` - (Optional) The number of Parallel in-application streams to create.
 See [Parallelism](#parallelism) below for more details.
@@ -229,9 +232,9 @@ The `outputs` block supports the following:
 
 * `name` - (Required) The Name of the in-application stream.
 * `schema` - (Required) The Schema format of the data written to the destination. See [Destination Schema](#destination-schema) below for more details.
-* `kinesisFirehose` - (Optional) The Kinesis Firehose configuration for the destination stream. Conflicts with `kinesis_stream`.
+* `kinesisFirehose` - (Optional) The Kinesis Firehose configuration for the destination stream. Conflicts with `kinesisStream`.
 See [Kinesis Firehose](#kinesis-firehose) below for more details.
-* `kinesisStream` - (Optional) The Kinesis Stream configuration for the destination stream. Conflicts with `kinesis_firehose`.
+* `kinesisStream` - (Optional) The Kinesis Stream configuration for the destination stream. Conflicts with `kinesisFirehose`.
 See [Kinesis Stream](#kinesis-stream) below for more details.
 * `lambda` - (Optional) The Lambda function destination. See [Lambda](#lambda) below for more details.
 
@@ -384,7 +387,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `lastUpdateTimestamp` - The Timestamp when the application was last updated.
 * `status` - The Status of the application.
 * `version` - The Version of the application.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: https://docs.aws.amazon.com/kinesisanalytics/latest/dev/what-is.html
 
@@ -396,9 +399,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { KinesisAnalyticsApplication } from "./.gen/providers/aws/kinesis-analytics-application";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    KinesisAnalyticsApplication.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:kinesisanalytics:us-west-2:1234567890:application/example"
+    );
   }
 }
 
@@ -410,4 +423,4 @@ Using `terraform import`, import Kinesis Analytics Application using ARN. For ex
 % terraform import aws_kinesis_analytics_application.example arn:aws:kinesisanalytics:us-west-2:1234567890:application/example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-14782ea879b9f73b5ee5ad2ef9ec8d20965c88da8a7cb0cb2534adfe79bb7ca6 -->
+<!-- cache-key: cdktf-0.20.8 input-34bc4704213a57f95d47926f75578a8284db2b7f57460805a287d8d63a6dd1ec -->

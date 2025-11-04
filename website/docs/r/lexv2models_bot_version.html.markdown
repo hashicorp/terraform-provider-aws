@@ -16,7 +16,7 @@ Terraform resource for managing an AWS Lex V2 Models Bot Version.
 
 ```terraform
 resource "aws_lexv2models_bot_version" "test" {
-  bot_id = aws_lexv2models.test.id
+  bot_id = aws_lexv2models_bot.test.id
   locale_specification = {
     "en_US" = {
       source_bot_version = "DRAFT"
@@ -27,14 +27,15 @@ resource "aws_lexv2models_bot_version" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `bot_id` - Idientifier of the bot to create the version for.
-* `locale_specification` - Specifies the locales that Amazon Lex adds to this version. You can choose the draft version or any other previously published version for each locale. When you specify a source version, the locale data is copied from the source version to the new version.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `bot_id` - (Required) Idientifier of the bot to create the version for.
+* `locale_specification` - (Required) Specifies the locales that Amazon Lex adds to this version. You can choose the draft version or any other previously published version for each locale. When you specify a source version, the locale data is copied from the source version to the new version.
+* `description` - (Optional) A description of the version. Use the description to help identify the version in lists.
+* `sourceBotVersion` - (Required) The version of a bot used for a bot locale. Valid values: `DRAFT`, a numeric version.
 
-The following arguments are optional:
-
-* `description` - A description of the version. Use the description to help identify the version in lists.
+The `locale_specification` attribute value is a map with one or more entries, each of which has a locale name as the key and an object with the following attribute as the value:
 
 ## Attribute Reference
 

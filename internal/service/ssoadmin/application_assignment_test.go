@@ -34,7 +34,7 @@ func TestAccSSOAdminApplicationAssignment_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,7 +42,7 @@ func TestAccSSOAdminApplicationAssignment_basic(t *testing.T) {
 				Config: testAccApplicationAssignmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, "application_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", userResourceName, "user_id"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "USER"),
 				),
@@ -69,7 +69,7 @@ func TestAccSSOAdminApplicationAssignment_group(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func TestAccSSOAdminApplicationAssignment_group(t *testing.T) {
 				Config: testAccApplicationAssignmentConfig_group(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, "application_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", groupResourceName, "group_id"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "GROUP"),
 				),
@@ -102,7 +102,7 @@ func TestAccSSOAdminApplicationAssignment_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -130,7 +130,7 @@ func TestAccSSOAdminApplicationAssignment_disappears_Application(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -221,7 +221,7 @@ resource "aws_identitystore_user" "test" {
 }
 
 resource "aws_ssoadmin_application_assignment" "test" {
-  application_arn = aws_ssoadmin_application.test.application_arn
+  application_arn = aws_ssoadmin_application.test.arn
   principal_id    = aws_identitystore_user.test.user_id
   principal_type  = "USER"
 }
@@ -238,7 +238,7 @@ resource "aws_identitystore_group" "test" {
 }
 
 resource "aws_ssoadmin_application_assignment" "test" {
-  application_arn = aws_ssoadmin_application.test.application_arn
+  application_arn = aws_ssoadmin_application.test.arn
   principal_id    = aws_identitystore_group.test.group_id
   principal_type  = "GROUP"
 }

@@ -41,19 +41,18 @@ resource "aws_elasticache_subnet_group" "bar" {
 
 This resource supports the following arguments:
 
-* `name` – (Required) Name for the cache subnet group. ElastiCache converts this name to lowercase.
-* `description` – (Optional) Description for the cache subnet group. Defaults to "Managed by Terraform".
-* `subnet_ids` – (Required) List of VPC Subnet IDs for the cache subnet group
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name for the cache subnet group. ElastiCache converts this name to lowercase.
+* `description` - (Optional) Description for the cache subnet group. Defaults to "Managed by Terraform".
+* `subnet_ids` - (Required) List of VPC Subnet IDs for the cache subnet group
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `description` - The Description of the ElastiCache Subnet Group.
-* `name` - The Name of the ElastiCache Subnet Group.
-* `subnet_ids` - The Subnet IDs of the ElastiCache Subnet Group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `vpc_id` - The Amazon Virtual Private Cloud identifier (VPC ID) of the cache subnet group.
 
 ## Import
 

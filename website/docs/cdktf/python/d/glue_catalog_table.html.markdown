@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the table.
 * `database_name` - (Required) Name of the metadata database where the table metadata resides.
 * `catalog_id` - (Optional) ID of the Glue Catalog and database where the table metadata resides. If omitted, this defaults to the current AWS Account ID.
@@ -69,10 +70,12 @@ This data source exports the following attributes in addition to the arguments a
 
 * `comment` - Free-form text comment.
 * `name` - Name of the Partition Key.
+* `parameters` - Map of key-value pairs.
 * `type` - Datatype of data in the Partition Key.
 
 ### storage_descriptor
 
+* `additional_locations` - List of locations that point to the path where a Delta table is located
 * `bucket_columns` - List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - Whether the data in the table is compressed.
@@ -128,5 +131,6 @@ This data source exports the following attributes in addition to the arguments a
 * `catalog_id` - ID of the Data Catalog in which the table resides.
 * `database_name` - Name of the catalog database that contains the target table.
 * `name` - Name of the target table.
+* `region` - Region of the target table.
 
-<!-- cache-key: cdktf-0.19.0 input-e15edcd6d033b5edb19b2c2cba94f792949b55bd9f5265620f634af7b6c959a4 -->
+<!-- cache-key: cdktf-0.20.8 input-1681829eab78c92a38376326a34f58720981979b286852e2d983e61dbeed856f -->

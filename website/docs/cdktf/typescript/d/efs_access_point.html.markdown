@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessPointId` - (Required) ID that identifies the file system.
 
 ## Attribute Reference
@@ -50,14 +51,14 @@ This data source exports the following attributes in addition to the arguments a
 * `fileSystemId` - ID of the file system for which the access point is intended.
 * `posixUser` - Single element list containing operating system user and group applied to all file system requests made using the access point.
     * `gid` - Group ID
-    * `secondary_gids` - Secondary group IDs
+    * `secondaryGids` - Secondary group IDs
     * `uid` - User Id
 * `rootDirectory`- Single element list containing information on the directory on the Amazon EFS file system that the access point provides access to.
-    * `creation_info` - Single element list containing information on the creation permissions of the directory
-        * `owner_gid` - POSIX owner group ID
-        * `owner_uid` - POSIX owner user ID
+    * `creationInfo` - Single element list containing information on the creation permissions of the directory
+        * `ownerGid` - POSIX owner group ID
+        * `ownerUid` - POSIX owner user ID
         * `permissions` - POSIX permissions mode
     * `path` - Path exposed as the root directory
 * `tags` - Key-value mapping of resource tags.
 
-<!-- cache-key: cdktf-0.19.0 input-0a6eb33b78fe37cb122bdb76da99c518922b10eb75fae54fd07c18509d2e4a50 -->
+<!-- cache-key: cdktf-0.20.8 input-fe36f97834cf046d65b4069945ea6d1fc0b563aec79732b5050f141633a705e0 -->

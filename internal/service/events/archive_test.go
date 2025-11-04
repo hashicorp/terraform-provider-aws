@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEventsArchive_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccEventsArchive_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,11 +35,12 @@ func TestAccEventsArchive_basic(t *testing.T) {
 				Config: testAccArchiveConfig_basic(archiveName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "0"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("archive/%s", archiveName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", ""),
 				),
 			},
 			{
@@ -58,7 +60,7 @@ func TestAccEventsArchive_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,7 +76,7 @@ func TestAccEventsArchive_update(t *testing.T) {
 					testAccCheckArchiveExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "7"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"company.team.service\"]}"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 				),
 			},
 		},
@@ -89,7 +91,7 @@ func TestAccEventsArchive_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,24 +107,111 @@ func TestAccEventsArchive_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEventsArchive_kmsKeyIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1 eventbridge.DescribeArchiveOutput
+	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_archive.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccArchiveConfig_kmsKeyIdentifier(archiveName, "${aws_kms_key.test_1.id}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_1", names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccArchiveConfig_kmsKeyIdentifier(archiveName, "${aws_kms_key.test_2.arn}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_2", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccArchiveConfig_kmsKeyIdentifier(archiveName, "${aws_kms_alias.test_1.name}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_alias.test_1", names.AttrName),
+				),
+			},
+			{
+				Config: testAccArchiveConfig_kmsKeyIdentifier(archiveName, "${aws_kms_alias.test_1.arn}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_alias.test_1", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEventsArchive_retentionSetOnCreation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1 eventbridge.DescribeArchiveOutput
+	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_archive.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccArchiveConfig_retentionOnCreation(archiveName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
+					resource.TestCheckResourceAttr(resourceName, "retention_days", "1"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("archive/%s", archiveName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckArchiveDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_archive" {
 				continue
 			}
 
-			params := eventbridge.DescribeArchiveInput{
-				ArchiveName: aws.String(rs.Primary.ID),
+			_, err := tfevents.FindArchiveByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			resp, err := conn.DescribeArchiveWithContext(ctx, &params)
-
-			if err == nil {
-				return fmt.Errorf("EventBridge event bus (%s) still exists: %s", rs.Primary.ID, resp)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("EventBridge Archive %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -136,56 +225,18 @@ func testAccCheckArchiveExists(ctx context.Context, n string, v *eventbridge.Des
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
-		params := eventbridge.DescribeArchiveInput{
-			ArchiveName: aws.String(rs.Primary.ID),
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
-		resp, err := conn.DescribeArchiveWithContext(ctx, &params)
+		output, err := tfevents.FindArchiveByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if resp == nil {
-			return fmt.Errorf("EventBridge archive (%s) not found", n)
-		}
-
-		*v = *resp
+		*v = *output
 
 		return nil
 	}
-}
-
-func TestAccEventsArchive_retentionSetOnCreation(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v1 eventbridge.DescribeArchiveOutput
-	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_archive.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccArchiveConfig_retentionOnCreation(archiveName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
-					resource.TestCheckResourceAttr(resourceName, "retention_days", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
 }
 
 func testAccArchiveConfig_basic(name string) string {
@@ -219,6 +270,130 @@ resource "aws_cloudwatch_event_archive" "test" {
 PATTERN
 }
 `, name)
+}
+
+func testAccArchiveConfig_kmsKeyIdentifier(name, kmsKeyIdentifier string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+}
+
+resource "aws_kms_key" "test_1" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-policy-example"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow describing of the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "events.amazonaws.com"
+        },
+        Action = [
+          "kms:DescribeKey"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "events.amazonaws.com"
+        },
+        Action = [
+          "kms:GenerateDataKey",
+          "kms:Decrypt",
+          "kms:ReEncrypt*"
+        ],
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "kms:EncryptionContext:aws:events:event-bus:arn" = aws_cloudwatch_event_bus.test.arn
+          }
+        }
+      }
+    ]
+  })
+  tags = {
+    EventBridgeApiDestinations = "true"
+  }
+}
+
+resource "aws_kms_alias" "test_1" {
+  name          = "alias/test-1"
+  target_key_id = aws_kms_key.test_1.key_id
+}
+
+resource "aws_kms_key" "test_2" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-policy-example"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow describing of the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "events.amazonaws.com"
+        },
+        Action = [
+          "kms:DescribeKey"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "events.amazonaws.com"
+        },
+        Action = [
+          "kms:GenerateDataKey",
+          "kms:Decrypt",
+          "kms:ReEncrypt*"
+        ],
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "kms:EncryptionContext:aws:events:event-bus:arn" = aws_cloudwatch_event_bus.test.arn
+          }
+        }
+      }
+    ]
+  })
+  tags = {
+    EventBridgeApiDestinations = "true"
+  }
+}
+
+resource "aws_cloudwatch_event_archive" "test" {
+  name               = %[1]q
+  event_source_arn   = aws_cloudwatch_event_bus.test.arn
+  kms_key_identifier = %[2]q
+}
+`, name, kmsKeyIdentifier)
 }
 
 func testAccArchiveConfig_retentionOnCreation(name string) string {

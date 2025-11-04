@@ -6,10 +6,10 @@ package dms_test
 import (
 	"testing"
 
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDMSReplicationSubnetGroupDataSource_basic(t *testing.T) {
@@ -20,7 +20,7 @@ func TestAccDMSReplicationSubnetGroupDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -29,8 +29,8 @@ func TestAccDMSReplicationSubnetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "replication_subnet_group_id", resourceName, "replication_subnet_group_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "replication_subnet_group_description", resourceName, "replication_subnet_group_description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),
 			},
 		},

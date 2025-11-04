@@ -19,44 +19,45 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Access Policy")
-func newDataSourceAccessPolicy(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceAccessPolicy{}, nil
+// @FrameworkDataSource("aws_opensearchserverless_access_policy", name="Access Policy")
+func newAccessPolicyDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &accessPolicyDataSource{}, nil
 }
 
 const (
 	DSNameAccessPolicy = "Access Policy Data Source"
 )
 
-type dataSourceAccessPolicy struct {
-	framework.DataSourceWithConfigure
+type accessPolicyDataSource struct {
+	framework.DataSourceWithModel[accessPolicyDataSourceModel]
 }
 
-func (d *dataSourceAccessPolicy) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_opensearchserverless_access_policy"
-}
-
-func (d *dataSourceAccessPolicy) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *accessPolicyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"description": schema.StringAttribute{
-				Computed: true,
+			names.AttrDescription: schema.StringAttribute{
+				Description: "Description of the policy. Typically used to store information about the permissions defined in the policy.",
+				Computed:    true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
-				Required: true,
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
+				Description: "Name of the policy.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
 			},
-			"policy": schema.StringAttribute{
-				Computed: true,
+			names.AttrPolicy: schema.StringAttribute{
+				Description: "JSON policy document to use as the content for the new policy.",
+				Computed:    true,
 			},
 			"policy_version": schema.StringAttribute{
-				Computed: true,
+				Description: "Version of the policy.",
+				Computed:    true,
 			},
-			"type": schema.StringAttribute{
-				Required: true,
+			names.AttrType: schema.StringAttribute{
+				Description: "Type of access policy. Must be `data`.",
+				Required:    true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.AccessPolicyType](),
 				},
@@ -64,10 +65,10 @@ func (d *dataSourceAccessPolicy) Schema(_ context.Context, _ datasource.SchemaRe
 		},
 	}
 }
-func (d *dataSourceAccessPolicy) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *accessPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
-	var data dataSourceAccessPolicyData
+	var data accessPolicyDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -82,28 +83,18 @@ func (d *dataSourceAccessPolicy) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	data.ID = flex.StringToFramework(ctx, out.Name)
-	data.Description = flex.StringToFramework(ctx, out.Description)
-	data.Name = flex.StringToFramework(ctx, out.Name)
-	data.Type = flex.StringValueToFramework(ctx, out.Type)
-	data.PolicyVersion = flex.StringToFramework(ctx, out.PolicyVersion)
-
-	policyBytes, err := out.Policy.MarshalSmithyDocument()
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameAccessPolicy, data.Name.String(), err),
-			err.Error(),
-		)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	pb := string(policyBytes)
-	data.Policy = flex.StringToFramework(ctx, &pb)
+	data.ID = flex.StringToFramework(ctx, out.Name)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceAccessPolicyData struct {
+type accessPolicyDataSourceModel struct {
+	framework.WithRegionModel
 	Description   types.String `tfsdk:"description"`
 	ID            types.String `tfsdk:"id"`
 	Name          types.String `tfsdk:"name"`

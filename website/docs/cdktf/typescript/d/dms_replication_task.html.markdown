@@ -40,21 +40,17 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replicationTaskId` - (Required) The replication task identifier.
-
-    - Must contain from 1 to 255 alphanumeric characters or hyphens.
-    - First character must be a letter.
-    - Cannot end with a hyphen.
-    - Cannot contain two consecutive hyphens.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `cdcStartPosition` - (Conflicts with `cdc_start_time`) Indicates when you want a change data capture (CDC) operation to start. The value can be in date, checkpoint, or LSN/SCN format depending on the source engine. For more information, see [Determining a CDC native start point](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Task.CDC.html#CHAP_Task.CDC.StartPoint.Native).
-* `cdcStartTime` - (Conflicts with `cdc_start_position`) The Unix timestamp integer for the start of the Change Data Capture (CDC) operation.
+* `cdcStartPosition` - (Conflicts with `cdcStartTime`) Indicates when you want a change data capture (CDC) operation to start. The value can be in date, checkpoint, or LSN/SCN format depending on the source engine. For more information, see [Determining a CDC native start point](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Task.CDC.html#CHAP_Task.CDC.StartPoint.Native).
+* `cdcStartTime` - (Conflicts with `cdcStartPosition`) The Unix timestamp integer for the start of the Change Data Capture (CDC) operation.
 * `migrationType` - The migration type. Can be one of `full-load | cdc | full-load-and-cdc`.
 * `replicationInstanceArn` - The Amazon Resource Name (ARN) of the replication instance.
 * `replicationTaskSettings` - An escaped JSON string that contains the task settings. For a complete list of task settings, see [Task Settings for AWS Database Migration Service Tasks](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html).
@@ -65,4 +61,4 @@ This data source exports the following attributes in addition to the arguments a
 * `targetEndpointArn` - The Amazon Resource Name (ARN) string that uniquely identifies the target endpoint.
 * `replicationTaskArn` - The Amazon Resource Name (ARN) for the replication task.
 
-<!-- cache-key: cdktf-0.19.0 input-fa1a1915aa39f86d68f0c890bf2884e184e4111a8bb8bbe6b38fd7c6c992b063 -->
+<!-- cache-key: cdktf-0.20.8 input-bd68a0d3d48ee95e21b042c28d8b92612fdcb7f3700886e85dd6551b43189b4d -->

@@ -160,13 +160,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoScalingConfigurationArn` - ARN of an App Runner automatic scaling configuration resource that you want to associate with your service. If not provided, App Runner associates the latest revision of a default auto scaling configuration.
 * `encryptionConfiguration` - (Forces new resource) An optional custom encryption key that App Runner uses to encrypt the copy of your source repository that it maintains and your service logs. By default, App Runner uses an AWS managed CMK. See [Encryption Configuration](#encryption-configuration) below for more details.
 * `healthCheckConfiguration` - Settings of the health check that AWS App Runner performs to monitor the health of your service. See [Health Check Configuration](#health-check-configuration) below for more details.
 * `instanceConfiguration` - The runtime configuration of instances (scaling units) of the App Runner service. See [Instance Configuration](#instance-configuration) below for more details.
 * `networkConfiguration` - Configuration settings related to network traffic of the web application that the App Runner service runs. See [Network Configuration](#network-configuration) below for more details.
 * `observabilityConfiguration` - The observability configuration of your service. See [Observability Configuration](#observability-configuration) below for more details.
-* `tags` - Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Encryption Configuration
 
@@ -237,7 +238,7 @@ The `egressConfiguration` block supports the following argument:
 The `observabilityConfiguration` block supports the following arguments:
 
 * `observabilityEnabled` - (Required) When `true`, an observability configuration resource is associated with the service.
-* `observabilityConfigurationArn` - (Optional) ARN of the observability configuration that is associated with the service. Specified only when `observability_enabled` is `true`.
+* `observabilityConfigurationArn` - (Optional) ARN of the observability configuration that is associated with the service. Specified only when `observabilityEnabled` is `true`.
 
 ### Code Repository
 
@@ -300,16 +301,37 @@ The `sourceCodeVersion` block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the App Runner service.
-* `autoScalingConfigurationRevision` - The revision of this auto scaling configuration. It's unique among all the active configurations that share the same `auto_scaling_configuration_name`.
+* `autoScalingConfigurationRevision` - The revision of this auto scaling configuration. It's unique among all the active configurations that share the same `autoScalingConfigurationName`.
 * `hasAssociatedService` - Indicates if this auto scaling configuration has an App Runner service associated with it.
 * `isDefault` - Indicates if this auto scaling configuration should be used as the default for a new App Runner service that does not have an auto scaling configuration ARN specified during creation.
-* `latest` - It's set to `true` for the configuration with the highest `auto_scaling_configuration_revision` among all configurations that share the same `auto_scaling_configuration_name`.
+* `latest` - It's set to `true` for the configuration with the highest `autoScalingConfigurationRevision` among all configurations that share the same `autoScalingConfigurationName`.
 * `serviceId` - An alphanumeric ID that App Runner generated for this service. Unique within the AWS Region.
 * `serviceUrl` - Subdomain URL that App Runner generated for this service. You can use this URL to access your service web application.
 * `status` - Current state of the App Runner service.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_apprunner_service.example
+  identity = {
+    "arn" = "arn:aws:apprunner:us-east-1:123456789012:service/example-app-service/8fe1e10304f84fd2b0df550fe98a71fa"
+  }
+}
+
+resource "aws_apprunner_service" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the App Runner service.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner Services using the `arn`. For example:
 
@@ -317,9 +339,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { ApprunnerService } from "./.gen/providers/aws/apprunner-service";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    ApprunnerService.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe"
+    );
   }
 }
 
@@ -331,4 +363,4 @@ Using `terraform import`, import App Runner Services using the `arn`. For exampl
 % terraform import aws_apprunner_service.example arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-49b6751d647a49c3c3492d7fba17d8ea4f9304c7977e4bcce52e5ef6a905c952 -->
+<!-- cache-key: cdktf-0.20.8 input-e81ed236b80ace3693ad0f0b0d4d2448dcd36f51f2c29d05be739b8cec9c2987 -->

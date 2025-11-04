@@ -61,8 +61,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `alternateIdentifier` (Optional) A unique identifier for a user or group that is not the primary identifier. Conflicts with `user_id` and `filter`. Detailed below.
-* `filter` - (Optional, **Deprecated** use the `alternate_identifier` attribute instead) Configuration block for filtering by a unique attribute of the user. Detailed below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `alternateIdentifier` (Optional) A unique identifier for a user or group that is not the primary identifier. Conflicts with `userId` and `filter`. Detailed below.
 * `userId` - (Optional) The identifier for a user in the Identity Store.
 
 -> Exactly one of the above arguments must be provided. Passing both `filter` and `userId` is allowed for backwards compatibility.
@@ -83,15 +83,6 @@ The `externalId` configuration block supports the following arguments:
 * `id` - (Required) The identifier issued to this resource by an external identity provider.
 * `issuer` - (Required) The issuer for an external identifier.
 
-### `filter` Configuration Block
-
-~> The `filter` configuration block has been deprecated. Use `alternateIdentifier` instead.
-
-The following arguments are supported by the `filter` configuration block:
-
-* `attributePath` - (Required) Attribute path that is used to specify which attribute name to search. Currently, `UserName` is the only valid attribute path.
-* `attributeValue` - (Required) Value for an attribute.
-
 ### `uniqueAttribute` Configuration Block
 
 The `uniqueAttribute` configuration block supports the following arguments:
@@ -108,10 +99,10 @@ This data source exports the following attributes in addition to the arguments a
     * `country` - The country that this address is in.
     * `formatted` - The name that is typically displayed when the address is shown for display.
     * `locality` - The address locality.
-    * `postal_code` - The postal code of the address.
+    * `postalCode` - The postal code of the address.
     * `primary` - When `true`, this is the primary address associated with the user.
     * `region` - The region of the address.
-    * `street_address` - The street of the address.
+    * `streetAddress` - The street of the address.
     * `type` - The type of address.
 * `displayName` - The name that is typically displayed when the user is referenced.
 * `emails` - List of details about the user's email.
@@ -123,12 +114,12 @@ This data source exports the following attributes in addition to the arguments a
     * `issuer` - The issuer for an external identifier.
 * `locale` - The user's geographical region or location.
 * `name` - Details about the user's full name.
-    * `family_name` - The family name of the user.
+    * `familyName` - The family name of the user.
     * `formatted` - The name that is typically displayed when the name is shown for display.
-    * `given_name` - The given name of the user.
-    * `honorific_prefix` - The honorific prefix of the user.
-    * `honorific_suffix` - The honorific suffix of the user.
-    * `middle_name` - The middle name of the user.
+    * `givenName` - The given name of the user.
+    * `honorificPrefix` - The honorific prefix of the user.
+    * `honorificSuffix` - The honorific suffix of the user.
+    * `middleName` - The middle name of the user.
 * `nickname` - An alternate name for the user.
 * `phoneNumbers` - List of details about the user's phone number.
     * `primary` - When `true`, this is the primary phone number associated with the user.
@@ -141,4 +132,4 @@ This data source exports the following attributes in addition to the arguments a
 * `userName` - User's user name value.
 * `userType` - The user type.
 
-<!-- cache-key: cdktf-0.19.0 input-8c28f2f52361f5a36e7b173700680cb27d3254e1fd37a8faf2c90f48b32a9d09 -->
+<!-- cache-key: cdktf-0.20.8 input-670d9a4ed0f164cbcab3972da4a52d838a4b9a95fb5101bdfade807d743f2eb2 -->

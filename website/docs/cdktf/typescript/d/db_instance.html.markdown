@@ -38,12 +38,13 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dbInstanceIdentifier` - (Optional) Name of the RDS instance.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired instance.
 
 ## Attribute Reference
 
-~> **NOTE:** The `port` field may be empty while an Aurora cluster is still in the process of being created. This can occur if the cluster was initiated with the [AWS CLI `createDbCluster`](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html) command, but no DB instance has yet been added to it.
+~> **NOTE:** The `port` field may be empty while an Aurora cluster is still in the process of being created. This can occur if the cluster was initiated with the [AWS CLI `create-db-cluster`](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html) command, but no DB instance has yet been added to it.
 
 This data source exports the following attributes in addition to the arguments above:
 
@@ -52,6 +53,7 @@ This data source exports the following attributes in addition to the arguments a
 * `autoMinorVersionUpgrade` - Indicates that minor version patches are applied automatically.
 * `availabilityZone` - Name of the Availability Zone the DB instance is located in.
 * `backupRetentionPeriod` - Specifies the number of days for which automatic DB snapshots are retained.
+* `databaseInsightsMode` - The mode of Database Insights that is enabled for the DB instance.
 * `dbClusterIdentifier` - If the DB instance is a member of a DB cluster, contains the name of the DB cluster that the DB instance is a member of.
 * `dbInstanceArn` - ARN for the DB instance.
 * `dbInstanceClass` - Contains the name of the compute and memory capacity class of the DB instance.
@@ -68,14 +70,14 @@ This data source exports the following attributes in addition to the arguments a
 * `kmsKeyId` - If StorageEncrypted is true, the KMS key identifier for the encrypted DB instance.
 * `licenseModel` - License model information for this DB instance.
 * `masterUsername` - Contains the master username for the DB instance.
-* `masterUserSecret` - Provides the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
+* `masterUserSecret` - Provides the master user secret. Only available when `manageMasterUserPassword` is set to true. [Documented below](#master_user_secret).
 * `maxAllocatedStorage` - The upper limit to which Amazon RDS can automatically scale the storage of the DB instance.
 * `monitoringInterval` - Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance.
 * `monitoringRoleArn` - ARN for the IAM role that permits RDS to send Enhanced Monitoring metrics to CloudWatch Logs.
 * `multiAz` - If the DB instance is a Multi-AZ deployment.
 * `networkType` - Network type of the DB instance.
 * `optionGroupMemberships` - Provides the list of option group memberships for this DB instance.
-* `port` - Database endpoint port, primarily used by an Aurora DB cluster. For a conventional RDS DB instance, the `db_instance_port` is typically the preferred choice.
+* `port` - Database endpoint port, primarily used by an Aurora DB cluster. For a conventional RDS DB instance, the `dbInstancePort` is typically the preferred choice.
 * `preferredBackupWindow` - Specifies the daily time range during which automated backups are created.
 * `preferredMaintenanceWindow` -  Specifies the weekly time range during which system maintenance can occur in UTC.
 * `publiclyAccessible` - Accessibility options for the DB instance.
@@ -94,6 +96,6 @@ The `masterUserSecret` configuration block supports the following attributes:
 
 * `kmsKeyId` - The Amazon Web Services KMS key identifier that is used to encrypt the secret.
 * `secretArn` - The Amazon Resource Name (ARN) of the secret.
-* `secretStatus` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
+* `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
-<!-- cache-key: cdktf-0.19.0 input-156ff5865fbb8f8d95843d45c98755bb49f6b9ca52d29fab4979c7c7d124577a -->
+<!-- cache-key: cdktf-0.20.8 input-1327c585f632a73e192d45f4fe45a839e9c5b50890fd9259ac880721210b5561 -->

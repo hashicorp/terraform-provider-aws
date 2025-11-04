@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -21,10 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpclattice_target_group_attachment", name="Target Group Attachment")
+// @Testing(tagsTest=false)
 func resourceTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupAttachmentCreate,
@@ -37,7 +40,7 @@ func resourceTargetGroupAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -45,13 +48,13 @@ func resourceTargetGroupAttachment() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-						"port": {
+						names.AttrPort: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
@@ -70,105 +73,138 @@ func resourceTargetGroupAttachment() *schema.Resource {
 	}
 }
 
-func resourceTargetGroupAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
-	target := expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{}))
+	target := expandTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any))
 	targetID := aws.ToString(target.Id)
-	targetPort := int(aws.ToInt32(target.Port))
-	id := strings.Join([]string{targetGroupID, targetID, strconv.Itoa(targetPort)}, "/")
-	input := &vpclattice.RegisterTargetsInput{
+	targetPort := aws.ToInt32(target.Port)
+	id := targetGroupAttachmentCreateResourceID(targetGroupID, targetID, targetPort)
+	input := vpclattice.RegisterTargetsInput{
 		TargetGroupIdentifier: aws.String(targetGroupID),
 		Targets:               []types.Target{target},
 	}
 
-	_, err := conn.RegisterTargets(ctx, input)
+	_, err := conn.RegisterTargets(ctx, &input)
 
 	if err != nil {
-		return diag.Errorf("creating VPC Lattice Target Group Attachment (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating VPC Lattice Target Group Attachment (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitTargetGroupAttachmentCreated(ctx, conn, targetGroupID, targetID, targetPort, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for VPC Lattice Target Group Attachment (%s) create: %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for VPC Lattice Target Group Attachment (%s) create: %s", id, err)
 	}
 
-	return resourceTargetGroupAttachmentRead(ctx, d, meta)
+	return append(diags, resourceTargetGroupAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
+	// Can't use targetGroupAttachmentParseResourceID as targetID ALB ARN includes '/'.
 	targetGroupID := d.Get("target_group_identifier").(string)
-	target := expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{}))
+	target := expandTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any))
 	targetID := aws.ToString(target.Id)
-	targetPort := int(aws.ToInt32(target.Port))
-
+	targetPort := aws.ToInt32(target.Port)
 	output, err := findTargetByThreePartKey(ctx, conn, targetGroupID, targetID, targetPort)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Lattice Target Group Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading VPC Lattice Target Group Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading VPC Lattice Target Group Attachment (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("target", []interface{}{flattenTargetSummary(output)}); err != nil {
-		return diag.Errorf("setting target: %s", err)
+	if err := d.Set(names.AttrTarget, []any{flattenTargetSummary(output)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
 	}
 	d.Set("target_group_identifier", targetGroupID)
 
-	return nil
+	return diags
 }
 
-func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	targetGroupID := d.Get("target_group_identifier").(string)
-	target := expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{}))
-	targetID := aws.ToString(target.Id)
-	targetPort := int(aws.ToInt32(target.Port))
-
 	log.Printf("[INFO] Deleting VPC Lattice Target Group Attachment: %s", d.Id())
-	_, err := conn.DeregisterTargets(ctx, &vpclattice.DeregisterTargetsInput{
-		TargetGroupIdentifier: aws.String(targetGroupID),
-		Targets:               []types.Target{target},
-	})
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
-	}
-
-	if err != nil {
-		return diag.Errorf("deleting VPC Lattice Target Group Attachment (%s): %s", d.Id(), err)
-	}
-
-	if _, err := waitTargetGroupAttachmentDeleted(ctx, conn, targetGroupID, targetID, targetPort, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for VPC Lattice Target Group Attachment (%s) delete: %s", d.Id(), err)
-	}
-
-	return nil
-}
-
-func findTargetByThreePartKey(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int) (*types.TargetSummary, error) {
-	input := &vpclattice.ListTargetsInput{
+	targetGroupID := d.Get("target_group_identifier").(string)
+	target := expandTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any))
+	targetID := aws.ToString(target.Id)
+	targetPort := aws.ToInt32(target.Port)
+	input := vpclattice.DeregisterTargetsInput{
 		TargetGroupIdentifier: aws.String(targetGroupID),
 		Targets: []types.Target{{
 			Id: aws.String(targetID),
 		}},
 	}
 	if targetPort > 0 {
-		input.Targets[0].Port = aws.Int32(int32(targetPort))
+		input.Targets[0].Port = aws.Int32(targetPort)
 	}
+	_, err := conn.DeregisterTargets(ctx, &input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting VPC Lattice Target Group Attachment (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitTargetGroupAttachmentDeleted(ctx, conn, targetGroupID, targetID, targetPort, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for VPC Lattice Target Group Attachment (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+const targetGroupAttachmentResourceIDSeparator = "/"
+
+func targetGroupAttachmentCreateResourceID(targetGroupID, targetID string, targetPort int32) string {
+	parts := []string{targetGroupID, targetID, flex.Int32ValueToStringValue(targetPort)}
+	id := strings.Join(parts, targetGroupAttachmentResourceIDSeparator)
+
+	return id
+}
+
+func findTargetByThreePartKey(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32) (*types.TargetSummary, error) {
+	input := vpclattice.ListTargetsInput{
+		TargetGroupIdentifier: aws.String(targetGroupID),
+		Targets: []types.Target{{
+			Id: aws.String(targetID),
+		}},
+	}
+	if targetPort > 0 {
+		input.Targets[0].Port = aws.Int32(targetPort)
+	}
+
+	return findTarget(ctx, conn, &input)
+}
+
+func findTarget(ctx context.Context, conn *vpclattice.Client, input *vpclattice.ListTargetsInput) (*types.TargetSummary, error) {
+	output, err := findTargets(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTargets(ctx context.Context, conn *vpclattice.Client, input *vpclattice.ListTargetsInput) ([]types.TargetSummary, error) {
+	var output []types.TargetSummary
 
 	paginator := vpclattice.NewListTargetsPaginator(conn, input)
 	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(ctx)
+		page, err := paginator.NextPage(ctx)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
@@ -181,16 +217,14 @@ func findTargetByThreePartKey(ctx context.Context, conn *vpclattice.Client, targ
 			return nil, err
 		}
 
-		if output != nil && len(output.Items) == 1 {
-			return &(output.Items[0]), nil
-		}
+		output = append(output, page.Items...)
 	}
 
-	return nil, &retry.NotFoundError{}
+	return output, nil
 }
 
-func statusTarget(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTarget(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32) retry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTargetByThreePartKey(ctx, conn, targetGroupID, targetID, targetPort)
 
 		if tfresource.NotFound(err) {
@@ -205,13 +239,12 @@ func statusTarget(ctx context.Context, conn *vpclattice.Client, targetGroupID, t
 	}
 }
 
-func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int, timeout time.Duration) (*types.TargetSummary, error) {
+func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32, timeout time.Duration) (*types.TargetSummary, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.TargetStatusInitial),
 		Target:                    enum.Slice(types.TargetStatusHealthy, types.TargetStatusUnhealthy, types.TargetStatusUnused, types.TargetStatusUnavailable),
 		Refresh:                   statusTarget(ctx, conn, targetGroupID, targetID, targetPort),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -226,7 +259,7 @@ func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Clie
 	return nil, err
 }
 
-func waitTargetGroupAttachmentDeleted(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int, timeout time.Duration) (*types.TargetSummary, error) {
+func waitTargetGroupAttachmentDeleted(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32, timeout time.Duration) (*types.TargetSummary, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TargetStatusDraining, types.TargetStatusInitial),
 		Target:  []string{},
@@ -245,32 +278,32 @@ func waitTargetGroupAttachmentDeleted(ctx context.Context, conn *vpclattice.Clie
 	return nil, err
 }
 
-func flattenTargetSummary(apiObject *types.TargetSummary) map[string]interface{} {
+func flattenTargetSummary(apiObject *types.TargetSummary) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Id; v != nil {
-		tfMap["id"] = aws.ToString(v)
+		tfMap[names.AttrID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.ToInt32(v)
+		tfMap[names.AttrPort] = aws.ToInt32(v)
 	}
 
 	return tfMap
 }
 
-func expandTarget(tfMap map[string]interface{}) types.Target {
+func expandTarget(tfMap map[string]any) types.Target {
 	apiObject := types.Target{}
 
-	if v, ok := tfMap["id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 		apiObject.Id = aws.String(v)
 	}
 
-	if v, ok := tfMap["port"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 

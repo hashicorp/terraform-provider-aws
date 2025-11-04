@@ -20,7 +20,7 @@ func TestAccS3ObjectsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -44,7 +44,7 @@ func TestAccS3ObjectsDataSource_basicViaAccessPoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -67,7 +67,7 @@ func TestAccS3ObjectsDataSource_prefixes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func TestAccS3ObjectsDataSource_encoded(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -114,7 +114,7 @@ func TestAccS3ObjectsDataSource_maxKeysSmall(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -143,13 +143,13 @@ func TestAccS3ObjectsDataSource_maxKeysLarge(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_s3_objects.test"
 	var keys []string
-	for i := 0; i < 1500; i++ {
+	for i := range 1500 {
 		keys = append(keys, fmt.Sprintf("data%d", i))
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -181,7 +181,7 @@ func TestAccS3ObjectsDataSource_startAfter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -204,7 +204,7 @@ func TestAccS3ObjectsDataSource_fetchOwner(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -227,7 +227,7 @@ func TestAccS3ObjectsDataSource_directoryBucket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -383,7 +383,7 @@ data "aws_s3_objects" "test" {
 }
 
 func testAccObjectsDataSourceConfig_directoryBucket(rName string, n int) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

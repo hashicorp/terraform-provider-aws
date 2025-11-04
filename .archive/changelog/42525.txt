@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_wafv2_api_key
+```

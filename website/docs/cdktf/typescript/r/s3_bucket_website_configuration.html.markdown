@@ -88,13 +88,14 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
-* `errorDocument` - (Optional, Conflicts with `redirect_all_requests_to`) Name of the error document for the website. [See below](#error_document).
+* `errorDocument` - (Optional, Conflicts with `redirectAllRequestsTo`) Name of the error document for the website. [See below](#error_document).
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
-* `indexDocument` - (Optional, Required if `redirect_all_requests_to` is not specified) Name of the index document for the website. [See below](#index_document).
-* `redirectAllRequestsTo` - (Optional, Required if `index_document` is not specified) Redirect behavior for every request to this bucket's website endpoint. [See below](#redirect_all_requests_to). Conflicts with `error_document`, `index_document`, and `routing_rule`.
-* `routingRule` - (Optional, Conflicts with `redirect_all_requests_to` and `routing_rules`) List of rules that define when a redirect is applied and the redirect behavior. [See below](#routing_rule).
-* `routingRules` - (Optional, Conflicts with `routing_rule` and `redirect_all_requests_to`) JSON array containing [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules.html)
+* `indexDocument` - (Optional, Required if `redirectAllRequestsTo` is not specified) Name of the index document for the website. [See below](#index_document).
+* `redirectAllRequestsTo` - (Optional, Required if `indexDocument` is not specified) Redirect behavior for every request to this bucket's website endpoint. [See below](#redirect_all_requests_to). Conflicts with `errorDocument`, `indexDocument`, and `routingRule`.
+* `routingRule` - (Optional, Conflicts with `redirectAllRequestsTo` and `routingRules`) List of rules that define when a redirect is applied and the redirect behavior. [See below](#routing_rule).
+* `routingRules` - (Optional, Conflicts with `routingRule` and `redirectAllRequestsTo`) JSON array containing [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules.html)
   describing redirect behavior and when redirects are applied. Use this parameter when your routing rules contain empty String values (`""`) as seen in the [example above](#with-routing_rules-configured).
 
 ### error_document
@@ -129,8 +130,8 @@ The `routingRule` configuration block supports the following arguments:
 
 The `condition` configuration block supports the following arguments:
 
-* `httpErrorCodeReturnedEquals` - (Optional, Required if `key_prefix_equals` is not specified) HTTP error code when the redirect is applied. If specified with `key_prefix_equals`, then both must be true for the redirect to be applied.
-* `keyPrefixEquals` - (Optional, Required if `http_error_code_returned_equals` is not specified) Object key name prefix when the redirect is applied. If specified with `http_error_code_returned_equals`, then both must be true for the redirect to be applied.
+* `httpErrorCodeReturnedEquals` - (Optional, Required if `keyPrefixEquals` is not specified) HTTP error code when the redirect is applied. If specified with `keyPrefixEquals`, then both must be true for the redirect to be applied.
+* `keyPrefixEquals` - (Optional, Required if `httpErrorCodeReturnedEquals` is not specified) Object key name prefix when the redirect is applied. If specified with `httpErrorCodeReturnedEquals`, then both must be true for the redirect to be applied.
 
 ### redirect
 
@@ -139,18 +140,45 @@ The `redirect` configuration block supports the following arguments:
 * `hostName` - (Optional) Host name to use in the redirect request.
 * `httpRedirectCode` - (Optional) HTTP redirect code to use on the response.
 * `protocol` - (Optional) Protocol to use when redirecting requests. The default is the protocol that is used in the original request. Valid values: `http`, `https`.
-* `replaceKeyPrefixWith` - (Optional, Conflicts with `replace_key_with`) Object key prefix to use in the redirect request. For example, to redirect requests for all pages with prefix `docs/` (objects in the `docs/` folder) to `documents/`, you can set a `condition` block with `key_prefix_equals` set to `docs/` and in the `redirect` set `replace_key_prefix_with` to `/documents`.
-* `replaceKeyWith` - (Optional, Conflicts with `replace_key_prefix_with`) Specific object key to use in the redirect request. For example, redirect request to `error.html`.
+* `replaceKeyPrefixWith` - (Optional, Conflicts with `replaceKeyWith`) Object key prefix to use in the redirect request. For example, to redirect requests for all pages with prefix `docs/` (objects in the `docs/` folder) to `documents/`, you can set a `condition` block with `keyPrefixEquals` set to `docs/` and in the `redirect` set `replaceKeyPrefixWith` to `/documents`.
+* `replaceKeyWith` - (Optional, Conflicts with `replaceKeyPrefixWith`) Specific object key to use in the redirect request. For example, redirect request to `error.html`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
+* `id` - The `bucket` or `bucket` and `expectedBucketOwner` separated by a comma (`,`) if the latter is provided.
 * `websiteDomain` - Domain of the website endpoint. This is used to create Route 53 alias records.
 * `websiteEndpoint` - Website endpoint.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_website_configuration.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_website_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `expectedBucketOwner` (String) Account ID of the expected bucket owner.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket website configuration using the `bucket` or using the `bucket` and `expectedBucketOwner` separated by a comma (`,`). For example:
 
@@ -160,9 +188,19 @@ If the owner (account ID) of the source bucket is the same account used to confi
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { S3BucketWebsiteConfiguration } from "./.gen/providers/aws/s3-bucket-website-configuration";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    S3BucketWebsiteConfiguration.generateConfigForImport(
+      this,
+      "example",
+      "bucket-name"
+    );
   }
 }
 
@@ -174,9 +212,19 @@ If the owner (account ID) of the source bucket differs from the account used to 
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { S3BucketWebsiteConfiguration } from "./.gen/providers/aws/s3-bucket-website-configuration";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    S3BucketWebsiteConfiguration.generateConfigForImport(
+      this,
+      "example",
+      "bucket-name,123456789012"
+    );
   }
 }
 
@@ -196,4 +244,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_website_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-2bd65f193d56ad7f250de1a3de6546120dfff97bf42a13c7dc68b5c6058c0969 -->
+<!-- cache-key: cdktf-0.20.8 input-59f9f5ba0b39845b9547687111ca3a2d7bbe0896101555a59b73d668c2d75a7c -->

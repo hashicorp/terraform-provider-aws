@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lakeformation_data_lake_settings: Add `parameters` map argument enabling `CROSS_ACCOUNT_VERSION` to be set
+```
+
+```release-note:enhancement
+data-source/aws_lakeformation_data_lake_settings: Add `parameters` map attribute to read `CROSS_ACCOUNT_VERSION`
+```

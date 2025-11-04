@@ -8,21 +8,23 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicecatalog_provisioning_artifact")
-func ResourceProvisioningArtifact() *schema.Resource {
+// @SDKResource("aws_servicecatalog_provisioning_artifact", name="Provisioning Artifact")
+func resourceProvisioningArtifact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisioningArtifactCreate,
 		ReadWithoutTimeout:   resourceProvisioningArtifactRead,
@@ -43,19 +45,19 @@ func ResourceProvisioningArtifact() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      AcceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				Default:      acceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
 			"active": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -67,12 +69,12 @@ func ResourceProvisioningArtifact() *schema.Resource {
 				ForceNew: true,
 			},
 			"guidance": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      servicecatalog.ProvisioningArtifactGuidanceDefault,
-				ValidateFunc: validation.StringInSlice(servicecatalog.ProvisioningArtifactGuidance_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.ProvisioningArtifactGuidanceDefault,
+				ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactGuidance](),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -103,27 +105,27 @@ func ResourceProvisioningArtifact() *schema.Resource {
 					"template_physical_id",
 				},
 			},
-			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(servicecatalog.ProvisioningArtifactType_Values(), false),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactType](),
 			},
 		},
 	}
 }
 
-func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	parameters := make(map[string]interface{})
-	parameters["description"] = d.Get("description")
+	parameters := make(map[string]any)
+	parameters[names.AttrDescription] = d.Get(names.AttrDescription)
 	parameters["disable_template_validation"] = d.Get("disable_template_validation")
-	parameters["name"] = d.Get("name")
+	parameters[names.AttrName] = d.Get(names.AttrName)
 	parameters["template_physical_id"] = d.Get("template_physical_id")
 	parameters["template_url"] = d.Get("template_url")
-	parameters["type"] = d.Get("type")
+	parameters[names.AttrType] = d.Get(names.AttrType)
 
 	input := &servicecatalog.CreateProvisioningArtifactInput{
 		IdempotencyToken: aws.String(id.UniqueId()),
@@ -136,25 +138,21 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	var output *servicecatalog.CreateProvisioningArtifactOutput
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
-		output, err = conn.CreateProvisioningArtifactWithContext(ctx, input)
+		output, err = conn.CreateProvisioningArtifact(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return retry.RetryableError(err)
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateProvisioningArtifactWithContext(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Provisioning Artifact: %s", err)
@@ -164,7 +162,7 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Provisioning Artifact: empty response")
 	}
 
-	d.SetId(ProvisioningArtifactID(aws.StringValue(output.ProvisioningArtifactDetail.Id), d.Get("product_id").(string)))
+	d.SetId(provisioningArtifactID(aws.ToString(output.ProvisioningArtifactDetail.Id), d.Get("product_id").(string)))
 
 	// Active and Guidance are not fields of CreateProvisioningArtifact but are fields of UpdateProvisioningArtifact.
 	// In order to set these to non-default values, you must create and then update.
@@ -172,19 +170,19 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceProvisioningArtifactUpdate(ctx, d, meta)...)
 }
 
-func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
+	artifactID, productID, err := provisioningArtifactParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing Service Catalog Provisioning Artifact ID (%s): %s", d.Id(), err)
 	}
 
-	output, err := WaitProvisioningArtifactReady(ctx, conn, artifactID, productID, d.Timeout(schema.TimeoutRead))
+	output, err := waitProvisioningArtifactReady(ctx, conn, artifactID, productID, d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Service Catalog Provisioning Artifact (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -210,24 +208,24 @@ func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceDat
 
 	d.Set("active", pad.Active)
 	if pad.CreatedTime != nil {
-		d.Set("created_time", pad.CreatedTime.Format(time.RFC3339))
+		d.Set(names.AttrCreatedTime, pad.CreatedTime.Format(time.RFC3339))
 	}
-	d.Set("description", pad.Description)
+	d.Set(names.AttrDescription, pad.Description)
 	d.Set("guidance", pad.Guidance)
-	d.Set("name", pad.Name)
+	d.Set(names.AttrName, pad.Name)
 	d.Set("product_id", productID)
 	d.Set("provisioning_artifact_id", artifactID)
-	d.Set("type", pad.Type)
+	d.Set(names.AttrType, pad.Type)
 
 	return diags
 }
 
-func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	if d.HasChanges("accept_language", "active", "description", "guidance", "name", "product_id") {
-		artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
+	if d.HasChanges("accept_language", "active", names.AttrDescription, "guidance", names.AttrName, "product_id") {
+		artifactID, productID, err := provisioningArtifactParseID(d.Id())
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "parsing Service Catalog Provisioning Artifact ID (%s): %s", d.Id(), err)
@@ -243,35 +241,31 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 			input.AcceptLanguage = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("guidance"); ok {
-			input.Guidance = aws.String(v.(string))
+			input.Guidance = awstypes.ProvisioningArtifactGuidance(v.(string))
 		}
 
-		if v, ok := d.GetOk("name"); ok {
+		if v, ok := d.GetOk(names.AttrName); ok {
 			input.Name = aws.String(v.(string))
 		}
 
-		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
-			_, err := conn.UpdateProvisioningArtifactWithContext(ctx, input)
+		err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) *tfresource.RetryError {
+			_, err := conn.UpdateProvisioningArtifact(ctx, input)
 
-			if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-				return retry.RetryableError(err)
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
+				return tfresource.RetryableError(err)
 			}
 
 			if err != nil {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 
 			return nil
 		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateProvisioningArtifactWithContext(ctx, input)
-		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Service Catalog Provisioning Artifact (%s): %s", d.Id(), err)
@@ -281,11 +275,11 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceProvisioningArtifactRead(ctx, d, meta)...)
 }
 
-func resourceProvisioningArtifactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisioningArtifactDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
+	artifactID, productID, err := provisioningArtifactParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing Service Catalog Provisioning Artifact ID (%s): %s", d.Id(), err)
@@ -300,9 +294,9 @@ func resourceProvisioningArtifactDelete(ctx context.Context, d *schema.ResourceD
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	_, err = conn.DeleteProvisioningArtifactWithContext(ctx, input)
+	_, err = conn.DeleteProvisioningArtifact(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -310,7 +304,7 @@ func resourceProvisioningArtifactDelete(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Provisioning Artifact (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitProvisioningArtifactDeleted(ctx, conn, artifactID, productID, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitProvisioningArtifactDeleted(ctx, conn, artifactID, productID, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioning Artifact (%s) to be deleted: %s", d.Id(), err)
 	}
 

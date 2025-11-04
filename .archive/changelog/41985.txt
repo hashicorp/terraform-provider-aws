@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iot_domain_configuration: Change `domain_name` to Computed
+```

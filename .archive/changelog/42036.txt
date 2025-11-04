@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_s3_bucket_lifecycle_configuration: Removes spurious "known after apply" notations in plan
+```
+
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Removes incorrect warning for empty `rule.filter`
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket_lifecycle_configuration: Adds warning if multiple attributes in `rule.expiration` are set
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket_lifecycle_configuration: Adds warning if neither `rule.prefix` nor `rule.filter` is set
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket_lifecycle_configuration: Adds warning if neither `rule.transition.date` nor `rule.transition.days` is set and error if both are set
+```

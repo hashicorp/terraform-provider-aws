@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: The `use_fips_endpoint` flag is now ignored for any service with a custom endpoint configured in `endpoints`.
+```

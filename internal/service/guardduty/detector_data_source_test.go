@@ -6,9 +6,9 @@ package guardduty_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDetectorDataSource_basic(t *testing.T) {
@@ -21,18 +21,19 @@ func testAccDetectorDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:                acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDetectorDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "features.#", 0),
 					resource.TestCheckResourceAttrPair(datasourceName, "finding_publishing_frequency", resourceName, "finding_publishing_frequency"),
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					acctest.CheckResourceAttrGlobalARN(datasourceName, "service_role_arn", "iam", "role/aws-service-role/guardduty.amazonaws.com/AWSServiceRoleForAmazonGuardDuty"),
-					resource.TestCheckResourceAttr(datasourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					acctest.CheckResourceAttrGlobalARN(ctx, datasourceName, names.AttrServiceRoleARN, "iam", "role/aws-service-role/guardduty.amazonaws.com/AWSServiceRoleForAmazonGuardDuty"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 		},
@@ -49,17 +50,18 @@ func testAccDetectorDataSource_ID(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDetectorDataSourceConfig_id,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "features.#", 0),
 					resource.TestCheckResourceAttrPair(datasourceName, "finding_publishing_frequency", resourceName, "finding_publishing_frequency"),
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					acctest.CheckResourceAttrGlobalARN(datasourceName, "service_role_arn", "iam", "role/aws-service-role/guardduty.amazonaws.com/AWSServiceRoleForAmazonGuardDuty"),
-					resource.TestCheckResourceAttr(datasourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					acctest.CheckResourceAttrGlobalARN(ctx, datasourceName, names.AttrServiceRoleARN, "iam", "role/aws-service-role/guardduty.amazonaws.com/AWSServiceRoleForAmazonGuardDuty"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 		},

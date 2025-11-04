@@ -63,6 +63,7 @@ resource "aws_dx_hosted_private_virtual_interface_accepter" "accepter" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `virtual_interface_id` - (Required) The ID of the Direct Connect virtual interface to accept.
 * `dx_gateway_id` - (Optional) The ID of the Direct Connect gateway to which to connect the virtual interface.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

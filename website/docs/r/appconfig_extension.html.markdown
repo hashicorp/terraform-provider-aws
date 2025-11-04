@@ -54,6 +54,7 @@ resource "aws_appconfig_extension" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name for the extension. Each extension name in your account must be unique. Extension versions use the same name.
 * `description` - (Optional) Information about the extension.
 * `action_point` - (Required) The action points defined in the extension. [Detailed below](#action_point).
@@ -72,8 +73,8 @@ Defines the actions the extension performs during the AppConfig workflow and at 
 The `action` configuration block supports configuring any number of the following arguments:
 
 * `name` - (Required) The action name.
-* `role_arn` - (Required) An Amazon Resource Name (ARN) for an Identity and Access Management assume role.
 * `uri` - (Required) The extension URI associated to the action point in the extension definition. The URI can be an Amazon Resource Name (ARN) for one of the following: an Lambda function, an Amazon Simple Queue Service queue, an Amazon Simple Notification Service topic, or the Amazon EventBridge default event bus.
+* `role_arn` - (Optional) An Amazon Resource Name (ARN) for an Identity and Access Management assume role.
 * `description` - (Optional) Information about the action.
 
 #### `parameter`

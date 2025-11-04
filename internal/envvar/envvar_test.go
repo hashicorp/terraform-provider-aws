@@ -10,7 +10,7 @@ import (
 	testingiface "github.com/mitchellh/go-testing-interface"
 )
 
-func TestGetWithDefault(t *testing.T) { //nolint:paralleltest
+func TestGetWithDefault(t *testing.T) {
 	envVar := "TESTENVVAR_GETWITHDEFAULT"
 
 	t.Run("missing", func(t *testing.T) { //nolint:paralleltest
@@ -25,7 +25,7 @@ func TestGetWithDefault(t *testing.T) { //nolint:paralleltest
 		}
 	})
 
-	t.Run("empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("empty", func(t *testing.T) {
 		want := "default"
 
 		t.Setenv(envVar, "")
@@ -37,7 +37,7 @@ func TestGetWithDefault(t *testing.T) { //nolint:paralleltest
 		}
 	})
 
-	t.Run("not empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("not empty", func(t *testing.T) {
 		want := "notempty"
 
 		t.Setenv(envVar, want)
@@ -50,7 +50,7 @@ func TestGetWithDefault(t *testing.T) { //nolint:paralleltest
 	})
 }
 
-func TestRequireOneOf(t *testing.T) { //nolint:paralleltest
+func TestRequireOneOf(t *testing.T) {
 	envVar1 := "TESTENVVAR_REQUIREONEOF1"
 	envVar2 := "TESTENVVAR_REQUIREONEOF2"
 	envVars := []string{envVar1, envVar2}
@@ -67,7 +67,7 @@ func TestRequireOneOf(t *testing.T) { //nolint:paralleltest
 		}
 	})
 
-	t.Run("all empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("all empty", func(t *testing.T) {
 		t.Setenv(envVar1, "")
 		t.Setenv(envVar2, "")
 
@@ -78,7 +78,7 @@ func TestRequireOneOf(t *testing.T) { //nolint:paralleltest
 		}
 	})
 
-	t.Run("some empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("some empty", func(t *testing.T) {
 		wantValue := "pickme"
 
 		t.Setenv(envVar1, "")
@@ -99,7 +99,7 @@ func TestRequireOneOf(t *testing.T) { //nolint:paralleltest
 		}
 	})
 
-	t.Run("all not empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("all not empty", func(t *testing.T) {
 		wantValue := "pickme"
 
 		t.Setenv(envVar1, wantValue)
@@ -121,7 +121,7 @@ func TestRequireOneOf(t *testing.T) { //nolint:paralleltest
 	})
 }
 
-func TestRequire(t *testing.T) { //nolint:paralleltest
+func TestRequire(t *testing.T) {
 	envVar := "TESTENVVAR_REQUIRE"
 
 	t.Run("missing", func(t *testing.T) { //nolint:paralleltest
@@ -134,7 +134,7 @@ func TestRequire(t *testing.T) { //nolint:paralleltest
 		}
 	})
 
-	t.Run("empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("empty", func(t *testing.T) {
 		t.Setenv(envVar, "")
 
 		_, err := Require(envVar, "usage")
@@ -144,7 +144,7 @@ func TestRequire(t *testing.T) { //nolint:paralleltest
 		}
 	})
 
-	t.Run("not empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("not empty", func(t *testing.T) {
 		want := "notempty"
 
 		t.Setenv(envVar, want)
@@ -161,7 +161,7 @@ func TestRequire(t *testing.T) { //nolint:paralleltest
 	})
 }
 
-func TestTestFailIfAllEmpty(t *testing.T) { //nolint:paralleltest
+func TestTestFailIfAllEmpty(t *testing.T) {
 	envVar1 := "TESTENVVAR_FAILIFALLEMPTY1"
 	envVar2 := "TESTENVVAR_FAILIFALLEMPTY2"
 	envVars := []string{envVar1, envVar2}
@@ -178,7 +178,7 @@ func TestTestFailIfAllEmpty(t *testing.T) { //nolint:paralleltest
 		t.Fatal("expected to fail previously")
 	})
 
-	t.Run("all empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("all empty", func(t *testing.T) {
 		defer testingifaceRecover()
 
 		t.Setenv(envVar1, "")
@@ -189,7 +189,7 @@ func TestTestFailIfAllEmpty(t *testing.T) { //nolint:paralleltest
 		t.Fatal("expected to fail previously")
 	})
 
-	t.Run("some empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("some empty", func(t *testing.T) {
 		wantValue := "pickme"
 
 		t.Setenv(envVar1, "")
@@ -206,7 +206,7 @@ func TestTestFailIfAllEmpty(t *testing.T) { //nolint:paralleltest
 		}
 	})
 
-	t.Run("all not empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("all not empty", func(t *testing.T) {
 		wantValue := "pickme"
 
 		t.Setenv(envVar1, wantValue)
@@ -224,7 +224,7 @@ func TestTestFailIfAllEmpty(t *testing.T) { //nolint:paralleltest
 	})
 }
 
-func TestTestFailIfEmpty(t *testing.T) { //nolint:paralleltest
+func TestTestFailIfEmpty(t *testing.T) {
 	envVar := "TESTENVVAR_FAILIFEMPTY"
 
 	t.Run("missing", func(t *testing.T) { //nolint:paralleltest
@@ -237,7 +237,7 @@ func TestTestFailIfEmpty(t *testing.T) { //nolint:paralleltest
 		t.Fatal("expected to fail previously")
 	})
 
-	t.Run("empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("empty", func(t *testing.T) {
 		defer testingifaceRecover()
 
 		t.Setenv(envVar, "")
@@ -247,7 +247,7 @@ func TestTestFailIfEmpty(t *testing.T) { //nolint:paralleltest
 		t.Fatal("expected to fail previously")
 	})
 
-	t.Run("not empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("not empty", func(t *testing.T) {
 		want := "notempty"
 
 		t.Setenv(envVar, want)
@@ -260,7 +260,7 @@ func TestTestFailIfEmpty(t *testing.T) { //nolint:paralleltest
 	})
 }
 
-func TestTestSkipIfEmpty(t *testing.T) { //nolint:paralleltest
+func TestTestSkipIfEmpty(t *testing.T) {
 	envVar := "TESTENVVAR_SKIPIFEMPTY"
 
 	t.Run("missing", func(t *testing.T) { //nolint:paralleltest
@@ -275,7 +275,7 @@ func TestTestSkipIfEmpty(t *testing.T) { //nolint:paralleltest
 		}
 	})
 
-	t.Run("empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("empty", func(t *testing.T) {
 		mockT := &testingiface.RuntimeT{}
 
 		t.Setenv(envVar, "")
@@ -287,7 +287,7 @@ func TestTestSkipIfEmpty(t *testing.T) { //nolint:paralleltest
 		}
 	})
 
-	t.Run("not empty", func(t *testing.T) { //nolint:paralleltest
+	t.Run("not empty", func(t *testing.T) {
 		want := "notempty"
 
 		t.Setenv(envVar, want)

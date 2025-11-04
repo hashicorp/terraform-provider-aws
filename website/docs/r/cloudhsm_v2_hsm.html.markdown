@@ -29,20 +29,25 @@ resource "aws_cloudhsm_v2_hsm" "cloudhsm_v2_hsm" {
 
 This resource supports the following arguments:
 
-~> **NOTE:** Either `subnet_id` or `availability_zone` must be specified.
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_id` - (Required) The ID of Cloud HSM v2 cluster to which HSM will be added.
 * `subnet_id` - (Optional) The ID of subnet in which HSM module will be located. Conflicts with `availability_zone`.
 * `availability_zone` - (Optional) The IDs of AZ in which HSM module will be located. Conflicts with `subnet_id`.
 * `ip_address` - (Optional) The IP address of HSM module. Must be within the CIDR of selected subnet.
 
+~> **NOTE:** Either `subnet_id` or `availability_zone` must be specified.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `availability_zone` - Name of the Availability Zone the HSM instance is located in.
+* `cluster_id` - ID of Cloud HSM v2 cluster.
+* `hsm_eni_id` - The id of the ENI interface allocated for HSM module.
 * `hsm_id` - The id of the HSM module.
 * `hsm_state` - The state of the HSM module.
-* `hsm_eni_id` - The id of the ENI interface allocated for HSM module.
+* `ip_address` - The IP address of the HSM Module.
+* `subnet_id` -  The ID of subnet in which HSM is located
 
 ## Import
 

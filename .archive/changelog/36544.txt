@@ -1,0 +1,4 @@
+```release-note:enhancement
+data-source/aws_db_snapshot: Add `original_snapshot_create_time` attribute
+```
+

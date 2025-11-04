@@ -30,7 +30,7 @@ func TestAccAppRunnerVPCIngressConnection_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,13 +38,13 @@ func TestAccAppRunnerVPCIngressConnection_basic(t *testing.T) {
 				Config: testAccVPCIngressConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`vpcingressconnection/%s/.+`, rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.VpcIngressConnectionStatusAvailable)),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_arn", appRunnerServiceResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "ingress_vpc_configuration.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "ingress_vpc_configuration.0.vpc_endpoint_id", vpcEndpointResourceName, "id"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`vpcingressconnection/%s/.+`, rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.VpcIngressConnectionStatusAvailable)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(resourceName, "service_arn", appRunnerServiceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "ingress_vpc_configuration.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ingress_vpc_configuration.0.vpc_endpoint_id", vpcEndpointResourceName, names.AttrID),
 				),
 			},
 			{
@@ -63,7 +63,7 @@ func TestAccAppRunnerVPCIngressConnection_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,51 +74,6 @@ func TestAccAppRunnerVPCIngressConnection_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceVPCIngressConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAppRunnerVPCIngressConnection_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_apprunner_vpc_ingress_connection.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCIngressConnectionConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVPCIngressConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccVPCIngressConnectionConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
 			},
 		},
 	})
@@ -220,41 +175,4 @@ resource "aws_apprunner_vpc_ingress_connection" "test" {
   }
 }
 `, rName))
-}
-
-func testAccVPCIngressConnectionConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccVPCIngressConnectionConfig_base(rName), fmt.Sprintf(`
-resource "aws_apprunner_vpc_ingress_connection" "test" {
-  name        = %[1]q
-  service_arn = aws_apprunner_service.test.arn
-
-  ingress_vpc_configuration {
-    vpc_id          = aws_vpc.test.id
-    vpc_endpoint_id = aws_vpc_endpoint.test.id
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccVPCIngressConnectionConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccVPCIngressConnectionConfig_base(rName), fmt.Sprintf(`
-resource "aws_apprunner_vpc_ingress_connection" "test" {
-  name        = %[1]q
-  service_arn = aws_apprunner_service.test.arn
-
-  ingress_vpc_configuration {
-    vpc_id          = aws_vpc.test.id
-    vpc_endpoint_id = aws_vpc_endpoint.test.id
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

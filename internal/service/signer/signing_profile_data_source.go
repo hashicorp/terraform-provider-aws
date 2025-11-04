@@ -12,20 +12,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_signer_signing_profile")
-func DataSourceSigningProfile() *schema.Resource {
+// @SDKDataSource("aws_signer_signing_profile", name="Signing Profile")
+func dataSourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSigningProfileRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,23 +64,42 @@ func DataSourceSigningProfile() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"status": {
+			"signing_material": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrCertificateARN: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"signing_parameters": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,12 +111,12 @@ func DataSourceSigningProfile() *schema.Resource {
 	}
 }
 
-func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	profileName := d.Get("name").(string)
+	profileName := d.Get(names.AttrName).(string)
 	signingProfileOutput, err := conn.GetSigningProfile(ctx, &signer.GetSigningProfileInput{
 		ProfileName: aws.String(profileName),
 	})
@@ -108,24 +129,26 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform id: %s", err)
 	}
 
-	if err := d.Set("signature_validity_period", []interface{}{
-		map[string]interface{}{
-			"value": signingProfileOutput.SignatureValidityPeriod.Value,
-			"type":  signingProfileOutput.SignatureValidityPeriod.Type,
-		},
-	}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile signature validity period: %s", err)
+	if v := signingProfileOutput.SignatureValidityPeriod; v != nil {
+		if err := d.Set("signature_validity_period", []any{
+			map[string]any{
+				names.AttrValue: v.Value,
+				names.AttrType:  v.Type,
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signature_validity_period: %s", err)
+		}
 	}
 
 	if err := d.Set("platform_display_name", signingProfileOutput.PlatformDisplayName); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform display name: %s", err)
 	}
 
-	if err := d.Set("arn", signingProfileOutput.Arn); err != nil {
+	if err := d.Set(names.AttrARN, signingProfileOutput.Arn); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile arn: %s", err)
 	}
 
-	if err := d.Set("version", signingProfileOutput.ProfileVersion); err != nil {
+	if err := d.Set(names.AttrVersion, signingProfileOutput.ProfileVersion); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version: %s", err)
 	}
 
@@ -133,11 +156,23 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version arn: %s", err)
 	}
 
-	if err := d.Set("status", signingProfileOutput.Status); err != nil {
+	if signingProfileOutput.SigningMaterial != nil {
+		if err := d.Set("signing_material", flattenSigningMaterial(signingProfileOutput.SigningMaterial)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signing_material: %s", err)
+		}
+	}
+
+	if signingProfileOutput.SigningParameters != nil {
+		if err := d.Set("signing_parameters", flex.FlattenStringValueMap(signingProfileOutput.SigningParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signing_parameters: %s", err)
+		}
+	}
+
+	if err := d.Set(names.AttrStatus, signingProfileOutput.Status); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, signingProfileOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, signingProfileOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile tags: %s", err)
 	}
 

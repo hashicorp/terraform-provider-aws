@@ -36,6 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directoryId` - (Required) ID of the directory.
 
 ## Attribute Reference
@@ -54,14 +57,14 @@ This data source exports the following attributes in addition to the arguments a
 * `accessUrl` - Access URL for the directory/connector, such as http://alias.awsapps.com.
 * `dnsIpAddresses` - List of IP addresses of the DNS servers for the directory/connector.
 * `securityGroupId` - ID of the security group created by the directory/connector.
-* `tags` – A map of tags assigned to the directory/connector.
+* `tags` - A map of tags assigned to the directory/connector.
 
- `vpcSettings` (for `simpleAd` and `microsoftAd`) is also exported with the following attributes:
+ `vpcSettings` (for `SimpleAD` and `MicrosoftAD`) is also exported with the following attributes:
 
 * `subnetIds` - Identifiers of the subnets for the directory servers (2 subnets in 2 different AZs).
 * `vpcId` - ID of the VPC that the directory is in.
 
-`connectSettings` (for `adConnector`) is also exported with the following attributes:
+`connectSettings` (for `ADConnector`) is also exported with the following attributes:
 
 * `connectIps` - IP addresses of the AD Connector servers.
 * `customerUsername` - Username corresponding to the password provided.
@@ -79,4 +82,4 @@ This data source exports the following attributes in addition to the arguments a
 * `radiusTimeout` - Amount of time, in seconds, to wait for the RADIUS server to respond.
 * `useSameUsername` - Not currently used.
 
-<!-- cache-key: cdktf-0.19.0 input-a0542c4af1900563814b75f11b6b9079e80d58db377a8603ef5e97154a0bd43f -->
+<!-- cache-key: cdktf-0.20.8 input-9d2500770538a9038268faf84e026bd3c309468f69ba821c0684b89d59d4be0e -->

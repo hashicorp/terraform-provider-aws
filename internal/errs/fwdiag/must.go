@@ -14,5 +14,5 @@ import (
 // [1]: https://pkg.go.dev/text/template#Must
 // [2]: https://pkg.go.dev/regexp#MustCompile
 func Must[T any](x T, diags diag.Diagnostics) T {
-	return errs.Must(x, DiagnosticsError(diags))
+	return errs.Must(AsError(x, diags))
 }

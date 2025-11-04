@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cur_report_definition: Add `tags` argument and `tags_all` attribute
+```
+
+```release-note:enhancement
+data-source/aws_cur_report_definition: Add `tags` attribute
+```

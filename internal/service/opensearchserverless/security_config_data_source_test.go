@@ -28,19 +28,19 @@ func TestAccOpenSearchServerlessSecurityConfigDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityConfigDataSourceConfig_basic(rName, "description", "test-fixtures/idp-metadata.xml"),
+				Config: testAccSecurityConfigDataSourceConfig_basic(rName, names.AttrDescription, "test-fixtures/idp-metadata.xml"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigExists(ctx, dataSourceName, &securityconfig),
-					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "config_version", resourceName, "config_version"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_modified_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "saml_options.metadata", resourceName, "saml_options.metadata"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "saml_options.session_timeout", resourceName, "saml_options.session_timeout"),
 				),

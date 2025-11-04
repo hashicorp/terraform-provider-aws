@@ -25,7 +25,7 @@ func sweepNotificationRules(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CodeStarNotificationsClient(ctx)
 	input := &codestarnotifications.ListNotificationRulesInput{}
@@ -41,7 +41,7 @@ func sweepNotificationRules(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error listingCodeStar Notification Rules (%s): %w", region, err)
+			return fmt.Errorf("error listing CodeStar Notification Rules (%s): %w", region, err)
 		}
 
 		for _, v := range page.NotificationRules {

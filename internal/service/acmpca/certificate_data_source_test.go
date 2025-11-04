@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
@@ -22,19 +22,19 @@ func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`ResourceNotFoundException`),
+				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_arn(domain),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "certificate", resourceName, "certificate"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_chain", resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCertificate, resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCertificateChain, resourceName, names.AttrCertificateChain),
 					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_authority_arn", resourceName, "certificate_authority_arn"),
 				),
 			},
@@ -82,8 +82,8 @@ data "aws_partition" "current" {}
 
 const testAccCertificateDataSourceConfig_nonExistent = `
 data "aws_acmpca_certificate" "test" {
-  arn                       = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist/certificate/does-not-exist"
-  certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist"
+  arn                       = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist/certificate/does-not-exist"
+  certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist"
 }
 
 data "aws_caller_identity" "current" {}

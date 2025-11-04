@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_cloudwatch_event_bus: Add `description` argument
+```
+```release-note:enhancement
+data-source/aws_cloudwatch_event_bus: Add `description` attribute
+```

@@ -62,20 +62,21 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `hierarchyGroupId` is required.
+This data source supports the following arguments:
 
-This argument supports the following arguments:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `hierarchyGroupId` - (Optional) Returns information on a specific hierarchy group by hierarchy group id
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific hierarchy group by name
+
+~> **NOTE:** `instanceId` and one of either `name` or `hierarchyGroupId` is required.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the hierarchy group.
-* `hierarchyPath` - Block that contains information about the levels in the hierarchy group. The `hierarchy_path` block is documented below.
+* `hierarchyPath` - Block that contains information about the levels in the hierarchy group. The `hierarchyPath` block is documented below.
 * `levelId` - Identifier of the level in the hierarchy group.
 * `id` - Identifier of the hosting Amazon Connect Instance and identifier of the hierarchy group separated by a colon (`:`).
 * `tags` - Map of tags to assign to the hierarchy group.
@@ -94,4 +95,4 @@ A level block supports the following attributes:
 * `id` -  The identifier of the hierarchy group.
 * `name` - Name of the hierarchy group.
 
-<!-- cache-key: cdktf-0.19.0 input-4a65e86f5180790b93c832a3ed14333f7e6e9c245f4c8eef60843f34eedef36c -->
+<!-- cache-key: cdktf-0.20.8 input-73c05636cb20e8f18c9d9be040dafd714956c64bc36b69e5acf4127b49638bb8 -->

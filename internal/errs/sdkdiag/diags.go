@@ -31,12 +31,16 @@ func severityFilter(s diag.Severity) tfslices.Predicate[diag.Diagnostic] {
 	}
 }
 
+func DiagnosticError(diag diag.Diagnostic) error {
+	return errors.New(DiagnosticString(diag))
+}
+
 // DiagnosticsError returns an error containing all Diagnostic with SeverityError
 func DiagnosticsError(diags diag.Diagnostics) error {
 	var errs []error
 
 	for _, d := range Errors(diags) {
-		errs = append(errs, errors.New(DiagnosticString(d)))
+		errs = append(errs, DiagnosticError(d))
 	}
 
 	return errors.Join(errs...)
@@ -52,7 +56,7 @@ func DiagnosticString(d diag.Diagnostic) string {
 		fmt.Fprintf(&buf, "\n\n%s", d.Detail)
 	}
 	if len(d.AttributePath) > 0 {
-		fmt.Fprintf(&buf, "\n%s", pathString(d.AttributePath))
+		fmt.Fprintf(&buf, "\n\nPath: %s", pathString(d.AttributePath))
 	}
 
 	return buf.String()
@@ -68,24 +72,22 @@ func pathString(path cty.Path) string {
 			}
 			buf.WriteString(x.Name)
 		case cty.IndexStep:
-			val := x.Key
-			typ := val.Type()
 			var s string
-			switch {
-			case typ == cty.String:
+			switch val := x.Key; val.Type() {
+			case cty.String:
 				s = val.AsString()
-			case typ == cty.Number:
+			case cty.Number:
 				num := val.AsBigFloat()
 				s = num.String()
 			default:
-				s = fmt.Sprintf("<unexpected index: %s>", typ.FriendlyName())
+				s = fmt.Sprintf("<unexpected index: %s>", val.Type().FriendlyName())
 			}
-			buf.WriteString(fmt.Sprintf("[%s]", s))
+			fmt.Fprintf(&buf, "[%s]", s)
 		default:
 			if i != 0 {
 				buf.WriteString(".")
 			}
-			buf.WriteString(fmt.Sprintf("<unexpected step: %[1]T %[1]v>", x))
+			fmt.Fprintf(&buf, "<unexpected step: %[1]T %[1]v>", x)
 		}
 	}
 	return buf.String()

@@ -1,0 +1,15 @@
+```release-note:enhancement
+data-source/aws_ami: Add `uefi_data` attribute
+```
+
+```release-note:enhancement
+resource/aws_ami: Add `uefi_data` argument
+```
+
+```release-note:enhancement
+resource/aws_ami_copy: Add `uefi_data` attribute
+```
+
+```release-note:enhancement
+resource/aws_ami_from_instance: Add `uefi_data` attribute
+```

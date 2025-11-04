@@ -7,11 +7,12 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type TunnelOptions struct {
@@ -133,7 +135,6 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
@@ -159,11 +160,11 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -171,20 +172,21 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "core_network_attachment_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_gateway_configuration"),
-					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv4_network_cidr", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv6_network_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, "outside_ip_address_type", "PublicIpv4"),
+					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "Standard"),
 					resource.TestCheckResourceAttr(resourceName, "remote_ipv4_network_cidr", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "remote_ipv6_network_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, "routes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "static_routes_only", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_bgp_asn"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_bgp_holdtime", "30"),
@@ -196,7 +198,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_dh_group_numbers"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_encryption_algorithms"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_integrity_algorithms"),
@@ -206,6 +208,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase2_integrity_algorithms"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_lifetime_seconds", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_preshared_key"),
+					testAccCheckResourceAttrNotContains(resourceName, "tunnel1_preshared_key", "REDACTED"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_fuzz_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_margin_time_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_replay_window_size", "0"),
@@ -222,7 +225,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase1_dh_group_numbers"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase1_encryption_algorithms"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase1_integrity_algorithms"),
@@ -232,6 +235,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase2_integrity_algorithms"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_lifetime_seconds", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_preshared_key"),
+					testAccCheckResourceAttrNotContains(resourceName, "tunnel2_preshared_key", "REDACTED"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_fuzz_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_margin_time_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_replay_window_size", "0"),
@@ -256,11 +260,11 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -268,20 +272,20 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_withoutTGWorVGW(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "core_network_attachment_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_gateway_configuration"),
-					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv4_network_cidr", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv6_network_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, "outside_ip_address_type", "PublicIpv4"),
 					resource.TestCheckResourceAttr(resourceName, "remote_ipv4_network_cidr", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "remote_ipv6_network_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, "routes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "static_routes_only", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_bgp_holdtime", "30"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
@@ -292,7 +296,7 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_dh_group_numbers"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_encryption_algorithms"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_integrity_algorithms"),
@@ -317,7 +321,7 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase1_dh_group_numbers"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase1_encryption_algorithms"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase1_integrity_algorithms"),
@@ -351,11 +355,11 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -365,12 +369,12 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_group_arn", "aws_cloudwatch_log_group.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_output_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_group_arn", "aws_cloudwatch_log_group.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_output_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -385,10 +389,10 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_group_arn", "aws_cloudwatch_log_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_group_arn", "aws_cloudwatch_log_group.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_output_format", "text"),
 				),
 			},
@@ -398,7 +402,7 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 
 func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -406,7 +410,7 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -414,8 +418,8 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_transitGateway(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexache.MustCompile(`tgw-attach-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, regexache.MustCompile(`tgw-attach-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),
 			},
 			{
@@ -433,11 +437,11 @@ func TestAccSiteVPNConnection_tunnel1InsideCIDR(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -463,20 +467,28 @@ func TestAccSiteVPNConnection_tunnel1InsideIPv6CIDR(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				Config:      testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8::1:0/125", "fd00:2001:db8::2:0/125"),
+				ExpectError: regexache.MustCompile(`expected "\w+" to contain a network Value with between 126 and 126 significant bits`),
+			},
+			{
+				Config:      testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fcff:2001:db8:2:2d1:81ff:fe41:d200/126", "fcff:2001:db8:2:2d1:81ff:fe41:0/126"),
+				ExpectError: regexache.MustCompile(`must be within fd00::/8`),
+			},
+			{
+				Config: testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fdff:2001:db8:2:2d1:81ff:fe41:d204/126"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", "fdff:2001:db8:2:2d1:81ff:fe41:d204/126"),
 				),
 			},
 			// NOTE: Import does not currently have access to the Terraform configuration,
@@ -493,11 +505,11 @@ func TestAccSiteVPNConnection_tunnel1PreSharedKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -524,7 +536,7 @@ func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 	badCidrRangeErr := regexache.MustCompile(`expected \w+ to not be any of \[[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/30\s?]+\]`)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	tunnel1 := TunnelOptions{
 		psk:                          "12345678",
@@ -570,7 +582,7 @@ func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -634,7 +646,7 @@ func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "static_routes_only", acctest.CtFalse),
 
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "12345678"),
@@ -658,7 +670,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2, vpn3, vpn4, vpn5 ec2.VpnConnection
+	var vpn1, vpn2, vpn3, vpn4, vpn5 awstypes.VpnConnection
 
 	tunnel1 := TunnelOptions{
 		psk:                          "12345678",
@@ -711,7 +723,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -725,7 +737,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "30"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
@@ -775,7 +787,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "45"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
@@ -834,7 +846,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "45"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
@@ -885,7 +897,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "45"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
@@ -943,7 +955,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "45"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
@@ -994,7 +1006,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "30"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
@@ -1052,7 +1064,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "30"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
@@ -1102,7 +1114,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "45"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
@@ -1162,7 +1174,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "30"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", ""),
@@ -1186,7 +1198,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "30"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", ""),
@@ -1217,11 +1229,11 @@ func TestAccSiteVPNConnection_staticRoutes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1229,7 +1241,7 @@ func TestAccSiteVPNConnection_staticRoutes(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_staticRoutes(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "static_routes_only", acctest.CtTrue),
 				),
 			},
 			{
@@ -1247,11 +1259,11 @@ func TestAccSiteVPNConnection_outsideAddressTypePrivate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1277,11 +1289,11 @@ func TestAccSiteVPNConnection_outsideAddressTypePublic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1307,11 +1319,11 @@ func TestAccSiteVPNConnection_enableAcceleration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1319,7 +1331,7 @@ func TestAccSiteVPNConnection_enableAcceleration(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_enableAcceleration(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", acctest.CtTrue),
 				),
 			},
 			{
@@ -1337,11 +1349,11 @@ func TestAccSiteVPNConnection_ipv6(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1366,20 +1378,20 @@ func TestAccSiteVPNConnection_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_tags1(rName, rBgpAsn, "key1", "value1"),
+				Config: testAccSiteVPNConnectionConfig_tags1(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -1389,20 +1401,20 @@ func TestAccSiteVPNConnection_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_tags2(rName, rBgpAsn, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSiteVPNConnectionConfig_tags2(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_tags1(rName, rBgpAsn, "key2", "value2"),
+				Config: testAccSiteVPNConnectionConfig_tags1(rName, rBgpAsn, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -1414,11 +1426,11 @@ func TestAccSiteVPNConnection_specifyIPv4(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1453,11 +1465,11 @@ func TestAccSiteVPNConnection_specifyIPv6(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1478,11 +1490,11 @@ func TestAccSiteVPNConnection_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1504,11 +1516,11 @@ func TestAccSiteVPNConnection_updateCustomerGatewayID(t *testing.T) {
 	rBgpAsn1 := sdkacctest.RandIntRange(64512, 65534)
 	rBgpAsn2 := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2 ec2.VpnConnection
+	var vpn1, vpn2 awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1516,7 +1528,7 @@ func TestAccSiteVPNConnection_updateCustomerGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_customerGatewayID(rName, rBgpAsn1, rBgpAsn2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
-					resource.TestCheckResourceAttrPair(resourceName, "customer_gateway_id", "aws_customer_gateway.test1", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_gateway_id", "aws_customer_gateway.test1", names.AttrID),
 				),
 			},
 			{
@@ -1530,7 +1542,7 @@ func TestAccSiteVPNConnection_updateCustomerGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
-					resource.TestCheckResourceAttrPair(resourceName, "customer_gateway_id", "aws_customer_gateway.test2", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_gateway_id", "aws_customer_gateway.test2", names.AttrID),
 				),
 			},
 		},
@@ -1542,11 +1554,11 @@ func TestAccSiteVPNConnection_updateVPNGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2 ec2.VpnConnection
+	var vpn1, vpn2 awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1554,7 +1566,7 @@ func TestAccSiteVPNConnection_updateVPNGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_vpnGatewayID(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test1", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test1", names.AttrID),
 				),
 			},
 			{
@@ -1568,7 +1580,7 @@ func TestAccSiteVPNConnection_updateVPNGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test2", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test2", names.AttrID),
 				),
 			},
 		},
@@ -1580,11 +1592,11 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2 ec2.VpnConnection
+	var vpn1, vpn2 awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1592,8 +1604,8 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_transitGatewayID(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test1", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test1", names.AttrID),
 				),
 			},
 			{
@@ -1607,8 +1619,8 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test2", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test2", names.AttrID),
 				),
 			},
 		},
@@ -1620,11 +1632,11 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2 ec2.VpnConnection
+	var vpn1, vpn2 awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1632,8 +1644,8 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", names.AttrID),
 				),
 			},
 			{
@@ -1647,7 +1659,7 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpn_gateway_id", ""),
 				),
 			},
@@ -1660,11 +1672,11 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2 ec2.VpnConnection
+	var vpn1, vpn2 awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1672,7 +1684,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpn_gateway_id", ""),
 				),
 			},
@@ -1687,8 +1699,70 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", names.AttrID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSiteVPNConnection_preSharedKeyStorage(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn awstypes.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteVPNConnectionConfig_preSharedKeyStorage(rName, rBgpAsn, "SecretsManager"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "SecretsManager"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "preshared_key_arn", "secretsmanager", regexache.MustCompile(`secret:s2svpn!vpn-*`)),
+					acctest.CheckResourceAttrContains(resourceName, "tunnel1_preshared_key", "REDACTED"),
+					acctest.CheckResourceAttrContains(resourceName, "tunnel2_preshared_key", "REDACTED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
+			},
+			{
+				Config: testAccSiteVPNConnectionConfig_preSharedKeyStorage(rName, rBgpAsn, "Standard"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "Standard"),
+					testAccCheckResourceAttrNotContains(resourceName, "tunnel1_preshared_key", "REDACTED"),
+					testAccCheckResourceAttrNotContains(resourceName, "tunnel2_preshared_key", "REDACTED"),
+				),
+			},
+			{
+				Config: testAccSiteVPNConnectionConfig_preSharedKeyStorage(rName, rBgpAsn, "SecretsManager"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "SecretsManager"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "preshared_key_arn", "secretsmanager", regexache.MustCompile(`secret:s2svpn!vpn-*`)),
+					acctest.CheckResourceAttrContains(resourceName, "tunnel1_preshared_key", "REDACTED"),
+					acctest.CheckResourceAttrContains(resourceName, "tunnel2_preshared_key", "REDACTED"),
+				),
+			},
+			{
+				Config: testAccSiteVPNConnectionConfig_basic(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "SecretsManager"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "preshared_key_arn", "secretsmanager", regexache.MustCompile(`secret:s2svpn!vpn-*`)),
+					acctest.CheckResourceAttrContains(resourceName, "tunnel1_preshared_key", "REDACTED"),
+					acctest.CheckResourceAttrContains(resourceName, "tunnel2_preshared_key", "REDACTED"),
 				),
 			},
 		},
@@ -1697,7 +1771,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 
 func testAccCheckVPNConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpn_connection" {
@@ -1721,7 +1795,7 @@ func testAccCheckVPNConnectionDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccVPNConnectionExists(ctx context.Context, n string, v *ec2.VpnConnection) resource.TestCheckFunc {
+func testAccVPNConnectionExists(ctx context.Context, n string, v *awstypes.VpnConnection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1732,7 +1806,7 @@ func testAccVPNConnectionExists(ctx context.Context, n string, v *ec2.VpnConnect
 			return fmt.Errorf("No EC2 VPN Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPNConnectionByID(ctx, conn, rs.Primary.ID)
 
@@ -1746,14 +1820,23 @@ func testAccVPNConnectionExists(ctx context.Context, n string, v *ec2.VpnConnect
 	}
 }
 
-func testAccCheckVPNConnectionNotRecreated(before, after *ec2.VpnConnection) resource.TestCheckFunc {
+func testAccCheckVPNConnectionNotRecreated(before, after *awstypes.VpnConnection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.VpnConnectionId), aws.StringValue(after.VpnConnectionId); before != after {
+		if before, after := aws.ToString(before.VpnConnectionId), aws.ToString(after.VpnConnectionId); before != after {
 			return fmt.Errorf("Expected EC2 VPN Connection IDs not to change, but got before: %s, after: %s", before, after)
 		}
 
 		return nil
 	}
+}
+
+func testAccCheckResourceAttrNotContains(name, key, substr string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
+		if !strings.Contains(value, substr) {
+			return nil
+		}
+		return fmt.Errorf("%s: Attribute '%s' expected not contains %#v, got %#v", name, key, substr, value)
+	})
 }
 
 func testAccSiteVPNConnectionConfig_basic(rName string, rBgpAsn int) string {
@@ -2365,10 +2448,6 @@ resource "aws_vpn_connection" "test" {
 
 func testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName string, rBgpAsn int, tunnel1InsideIpv6Cidr string, tunnel2InsideIpv6Cidr string) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_transit_gateway" "test" {
-  description = %[1]q
-}
-
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]d
   ip_address = "178.0.0.1"
@@ -2381,7 +2460,6 @@ resource "aws_customer_gateway" "test" {
 
 resource "aws_vpn_connection" "test" {
   customer_gateway_id      = aws_customer_gateway.test.id
-  transit_gateway_id       = aws_ec2_transit_gateway.test.id
   tunnel_inside_ip_version = "ipv6"
   tunnel1_inside_ipv6_cidr = %[3]q
   tunnel2_inside_ipv6_cidr = %[4]q
@@ -2674,6 +2752,33 @@ resource "aws_vpn_connection" "test" {
   }
 }
 `, rName, rBgpAsn, useTransitGateway)
+}
+
+func testAccSiteVPNConnectionConfig_preSharedKeyStorage(rName string, rBgpAsn int, preSharedKeyStorage string) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id        = aws_vpn_gateway.test.id
+  customer_gateway_id   = aws_customer_gateway.test.id
+  type                  = "ipsec.1"
+  preshared_key_storage = %[3]q
+}
+`, rName, rBgpAsn, preSharedKeyStorage)
 }
 
 // Test our VPN tunnel config XML parsing

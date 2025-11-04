@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_verifiedpermissions_policy_store
+```
+
+```release-note:new-resource
+aws_verifiedpermissions_schema
+```
+
+```release-note:new-data-source
+aws_verifiedpermissions_policy_store
+```

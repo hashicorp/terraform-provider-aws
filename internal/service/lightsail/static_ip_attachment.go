@@ -13,14 +13,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_static_ip_attachment")
+// @SDKResource("aws_lightsail_static_ip_attachment", name="Static IP Attachment")
 func ResourceStaticIPAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStaticIPAttachmentCreate,
 		ReadWithoutTimeout:   resourceStaticIPAttachmentRead,
 		DeleteWithoutTimeout: resourceStaticIPAttachmentDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"static_ip_name": {
@@ -33,7 +38,7 @@ func ResourceStaticIPAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,7 +46,7 @@ func ResourceStaticIPAttachment() *schema.Resource {
 	}
 }
 
-func resourceStaticIPAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStaticIPAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
@@ -60,11 +65,11 @@ func resourceStaticIPAttachmentCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceStaticIPAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceStaticIPAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStaticIPAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	staticIpName := d.Get("static_ip_name").(string)
+	staticIpName := d.Id()
 	log.Printf("[INFO] Reading Lightsail Static IP Attachment: %q", staticIpName)
 	out, err := conn.GetStaticIp(ctx, &lightsail.GetStaticIpInput{
 		StaticIpName: aws.String(staticIpName),
@@ -84,12 +89,13 @@ func resourceStaticIPAttachmentRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("instance_name", out.StaticIp.AttachedTo)
-	d.Set("ip_address", out.StaticIp.IpAddress)
+	d.Set(names.AttrIPAddress, out.StaticIp.IpAddress)
+	d.Set("static_ip_name", out.StaticIp.Name)
 
 	return diags
 }
 
-func resourceStaticIPAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStaticIPAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 

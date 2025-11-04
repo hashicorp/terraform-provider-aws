@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_api_gateway_integration: Fix `BadRequestException: Invalid mapping expression specified` and `NotFoundException: Invalid parameter name specified` errors when making updates to `request_parameters` and/or `cache_key_parameters`
+```
+
+```release-note:bug
+resource/aws_api_gateway_method: Fix `BadRequestException: Invalid mapping expression specified` and `NotFoundException: Invalid parameter name specified` errors when making updates to `request_parameters`
+```

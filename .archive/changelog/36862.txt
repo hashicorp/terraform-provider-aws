@@ -1,0 +1,6 @@
+```release-note:new-resource
+aws_redshift_logging
+```
+```release-note:note
+resource/aws_redshift_cluster: The `logging` argument is now deprecated. Use the `aws_redshift_logging` resource instead.
+```

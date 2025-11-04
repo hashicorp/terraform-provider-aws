@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/synthetics"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/synthetics"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -31,26 +31,28 @@ func sweepCanaries(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.SyntheticsConn(ctx)
+	conn := client.SyntheticsClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	input := &synthetics.DescribeCanariesInput{}
-	for {
-		output, err := conn.DescribeCanariesWithContext(ctx, input)
-		if awsv1.SkipSweepError(err) {
+	pages := synthetics.NewDescribeCanariesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Synthetics Canary sweep for %s: %s", region, err)
 			return nil
 		}
+
 		if err != nil {
 			return fmt.Errorf("error retrieving Synthetics Canaries: %w", err)
 		}
 
-		for _, canary := range output.Canaries {
-			name := aws.StringValue(canary.Name)
+		for _, canary := range page.Canaries {
+			name := aws.ToString(canary.Name)
 			log.Printf("[INFO] Deleting Synthetics Canary: %s", name)
 
 			r := ResourceCanary()
@@ -59,11 +61,6 @@ func sweepCanaries(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
 	}
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {

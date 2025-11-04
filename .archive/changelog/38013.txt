@@ -1,0 +1,23 @@
+```release-note:enhancement
+data-source/aws_networkmanager_core_network_policy_document: Add `attachment_policies.action.add_to_network_function_group` argument
+```
+
+```release-note:enhancement
+data-source/aws_networkmanager_core_network_policy_document: Add `send-via` and `send-to` as valid values for `segment_actions.action`
+```
+
+```release-note:enhancement
+data-source/aws_networkmanager_core_network_policy_document: Add `single-hop` and `dual-hop` as valid values for `segment_actions.mode`
+```
+
+```release-note:enhancement
+data-source/aws_networkmanager_core_network_policy_document: Add `when_sent_to` and `via` configuration blocks to `segment_actions`
+```
+
+```release-note:bug
+data-source/aws_networkmanager_core_network_policy_document: Add correct `except` values to the returned JSON document when `segment_actions.share_with_except` is configured
+```
+
+```release-note:enhancement
+data-source/aws_networkmanager_core_network_policy_document: Add `network_function_groups` configuration block
+```
