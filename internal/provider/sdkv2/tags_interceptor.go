@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"unique"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -323,9 +324,20 @@ func validateRequiredTags() customizeDiffInterceptor {
 						if reqTags, ok := policy.RequiredTags[typeName]; ok {
 							if !allTags.ContainsAllKeys(reqTags) {
 								missing := reqTags.Removed(allTags).Keys()
-								// TODO: CustomizeDiff does not support diagnostics - can we warn some other way?
-								if policy.Level == "error" {
-									return fmt.Errorf("missing required tags for %s: %s", typeName, missing)
+								summary := "Missing Required Tags"
+								detail := fmt.Sprintf("An organizational tag policy requires the following tags for %s: %s", typeName, missing)
+
+								// CustomizeDiff does not support diagnostics (only an error return)
+								switch policy.Level {
+								case "warning":
+									// Warning diagnostics are only logged
+									tflog.Warn(ctx, "Required Tags Validation", map[string]any{
+										"summary": summary,
+										"detail":  detail,
+									})
+								default:
+									// Error diagnostics merge summary and detail into a single message
+									return fmt.Errorf("%s - %s", summary, detail)
 								}
 							}
 						}

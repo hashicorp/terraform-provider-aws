@@ -431,7 +431,7 @@ func TestAccLogsLogGroup_requiredTags(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
-				ExpectError: regexache.MustCompile("missing required tags for"),
+				ExpectError: regexache.MustCompile("Missing Required Tags"),
 			},
 			// Creation with required tags succeeds
 			{
@@ -487,7 +487,7 @@ func TestAccLogsLogGroup_requiredTags(t *testing.T) {
 						tagKey: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
-				ExpectError: regexache.MustCompile("missing required tags for"),
+				ExpectError: regexache.MustCompile("Missing Required Tags"),
 			},
 		},
 	})
@@ -521,7 +521,7 @@ func TestAccLogsLogGroup_requiredTags_defaultTags(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
-				ExpectError: regexache.MustCompile("missing required tags for"),
+				ExpectError: regexache.MustCompile("Missing Required Tags"),
 			},
 			// Creation with required tags in default_tags succeeds
 			{
@@ -569,7 +569,7 @@ func TestAccLogsLogGroup_requiredTags_defaultTags(t *testing.T) {
 						tagKey: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
-				ExpectError: regexache.MustCompile("missing required tags for"),
+				ExpectError: regexache.MustCompile("Missing Required Tags"),
 			},
 		},
 	})
