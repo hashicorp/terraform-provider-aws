@@ -232,6 +232,7 @@ func testAccStreamDataSourceConfig_maxRecordSizeInKiB(rName string, maxRecordSiz
 resource "aws_kinesis_stream" "test" {
   name                   = %[1]q
   max_record_size_in_kib = %[2]d
+  shard_count            = 1
 }
 
 data "aws_kinesis_stream" "test" {

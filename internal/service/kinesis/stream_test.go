@@ -202,10 +202,10 @@ func TestAccKinesisStream_maxRecordSizeInKiB(t *testing.T) {
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig_encryption(rName),
+				Config: testAccStreamConfig_maxRecordSizeInKiB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "encryption_type", "KMS"),
+					resource.TestCheckResourceAttr(resourceName, "max_record_size_in_kib", "10240"),
 				),
 			},
 			{
@@ -807,6 +807,7 @@ func testAccStreamConfig_maxRecordSizeInKiB(rName string) string {
 resource "aws_kinesis_stream" "test" {
   name                   = %[1]q
   max_record_size_in_kib = 10240
+  shard_count            = 2
 }
 `, rName)
 }
