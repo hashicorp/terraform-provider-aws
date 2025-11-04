@@ -6,139 +6,310 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudfront_distribution_tenant", name="Distribution Tenant")
+// @FrameworkDataSource("aws_cloudfront_distribution_tenant", name="Distribution Tenant")
 // @Tags(identifierAttribute="arn")
-func dataSourceDistributionTenant() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceDistributionTenantRead,
+func newDistributionTenantDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &distributionTenantDataSource{}
+	return d, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
+const (
+	DSNameDistributionTenant = "Distribution Tenant Data Source"
+)
+
+type distributionTenantDataSource struct {
+	framework.DataSourceWithModel[distributionTenantDataSourceModel]
+}
+
+func (d *distributionTenantDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 			},
-			"connection_group_id": {
-				Type:     schema.TypeString,
+			"connection_group_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"distribution_id": {
-				Type:     schema.TypeString,
+			"distribution_id": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrDomain: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"domain", names.AttrID},
+			names.AttrDomain: schema.StringAttribute{
+				Optional: true,
 			},
-			"domains": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+			"domains": schema.SetAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
 			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
+			names.AttrEnabled: schema.BoolAttribute{
 				Computed: true,
 			},
-			"etag": {
-				Type:     schema.TypeString,
+			"etag": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"domain", names.AttrID},
-			},
-			"last_modified_time": {
-				Type:     schema.TypeString,
+			names.AttrID: schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 			},
-			names.AttrName: {
-				Type:     schema.TypeString,
+			"last_modified_time": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			names.AttrName: schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"customizations": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customizationsDataSourceModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"geo_restriction": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[geoRestrictionDataSourceModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"locations": schema.SetAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
+									},
+									"restriction_type": schema.StringAttribute{
+										Computed:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GeoRestrictionType](),
+									},
+								},
+							},
+						},
+						names.AttrCertificate: schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[certificateDataSourceModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrARN: schema.StringAttribute{
+										Computed:   true,
+										CustomType: fwtypes.ARNType,
+									},
+								},
+							},
+						},
+						"web_acl": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[webAclDataSourceModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrAction: schema.StringAttribute{
+										Computed:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.CustomizationActionType](),
+									},
+									names.AttrARN: schema.StringAttribute{
+										Computed:   true,
+										CustomType: fwtypes.ARNType,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"managed_certificate_request": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[managedCertificateRequestDataSourceModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"certificate_transparency_logging_preference": schema.StringAttribute{
+							Computed:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.CertificateTransparencyLoggingPreference](),
+						},
+						"primary_domain_name": schema.StringAttribute{
+							Computed: true,
+						},
+						"validation_token_host": schema.StringAttribute{
+							Computed:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.ValidationTokenHost](),
+						},
+					},
+				},
+			},
+			names.AttrParameters: schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[parameterDataSourceModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrName: schema.StringAttribute{
+							Computed: true,
+						},
+						names.AttrValue: schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
-func dataSourceDistributionTenantRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
-
-	var identifier string
-	var tenant *awstypes.DistributionTenant
-	var etag *string
-
-	if id, ok := d.GetOk(names.AttrID); ok {
-		identifier = id.(string)
-		output, err := findDistributionTenantByID(ctx, conn, identifier)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading CloudFront Distribution Tenant by ID (%s): %s", identifier, err)
-		}
-		tenant = output.DistributionTenant
-		etag = output.ETag
-	} else {
-		identifier = d.Get(names.AttrDomain).(string)
-		output, err := findDistributionTenantByDomain(ctx, conn, identifier)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading CloudFront Distribution Tenant by Domain (%s): %s", identifier, err)
-		}
-		tenant = output.DistributionTenant
-		etag = output.ETag
+func (d *distributionTenantDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data distributionTenantDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	d.SetId(aws.ToString(tenant.Id))
-	d.Set(names.AttrARN, tenant.Arn)
-	d.Set("connection_group_id", tenant.ConnectionGroupId)
-	d.Set("distribution_id", tenant.DistributionId)
-	d.Set("domains", flattenDomains(tenant.Domains))
-	d.Set(names.AttrEnabled, tenant.Enabled)
-	d.Set("etag", etag)
-	d.Set(names.AttrName, tenant.Name)
-	d.Set(names.AttrStatus, tenant.Status)
-	d.Set("last_modified_time", tenant.LastModifiedTime.String())
+	conn := d.Meta().CloudFrontClient(ctx)
 
-	return diags
-}
-
-func findDistributionTenantByDomain(ctx context.Context, conn *cloudfront.Client, domain string) (*cloudfront.GetDistributionTenantByDomainOutput, error) {
-	input := cloudfront.GetDistributionTenantByDomainInput{
-		Domain: aws.String(domain),
+	// Define lookup strategies in order of preference
+	lookupStrategies := []struct {
+		value types.String
+		fn    func(context.Context, *cloudfront.Client, string) (interface{}, error)
+	}{
+		{data.ID, func(ctx context.Context, conn *cloudfront.Client, id string) (interface{}, error) {
+			return findDistributionTenantByIdentifier(ctx, conn, id)
+		}},
+		{data.ARN, func(ctx context.Context, conn *cloudfront.Client, arn string) (interface{}, error) {
+			return findDistributionTenantByIdentifier(ctx, conn, arn)
+		}},
+		{data.Name, func(ctx context.Context, conn *cloudfront.Client, name string) (interface{}, error) {
+			return findDistributionTenantByIdentifier(ctx, conn, name)
+		}},
+		{data.Domain, func(ctx context.Context, conn *cloudfront.Client, domain string) (interface{}, error) {
+			return findDistributionTenantByDomain(ctx, conn, domain)
+		}},
 	}
 
-	output, err := conn.GetDistributionTenantByDomain(ctx, &input)
+	var output interface{}
+	var err error
 
-	if errs.IsA[*awstypes.EntityNotFound](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+	// Try each lookup strategy until we find a non-null, non-unknown value
+	for _, strategy := range lookupStrategies {
+		if !strategy.value.IsNull() && !strategy.value.IsUnknown() {
+			output, err = strategy.fn(ctx, conn, strategy.value.ValueString())
+			break
 		}
 	}
 
 	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, DSNameDistributionTenant, data.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Handle both output types
+	var tenant *awstypes.DistributionTenant
+	var etag *string
+	switch v := output.(type) {
+	case *cloudfront.GetDistributionTenantOutput:
+		tenant = v.DistributionTenant
+		etag = v.ETag
+	case *cloudfront.GetDistributionTenantByDomainOutput:
+		tenant = v.DistributionTenant
+		etag = v.ETag
+	}
+
+	// Flatten the distribution tenant data into the model
+	response.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Set computed fields that need special handling
+	data.ID = fwflex.StringToFramework(ctx, tenant.Id)
+	data.ETag = fwflex.StringToFramework(ctx, etag)
+	if tenant.LastModifiedTime != nil {
+		data.LastModifiedTime = fwflex.TimeToFramework(ctx, tenant.LastModifiedTime)
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type distributionTenantDataSourceModel struct {
+	ARN                       types.String                                                              `tfsdk:"arn"`
+	ConnectionGroupID         types.String                                                              `tfsdk:"connection_group_id"`
+	Customizations            fwtypes.ListNestedObjectValueOf[customizationsDataSourceModel]            `tfsdk:"customizations"`
+	DistributionID            types.String                                                              `tfsdk:"distribution_id"`
+	Domain                    types.String                                                              `tfsdk:"domain"`
+	Domains                   fwtypes.SetValueOf[types.String]                                          `tfsdk:"domains"`
+	Enabled                   types.Bool                                                                `tfsdk:"enabled"`
+	ETag                      types.String                                                              `tfsdk:"etag"`
+	ID                        types.String                                                              `tfsdk:"id"`
+	LastModifiedTime          timetypes.RFC3339                                                         `tfsdk:"last_modified_time"`
+	ManagedCertificateRequest fwtypes.ListNestedObjectValueOf[managedCertificateRequestDataSourceModel] `tfsdk:"managed_certificate_request"`
+	Name                      types.String                                                              `tfsdk:"name"`
+	Parameters                fwtypes.SetNestedObjectValueOf[parameterDataSourceModel]                  `tfsdk:"parameters"`
+	Status                    types.String                                                              `tfsdk:"status"`
+	Tags                      tftags.Map                                                                `tfsdk:"tags"`
+}
+
+type customizationsDataSourceModel struct {
+	GeoRestriction fwtypes.ListNestedObjectValueOf[geoRestrictionDataSourceModel] `tfsdk:"geo_restriction"`
+	Certificate    fwtypes.ListNestedObjectValueOf[certificateDataSourceModel]    `tfsdk:"certificate"`
+	WebAcl         fwtypes.ListNestedObjectValueOf[webAclDataSourceModel]         `tfsdk:"web_acl"`
+}
+
+type geoRestrictionDataSourceModel struct {
+	Locations       fwtypes.SetValueOf[types.String]                `tfsdk:"locations"`
+	RestrictionType fwtypes.StringEnum[awstypes.GeoRestrictionType] `tfsdk:"restriction_type"`
+}
+
+type certificateDataSourceModel struct {
+	ARN fwtypes.ARN `tfsdk:"arn"`
+}
+
+type webAclDataSourceModel struct {
+	Action fwtypes.StringEnum[awstypes.CustomizationActionType] `tfsdk:"action"`
+	ARN    fwtypes.ARN                                          `tfsdk:"arn"`
+}
+
+type managedCertificateRequestDataSourceModel struct {
+	CertificateTransparencyLoggingPreference fwtypes.StringEnum[awstypes.CertificateTransparencyLoggingPreference] `tfsdk:"certificate_transparency_logging_preference"`
+	PrimaryDomainName                        types.String                                                          `tfsdk:"primary_domain_name"`
+	ValidationTokenHost                      fwtypes.StringEnum[awstypes.ValidationTokenHost]                      `tfsdk:"validation_token_host"`
+}
+
+type parameterDataSourceModel struct {
+	Name  types.String `tfsdk:"name"`
+	Value types.String `tfsdk:"value"`
+}
+
+func (d *distributionTenantDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.ExactlyOneOf(
+			path.MatchRoot(names.AttrID),
+			path.MatchRoot(names.AttrARN),
+			path.MatchRoot(names.AttrName),
+			path.MatchRoot(names.AttrDomain),
+		),
+	}
+}
+func findDistributionTenantByDomain(ctx context.Context, conn *cloudfront.Client, domain string) (*cloudfront.GetDistributionTenantByDomainOutput, error) {
+	input := &cloudfront.GetDistributionTenantByDomainInput{
+		Domain: &domain,
+	}
+
+	output, err := conn.GetDistributionTenantByDomain(ctx, input)
+	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || output.DistributionTenant == nil || output.DistributionTenant.Domains == nil || output.DistributionTenant.DistributionId == nil {
+	if output == nil || output.DistributionTenant == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
