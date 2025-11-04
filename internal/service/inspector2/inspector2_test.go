@@ -43,10 +43,6 @@ func TestAccInspector2_serial(t *testing.T) {
 			"filter_portRangeFilters": testAccInspector2Filter_portRangeFilters,
 			"filter_packageFilters":   testAccInspector2Filter_packageFilters,
 		},
-		"FilterAssociation": {
-			acctest.CtBasic:      testAccInspector2Filter_basic,
-			acctest.CtDisappears: testAccMemberAssociation_disappears,
-		},
 		"MemberAssociation": {
 			acctest.CtBasic:      testAccMemberAssociation_basic,
 			acctest.CtDisappears: testAccMemberAssociation_disappears,
