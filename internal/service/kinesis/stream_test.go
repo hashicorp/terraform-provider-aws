@@ -189,6 +189,50 @@ func TestAccKinesisStream_encryption(t *testing.T) {
 	})
 }
 
+func TestAccKinesisStream_maxRecordSizeInKiB(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.StreamDescriptionSummary
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamConfig_encryption(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "encryption_type", "KMS"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           rName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+			},
+			{
+				Config: testAccStreamConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "max_record_size_in_kib", "1024"),
+				),
+			},
+			{
+				Config: testAccStreamConfig_maxRecordSizeInKiB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "max_record_size_in_kib", "10240"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKinesisStream_shardCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream types.StreamDescriptionSummary
@@ -754,6 +798,15 @@ resource "aws_kms_key" "test" {
   ]
 }
 POLICY
+}
+`, rName)
+}
+
+func testAccStreamConfig_maxRecordSizeInKiB(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name                   = %[1]q
+  max_record_size_in_kib = 10240
 }
 `, rName)
 }

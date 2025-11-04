@@ -487,17 +487,15 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if d.HasChanges("max_record_size_in_kib") {
 		o, n := d.GetChange("max_record_size_in_kib")
-		oi := o.(int32)
-		ni := n.(int32)
 
 		input := kinesis.UpdateMaxRecordSizeInput{
-			MaxRecordSizeInKiB: aws.Int32(ni),
+			MaxRecordSizeInKiB: aws.Int32(n.(int32)),
 			StreamARN:          aws.String(d.Id()),
 		}
 
 		_, err := conn.UpdateMaxRecordSize(ctx, &input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Updating Kinesis Stream (%s) MaxRecordSizeInKiB from %s to %s", name, oi, ni)
+			return sdkdiag.AppendErrorf(diags, "Updating Kinesis Stream (%s) MaxRecordSizeInKiB from %s to %s", name, o.(string), n.(string))
 		}
 	}
 
