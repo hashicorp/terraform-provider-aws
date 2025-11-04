@@ -418,8 +418,8 @@ type vpcOriginEndpointConfigModel struct {
 }
 
 type originSSLProtocolsModel struct {
-	Items    fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.SslProtocol]] `tfsdk:"items"`
-	Quantity types.Int64                                                  `tfsdk:"quantity"`
+	Items    fwtypes.SetOfStringEnum[awstypes.SslProtocol] `tfsdk:"items"`
+	Quantity types.Int64                                   `tfsdk:"quantity"`
 }
 
 var (
