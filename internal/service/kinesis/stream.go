@@ -127,7 +127,7 @@ func resourceStream() *schema.Resource {
 			"max_record_size_in_kib": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      1024,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(1024, 10240),
 			},
 			names.AttrName: {
@@ -181,6 +181,10 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		StreamName: aws.String(name),
 	}
 
+	if v, ok := d.GetOk("max_record_size_in_kib"); ok {
+		input.MaxRecordSizeInKiB = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("stream_mode_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.StreamModeDetails = expandStreamModeDetails(v.([]any)[0].(map[string]any))
 	}
@@ -191,10 +195,6 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if tags := keyValueTags(ctx, getTagsIn(ctx)).Map(); len(tags) > 0 {
 		input.Tags = tags
-	}
-
-	if v, ok := d.GetOk("max_record_size_in_kib"); ok {
-		input.MaxRecordSizeInKiB = aws.Int32(int32(v.(int)))
 	}
 
 	_, err := conn.CreateStream(ctx, &input)
@@ -502,7 +502,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		_, err := conn.UpdateMaxRecordSize(ctx, &input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "starting Kinesis Stream (%s) update (UpdateMaxRecordSize): %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "update Kinesis Stream (%s) max record size: %s", name, err)
 		}
 
 		if _, err := waitStreamUpdated(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
