@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * data-source/aws_elasticache_replication_group: Add `node_group_configuration` attribute to expose node group details including availability zones, replica counts, and slot ranges ([#44879](https://github.com/hashicorp/terraform-provider-aws/issues/44879))
 * resource/aws_elasticache_replication_group: Add `node_group_configuration` block to support availability zone specification and snapshot restoration for cluster mode enabled replication groups ([#44879](https://github.com/hashicorp/terraform-provider-aws/issues/44879))
+* resource/aws_kinesis_stream: Add `max_record_size_in_kib` attribute to add support for Kinesis 10MiB payloads ([#44851](https://github.com/hashicorp/terraform-provider-aws/issues/44851))
 * resource/aws_transfer_server: Add support for `TransferSecurityPolicy-AS2Restricted-2025-07` `security_policy_name` value ([#44865](https://github.com/hashicorp/terraform-provider-aws/issues/44865))
 
 BUG FIXES:
