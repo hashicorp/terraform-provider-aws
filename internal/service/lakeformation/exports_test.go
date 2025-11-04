@@ -22,4 +22,13 @@ var (
 	FilterPermissions = filterPermissions
 
 	IncludePrincipalIdentifierInList = includePrincipalIdentifierInList
+
+	FilterCatalogPermissions          = filterCatalogPermissions
+	FilterDataCellsFilter             = filterDataCellsFilter
+	FilterDataLocationPermissions     = filterDataLocationPermissions
+	FilterDatabasePermissions         = filterDatabasePermissions
+	FilterLFTagPermissions            = filterLFTagPermissions
+	FilterLFTagPolicyPermissions      = filterLFTagPolicyPermissions
+	FilterTablePermissions            = filterTablePermissions
+	FilterTableWithColumnsPermissions = filterTableWithColumnsPermissions
 )
