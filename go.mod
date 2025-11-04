@@ -45,9 +45,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.2
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.51.0
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.12.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.8.3
-	github.com/aws/aws-sdk-go-v2/service/budgets v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/budgets v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.9
 	github.com/aws/aws-sdk-go-v2/service/chime v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.9
@@ -104,10 +104,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.52.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.260.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.261.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.1
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.67.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.67.1
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/eks v1.74.6
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.0
@@ -150,7 +150,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.27.9
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.9
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.2
-	github.com/aws/aws-sdk-go-v2/service/kinesis v1.41.1
+	github.com/aws/aws-sdk-go-v2/service/kinesis v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.9
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.10
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.32.8
