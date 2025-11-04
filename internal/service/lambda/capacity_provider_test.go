@@ -47,22 +47,16 @@ func TestAccLambdaCapacityProvider_basic(t *testing.T) {
 				Config: testAccCapacityProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &capacityprovider),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`capacityprovider:.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -170,29 +164,222 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCapacityProviderConfig_basic(rName string) string {
+func testAccCapacityProviderConfig_base(policyName, roleName, sgName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role_policy" "iam_policy_for_lambda" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInterface",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:UnassignPrivateIpAddresses"
+"lambda.*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "SNS:Publish"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "xray:PutTraceSegments"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "test" {
+  name = %[2]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[3]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.vpc_for_lambda.id
+  availability_zone = data.aws_availability_zones.available.names[1]
+
+  cidr_block      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
+
+  assign_ipv6_address_on_creation = true
+
+  tags = {
+    Name = %[3]q
+  }
+}
+
+# This is defined here, rather than only in test cases where it's needed is to
+# prevent a timeout issue when fully removing Lambda Filesystems
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[1]
+
+  cidr_block      = cidrsubnet(aws_vpc.test.cidr_block, 8, 2)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
+
+  assign_ipv6_address_on_creation = true
+
+  tags = {
+    Name = %[3]q
+  }
+}
+
 resource "aws_security_group" "test" {
- name = %[1]q
+  name        = %[3]q
+  description = "Allow all inbound traffic for lambda test"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[3]q
+  }
+}
+`, policyName, roleName, sgName)
 }
 
+func testaccCapacityProvider_baseEC2(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+data "aws_iam_policy_document" "test_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test_instance" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
+}
+
+data "aws_iam_policy_document" "test_instance_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test_instance" {
+  name               = "%[1]s-instance"
+  assume_role_policy = data.aws_iam_policy_document.test_instance_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "test_instance" {
+  role       = aws_iam_role.test_instance.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_instance_profile" "test" {
+  name = %[1]q
+  role = aws_iam_role.test_instance.name
+}
+`, rName))
+}
+
+func testAccCapacityProviderConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_base(rName, rName, rName),
+		testaccCapacityProvider_baseEC2(rName),
+		fmt.Sprintf(`
 resource "aws_lambda_capacity_provider" "test" {
- name             = %[1]q
- engine_type             = "ActiveLambda"
- engine_version          = %[2]q
- host_instance_type      = "lambda.t2.micro"
- security_groups         = [aws_security_group.test.id]
- authentication_strategy = "simple"
- storage_type            = "efs"
+  name = %[1]q
 
- logs {
-   general = true
- }
+  vpc_config {
+    subnet_ids = aws_subnet.subnet_for_lambda.*.id
+  }
 
- user {
-   username = "Test"
-   password = "TestTest1234"
- }
+  permissions_config {
+    instance_profile_arn           = aws_iam_instance_profile.test.arn
+    capacity_provider_operator_arn = aws_iam_role.test.arn
+  }
 }
-`, rName)
+`, rName))
 }
