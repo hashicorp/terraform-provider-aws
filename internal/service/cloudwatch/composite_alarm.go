@@ -152,7 +152,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
-			return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
+			return smerr.AppendEnrich(ctx, diags, resourceCompositeAlarmRead(ctx, d, meta))
 		}
 
 		if err != nil {
@@ -160,7 +160,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceCompositeAlarmRead(ctx, d, meta))
 }
 
 func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -169,8 +169,8 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 
 	alarm, err := findCompositeAlarmByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudWatch Composite Alarm %s not found, removing from state", d.Id())
+	if !d.IsNewResource() && intretry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -212,7 +212,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceCompositeAlarmRead(ctx, d, meta))
 }
 
 func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
