@@ -54,7 +54,7 @@ resource "aws_iam_role_policy" "example" {
 }
 
 resource "aws_bedrockagentcore_agent_runtime" "example" {
-  agent_runtime_name = "example-agent-runtime"
+  agent_runtime_name = "example_agent_runtime"
   role_arn           = aws_iam_role.example.arn
 
   agent_runtime_artifact {
@@ -73,7 +73,7 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 
 ```terraform
 resource "aws_bedrockagentcore_agent_runtime" "example" {
-  agent_runtime_name = "example-agent-runtime"
+  agent_runtime_name = "example_agent_runtime"
   description        = "Agent runtime with JWT authorization"
   role_arn           = aws_iam_role.example.arn
 

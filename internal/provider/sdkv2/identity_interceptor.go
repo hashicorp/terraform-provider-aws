@@ -147,6 +147,7 @@ func newIdentityInterceptor(identitySpec *inttypes.Identity) interceptorInvocati
 
 func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 	return &schema.ResourceIdentity{
+		Version: v.Version(),
 		SchemaFunc: func() map[string]*schema.Schema {
 			return identity.NewIdentitySchema(v)
 		},
@@ -247,6 +248,19 @@ func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.Resou
 				return []*schema.ResourceData{rd}, nil
 			},
 		}
+	}
+}
+
+func customInherentRegionResourceImporter(identity inttypes.Identity) *schema.ResourceImporter {
+	// Not supported for Global resources. This is validated in validateResourceSchemas().
+	return &schema.ResourceImporter{
+		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+			if err := importer.RegionalInherentRegion(ctx, rd, identity); err != nil {
+				return nil, err
+			}
+
+			return []*schema.ResourceData{rd}, nil
+		},
 	}
 }
 

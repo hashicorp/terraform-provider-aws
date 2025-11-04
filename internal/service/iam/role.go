@@ -38,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -731,6 +732,32 @@ func listRoles(ctx context.Context, conn *iam.Client, input *iam.ListRolesInput)
 	}
 }
 
+func listNonServiceLinkedRoles(ctx context.Context, conn *iam.Client, input *iam.ListRolesInput) iter.Seq2[awstypes.Role, error] {
+	return func(yield func(awstypes.Role, error) bool) {
+		roles := listRoles(ctx, conn, input)
+		for role, err := range roles {
+			if err != nil {
+				yield(awstypes.Role{}, err)
+				return
+			}
+
+			// Exclude Service-Linked Roles
+			if strings.HasPrefix(aws.ToString(role.Path), "/aws-service-role/") {
+				tflog.Debug(ctx, "Skipping resource", map[string]any{
+					"skip_reason": "Service-Linked Role",
+					logging.ResourceAttributeKey("role_name"):    aws.ToString(role.RoleName),
+					logging.ResourceAttributeKey(names.AttrPath): aws.ToString(role.Path),
+				})
+				continue
+			}
+
+			if !yield(role, nil) {
+				return
+			}
+		}
+	}
+}
+
 func resourceRoleFlatten(ctx context.Context, role *awstypes.Role, d *schema.ResourceData) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -1132,29 +1159,25 @@ func (l *roleListResource) List(ctx context.Context, request list.ListRequest, s
 		return
 	}
 
-	stream.Results = func(yield func(list.ListResult) bool) {
-		result := request.NewListResult(ctx)
+	tflog.Info(ctx, "Listing resources")
 
-		for output, err := range listRoles(ctx, conn, &input) {
+	stream.Results = func(yield func(list.ListResult) bool) {
+		for role, err := range listNonServiceLinkedRoles(ctx, conn, &input) {
 			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
+				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			// Exclude Service-Linked Roles
-			if strings.HasPrefix(aws.ToString(output.Path), "/aws-service-role/") {
-				tflog.Debug(ctx, "Skipping resource", map[string]any{
-					"skip_reason":  "Service-Linked Role",
-					"role_name":    aws.ToString(output.RoleName),
-					names.AttrPath: aws.ToString(output.Path),
-				})
-				continue
-			}
+			ctx := resourceRoleListItemLoggingContext(ctx, role)
+
+			result := request.NewListResult(ctx)
 
 			rd := l.ResourceData()
-			rd.SetId(aws.ToString(output.RoleName))
-			result.Diagnostics.Append(translateDiags(resourceRoleFlatten(ctx, &output, rd))...)
+			rd.SetId(aws.ToString(role.RoleName))
+
+			tflog.Info(ctx, "Reading resource")
+			result.Diagnostics.Append(translateDiags(resourceRoleFlatten(ctx, &role, rd))...)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -1168,7 +1191,7 @@ func (l *roleListResource) List(ctx context.Context, request list.ListRequest, s
 				return
 			}
 
-			result.DisplayName = aws.ToString(output.RoleName)
+			result.DisplayName = resourceRoleDisplayName(role)
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
 			if result.Diagnostics.HasError() {
@@ -1181,6 +1204,17 @@ func (l *roleListResource) List(ctx context.Context, request list.ListRequest, s
 			}
 		}
 	}
+}
+
+func resourceRoleDisplayName(role awstypes.Role) string {
+	var buf strings.Builder
+
+	path := aws.ToString(role.Path)
+	buf.WriteString(strings.TrimPrefix(path, "/"))
+
+	buf.WriteString(aws.ToString(role.RoleName))
+
+	return buf.String()
 }
 
 func translateDiags(in diag.Diagnostics) frameworkdiag.Diagnostics {
@@ -1236,4 +1270,8 @@ func translatePath(in cty.Path) path.Path {
 	}
 
 	return out
+}
+
+func resourceRoleListItemLoggingContext(ctx context.Context, role awstypes.Role) context.Context {
+	return tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), aws.ToString(role.RoleName))
 }
