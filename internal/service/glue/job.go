@@ -472,8 +472,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			jobUpdate.SourceControlDetails = expandSourceControlDetails(v.([]any))
 		}
 
-		if v, ok := d.GetOk(names.AttrTimeout); ok {
-			jobUpdate.Timeout = aws.Int32(int32(v.(int)))
+		if !strings.EqualFold(jobCommandNameRay, aws.ToString(jobUpdate.Command.Name)) {
+			if v, ok := d.GetOk(names.AttrTimeout); ok {
+				jobUpdate.Timeout = aws.Int32(int32(v.(int)))
+			}
 		}
 
 		if v, ok := d.GetOk("worker_type"); ok {
@@ -518,14 +520,20 @@ func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 
 func resourceJobCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if command := expandJobCommand(diff.Get("command").([]any)); command != nil {
+		commandName := aws.ToString(command.Name)
 		// Allow 0 timeout for streaming jobs.
 		var minVal int64
-		if !strings.EqualFold(jobCommandNameApacheSparkStreamingETL, aws.ToString(command.Name)) {
+		if !strings.EqualFold(jobCommandNameApacheSparkStreamingETL, commandName) {
 			minVal = 1
 		}
 
 		key := names.AttrTimeout
 		if v := diff.GetRawConfig().GetAttr(key); v.IsKnown() && !v.IsNull() {
+			// InvalidInputException: Timeout not supported for Ray jobs.
+			if strings.EqualFold(jobCommandNameRay, commandName) {
+				return fmt.Errorf("%s must not be configured for Ray jobs", key)
+			}
+
 			if v, _ := v.AsBigFloat().Int64(); v < minVal {
 				return fmt.Errorf("expected %s to be at least (%d), got %d", key, minVal, v)
 			}

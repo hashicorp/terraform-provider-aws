@@ -17,6 +17,7 @@ const (
 const (
 	jobCommandNameApacheSparkETL          = "glueetl"
 	jobCommandNameApacheSparkStreamingETL = "gluestreaming"
+	jobCommandNameRay                     = "glueray"
 )
 
 const (

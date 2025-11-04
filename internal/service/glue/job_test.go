@@ -998,13 +998,66 @@ func TestAccGlueJob_rayJob(t *testing.T) {
 				Config: testAccJobConfig_rayJob(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
-					resource.TestCheckResourceAttr(resourceName, "command.0.name", "glueray"),
-					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3.9"),
-					resource.TestCheckResourceAttr(resourceName, "command.0.runtime", "Ray2.4"),
-					resource.TestCheckResourceAttr(resourceName, "worker_type", "Z.2X"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(480)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueJob_rayJobUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var job awstypes.Job
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_rayJobWithDescription(rName, "Initial job"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Initial job")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(480)),
+				},
+			},
+			{
+				Config: testAccJobConfig_rayJobWithDescription(rName, "Updated job"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Updated job")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTimeout), knownvalue.Int64Exact(480)),
+				},
 			},
 		},
 	})
@@ -1653,6 +1706,28 @@ resource "aws_glue_job" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
+}
+
+func testAccJobConfig_rayJobWithDescription(rName, description string) string {
+	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_job" "test" {
+  glue_version      = "4.0"
+  name              = %[1]q
+  description       = %[2]q
+  role_arn          = aws_iam_role.test.arn
+  worker_type       = "Z.2X"
+  number_of_workers = 10
+
+  command {
+    name            = "glueray"
+    python_version  = "3.9"
+    runtime         = "Ray2.4"
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, description))
 }
 
 func testAccJobConfig_maxCapacity(rName string, maxCapacity float64) string {
