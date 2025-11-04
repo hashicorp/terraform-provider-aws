@@ -33,12 +33,21 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the ECS Service
+* `capacity_provider_strategy` - Capacity provider strategy for the ECS Service. See [`capacity_provider_strategy` Block](#capacity_provider_strategy-block) for details.
 * `desired_count` - Number of tasks for the ECS Service
 * `launch_type` - Launch type for the ECS Service
 * `load_balancer` - Load balancers for the ECS Service. See [`load_balancer` Block](#load_balancer-block) for details.
 * `scheduling_strategy` - Scheduling strategy for the ECS Service
 * `task_definition` - Family for the latest ACTIVE revision or full ARN of the task definition.
 * `tags` - Resource tags.
+
+### `capacity_provider_strategy` Block
+
+The `capacity_provider_strategy` block exports the following attributes:
+
+* `base` - The number of tasks, at a minimum, to run on the specified capacity provider.
+* `capacity_provider` - The short name of the capacity provider.
+* `weight` - The relative percentage of the total number of launched tasks that should use the specified capacity provider.
 
 ### `load_balancer` Block
 

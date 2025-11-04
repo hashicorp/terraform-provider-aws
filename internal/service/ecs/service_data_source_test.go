@@ -35,6 +35,7 @@ func TestAccECSServiceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrServiceName),
 					resource.TestCheckResourceAttrPair(resourceName, "task_definition", dataSourceName, "task_definition"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCapacityProviderStrategy, dataSourceName, names.AttrCapacityProviderStrategy),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.Name", dataSourceName, "tags.Name"),
 				),
 			},
@@ -64,6 +65,36 @@ func TestAccECSServiceDataSource_loadBalancer(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "scheduling_strategy", dataSourceName, "scheduling_strategy"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrServiceName),
 					resource.TestCheckResourceAttrPair(resourceName, "task_definition", dataSourceName, "task_definition"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSServiceDataSource_capacityProviderStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_ecs_service.test"
+	resourceName := "aws_ecs_service.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDataSourceConfig_capacityProviderStrategy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_rebalancing", dataSourceName, "availability_zone_rebalancing"),
+					resource.TestCheckResourceAttrPair(resourceName, "desired_count", dataSourceName, "desired_count"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_type", dataSourceName, "launch_type"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer", dataSourceName, "load_balancer"),
+					resource.TestCheckResourceAttrPair(resourceName, "scheduling_strategy", dataSourceName, "scheduling_strategy"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrServiceName),
+					resource.TestCheckResourceAttrPair(resourceName, "task_definition", dataSourceName, "task_definition"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCapacityProviderStrategy, dataSourceName, names.AttrCapacityProviderStrategy),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
@@ -112,6 +143,17 @@ data "aws_ecs_service" "test" {
 }
 
 func testAccServiceDataSourceConfig_loadBalancer(rName string) string {
+	return acctest.ConfigCompose(
+		testAccServiceConfig_blueGreenDeployment_basic(rName, false),
+		`
+data "aws_ecs_service" "test" {
+  service_name = aws_ecs_service.test.name
+  cluster_arn  = aws_ecs_cluster.main.arn
+}
+`)
+}
+
+func testAccServiceDataSourceConfig_capacityProviderStrategy(rName string) string {
 	return acctest.ConfigCompose(
 		testAccServiceConfig_blueGreenDeployment_basic(rName, false),
 		`

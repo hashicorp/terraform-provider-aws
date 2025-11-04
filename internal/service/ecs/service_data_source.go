@@ -31,6 +31,26 @@ func dataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrCapacityProviderStrategy: {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"base": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"capacity_provider": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrWeight: {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"cluster_arn": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -122,6 +142,11 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
 	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
+	if service.CapacityProviderStrategy != nil {
+		if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
+		}
+	}
 	d.Set("cluster_arn", service.ClusterArn)
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("launch_type", service.LaunchType)
