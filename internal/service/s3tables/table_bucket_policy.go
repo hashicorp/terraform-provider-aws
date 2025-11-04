@@ -166,10 +166,6 @@ func (r *tableBucketPolicyResource) Delete(ctx context.Context, request resource
 	}
 }
 
-// func (r *tableBucketPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-// 	resource.ImportStatePassthroughID(ctx, path.Root("table_bucket_arn"), request, response)
-// }
-
 func findTableBucketPolicyByARN(ctx context.Context, conn *s3tables.Client, tableBucketARN string) (*s3tables.GetTableBucketPolicyOutput, error) {
 	input := s3tables.GetTableBucketPolicyInput{
 		TableBucketARN: aws.String(tableBucketARN),
