@@ -36,6 +36,7 @@ import (
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	"github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -1281,6 +1282,23 @@ func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
 
 	if status := output.RegionOptStatus; status != accounttypes.RegionOptStatusEnabled && status != accounttypes.RegionOptStatusEnabledByDefault {
 		t.Skipf("Region (%s) opt-in status: %s", region, status)
+	}
+}
+
+func PreCheckResourceGroupsTaggingAPIRequiredTags(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).ResourceGroupsTaggingAPIClient(ctx)
+	input := resourcegroupstaggingapi.ListRequiredTagsInput{}
+
+	output, err := conn.ListRequiredTags(ctx, &input)
+	if err != nil {
+		t.Skipf("listing required tags: %s", err)
+	}
+
+	// Ensure some required tags are configured
+	if output == nil || len(output.RequiredTags) == 0 {
+		t.Skip("no requird tags found")
 	}
 }
 
