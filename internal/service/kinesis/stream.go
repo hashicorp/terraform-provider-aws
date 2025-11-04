@@ -502,11 +502,11 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		_, err := conn.UpdateMaxRecordSize(ctx, &input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "starting Kinesis Stream (%s) update (MaxRecordSizeInKiB)", name, err)
+			return sdkdiag.AppendErrorf(diags, "starting Kinesis Stream (%s) update (UpdateMaxRecordSize): %s", name, err)
 		}
 
 		if _, err := waitStreamUpdated(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream (%s) update (MaxRecordSizeInKiB): %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream (%s) update (UpdateMaxRecordSize): %s", name, err)
 		}
 	}
 
