@@ -5,7 +5,9 @@ package glue
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
@@ -39,6 +41,8 @@ func resourceJob() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		CustomizeDiff: resourceJobCustomizeDiff,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -53,7 +57,7 @@ func resourceJob() *schema.Resource {
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "glueetl",
+							Default:  jobCommandNameApacheSparkETL,
 						},
 						"python_version": {
 							Type:         schema.TypeString,
@@ -228,10 +232,9 @@ func resourceJob() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrTimeout: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntAtLeast(1),
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
 			},
 			"worker_type": {
 				Type:          schema.TypeString,
@@ -511,6 +514,25 @@ func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	return diags
+}
+
+func resourceJobCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
+	if command := expandJobCommand(diff.Get("command").([]any)); command != nil {
+		// Allow 0 timeout for streaming jobs.
+		var minVal int64
+		if !strings.EqualFold(jobCommandNameApacheSparkStreamingETL, aws.ToString(command.Name)) {
+			minVal = 1
+		}
+
+		key := names.AttrTimeout
+		if v := diff.GetRawConfig().GetAttr(key); v.IsKnown() && !v.IsNull() {
+			if v, _ := v.AsBigFloat().Int64(); v < minVal {
+				return fmt.Errorf("expected %s to be at least (%d), got %d", key, minVal, v)
+			}
+		}
+	}
+
+	return nil
 }
 
 func findJobByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Job, error) {
