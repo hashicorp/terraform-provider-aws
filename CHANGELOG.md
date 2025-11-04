@@ -13,6 +13,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_glue_job: Allow a zero (`0`) value for `timeout` for Apache Spark streaming ETL jobs. This allows the job to be configured with no timeout ([#44920](https://github.com/hashicorp/terraform-provider-aws/issues/44920))
 * resource/aws_lakeformation_lf_tags: Remove incorrect validation from `catalog_id`, `database.catalog_id`, `table.catalog_id`, and `table_with_columns.catalog_id` arguments ([#44890](https://github.com/hashicorp/terraform-provider-aws/issues/44890))
 
 ## 6.19.0 (October 30, 2025)
