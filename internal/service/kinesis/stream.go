@@ -124,6 +124,12 @@ func resourceStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"max_record_size_in_kib": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1024,
+				ValidateFunc: validation.IntBetween(1024, 10240),
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
