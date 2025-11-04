@@ -113,7 +113,7 @@ func TestAccGlueJob_basicStreaming(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "0"),
 				),
 			},
 			{
@@ -585,7 +585,7 @@ func TestAccGlueJob_tags(t *testing.T) {
 	})
 }
 
-func TestAccGlueJob_StreamingTimeout_createNonNull(t *testing.T) {
+func TestAccGlueJob_streamingTimeout(t *testing.T) {
 	ctx := acctest.Context(t)
 	var job awstypes.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -598,79 +598,23 @@ func TestAccGlueJob_StreamingTimeout_createNonNull(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_streamingTimeout(rName, "500"),
+				Config: testAccJobConfig_streamingTimeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "500"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "1"),
+				),
+			},
+			{
+				Config: testAccJobConfig_streamingTimeout(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccJobConfig_streamingTimeout(rName, "1500"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "1500"),
-				),
-			},
-			{
-				Config: testAccJobConfig_streamingTimeout(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, ""),
-				),
-			},
-		},
-	})
-}
-
-func TestAccGlueJob_StreamingTimeout_createNull(t *testing.T) {
-	ctx := acctest.Context(t)
-	var job awstypes.Job
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_glue_job.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccJobConfig_streamingTimeout(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, ""),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccJobConfig_streamingTimeout(rName, "500"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "500"),
-				),
-			},
-			{
-				Config: testAccJobConfig_streamingTimeout(rName, "1500"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "1500"),
-				),
-			},
-			{
-				Config: testAccJobConfig_streamingTimeout(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, ""),
-				),
 			},
 		},
 	})
@@ -696,16 +640,16 @@ func TestAccGlueJob_timeout(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccJobConfig_timeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1468,13 +1412,13 @@ resource "aws_glue_job" "test" {
 `, rName, timeout))
 }
 
-func testAccJobConfig_streamingTimeout(rName, timeout string) string {
+func testAccJobConfig_streamingTimeout(rName string, timeout int) string {
 	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
   max_capacity = 10
   name         = %[1]q
   role_arn     = aws_iam_role.test.arn
-  timeout      = %[2]q
+  timeout      = %[2]d
 
   command {
     name            = "gluestreaming"

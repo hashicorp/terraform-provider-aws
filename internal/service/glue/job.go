@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -229,10 +228,10 @@ func resourceJob() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrTimeout: {
-				Type:         nullable.TypeNullableInt,
+				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(1),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"worker_type": {
 				Type:          schema.TypeString,
@@ -323,8 +322,8 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.SourceControlDetails = expandSourceControlDetails(v.([]any))
 	}
 
-	if v, null, _ := nullable.Int(d.Get(names.AttrTimeout).(string)).ValueInt32(); !null && v > 0 {
-		input.Timeout = aws.Int32(v)
+	if v, ok := d.GetOk(names.AttrTimeout); ok {
+		input.Timeout = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("worker_type"); ok {
@@ -388,11 +387,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if err := d.Set("source_control_details", flattenSourceControlDetails(job.SourceControlDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting source_control_details: %s", err)
 	}
-	if job.Timeout != nil {
-		d.Set(names.AttrTimeout, flex.Int32ToStringValue(job.Timeout))
-	} else {
-		d.Set(names.AttrTimeout, nil)
-	}
+	d.Set(names.AttrTimeout, job.Timeout)
 	d.Set("worker_type", job.WorkerType)
 
 	return diags
@@ -474,8 +469,8 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			jobUpdate.SourceControlDetails = expandSourceControlDetails(v.([]any))
 		}
 
-		if v, null, _ := nullable.Int(d.Get(names.AttrTimeout).(string)).ValueInt32(); !null && v > 0 {
-			jobUpdate.Timeout = aws.Int32(v)
+		if v, ok := d.GetOk(names.AttrTimeout); ok {
+			jobUpdate.Timeout = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("worker_type"); ok {
