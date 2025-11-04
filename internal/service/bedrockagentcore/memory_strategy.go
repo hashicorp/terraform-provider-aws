@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -350,7 +351,7 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 	}
 
 	out, err := findMemoryStrategyByTwoPartKey(ctx, conn, state.MemoryID.ValueString(), state.MemoryStrategyID.ValueString())
-	if tfresource.NotFound(err) {
+	if intretry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -575,7 +576,7 @@ func waitMemoryStrategyDeleted(ctx context.Context, conn *bedrockagentcorecontro
 func statusMemoryStrategy(conn *bedrockagentcorecontrol.Client, memoryID, memoryStrategyID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findMemoryStrategyByTwoPartKey(ctx, conn, memoryID, memoryStrategyID)
-		if tfresource.NotFound(err) {
+		if intretry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -594,9 +595,10 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(tfslices.Filter(memory.Strategies, func(v awstypes.MemoryStrategy) bool {
+	result, err := tfresource.AssertSingleValueResult(tfslices.Filter(memory.Strategies, func(v awstypes.MemoryStrategy) bool {
 		return aws.ToString(v.StrategyId) == memoryStrategyID
 	}))
+	return smarterr.Assert(result, err)
 }
 
 type memoryStrategyResourceModel struct {

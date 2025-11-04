@@ -36,6 +36,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -264,8 +265,8 @@ func (r *gatewayResource) Read(ctx context.Context, request resource.ReadRequest
 
 	gatewayID := fwflex.StringValueFromFramework(ctx, data.GatewayID)
 	out, err := findGatewayByID(ctx, conn, gatewayID)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -412,7 +413,7 @@ func waitGatewayDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 func statusGateway(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findGatewayByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if intretry.NotFound(err) {
 			return nil, "", nil
 		}
 

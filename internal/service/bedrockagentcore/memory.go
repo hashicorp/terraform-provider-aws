@@ -32,6 +32,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -177,8 +178,8 @@ func (r *memoryResource) Read(ctx context.Context, request resource.ReadRequest,
 
 	memoryID := fwflex.StringValueFromFramework(ctx, data.ID)
 	out, err := findMemoryByID(ctx, conn, memoryID)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -299,7 +300,7 @@ func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client
 func statusMemory(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findMemoryByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if intretry.NotFound(err) {
 			return nil, "", nil
 		}
 

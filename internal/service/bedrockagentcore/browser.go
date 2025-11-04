@@ -35,6 +35,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -265,8 +266,8 @@ func (r *browserResource) Read(ctx context.Context, request resource.ReadRequest
 
 	browserID := fwflex.StringValueFromFramework(ctx, data.BrowserID)
 	out, err := findBrowserByID(ctx, conn, browserID)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -352,7 +353,7 @@ func waitBrowserDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 func statusBrowser(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findBrowserByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if intretry.NotFound(err) {
 			return nil, "", nil
 		}
 
