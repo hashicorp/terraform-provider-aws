@@ -606,8 +606,6 @@ resource "aws_redshift_integration" "test" {
   target_arn       = aws_redshiftserverless_namespace.test.arn
 
   depends_on = [
-    aws_dynamodb_table.test,
-    aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
     aws_dynamodb_resource_policy.test,
@@ -673,8 +671,6 @@ resource "aws_redshift_integration" "test" {
   }
 
   depends_on = [
-    aws_dynamodb_table.test,
-    aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
     aws_dynamodb_resource_policy.test,
@@ -692,8 +688,6 @@ resource "aws_redshift_integration" "test" {
   target_arn       = aws_redshiftserverless_namespace.test.arn
 
   depends_on = [
-    aws_s3_bucket.test,
-    aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
     aws_s3_bucket_policy.test,
@@ -714,8 +708,6 @@ resource "aws_redshift_integration" "test" {
   }
 
   depends_on = [
-    aws_dynamodb_table.test,
-    aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
     aws_dynamodb_resource_policy.test,
@@ -737,8 +729,6 @@ resource "aws_redshift_integration" "test" {
   }
 
   depends_on = [
-    aws_dynamodb_table.test,
-    aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
     aws_dynamodb_resource_policy.test,
