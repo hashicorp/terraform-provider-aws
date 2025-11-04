@@ -471,7 +471,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_public_access_block" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   block_public_acls       = true
   block_public_policy     = true
@@ -480,7 +480,7 @@ resource "aws_s3_bucket_public_access_block" "test" {
 }
 
 resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   policy = jsonencode({
     Version = "2008-10-17",
