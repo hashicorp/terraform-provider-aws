@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_redshift_usage_limit", name="Usage Limit")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceUsageLimit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsageLimitCreate,

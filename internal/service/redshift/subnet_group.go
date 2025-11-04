@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_redshift_subnet_group", name="Subnet Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
