@@ -379,31 +379,59 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 }
 
 func testAccIntegrationConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+  base_capacity  = 8
+
+  publicly_accessible = false
+  subnet_ids          = aws_subnet.test[*].id
+}
+
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
+`, rName))
+}
 
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  ingress {
-    protocol  = -1
-    self      = true
-    from_port = 0
-    to_port   = 0
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
+func testAccIntegrationConfig_source_DynamoDBTable(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIntegrationConfig_base(rName), fmt.Sprintf(`
+# The "aws_redshiftserverless_resource_policy" resource doesn't support the following action types.
+# Therefore we need to use the "aws_redshift_resource_policy" resource for RedShift-serverless instead.
+resource "aws_redshift_resource_policy" "test" {
+  resource_arn = aws_redshiftserverless_namespace.test.arn
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "redshift.amazonaws.com"
+        }
+        Action   = "redshift:AuthorizeInboundIntegration"
+        Resource = aws_redshiftserverless_namespace.test.arn
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn" = aws_dynamodb_table.test.arn
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "redshift:CreateInboundIntegration"
+        Resource = aws_redshiftserverless_namespace.test.arn
+      }
+    ]
+  })
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -465,6 +493,43 @@ resource "aws_dynamodb_resource_policy" "test" {
     ]
   })
 }
+`, rName))
+}
+
+func testAccIntegrationConfig_source_S3Bucket(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIntegrationConfig_base(rName), fmt.Sprintf(`
+# The "aws_redshiftserverless_resource_policy" resource doesn't support the following action types.
+# Therefore we need to use the "aws_redshift_resource_policy" resource for RedShift-serverless instead.
+resource "aws_redshift_resource_policy" "test" {
+  resource_arn = aws_redshiftserverless_namespace.test.arn
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "redshift.amazonaws.com"
+        }
+        Action   = "redshift:AuthorizeInboundIntegration"
+        Resource = aws_redshiftserverless_namespace.test.arn
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn" = aws_s3_bucket.test.arn
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "redshift:CreateInboundIntegration"
+        Resource = aws_redshiftserverless_namespace.test.arn
+      }
+    ]
+  })
+}
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -500,106 +565,12 @@ resource "aws_s3_bucket_policy" "test" {
     ]
   })
 }
-
-resource "aws_redshiftserverless_namespace" "test" {
-  namespace_name = %[1]q
-}
-
-resource "aws_redshiftserverless_workgroup" "test" {
-  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
-  workgroup_name = %[1]q
-  base_capacity  = 8
-
-  publicly_accessible = false
-  subnet_ids          = aws_subnet.test[*].id
-
-  config_parameter {
-    parameter_key   = "enable_case_sensitive_identifier"
-    parameter_value = "true"
-  }
-  config_parameter {
-    parameter_key   = "auto_mv"
-    parameter_value = "true"
-  }
-  config_parameter {
-    parameter_key   = "datestyle"
-    parameter_value = "ISO, MDY"
-  }
-  config_parameter {
-    parameter_key   = "enable_user_activity_logging"
-    parameter_value = "true"
-  }
-  config_parameter {
-    parameter_key   = "max_query_execution_time"
-    parameter_value = "14400"
-  }
-  config_parameter {
-    parameter_key   = "query_group"
-    parameter_value = "default"
-  }
-  config_parameter {
-    parameter_key   = "require_ssl"
-    parameter_value = "true"
-  }
-  config_parameter {
-    parameter_key   = "search_path"
-    parameter_value = "$user, public"
-  }
-  config_parameter {
-    parameter_key   = "use_fips_ssl"
-    parameter_value = "false"
-  }
-}
-
-# The "aws_redshiftserverless_resource_policy" resource doesn't support the following action types.
-# Therefore we need to use the "aws_redshift_resource_policy" resource for RedShift-serverless instead.
-resource "aws_redshift_resource_policy" "test" {
-  resource_arn = aws_redshiftserverless_namespace.test.arn
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "redshift.amazonaws.com"
-        }
-        Action   = "redshift:AuthorizeInboundIntegration"
-        Resource = aws_redshiftserverless_namespace.test.arn
-        Condition = {
-          StringEquals = {
-            "aws:SourceArn" = aws_dynamodb_table.test.arn
-          }
-        }
-      },
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "redshift.amazonaws.com"
-        }
-        Action   = "redshift:AuthorizeInboundIntegration"
-        Resource = aws_redshiftserverless_namespace.test.arn
-        Condition = {
-          StringEquals = {
-            "aws:SourceArn" = aws_s3_bucket.test.arn
-          }
-        }
-      },
-      {
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "redshift:CreateInboundIntegration"
-        Resource = aws_redshiftserverless_namespace.test.arn
-      }
-    ]
-  })
-}
 `, rName))
 }
 
 func testAccIntegrationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccIntegrationConfig_source_DynamoDBTable(rName), fmt.Sprintf(`
 resource "aws_redshift_integration" "test" {
   integration_name = %[1]q
   source_arn       = aws_dynamodb_table.test.arn
@@ -615,7 +586,8 @@ resource "aws_redshift_integration" "test" {
 }
 
 func testAccIntegrationConfig_optional(rName string) string {
-	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccIntegrationConfig_source_DynamoDBTable(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
@@ -680,7 +652,8 @@ resource "aws_redshift_integration" "test" {
 }
 
 func testAccIntegrationConfig_sourceUsesS3Bucket(rName, description, integrationName string) string {
-	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccIntegrationConfig_source_S3Bucket(rName), fmt.Sprintf(`
 resource "aws_redshift_integration" "test" {
   description      = %[1]q
   integration_name = %[2]q
@@ -697,7 +670,8 @@ resource "aws_redshift_integration" "test" {
 }
 
 func testAccIntegrationConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccIntegrationConfig_source_DynamoDBTable(rName), fmt.Sprintf(`
 resource "aws_redshift_integration" "test" {
   integration_name = %[1]q
   source_arn       = aws_dynamodb_table.test.arn
@@ -717,7 +691,8 @@ resource "aws_redshift_integration" "test" {
 }
 
 func testAccIntegrationConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccIntegrationConfig_source_DynamoDBTable(rName), fmt.Sprintf(`
 resource "aws_redshift_integration" "test" {
   integration_name = %[1]q
   source_arn       = aws_dynamodb_table.test.arn
