@@ -57,8 +57,8 @@ type Config struct {
 	SkipRequestingAccountId        bool
 	STSRegion                      string
 	SuppressDebugLog               bool
-	TaggingPolicyEnforced          bool
-	TaggingPolicySeverity          string
+	TagPolicyEnforced              bool
+	TagPolicySeverity              string
 	TerraformVersion               string
 	Token                          string
 	TokenBucketRateLimiterCapacity int
@@ -194,21 +194,21 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	}
 
-	// Fetch tagging policy details when enforced
-	if c.TaggingPolicyEnforced {
-		tflog.Debug(ctx, "Retrieving tagging policy details")
+	// Fetch tag policy details when enforced
+	if c.TagPolicyEnforced {
+		tflog.Debug(ctx, "Retrieving tag policy details")
 		reqTags, err := tagris.GetRequiredTags(ctx, cfg)
 		if err != nil {
 			diags = append(diags, errs.NewErrorDiagnostic(
 				"Retrieving Required Tags",
-				`Failed to retrieve required tags from the organizations effective tagging policy. Ensure the calling principal `+
+				`Failed to retrieve required tags from the organizations tag policies. Ensure the calling principal `+
 					`has the "tag:ListRequiredTags" IAM permission and that tag policies are attached to the target account.`+
 					fmt.Sprintf("\n\nOriginal error: %s", err)))
 			return nil, diags
 		}
 
-		client.taggingPolicyConfig = &tftags.TaggingPolicyConfig{
-			Level:        c.TaggingPolicySeverity,
+		client.tagPolicyConfig = &tftags.TagPolicyConfig{
+			Level:        c.TagPolicySeverity,
 			RequiredTags: reqTags,
 		}
 	}

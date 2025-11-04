@@ -182,25 +182,25 @@ provider "aws" {
 `, key1)
 }
 
-// ConfigTaggingPolicyEnforced enables tag policy enforcement with the provided severity
-func ConfigTaggingPolicyEnforced(severity string) string {
+// ConfigTagPolicyEnforced enables tag policy enforcement with the provided severity
+func ConfigTagPolicyEnforced(severity string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  tagging_policy_enforced = true
-  tagging_policy_severity = %[1]q
+  tag_policy_enforced = true
+  tag_policy_severity = %[1]q
 }
 `, severity)
 }
 
-// ConfigTaggingPolicyEnforcedAndDefaultTags1 enables tag policy enforcement with the
+// ConfigTagPolicyEnforcedAndDefaultTags1 enables tag policy enforcement with the
 // provided severity and a default tag
-func ConfigTaggingPolicyEnforcedAndDefaultTags1(severity, key1, value1 string) string {
+func ConfigTagPolicyEnforcedAndDefaultTags1(severity, key1, value1 string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-  tagging_policy_enforced = true
-  tagging_policy_severity = %[1]q
+  tag_policy_enforced = true
+  tag_policy_severity = %[1]q
 
   default_tags {
     tags = {

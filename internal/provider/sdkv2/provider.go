@@ -249,17 +249,17 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Description: "The region where AWS STS operations will take place. Examples\n" +
 						"are us-east-1 and us-west-2.", // lintignore:AWSAT003,
 				},
-				"tagging_policy_enforced": {
+				"tag_policy_enforced": {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Description: "Whether to enforce the organizations effective tagging policy on resources managed by " +
 						"this provider instance.",
 				},
-				"tagging_policy_severity": {
+				"tag_policy_severity": {
 					Type:     schema.TypeString,
 					Optional: true,
 					Description: `The severity of diagnostics related to violations of the organizations effective tagging ` +
-						`policy. Can only be set when tagging_policy_enforced is true. Valid values are "warning" and "error". ` +
+						`policy. Can only be set when tag_policy_enforced is true. Valid values are "warning" and "error". ` +
 						`Defaults to "error".`,
 				},
 				"token": {
@@ -362,7 +362,7 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
 		STSRegion:                      d.Get("sts_region").(string),
-		TaggingPolicyEnforced:          d.Get("tagging_policy_enforced").(bool),
+		TagPolicyEnforced:              d.Get("tag_policy_enforced").(bool),
 		TerraformVersion:               terraformVersion,
 		Token:                          d.Get("token").(string),
 		TokenBucketRateLimiterCapacity: d.Get("token_bucket_rate_limiter_capacity").(int),
@@ -479,10 +479,10 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		config.IgnoreTagsConfig = expandIgnoreTags(ctx, nil)
 	}
 
-	if v, ok := d.Get("tagging_policy_severity").(string); ok && v != "" {
+	if v, ok := d.Get("tag_policy_severity").(string); ok && v != "" {
 		// TODO: validate required tags are enabled
 		// TODO: parse v and validate one of error, warning
-		config.TaggingPolicySeverity = v
+		config.TagPolicySeverity = v
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -608,7 +608,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, v.TypeName, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TaggingPolicyConfig(ctx))
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
 					}
 
@@ -778,7 +778,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, resource.Name, resource.TypeName, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TaggingPolicyConfig(ctx))
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
 					}
 

@@ -309,15 +309,13 @@ func validateRequiredTags() customizeDiffInterceptor {
 				isCreate := d.GetRawState().IsNull()
 				hasTagsChange := d.HasChange(names.AttrTags)
 
-				// TODO: removing this condition causes destroy ops to apply the validation
-				// on the pre-destroy refresh. Verify this is acceptable for now.
 				if isCreate || hasTagsChange {
 					_, _, _, typeName, _, ok := interceptors.InfoFromContext(ctx, c)
 					if !ok {
 						return nil
 					}
 
-					if policy := c.TaggingPolicyConfig(ctx); policy != nil {
+					if policy := c.TagPolicyConfig(ctx); policy != nil {
 						cfgTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
 						allTags := c.DefaultTagsConfig(ctx).MergeTags(cfgTags)
 

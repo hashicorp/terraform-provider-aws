@@ -59,8 +59,8 @@ type IgnoreConfig struct {
 	KeyPrefixes KeyValueTags
 }
 
-// TaggingPolicyConfig contains options related to organizational tagging policies.
-type TaggingPolicyConfig struct {
+// TagPolicyConfig contains options related to organizational tagging policies.
+type TagPolicyConfig struct {
 	// Level indicates the severity of the diagnostic
 	//
 	// Must be one of "error" or "warning". This is a higher level abstraction on

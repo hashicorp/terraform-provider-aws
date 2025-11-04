@@ -423,7 +423,7 @@ func TestAccLogsLogGroup_requiredTags(t *testing.T) {
 			// New resources missing required tags fail
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigTaggingPolicyEnforced("error"),
+					acctest.ConfigTagPolicyEnforced("error"),
 					testAccGroupConfig_basic(rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -436,7 +436,7 @@ func TestAccLogsLogGroup_requiredTags(t *testing.T) {
 			// Creation with required tags succeeds
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigTaggingPolicyEnforced("error"),
+					acctest.ConfigTagPolicyEnforced("error"),
 					testAccGroupConfig_tags1(rName, tagKey, acctest.CtValue1),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -465,7 +465,7 @@ func TestAccLogsLogGroup_requiredTags(t *testing.T) {
 			// Updates which remove required tags fail
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigTaggingPolicyEnforced("error"),
+					acctest.ConfigTagPolicyEnforced("error"),
 					testAccGroupConfig_tags1(rName, nonRequiredTagKey, acctest.CtValue1),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -513,7 +513,7 @@ func TestAccLogsLogGroup_requiredTags_defaultTags(t *testing.T) {
 			// New resources missing required tags fail
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigTaggingPolicyEnforced("error"),
+					acctest.ConfigTagPolicyEnforced("error"),
 					testAccGroupConfig_basic(rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -526,7 +526,7 @@ func TestAccLogsLogGroup_requiredTags_defaultTags(t *testing.T) {
 			// Creation with required tags in default_tags succeeds
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigTaggingPolicyEnforcedAndDefaultTags1("error", tagKey, acctest.CtValue1),
+					acctest.ConfigTagPolicyEnforcedAndDefaultTags1("error", tagKey, acctest.CtValue1),
 					testAccGroupConfig_basic(rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -551,7 +551,7 @@ func TestAccLogsLogGroup_requiredTags_defaultTags(t *testing.T) {
 			// Updates which remove required tags from default_tags fail
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigTaggingPolicyEnforcedAndDefaultTags1("error", nonRequiredTagKey, acctest.CtValue1),
+					acctest.ConfigTagPolicyEnforcedAndDefaultTags1("error", nonRequiredTagKey, acctest.CtValue1),
 					testAccGroupConfig_basic(rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -595,7 +595,7 @@ func TestAccLogsLogGroup_requiredTags_warning(t *testing.T) {
 			// New resources missing required tags succeeds
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigTaggingPolicyEnforced("warning"),
+					acctest.ConfigTagPolicyEnforced("warning"),
 					testAccGroupConfig_basic(rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -613,7 +613,7 @@ func TestAccLogsLogGroup_requiredTags_warning(t *testing.T) {
 			// Updates adding required tags succeeds
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigTaggingPolicyEnforced("warning"),
+					acctest.ConfigTagPolicyEnforced("warning"),
 					testAccGroupConfig_tags1(rName, tagKey, acctest.CtValue1),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -642,7 +642,7 @@ func TestAccLogsLogGroup_requiredTags_warning(t *testing.T) {
 			// Updates which remove required tags also succeed
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigTaggingPolicyEnforced("warning"),
+					acctest.ConfigTagPolicyEnforced("warning"),
 					testAccGroupConfig_tags1(rName, nonRequiredTagKey, acctest.CtValue1),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

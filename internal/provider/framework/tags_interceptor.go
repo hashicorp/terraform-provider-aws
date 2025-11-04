@@ -299,14 +299,14 @@ func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context,
 
 		// Only run validation during resource creation or when tags are modified
 		if isCreate || hasTagsChange {
-			if policy := c.TaggingPolicyConfig(ctx); policy != nil {
+			if policy := c.TagPolicyConfig(ctx); policy != nil {
 
 				// Verify required tags are present
 				if reqTags, ok := policy.RequiredTags[typeName]; ok {
 					if !allPlanTags.ContainsAllKeys(reqTags) {
 						missing := reqTags.Removed(allPlanTags).Keys()
 						summary := "Missing Required Tags"
-						detail := fmt.Sprintf("An organizational tagging policy requires the following tags for %s: %s", typeName, missing)
+						detail := fmt.Sprintf("An organizational tag policy requires the following tags for %s: %s", typeName, missing)
 
 						switch policy.Level {
 						case "warning":

@@ -11,9 +11,9 @@ import (
 
 // InContext represents the tagging information kept in Context.
 type InContext struct {
-	DefaultConfig       *DefaultConfig
-	IgnoreConfig        *IgnoreConfig
-	TaggingPolicyConfig *TaggingPolicyConfig
+	DefaultConfig   *DefaultConfig
+	IgnoreConfig    *IgnoreConfig
+	TagPolicyConfig *TagPolicyConfig
 
 	// TagsIn holds tags specified in configuration. Typically this field includes any default tags and excludes system tags.
 	TagsIn option.Option[KeyValueTags]
@@ -22,13 +22,13 @@ type InContext struct {
 }
 
 // NewContext returns a Context enhanced with tagging information.
-func NewContext(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, taggingPolicyConfig *TaggingPolicyConfig) context.Context {
+func NewContext(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, tagPolicyConfig *TagPolicyConfig) context.Context {
 	v := InContext{
-		DefaultConfig:       defaultConfig,
-		IgnoreConfig:        ignoreConfig,
-		TaggingPolicyConfig: taggingPolicyConfig,
-		TagsIn:              option.None[KeyValueTags](),
-		TagsOut:             option.None[KeyValueTags](),
+		DefaultConfig:   defaultConfig,
+		IgnoreConfig:    ignoreConfig,
+		TagPolicyConfig: tagPolicyConfig,
+		TagsIn:          option.None[KeyValueTags](),
+		TagsOut:         option.None[KeyValueTags](),
 	}
 
 	return context.WithValue(ctx, tagKey, &v)

@@ -307,7 +307,7 @@ func (c mockClient) IgnoreTagsConfig(ctx context.Context) *tftags.IgnoreConfig {
 	panic("not implemented") //lintignore:R009
 }
 
-func (c mockClient) TaggingPolicyConfig(ctx context.Context) *tftags.TaggingPolicyConfig {
+func (c mockClient) TagPolicyConfig(ctx context.Context) *tftags.TagPolicyConfig {
 	panic("not implemented") //lintignore:R009
 }
 

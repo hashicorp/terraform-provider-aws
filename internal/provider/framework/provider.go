@@ -199,15 +199,15 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				Optional:    true,
 				Description: "The region where AWS STS operations will take place. Examples\nare us-east-1 and us-west-2.", // lintignore:AWSAT003
 			},
-			"tagging_policy_enforced": schema.BoolAttribute{
+			"tag_policy_enforced": schema.BoolAttribute{
 				Optional: true,
 				Description: "Whether to enforce the organizations effective tagging policy on resources managed by " +
 					"this provider instance.",
 			},
-			"tagging_policy_severity": schema.StringAttribute{
+			"tag_policy_severity": schema.StringAttribute{
 				Optional: true,
 				Description: `The severity of diagnostics related to violations of the organizations effective tagging ` +
-					`policy. Can only be set when tagging_policy_enforced is true. Valid values are "warning" and "error". ` +
+					`policy. Can only be set when tag_policy_enforced is true. Valid values are "warning" and "error". ` +
 					`Defaults to "error".`,
 			},
 			"token": schema.StringAttribute{
