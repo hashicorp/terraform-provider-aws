@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -251,7 +252,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
-			return smerr.AddEnrich(ctx, diags, resourceMetricStreamRead(ctx, d, meta)) // no error, just continue
+			return smerr.AppendEnrich(ctx, diags, resourceMetricStreamRead(ctx, d, meta)) // no error, just continue
 		}
 
 		if err != nil {
