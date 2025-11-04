@@ -42,12 +42,14 @@ return smarterr.Assert(tfresource.AssertSingleValueResult(...))
 ### 4. Direct Diagnostics Calls
 
 **Framework:**
+
 ```go
 // Before: resp.Diagnostics.Append(...)
 // After:  smerr.AddEnrich(ctx, &resp.Diagnostics, ...)
 ```
 
 **SDKv2:**
+
 ```go
 // Before: return append(diags, someFunc()...)
 // After:  return smerr.AppendEnrich(ctx, diags, someFunc())
@@ -56,14 +58,17 @@ return smarterr.Assert(tfresource.AssertSingleValueResult(...))
 ## Function Reference
 
 **Framework (Add verbs):**
+
 - `smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)`
 - `smerr.AddEnrich(ctx, &response.Diagnostics, diagnosticFunc())`
 
 **SDKv2 (Append verbs):**
+
 - `smerr.Append(ctx, diags, err, smerr.ID, id)`
 - `smerr.AppendEnrich(ctx, diags, diagnosticFunc())`
 
 **Both contexts:**
+
 - `smarterr.NewError(err)` - Wrap bare returns
 - `smarterr.Assert(tfresource.AssertSingleValueResult(...))` - Wrap helpers
 
