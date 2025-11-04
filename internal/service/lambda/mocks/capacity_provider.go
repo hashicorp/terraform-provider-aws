@@ -30,3 +30,7 @@ func (c *Client) UpdateCapacityProvider(ctx context.Context, input *types.Update
 func (c *Client) GetCapacityProvider(ctx context.Context, input *types.GetCapacityProviderInput) (*types.GetCapacityProviderOutput, error) {
 	return &types.GetCapacityProviderOutput{}, nil
 }
+
+func (c *Client) ListCapacityProviders(ctx context.Context, input *types.ListCapacityProvidersInput) (*types.ListCapacityProvidersOutput, error) {
+	return &types.ListCapacityProvidersOutput{}, nil
+}

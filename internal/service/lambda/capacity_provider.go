@@ -38,6 +38,7 @@ import (
 
 // @FrameworkResource("aws_lambda_capacity_provider", name="Capacity Provider")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newResourceCapacityProvider(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCapacityProvider{}
 
@@ -236,7 +237,7 @@ func (r *resourceCapacityProvider) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	out, err := findCapacityProviderByArn(ctx, conn, state.ARN.ValueString())
+	out, err := findCapacityProviderByARN(ctx, conn, state.ARN.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -372,7 +373,7 @@ func waitCapacityProviderDeleted(ctx context.Context, conn *mocks.Client, id str
 
 func statusCapacityProvider(ctx context.Context, conn *mocks.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := findCapacityProviderByArn(ctx, conn, id)
+		out, err := findCapacityProviderByARN(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -385,7 +386,7 @@ func statusCapacityProvider(ctx context.Context, conn *mocks.Client, id string) 
 	}
 }
 
-func findCapacityProviderByArn(ctx context.Context, conn *mocks.Client, id string) (*awsmocktypes.GetCapacityProviderOutput, error) {
+func findCapacityProviderByARN(ctx context.Context, conn *mocks.Client, id string) (*awsmocktypes.GetCapacityProviderOutput, error) {
 	input := awsmocktypes.GetCapacityProviderInput{
 		CapacityProviderName: aws.String(id),
 	}

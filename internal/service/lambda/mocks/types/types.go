@@ -46,6 +46,10 @@ type GetCapacityProviderOutput struct {
 	State State
 }
 
+type ListCapacityProvidersInput struct{}
+
+type ListCapacityProvidersOutput struct{}
+
 type State string
 
 const (
