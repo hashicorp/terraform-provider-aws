@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_redshift_hsm_configuration", name="HSM Configuration")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceHSMConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHSMConfigurationCreate,

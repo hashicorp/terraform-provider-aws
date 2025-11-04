@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_redshift_parameter_group", name="Parameter Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,

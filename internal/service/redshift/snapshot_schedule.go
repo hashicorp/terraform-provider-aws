@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_redshift_snapshot_schedule", name="Snapshot Schedule")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceSnapshotSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotScheduleCreate,
