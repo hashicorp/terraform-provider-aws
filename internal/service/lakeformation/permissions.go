@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -513,7 +514,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
-	input := &lakeformation.ListPermissionsInput{
+	input := lakeformation.ListPermissionsInput{
 		Resource: &awstypes.Resource{},
 	}
 
@@ -553,42 +554,18 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]any)[0].(map[string]any))
 	}
 
-	var tableType TableType
-
 	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
-		tableType = TableTypeTable
 	}
 
 	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		// can't ListPermissions for TableWithColumns, so use Table instead
 		input.Resource.Table = ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any))
-		tableType = TableTypeTableWithColumns
 	}
 
-	columnNames := make([]string, 0)
-	excludedColumnNames := make([]string, 0)
-	columnWildcard := false
+	filter := permissionsFilter(d)
 
-	if tableType == TableTypeTableWithColumns {
-		if v, ok := d.GetOk("table_with_columns.0.wildcard"); ok {
-			columnWildcard = v.(bool)
-		}
-
-		if v, ok := d.GetOk("table_with_columns.0.column_names"); ok {
-			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-				columnNames = flex.ExpandStringValueSet(v)
-			}
-		}
-
-		if v, ok := d.GetOk("table_with_columns.0.excluded_column_names"); ok {
-			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-				excludedColumnNames = flex.ExpandStringValueSet(v)
-			}
-		}
-	}
-
-	allPermissions, err := waitPermissionsReady(ctx, conn, input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waitPermissionsReady(ctx, conn, &input, filter, principalIdentifier)
 
 	if !d.IsNewResource() {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
@@ -615,7 +592,11 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
-	cleanPermissions := filterPermissions(input, principalIdentifier, tableType, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+	cleanPermissions := filterPermissions(filter, allPermissions)
+
+	if len(cleanPermissions) != len(allPermissions) {
+		return sdkdiag.AppendErrorf(diags, "Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths", len(cleanPermissions), len(allPermissions))
+	}
 
 	if len(cleanPermissions) == 0 {
 		log.Printf("[WARN] No Lake Formation permissions (%s) found", d.Id())
@@ -627,10 +608,6 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 		d.Set("table_with_columns", nil)
 		d.Set("table", nil)
 		return diags
-	}
-
-	if len(cleanPermissions) != len(allPermissions) {
-		log.Printf("[INFO] Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths (this is not necessarily a problem): %s", len(cleanPermissions), len(allPermissions), d.Id())
 	}
 
 	d.Set(names.AttrPrincipal, cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
@@ -854,6 +831,57 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+type PermissionsFilter = tfslices.Predicate[awstypes.PrincipalResourcePermissions]
+
+func permissionsFilter(d *schema.ResourceData) PermissionsFilter {
+	principalIdentifier := d.Get(names.AttrPrincipal).(string)
+
+	if _, ok := d.GetOk("catalog_resource"); ok {
+		return filterCatalogPermissions(principalIdentifier)
+	}
+	if _, ok := d.GetOk("data_cells_filter"); ok {
+		return filterDataCellsFilter(principalIdentifier)
+	}
+	if v, ok := d.GetOk("data_location"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterDataLocationPermissions(principalIdentifier)
+	}
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterDatabasePermissions(principalIdentifier)
+	}
+	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterLFTagPermissions(principalIdentifier)
+	}
+	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterLFTagPolicyPermissions(principalIdentifier)
+	}
+	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		return filterTablePermissions(principalIdentifier, ExpandTableResource(v.([]any)[0].(map[string]any)))
+	}
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		var columnNames []string
+		if v, ok := d.GetOk("table_with_columns.0.column_names"); ok {
+			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+				columnNames = flex.ExpandStringValueSet(v)
+			}
+		}
+
+		var excludedColumnNames []string
+		if v, ok := d.GetOk("table_with_columns.0.excluded_column_names"); ok {
+			if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+				excludedColumnNames = flex.ExpandStringValueSet(v)
+			}
+		}
+
+		var columnWildcard bool
+		if v, ok := d.GetOk("table_with_columns.0.wildcard"); ok {
+			columnWildcard = v.(bool)
+		}
+
+		return filterTableWithColumnsPermissions(principalIdentifier, ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any)), columnNames, excludedColumnNames, columnWildcard)
+	}
+	return nil
 }
 
 func ExpandCatalogResource() *awstypes.CatalogResource {
