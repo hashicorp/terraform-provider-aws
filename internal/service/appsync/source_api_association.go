@@ -52,10 +52,6 @@ func newSourceAPIAssociationResource(_ context.Context) (resource.ResourceWithCo
 	return r, nil
 }
 
-const (
-	resNameSourceAPIAssociation = "Source API Association"
-)
-
 type sourceAPIAssociationResource struct {
 	framework.ResourceWithModel[sourceAPIAssociationResourceModel]
 	framework.WithImportByID
