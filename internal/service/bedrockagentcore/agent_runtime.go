@@ -289,12 +289,12 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data agentRuntimeResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -313,18 +313,18 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *agentRuntimeResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var new, old agentRuntimeResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -332,7 +332,7 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, new, old)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -340,7 +340,7 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 	if diff.HasChanges() {
 		agentRuntimeID := fwflex.StringValueFromFramework(ctx, new.AgentRuntimeID)
 		var input bedrockagentcorecontrol.UpdateAgentRuntimeInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input, fwflex.WithFieldNamePrefix("AgentRuntime")))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input, fwflex.WithFieldNamePrefix("AgentRuntime")))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -354,7 +354,7 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 			return
 		}
 
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &new, fwflex.WithFieldNamePrefix("AgentRuntime")))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &new, fwflex.WithFieldNamePrefix("AgentRuntime")))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -367,12 +367,12 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 		new.AgentRuntimeVersion = old.AgentRuntimeVersion
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *agentRuntimeResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data agentRuntimeResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -532,7 +532,7 @@ func (m *agentRuntimeArtifactModel) Flatten(ctx context.Context, v any) diag.Dia
 	switch t := v.(type) {
 	case awstypes.AgentRuntimeArtifactMemberContainerConfiguration:
 		var data containerConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
 		if diags.HasError() {
 			return diags
 		}
@@ -552,12 +552,12 @@ func (m agentRuntimeArtifactModel) Expand(ctx context.Context) (any, diag.Diagno
 	switch {
 	case !m.ContainerConfiguration.IsNull():
 		data, d := m.ContainerConfiguration.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.AgentRuntimeArtifactMemberContainerConfiguration
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -584,7 +584,7 @@ func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) diag.
 	switch t := v.(type) {
 	case awstypes.AuthorizerConfigurationMemberCustomJWTAuthorizer:
 		var data customJWTAuthorizerConfigurationModel
-		smerr.EnrichAppend(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
 		if diags.HasError() {
 			return diags
 		}
@@ -604,12 +604,12 @@ func (m authorizerConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 	switch {
 	case !m.CustomJWTAuthorizer.IsNull():
 		data, d := m.CustomJWTAuthorizer.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &diags, d)
+		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
 			return nil, diags
 		}
 		var r awstypes.AuthorizerConfigurationMemberCustomJWTAuthorizer
-		smerr.EnrichAppend(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}

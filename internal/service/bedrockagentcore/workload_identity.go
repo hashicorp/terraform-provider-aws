@@ -64,7 +64,7 @@ func (r *workloadIdentityResource) Schema(ctx context.Context, request resource.
 
 func (r *workloadIdentityResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data workloadIdentityResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -73,7 +73,7 @@ func (r *workloadIdentityResource) Create(ctx context.Context, request resource.
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var input bedrockagentcorecontrol.CreateWorkloadIdentityInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -86,12 +86,12 @@ func (r *workloadIdentityResource) Create(ctx context.Context, request resource.
 
 	data.WorkloadIdentityARN = fwflex.StringToFramework(ctx, out.WorkloadIdentityArn)
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *workloadIdentityResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data workloadIdentityResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -115,18 +115,18 @@ func (r *workloadIdentityResource) Read(ctx context.Context, request resource.Re
 		out.AllowedResourceOauth2ReturnUrls = nil
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *workloadIdentityResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var new, old workloadIdentityResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -134,7 +134,7 @@ func (r *workloadIdentityResource) Update(ctx context.Context, request resource.
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, new, old)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -142,7 +142,7 @@ func (r *workloadIdentityResource) Update(ctx context.Context, request resource.
 	if diff.HasChanges() {
 		name := fwflex.StringValueFromFramework(ctx, new.Name)
 		var input bedrockagentcorecontrol.UpdateWorkloadIdentityInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -153,12 +153,12 @@ func (r *workloadIdentityResource) Update(ctx context.Context, request resource.
 			return
 		}
 	}
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *workloadIdentityResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data workloadIdentityResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
