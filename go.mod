@@ -10,7 +10,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.3.0
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.24.0
-	github.com/YakDriver/smarterr v0.6.0
+	github.com/YakDriver/smarterr v0.7.0
 	github.com/aws/aws-sdk-go-v2 v1.39.5
 	github.com/aws/aws-sdk-go-v2/config v1.31.16
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.20
