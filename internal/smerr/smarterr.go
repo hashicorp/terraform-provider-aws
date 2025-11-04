@@ -34,11 +34,9 @@ func EnrichAppend(ctx context.Context, existing *fwdiag.Diagnostics, incoming fw
 	smarterr.EnrichAppend(ctx, existing, incoming, injectContext(ctx, keyvals...)...)
 }
 
-// EnrichAppendDiagnostic is a helper that converts a single Diagnostic to Diagnostics and calls EnrichAppend.
-func EnrichAppendDiagnostic(ctx context.Context, existing *fwdiag.Diagnostics, incoming fwdiag.Diagnostic, keyvals ...any) {
-	var diags fwdiag.Diagnostics
-	diags.Append(incoming)
-	EnrichAppend(ctx, existing, diags, keyvals...)
+// AddOne enriches smarterr.AddOne with resource and service context if available.
+func AddOne(ctx context.Context, existing *fwdiag.Diagnostics, incoming fwdiag.Diagnostic, keyvals ...any) {
+	smarterr.AddOne(ctx, existing, incoming, injectContext(ctx, keyvals...)...)
 }
 
 func injectContext(ctx context.Context, keyvals ...any) []any {

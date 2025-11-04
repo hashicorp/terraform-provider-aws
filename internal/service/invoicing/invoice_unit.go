@@ -171,7 +171,7 @@ func (r *invoiceUnitResource) Read(ctx context.Context, request resource.ReadReq
 
 	output, err := findInvoiceUnitByARN(ctx, conn, data.ARN.ValueString())
 	if retry.NotFound(err) {
-		smerr.EnrichAppendDiagnostic(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}

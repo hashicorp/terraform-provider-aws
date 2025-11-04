@@ -90,12 +90,12 @@ rules:
 
   - id: go-no-direct-diag-append
     languages: [go]
-    message: Use smerr.EnrichAppend() or smerr.EnrichAppendDiagnostic() instead of resp.Diagnostics.Append (migrate to smarterr/smerr).
+    message: Use smerr.EnrichAppend() or smerr.AddOne() instead of resp.Diagnostics.Append (migrate to smarterr/smerr).
     severity: ERROR
     patterns:
       - pattern: $RESP.Diagnostics.Append(...)
       - pattern-not-inside: smerr.EnrichAppend(...)
-      - pattern-not-inside: smerr.EnrichAppendDiagnostic(...)
+      - pattern-not-inside: smerr.AddOne(...)
     paths:
       include:
         - "/internal/service/cloudwatch/"
