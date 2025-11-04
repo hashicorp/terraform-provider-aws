@@ -480,8 +480,11 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 	}
 
 	if v, ok := d.Get("tag_policy_severity").(string); ok && v != "" {
-		// TODO: validate required tags are enabled
-		// TODO: parse v and validate one of error, warning
+		path, otherPath := cty.GetAttrPath("tag_policy_severity"), cty.GetAttrPath("tag_policy_enforced")
+		if !config.TagPolicyEnforced {
+			diags = append(diags, errs.NewAttributeConflictsWhenError(path, otherPath, "false"))
+		}
+		diags = append(diags, validateTagPolicySeverity(path, v)...)
 		config.TagPolicySeverity = v
 	}
 
@@ -1178,4 +1181,12 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]any) *tftags.IgnoreC
 	}
 
 	return ignoreConfig
+}
+
+func validateTagPolicySeverity(path cty.Path, s string) diag.Diagnostics {
+	switch s {
+	case "error", "warning":
+		return nil
+	}
+	return diag.Diagnostics{errs.NewInvalidValueAttributeError(path, `Must be one of "error" or "warning"`)}
 }
