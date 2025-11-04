@@ -19,6 +19,7 @@ BUG FIXES:
 
 * resource/aws_cloudfront_distribution: Change `logging_config.bucket` argument from `Required` to `Optional` ([#44838](https://github.com/hashicorp/terraform-provider-aws/issues/44838))
 * resource/aws_cloudfront_distribution: Fix inability to configure `logging_config.include_cookies` argument while keeping V1 logging disabled ([#44838](https://github.com/hashicorp/terraform-provider-aws/issues/44838))
+* resource/aws_cloudfront_vpc_origin: Fix `Source type "...cloudfront.originSSLProtocolsModel" does not implement attr.Value` and `missing required field, CreateVpcOriginInput.VpcOriginEndpointConfig` errors. This fixes a regression introduced in [v6.17.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6170-october-16-2025) ([#44861](https://github.com/hashicorp/terraform-provider-aws/issues/44861))
 * resource/aws_glue_job: Allow Ray jobs to be updated ([#35012](https://github.com/hashicorp/terraform-provider-aws/issues/35012))
 * resource/aws_glue_job: Allow a zero (`0`) value for `timeout` for Apache Spark streaming ETL jobs. This allows the job to be configured with no timeout ([#44920](https://github.com/hashicorp/terraform-provider-aws/issues/44920))
 * resource/aws_lakeformation_lf_tags: Remove incorrect validation from `catalog_id`, `database.catalog_id`, `table.catalog_id`, and `table_with_columns.catalog_id` arguments ([#44890](https://github.com/hashicorp/terraform-provider-aws/issues/44890))
