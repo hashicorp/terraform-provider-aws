@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -31,15 +30,18 @@ import (
 
 // @FrameworkResource("aws_inspector2_filter", name="Filter")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 // @Testing(tagsTest=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector2/types;types.Filter")
 // @Testing(importStateIdAttribute="arn")
+// @Testing(preIdentityVersion="6.19.0")
 func newFilterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &filterResource{}, nil
 }
 
 type filterResource struct {
 	framework.ResourceWithModel[filterResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *filterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -508,10 +510,6 @@ func (r *filterResource) Delete(ctx context.Context, request resource.DeleteRequ
 
 		return
 	}
-}
-
-func (r *filterResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
 func findFilterByARN(ctx context.Context, conn *inspector2.Client, arn string) (*awstypes.Filter, error) {
