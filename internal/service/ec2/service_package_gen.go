@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
@@ -1032,7 +1033,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ec2_image_block_public_access",
 			Name:     "Image Block Public Access",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.VersionedIdentity(1, inttypes.RegionalSingletonIdentity(
+			Identity: inttypes.VersionedIdentity(1, []schema.IdentityUpgrader{imageBlockPublicAccessIdentityUpgradeV0}, inttypes.RegionalSingletonIdentity(
 				inttypes.WithV6_0SDKv2Fix(),
 			)),
 		},
