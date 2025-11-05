@@ -638,46 +638,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.identityAttribute = args.Positional[0]
 				}
 
-				var attrs []string
-				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-					attrs = strings.Split(attr, ";")
-				}
-				if d.Implementation == tests.ImplementationSDK {
-					attrs = append(attrs, "id")
-				} else {
-					if !slices.Contains(attrs, "id") {
-						d.SetImportStateIDAttribute(d.identityAttribute)
-					}
-				}
-				slices.Sort(attrs)
-				attrs = slices.Compact(attrs)
-				d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
-					return namesgen.ConstOrQuote(s)
-				})
+				populateInherentRegionIdentity(&d, args)
 
 			case "CustomInherentRegionIdentity":
 				hasIdentity = true
 				d.IsCustomInherentRegionIdentity = true
-
 				args := common.ParseArgs(m[3])
 				d.identityAttribute = args.Positional[0]
 
-				var attrs []string
-				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-					attrs = strings.Split(attr, ";")
-				}
-				if d.Implementation == tests.ImplementationSDK {
-					attrs = append(attrs, "id")
-				} else {
-					if !slices.Contains(attrs, "id") {
-						d.SetImportStateIDAttribute(d.identityAttribute)
-					}
-				}
-				slices.Sort(attrs)
-				attrs = slices.Compact(attrs)
-				d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
-					return namesgen.ConstOrQuote(s)
-				})
+				populateInherentRegionIdentity(&d, args)
 
 			case "IdentityAttribute":
 				hasIdentity = true
@@ -1000,4 +969,23 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 	if err := tf.Write(); err != nil {
 		g.Fatalf("generating file (%s): %s", mainPath, err)
 	}
+}
+
+func populateInherentRegionIdentity(d *ResourceDatum, args common.Args) {
+	var attrs []string
+	if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+		attrs = strings.Split(attr, ";")
+	}
+	if d.Implementation == tests.ImplementationSDK {
+		attrs = append(attrs, "id")
+	} else {
+		if !slices.Contains(attrs, "id") {
+			d.SetImportStateIDAttribute(d.identityAttribute)
+		}
+	}
+	slices.Sort(attrs)
+	attrs = slices.Compact(attrs)
+	d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
+		return namesgen.ConstOrQuote(s)
+	})
 }
