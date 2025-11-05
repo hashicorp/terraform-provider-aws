@@ -51,7 +51,7 @@ func testAccNetworkFlowMonitorScope_basic(t *testing.T) {
 				Config: testAccScopeConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "networkflowmonitor", "scope/*"),
 					resource.TestCheckResourceAttrSet(resourceName, "scope_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 				),
@@ -106,11 +106,11 @@ func testAccNetworkFlowMonitorScope_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScopeConfig_tags1("key1", "value1"),
+				Config: testAccScopeConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -119,20 +119,20 @@ func testAccNetworkFlowMonitorScope_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScopeConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccScopeConfig_tags2(acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccScopeConfig_tags1("key2", "value2"),
+				Config: testAccScopeConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -189,10 +189,11 @@ func testAccCheckScopeDestroy(ctx context.Context) resource.TestCheckFunc {
 func testAccScopeConfig_basic() string {
 	return `
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 resource "aws_networkflowmonitor_scope" "test" {
   targets {
-    region = "us-east-1"
+    region = data.aws_region.current.name
     target_identifier {
       target_id   = data.aws_caller_identity.current.account_id
       target_type = "ACCOUNT"
@@ -205,10 +206,11 @@ resource "aws_networkflowmonitor_scope" "test" {
 func testAccScopeConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 resource "aws_networkflowmonitor_scope" "test" {
   targets {
-    region = "us-east-1"
+    region = data.aws_region.current.name
     target_identifier {
       target_id   = data.aws_caller_identity.current.account_id
       target_type = "ACCOUNT"
@@ -225,10 +227,11 @@ resource "aws_networkflowmonitor_scope" "test" {
 func testAccScopeConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 resource "aws_networkflowmonitor_scope" "test" {
   targets {
-    region = "us-east-1"
+    region = data.aws_region.current.name
     target_identifier {
       target_id   = data.aws_caller_identity.current.account_id
       target_type = "ACCOUNT"

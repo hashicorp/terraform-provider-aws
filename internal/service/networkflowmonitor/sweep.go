@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -31,13 +32,13 @@ func sweepMonitors(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.NetworkFlowMonitorClient(ctx)
-	input := &networkflowmonitor.ListMonitorsInput{}
+	input := networkflowmonitor.ListMonitorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := networkflowmonitor.NewListMonitorsPaginator(conn, input)
+	pages := networkflowmonitor.NewListMonitorsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -55,7 +56,7 @@ func sweepMonitors(region string) error {
 			name := aws.ToString(v.MonitorName)
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newMonitorResource, client,
-				framework.NewAttribute("id", arn),
+				framework.NewAttribute(names.AttrID, arn),
 				framework.NewAttribute("monitor_name", name),
 			))
 		}
@@ -73,13 +74,13 @@ func sweepScopes(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.NetworkFlowMonitorClient(ctx)
-	input := &networkflowmonitor.ListScopesInput{}
+	input := networkflowmonitor.ListScopesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := networkflowmonitor.NewListScopesPaginator(conn, input)
+	pages := networkflowmonitor.NewListScopesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -97,7 +98,7 @@ func sweepScopes(region string) error {
 			scopeArn := aws.ToString(v.ScopeArn)
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newScopeResource, client,
-				framework.NewAttribute("id", scopeArn),
+				framework.NewAttribute(names.AttrID, scopeArn),
 				framework.NewAttribute("scope_id", scopeId),
 			))
 		}

@@ -55,7 +55,7 @@ func testAccNetworkFlowMonitorMonitor_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "networkflowmonitor", fmt.Sprintf("monitor/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_status"),
 				),
 			},
@@ -112,11 +112,11 @@ func testAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMonitorConfig_tags1(rName, "key1", "value1"),
+				Config: testAccMonitorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -126,20 +126,20 @@ func testAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"scope_arn"},
 			},
 			{
-				Config: testAccMonitorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccMonitorConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccMonitorConfig_tags1(rName, "key2", "value2"),
+				Config: testAccMonitorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -265,6 +265,7 @@ func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 func testAccMonitorConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -276,7 +277,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_networkflowmonitor_scope" "test" {
   targets {
-    region = "us-east-1"
+    region = data.aws_region.current.name
     target_identifier {
       target_id   = data.aws_caller_identity.current.account_id
       target_type = "ACCOUNT"
@@ -304,6 +305,7 @@ resource "aws_networkflowmonitor_monitor" "test" {
 func testAccMonitorConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -315,7 +317,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_networkflowmonitor_scope" "test" {
   targets {
-    region = "us-east-1"
+    region = data.aws_region.current.name
     target_identifier {
       target_id   = data.aws_caller_identity.current.account_id
       target_type = "ACCOUNT"
@@ -347,6 +349,7 @@ resource "aws_networkflowmonitor_monitor" "test" {
 func testAccMonitorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -358,7 +361,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_networkflowmonitor_scope" "test" {
   targets {
-    region = "us-east-1"
+    region = data.aws_region.current.name
     target_identifier {
       target_id   = data.aws_caller_identity.current.account_id
       target_type = "ACCOUNT"
@@ -391,6 +394,7 @@ resource "aws_networkflowmonitor_monitor" "test" {
 func testAccMonitorConfig_updated1(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -411,7 +415,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_networkflowmonitor_scope" "test" {
   targets {
-    region = "us-east-1"
+    region = data.aws_region.current.name
     target_identifier {
       target_id   = data.aws_caller_identity.current.account_id
       target_type = "ACCOUNT"
@@ -444,6 +448,7 @@ resource "aws_networkflowmonitor_monitor" "test" {
 func testAccMonitorConfig_updated2(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -464,7 +469,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_networkflowmonitor_scope" "test" {
   targets {
-    region = "us-east-1"
+    region = data.aws_region.current.name
     target_identifier {
       target_id   = data.aws_caller_identity.current.account_id
       target_type = "ACCOUNT"
@@ -502,9 +507,9 @@ resource "aws_networkflowmonitor_monitor" "test" {
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFlowMonitorClient(ctx)
 
-	input := &networkflowmonitor.ListMonitorsInput{}
+	input := networkflowmonitor.ListMonitorsInput{}
 
-	_, err := conn.ListMonitors(ctx, input)
+	_, err := conn.ListMonitors(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

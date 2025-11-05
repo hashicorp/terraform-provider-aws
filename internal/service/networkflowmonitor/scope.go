@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkflowmonitor/types"
 	"github.com/google/uuid"
@@ -48,10 +49,6 @@ type scopeResource struct {
 	framework.ResourceWithConfigure
 	framework.ResourceWithModel[scopeResourceModel]
 	framework.WithTimeouts
-}
-
-func (r *scopeResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = request.ProviderTypeName + "_networkflowmonitor_scope"
 }
 
 func (r *scopeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -141,7 +138,7 @@ func (r *scopeResource) Create(ctx context.Context, request resource.CreateReque
 	conn := r.Meta().NetworkFlowMonitorClient(ctx)
 
 	// Manual parameter mapping (AutoFlex can't handle union types)
-	input := &networkflowmonitor.CreateScopeInput{}
+	input := networkflowmonitor.CreateScopeInput{}
 
 	// Map targets manually since they contain union types
 	if !data.Targets.IsNull() && !data.Targets.IsUnknown() {
@@ -153,7 +150,7 @@ func (r *scopeResource) Create(ctx context.Context, request resource.CreateReque
 
 		input.Targets = make([]awstypes.TargetResource, len(targets))
 		for i, target := range targets {
-			input.Targets[i].Region = aws.String(target.Region.ValueString())
+			input.Targets[i].Region = target.Region.ValueStringPointer()
 
 			if !target.TargetIdentifier.IsNull() && !target.TargetIdentifier.IsUnknown() {
 				targetIds, diags := target.TargetIdentifier.ToSlice(ctx)
@@ -179,7 +176,7 @@ func (r *scopeResource) Create(ctx context.Context, request resource.CreateReque
 	input.ClientToken = aws.String(uuid.New().String())
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateScope(ctx, input)
+	output, err := conn.CreateScope(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError("creating Network Flow Monitor Scope", err.Error())
 		return
@@ -349,13 +346,13 @@ func (r *scopeResource) Update(ctx context.Context, request resource.UpdateReque
 
 		// Update scope targets if there are changes
 		if len(resourcesToAdd) > 0 || len(resourcesToDelete) > 0 {
-			input := &networkflowmonitor.UpdateScopeInput{
-				ScopeId:           aws.String(old.ScopeId.ValueString()),
+			input := networkflowmonitor.UpdateScopeInput{
+				ScopeId:           old.ScopeId.ValueStringPointer(),
 				ResourcesToAdd:    resourcesToAdd,
 				ResourcesToDelete: resourcesToDelete,
 			}
 
-			_, err := conn.UpdateScope(ctx, input)
+			_, err := conn.UpdateScope(ctx, &input)
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("updating Network Flow Monitor Scope (%s) targets", new.ID.ValueString()), err.Error())
 				return
@@ -450,7 +447,7 @@ func (r *scopeResource) calculateTargetChanges(ctx context.Context, oldTargets, 
 
 		for _, target := range oldTargetsList {
 			awsTarget := awstypes.TargetResource{
-				Region: aws.String(target.Region.ValueString()),
+				Region: target.Region.ValueStringPointer(),
 			}
 
 			// Handle union type for TargetIdentifier
@@ -492,7 +489,7 @@ func (r *scopeResource) calculateTargetChanges(ctx context.Context, oldTargets, 
 
 		for _, target := range newTargetsList {
 			awsTarget := awstypes.TargetResource{
-				Region: aws.String(target.Region.ValueString()),
+				Region: target.Region.ValueStringPointer(),
 			}
 
 			// Handle union type for TargetIdentifier
@@ -547,9 +544,10 @@ func (r *scopeResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	conn := r.Meta().NetworkFlowMonitorClient(ctx)
 
-	_, err := conn.DeleteScope(ctx, &networkflowmonitor.DeleteScopeInput{
-		ScopeId: aws.String(data.ScopeId.ValueString()),
-	})
+	input := networkflowmonitor.DeleteScopeInput{
+		ScopeId: data.ScopeId.ValueStringPointer(),
+	}
+	_, err := conn.DeleteScope(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -571,17 +569,28 @@ func (r *scopeResource) ImportState(ctx context.Context, request resource.Import
 	id := request.ID
 
 	// If it's an ARN, extract the scope ID
-	if strings.HasPrefix(id, "arn:aws:networkflowmonitor:") {
-		// ARN format: arn:aws:networkflowmonitor:region:account:scope/scope-id
-		parts := strings.Split(id, "/")
-		if len(parts) != 2 {
-			response.Diagnostics.AddError("Invalid import ID", fmt.Sprintf("Expected ARN format 'arn:aws:networkflowmonitor:region:account:scope/scope-id', got: %s", id))
+	if arn.IsARN(id) {
+		parsedARN, err := arn.Parse(id)
+		if err != nil {
+			response.Diagnostics.AddError("Invalid ARN", fmt.Sprintf("Unable to parse ARN (%s): %s", id, err))
+			return
+		}
+
+		if parsedARN.Service != "networkflowmonitor" {
+			response.Diagnostics.AddError("Invalid ARN", fmt.Sprintf("Expected networkflowmonitor service ARN, got: %s", parsedARN.Service))
+			return
+		}
+
+		// ARN format: arn:partition:networkflowmonitor:region:account:scope/scope-id
+		parts := strings.Split(parsedARN.Resource, "/")
+		if len(parts) != 2 || parts[0] != "scope" {
+			response.Diagnostics.AddError("Invalid import ID", fmt.Sprintf("Expected ARN format 'arn:partition:networkflowmonitor:region:account:scope/scope-id', got: %s", id))
 			return
 		}
 		scopeId := parts[1]
 
 		// Set both ID (ARN) and scope_id
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), id)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), id)...)
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("scope_id"), scopeId)...)
 	} else {
 		// Assume it's a scope ID, we'll need to construct the ARN during read
@@ -591,11 +600,11 @@ func (r *scopeResource) ImportState(ctx context.Context, request resource.Import
 }
 
 func findScopeByID(ctx context.Context, conn *networkflowmonitor.Client, id string) (*networkflowmonitor.GetScopeOutput, error) {
-	input := &networkflowmonitor.GetScopeInput{
+	input := networkflowmonitor.GetScopeInput{
 		ScopeId: aws.String(id),
 	}
 
-	output, err := conn.GetScope(ctx, input)
+	output, err := conn.GetScope(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -616,7 +625,7 @@ func findScopeByID(ctx context.Context, conn *networkflowmonitor.Client, id stri
 }
 
 func statusScope(ctx context.Context, conn *networkflowmonitor.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findScopeByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

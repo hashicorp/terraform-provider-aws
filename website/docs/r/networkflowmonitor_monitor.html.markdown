@@ -1,5 +1,5 @@
 ---
-subcategory: "Network Flow Monitor"
+subcategory: "CloudWatch NetworkFlow Monitor"
 layout: "aws"
 page_title: "AWS: aws_networkflowmonitor_monitor"
 description: |-

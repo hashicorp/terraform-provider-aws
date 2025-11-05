@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkflowmonitor/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -51,10 +52,6 @@ type monitorResource struct {
 	framework.WithTimeouts
 }
 
-func (r *monitorResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = request.ProviderTypeName + "_networkflowmonitor_monitor"
-}
-
 func (r *monitorResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -89,10 +86,10 @@ func (r *monitorResource) Schema(ctx context.Context, request resource.SchemaReq
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							Required: true,
 						},
-						"identifier": schema.StringAttribute{
+						names.AttrIdentifier: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -102,10 +99,10 @@ func (r *monitorResource) Schema(ctx context.Context, request resource.SchemaReq
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[monitorResourceConfigModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							Required: true,
 						},
-						"identifier": schema.StringAttribute{
+						names.AttrIdentifier: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -147,8 +144,8 @@ func (r *monitorResource) Create(ctx context.Context, request resource.CreateReq
 
 	conn := r.Meta().NetworkFlowMonitorClient(ctx)
 
-	input := &networkflowmonitor.CreateMonitorInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := networkflowmonitor.CreateMonitorInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -156,7 +153,7 @@ func (r *monitorResource) Create(ctx context.Context, request resource.CreateReq
 	// Set additional fields that need special handling
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateMonitor(ctx, input)
+	output, err := conn.CreateMonitor(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Network Flow Monitor Monitor", err.Error())
@@ -235,8 +232,8 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 
 	// Check if local_resources or remote_resources have changed
 	if !new.LocalResources.Equal(old.LocalResources) || !new.RemoteResources.Equal(old.RemoteResources) {
-		input := &networkflowmonitor.UpdateMonitorInput{
-			MonitorName: aws.String(new.MonitorName.ValueString()),
+		input := networkflowmonitor.UpdateMonitorInput{
+			MonitorName: new.MonitorName.ValueStringPointer(),
 		}
 
 		// Calculate local resources diff
@@ -254,7 +251,7 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 				key := resource.Type.ValueString() + "|" + resource.Identifier.ValueString()
 				oldLocalResources[key] = awstypes.MonitorLocalResource{
 					Type:       awstypes.MonitorLocalResourceType(resource.Type.ValueString()),
-					Identifier: aws.String(resource.Identifier.ValueString()),
+					Identifier: resource.Identifier.ValueStringPointer(),
 				}
 			}
 		}
@@ -270,7 +267,7 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 				key := resource.Type.ValueString() + "|" + resource.Identifier.ValueString()
 				newLocalResources[key] = awstypes.MonitorLocalResource{
 					Type:       awstypes.MonitorLocalResourceType(resource.Type.ValueString()),
-					Identifier: aws.String(resource.Identifier.ValueString()),
+					Identifier: resource.Identifier.ValueStringPointer(),
 				}
 			}
 		}
@@ -306,7 +303,7 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 				key := resource.Type.ValueString() + "|" + resource.Identifier.ValueString()
 				oldRemoteResources[key] = awstypes.MonitorRemoteResource{
 					Type:       awstypes.MonitorRemoteResourceType(resource.Type.ValueString()),
-					Identifier: aws.String(resource.Identifier.ValueString()),
+					Identifier: resource.Identifier.ValueStringPointer(),
 				}
 			}
 		}
@@ -322,7 +319,7 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 				key := resource.Type.ValueString() + "|" + resource.Identifier.ValueString()
 				newRemoteResources[key] = awstypes.MonitorRemoteResource{
 					Type:       awstypes.MonitorRemoteResourceType(resource.Type.ValueString()),
-					Identifier: aws.String(resource.Identifier.ValueString()),
+					Identifier: resource.Identifier.ValueStringPointer(),
 				}
 			}
 		}
@@ -357,7 +354,7 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 			input.RemoteResourcesToRemove = remoteResourcesToRemove
 		}
 
-		_, err := conn.UpdateMonitor(ctx, input)
+		_, err := conn.UpdateMonitor(ctx, &input)
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Network Flow Monitor Monitor (%s)", new.ID.ValueString()), err.Error())
 			return
@@ -394,9 +391,10 @@ func (r *monitorResource) Delete(ctx context.Context, request resource.DeleteReq
 
 	conn := r.Meta().NetworkFlowMonitorClient(ctx)
 
-	_, err := conn.DeleteMonitor(ctx, &networkflowmonitor.DeleteMonitorInput{
-		MonitorName: aws.String(data.MonitorName.ValueString()),
-	})
+	input := networkflowmonitor.DeleteMonitorInput{
+		MonitorName: data.MonitorName.ValueStringPointer(),
+	}
+	_, err := conn.DeleteMonitor(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -418,17 +416,28 @@ func (r *monitorResource) ImportState(ctx context.Context, request resource.Impo
 	id := request.ID
 
 	// If it's an ARN, extract the monitor name
-	if strings.HasPrefix(id, "arn:aws:networkflowmonitor:") {
-		// ARN format: arn:aws:networkflowmonitor:region:account:monitor/monitor-name
-		parts := strings.Split(id, "/")
-		if len(parts) != 2 {
-			response.Diagnostics.AddError("Invalid import ID", fmt.Sprintf("Expected ARN format 'arn:aws:networkflowmonitor:region:account:monitor/monitor-name', got: %s", id))
+	if arn.IsARN(id) {
+		parsedARN, err := arn.Parse(id)
+		if err != nil {
+			response.Diagnostics.AddError("Invalid ARN", fmt.Sprintf("Unable to parse ARN (%s): %s", id, err))
+			return
+		}
+
+		if parsedARN.Service != "networkflowmonitor" {
+			response.Diagnostics.AddError("Invalid ARN", fmt.Sprintf("Expected networkflowmonitor service ARN, got: %s", parsedARN.Service))
+			return
+		}
+
+		// ARN format: arn:partition:networkflowmonitor:region:account:monitor/monitor-name
+		parts := strings.Split(parsedARN.Resource, "/")
+		if len(parts) != 2 || parts[0] != "monitor" {
+			response.Diagnostics.AddError("Invalid import ID", fmt.Sprintf("Expected ARN format 'arn:partition:networkflowmonitor:region:account:monitor/monitor-name', got: %s", id))
 			return
 		}
 		monitorName := parts[1]
 
 		// Set both ID (ARN) and monitor_name
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), id)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), id)...)
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("monitor_name"), monitorName)...)
 	} else {
 		// Assume it's a monitor name, we'll need to construct the ARN during read
@@ -438,11 +447,11 @@ func (r *monitorResource) ImportState(ctx context.Context, request resource.Impo
 }
 
 func findMonitorByName(ctx context.Context, conn *networkflowmonitor.Client, name string) (*networkflowmonitor.GetMonitorOutput, error) {
-	input := &networkflowmonitor.GetMonitorInput{
+	input := networkflowmonitor.GetMonitorInput{
 		MonitorName: aws.String(name),
 	}
 
-	output, err := conn.GetMonitor(ctx, input)
+	output, err := conn.GetMonitor(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -463,7 +472,7 @@ func findMonitorByName(ctx context.Context, conn *networkflowmonitor.Client, nam
 }
 
 func statusMonitor(ctx context.Context, conn *networkflowmonitor.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findMonitorByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
