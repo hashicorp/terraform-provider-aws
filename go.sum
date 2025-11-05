@@ -291,8 +291,8 @@ github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.48.4 h1:J30DLdOosZDh9zwmWrF
 github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.48.4/go.mod h1:VD7bLCk88KQgyRB+yIQH9BNmtmSpwgRQ0Q7Wp1bsCuk=
 github.com/aws/aws-sdk-go-v2/service/inspector v1.30.9 h1:e1WIoRDAyFSsxs4qGlDexK5MiPAWaBgn+7cobyLfnYk=
 github.com/aws/aws-sdk-go-v2/service/inspector v1.30.9/go.mod h1:Ce8Iac726mzXgIOgFkMllAZsgb5XTOjzC5og1vPkHu0=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.44.9 h1:6dAGoWTFxh+IgUs8sedMSlLXS5EKtGhhpL7z4SslALo=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.44.9/go.mod h1:99IW3bcT1Y6e6PPiaR0gS5nw5PIY59rk47nqC4UH+XI=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.44.10 h1:Ljs2y3qmx4eimm97ZtmJEBr4qDCbG7vhIcaCTdV7qZ8=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.44.10/go.mod h1:btzexzBLvYxamIptsxWMmHhXXx/FFmdKGgH96IM6HE8=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.3 h1:x2Ibm/Af8Fi+BH+Hsn9TXGdT+hKbDd5XOTZxTMxDk7o=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.3/go.mod h1:IW1jwyrQgMdhisceG8fQLmQIydcT/jWY21rFhzgaKwo=
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.4 h1:NvMjwvv8hpGUILarKw7Z4Q0w1H9anXKsesMxtw++MA4=
