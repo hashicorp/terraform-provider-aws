@@ -31,10 +31,10 @@ inttypes.StringIdentityAttribute(
 {{ end -}}
 {{- end }}
 
-{{ define "IdentityUpgradersValue" -}}
-{{- if gt (len .IdentityUpgraders) 0 -}}
+{{ define "SDKv2IdentityUpgradersValue" -}}
+{{- if gt (len .SDKv2IdentityUpgraders) 0 -}}
 []schema.IdentityUpgrader{
-	{{- range .IdentityUpgraders -}}
+	{{- range .SDKv2IdentityUpgraders -}}
 	{{.}},
 	{{- end -}}
 }
@@ -466,7 +466,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			{{- if $value.HasResourceIdentity }}
 				Identity:
 				{{- if $value.IdentityVersion }}
-					inttypes.VersionedIdentity({{ $value.IdentityVersion }}, {{- template "IdentityUpgradersValue" . -}},
+					inttypes.VersionedIdentity({{ $value.IdentityVersion }}, {{- template "SDKv2IdentityUpgradersValue" . -}},
 				{{- end -}}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
@@ -588,7 +588,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			{{- if $value.HasResourceIdentity }}
 				Identity:
 				{{- if $value.IdentityVersion }}
-					inttypes.VersionedIdentity({{ $value.IdentityVersion }}, {{- template "IdentityUpgradersValue" . -}},
+					inttypes.VersionedIdentity({{ $value.IdentityVersion }}, {{- template "SDKv2IdentityUpgradersValue" . -}},
 				{{- end -}}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}

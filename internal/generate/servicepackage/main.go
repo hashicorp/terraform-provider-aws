@@ -238,7 +238,7 @@ type ResourceDatum struct {
 	HasV6_0SDKv2Fix                   bool
 	HasIdentityFix                    bool
 	IdentityVersion                   int64
-	IdentityUpgraders                 []string
+	SDKv2IdentityUpgraders            []string
 	CustomInherentRegionIdentity      bool
 	customIdentityAttribute           string
 	CustomInherentRegionParser        string
@@ -566,9 +566,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.IdentityVersion = i
 				}
 
-				if attr, ok := args.Keyword["identityUpgraders"]; ok {
+				if attr, ok := args.Keyword["sdkV2IdentityUpgraders"]; ok {
 					attrs := strings.Split(attr, ";")
-					d.IdentityUpgraders = attrs
+					d.SDKv2IdentityUpgraders = attrs
 				}
 
 			case "CustomInherentRegionIdentity":
