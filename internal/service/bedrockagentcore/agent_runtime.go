@@ -303,8 +303,8 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 
 	agentRuntimeID := fwflex.StringValueFromFramework(ctx, data.AgentRuntimeID)
 	out, err := findAgentRuntimeByID(ctx, conn, agentRuntimeID)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
