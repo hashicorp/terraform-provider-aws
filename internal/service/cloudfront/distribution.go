@@ -337,7 +337,7 @@ func resourceDistribution() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						names.AttrBucket: {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"include_cookies": {
 							Type:     schema.TypeBool,
@@ -351,6 +351,10 @@ func resourceDistribution() *schema.Resource {
 						},
 					},
 				},
+			},
+			"logging_v1_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"ordered_cache_behavior": {
 				Type:     schema.TypeList,
@@ -995,11 +999,17 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
-	if distributionConfig.Logging != nil && aws.ToBool(distributionConfig.Logging.Enabled) {
-		if err := d.Set("logging_config", flattenLoggingConfig(distributionConfig.Logging)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
+	if distributionConfig.Logging != nil {
+		d.Set("logging_v1_enabled", distributionConfig.Logging.Enabled)
+		if aws.ToBool(distributionConfig.Logging.Enabled) || aws.ToBool(distributionConfig.Logging.IncludeCookies) {
+			if err := d.Set("logging_config", flattenLoggingConfig(distributionConfig.Logging)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
+			}
+		} else {
+			d.Set("logging_config", []any{})
 		}
 	} else {
+		d.Set("logging_v1_enabled", false)
 		d.Set("logging_config", []any{})
 	}
 	if distributionConfig.CacheBehaviors != nil {
@@ -2651,8 +2661,13 @@ func expandLoggingConfig(tfMap map[string]any) *awstypes.LoggingConfig {
 	apiObject := &awstypes.LoggingConfig{}
 
 	if tfMap != nil {
-		apiObject.Bucket = aws.String(tfMap[names.AttrBucket].(string))
-		apiObject.Enabled = aws.Bool(true)
+		if v, ok := tfMap[names.AttrBucket]; ok && v.(string) != "" {
+			apiObject.Bucket = aws.String(v.(string))
+			apiObject.Enabled = aws.Bool(true)
+		} else {
+			apiObject.Bucket = aws.String("")
+			apiObject.Enabled = aws.Bool(false)
+		}
 		apiObject.IncludeCookies = aws.Bool(tfMap["include_cookies"].(bool))
 		apiObject.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 	} else {
