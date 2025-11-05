@@ -427,6 +427,10 @@ func (d ResourceDatum) IsARNIdentity() bool {
 	return d.isARNIdentity
 }
 
+func (d ResourceDatum) IsGlobalARNFormatForRegionalResource() bool {
+	return d.isARNIdentity && !d.IsGlobal && d.IsARNFormatGlobal()
+}
+
 func (d ResourceDatum) ARNAttribute() string {
 	return namesgen.ConstOrQuote(d.arnAttribute)
 }
