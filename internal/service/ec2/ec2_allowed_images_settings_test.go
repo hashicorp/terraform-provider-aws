@@ -291,8 +291,8 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithCreationDate(t *testing.T)
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.creation_date_condition.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.creation_date_condition.maximum_days_since_created", "365"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.creation_date_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.creation_date_condition.0.maximum_days_since_created", "365"),
 				),
 			},
 			{
@@ -325,8 +325,8 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithDeprecationTime(t *testing
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.deprecation_time_condition.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.deprecation_time_condition.maximum_days_since_deprecated", "30"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.deprecation_time_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.deprecation_time_condition.0.maximum_days_since_deprecated", "30"),
 				),
 			},
 			{
@@ -362,8 +362,8 @@ func testAccEC2AllowedImagesSettings_imageCriteriaComplete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_providers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.marketplace_product_codes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.creation_date_condition.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.deprecation_time_condition.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.creation_date_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.deprecation_time_condition.#", "1"),
 				),
 			},
 			{
@@ -551,7 +551,7 @@ resource "aws_ec2_allowed_images_settings" "test" {
   state = "enabled"
 
   image_criterion {
-    image_providers         = ["aws-marketplace"]
+    image_providers           = ["aws-marketplace"]
     marketplace_product_codes = ["abcdef123456"]
   }
 }
@@ -596,8 +596,8 @@ resource "aws_ec2_allowed_images_settings" "test" {
   state = "enabled"
 
   image_criterion {
-    image_names             = ["al2023-ami-*"]
-    image_providers         = ["amazon"]
+    image_names              = ["al2023-ami-*"]
+    image_providers          = ["amazon"]
     marketplace_product_codes = ["abc123def456"]
     
     creation_date_condition {

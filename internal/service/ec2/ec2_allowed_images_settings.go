@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -105,34 +104,34 @@ func (r *allowedImagesSettingsResource) Schema(ctx context.Context, request reso
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"creation_date_condition": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[imageCriterionCreationDateConditionModel](ctx),
-							Validators: []validator.Object{
-								objectvalidator.AlsoRequires(
-									path.MatchRelative().AtName("maximum_days_since_created"),
-								),
+						"creation_date_condition": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[creationDateConditionModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
-							Attributes: map[string]schema.Attribute{
-								"maximum_days_since_created": schema.Int32Attribute{
-									Optional: true,
-									Validators: []validator.Int32{
-										int32validator.AtLeast(0),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"maximum_days_since_created": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.AtLeast(0),
+										},
 									},
 								},
 							},
 						},
-						"deprecation_time_condition": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[imageCriterionDeprecationTimeConditionModel](ctx),
-							Validators: []validator.Object{
-								objectvalidator.AlsoRequires(
-									path.MatchRelative().AtName("maximum_days_since_deprecated"),
-								),
+						"deprecation_time_condition": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[deprecationTimeConditionModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
-							Attributes: map[string]schema.Attribute{
-								"maximum_days_since_deprecated": schema.Int32Attribute{
-									Optional: true,
-									Validators: []validator.Int32{
-										int32validator.AtLeast(0),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"maximum_days_since_deprecated": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.AtLeast(0),
+										},
 									},
 								},
 							},
@@ -359,17 +358,17 @@ type allowedImagesSettingsResourceModel struct {
 }
 
 type imageCriterionModel struct {
-	ImageNames               fwtypes.SetOfString                                                `tfsdk:"image_names"`
-	ImageProviders           fwtypes.SetOfString                                                `tfsdk:"image_providers"`
-	MarketplaceProductCodes  fwtypes.SetOfString                                                `tfsdk:"marketplace_product_codes"`
-	CreationDateCondition    fwtypes.ObjectValueOf[imageCriterionCreationDateConditionModel]    `tfsdk:"creation_date_condition"`
-	DeprecationTimeCondition fwtypes.ObjectValueOf[imageCriterionDeprecationTimeConditionModel] `tfsdk:"deprecation_time_condition"`
+	CreationDateCondition    fwtypes.ListNestedObjectValueOf[creationDateConditionModel]    `tfsdk:"creation_date_condition"`
+	DeprecationTimeCondition fwtypes.ListNestedObjectValueOf[deprecationTimeConditionModel] `tfsdk:"deprecation_time_condition"`
+	ImageNames               fwtypes.SetOfString                                            `tfsdk:"image_names"`
+	ImageProviders           fwtypes.SetOfString                                            `tfsdk:"image_providers"`
+	MarketplaceProductCodes  fwtypes.SetOfString                                            `tfsdk:"marketplace_product_codes"`
 }
 
-type imageCriterionCreationDateConditionModel struct {
+type creationDateConditionModel struct {
 	MaximumDaysSinceCreated types.Int32 `tfsdk:"maximum_days_since_created"`
 }
 
-type imageCriterionDeprecationTimeConditionModel struct {
+type deprecationTimeConditionModel struct {
 	MaximumDaysSinceDeprecated types.Int32 `tfsdk:"maximum_days_since_deprecated"`
 }
