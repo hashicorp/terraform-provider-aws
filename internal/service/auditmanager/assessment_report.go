@@ -154,7 +154,7 @@ func (r *assessmentReportResource) Delete(ctx context.Context, request resource.
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.ValidationException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ValidationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteAssessmentReport(ctx, &input)
 	})
 

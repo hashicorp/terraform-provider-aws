@@ -67,7 +67,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 		WebACLId:    aws.String(webACLID),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.AssociateWebACL(ctx, input)
 	})
 

@@ -263,6 +263,7 @@ The following arguments are optional:
 
 * `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `auto_adjust_data` - (Optional) Object containing [AutoAdjustData](#auto-adjust-data) which determines the budget amount for an auto-adjusting budget.
+* `billing_view_arn` - (Optional) ARN of the billing view.
 * `cost_filter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget.
 * `cost_types` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `limit_amount` - (Optional) The amount of cost or usage being measured for a budget.
@@ -370,4 +371,4 @@ Using `terraform import`, import budgets using `AccountID:BudgetName`. For examp
 % terraform import aws_budgets_budget.myBudget 123456789012:myBudget
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dd9b63f9a398499a48eeeb8ff1356cc5ea01c7583a6ad256695d6226fb2a2535 -->
+<!-- cache-key: cdktf-0.20.8 input-e52e9aa4f1efa0cafccc57242cec6f46233754b650bdda48081f534770d1bfe4 -->

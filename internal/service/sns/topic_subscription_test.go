@@ -866,7 +866,7 @@ func testAccCheckTopicSubscriptionDeliveryPolicyAttribute(attributes *map[string
 
 		var apiDeliveryPolicy tfsns.TopicSubscriptionDeliveryPolicy
 		if err := json.Unmarshal([]byte(apiDeliveryPolicyJSONString), &apiDeliveryPolicy); err != nil {
-			return fmt.Errorf("unable to unmarshal SNS Topic Subscription delivery policy JSON (%s): %s", apiDeliveryPolicyJSONString, err)
+			return fmt.Errorf("unable to unmarshal SNS Topic Subscription delivery policy JSON (%s): %w", apiDeliveryPolicyJSONString, err)
 		}
 
 		if reflect.DeepEqual(apiDeliveryPolicy, *expectedDeliveryPolicy) {
@@ -887,7 +887,7 @@ func testAccCheckTopicSubscriptionRedrivePolicyAttribute(ctx context.Context, at
 
 		var apiRedrivePolicy tfsns.TopicSubscriptionRedrivePolicy
 		if err := json.Unmarshal([]byte(apiRedrivePolicyJSONString), &apiRedrivePolicy); err != nil {
-			return fmt.Errorf("unable to unmarshal SNS Topic Subscription redrive policy JSON (%s): %s", apiRedrivePolicyJSONString, err)
+			return fmt.Errorf("unable to unmarshal SNS Topic Subscription redrive policy JSON (%s): %w", apiRedrivePolicyJSONString, err)
 		}
 
 		expectedRedrivePolicy := tfsns.TopicSubscriptionRedrivePolicy{

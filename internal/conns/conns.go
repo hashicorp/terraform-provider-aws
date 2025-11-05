@@ -5,6 +5,7 @@ package conns
 
 import (
 	"context"
+	"iter"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
@@ -20,11 +21,28 @@ type ServicePackage interface {
 	ServicePackageName() string
 }
 
+// ServicePackageWithActions is an interface that extends ServicePackage with actions.
+// Actions are imperative operations that can be invoked to perform Day-2 operations.
+type ServicePackageWithActions interface {
+	ServicePackage
+	Actions(context.Context) []*types.ServicePackageAction
+}
+
 // ServicePackageWithEphemeralResources is an interface that extends ServicePackage with ephemeral resources.
 // Ephemeral resources are resources that are not part of the Terraform state, but are used to create other resources.
 type ServicePackageWithEphemeralResources interface {
 	ServicePackage
 	EphemeralResources(context.Context) []*types.ServicePackageEphemeralResource
+}
+
+type ServicePackageWithFrameworkListResources interface {
+	ServicePackage
+	FrameworkListResources(context.Context) iter.Seq[*types.ServicePackageFrameworkListResource]
+}
+
+type ServicePackageWithSDKListResources interface {
+	ServicePackage
+	SDKListResources(ctx context.Context) iter.Seq[*types.ServicePackageSDKListResource]
 }
 
 type (

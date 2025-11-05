@@ -159,9 +159,47 @@ func TestAccRoute53HealthCheck_withChildHealthChecks(t *testing.T) {
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHealthCheckConfig_childs,
+				Config: testAccHealthCheckConfig_childs(1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.HealthCheckTypeCalculated)),
+					resource.TestCheckResourceAttr(resourceName, "child_health_threshold", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccHealthCheckConfig_childs(0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.HealthCheckTypeCalculated)),
+					resource.TestCheckResourceAttr(resourceName, "child_health_threshold", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53HealthCheck_withChildHealthChecksThresholdZero(t *testing.T) {
+	ctx := acctest.Context(t)
+	var check awstypes.HealthCheck
+	resourceName := "aws_route53_health_check.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHealthCheckConfig_childs(0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.HealthCheckTypeCalculated)),
+					resource.TestCheckResourceAttr(resourceName, "child_health_threshold", "0"),
 				),
 			},
 			{
@@ -600,7 +638,8 @@ resource "aws_route53_health_check" "test" {
 `, ip)
 }
 
-const testAccHealthCheckConfig_childs = `
+func testAccHealthCheckConfig_childs(threshold int) string {
+	return fmt.Sprintf(`
 resource "aws_route53_health_check" "child1" {
   fqdn              = "child1.example.com"
   port              = 80
@@ -612,14 +651,15 @@ resource "aws_route53_health_check" "child1" {
 
 resource "aws_route53_health_check" "test" {
   type                   = "CALCULATED"
-  child_health_threshold = 1
+  child_health_threshold = %[1]d
   child_healthchecks     = [aws_route53_health_check.child1.id]
 
   tags = {
     Name = "tf-test-calculated-health-check"
   }
 }
-`
+`, threshold)
+}
 
 func testAccHealthCheckConfig_regions(regions ...string) string {
 	return fmt.Sprintf(`

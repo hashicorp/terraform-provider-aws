@@ -198,6 +198,9 @@ func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
+	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "was not found") {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Data Catalog (%s): %s", d.Id(), err)

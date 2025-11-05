@@ -8,10 +8,8 @@ import (
 )
 
 const (
-	TableNameAllTables        = "ALL_TABLES"
-	TableTypeTable            = "Table"
-	TableTypeTableWithColumns = "TableWithColumns"
-	IAMAllowedPrincipals      = "IAM_ALLOWED_PRINCIPALS"
+	TableNameAllTables   = "ALL_TABLES"
+	IAMAllowedPrincipals = "IAM_ALLOWED_PRINCIPALS"
 )
 
 const (

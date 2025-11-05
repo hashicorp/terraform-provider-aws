@@ -6,7 +6,6 @@ package securityhub
 import (
 	"context"
 	"log"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
@@ -18,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -397,19 +398,19 @@ func numberFilterSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"eq": {
-					Type:         schema.TypeString,
+					Type:         nullable.TypeNullableFloat,
 					Optional:     true,
-					ValidateFunc: verify.ValidTypeStringNullableFloat,
+					ValidateFunc: nullable.ValidateTypeStringNullableFloat,
 				},
 				"gte": {
-					Type:         schema.TypeString,
+					Type:         nullable.TypeNullableFloat,
 					Optional:     true,
-					ValidateFunc: verify.ValidTypeStringNullableFloat,
+					ValidateFunc: nullable.ValidateTypeStringNullableFloat,
 				},
 				"lte": {
-					Type:         schema.TypeString,
+					Type:         nullable.TypeNullableFloat,
 					Optional:     true,
-					ValidateFunc: verify.ValidTypeStringNullableFloat,
+					ValidateFunc: nullable.ValidateTypeStringNullableFloat,
 				},
 			},
 		},
@@ -966,24 +967,21 @@ func expandNumberFilters(l []any) []types.NumberFilter {
 
 		nf := types.NumberFilter{}
 
-		if v, ok := tfMap["eq"].(string); ok && v != "" {
-			val, err := strconv.ParseFloat(v, 64)
-			if err == nil {
-				nf.Eq = aws.Float64(val)
+		if v, ok := tfMap["eq"].(string); ok {
+			if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
+				nf.Eq = aws.Float64(v)
 			}
 		}
 
-		if v, ok := tfMap["gte"].(string); ok && v != "" {
-			val, err := strconv.ParseFloat(v, 64)
-			if err == nil {
-				nf.Gte = aws.Float64(val)
+		if v, ok := tfMap["gte"].(string); ok {
+			if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
+				nf.Gte = aws.Float64(v)
 			}
 		}
 
-		if v, ok := tfMap["lte"].(string); ok && v != "" {
-			val, err := strconv.ParseFloat(v, 64)
-			if err == nil {
-				nf.Lte = aws.Float64(val)
+		if v, ok := tfMap["lte"].(string); ok {
+			if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
+				nf.Lte = aws.Float64(v)
 			}
 		}
 
@@ -1122,15 +1120,15 @@ func flattenNumberFilters(filters []types.NumberFilter) []any {
 		m := map[string]any{}
 
 		if filter.Eq != nil {
-			m["eq"] = strconv.FormatFloat(aws.ToFloat64(filter.Eq), 'f', -1, 64)
+			m["eq"] = flex.Float64ToStringValue(filter.Eq)
 		}
 
 		if filter.Gte != nil {
-			m["gte"] = strconv.FormatFloat(aws.ToFloat64(filter.Gte), 'f', -1, 64)
+			m["gte"] = flex.Float64ToStringValue(filter.Gte)
 		}
 
 		if filter.Lte != nil {
-			m["lte"] = strconv.FormatFloat(aws.ToFloat64(filter.Lte), 'f', -1, 64)
+			m["lte"] = flex.Float64ToStringValue(filter.Lte)
 		}
 
 		numFilters = append(numFilters, m)

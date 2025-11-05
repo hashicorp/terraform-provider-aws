@@ -18,6 +18,7 @@ func TestIsAWSRegion(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 		{"", false},
 		{"eu-isoe-west-1", true},
 		{"mars", false},
+		{"eusc-de-east-1", true},
 	} {
 		ok := IsAWSRegion(tc.id)
 		if got, want := ok, tc.valid; got != want {

@@ -24,17 +24,15 @@ import (
 
 // @SDKResource("aws_ssm_maintenance_window", name="Maintenance Window")
 // @Tags(identifierAttribute="id", resourceType="MaintenanceWindow")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm;ssm.GetMaintenanceWindowOutput")
+// @Testing(preIdentityVersion="v6.10.0")
 func resourceMaintenanceWindow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowCreate,
 		ReadWithoutTimeout:   resourceMaintenanceWindowRead,
 		UpdateWithoutTimeout: resourceMaintenanceWindowUpdate,
 		DeleteWithoutTimeout: resourceMaintenanceWindowDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"allow_unassociated_targets": {

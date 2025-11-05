@@ -6,9 +6,11 @@ package guardduty_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -93,6 +95,55 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 	})
 }
 
+func testAccDetectorFeature_additionalConfiguration_newOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_detector_feature.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDetectorFeatureConfig_additionalConfiguration_multiple([]string{"EKS_ADDON_MANAGEMENT", "EC2_AGENT_MANAGEMENT", "ECS_FARGATE_AGENT_MANAGEMENT"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{names.AttrName: "EKS_ADDON_MANAGEMENT", names.AttrStatus: "ENABLED"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{names.AttrName: "EC2_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{names.AttrName: "ECS_FARGATE_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
+				),
+			},
+			{
+				// Change the order of the additional_configuration blocks and ensure that there is an empty plan
+				Config: testAccDetectorFeatureConfig_additionalConfiguration_multiple([]string{"EC2_AGENT_MANAGEMENT", "ECS_FARGATE_AGENT_MANAGEMENT", "EKS_ADDON_MANAGEMENT"}),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{names.AttrName: "EKS_ADDON_MANAGEMENT", names.AttrStatus: "ENABLED"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{names.AttrName: "EC2_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{names.AttrName: "ECS_FARGATE_AGENT_MANAGEMENT", names.AttrStatus: "ENABLED"}),
+				),
+			},
+		},
+	})
+}
+
 func testAccDetectorFeature_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource1Name := "aws_guardduty_detector_feature.test1"
@@ -163,6 +214,44 @@ func testAccDetectorFeature_multiple(t *testing.T) {
 	})
 }
 
+func testAccDetectorFeature_additionalConfiguration_migrateListToSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_detector_feature.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.16.0", // version before List -> Set change
+					},
+				},
+				Config: testAccDetectorFeatureConfig_additionalConfiguration("ENABLED", "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccDetectorFeatureConfig_additionalConfiguration("ENABLED", "ENABLED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDetectorFeatureExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -209,6 +298,30 @@ resource "aws_guardduty_detector_feature" "test" {
   }
 }
 `, featureStatus, additionalConfigurationStatus)
+}
+
+func testAccDetectorFeatureConfig_additionalConfiguration_multiple(configNames []string) string {
+	var additionalConfigs strings.Builder
+	for _, name := range configNames {
+		fmt.Fprintf(&additionalConfigs, `
+  additional_configuration {
+    name   = %[1]q
+    status = "ENABLED"
+  }`, name)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}
+
+resource "aws_guardduty_detector_feature" "test" {
+  detector_id = aws_guardduty_detector.test.id
+  name        = "RUNTIME_MONITORING"
+  status      = "ENABLED"
+  %[1]s
+}
+`, additionalConfigs.String())
 }
 
 func testAccDetectorFeatureConfig_multiple(status1, status2, status3 string) string {

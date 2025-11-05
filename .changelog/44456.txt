@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_fsx_lustre_file_system: Fixed to update `metadata_configuration` first to allow simultaneous increase of `metadata_configuration.iops` and `storage_capacity`
+```

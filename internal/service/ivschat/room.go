@@ -67,7 +67,7 @@ func ResourceRoom() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(1, 10),
+				ValidateFunc: validation.IntBetween(1, 100),
 			},
 			"message_review_handler": {
 				Type:     schema.TypeList,

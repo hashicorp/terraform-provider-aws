@@ -5,6 +5,7 @@ package workspaces
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 )
@@ -13,7 +14,7 @@ func describeConnectionAliasesPages(ctx context.Context, conn *workspaces.Client
 	for {
 		output, err := conn.DescribeConnectionAliases(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -29,7 +30,7 @@ func describeIPGroupsPages(ctx context.Context, conn *workspaces.Client, input *
 	for {
 		output, err := conn.DescribeIpGroups(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -45,7 +46,7 @@ func describeWorkspaceImagesPages(ctx context.Context, conn *workspaces.Client, 
 	for {
 		output, err := conn.DescribeWorkspaceImages(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

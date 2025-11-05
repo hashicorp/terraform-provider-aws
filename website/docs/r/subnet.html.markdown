@@ -3,7 +3,7 @@ subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_subnet"
 description: |-
-  Provides an VPC subnet resource.
+  Provides an VPC Subnet resource.
 ---
 
 # Resource: aws_subnet
@@ -91,11 +91,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_subnet.example
+  identity = {
+    id = "subnet-9d4a7b6c"
+  }
+}
+
+resource "aws_subnet" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the subnet.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import subnets using the subnet `id`. For example:
 
 ```terraform
 import {
-  to = aws_subnet.public_subnet
+  to = aws_subnet.example
   id = "subnet-9d4a7b6c"
 }
 ```
@@ -103,5 +129,5 @@ import {
 Using `terraform import`, import subnets using the subnet `id`. For example:
 
 ```console
-% terraform import aws_subnet.public_subnet subnet-9d4a7b6c
+% terraform import aws_subnet.example subnet-9d4a7b6c
 ```

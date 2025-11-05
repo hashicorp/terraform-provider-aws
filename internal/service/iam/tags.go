@@ -451,7 +451,7 @@ func updateTags(ctx context.Context, conn *iam.Client, identifier, resourceType 
 	case "Role":
 		return roleUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
 	case "ServiceLinkedRole":
-		_, roleName, _, err := DecodeServiceLinkedRoleID(identifier)
+		_, roleName, _, err := serviceLinkedRoleParseResourceID(identifier)
 		if err != nil {
 			return err
 		}
@@ -494,7 +494,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 
 	case "ServiceLinkedRole":
 		var roleName string
-		_, roleName, _, err = DecodeServiceLinkedRoleID(identifier)
+		_, roleName, _, err = serviceLinkedRoleParseResourceID(identifier)
 		if err != nil {
 			return err
 		}

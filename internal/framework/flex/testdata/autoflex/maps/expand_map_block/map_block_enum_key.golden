@@ -1,0 +1,138 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockListEnumKey",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockValues"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockListEnumKey",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockValues"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "MapBlock",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockListEnumKey",
+    "autoflex.target.fieldname": "MapBlock",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockValues"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "MapBlock",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockElementEnumKey]",
+    "autoflex.target.path": "MapBlock",
+    "autoflex.target.type": "map[string]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockElement"
+  },
+  {
+    "@level": "trace",
+    "@message": "Skipping map block key",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "MapBlockKey",
+    "autoflex.source.path": "MapBlock[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockElementEnumKey",
+    "autoflex.target.path": "MapBlock[\"List\"]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockElement"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Attr1",
+    "autoflex.source.path": "MapBlock[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockElementEnumKey",
+    "autoflex.target.fieldname": "Attr1",
+    "autoflex.target.path": "MapBlock[\"List\"]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockElement"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "MapBlock[0].Attr1",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue",
+    "autoflex.target.path": "MapBlock[\"List\"].Attr1",
+    "autoflex.target.type": "string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Attr2",
+    "autoflex.source.path": "MapBlock[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockElementEnumKey",
+    "autoflex.target.fieldname": "Attr2",
+    "autoflex.target.path": "MapBlock[\"List\"]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockElement"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "MapBlock[0].Attr2",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue",
+    "autoflex.target.path": "MapBlock[\"List\"].Attr2",
+    "autoflex.target.type": "string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Skipping map block key",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "MapBlockKey",
+    "autoflex.source.path": "MapBlock[1]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockElementEnumKey",
+    "autoflex.target.path": "MapBlock[\"Scalar\"]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockElement"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Attr1",
+    "autoflex.source.path": "MapBlock[1]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockElementEnumKey",
+    "autoflex.target.fieldname": "Attr1",
+    "autoflex.target.path": "MapBlock[\"Scalar\"]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockElement"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "MapBlock[1].Attr1",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue",
+    "autoflex.target.path": "MapBlock[\"Scalar\"].Attr1",
+    "autoflex.target.type": "string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Attr2",
+    "autoflex.source.path": "MapBlock[1]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapBlockElementEnumKey",
+    "autoflex.target.fieldname": "Attr2",
+    "autoflex.target.path": "MapBlock[\"Scalar\"]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapBlockElement"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "MapBlock[1].Attr2",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue",
+    "autoflex.target.path": "MapBlock[\"Scalar\"].Attr2",
+    "autoflex.target.type": "string"
+  }
+]

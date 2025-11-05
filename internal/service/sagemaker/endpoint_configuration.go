@@ -1107,6 +1107,9 @@ func expandEndpointConfigNotificationConfig(configured []any) *awstypes.AsyncInf
 	if len(configured) == 0 {
 		return nil
 	}
+	if configured[0] == nil {
+		return &awstypes.AsyncInferenceNotificationConfig{}
+	}
 
 	m := configured[0].(map[string]any)
 

@@ -858,8 +858,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				ClusterIdentifier: aws.String(d.Id()),
 			}
 
-			_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-				func() (any, error) {
+			_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
+				func(ctx context.Context) (any, error) {
 					return conn.RebootCluster(ctx, input)
 				})
 
@@ -954,8 +954,8 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteCluster(ctx, input)
 		})
 

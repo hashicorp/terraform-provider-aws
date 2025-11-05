@@ -5,6 +5,7 @@ package kinesisvideo
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesisvideo"
 )
@@ -13,7 +14,7 @@ func listTagsForStreamPages(ctx context.Context, conn *kinesisvideo.Client, inpu
 	for {
 		output, err := conn.ListTagsForStream(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

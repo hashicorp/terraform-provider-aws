@@ -128,13 +128,16 @@ func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, met
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	if quotaName != "" {
 		defaultQuota, err = findDefaultServiceQuotaByServiceCodeAndQuotaName(ctx, conn, serviceCode, quotaName)
-		quotaCode = aws.ToString(defaultQuota.QuotaCode)
 	} else {
 		defaultQuota, err = findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Service Quotas Service Quota", err))
+	}
+
+	if quotaName != "" {
+		quotaCode = aws.ToString(defaultQuota.QuotaCode)
 	}
 
 	arn := aws.ToString(defaultQuota.QuotaArn)

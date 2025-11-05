@@ -165,7 +165,7 @@ func testAccAuthorizerImportStateUserProfileFunc(resourceName string) resource.I
 }
 
 func testAccFormTypeConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName, rName), `
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), `
 resource "aws_datazone_form_type" "test" {
   description               = "desc"
   name                      = "SageMakerModelFormType"

@@ -473,7 +473,7 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 		TopicArn:       aws.String(arn),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.InvalidParameterException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidParameterException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.SetTopicAttributes(ctx, input)
 	})
 
@@ -497,19 +497,19 @@ func topicName(d sdkv2.ResourceDiffer) string {
 // nosemgrep:ci.aws-in-func-name
 func findTopicAttributesWithValidAWSPrincipalsByARN(ctx context.Context, conn *sns.Client, arn string) (map[string]string, error) {
 	var attributes map[string]string
-	err := tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		attributes, err = findTopicAttributesByARN(ctx, conn, arn)
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		valid, err := tfiam.PolicyHasValidAWSPrincipals(attributes[topicAttributeNamePolicy])
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		if !valid {
-			return retry.RetryableError(errors.New("contains invalid principals"))
+			return tfresource.RetryableError(errors.New("contains invalid principals"))
 		}
 
 		return nil

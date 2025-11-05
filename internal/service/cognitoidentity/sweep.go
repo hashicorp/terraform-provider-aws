@@ -25,7 +25,7 @@ func sweepIdentityPools(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &cognitoidentity.ListIdentityPoolsInput{
 		MaxResults: aws.Int32(50),

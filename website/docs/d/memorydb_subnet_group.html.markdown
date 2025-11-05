@@ -6,7 +6,7 @@ description: |-
   Provides information about a MemoryDB Subnet Group.
 ---
 
-# Resource: aws_memorydb_subnet_group
+# Data Source: aws_memorydb_subnet_group
 
 Provides information about a MemoryDB Subnet Group.
 

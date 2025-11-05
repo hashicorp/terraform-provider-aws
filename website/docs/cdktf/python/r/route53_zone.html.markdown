@@ -85,13 +85,26 @@ from cdktf import TerraformStack
 # See https://cdk.tf/provider-generation for more details.
 #
 from imports.aws.route53_zone import Route53Zone
+from imports.aws.vpc import Vpc
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        primary = Vpc(self, "primary",
+            cidr_block="10.6.0.0/16",
+            enable_dns_hostnames=True,
+            enable_dns_support=True
+        )
+        secondary = Vpc(self, "secondary",
+            cidr_block="10.7.0.0/16",
+            enable_dns_hostnames=True,
+            enable_dns_support=True
+        )
         Route53Zone(self, "private",
             name="example.com",
             vpc=[Route53ZoneVpc(
-                vpc_id=example.id
+                vpc_id=primary.id
+            ), Route53ZoneVpc(
+                vpc_id=secondary.id
             )
             ]
         )
@@ -157,4 +170,4 @@ Using `terraform import`, import Route53 Zones using the zone `id`. For example:
 % terraform import aws_route53_zone.myzone Z1D633PJN98FT9
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9c75d13012d076c4e45ee2eed2fab48617563530adc7f1351bafd11b5bd43f70 -->
+<!-- cache-key: cdktf-0.20.8 input-36b1e071614d9565eafcfeff03b67f03d2e97f15716be0f40a74b2e3fc843194 -->

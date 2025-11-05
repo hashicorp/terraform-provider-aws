@@ -1,0 +1,3 @@
+```release-note:enhancement
+action/aws_lambda_invoke: Output logs in a progress message when `log_type` is `Tail`
+```

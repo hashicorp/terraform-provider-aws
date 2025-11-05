@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_rds_global_cluster: Remove provider-side conflict between `source_db_cluster_identifier` and `engine` arguments
+```

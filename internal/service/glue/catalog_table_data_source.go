@@ -96,6 +96,11 @@ func dataSourceCatalogTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						names.AttrParameters: {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,

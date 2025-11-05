@@ -15,6 +15,7 @@ type AIsZero struct {
 func TestIsZero(t *testing.T) {
 	t.Parallel()
 
+	zero := Zero[AIsZero]()
 	testCases := []struct {
 		Name     string
 		Ptr      *AIsZero
@@ -26,7 +27,7 @@ func TestIsZero(t *testing.T) {
 		},
 		{
 			Name:     "pointer to zero value",
-			Ptr:      &AIsZero{},
+			Ptr:      &zero,
 			Expected: true,
 		},
 		{

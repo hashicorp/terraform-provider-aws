@@ -87,7 +87,7 @@ func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, 
 	const (
 		timeout = 30 * time.Second
 	)
-	_, err := tfresource.RetryWhenIsA[*types.BadRequestException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.BadRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateBasePathMapping(ctx, &input)
 	})
 

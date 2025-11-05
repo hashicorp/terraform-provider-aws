@@ -659,7 +659,7 @@ func retrieveRegionMiddleware(region *string) middleware.SerializeMiddleware {
 	)
 }
 
-var errCancelOperation = fmt.Errorf("Test: Canceling request")
+var errCancelOperation = errors.New("Test: Canceling request")
 
 func addCancelRequestMiddleware() func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {

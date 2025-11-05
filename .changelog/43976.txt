@@ -1,0 +1,27 @@
+```release-note:enhancement
+resource/aws_s3_bucket_public_access_block: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_s3_bucket_policy: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_s3_bucket_ownership_controls: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_s3_bucket_logging: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_s3_bucket_server_side_encryption_configuration: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_s3_bucket_versioning: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_s3_bucket_notification: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_s3_bucket_cors_configuration: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_s3_bucket_website_configuration: Add resource identity support
+```

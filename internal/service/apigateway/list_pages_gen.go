@@ -5,6 +5,7 @@ package apigateway
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 )
@@ -13,7 +14,7 @@ func getAuthorizersPages(ctx context.Context, conn *apigateway.Client, input *ap
 	for {
 		output, err := conn.GetAuthorizers(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.Position) == ""
@@ -29,7 +30,7 @@ func getDomainNameAccessAssociationsPages(ctx context.Context, conn *apigateway.
 	for {
 		output, err := conn.GetDomainNameAccessAssociations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.Position) == ""

@@ -4,7 +4,7 @@ rules:
     message: Data sources should not have a `tags_all` attribute
     paths:
       include:
-        - internal/service/**/*_data_source.go
+        - "/internal/service/**/*_data_source.go"
     patterns:
       - pattern-either:
           - pattern-regex: '"tags_all":\s*tftags.TagsSchemaComputed'

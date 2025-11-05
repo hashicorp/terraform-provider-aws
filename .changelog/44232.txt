@@ -1,0 +1,3 @@
+```release-note:new-action
+aws_sns_publish
+```

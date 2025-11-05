@@ -27,6 +27,8 @@ import (
 
 // @SDKResource("aws_sfn_activity", name="Activity")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.14.1")
 func resourceActivity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivityCreate,
@@ -34,11 +36,11 @@ func resourceActivity() *schema.Resource {
 		UpdateWithoutTimeout: resourceActivityUpdate,
 		DeleteWithoutTimeout: resourceActivityDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -129,6 +131,7 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		d.Set(names.AttrEncryptionConfiguration, nil)
 	}
+	d.Set(names.AttrARN, output.ActivityArn)
 	d.Set(names.AttrName, output.Name)
 
 	return diags

@@ -733,6 +733,8 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					r.Importer = arnIdentityResourceImporter(resource.Identity)
 				} else if resource.Identity.IsSingleton {
 					r.Importer = singletonIdentityResourceImporter(resource.Identity)
+				} else if resource.Identity.IsCustomInherentRegion {
+					r.Importer = customInherentRegionResourceImporter(resource.Identity)
 				} else {
 					r.Importer = newParameterizedIdentityImporter(resource.Identity, &resource.Import)
 				}
@@ -744,7 +746,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					var overrideRegion string
 
 					if isRegionOverrideEnabled && getAttribute != nil {
-						if region, ok := getAttribute(names.AttrRegion); ok {
+						if region, ok := getAttribute(names.AttrRegion); ok && region != nil {
 							overrideRegion = region.(string)
 						}
 					}
@@ -800,19 +802,19 @@ func (p *sdkProvider) validateResourceSchemas(ctx context.Context) error {
 			}
 		}
 
-		for _, v := range sp.SDKResources(ctx) {
-			typeName := v.TypeName
-			r := v.Factory()
+		for _, resource := range sp.SDKResources(ctx) {
+			typeName := resource.TypeName
+			r := resource.Factory()
 			s := r.SchemaMap()
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := s[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue
 				}
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
+			if !tfunique.IsHandleNil(resource.Tags) {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := s[names.AttrTags]; ok {
@@ -831,6 +833,13 @@ func (p *sdkProvider) validateResourceSchemas(ctx context.Context) error {
 					}
 				} else {
 					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
+					continue
+				}
+			}
+
+			if resource.Identity.IsCustomInherentRegion {
+				if resource.Identity.IsGlobalResource {
+					errs = append(errs, fmt.Errorf("`IsCustomInherentRegion` is not supported for Global resources: %s resource", typeName))
 					continue
 				}
 			}

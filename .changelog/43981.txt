@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_imagebuilder_image_recipe: Increase upper limit of `block_device_mapping.ebs.iops` from `10000` to `100000`
+```

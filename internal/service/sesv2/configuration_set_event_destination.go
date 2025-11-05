@@ -223,7 +223,7 @@ func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *sche
 	configurationSetEventDestinationID := configurationSetEventDestinationCreateResourceID(d.Get("configuration_set_name").(string), d.Get("event_destination_name").(string))
 
 	out, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateConfigurationSetEventDestination(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -297,7 +297,7 @@ func resourceConfigurationSetEventDestinationUpdate(ctx context.Context, d *sche
 
 		log.Printf("[DEBUG] Updating SESV2 ConfigurationSetEventDestination (%s): %#v", d.Id(), in)
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateConfigurationSetEventDestination(ctx, in)
 			},
 			func(err error) (bool, error) {

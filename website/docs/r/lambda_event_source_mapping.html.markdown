@@ -234,6 +234,7 @@ The following arguments are optional:
 ### amazon_managed_kafka_event_source_config Configuration Block
 
 * `consumer_group_id` - (Optional) Kafka consumer group ID between 1 and 200 characters for use when creating this event source mapping. If one is not specified, this value will be automatically generated. See [AmazonManagedKafkaEventSourceConfig Syntax](https://docs.aws.amazon.com/lambda/latest/dg/API_AmazonManagedKafkaEventSourceConfig.html).
+* `schema_registry_config` - (Optional) Block for a Kafka schema registry setting. [See below](#schema_registry_config-configuration-block).
 
 ### destination_config Configuration Block
 
@@ -277,11 +278,22 @@ The following arguments are optional:
 ### self_managed_kafka_event_source_config Configuration Block
 
 * `consumer_group_id` - (Optional) Kafka consumer group ID between 1 and 200 characters for use when creating this event source mapping. If one is not specified, this value will be automatically generated. See [SelfManagedKafkaEventSourceConfig Syntax](https://docs.aws.amazon.com/lambda/latest/dg/API_SelfManagedKafkaEventSourceConfig.html).
+* `schema_registry_config` - (Optional) Block for a Kafka schema registry setting. [See below](#schema_registry_config-configuration-block).
 
 ### source_access_configuration Configuration Block
 
 * `type` - (Required) Type of authentication protocol, VPC components, or virtual host for your event source. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/lambda/latest/api/API_SourceAccessConfiguration.html).
 * `uri` - (Required) URI for this configuration. For type `VPC_SUBNET` the value should be `subnet:subnet_id` where `subnet_id` is the value you would find in an aws_subnet resource's id attribute. For type `VPC_SECURITY_GROUP` the value should be `security_group:security_group_id` where `security_group_id` is the value you would find in an aws_security_group resource's id attribute.
+
+### schema_registry_config Configuration Block
+
+* `access_config` - (Optional) Configuration block for authentication Lambda uses to access the schema registry.
+    * `type` - (Optional) Authentication type Lambda uses to access the schema registry.
+    * `uri` - (Optional) URI of the secret (Secrets Manager secret ARN) used to authenticate with the schema registry.
+* `event_record_format` - (Optional) Record format that Lambda delivers to the function after schema validation. Valid values: `JSON`, `SOURCE`.
+* `schema_registry_uri` - (Optional) URI of the schema registry. For AWS Glue schema registries, use the ARN of the registry. For Confluent schema registries, use the registry URL.
+* `schema_validation_config` - (Optional) Repeatable block that defines schema validation settings. These specify the message attributes that Lambda should validate and filter using the schema registry.
+    * `attribute` - (Optional) Message attribute to validate. Valid values: `KEY`, `VALUE`.
 
 ## Attribute Reference
 

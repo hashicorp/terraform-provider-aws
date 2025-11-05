@@ -80,7 +80,7 @@ func resourceVPCAssociationAuthorizationCreate(ctx context.Context, d *schema.Re
 		input.VPC.VPCRegion = awstypes.VPCRegion(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateVPCAssociationAuthorization(ctx, input)
 	})
 
@@ -106,7 +106,7 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 
 	// InvalidPaginationToken errors can manifest when many authorization resources are
 	// managed concurrently. Retry these errors for a short duration.
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidPaginationToken](ctx, d.Timeout(schema.TimeoutRead), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidPaginationToken](ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (any, error) {
 		return findVPCAssociationAuthorizationByTwoPartKey(ctx, conn, zoneID, vpcID)
 	})
 
@@ -138,7 +138,7 @@ func resourceVPCAssociationAuthorizationDelete(ctx context.Context, d *schema.Re
 	}
 
 	log.Printf("[INFO] Deleting Route53 VPC Association Authorization: %s", d.Id())
-	_, err = tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.DeleteVPCAssociationAuthorization(ctx, &route53.DeleteVPCAssociationAuthorizationInput{
 			HostedZoneId: aws.String(zoneID),
 			VPC: &awstypes.VPC{

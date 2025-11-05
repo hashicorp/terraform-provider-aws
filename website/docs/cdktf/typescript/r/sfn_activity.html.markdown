@@ -84,12 +84,28 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) that identifies the created activity.
-* `name` - The name of the activity.
-* `creationDate` - The date the activity was created.
+* `id` - Amazon Resource Name (ARN) of the activity.
+* `arn` - Amazon Resource Name (ARN) of the activity.
+* `name` - Name of the activity.
+* `creationDate` - Date the activity was created.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sfn_activity.example
+  identity = {
+    "arn" = "arn:aws:states:eu-west-1:123456789098:activity:bar"
+  }
+}
+
+resource "aws_sfn_activity" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import activities using the `arn`. For example:
 
@@ -107,7 +123,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     SfnActivity.generateConfigForImport(
       this,
-      "foo",
+      "example",
       "arn:aws:states:eu-west-1:123456789098:activity:bar"
     );
   }
@@ -118,7 +134,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import activities using the `arn`. For example:
 
 ```console
-% terraform import aws_sfn_activity.foo arn:aws:states:eu-west-1:123456789098:activity:bar
+% terraform import aws_sfn_activity.example arn:aws:states:eu-west-1:123456789098:activity:bar
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2496db6955c83de6e87fb10b61e69a5c6b503a2da27e1f4b07b01d3120bea1ce -->
+<!-- cache-key: cdktf-0.20.8 input-ec0e91737b599bdf7704c93b09f1e2b8ad71e1df4c3f2d82399af6b4d1d8f66d -->

@@ -252,7 +252,7 @@ func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Deleting RDS DB Option Group: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.InvalidOptionGroupStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidOptionGroupStateFault](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteOptionGroup(ctx, &rds.DeleteOptionGroupInput{
 			OptionGroupName: aws.String(d.Id()),
 		})

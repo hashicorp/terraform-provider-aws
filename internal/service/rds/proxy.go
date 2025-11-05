@@ -54,7 +54,7 @@ func resourceProxy() *schema.Resource {
 			},
 			"auth": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth_scheme": {
@@ -93,6 +93,12 @@ func resourceProxy() *schema.Resource {
 			"debug_logging": {
 				Type:     schema.TypeBool,
 				Optional: true,
+			},
+			"default_auth_scheme": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.DefaultAuthScheme](),
 			},
 			names.AttrEndpoint: {
 				Type:     schema.TypeString,
@@ -147,7 +153,6 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	name := d.Get(names.AttrName).(string)
 	input := &rds.CreateDBProxyInput{
-		Auth:         expandUserAuthConfigs(d.Get("auth").(*schema.Set).List()),
 		DBProxyName:  aws.String(name),
 		EngineFamily: types.EngineFamily(d.Get("engine_family").(string)),
 		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
@@ -155,8 +160,18 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		VpcSubnetIds: flex.ExpandStringValueSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 	}
 
+	if v, ok := d.GetOk("auth"); ok && v.(*schema.Set).Len() > 0 {
+		input.Auth = expandUserAuthConfigs(v.(*schema.Set).List())
+	} else {
+		input.Auth = []types.UserAuthConfig{}
+	}
+
 	if v, ok := d.GetOk("debug_logging"); ok {
 		input.DebugLogging = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("default_auth_scheme"); ok {
+		input.DefaultAuthScheme = types.DefaultAuthScheme(v.(string))
 	}
 
 	if v, ok := d.GetOk("idle_client_timeout"); ok {
@@ -206,6 +221,7 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("auth", flattenUserAuthConfigInfos(dbProxy.Auth))
 	d.Set(names.AttrName, dbProxy.DBProxyName)
 	d.Set("debug_logging", dbProxy.DebugLogging)
+	d.Set("default_auth_scheme", dbProxy.DefaultAuthScheme)
 	d.Set("engine_family", dbProxy.EngineFamily)
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
 	d.Set("require_tls", dbProxy.RequireTLS)
@@ -224,12 +240,21 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		oName, nName := d.GetChange(names.AttrName)
 		input := &rds.ModifyDBProxyInput{
-			Auth:           expandUserAuthConfigs(d.Get("auth").(*schema.Set).List()),
 			DBProxyName:    aws.String(oName.(string)),
 			DebugLogging:   aws.Bool(d.Get("debug_logging").(bool)),
 			NewDBProxyName: aws.String(nName.(string)),
 			RequireTLS:     aws.Bool(d.Get("require_tls").(bool)),
 			RoleArn:        aws.String(d.Get(names.AttrRoleARN).(string)),
+		}
+
+		if v, ok := d.GetOk("auth"); ok && v.(*schema.Set).Len() > 0 {
+			input.Auth = expandUserAuthConfigs(v.(*schema.Set).List())
+		} else {
+			input.Auth = []types.UserAuthConfig{}
+		}
+
+		if v, ok := d.GetOk("default_auth_scheme"); ok {
+			input.DefaultAuthScheme = types.DefaultAuthScheme(v.(string))
 		}
 
 		if v, ok := d.GetOk("idle_client_timeout"); ok {

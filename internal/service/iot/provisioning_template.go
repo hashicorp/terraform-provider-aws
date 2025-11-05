@@ -155,8 +155,8 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 		input.Type = awstypes.TemplateType(v)
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-		func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.CreateProvisioningTemplate(ctx, input)
 		})
 
@@ -234,8 +234,8 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 			input.PreProvisioningHook = expandProvisioningHook(v.([]any)[0].(map[string]any))
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-			func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout,
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateProvisioningTemplate(ctx, input)
 			})
 

@@ -197,7 +197,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 	const (
 		timeout = 5 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateRuleGroup(ctx, input)
 	})
 
@@ -288,7 +288,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		const (
 			timeout = 5 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateRuleGroup(ctx, input)
 		})
 

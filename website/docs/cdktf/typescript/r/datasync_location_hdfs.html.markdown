@@ -116,6 +116,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_location_hdfs.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567"
+  }
+}
+
+resource "aws_datasync_location_hdfs" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DataSync HDFS location.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_hdfs` using the Amazon Resource Name (ARN). For example:
 
 ```typescript
@@ -146,4 +167,4 @@ Using `terraform import`, import `aws_datasync_location_hdfs` using the Amazon R
 % terraform import aws_datasync_location_hdfs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3213fbfb6057908b4a74ba545538629a8dbddd906b8f8e0eae60a8d39acc547c -->
+<!-- cache-key: cdktf-0.20.8 input-e231e7e5e8d0cc45a36ab101c943f81b2800d3c0421d17f379480d7d70330e9a -->

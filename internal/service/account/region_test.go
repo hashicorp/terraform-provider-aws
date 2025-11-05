@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,7 +21,7 @@ func testAccRegion_basic(t *testing.T) {
 	resourceName := "aws_account_region.test"
 	regionName := endpoints.ApSoutheast3RegionID
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckRegionDisabled(ctx, t, regionName)
@@ -64,7 +63,7 @@ func testAccRegion_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-nam
 	resourceName := "aws_account_region.test"
 	regionName := endpoints.ApSoutheast3RegionID
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -105,7 +104,7 @@ func testAccRegion_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-nam
 func testAccPreCheckRegionDisabled(ctx context.Context, t *testing.T, region string) {
 	t.Helper()
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).AccountClient(ctx)
 
 	output, err := tfaccount.FindRegionOptStatus(ctx, conn, "", region)
 

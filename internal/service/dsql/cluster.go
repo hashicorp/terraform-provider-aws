@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -43,6 +44,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dsql;dsql.GetClusterOutput")
 // @Testing(importStateIdAttribute="identifier")
+// @Testing(generator=false)
 func newClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterResource{}
 
@@ -64,8 +66,15 @@ func (r *clusterResource) Schema(ctx context.Context, request resource.SchemaReq
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"deletion_protection_enabled": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
 			},
 			"encryption_details": framework.ResourceComputedListOfObjectsAttribute[encryptionDetailsModel](ctx),
+			names.AttrForceDestroy: schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+			},
 			names.AttrIdentifier: framework.IDAttribute(),
 			"kms_encryption_key": schema.StringAttribute{
 				Optional: true,
@@ -309,6 +318,19 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 
 	conn := r.Meta().DSQLClient(ctx)
 
+	if data.ForceDestroy.ValueBool() {
+		input := dsql.UpdateClusterInput{
+			Identifier:                data.Identifier.ValueStringPointer(),
+			DeletionProtectionEnabled: aws.Bool(false),
+			ClientToken:               aws.String(sdkid.UniqueId()),
+		}
+		// Changing DeletionProtectionEnabled is instantaneous, no need to wait.
+		if _, err := conn.UpdateCluster(ctx, &input); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("disabling deletion protection for Aurora DSQL Cluster (%s)", data.Identifier.ValueString()), err.Error())
+			return
+		}
+	}
+
 	id := fwflex.StringValueFromFramework(ctx, data.Identifier)
 	tflog.Debug(ctx, "deleting Aurora DSQL Cluster", map[string]any{
 		names.AttrIdentifier: id,
@@ -338,6 +360,9 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 
 func (r *clusterResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrIdentifier), request, response)
+
+	// Set force_destroy to false on import to prevent accidental deletion
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrForceDestroy), types.BoolValue(false))...)
 }
 
 func findClusterByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.GetClusterOutput, error) {
@@ -441,10 +466,12 @@ func waitClusterUpdated(ctx context.Context, conn *dsql.Client, id string, timeo
 
 func waitClusterDeleted(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ClusterStatusDeleting, awstypes.ClusterStatusPendingDelete),
-		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, id),
-		Timeout: timeout,
+		Pending:      enum.Slice(awstypes.ClusterStatusDeleting, awstypes.ClusterStatusPendingDelete),
+		Target:       []string{},
+		Refresh:      statusCluster(ctx, conn, id),
+		Timeout:      timeout,
+		Delay:        1 * time.Minute,
+		PollInterval: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -522,6 +549,7 @@ type clusterResourceModel struct {
 	ARN                       types.String                                                `tfsdk:"arn"`
 	DeletionProtectionEnabled types.Bool                                                  `tfsdk:"deletion_protection_enabled"`
 	EncryptionDetails         fwtypes.ListNestedObjectValueOf[encryptionDetailsModel]     `tfsdk:"encryption_details"`
+	ForceDestroy              types.Bool                                                  `tfsdk:"force_destroy"`
 	Identifier                types.String                                                `tfsdk:"identifier"`
 	KMSEncryptionKey          types.String                                                `tfsdk:"kms_encryption_key"`
 	MultiRegionProperties     fwtypes.ListNestedObjectValueOf[multiRegionPropertiesModel] `tfsdk:"multi_region_properties"`

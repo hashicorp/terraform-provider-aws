@@ -57,6 +57,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codeconnections_connection.example
+  identity = {
+    "arn" = "arn:aws:codeconnections:us-west-2:123456789012:connection/example-connection-id"
+  }
+}
+
+resource "aws_codeconnections_connection" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeConnections connection.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeConnections connection using the ARN. For example:
 
 ```python
@@ -80,4 +101,4 @@ Using `terraform import`, import CodeConnections connection using the ARN. For e
 % terraform import aws_codeconnections_connection.test-connection arn:aws:codeconnections:us-west-1:0123456789:connection/79d4d357-a2ee-41e4-b350-2fe39ae59448
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ee1dd38fa2f451c5034f74bd46a562bcfb8179ea0fb6033b9978cb238b07f7be -->
+<!-- cache-key: cdktf-0.20.8 input-c7386d2e09ecfa49ab8b75a929165bb6c995da87ef645cb8cbe73a70c78a12dc -->

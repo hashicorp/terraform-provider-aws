@@ -6,7 +6,6 @@ package sesv2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -115,6 +114,10 @@ func resourceEmailIdentity() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"verification_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"verified_for_sending_status": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -160,7 +163,8 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESV2Client(ctx)
 
 	out, err := findEmailIdentityByID(ctx, conn, d.Id())
 
@@ -174,10 +178,9 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameEmailIdentity, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, emailIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, emailIdentityARN(ctx, c, d.Id()))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 	d.Set("email_identity", d.Id())
-
 	if out.DkimAttributes != nil {
 		tfMap := flattenDKIMAttributes(out.DkimAttributes)
 		tfMap["domain_signing_private_key"] = d.Get("dkim_signing_attributes.0.domain_signing_private_key").(string)
@@ -189,8 +192,8 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 	} else {
 		d.Set("dkim_signing_attributes", nil)
 	}
-
-	d.Set("identity_type", string(out.IdentityType))
+	d.Set("identity_type", out.IdentityType)
+	d.Set("verification_status", out.VerificationStatus)
 	d.Set("verified_for_sending_status", out.VerifiedForSendingStatus)
 
 	return diags
@@ -350,5 +353,5 @@ func flattenDKIMAttributes(apiObject *types.DkimAttributes) map[string]any {
 }
 
 func emailIdentityARN(ctx context.Context, c *conns.AWSClient, emailIdentityName string) string {
-	return c.RegionalARN(ctx, "ses", fmt.Sprintf("identity/%s", emailIdentityName))
+	return c.RegionalARN(ctx, "ses", "identity/"+emailIdentityName)
 }

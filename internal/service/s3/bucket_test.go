@@ -629,7 +629,7 @@ func TestAccS3Bucket_tags_withSystemTags(t *testing.T) {
 				}
 
 				if _, err := tfcloudformation.WaitStackDeleted(ctx, conn, stackID, requestToken, 10*time.Minute); err != nil {
-					return fmt.Errorf("Error waiting for CloudFormation stack deletion: %s", err)
+					return fmt.Errorf("Error waiting for CloudFormation stack deletion: %w", err)
 				}
 
 				return nil

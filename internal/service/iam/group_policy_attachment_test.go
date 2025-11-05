@@ -145,7 +145,7 @@ func testAccCheckGroupPolicyAttachmentCount(ctx context.Context, groupName strin
 		input := &iam.ListAttachedGroupPoliciesInput{
 			GroupName: aws.String(groupName),
 		}
-		output, err := tfiam.FindAttachedGroupPolicies(ctx, conn, input, tfslices.PredicateTrue[awstypes.AttachedPolicy]())
+		output, err := tfiam.FindAttachedGroupPolicies(ctx, conn, input, tfslices.PredicateTrue[*awstypes.AttachedPolicy]())
 
 		if err != nil {
 			return err

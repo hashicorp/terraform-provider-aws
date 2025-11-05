@@ -60,7 +60,7 @@ func testAccCheckBucketPolicyMatch(nameFirst, keyFirst, nameSecond, keySecond st
 
 		areEquivalent, err := awspolicy.PoliciesAreEquivalent(policy1, policy2)
 		if err != nil {
-			return fmt.Errorf("comparing IAM Policies failed: %s", err)
+			return fmt.Errorf("comparing IAM Policies failed: %w", err)
 		}
 
 		if !areEquivalent {

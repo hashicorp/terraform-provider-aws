@@ -7,6 +7,7 @@ package cognitoidp
 var (
 	ResourceIdentityProvider         = resourceIdentityProvider
 	ResourceLogDeliveryConfiguration = newLogDeliveryConfigurationResource
+	ResourceManagedLoginBranding     = newManagedLoginBrandingResource
 	ResourceManagedUserPoolClient    = newManagedUserPoolClientResource
 	ResourceResourceServer           = resourceResourceServer
 	ResourceRiskConfiguration        = resourceRiskConfiguration
@@ -22,6 +23,7 @@ var (
 	FindGroupUserByThreePartKey              = findGroupUserByThreePartKey
 	FindIdentityProviderByTwoPartKey         = findIdentityProviderByTwoPartKey
 	FindLogDeliveryConfigurationByUserPoolID = findLogDeliveryConfigurationByUserPoolID
+	FindManagedLoginBrandingByThreePartKey   = findManagedLoginBrandingByThreePartKey
 	FindResourceServerByTwoPartKey           = findResourceServerByTwoPartKey
 	FindRiskConfigurationByTwoPartKey        = findRiskConfigurationByTwoPartKey
 	FindUserByTwoPartKey                     = findUserByTwoPartKey

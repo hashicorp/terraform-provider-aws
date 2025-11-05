@@ -49,6 +49,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_apprunner_auto_scaling_configuration_version.example
+  identity = {
+    "arn" = "arn:aws:apprunner:us-east-1:123456789012:autoscalingconfiguration/example-auto-scaling-config/1/a1b2c3d4567890ab"
+  }
+}
+
+resource "aws_apprunner_auto_scaling_configuration_version" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the App Runner auto scaling configuration version.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner AutoScaling Configuration Versions using the `arn`. For example:
 
 ```terraform

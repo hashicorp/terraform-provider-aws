@@ -274,7 +274,7 @@ func (r *securityConfigResource) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *securityConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, idSeparator)
+	parts := strings.Split(req.ID, resourceIDSeparator)
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
 		err := fmt.Errorf("unexpected format for ID (%[1]s), expected saml/account-id/name", req.ID)
 		resp.Diagnostics.AddError(fmt.Sprintf("importing Security Policy (%s)", req.ID), err.Error())

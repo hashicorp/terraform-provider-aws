@@ -363,6 +363,17 @@ func testAccCheckSecretVersionExists(ctx context.Context, n string, v *secretsma
 	}
 }
 
+func testAccSecretVersionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s|%s", rs.Primary.Attributes["secret_id"], rs.Primary.Attributes["version_id"]), nil
+	}
+}
+
 func testAccCheckSecretVersionWriteOnlyValueEqual(t *testing.T, param *secretsmanager.GetSecretValueOutput, writeOnlyValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(param.SecretString) != writeOnlyValue {

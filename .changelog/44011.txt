@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_kms_external_key: Add `key_spec` argument
+```
+
+```release-note:enhancement
+resource/aws_kms_external_key: Change `key_usage` to Optional and Computed
+```

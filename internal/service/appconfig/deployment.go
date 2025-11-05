@@ -131,7 +131,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	const (
 		timeout = 30 * time.Minute // AWS SDK for Go v1 compatibility.
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.StartDeployment(ctx, &input)
 	})
 

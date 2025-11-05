@@ -648,7 +648,7 @@ func testAccCheckTopicHasPolicy(ctx context.Context, n string, expectedPolicyTex
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 
 		if err != nil {
-			return fmt.Errorf("testing policy equivalence: %s", err)
+			return fmt.Errorf("testing policy equivalence: %w", err)
 		}
 
 		if !equivalent {

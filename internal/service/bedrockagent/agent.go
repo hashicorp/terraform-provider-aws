@@ -514,8 +514,8 @@ func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockag
 }
 
 func updateAgentWithRetry(ctx context.Context, conn *bedrockagent.Client, input bedrockagent.UpdateAgentInput, timeout time.Duration) (*bedrockagent.UpdateAgentOutput, error) {
-	return tfresource.RetryGWhen(ctx, timeout,
-		func() (*bedrockagent.UpdateAgentOutput, error) {
+	return tfresource.RetryWhen(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.UpdateAgentOutput, error) {
 			return conn.UpdateAgent(ctx, &input)
 		},
 		func(err error) (bool, error) {

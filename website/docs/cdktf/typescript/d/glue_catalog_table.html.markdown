@@ -73,6 +73,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `comment` - Free-form text comment.
 * `name` - Name of the Partition Key.
+* `parameters` - Map of key-value pairs.
 * `type` - Datatype of data in the Partition Key.
 
 ### storage_descriptor
@@ -135,4 +136,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the target table.
 * `region` - Region of the target table.
 
-<!-- cache-key: cdktf-0.20.8 input-c19d3f2a71f47ca32caca19dff6d0604ad37a5023072094a28ae3df0654bde4b -->
+<!-- cache-key: cdktf-0.20.8 input-1681829eab78c92a38376326a34f58720981979b286852e2d983e61dbeed856f -->

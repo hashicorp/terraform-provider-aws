@@ -1,0 +1,48 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapOfStringPointer",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapOfString"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapOfStringPointer",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapOfString"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "FieldInner",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapOfStringPointer",
+    "autoflex.target.fieldname": "FieldInner",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapOfString"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FieldInner",
+    "autoflex.source.type": "map[string]*string",
+    "autoflex.target.path": "FieldInner",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening with MapValue",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FieldInner",
+    "autoflex.source.size": 1,
+    "autoflex.source.type": "map[string]*string",
+    "autoflex.target.path": "FieldInner",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]"
+  }
+]

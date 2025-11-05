@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -132,11 +131,11 @@ func testAccCheckGlobalSettingsDestroy(ctx context.Context) resource.TestCheckFu
 			const retryTimeout = 10 * time.Second
 			response := &chimesdkvoice.GetGlobalSettingsOutput{}
 
-			err := tfresource.Retry(ctx, retryTimeout, func() *retry.RetryError {
+			err := tfresource.Retry(ctx, retryTimeout, func(ctx context.Context) *tfresource.RetryError {
 				var err error
 				response, err = conn.GetGlobalSettings(ctx, input)
 				if err == nil && response.VoiceConnector.CdrBucket != nil {
-					return retry.RetryableError(errors.New("error Chime Voice Connector Global settings still exists"))
+					return tfresource.RetryableError(errors.New("error Chime Voice Connector Global settings still exists"))
 				}
 				return nil
 			})

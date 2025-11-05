@@ -53,24 +53,19 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 		ClientToken:    aws.String(id.UniqueId()),
 	}
 
-	var err error
-	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 4*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.EnableOrganizationAdminAccount(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.EnableOrganizationAdminAccount(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Macie OrganizationAdminAccount: %s", err)

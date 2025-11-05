@@ -342,7 +342,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `maximum_retry_attempts` - (Optional) Discard records after the specified number of retries. The default value is -1, which sets the maximum number of retries to infinite. When MaximumRetryAttempts is infinite, EventBridge retries failed records until the record expires in the event source. Maximum value of 10,000.
 * `on_partial_batch_item_failure` - (Optional) Define how to handle item process failures. AUTOMATIC_BISECT halves each batch and retry each half until all the records are processed or there is one failed message left in the batch. Valid values: AUTOMATIC_BISECT.
 * `parallelization_factor` - (Optional)The number of batches to process concurrently from each shard. The default value is 1. Maximum value of 10.
-* `starting_position` - (Optional) The position in a stream from which to start reading. Valid values: TRIM_HORIZON, LATEST.
+* `starting_position` - (Required) The position in a stream from which to start reading. Valid values: TRIM_HORIZON, LATEST.
 
 ##### source_parameters.dynamodb_stream_parameters.dead_letter_config Configuration Block
 

@@ -63,12 +63,14 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Brief description of the endpoint.
 * `dns_name` - DNS name to be used by clients when connecting to the Client VPN endpoint.
 * `dns_servers` - Information about the DNS servers to be used for DNS resolution.
+* `endpoint_ip_address_type` - IP address type for the Client VPN endpoint.
 * `security_group_ids` - IDs of the security groups for the target network associated with the Client VPN endpoint.
 * `self_service_portal` - Whether the self-service portal for the Client VPN endpoint is enabled.
 * `self_service_portal_url` - The URL of the self-service portal.
 * `server_certificate_arn` - The ARN of the server certificate.
 * `session_timeout_hours` - The maximum VPN session duration time in hours.
 * `split_tunnel` - Whether split-tunnel is enabled in the AWS Client VPN endpoint.
+* `traffic_ip_address_type` - IP address type for traffic within the Client VPN tunnel.
 * `transport_protocol` - Transport protocol used by the Client VPN endpoint.
 * `vpc_id` - ID of the VPC associated with the Client VPN endpoint.
 * `vpn_port` - Port number for the Client VPN endpoint.

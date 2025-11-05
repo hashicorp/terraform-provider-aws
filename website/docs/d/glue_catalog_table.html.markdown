@@ -57,6 +57,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `comment` - Free-form text comment.
 * `name` - Name of the Partition Key.
+* `parameters` - Map of key-value pairs.
 * `type` - Datatype of data in the Partition Key.
 
 ### storage_descriptor

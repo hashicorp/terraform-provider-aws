@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_servicecatalog_provisioned_product: Set `provisioning_parameters` and `provisioning_artifact_id` to the values from the last successful deployment when update fails
+```

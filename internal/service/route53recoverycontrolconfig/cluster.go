@@ -15,17 +15,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53recoverycontrolconfig_cluster", name="Cluster")
+// @Tags(identifierAttribute="arn")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
+		UpdateWithoutTimeout: resourceClusterUpdate,
 		DeleteWithoutTimeout: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -57,10 +61,18 @@ func resourceCluster() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"network_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
+			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -72,6 +84,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	input := &r53rcc.CreateClusterInput{
 		ClientToken: aws.String(id.UniqueId()),
 		ClusterName: aws.String(d.Get(names.AttrName).(string)),
+	}
+
+	if v, ok := d.GetOk("network_type"); ok {
+		input.NetworkType = awstypes.NetworkType(v.(string))
 	}
 
 	output, err := conn.CreateCluster(ctx, input)
@@ -89,6 +105,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if _, err := waitClusterCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Cluster (%s) to be Deployed: %s", d.Id(), err)
+	}
+
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Control Config Cluster (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
@@ -112,6 +132,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.Set(names.AttrARN, output.ClusterArn)
 	d.Set(names.AttrName, output.Name)
+	d.Set("network_type", output.NetworkType)
 	d.Set(names.AttrStatus, output.Status)
 
 	if err := d.Set("cluster_endpoints", flattenClusterEndpoints(output.ClusterEndpoints)); err != nil {
@@ -119,6 +140,37 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return diags
+}
+
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
+
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &r53rcc.UpdateClusterInput{
+			ClusterArn: aws.String(d.Id()),
+		}
+
+		if d.HasChanges("network_type") {
+			input.NetworkType = awstypes.NetworkType(d.Get("network_type").(string))
+		}
+
+		output, err := conn.UpdateCluster(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Cluster: %s", err)
+		}
+
+		if output == nil || output.Cluster == nil {
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Cluster: empty response")
+		}
+
+		if _, err := waitClusterUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Cluster (%s) to be Updated: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

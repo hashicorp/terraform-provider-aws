@@ -62,7 +62,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		Tags: getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InternalServerException](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InternalServerException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateGraph(ctx, input)
 	})
 

@@ -119,7 +119,7 @@ func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.RedshiftClient(ctx)
 	input := &redshift.DescribeClustersInput{}
@@ -225,7 +225,7 @@ func sweepScheduledActions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.RedshiftClient(ctx)
 	input := &redshift.DescribeScheduledActionsInput{}
@@ -266,7 +266,7 @@ func sweepSnapshotSchedules(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.RedshiftClient(ctx)
 	input := &redshift.DescribeSnapshotSchedulesInput{}
@@ -365,7 +365,7 @@ func sweepHSMClientCertificates(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	conn := client.RedshiftClient(ctx)
@@ -407,7 +407,7 @@ func sweepHSMConfigurations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.RedshiftClient(ctx)
 	input := &redshift.DescribeHsmConfigurationsInput{}
@@ -448,7 +448,7 @@ func sweepAuthenticationProfiles(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.RedshiftClient(ctx)
 	input := &redshift.DescribeAuthenticationProfilesInput{}

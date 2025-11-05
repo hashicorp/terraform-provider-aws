@@ -54,6 +54,27 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_kinesis_resource_policy.example
+  identity = {
+    "arn" = "arn:aws:kinesis:us-east-1:123456789012:stream/example-stream"
+  }
+}
+
+resource "aws_kinesis_resource_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Kinesis stream.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis resource policies using the `resource_arn`. For example:
 
 ```terraform

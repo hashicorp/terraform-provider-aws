@@ -5,6 +5,7 @@ package rds
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 )
@@ -13,7 +14,7 @@ func describeDBShardGroupsPages(ctx context.Context, conn *rds.Client, input *rd
 	for {
 		output, err := conn.DescribeDBShardGroups(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.Marker) == ""

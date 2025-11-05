@@ -358,6 +358,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_appflow_connector_profile.example
+  identity = {
+    name = "example_profile"
+  }
+}
+
+resource "aws_appflow_connector_profile" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the Appflow connector profile.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow Connector Profile using the connector profile `name`. For example:
 
 ```typescript
@@ -391,4 +417,4 @@ Using `terraform import`, import AppFlow Connector Profile using the connector p
 [1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html
 [2]: https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html
 
-<!-- cache-key: cdktf-0.20.8 input-91b08cf1ff5c7fe03abdc31bcad1124ce30a20d9d96fd34b2d3dc41e9a402a96 -->
+<!-- cache-key: cdktf-0.20.8 input-f6c063dece1f67b76f0b735703a919748b24f993e5faa54d4de1824a3d92338e -->

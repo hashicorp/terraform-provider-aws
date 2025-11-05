@@ -33,14 +33,12 @@ func resourceDetectorFeature() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"additional_configuration": {
 				Optional: true,
-				ForceNew: true,
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrName: {
 							Type:             schema.TypeString,
 							Required:         true,
-							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.FeatureAdditionalConfiguration](),
 						},
 						names.AttrStatus: {
@@ -81,8 +79,8 @@ func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, met
 		Status: awstypes.FeatureStatus(d.Get(names.AttrStatus).(string)),
 	}
 
-	if v, ok := d.GetOk("additional_configuration"); ok && len(v.([]any)) > 0 {
-		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.([]any))
+	if v, ok := d.GetOk("additional_configuration"); ok && v.(*schema.Set).Len() > 0 {
+		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.(*schema.Set).List())
 	}
 
 	input := &guardduty.UpdateDetectorInput{

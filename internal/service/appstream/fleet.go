@@ -293,7 +293,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		timeout = 15 * time.Minute
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateFleet(ctx, &input)
 		},
 		func(err error) (bool, error) {

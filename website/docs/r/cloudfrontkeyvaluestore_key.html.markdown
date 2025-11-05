@@ -46,6 +46,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudfrontkeyvaluestore_key.example
+  identity = {
+    key_value_store_arn = "arn:aws:cloudfront::111111111111:key-value-store/8562g61f-caba-2845-9d99-b97diwae5d3c"
+    key                 = "someKey"
+  }
+}
+
+resource "aws_cloudfrontkeyvaluestore_key" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `key_value_store_arn` (String) ARN of the CloudFront Key Value Store.
+* `key` (String) Key name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront KeyValueStore Key using the `key_value_store_arn` and 'key' separated by `,`. For example:
 
 ```terraform

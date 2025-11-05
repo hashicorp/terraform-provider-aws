@@ -178,7 +178,7 @@ func hostedZoneDNSSECDisable(ctx context.Context, conn *route53.Client, hostedZo
 	const (
 		timeout = 5 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.KeySigningKeyInParentDSRecord](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.KeySigningKeyInParentDSRecord](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DisableHostedZoneDNSSEC(ctx, input)
 	})
 

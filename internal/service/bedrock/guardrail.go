@@ -395,6 +395,20 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 							CustomType: fwtypes.NewListNestedObjectTypeOf[managedWordListsConfig](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"input_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailWordAction](),
+									},
+									"input_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
+									"output_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailWordAction](),
+									},
+									"output_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
 									names.AttrType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailManagedWordsType](),
@@ -404,8 +418,26 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 						},
 						"words_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[wordsConfig](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(10000),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"input_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailWordAction](),
+									},
+									"input_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
+									"output_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailWordAction](),
+									},
+									"output_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
 									"text": schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
@@ -836,9 +868,17 @@ type wordPolicyConfig struct {
 }
 
 type managedWordListsConfig struct {
-	Type fwtypes.StringEnum[awstypes.GuardrailManagedWordsType] `tfsdk:"type"`
+	InputAction   fwtypes.StringEnum[awstypes.GuardrailWordAction]       `tfsdk:"input_action"`
+	InputEnabled  types.Bool                                             `tfsdk:"input_enabled"`
+	OutputAction  fwtypes.StringEnum[awstypes.GuardrailWordAction]       `tfsdk:"output_action"`
+	OutputEnabled types.Bool                                             `tfsdk:"output_enabled"`
+	Type          fwtypes.StringEnum[awstypes.GuardrailManagedWordsType] `tfsdk:"type"`
 }
 
 type wordsConfig struct {
-	Text types.String `tfsdk:"text"`
+	InputAction   fwtypes.StringEnum[awstypes.GuardrailWordAction] `tfsdk:"input_action"`
+	InputEnabled  types.Bool                                       `tfsdk:"input_enabled"`
+	OutputAction  fwtypes.StringEnum[awstypes.GuardrailWordAction] `tfsdk:"output_action"`
+	OutputEnabled types.Bool                                       `tfsdk:"output_enabled"`
+	Text          types.String                                     `tfsdk:"text"`
 }

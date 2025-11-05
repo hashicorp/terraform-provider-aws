@@ -87,7 +87,46 @@ func testAccTransitGatewayRouteTablePropagation_disappears(t *testing.T, semapho
 	})
 }
 
-func testAccTransitGatewayRouteTablePropagtion_notRecreatedDXGateway(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayRouteTablePropagation_attachmentChange(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v awstypes.TransitGatewayRouteTablePropagation
+	resourceName := "aws_ec2_transit_gateway_route_table_propagation.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTablePropagationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayRouteTablePropagationConfig_attachmentChange(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, "aws_ec2_transit_gateway_vpc_attachment.test.0", names.AttrID),
+				),
+			},
+			{
+				Config: testAccTransitGatewayRouteTablePropagationConfig_attachmentChange(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, "aws_ec2_transit_gateway_vpc_attachment.test.1", names.AttrID),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayRouteTablePropagtion_recreatedDXGateway(t *testing.T, semaphore tfsync.Semaphore) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -119,11 +158,9 @@ func testAccTransitGatewayRouteTablePropagtion_notRecreatedDXGateway(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, resourceName, &a),
 				),
-				// Calling a NotRecreated function, such as testAccCheckRouteTableAssociationNotRecreated, as is typical,
-				// won't work here because the recreated resource ID will be the same, because it's two IDs pegged together.
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 			},
@@ -261,4 +298,70 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 }
 `, rName, rBGPASN, strings.Join(allowedPrefixes, `", "`))
+}
+
+func testAccTransitGatewayRouteTablePropagationConfig_attachmentChange(rName string, attachmentIndex int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  count = 2
+
+  cidr_block = "10.${count.index}.0.0/16"
+
+  tags = {
+    Name = "%[1]s-${count.index}"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test[count.index].id
+  cidr_block        = "10.${count.index}.0.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "%[1]s-${count.index}"
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  count = 2
+
+  subnet_ids         = [aws_subnet.test[count.index].id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test[count.index].id
+
+  tags = {
+    Name = "%[1]s-${count.index}"
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table" "test" {
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test[%[2]d].id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
+}
+`, rName, attachmentIndex)
 }

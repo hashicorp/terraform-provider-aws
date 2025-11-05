@@ -17,7 +17,7 @@ func TestAccPollyVoicesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_polly_voices.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.PollyEndpointID)
@@ -45,7 +45,7 @@ func TestAccPollyVoicesDataSource_languageCode(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_polly_voices.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.PollyEndpointID)

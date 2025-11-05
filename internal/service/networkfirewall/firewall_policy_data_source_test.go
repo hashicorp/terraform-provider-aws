@@ -34,7 +34,7 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.0", resourceName, "firewall_policy.0.stateless_fragment_default_actions.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_default_actions.#", resourceName, "firewall_policy.0.stateless_default_actions.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_default_actions.0", resourceName, "firewall_policy.0.stateless_default_actions.0"),
-					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.tls_inspection_coniguration_arn", resourceName, "firewall_policy.0.tls_inspection_coniguration_arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.tls_inspection_configuration_arn", resourceName, "firewall_policy.0.tls_inspection_configuration_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
@@ -64,7 +64,7 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.0", resourceName, "firewall_policy.0.stateless_fragment_default_actions.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_default_actions.#", resourceName, "firewall_policy.0.stateless_default_actions.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_default_actions.0", resourceName, "firewall_policy.0.stateless_default_actions.0"),
-					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.tls_inspection_coniguration_arn", resourceName, "firewall_policy.0.tls_inspection_coniguration_arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.tls_inspection_configuration_arn", resourceName, "firewall_policy.0.tls_inspection_configuration_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
@@ -94,7 +94,7 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_nameAndARN(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.0", resourceName, "firewall_policy.0.stateless_fragment_default_actions.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_default_actions.#", resourceName, "firewall_policy.0.stateless_default_actions.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_default_actions.0", resourceName, "firewall_policy.0.stateless_default_actions.0"),
-					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.tls_inspection_coniguration_arn", resourceName, "firewall_policy.0.tls_inspection_coniguration_arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.tls_inspection_configuration_arn", resourceName, "firewall_policy.0.tls_inspection_configuration_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
@@ -184,6 +184,66 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_activeThreatDefense(t *testi
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.#", resourceName, "firewall_policy.0.stateful_rule_group_reference.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.0", resourceName, "firewall_policy.0.stateful_rule_group_reference.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.0.deep_threat_inspection", resourceName, "firewall_policy.0.stateful_rule_group_reference.0.deep_threat_inspection"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewallPolicyDataSource_statefulEngineOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+	datasourceName := "data.aws_networkfirewall_firewall_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyDataSourceConfig_statefulEngineOptions(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN), resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.#", resourceName, "firewall_policy.0.stateless_fragment_default_actions.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.0", resourceName, "firewall_policy.0.stateless_fragment_default_actions.0"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_engine_options.#", resourceName, "firewall_policy.0.stateful_engine_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.0.tcp_idle_timeout_seconds", resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.0.tcp_idle_timeout_seconds"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_engine_options.0.rule_order", resourceName, "firewall_policy.0.stateful_engine_options.0.rule_order"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_engine_options.0.stream_exception_policy", resourceName, "firewall_policy.0.stateful_engine_options.0.stream_exception_policy"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewallPolicyDataSource_multipleStatefulRuleGroupReferences(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+	datasourceName := "data.aws_networkfirewall_firewall_policy.test"
+	ruleGroupResourceName1 := "aws_networkfirewall_rule_group.test.0"
+	ruleGroupResourceName2 := "aws_networkfirewall_rule_group.test.1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyDataSourceConfig_multipleStatefulRuleGroupReferences(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN), resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.#", resourceName, "firewall_policy.0.stateful_rule_group_reference.#"),
+					resource.TestCheckTypeSetElemAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName1, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName2, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
@@ -305,4 +365,36 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 data "aws_networkfirewall_firewall_policy" "test" {
   arn = aws_networkfirewall_firewall_policy.test.arn
 }`, rName)
+}
+
+func testAccFirewallPolicyDataSourceConfig_statefulEngineOptions(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+
+    stateful_engine_options {
+      flow_timeouts {
+        tcp_idle_timeout_seconds = 60
+      }
+      rule_order              = "STRICT_ORDER"
+      stream_exception_policy = "DROP"
+    }
+  }
+}
+data "aws_networkfirewall_firewall_policy" "test" {
+  arn = aws_networkfirewall_firewall_policy.test.arn
+}
+`, rName)
+}
+
+func testAccFirewallPolicyDataSourceConfig_multipleStatefulRuleGroupReferences(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_multipleStatefulRuleGroupReferences(rName), `
+data "aws_networkfirewall_firewall_policy" "test" {
+  arn = aws_networkfirewall_firewall_policy.test.arn
+}
+`)
 }

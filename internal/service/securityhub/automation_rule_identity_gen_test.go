@@ -24,9 +24,10 @@ func testAccSecurityHubAutomationRule_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccSecurityHubAutomationRule_Identity_Basic,
-		"ExistingResource": testAccSecurityHubAutomationRule_Identity_ExistingResource,
-		"RegionOverride":   testAccSecurityHubAutomationRule_Identity_RegionOverride,
+		acctest.CtBasic:             testAccSecurityHubAutomationRule_Identity_Basic,
+		"ExistingResource":          testAccSecurityHubAutomationRule_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccSecurityHubAutomationRule_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccSecurityHubAutomationRule_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -312,6 +313,52 @@ func testAccSecurityHubAutomationRule_Identity_ExistingResource(t *testing.T) {
 						names.AttrARN: knownvalue.NotNull(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+		},
+	})
+}
+
+func testAccSecurityHubAutomationRule_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.AutomationRulesConfig
+	resourceName := "aws_securityhub_automation_rule.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		CheckDestroy: testAccCheckAutomationRuleDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AutomationRule/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAutomationRuleExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/AutomationRule/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 				},
 			},
 		},

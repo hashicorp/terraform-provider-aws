@@ -82,6 +82,27 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_acmpca_policy.example
+  identity = {
+    "arn" = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
+  }
+}
+
+resource "aws_acmpca_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the ACM PCA certificate authority.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_acmpca_policy` using the `resource_arn` value. For example:
 
 ```python
@@ -105,4 +126,4 @@ Using `terraform import`, import `aws_acmpca_policy` using the `resource_arn` va
 % terraform import aws_acmpca_policy.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-de9a2d0fa2456cf75827e030e0a2672f0561925a8cad7051f5a4662cb5db1365 -->
+<!-- cache-key: cdktf-0.20.8 input-f9d2b2741e89b7d2ea910593703e01c75c0d6924e79915598b5716fe43d3d1ba -->

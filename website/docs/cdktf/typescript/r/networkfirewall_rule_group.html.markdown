@@ -658,7 +658,7 @@ The `dimension` block supports the following argument:
 
 The `destination` block supports the following argument:
 
-* `addressDefinition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
+* `addressDefinition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4 and IPv6.
 
 ### Destination Port
 
@@ -672,7 +672,7 @@ The `destinationPort` block supports the following arguments:
 
 The `source` block supports the following argument:
 
-* `addressDefinition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
+* `addressDefinition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4 and IPv6.
 
 ### Source Port
 
@@ -736,4 +736,4 @@ Using `terraform import`, import Network Firewall Rule Groups using their `arn`.
 % terraform import aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8af1aae5893c42f1d45aad2d4399c0ee56e43ef2d30266db158f9832bb12a2ca -->
+<!-- cache-key: cdktf-0.20.8 input-0f91c2dd5afe949c49ee927bbf65813e1df28636cbcd0276fbedc0896e4de29a -->

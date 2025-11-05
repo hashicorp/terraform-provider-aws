@@ -84,6 +84,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_vpc_security_group_ingress_rule.example
+  identity = {
+    id = "sgr-02108b27edd666983"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the security group rule.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import security group ingress rules using the `securityGroupRuleId`. For example:
 
 ```typescript
@@ -114,4 +140,4 @@ Using `terraform import`, import security group ingress rules using the `securit
 % terraform import aws_vpc_security_group_ingress_rule.example sgr-02108b27edd666983
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c1416cf32b27999d870855d27eb3ab85a0e2df5a8a496e06aa9b44de65cb0d65 -->
+<!-- cache-key: cdktf-0.20.8 input-8fdb20a6da8b38f3c128d51f7801600d9dc9cad37534e3335cd7d21f2e21b404 -->

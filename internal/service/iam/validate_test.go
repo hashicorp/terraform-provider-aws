@@ -6,6 +6,10 @@ package iam
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -129,5 +133,97 @@ func TestValidRolePolicyRoleName(t *testing.T) {
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d Role Policy role name validation errors, got %d", tc.ErrCount, len(errors))
 		}
+	}
+}
+
+func TestValidPolicyPath(t *testing.T) {
+	t.Parallel()
+
+	cases := map[string]struct {
+		value         string
+		expectedDiags diag.Diagnostics
+	}{
+		"root path": {
+			value: "/",
+		},
+
+		"single element": {
+			value: "/test/",
+		},
+
+		"multiple elements": {
+			value: "/test1/test2/test3/",
+		},
+
+		// Empty path does not trigger validation in SDKv2
+		// "empty path": {
+		// 	value: "",
+		// 	expectedDiags: diag.Diagnostics{
+		// 		diag.Diagnostic{
+		// 			Severity:      diag.Error,
+		// 			Summary:       "expected length of path to be in the range (1 - 512), got ",
+		// 			AttributePath: cty.GetAttrPath(names.AttrPath),
+		// 		},
+		// 	},
+		// },
+
+		"missing leading slash": {
+			value: "test/",
+			expectedDiags: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "Invalid value",
+					Detail:        "Attribute \"path\" must begin and end with a slash (/), got \"test/\"",
+					AttributePath: cty.GetAttrPath(names.AttrPath),
+				},
+			},
+		},
+
+		"missing trailing slash": {
+			value: "/test",
+			expectedDiags: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "Invalid value",
+					Detail:        "Attribute \"path\" must begin and end with a slash (/), got \"/test\"",
+					AttributePath: cty.GetAttrPath(names.AttrPath),
+				},
+			},
+		},
+
+		"consecutive slashes": {
+			value: "/test//",
+			expectedDiags: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "Invalid value",
+					Detail:        "Attribute \"path\" must not contain consecutive slashes (//), got \"/test//\"",
+					AttributePath: cty.GetAttrPath(names.AttrPath),
+				},
+			},
+		},
+
+		"invalid character": {
+			value: "/test!/",
+			expectedDiags: diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "invalid value for path (must contain uppercase or lowercase alphanumeric characters or any of the following: / , . + @ = _ -)",
+					AttributePath: cty.GetAttrPath(names.AttrPath),
+				},
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := validPolicyPath(tc.value, cty.GetAttrPath(names.AttrPath))
+
+			if diff := cmp.Diff(diags, tc.expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+		})
 	}
 }

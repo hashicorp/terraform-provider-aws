@@ -68,6 +68,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudfrontkeyvaluestore_key.example
+  identity = {
+    key_value_store_arn = "arn:aws:cloudfront::111111111111:key-value-store/8562g61f-caba-2845-9d99-b97diwae5d3c"
+    key                 = "someKey"
+  }
+}
+
+resource "aws_cloudfrontkeyvaluestore_key" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `keyValueStoreArn` (String) ARN of the CloudFront Key Value Store.
+* `key` (String) Key name.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront KeyValueStore Key using the `keyValueStoreArn` and 'key' separated by `,`. For example:
 
 ```typescript
@@ -98,4 +125,4 @@ Using `terraform import`, import CloudFront KeyValueStore Key using the `keyValu
 % terraform import aws_cloudfrontkeyvaluestore_key.example arn:aws:cloudfront::111111111111:key-value-store/8562g61f-caba-2845-9d99-b97diwae5d3c,someKey
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5f3a002318dfe5dc8ae4a7dd75e179a75a7b7b9a3f92e17d464418d0a8bc5264 -->
+<!-- cache-key: cdktf-0.20.8 input-bdda66b3b9ccd8a63267c7205df22f3d3b22d733c80e56b4205d32deb7efef3b -->

@@ -71,6 +71,32 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_policy.example
+  identity = {
+    bucket = "my-tf-test-bucket"
+  }
+}
+
+resource "aws_s3_bucket_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) Name of the S3 bucket.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket policies using the bucket name. For example:
 
 ```python
@@ -85,13 +111,13 @@ from imports.aws.s3_bucket_policy import S3BucketPolicy
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        S3BucketPolicy.generate_config_for_import(self, "allowAccessFromAnotherAccount", "my-tf-test-bucket")
+        S3BucketPolicy.generate_config_for_import(self, "example", "my-tf-test-bucket")
 ```
 
 Using `terraform import`, import S3 bucket policies using the bucket name. For example:
 
 ```console
-% terraform import aws_s3_bucket_policy.allow_access_from_another_account my-tf-test-bucket
+% terraform import aws_s3_bucket_policy.example my-tf-test-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2cb1f365529aad410e8eb4b02e78ba3af707f075f7f3c4354c6611f509ffbcd3 -->
+<!-- cache-key: cdktf-0.20.8 input-a15ab2d1315a56cb464e925b61eec3dff376be1cd44c92c381287f92139f90b9 -->

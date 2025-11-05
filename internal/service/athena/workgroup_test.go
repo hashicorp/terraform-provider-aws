@@ -699,7 +699,7 @@ func testAccCheckCreateNamedQuery(ctx context.Context, workGroup *types.WorkGrou
 		}
 
 		if _, err := conn.CreateNamedQuery(ctx, input); err != nil {
-			return fmt.Errorf("error creating Named Query (%s) on Workgroup (%s): %s", queryName, aws.ToString(workGroup.Name), err)
+			return fmt.Errorf("error creating Named Query (%s) on Workgroup (%s): %w", queryName, aws.ToString(workGroup.Name), err)
 		}
 
 		return nil

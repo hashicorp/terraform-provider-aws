@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_glue_job: Ensure that `timeout` is unconfigured for Ray jobs
+```
+
+```release-note:bug
+resource/aws_glue_job: Allow Ray jobs to be updated
+```

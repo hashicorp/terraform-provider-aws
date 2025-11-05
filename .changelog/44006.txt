@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53_health_check: Fix `child_health_threshold` to properly accept explicitly specified zero value
+```

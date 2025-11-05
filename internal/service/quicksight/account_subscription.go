@@ -64,6 +64,13 @@ func resourceAccountSubscription() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					ForceNew: true,
 				},
+				"admin_pro_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					ForceNew: true,
+				},
 				"authentication_method": {
 					Type:             schema.TypeString,
 					Required:         true,
@@ -71,6 +78,13 @@ func resourceAccountSubscription() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.AuthenticationMethodOption](),
 				},
 				"author_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					ForceNew: true,
+				},
+				"author_pro_group": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -126,6 +140,13 @@ func resourceAccountSubscription() *schema.Resource {
 					MinItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
+				"reader_pro_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 				"realm": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -161,12 +182,24 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		input.AdminGroup = flex.ExpandStringValueList(v.([]any))
 	}
 
+	if v, ok := d.GetOk("admin_pro_group"); ok && len(v.([]any)) > 0 {
+		input.AdminProGroup = flex.ExpandStringValueList(v.([]any))
+	}
+
 	if v, ok := d.GetOk("author_group"); ok && len(v.([]any)) > 0 {
 		input.AuthorGroup = flex.ExpandStringValueList(v.([]any))
 	}
 
+	if v, ok := d.GetOk("author_pro_group"); ok && len(v.([]any)) > 0 {
+		input.AuthorProGroup = flex.ExpandStringValueList(v.([]any))
+	}
+
 	if v, ok := d.GetOk("reader_group"); ok && len(v.([]any)) > 0 {
 		input.ReaderGroup = flex.ExpandStringValueList(v.([]any))
+	}
+
+	if v, ok := d.GetOk("reader_pro_group"); ok && len(v.([]any)) > 0 {
+		input.ReaderProGroup = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("contact_number"); ok {

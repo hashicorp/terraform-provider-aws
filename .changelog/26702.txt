@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_glue_catalog_table: Add `partition_keys.parameters` argument, fixing `Invalid address to set: []string{"partition_keys", "0", "parameters"}` errors
+```
+
+```release-note:bug
+data-source/aws_glue_catalog_table: Add `partition_keys.parameters` attribute
+```

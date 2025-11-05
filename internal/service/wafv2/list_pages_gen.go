@@ -5,6 +5,7 @@ package wafv2
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 )
@@ -13,7 +14,7 @@ func listAPIKeysPages(ctx context.Context, conn *wafv2.Client, input *wafv2.List
 	for {
 		output, err := conn.ListAPIKeys(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -29,7 +30,7 @@ func listIPSetsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.ListI
 	for {
 		output, err := conn.ListIPSets(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -45,7 +46,7 @@ func listRegexPatternSetsPages(ctx context.Context, conn *wafv2.Client, input *w
 	for {
 		output, err := conn.ListRegexPatternSets(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -61,7 +62,7 @@ func listRuleGroupsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.L
 	for {
 		output, err := conn.ListRuleGroups(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -77,7 +78,7 @@ func listWebACLsPages(ctx context.Context, conn *wafv2.Client, input *wafv2.List
 	for {
 		output, err := conn.ListWebACLs(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""

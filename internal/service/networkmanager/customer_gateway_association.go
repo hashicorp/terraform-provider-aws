@@ -86,7 +86,7 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 
 	log.Printf("[DEBUG] Creating Network Manager Customer Gateway Association: %#v", input)
 	_, err := tfresource.RetryWhen(ctx, customerGatewayAssociationResourceNotFoundExceptionTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.AssociateCustomerGateway(ctx, input)
 		},
 		func(err error) (bool, error) {

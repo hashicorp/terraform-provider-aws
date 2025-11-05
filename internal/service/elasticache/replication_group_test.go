@@ -1582,6 +1582,100 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_ClusterMode_nodeGroupConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_nodeGroupConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
+					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "node_group_configuration.*", map[string]string{
+						"node_group_id": "0001",
+						"replica_count": "1",
+						"slots":         "0-8191",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "node_group_configuration.*", map[string]string{
+						"node_group_id": "0002",
+						"replica_count": "1",
+						"slots":         "8192-16383",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_ClusterMode_nodeGroupConfiguration_availabilityZones(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_nodeGroupConfigurationAZ(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
+					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "node_group_configuration.*", map[string]string{
+						"node_group_id":                "0001",
+						"replica_count":                "1",
+						"slots":                        "0-8191",
+						"replica_availability_zones.#": "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "node_group_configuration.*", map[string]string{
+						"node_group_id":                "0002",
+						"replica_count":                "1",
+						"slots":                        "8192-16383",
+						"replica_availability_zones.#": "1",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "node_group_configuration.*.primary_availability_zone", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "node_group_configuration.*.primary_availability_zone", "data.aws_availability_zones.available", "names.1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3579,6 +3673,60 @@ func testAccCheckResourceTags(resourceName string, kvs []kvp) []resource.TestChe
 	return checks
 }
 
+func resourceReplicationGroupDisableAutomaticFailover(ctx context.Context, conn *elasticache.Client, replicationGroupID string, timeout time.Duration) error {
+	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
+		ReplicationGroupId:       aws.String(replicationGroupID),
+		ApplyImmediately:         aws.Bool(true),
+		AutomaticFailoverEnabled: aws.Bool(false),
+		MultiAZEnabled:           aws.Bool(false),
+	})
+}
+
+func resourceReplicationGroupEnableAutomaticFailover(ctx context.Context, conn *elasticache.Client, replicationGroupID string, multiAZEnabled bool, timeout time.Duration) error {
+	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
+		ReplicationGroupId:       aws.String(replicationGroupID),
+		ApplyImmediately:         aws.Bool(true),
+		AutomaticFailoverEnabled: aws.Bool(true),
+		MultiAZEnabled:           aws.Bool(multiAZEnabled),
+	})
+}
+
+func resourceReplicationGroupSetPrimaryClusterID(ctx context.Context, conn *elasticache.Client, replicationGroupID, primaryClusterID string, timeout time.Duration) error {
+	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
+		ReplicationGroupId: aws.String(replicationGroupID),
+		ApplyImmediately:   aws.Bool(true),
+		PrimaryClusterId:   aws.String(primaryClusterID),
+	})
+}
+
+func resourceReplicationGroupUpgradeEngineVersion(ctx context.Context, conn *elasticache.Client, replicationGroupID, engineVersion string, timeout time.Duration) error {
+	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
+		ReplicationGroupId: aws.String(replicationGroupID),
+		ApplyImmediately:   aws.Bool(true),
+		EngineVersion:      aws.String(engineVersion),
+	})
+}
+
+func resourceReplicationGroupModify(ctx context.Context, conn *elasticache.Client, timeout time.Duration, input *elasticache.ModifyReplicationGroupInput) error {
+	_, err := conn.ModifyReplicationGroup(ctx, input)
+	if err != nil {
+		return fmt.Errorf("error requesting modification: %w", err)
+	}
+
+	const (
+		delay = 30 * time.Second
+	)
+	_, err = tfelasticache.WaitReplicationGroupAvailable(ctx, conn, aws.ToString(input.ReplicationGroupId), timeout, delay)
+	if err != nil {
+		return fmt.Errorf("error waiting for modification: %w", err)
+	}
+	return nil
+}
+
+func formatReplicationGroupClusterID(replicationGroupID string, clusterID int) string {
+	return fmt.Sprintf("%s-%03d", replicationGroupID, clusterID)
+}
+
 func testAccReplicationGroupConfig_basic_engine(rName string, engine string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
@@ -5059,56 +5207,61 @@ data "aws_elasticache_replication_group" "test" {
 `, rName, enableClusterMode, slowLogDeliveryEnabled, slowDeliveryDestination, slowDeliveryFormat, engineLogDeliveryEnabled, engineDeliveryDestination, engineLogDeliveryFormat)
 }
 
-func resourceReplicationGroupDisableAutomaticFailover(ctx context.Context, conn *elasticache.Client, replicationGroupID string, timeout time.Duration) error {
-	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
-		ReplicationGroupId:       aws.String(replicationGroupID),
-		ApplyImmediately:         aws.Bool(true),
-		AutomaticFailoverEnabled: aws.Bool(false),
-		MultiAZEnabled:           aws.Bool(false),
-	})
+func testAccReplicationGroupConfig_nodeGroupConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  port                       = 6379
+  parameter_group_name       = "default.redis7.cluster.on"
+  automatic_failover_enabled = true
+  num_node_groups            = 2
+
+  node_group_configuration {
+    node_group_id = "0001"
+    replica_count = 1
+    slots         = "0-8191"
+  }
+
+  node_group_configuration {
+    node_group_id = "0002"
+    replica_count = 1
+    slots         = "8192-16383"
+  }
+}
+`, rName)
 }
 
-func resourceReplicationGroupEnableAutomaticFailover(ctx context.Context, conn *elasticache.Client, replicationGroupID string, multiAZEnabled bool, timeout time.Duration) error {
-	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
-		ReplicationGroupId:       aws.String(replicationGroupID),
-		ApplyImmediately:         aws.Bool(true),
-		AutomaticFailoverEnabled: aws.Bool(true),
-		MultiAZEnabled:           aws.Bool(multiAZEnabled),
-	})
+func testAccReplicationGroupConfig_nodeGroupConfigurationAZ(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  port                       = 6379
+  parameter_group_name       = "default.redis7.cluster.on"
+  automatic_failover_enabled = true
+  num_node_groups            = 2
+
+  node_group_configuration {
+    node_group_id              = "0001"
+    primary_availability_zone  = data.aws_availability_zones.available.names[0]
+    replica_availability_zones = [data.aws_availability_zones.available.names[1]]
+    replica_count              = 1
+    slots                      = "0-8191"
+  }
+
+  node_group_configuration {
+    node_group_id              = "0002"
+    primary_availability_zone  = data.aws_availability_zones.available.names[1]
+    replica_availability_zones = [data.aws_availability_zones.available.names[0]]
+    replica_count              = 1
+    slots                      = "8192-16383"
+  }
 }
-
-func resourceReplicationGroupSetPrimaryClusterID(ctx context.Context, conn *elasticache.Client, replicationGroupID, primaryClusterID string, timeout time.Duration) error {
-	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
-		ReplicationGroupId: aws.String(replicationGroupID),
-		ApplyImmediately:   aws.Bool(true),
-		PrimaryClusterId:   aws.String(primaryClusterID),
-	})
-}
-
-func resourceReplicationGroupUpgradeEngineVersion(ctx context.Context, conn *elasticache.Client, replicationGroupID, engineVersion string, timeout time.Duration) error {
-	return resourceReplicationGroupModify(ctx, conn, timeout, &elasticache.ModifyReplicationGroupInput{
-		ReplicationGroupId: aws.String(replicationGroupID),
-		ApplyImmediately:   aws.Bool(true),
-		EngineVersion:      aws.String(engineVersion),
-	})
-}
-
-func resourceReplicationGroupModify(ctx context.Context, conn *elasticache.Client, timeout time.Duration, input *elasticache.ModifyReplicationGroupInput) error {
-	_, err := conn.ModifyReplicationGroup(ctx, input)
-	if err != nil {
-		return fmt.Errorf("error requesting modification: %w", err)
-	}
-
-	const (
-		delay = 30 * time.Second
+`, rName),
 	)
-	_, err = tfelasticache.WaitReplicationGroupAvailable(ctx, conn, aws.ToString(input.ReplicationGroupId), timeout, delay)
-	if err != nil {
-		return fmt.Errorf("error waiting for modification: %w", err)
-	}
-	return nil
-}
-
-func formatReplicationGroupClusterID(replicationGroupID string, clusterID int) string {
-	return fmt.Sprintf("%s-%03d", replicationGroupID, clusterID)
 }

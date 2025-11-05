@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster: Fixes the behavior when modifying `database_insights_mode` when using custom KMS key
+```

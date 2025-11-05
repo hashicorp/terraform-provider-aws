@@ -168,7 +168,7 @@ func retryClusterCapacityProvidersPut(ctx context.Context, conn *ecs.Client, inp
 		timeout = 10 * time.Minute
 	)
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.PutClusterCapacityProviders(ctx, input)
 		},
 		func(err error) (bool, error) {

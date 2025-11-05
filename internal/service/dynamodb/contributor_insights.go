@@ -46,6 +46,12 @@ func resourceContributorInsights() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			names.AttrMode: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ContributorInsightsMode](),
+			},
 			names.AttrTableName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -60,7 +66,7 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	tableName := d.Get(names.AttrTableName).(string)
-	input := &dynamodb.UpdateContributorInsightsInput{
+	input := dynamodb.UpdateContributorInsightsInput{
 		ContributorInsightsAction: awstypes.ContributorInsightsActionEnable,
 		TableName:                 aws.String(tableName),
 	}
@@ -71,7 +77,11 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 		input.IndexName = aws.String(indexName)
 	}
 
-	_, err := conn.UpdateContributorInsights(ctx, input)
+	if v, ok := d.GetOk(names.AttrMode); ok {
+		input.ContributorInsightsMode = awstypes.ContributorInsightsMode(v.(string))
+	}
+
+	_, err := conn.UpdateContributorInsights(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DynamoDB Contributor Insights for table (%s): %s", tableName, err)
@@ -108,6 +118,7 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("index_name", output.IndexName)
+	d.Set(names.AttrMode, output.ContributorInsightsMode)
 	d.Set(names.AttrTableName, output.TableName)
 
 	return diags
@@ -122,17 +133,16 @@ func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &dynamodb.UpdateContributorInsightsInput{
+	input := dynamodb.UpdateContributorInsightsInput{
 		ContributorInsightsAction: awstypes.ContributorInsightsActionDisable,
 		TableName:                 aws.String(tableName),
 	}
-
 	if indexName != "" {
 		input.IndexName = aws.String(indexName)
 	}
 
 	log.Printf("[INFO] Deleting DynamoDB Contributor Insights: %s", d.Id())
-	_, err = conn.UpdateContributorInsights(ctx, input)
+	_, err = conn.UpdateContributorInsights(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -168,14 +178,14 @@ func contributorInsightsParseResourceID(id string) (string, string, error) {
 }
 
 func findContributorInsightsByTwoPartKey(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) (*dynamodb.DescribeContributorInsightsOutput, error) {
-	input := &dynamodb.DescribeContributorInsightsInput{
+	input := dynamodb.DescribeContributorInsightsInput{
 		TableName: aws.String(tableName),
 	}
 	if indexName != "" {
 		input.IndexName = aws.String(indexName)
 	}
 
-	output, err := findContributorInsights(ctx, conn, input)
+	output, err := findContributorInsights(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err

@@ -42,7 +42,7 @@ func validNameForDataSource(v any, k string) (ws []string, es []error) {
 
 	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and be comprised of only [0-9A-Za-z_/-]", k))
+			"%q must begin with 'alias/' and only contain [0-9A-Za-z_/-]", k))
 	}
 	return
 }
@@ -56,7 +56,7 @@ func validNameForResource(v any, k string) (ws []string, es []error) {
 
 	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and be comprised of only [0-9A-Za-z_/-]", k))
+			"%q must begin with 'alias/' and only contain [0-9A-Za-z_/-]", k))
 	}
 	return
 }
@@ -87,7 +87,7 @@ func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	}
 
 	if _, err := arn.Parse(value); err != nil {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %w", k, value, err))
 		return
 	}
 
@@ -113,7 +113,7 @@ func validateKeyAliasARN(v any, k string) (ws []string, errors []error) {
 	}
 
 	if _, err := arn.Parse(value); err != nil {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %w", k, value, err))
 		return
 	}
 

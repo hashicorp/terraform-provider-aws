@@ -216,6 +216,28 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 	})
 }
 
+func TestAccELBV2LoadBalancerDataSource_nlbSecondaryIPAddresses(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb.nlb_test_with_arn"
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerDataSourceConfig_nlbSecondaryIPAddresses(rName, 3, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "secondary_ips_auto_assigned_per_subnet", resourceName, "secondary_ips_auto_assigned_per_subnet"),
+				),
+			},
+		},
+	})
+}
+
 func testAccLoadBalancerDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
@@ -396,4 +418,12 @@ data "aws_alb" "alb_test_with_tags" {
   tags = aws_alb.test.tags
 }
 `, rName))
+}
+
+func testAccLoadBalancerDataSourceConfig_nlbSecondaryIPAddresses(rName string, subnetCount, addressCount int) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_nlbSecondaryIPAddresses(rName, subnetCount, addressCount), `
+data "aws_lb" "nlb_test_with_arn" {
+  arn = aws_lb.test.arn
+}
+`)
 }

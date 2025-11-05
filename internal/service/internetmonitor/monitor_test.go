@@ -9,31 +9,29 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinternetmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_internetmonitor_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "internetmonitor", regexache.MustCompile(`monitor/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.#", "1"),
@@ -53,7 +51,7 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_status(rName, "INACTIVE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "INACTIVE"),
 				),
 			},
@@ -63,19 +61,19 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 
 func TestAccInternetMonitorMonitor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_internetmonitor_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinternetmonitor.ResourceMonitor(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,19 +84,19 @@ func TestAccInternetMonitorMonitor_disappears(t *testing.T) {
 
 func TestAccInternetMonitorMonitor_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_internetmonitor_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -111,7 +109,7 @@ func TestAccInternetMonitorMonitor_tags(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -120,7 +118,7 @@ func TestAccInternetMonitorMonitor_tags(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -131,19 +129,19 @@ func TestAccInternetMonitorMonitor_tags(t *testing.T) {
 
 func TestAccInternetMonitorMonitor_healthEventsConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_internetmonitor_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitorConfig_healthEventsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.availability_score_threshold", "50"),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.performance_score_threshold", "95"),
@@ -157,7 +155,7 @@ func TestAccInternetMonitorMonitor_healthEventsConfig(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_healthEventsConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.availability_score_threshold", "75"),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.performance_score_threshold", "85"),
@@ -169,19 +167,19 @@ func TestAccInternetMonitorMonitor_healthEventsConfig(t *testing.T) {
 
 func TestAccInternetMonitorMonitor_log(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_internetmonitor_monitor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitorConfig_log(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.0.s3_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.0.s3_config.0.bucket_name", rName),
@@ -196,9 +194,9 @@ func TestAccInternetMonitorMonitor_log(t *testing.T) {
 	})
 }
 
-func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMonitorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InternetMonitorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).InternetMonitorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_internetmonitor_monitor" {
@@ -207,7 +205,7 @@ func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfinternetmonitor.FindMonitorByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -222,14 +220,14 @@ func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckMonitorExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckMonitorExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InternetMonitorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).InternetMonitorClient(ctx)
 
 		_, err := tfinternetmonitor.FindMonitorByName(ctx, conn, rs.Primary.ID)
 

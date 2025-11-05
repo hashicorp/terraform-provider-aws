@@ -1257,8 +1257,8 @@ func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta a
 		TopicRulePayload: expandTopicRulePayload(d),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.CreateTopicRule(ctx, input)
 		})
 
@@ -1387,8 +1387,8 @@ func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			TopicRulePayload: expandTopicRulePayload(d),
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-			func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout,
+			func(ctx context.Context) (any, error) {
 				return conn.ReplaceTopicRule(ctx, input)
 			})
 

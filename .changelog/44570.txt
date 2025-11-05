@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_notebook_instance: Add `notebook-al2023-v1` to valid `platform_identifier` values
+```

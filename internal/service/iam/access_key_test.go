@@ -242,11 +242,11 @@ func testDecryptSecretKeyAndTest(nAccessKey, key string) resource.TestCheckFunc 
 		// have it. We can verify that decrypting it does not error
 		_, err := pgpkeys.DecryptBytes(secret, key)
 		if err != nil {
-			return fmt.Errorf("Error decrypting secret: %s", err)
+			return fmt.Errorf("Error decrypting secret: %w", err)
 		}
 		_, err = pgpkeys.DecryptBytes(password, key)
 		if err != nil {
-			return fmt.Errorf("Error decrypting password: %s", err)
+			return fmt.Errorf("Error decrypting password: %w", err)
 		}
 
 		return nil

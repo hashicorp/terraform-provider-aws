@@ -255,7 +255,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
-							return fmt.Errorf("could not convert string to int: %v", err)
+							return fmt.Errorf("could not convert string to int: %w", err)
 						}
 
 						if intValue <= 0 {
@@ -272,7 +272,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_minor_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
-							return fmt.Errorf("could not convert string to int: %v", err)
+							return fmt.Errorf("could not convert string to int: %w", err)
 						}
 
 						if intValue <= 0 {
@@ -289,7 +289,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
-							return fmt.Errorf("could not convert string to int: %v", err)
+							return fmt.Errorf("could not convert string to int: %w", err)
 						}
 
 						if intValue <= 0 {
@@ -301,7 +301,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_minor_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
-							return fmt.Errorf("could not convert string to int: %v", err)
+							return fmt.Errorf("could not convert string to int: %w", err)
 						}
 
 						if intValue <= 0 {

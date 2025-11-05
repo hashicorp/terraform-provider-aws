@@ -5,6 +5,7 @@ package ec2
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
@@ -13,7 +14,7 @@ func describeSpotFleetInstancesPages(ctx context.Context, conn *ec2.Client, inpu
 	for {
 		output, err := conn.DescribeSpotFleetInstances(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -29,7 +30,7 @@ func describeSpotFleetRequestHistoryPages(ctx context.Context, conn *ec2.Client,
 	for {
 		output, err := conn.DescribeSpotFleetRequestHistory(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -45,7 +46,7 @@ func describeVPCBlockPublicAccessExclusionsPages(ctx context.Context, conn *ec2.
 	for {
 		output, err := conn.DescribeVpcBlockPublicAccessExclusions(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -61,7 +62,7 @@ func describeVPCEndpointAssociationsPages(ctx context.Context, conn *ec2.Client,
 	for {
 		output, err := conn.DescribeVpcEndpointAssociations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -77,7 +78,7 @@ func describeVPCEndpointServicesPages(ctx context.Context, conn *ec2.Client, inp
 	for {
 		output, err := conn.DescribeVpcEndpointServices(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

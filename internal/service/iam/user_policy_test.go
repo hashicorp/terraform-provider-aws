@@ -247,14 +247,9 @@ func testAccCheckUserPolicyExists(ctx context.Context, n string, v *string) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		userName, policyName, err := tfiam.UserPolicyParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		output, err := tfiam.FindUserPolicyByTwoPartKey(ctx, conn, userName, policyName)
+		output, err := tfiam.FindUserPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -275,12 +270,7 @@ func testAccCheckUserPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			userName, policyName, err := tfiam.UserPolicyParseID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfiam.FindUserPolicyByTwoPartKey(ctx, conn, userName, policyName)
+			_, err := tfiam.FindUserPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue

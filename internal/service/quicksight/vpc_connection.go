@@ -421,7 +421,7 @@ func findVPCConnection(ctx context.Context, conn *quicksight.Client, input *quic
 func retryVPCConnectionCreate(ctx context.Context, conn *quicksight.Client, in *quicksight.CreateVPCConnectionInput) (*quicksight.CreateVPCConnectionOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx,
 		iamPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateVPCConnection(ctx, in)
 		},
 		func(err error) (bool, error) {

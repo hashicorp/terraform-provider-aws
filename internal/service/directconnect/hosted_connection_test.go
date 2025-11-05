@@ -60,7 +60,9 @@ func testAccCheckHostedConnectionDestroy(ctx context.Context, providerFunc func(
 				continue
 			}
 
-			_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID)
+			// Get the parent connection ID from the resource attributes
+			parentConnectionID := rs.Primary.Attributes[names.AttrConnectionID]
+			_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID, parentConnectionID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -86,7 +88,10 @@ func testAccCheckHostedConnectionExists(ctx context.Context, n string) resource.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID)
+		// Get the parent connection ID from the resource state
+		parentConnectionID := rs.Primary.Attributes[names.AttrConnectionID]
+
+		_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID, parentConnectionID)
 
 		return err
 	}

@@ -313,7 +313,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *neptune.C
 		GlobalClusterIdentifier:  aws.String(globalClusterID),
 	}
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.ModifyGlobalCluster(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -397,7 +397,7 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, conn *neptune.C
 				EngineVersion:       aws.String(engineVersion),
 			}
 			_, err = tfresource.RetryWhen(ctx, timeout,
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.ModifyDBCluster(ctx, input, optFn)
 				},
 				func(err error) (bool, error) {
@@ -448,7 +448,7 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, conn *neptune.C
 				EngineVersion:       aws.String(engineVersion),
 			}
 			_, err = tfresource.RetryWhen(ctx, timeout,
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.ModifyDBCluster(ctx, input, optFn)
 				},
 				func(err error) (bool, error) {

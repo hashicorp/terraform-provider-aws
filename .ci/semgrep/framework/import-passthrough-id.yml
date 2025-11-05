@@ -4,7 +4,7 @@ rules:
     message: Prefer `resource.ImportStatePassthroughID` to directly setting attribute
     paths:
       include:
-        - internal/service/
+        - "/internal/service"
     pattern: $RESP.Diagnostics.Append($RESP.State.SetAttribute(ctx, path.Root($X), $REQ.ID)...)
     severity: WARNING
     fix: resource.ImportStatePassthroughID(ctx, path.Root($X), $REQ, $RESP)

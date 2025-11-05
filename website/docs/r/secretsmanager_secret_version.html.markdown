@@ -81,6 +81,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_secretsmanager_secret_version.example
+  identity = {
+    secret_id  = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456"
+    version_id = "xxxxx-xxxxxxx-xxxxxxx-xxxxx"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `secret_id` - (String) ID of the secret.
+* `version_id` - (String) ID of the secret version.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_version` using the secret ID and version ID. For example:
 
 ```terraform

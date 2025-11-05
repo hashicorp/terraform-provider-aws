@@ -51,6 +51,7 @@ This data source exports the following attributes in addition to the arguments a
 * `enable_private_gua` - If private GUA is enabled.
 * `id` - ID of the IPAM resource.
 * `ipam_region` - Region that the IPAM exists in.
+* `metered_account` - AWS account that is charged for active IP addresses managed in IPAM.
 * `operating_regions` - Regions that the IPAM is configured to operate in.
 * `owner_id` - ID of the account that owns this IPAM.
 * `private_default_scope_id` - ID of the default private scope.
@@ -62,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tier` - IPAM Tier.
 * `tags` - Tags of the IPAM resource.
 
-<!-- cache-key: cdktf-0.20.8 input-1e20b716f80efd5e950694cb75b2e7015ac1de6c5e4b6c7949e7e8c38e4d5ebb -->
+<!-- cache-key: cdktf-0.20.8 input-9257a26614da7853edb77604542b0b4cced869cfb92a1dfbcae10caaa5a33527 -->

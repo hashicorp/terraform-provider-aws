@@ -998,13 +998,13 @@ func startChannel(ctx context.Context, conn *medialive.Client, timeout time.Dura
 	})
 
 	if err != nil {
-		return fmt.Errorf("starting Medialive Channel (%s): %s", id, err)
+		return fmt.Errorf("starting Medialive Channel (%s): %w", id, err)
 	}
 
 	_, err = waitChannelStarted(ctx, conn, id, timeout)
 
 	if err != nil {
-		return fmt.Errorf("waiting for Medialive Channel (%s) start: %s", id, err)
+		return fmt.Errorf("waiting for Medialive Channel (%s) start: %w", id, err)
 	}
 
 	return nil
@@ -1016,13 +1016,13 @@ func stopChannel(ctx context.Context, conn *medialive.Client, timeout time.Durat
 	})
 
 	if err != nil {
-		return fmt.Errorf("stopping Medialive Channel (%s): %s", id, err)
+		return fmt.Errorf("stopping Medialive Channel (%s): %w", id, err)
 	}
 
 	_, err = waitChannelStopped(ctx, conn, id, timeout)
 
 	if err != nil {
-		return fmt.Errorf("waiting for Medialive Channel (%s) stop: %s", id, err)
+		return fmt.Errorf("waiting for Medialive Channel (%s) stop: %w", id, err)
 	}
 
 	return nil

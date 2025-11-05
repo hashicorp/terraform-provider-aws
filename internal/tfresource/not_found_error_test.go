@@ -6,9 +6,11 @@ package tfresource
 import (
 	"errors"
 	"fmt"
+	"iter"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 )
 
 func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
@@ -167,5 +169,127 @@ func TestTooManyResultsErrorIs(t *testing.T) {
 				t.Errorf("got %t, expected %t", ok, testCase.expected)
 			}
 		})
+	}
+}
+
+func TestAssertSingleValueResult(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input         []int
+		expectedValue int
+		expectedError error
+	}{
+		"empty slice": {
+			input:         []int{},
+			expectedError: NewEmptyResultError(nil),
+		},
+		"single element": {
+			input:         []int{42},
+			expectedValue: 42,
+		},
+		"multiple elements": {
+			input:         []int{42, 43},
+			expectedError: NewTooManyResultsError(2, nil),
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := AssertSingleValueResult(testCase.input)
+
+			if testCase.expectedError != nil {
+				if err == nil {
+					t.Errorf("expected error: %v, got nil", testCase.expectedError)
+				} else if err.Error() != testCase.expectedError.Error() {
+					t.Errorf("expected error: %v, got %v", testCase.expectedError, err)
+				}
+			} else if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			if result == nil {
+				if testCase.expectedError == nil {
+					t.Errorf("expected %d, got nil", testCase.expectedValue)
+				}
+				return
+			} else if *result != testCase.expectedValue {
+				t.Errorf("expected %d, got %d", testCase.expectedValue, *result)
+			}
+		})
+	}
+}
+
+func TestAssertSingleValueResultIterErr(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input         iter.Seq2[int, error]
+		expectedValue int
+		expectedError error
+	}{
+		"empty slice": {
+			input:         tfiter.Null2[int, error](),
+			expectedError: NewEmptyResultError(nil),
+		},
+		"single element": {
+			input:         valuesWithErrors([]int{42}),
+			expectedValue: 42,
+		},
+		"multiple elements": {
+			input:         valuesWithErrors([]int{42, 43}),
+			expectedError: NewTooManyResultsError(2, nil),
+		},
+		"with error": {
+			input:         valueError(errors.New("test error")),
+			expectedError: errors.New("test error"),
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := AssertSingleValueResultIterErr(testCase.input)
+
+			if testCase.expectedError != nil {
+				if err == nil {
+					t.Errorf("expected error: %v, got nil", testCase.expectedError)
+				} else if err.Error() != testCase.expectedError.Error() {
+					t.Errorf("expected error: %v, got %v", testCase.expectedError, err)
+				}
+			} else if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			if result == nil {
+				if testCase.expectedError == nil {
+					t.Errorf("expected %d, got nil", testCase.expectedValue)
+				}
+				return
+			} else if *result != testCase.expectedValue {
+				t.Errorf("expected %d, got %d", testCase.expectedValue, *result)
+			}
+		})
+	}
+}
+
+func valuesWithErrors(values []int) iter.Seq2[int, error] {
+	return func(yield func(int, error) bool) {
+		for _, v := range values {
+			if !yield(v, nil) {
+				break
+			}
+		}
+	}
+}
+
+func valueError(err error) iter.Seq2[int, error] {
+	return func(yield func(int, error) bool) {
+		if !yield(0, err) {
+			return
+		}
 	}
 }

@@ -152,6 +152,10 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
+				Config:      testAccServiceQuotaDataSourceConfig_name("vpc", setQuotaQuotaName+"nonexist"),
+				ExpectError: regexache.MustCompile(`Service Quotas Service Quota`),
+			},
+			{
 				Config: testAccServiceQuotaDataSourceConfig_name("vpc", setQuotaQuotaName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", acctest.CtTrue),

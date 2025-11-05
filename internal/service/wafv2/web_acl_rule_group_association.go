@@ -629,7 +629,7 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 	}
 
 	const timeout = 5 * time.Minute
-	_, err = tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateWebACL(ctx, updateInput)
 	})
 
@@ -952,7 +952,7 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err = tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, updateTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, updateTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateWebACL(ctx, updateInput)
 	})
 
@@ -1043,7 +1043,7 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 	}
 
 	const timeout = 5 * time.Minute
-	_, err = tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateWebACL(ctx, updateInput)
 	})
 

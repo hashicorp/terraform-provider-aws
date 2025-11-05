@@ -270,6 +270,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_maintenance_window_task.example
+  identity = {
+    window_id = "mw-0c50858d01EXAMPLE"
+    id        = "4f7ca192-7e9a-40fe-9192-5cb15EXAMPLE"
+  }
+}
+
+resource "aws_ssm_maintenance_window_task" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `windowId` - (String) ID of the maintenance window.
+* `id` - (String) ID of the maintenance window task.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Maintenance Window Task using the `windowId` and `windowTaskId` separated by `/`. For example:
 
 ```typescript
@@ -286,7 +314,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     SsmMaintenanceWindowTask.generateConfigForImport(
       this,
-      "task",
+      "example",
       "<window_id>/<window_task_id>"
     );
   }
@@ -297,7 +325,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import AWS Maintenance Window Task using the `windowId` and `windowTaskId` separated by `/`. For example:
 
 ```console
-% terraform import aws_ssm_maintenance_window_task.task <window_id>/<window_task_id>
+% terraform import aws_ssm_maintenance_window_task.example <window_id>/<window_task_id>
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a15093cae75d3ea85c62bc1be18d18e6c07e1c8cee1c561d74a33f9d0e518a2f -->
+<!-- cache-key: cdktf-0.20.8 input-31a6f3156a7aa73769acba4cfdb46057c9766f4b23b259cea54a621621069c57 -->

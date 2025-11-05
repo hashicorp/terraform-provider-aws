@@ -20,12 +20,17 @@ import (
 func TestAccEC2SerialConsoleAccess_serial(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccEC2SerialConsoleAccess_basic,
-		"Identity":      testAccEC2SerialConsoleAccess_IdentitySerial,
+	testCases := map[string]map[string]func(t *testing.T){
+		"Resource": {
+			acctest.CtBasic: testAccEC2SerialConsoleAccess_basic,
+			"Identity":      testAccEC2SerialConsoleAccess_IdentitySerial,
+		},
+		"DataSource": {
+			acctest.CtBasic: testAccEC2SerialConsoleAccessDataSource_basic,
+		},
 	}
 
-	acctest.RunSerialTests1Level(t, testCases, 0)
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccEC2SerialConsoleAccess_basic(t *testing.T) {

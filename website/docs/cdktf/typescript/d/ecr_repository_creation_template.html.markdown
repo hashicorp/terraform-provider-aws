@@ -50,6 +50,7 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - The description for this template.
 * `encryptionConfiguration` - Encryption configuration for any created repositories. See [Encryption Configuration](#encryption-configuration) below.
 * `imageTagMutability` - The tag mutability setting for any created repositories.
+* `imageTagMutabilityExclusionFilter` - Block that defines filters to specify which image tags can override the default tag mutability setting.
 * `lifecyclePolicy` - The lifecycle policy document to apply to any created repositories.
 * `registryId` - The registry ID the repository creation template applies to.
 * `repositoryPolicy` - The registry policy document to apply to any created repositories.
@@ -60,4 +61,9 @@ This data source exports the following attributes in addition to the arguments a
 * `encryptionType` - Encryption type to use for any created repositories, either `AES256` or `KMS`.
 * `kmsKey` - If `encryptionType` is `KMS`, the ARN of the KMS key used.
 
-<!-- cache-key: cdktf-0.20.8 input-067c588d58c70adc384828a0005b1b14f460fa320de319853b9fb354d10917a7 -->
+### Image Tag Mutability Exclusion Filter
+
+* `filter` - The filter pattern to use for excluding image tags from the mutability setting.
+* `filterType` - The type of filter to use.
+
+<!-- cache-key: cdktf-0.20.8 input-c0dfec454d7833e695583f00e64db173355f88121792024f33c165d878d1041b -->

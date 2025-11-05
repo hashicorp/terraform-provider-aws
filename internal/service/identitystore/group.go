@@ -37,6 +37,10 @@ func resourceGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -123,6 +127,8 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading IdentityStore Group (%s): %s", d.Id(), err)
 	}
 
+	groupARN := meta.(*conns.AWSClient).GlobalARNNoAccount(ctx, "identitystore", "group/"+groupID)
+	d.Set(names.AttrARN, groupARN)
 	d.Set(names.AttrDescription, out.Description)
 	d.Set(names.AttrDisplayName, out.DisplayName)
 	if err := d.Set("external_ids", flattenExternalIDs(out.ExternalIds)); err != nil {

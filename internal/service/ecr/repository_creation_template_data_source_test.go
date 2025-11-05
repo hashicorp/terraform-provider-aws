@@ -66,6 +66,31 @@ func TestAccECRRepositoryCreationTemplateDataSource_root(t *testing.T) {
 	})
 }
 
+func TestAccECRRepositoryCreationTemplateDataSource_mutabilityWithExclusion(t *testing.T) {
+	ctx := acctest.Context(t)
+	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	dataSource := "data.aws_ecr_repository_creation_template.root"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRepositoryCreationTemplateDataSourceConfig_mutabilityWithExclusion(repositoryPrefix, "latest*", "prod-*"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSource, "image_tag_mutability", string(types.ImageTagMutabilityMutableWithExclusion)),
+					resource.TestCheckResourceAttr(dataSource, "image_tag_mutability_exclusion_filter.#", "2"),
+					resource.TestCheckResourceAttr(dataSource, "image_tag_mutability_exclusion_filter.0.filter", "latest*"),
+					resource.TestCheckResourceAttr(dataSource, "image_tag_mutability_exclusion_filter.0.filter_type", string(types.ImageTagMutabilityExclusionFilterTypeWildcard)),
+					resource.TestCheckResourceAttr(dataSource, "image_tag_mutability_exclusion_filter.1.filter", "prod-*"),
+					resource.TestCheckResourceAttr(dataSource, "image_tag_mutability_exclusion_filter.1.filter_type", string(types.ImageTagMutabilityExclusionFilterTypeWildcard)),
+				),
+			},
+		},
+	})
+}
+
 func testAccRepositoryCreationTemplateDataSourceConfig_basic(repositoryPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository_creation_template" "test" {
@@ -100,4 +125,36 @@ data "aws_ecr_repository_creation_template" "root" {
   prefix = aws_ecr_repository_creation_template.root.prefix
 }
 `
+}
+
+func testAccRepositoryCreationTemplateDataSourceConfig_mutabilityWithExclusion(repositoryPrefix, filter1, filter2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository_creation_template" "test" {
+  prefix = %[1]q
+
+  applied_for = [
+    "PULL_THROUGH_CACHE",
+    "REPLICATION",
+  ]
+
+  resource_tags = {
+    Foo = "Bar"
+  }
+
+  image_tag_mutability = "MUTABLE_WITH_EXCLUSION"
+
+  image_tag_mutability_exclusion_filter {
+    filter      = %[2]q
+    filter_type = "WILDCARD"
+  }
+
+  image_tag_mutability_exclusion_filter {
+    filter      = %[3]q
+    filter_type = "WILDCARD"
+  }
+}
+data "aws_ecr_repository_creation_template" "root" {
+  prefix = aws_ecr_repository_creation_template.test.prefix
+}
+`, repositoryPrefix, filter1, filter2)
 }

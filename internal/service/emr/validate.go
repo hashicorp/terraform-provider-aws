@@ -19,7 +19,7 @@ func validCustomAMIID(v any, k string) (ws []string, errors []error) {
 
 	if !regexache.MustCompile(`^ami\-[0-9a-z]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q must begin with 'ami-' and be comprised of only [0-9a-z]: %v", k, value))
+			"%q must begin with 'ami-' and only contain [0-9a-z]: %v", k, value))
 	}
 
 	return

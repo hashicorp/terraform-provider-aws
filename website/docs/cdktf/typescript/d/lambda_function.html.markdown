@@ -202,6 +202,7 @@ This data source exports the following attributes in addition to the arguments a
 * `signingProfileVersionArn` - ARN for a signing profile version.
 * `sourceCodeHash` - (**Deprecated** use `codeSha256` instead) Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `sourceCodeSize` - Size in bytes of the function .zip file.
+* `source_kms_key_arn` - ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package.
 * `tags` - Map of tags assigned to the Lambda Function.
 * `timeout` - Function execution time at which Lambda should terminate the function.
 * `tracingConfig` - Tracing settings of the function. [See below](#tracing_config-attribute-reference).
@@ -242,4 +243,4 @@ This data source exports the following attributes in addition to the arguments a
 * `subnetIds` - List of subnet IDs associated with the Lambda function.
 * `vpcId` - ID of the VPC.
 
-<!-- cache-key: cdktf-0.20.8 input-200be751c3b592b14918f59d2e6b6f393f3287d111c99f16f6143303ff4aca47 -->
+<!-- cache-key: cdktf-0.20.8 input-01a020b57df69ce25ee829fe5a0dafa7346e3fd8811540f5115dc20790ac9d27 -->

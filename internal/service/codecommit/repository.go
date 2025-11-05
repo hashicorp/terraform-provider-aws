@@ -229,7 +229,7 @@ func updateRepositoryDefaultBranch(ctx context.Context, conn *codecommit.Client,
 	output, err := conn.ListBranches(ctx, inputL)
 
 	if err != nil {
-		return fmt.Errorf("listing CodeCommit Repository (%s) branches: %s", name, err)
+		return fmt.Errorf("listing CodeCommit Repository (%s) branches: %w", name, err)
 	}
 
 	if len(output.Branches) == 0 {

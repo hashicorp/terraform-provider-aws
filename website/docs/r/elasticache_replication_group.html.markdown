@@ -95,6 +95,39 @@ resource "aws_elasticache_replication_group" "baz" {
 }
 ```
 
+### Redis OSS/Valkey Cluster Mode Enabled with Node Group Configuration
+
+To create a cluster with specific availability zone placement and keyspace distribution:
+
+```terraform
+resource "aws_elasticache_replication_group" "example" {
+  replication_group_id       = "tf-redis-cluster"
+  description                = "example description"
+  node_type                  = "cache.t2.small"
+  port                       = 6379
+  parameter_group_name       = "default.redis3.2.cluster.on"
+  automatic_failover_enabled = true
+
+  num_node_groups = 2
+
+  node_group_configuration {
+    node_group_id              = "0001"
+    primary_availability_zone  = "us-west-2a"
+    replica_availability_zones = ["us-west-2b"]
+    replica_count              = 1
+    slots                      = "0-8191"
+  }
+
+  node_group_configuration {
+    node_group_id              = "0002"
+    primary_availability_zone  = "us-west-2b"
+    replica_availability_zones = ["us-west-2a"]
+    replica_count              = 1
+    slots                      = "8192-16383"
+  }
+}
+```
+
 ### Redis Log Delivery configuration
 
 ```terraform
@@ -235,6 +268,7 @@ The following arguments are optional:
   Updates will occur before other modifications.
   Conflicts with `num_node_groups` and `replicas_per_node_group`.
   Defaults to `1`.
+* `node_group_configuration` - (Optional) Configuration block for node groups (shards). Can be specified only if `num_node_groups` is set. Conflicts with `preferred_cache_cluster_azs`. See [Node Group Configuration](#node-group-configuration) below for more details.
 * `num_node_groups` - (Optional) Number of node groups (shards) for this Redis replication group.
   Changing this number will trigger a resizing operation before other settings modifications.
   Conflicts with `num_cache_clusters`.
@@ -271,6 +305,18 @@ The `log_delivery_configuration` block allows the streaming of Redis OSS/Valkey 
 * `destination_type` - For CloudWatch Logs use `cloudwatch-logs` or for Kinesis Data Firehose use `kinesis-firehose`.
 * `log_format` - Valid values are `json` or `text`
 * `log_type` - Valid values are  `slow-log` or `engine-log`. Max 1 of each.
+
+### Node Group Configuration
+
+The `node_group_configuration` block supports the following arguments:
+
+* `node_group_id` - (Optional) ID for the node group. Redis (cluster mode disabled) replication groups don't have node group IDs, so this value is ignored. For Redis (cluster mode enabled) replication groups, the node group ID is a 1 to 4 character alphanumeric string.
+* `primary_availability_zone` - (Optional) Availability zone for the primary node.
+* `primary_outpost_arn` - (Optional) ARN of the Outpost for the primary node.
+* `replica_availability_zones` - (Optional) List of availability zones for the replica nodes.
+* `replica_count` - (Optional) Number of replica nodes in this node group.
+* `replica_outpost_arns` - (Optional) List of ARNs of the Outposts for the replica nodes.
+* `slots` - (Optional) Keyspace for this node group. Format is `start-end` (e.g., `0-5460`). For Redis (cluster mode disabled) replication groups, this value is ignored.
 
 ## Attribute Reference
 

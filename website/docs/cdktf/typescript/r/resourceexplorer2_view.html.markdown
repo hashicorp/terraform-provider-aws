@@ -88,6 +88,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_resourceexplorer2_view.example
+  identity = {
+    "arn" = "arn:aws:resource-explorer-2:us-east-1:123456789012:view/example-view/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111"
+  }
+}
+
+resource "aws_resourceexplorer2_view" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Resource Explorer view.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Resource Explorer views using the `arn`. For example:
 
 ```typescript
@@ -118,4 +139,4 @@ Using `terraform import`, import Resource Explorer views using the `arn`. For ex
 % terraform import aws_resourceexplorer2_view.example arn:aws:resource-explorer-2:us-west-2:123456789012:view/exampleview/e0914f6c-6c27-4b47-b5d4-6b28381a2421
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f37802152093455dbddab53c970210427c4c2dd1ddb98733b92823b676e04b58 -->
+<!-- cache-key: cdktf-0.20.8 input-942d40c3ea8c06cb0cd59757324d4be3cccf00b3d33b7560b14292fce5dfc7ca -->

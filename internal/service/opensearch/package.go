@@ -5,8 +5,11 @@ package opensearch
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
@@ -38,6 +41,12 @@ func resourcePackage() *schema.Resource {
 			"available_package_version": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrEngineVersion: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^Elasticsearch_[0-9]{1}\.[0-9]{1,2}$|^OpenSearch_[0-9]{1,2}\.[0-9]{1,2}$`), "must be in the format 'Elasticsearch_X.Y' or 'OpenSearch_X.Y'"),
 			},
 			"package_description": {
 				Type:     schema.TypeString,
@@ -94,6 +103,10 @@ func resourcePackageCreate(ctx context.Context, d *schema.ResourceData, meta any
 		PackageType:        awstypes.PackageType(d.Get("package_type").(string)),
 	}
 
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
+		input.EngineVersion = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("package_source"); ok {
 		input.PackageSource = expandPackageSource(v.([]any)[0].(map[string]any))
 	}
@@ -106,6 +119,9 @@ func resourcePackageCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId(aws.ToString(output.PackageDetails.PackageID))
 
+	if _, err := waitPackageValidationCompleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for package validation (%s) completed: %s", d.Id(), err)
+	}
 	return append(diags, resourcePackageRead(ctx, d, meta)...)
 }
 
@@ -126,6 +142,7 @@ func resourcePackageRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	d.Set("available_package_version", pkg.AvailablePackageVersion)
+	d.Set(names.AttrEngineVersion, pkg.EngineVersion)
 	d.Set("package_description", pkg.PackageDescription)
 	d.Set("package_id", pkg.PackageID)
 	d.Set("package_name", pkg.PackageName)
@@ -228,5 +245,48 @@ func expandPackageSource(v any) *awstypes.PackageSource {
 	return &awstypes.PackageSource{
 		S3BucketName: aws.String(v.(map[string]any)[names.AttrS3BucketName].(string)),
 		S3Key:        aws.String(v.(map[string]any)["s3_key"].(string)),
+	}
+}
+
+func waitPackageValidationCompleted(ctx context.Context, conn *opensearch.Client, id string) (*opensearch.DescribePackagesOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{"COPYING", "VALIDATING"},
+		Target:     []string{"AVAILABLE"},
+		Refresh:    statusPackageValidation(ctx, conn, id),
+		Timeout:    20 * time.Minute,
+		MinTimeout: 15 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*opensearch.DescribePackagesOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusPackageValidation(ctx context.Context, conn *opensearch.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findPackageByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
+		}
+
+		if output.ErrorDetails != nil {
+			return nil, string(output.PackageStatus), fmt.Errorf("package validation failed: %s, %s, %s", string(output.PackageStatus), aws.ToString(output.ErrorDetails.ErrorType), aws.ToString(output.ErrorDetails.ErrorMessage))
+		}
+
+		return output, string(output.PackageStatus), nil
 	}
 }

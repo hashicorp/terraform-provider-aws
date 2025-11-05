@@ -40,7 +40,7 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_basic(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -70,7 +70,7 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_basic(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -108,7 +108,7 @@ func TestAccSFNStateMachine_expressUpdate(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_typed(rName, "EXPRESS", 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -129,7 +129,7 @@ func TestAccSFNStateMachine_expressUpdate(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_typed(rName, "EXPRESS", 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -164,7 +164,7 @@ func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_typed(rName, "STANDARD", 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -186,7 +186,7 @@ func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
 			{
 				Config: testAccStateMachineConfig_typed(rName, "STANDARD", 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -221,8 +221,8 @@ func TestAccSFNStateMachine_nameGenerated(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_nameGenerated(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
@@ -250,8 +250,8 @@ func TestAccSFNStateMachine_namePrefix(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_namePrefix(rName, "tf-acc-test-prefix-"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
@@ -279,8 +279,8 @@ func TestAccSFNStateMachine_publish(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_publish(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "state_machine_version_arn"),
 				),
@@ -309,8 +309,8 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -322,8 +322,8 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 			},
 			{
 				Config: testAccStateMachineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -331,8 +331,8 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 			},
 			{
 				Config: testAccStateMachineConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -355,8 +355,8 @@ func TestAccSFNStateMachine_tracing(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_tracingDisable(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", acctest.CtFalse),
 				),
@@ -368,8 +368,8 @@ func TestAccSFNStateMachine_tracing(t *testing.T) {
 			},
 			{
 				Config: testAccStateMachineConfig_tracingEnable(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", acctest.CtTrue),
 				),
@@ -392,8 +392,8 @@ func TestAccSFNStateMachine_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_basic(rName, 5),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsfn.ResourceStateMachine(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -416,8 +416,8 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_expressLogConfiguration(rName, string(awstypes.LogLevelError)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -430,8 +430,8 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 			},
 			{
 				Config: testAccStateMachineConfig_expressLogConfiguration(rName, string(awstypes.LogLevelAll)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -456,7 +456,7 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKMSKey(t *test
 	reusePeriodSeconds1 := 900
 	reusePeriodSeconds2 := 450
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -464,8 +464,8 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKMSKey(t *test
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -487,8 +487,8 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKMSKey(t *test
 			//Update periodReuseSeconds
 			{
 				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -505,8 +505,8 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKMSKey(t *test
 			//Update kmsKeyId
 			{
 				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_2(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -523,8 +523,8 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKMSKey(t *test
 			//Update Encryption Key Type
 			{
 				Config: testAccStateMachineConfig_encryptionConfigurationServiceOwnedKey(rName, string(awstypes.EncryptionTypeAwsOwnedKey)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -547,7 +547,7 @@ func TestAccSFNStateMachine_encryptionConfigurationServiceOwnedKey(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	reusePeriodSeconds := 900
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -555,8 +555,8 @@ func TestAccSFNStateMachine_encryptionConfigurationServiceOwnedKey(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_encryptionConfigurationServiceOwnedKey(rName, string(awstypes.EncryptionTypeAwsOwnedKey)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -575,8 +575,8 @@ func TestAccSFNStateMachine_encryptionConfigurationServiceOwnedKey(t *testing.T)
 			//Update Encryption Type
 			{
 				Config: testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(ctx, resourceName, &sm),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStateMachineExists(ctx, resourceName, &sm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -612,7 +612,7 @@ func TestAccSFNStateMachine_definitionValidation(t *testing.T) {
 	})
 }
 
-func testAccCheckExists(ctx context.Context, n string, v *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
+func testAccCheckStateMachineExists(ctx context.Context, n string, v *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
