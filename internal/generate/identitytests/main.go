@@ -643,6 +643,26 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					return namesgen.ConstOrQuote(s)
 				})
 
+			case "CustomInherentRegionIdentity":
+				hasIdentity = true
+				d.IsCustomInherentRegionIdentity = true
+
+				args := common.ParseArgs(m[3])
+				d.identityAttribute = args.Positional[0]
+
+				var attrs []string
+				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+					attrs = strings.Split(attr, ";")
+				}
+				if d.Implementation == tests.ImplementationSDK {
+					attrs = append(attrs, "id")
+				}
+				slices.Sort(attrs)
+				attrs = slices.Compact(attrs)
+				d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
+					return namesgen.ConstOrQuote(s)
+				})
+
 			case "IdentityAttribute":
 				hasIdentity = true
 				args := common.ParseArgs(m[3])
@@ -738,26 +758,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.HasV6_0RefreshError = b
 					}
 				}
-
-			case "CustomInherentRegionIdentity":
-				hasIdentity = true
-				d.IsCustomInherentRegionIdentity = true
-
-				args := common.ParseArgs(m[3])
-				d.identityAttribute = args.Positional[0]
-
-				var attrs []string
-				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-					attrs = strings.Split(attr, ";")
-				}
-				if d.Implementation == tests.ImplementationSDK {
-					attrs = append(attrs, "id")
-				}
-				slices.Sort(attrs)
-				attrs = slices.Compact(attrs)
-				d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
-					return namesgen.ConstOrQuote(s)
-				})
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
