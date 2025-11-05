@@ -144,6 +144,7 @@ type Identity struct {
 	IsCustomInherentRegion     bool
 	customInherentRegionParser RegionalCustomInherentRegionIdentityFunc
 	version                    int64
+	identityUpgraders          []schema.IdentityUpgrader
 }
 
 func (i Identity) HasInherentRegion() bool {
@@ -421,8 +422,9 @@ func RegionalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 	return identity
 }
 
-func VersionedIdentity(version int64, base Identity) Identity {
+func VersionedIdentity(version int64, identityUpgraders []schema.IdentityUpgrader, base Identity) Identity {
 	base.version = version
+	base.identityUpgraders = identityUpgraders
 	return base
 }
 

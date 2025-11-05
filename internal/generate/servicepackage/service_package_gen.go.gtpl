@@ -31,6 +31,18 @@ inttypes.StringIdentityAttribute(
 {{ end -}}
 {{- end }}
 
+{{ define "IdentityUpgradersValue" -}}
+{{- if gt (len .IdentityUpgraders) 0 -}}
+[]schema.IdentityUpgrader{
+	{{- range .IdentityUpgraders -}}
+	{{.}},
+	{{- end -}}
+}
+{{- else -}}
+nil
+{{- end -}}
+{{- end }}
+
 package {{ .ProviderPackage }}
 
 import (
@@ -54,6 +66,7 @@ import (
 {{- if ne .ProviderPackage "meta" }}
 	"github.com/hashicorp/terraform-provider-aws/names"
 {{- end }}
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	{{ range .GoImports -}}
 	{{ if .Alias }}{{ .Alias }} {{ end }}"{{ .Path }}"
 	{{ end }}
@@ -453,7 +466,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			{{- if $value.HasResourceIdentity }}
 				Identity:
 				{{- if $value.IdentityVersion }}
-					inttypes.VersionedIdentity({{ $value.IdentityVersion }},
+					inttypes.VersionedIdentity({{ $value.IdentityVersion }}, {{- template "IdentityUpgradersValue" . -}},
 				{{- end -}}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
@@ -575,7 +588,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			{{- if $value.HasResourceIdentity }}
 				Identity:
 				{{- if $value.IdentityVersion }}
-					inttypes.VersionedIdentity({{ $value.IdentityVersion }},
+					inttypes.VersionedIdentity({{ $value.IdentityVersion }}, {{- template "IdentityUpgradersValue" . -}},
 				{{- end -}}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
