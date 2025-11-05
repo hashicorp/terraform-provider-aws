@@ -19,7 +19,7 @@ var tmpl string
 func main() {
 	const (
 		source   = `../../../internal/tags/tagris/tagris-cfn-terraform-mapping.csv`
-		filename = `../../../internal/tags/tagris/lookup.go`
+		filename = `../../../internal/tags/tagris/lookup_gen.go`
 	)
 	g := common.NewGenerator()
 
