@@ -10,7 +10,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.3.0
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.24.0
-	github.com/YakDriver/smarterr v0.6.0
+	github.com/YakDriver/smarterr v0.7.0
 	github.com/aws/aws-sdk-go-v2 v1.39.5
 	github.com/aws/aws-sdk-go-v2/config v1.31.16
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.20
@@ -45,9 +45,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.2
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.51.0
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.12.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.8.3
-	github.com/aws/aws-sdk-go-v2/service/budgets v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/budgets v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.9
 	github.com/aws/aws-sdk-go-v2/service/chime v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.9
@@ -104,10 +104,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.52.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.260.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.261.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.1
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.67.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.67.1
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/eks v1.74.6
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.0
@@ -150,7 +150,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.27.9
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.9
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.2
-	github.com/aws/aws-sdk-go-v2/service/kinesis v1.41.1
+	github.com/aws/aws-sdk-go-v2/service/kinesis v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.9
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.10
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.32.8
@@ -275,7 +275,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.8
 	github.com/aws/smithy-go v1.23.1
 	github.com/beevik/etree v1.6.0
-	github.com/cedar-policy/cedar-go v1.2.8
+	github.com/cedar-policy/cedar-go v1.2.9
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/gertd/go-pluralize v0.2.1
