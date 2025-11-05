@@ -11,7 +11,7 @@ require (
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.24.0
 	github.com/YakDriver/smarterr v0.7.0
-	github.com/aws/aws-sdk-go-v2 v1.39.5
+	github.com/aws/aws-sdk-go-v2 v1.39.6
 	github.com/aws/aws-sdk-go-v2/config v1.31.16
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.20
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.12
@@ -273,7 +273,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.64.1
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.8
-	github.com/aws/smithy-go v1.23.1
+	github.com/aws/smithy-go v1.23.2
 	github.com/beevik/etree v1.6.0
 	github.com/cedar-policy/cedar-go v1.2.9
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
