@@ -215,7 +215,8 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("default_outbound_queue_id", routingProfile.DefaultOutboundQueueId)
 	d.Set(names.AttrDescription, routingProfile.Description)
 	d.Set(names.AttrInstanceID, instanceID)
-	if err := d.Set("media_concurrencies", flattenMediaConcurrencies(routingProfile.MediaConcurrencies, d.Get("media_concurrencies").(*schema.Set).List())); err != nil {
+	configuredBehaviors := configuredCrossChannelBehaviors(d.Get("media_concurrencies").(*schema.Set).List())
+	if err := d.Set("media_concurrencies", flattenMediaConcurrencies(routingProfile.MediaConcurrencies, configuredBehaviors)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting media_concurrencies: %s", err)
 	}
 	d.Set(names.AttrName, routingProfile.Name)
@@ -502,6 +503,24 @@ func expandMediaConcurrencies(tfList []any) []awstypes.MediaConcurrency {
 	return apiObjects
 }
 
+func configuredCrossChannelBehaviors(configList []any) map[string]bool {
+	configuredBehaviors := make(map[string]bool)
+
+	if len(configList) == 0 {
+		return configuredBehaviors
+	}
+
+	for _, configRaw := range configList {
+		configMap := configRaw.(map[string]any)
+		channel := configMap["channel"].(string)
+		if crossChannelBehaviorList, ok := configMap["cross_channel_behavior"].([]any); ok && len(crossChannelBehaviorList) > 0 {
+			configuredBehaviors[channel] = true
+		}
+	}
+
+	return configuredBehaviors
+}
+
 func expandCrossChannelBehavior(tfList []any) *awstypes.CrossChannelBehavior {
 	if len(tfList) == 0 {
 		return nil
@@ -526,19 +545,8 @@ func flattenCrossChannelBehavior(apiObject *awstypes.CrossChannelBehavior) []map
 	}
 }
 
-func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency, configList ...[]any) []any {
+func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency, configuredBehaviors map[string]bool) []any {
 	tfList := []any{}
-
-	configuredBehaviors := make(map[string]bool)
-	if len(configList) > 0 && configList[0] != nil {
-		for _, configRaw := range configList[0] {
-			configMap := configRaw.(map[string]any)
-			channel := configMap["channel"].(string)
-			if crossChannelBehaviorList, ok := configMap["cross_channel_behavior"].([]any); ok && len(crossChannelBehaviorList) > 0 {
-				configuredBehaviors[channel] = true
-			}
-		}
-	}
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
@@ -548,7 +556,7 @@ func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency, configLis
 
 		channel := string(apiObject.Channel)
 		if apiObject.CrossChannelBehavior != nil {
-			if len(configList) == 0 || configuredBehaviors[channel] {
+			if len(configuredBehaviors) == 0 || configuredBehaviors[channel] {
 				tfMap["cross_channel_behavior"] = flattenCrossChannelBehavior(apiObject.CrossChannelBehavior)
 			}
 		}
