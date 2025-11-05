@@ -23,6 +23,17 @@ resource "aws_connect_routing_profile" "example" {
   media_concurrencies {
     channel     = "VOICE"
     concurrency = 1
+    cross_channel_behavior {
+      behavior_type = "ROUTE_ANY_CHANNEL"
+    }
+  }
+
+  media_concurrencies {
+    channel     = "CHAT"
+    concurrency = 3
+    cross_channel_behavior {
+      behavior_type = "ROUTE_CURRENT_CHANNEL_ONLY"
+    }
   }
 
   queue_configs {
@@ -56,6 +67,11 @@ A `media_concurrencies` block supports the following arguments:
 
 * `channel` - (Required) Specifies the channels that agents can handle in the Contact Control Panel (CCP). Valid values are `VOICE`, `CHAT`, `TASK`.
 * `concurrency` - (Required) Specifies the number of contacts an agent can have on a channel simultaneously. Valid Range for `VOICE`: Minimum value of 1. Maximum value of 1. Valid Range for `CHAT`: Minimum value of 1. Maximum value of 10. Valid Range for `TASK`: Minimum value of 1. Maximum value of 10.
+* `cross_channel_behavior` - (Optional) Defines the cross-channel routing behavior for each traffic type. Out-of-band changes are only detected when this argument is explicitly configured in your Terraform configuration. Documented below.
+
+A `cross_channel_behavior` block supports the following arguments:
+
+* `behavior_type` - (Required) Specifies the cross-channel behavior for routing contacts across multiple channels. `ROUTE_ANY_CHANNEL` allows agents to receive contacts from any channel regardless of what they are currently handling. `ROUTE_CURRENT_CHANNEL_ONLY` restricts agents to receive contacts only from the channel they are currently handling. Valid values are `ROUTE_CURRENT_CHANNEL_ONLY`, `ROUTE_ANY_CHANNEL`.
 
 A `queue_configs` block supports the following arguments:
 
