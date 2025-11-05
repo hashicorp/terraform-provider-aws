@@ -395,7 +395,6 @@ type ResourceDatum struct {
 	HasNoPreExistingResource       bool
 	PreIdentityVersion             *version.Version
 	IsCustomInherentRegionIdentity bool
-	customIdentityAttribute        string
 	IdentityVersions               map[int64]*version.Version
 	tests.CommonArgs
 }
@@ -466,10 +465,6 @@ func (r ResourceDatum) IsARNFormatGlobal() bool {
 
 func (r ResourceDatum) IdentityAttributes() []identityAttribute {
 	return r.identityAttributes
-}
-
-func (r ResourceDatum) CustomIdentityAttribute() string {
-	return namesgen.ConstOrQuote(r.customIdentityAttribute)
 }
 
 func (r ResourceDatum) LatestIdentityVersion() int64 {
@@ -749,7 +744,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.IsCustomInherentRegionIdentity = true
 
 				args := common.ParseArgs(m[3])
-				d.customIdentityAttribute = args.Positional[0]
 				d.identityAttribute = args.Positional[0]
 
 				var attrs []string
