@@ -5,8 +5,6 @@ package ec2
 
 import (
 	"context"
-	"errors"
-	"slices"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -15,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -23,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -143,211 +140,121 @@ func (r *allowedImagesSettingsResource) Schema(ctx context.Context, request reso
 	}
 }
 
-func (r *allowedImagesSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *allowedImagesSettingsResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data allowedImagesSettingsResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var plan allowedImagesSettingsResourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Set the allowed images settings state
-	r.updateAllowedImagesSettingsState(ctx, conn, &plan, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// If we enabled the setting, set the image criteria if provided
-	if plan.State.ValueString() != "disabled" {
-		r.updateImageCriteria(ctx, conn, &plan, &resp.Diagnostics)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
-}
-
-func (r *allowedImagesSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().EC2Client(ctx)
-
-	var state allowedImagesSettingsResourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := conn.GetAllowedImagesSettings(ctx, &ec2.GetAllowedImagesSettingsInput{})
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-		return
-	}
+	_, err := conn.EnableAllowedImagesSettings(ctx, &ec2.EnableAllowedImagesSettingsInput{
+		AllowedImagesSettingsState: data.State.ValueEnum(),
+	})
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
-		return
-	}
-
-	// If the setting is disabled, treat it as deleted
-	if out.State != nil && *out.State == "disabled" {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
-}
-
-func (r *allowedImagesSettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().EC2Client(ctx)
-
-	var plan, state allowedImagesSettingsResourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Check if state has changed (enabled/disabled/audit-mode)
-	if !plan.State.Equal(state.State) {
-		r.updateAllowedImagesSettingsState(ctx, conn, &plan, &resp.Diagnostics)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	if plan.State.ValueString() != "disabled" {
-		r.updateImageCriteria(ctx, conn, &plan, &resp.Diagnostics)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
-}
-
-func (r *allowedImagesSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().EC2Client(ctx)
-
-	var state allowedImagesSettingsResourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	clearCriteriaInput := &ec2.ReplaceImageCriteriaInAllowedImagesSettingsInput{}
-	criteriaOut, err := conn.ReplaceImageCriteriaInAllowedImagesSettings(ctx, clearCriteriaInput)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
-		return
-	}
-	if criteriaOut == nil || !*criteriaOut.ReturnValue {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("failed to clear image criteria"))
-		return
-	}
-
-	// Disable the allowed images settings as we can't delete it
-	input := &ec2.DisableAllowedImagesSettingsInput{}
-
-	out, err := conn.DisableAllowedImagesSettings(ctx, input)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err)
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("response from disabling allowed images settings was nil"))
-		return
-	}
-	if out.AllowedImagesSettingsState != "disabled" {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("failed to disable allowed images settings"), "API returned unexpected state: "+string(out.AllowedImagesSettingsState))
-		return
-	}
-}
-
-func (r *allowedImagesSettingsResource) updateAllowedImagesSettingsState(ctx context.Context, conn *ec2.Client, plan *allowedImagesSettingsResourceModel, diags *diag.Diagnostics) {
-	stateValue := plan.State.ValueString()
-
-	if slices.Contains(awstypes.AllowedImagesSettingsEnabledState.Values(""), awstypes.AllowedImagesSettingsEnabledState(stateValue)) {
-		// Enable with the specified state (enabled or audit-mode)
-		input := ec2.EnableAllowedImagesSettingsInput{
-			AllowedImagesSettingsState: awstypes.AllowedImagesSettingsEnabledState(stateValue),
-		}
-
-		out, err := conn.EnableAllowedImagesSettings(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, diags, err)
-			return
-		}
-		if out == nil {
-			smerr.AddError(ctx, diags, errors.New("response from enabling allowed images settings was nil"))
-			return
-		}
-		if out.AllowedImagesSettingsState != input.AllowedImagesSettingsState {
-			smerr.AddError(ctx, diags, errors.New("returned state setting does not match what was requested"), "API returned unexpected state: "+string(out.AllowedImagesSettingsState))
-			return
-		}
-		smerr.EnrichAppend(ctx, diags, flex.Flatten(ctx, out, plan))
-	} else if slices.Contains(awstypes.AllowedImagesSettingsDisabledState.Values(""), awstypes.AllowedImagesSettingsDisabledState(stateValue)) {
-		// Disable
-		input := &ec2.DisableAllowedImagesSettingsInput{}
-
-		out, err := conn.DisableAllowedImagesSettings(ctx, input)
-		if err != nil {
-			smerr.AddError(ctx, diags, err)
-			return
-		}
-		if out == nil {
-			smerr.AddError(ctx, diags, errors.New("response from disabling allowed images settings was nil"))
-			return
-		}
-		if out.AllowedImagesSettingsState != "disabled" {
-			smerr.AddError(ctx, diags, errors.New("failed to disable allowed images settings"), "API returned unexpected state: "+string(out.AllowedImagesSettingsState))
-			return
-		}
-		smerr.EnrichAppend(ctx, diags, flex.Flatten(ctx, out, plan))
-	} else {
-		smerr.AddError(ctx, diags, errors.New("invalid state requested"))
-	}
-}
-
-func (r *allowedImagesSettingsResource) updateImageCriteria(ctx context.Context, conn *ec2.Client, plan *allowedImagesSettingsResourceModel, diags *diag.Diagnostics) {
-	if plan.ImageCriteria.IsUnknown() {
+		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
 	}
 
 	var input ec2.ReplaceImageCriteriaInAllowedImagesSettingsInput
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	// AWS keeps image criteria options, even if set to disabled - set to empty
-	if !plan.ImageCriteria.IsNull() {
-		smerr.EnrichAppend(ctx, diags, flex.Expand(ctx, plan, &input))
-		if diags.HasError() {
+	_, err = conn.ReplaceImageCriteriaInAllowedImagesSettings(ctx, &input)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+}
+
+func (r *allowedImagesSettingsResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data allowedImagesSettingsResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().EC2Client(ctx)
+
+	out, err := findAllowedImagesSettings(ctx, conn)
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+}
+
+func (r *allowedImagesSettingsResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old allowedImagesSettingsResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().EC2Client(ctx)
+
+	if !new.State.Equal(old.State) {
+		_, err := conn.EnableAllowedImagesSettings(ctx, &ec2.EnableAllowedImagesSettingsInput{
+			AllowedImagesSettingsState: new.State.ValueEnum(),
+		})
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err)
 			return
 		}
 	}
 
-	out, err := conn.ReplaceImageCriteriaInAllowedImagesSettings(ctx, &input)
-	if err != nil {
-		smerr.AddError(ctx, diags, err)
-		return
+	if !new.ImageCriteria.Equal(old.ImageCriteria) {
+		var input ec2.ReplaceImageCriteriaInAllowedImagesSettingsInput
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		_, err := conn.ReplaceImageCriteriaInAllowedImagesSettings(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err)
+			return
+		}
 	}
-	if out == nil {
-		smerr.AddError(ctx, diags, errors.New("response from replacing image criteria was nil"))
-		return
-	}
-	if !*out.ReturnValue {
-		smerr.AddError(ctx, diags, errors.New("response from replacing image criteria indicated failure"))
-		return
-	}
-	smerr.EnrichAppend(ctx, diags, flex.Flatten(ctx, out, plan))
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
-func (r *allowedImagesSettingsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrRegion), req, resp)
+func (r *allowedImagesSettingsResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	conn := r.Meta().EC2Client(ctx)
+
+	_, err := conn.ReplaceImageCriteriaInAllowedImagesSettings(ctx, &ec2.ReplaceImageCriteriaInAllowedImagesSettingsInput{})
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err)
+		return
+	}
+
+	_, err = conn.DisableAllowedImagesSettings(ctx, &ec2.DisableAllowedImagesSettingsInput{})
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err)
+		return
+	}
+}
+
+func (r *allowedImagesSettingsResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrRegion), request, response)
 }
 
 type allowedImagesSettingsResourceModel struct {
