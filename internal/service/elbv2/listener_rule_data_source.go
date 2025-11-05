@@ -313,6 +313,50 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 					},
 				},
 			},
+			"transform": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[transformModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrType: schema.StringAttribute{
+							Computed: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"host_header_rewrite_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[hostHeaderRewriteConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"rewrite": transformRewriteConfigDataSourceSchema(ctx),
+								},
+							},
+						},
+						"url_rewrite_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[urlRewriteConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"rewrite": transformRewriteConfigDataSourceSchema(ctx),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func transformRewriteConfigDataSourceSchema(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[rewriteConfigModel](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"regex": schema.StringAttribute{
+					Computed: true,
+				},
+				"replace": schema.StringAttribute{
+					Computed: true,
+				},
+			},
 		},
 	}
 }
@@ -397,6 +441,7 @@ type listenerRuleDataSourceModel struct {
 	ListenerARN fwtypes.ARN                                        `tfsdk:"listener_arn"`
 	Priority    types.Int32                                        `tfsdk:"priority" autoflex:"-"`
 	Tags        tftags.Map                                         `tfsdk:"tags"`
+	Transform   fwtypes.SetNestedObjectValueOf[transformModel]     `tfsdk:"transform"`
 }
 
 // The API includes a TargetGroupArn field at the root level of the Action. This only applies when Type == "forward"
@@ -506,4 +551,23 @@ type queryStringKeyValuePairModel struct {
 
 type sourceIPConfigModel struct {
 	Values fwtypes.SetValueOf[types.String] `tfsdk:"values"`
+}
+
+type transformModel struct {
+	Type                    types.String                                                  `tfsdk:"type"`
+	HostHeaderRewriteConfig fwtypes.ListNestedObjectValueOf[hostHeaderRewriteConfigModel] `tfsdk:"host_header_rewrite_config"`
+	URLRewriteConfig        fwtypes.ListNestedObjectValueOf[urlRewriteConfigModel]        `tfsdk:"url_rewrite_config"`
+}
+
+type hostHeaderRewriteConfigModel struct {
+	Rewrites fwtypes.ListNestedObjectValueOf[rewriteConfigModel] `tfsdk:"rewrite"`
+}
+
+type urlRewriteConfigModel struct {
+	Rewrites fwtypes.ListNestedObjectValueOf[rewriteConfigModel] `tfsdk:"rewrite"`
+}
+
+type rewriteConfigModel struct {
+	Regex   types.String `tfsdk:"regex"`
+	Replace types.String `tfsdk:"replace"`
 }

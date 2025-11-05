@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless/types"
@@ -229,6 +230,123 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"monitoring_configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_logging_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									names.AttrLogGroupName: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 512),
+									},
+									"log_stream_name_prefix": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 512),
+									},
+									"encryption_key_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"log_types": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrValues: {
+													Type:     schema.TypeSet,
+													Required: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"managed_persistence_monitoring_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"encryption_key_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+						"prometheus_monitoring_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"remote_write_url": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 10280),
+											validation.StringMatch(
+												regexache.MustCompile(`^https://aps-workspaces\.([a-z]{2}-[a-z-]{1,20}-[1-9])\.amazonaws(\.[0-9A-Za-z]{2,4})+/workspaces/[-_.0-9A-Za-z]{1,100}/api/v1/remote_write$`),
+												"remote_write_url must be a valid Amazon Managed Service for Prometheus remote write URL",
+											),
+										),
+									},
+								},
+							},
+						},
+						"s3_monitoring_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_uri": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 10280),
+									},
+									"encryption_key_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"runtime_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -322,6 +440,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.MaximumCapacity = expandMaximumCapacity(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("monitoring_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.MonitoringConfiguration = expandMonitoringConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
 	}
@@ -395,6 +517,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting maximum_capacity: %s", err)
 	}
 
+	if err := d.Set("monitoring_configuration", flattenMonitoringConfiguration(application.MonitoringConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting monitoring_configuration: %s", err)
+	}
+
 	if err := d.Set(names.AttrNetworkConfiguration, []any{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
@@ -466,6 +592,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk("release_label"); ok {
 			input.ReleaseLabel = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("monitoring_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.MonitoringConfiguration = expandMonitoringConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("runtime_configuration"); ok && len(v.([]any)) > 0 {
@@ -1022,4 +1152,248 @@ func flattenRuntimeConfiguration(apiObjects []types.Configuration) []any {
 	}
 
 	return tfList
+}
+
+func expandMonitoringConfiguration(tfMap map[string]any) *types.MonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.MonitoringConfiguration{}
+
+	if v, ok := tfMap["cloudwatch_logging_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.CloudWatchLoggingConfiguration = expandCloudWatchLoggingConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["s3_monitoring_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.S3MonitoringConfiguration = expandS3MonitoringConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["managed_persistence_monitoring_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.ManagedPersistenceMonitoringConfiguration = expandManagedPersistenceMonitoringConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["prometheus_monitoring_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.PrometheusMonitoringConfiguration = expandPrometheusMonitoringConfiguration(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func flattenMonitoringConfiguration(apiObject *types.MonitoringConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CloudWatchLoggingConfiguration; v != nil {
+		tfMap["cloudwatch_logging_configuration"] = []any{flattenCloudWatchLoggingConfiguration(v)}
+	}
+
+	if v := apiObject.S3MonitoringConfiguration; v != nil {
+		tfMap["s3_monitoring_configuration"] = []any{flattenS3MonitoringConfiguration(v)}
+	}
+
+	if v := apiObject.ManagedPersistenceMonitoringConfiguration; v != nil {
+		tfMap["managed_persistence_monitoring_configuration"] = []any{flattenManagedPersistenceMonitoringConfiguration(v)}
+	}
+
+	if v := apiObject.PrometheusMonitoringConfiguration; v != nil {
+		tfMap["prometheus_monitoring_configuration"] = []any{flattenPrometheusMonitoringConfiguration(v)}
+	}
+
+	return []any{tfMap}
+}
+
+func expandCloudWatchLoggingConfiguration(tfMap map[string]any) *types.CloudWatchLoggingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.CloudWatchLoggingConfiguration{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
+		apiObject.LogGroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap["log_stream_name_prefix"].(string); ok && v != "" {
+		apiObject.LogStreamNamePrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["encryption_key_arn"].(string); ok && v != "" {
+		apiObject.EncryptionKeyArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["log_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.LogTypes = expandLogTypes(v.List())
+	}
+
+	return apiObject
+}
+
+func flattenCloudWatchLoggingConfiguration(apiObject *types.CloudWatchLoggingConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
+	}
+
+	if v := apiObject.LogGroupName; v != nil {
+		tfMap[names.AttrLogGroupName] = aws.ToString(v)
+	}
+
+	if v := apiObject.LogStreamNamePrefix; v != nil {
+		tfMap["log_stream_name_prefix"] = aws.ToString(v)
+	}
+
+	if v := apiObject.EncryptionKeyArn; v != nil {
+		tfMap["encryption_key_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.LogTypes; v != nil {
+		tfMap["log_types"] = flattenLogTypes(v)
+	}
+
+	return tfMap
+}
+
+func expandLogTypes(tfList []any) map[string][]string {
+	if tfList == nil {
+		return nil
+	}
+
+	configs := make(map[string][]string)
+	for _, v := range tfList {
+		configData := v.(map[string]any)
+		key := configData[names.AttrName].(string)
+		values := flex.ExpandStringValueSet(configData[names.AttrValues].(*schema.Set))
+		configs[key] = values
+	}
+
+	return configs
+}
+
+func flattenLogTypes(apiObject map[string][]string) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	var out []any
+	for k, v := range apiObject {
+		data := make(map[string]any)
+		data[names.AttrName] = k
+		data[names.AttrValues] = flex.FlattenStringValueSet(v)
+		out = append(out, data)
+	}
+
+	return out
+}
+
+func expandS3MonitoringConfiguration(tfMap map[string]any) *types.S3MonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.S3MonitoringConfiguration{}
+
+	if v, ok := tfMap["log_uri"].(string); ok && v != "" {
+		apiObject.LogUri = aws.String(v)
+	}
+
+	if v, ok := tfMap["encryption_key_arn"].(string); ok && v != "" {
+		apiObject.EncryptionKeyArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenS3MonitoringConfiguration(apiObject *types.S3MonitoringConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.LogUri; v != nil {
+		tfMap["log_uri"] = aws.ToString(v)
+	}
+
+	if v := apiObject.EncryptionKeyArn; v != nil {
+		tfMap["encryption_key_arn"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func expandManagedPersistenceMonitoringConfiguration(tfMap map[string]any) *types.ManagedPersistenceMonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ManagedPersistenceMonitoringConfiguration{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["encryption_key_arn"].(string); ok && v != "" {
+		apiObject.EncryptionKeyArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenManagedPersistenceMonitoringConfiguration(apiObject *types.ManagedPersistenceMonitoringConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
+	}
+
+	if v := apiObject.EncryptionKeyArn; v != nil {
+		tfMap["encryption_key_arn"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func expandPrometheusMonitoringConfiguration(tfMap map[string]any) *types.PrometheusMonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PrometheusMonitoringConfiguration{}
+
+	if v, ok := tfMap["remote_write_url"].(string); ok && v != "" {
+		apiObject.RemoteWriteUrl = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenPrometheusMonitoringConfiguration(apiObject *types.PrometheusMonitoringConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.RemoteWriteUrl; v != nil {
+		tfMap["remote_write_url"] = aws.ToString(v)
+	}
+
+	return tfMap
 }
