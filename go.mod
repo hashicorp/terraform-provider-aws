@@ -189,7 +189,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/odb v1.5.4
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.52.10
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.27.1
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.57.3
