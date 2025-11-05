@@ -16,8 +16,8 @@ Terraform resource for managing an AWS Resilience Hub App.
 
 ```terraform
 resource "aws_resiliencehub_app" "example" {
-  name                    = "example-app"
-  app_assessment_schedule = "Disabled"
+  name                = "example-app"
+  assessment_schedule = "Disabled"
 
   app_template {
     version = "2.0"
@@ -34,6 +34,55 @@ resource "aws_resiliencehub_app" "example" {
 ### Complete Usage with Resources and Terraform Source
 
 ```terraform
+resource "aws_resiliencehub_app" "example" {
+  name                    = "example-app"
+  description             = "Example app with Terraform source"
+  assessment_schedule = "Disabled"
+
+  app_template {
+    version = "2.0"
+
+    resource {
+      name = "lambda-function"
+      type = "AWS::Lambda::Function"
+
+      logical_resource_id {
+        identifier            = "MyLambda"
+        terraform_source_name = "my-terraform-source"
+      }
+    }
+
+    app_component {
+      name           = "appcommon"
+      type           = "AWS::ResilienceHub::AppCommonAppComponent"
+      resource_names = []
+    }
+
+    app_component {
+      name           = "compute-tier"
+      type           = "AWS::ResilienceHub::ComputeAppComponent"
+      resource_names = ["lambda-function"]
+    }
+  }
+
+  resource_mapping {
+    mapping_type          = "Terraform"
+    resource_name         = "lambda-function"
+    terraform_source_name = "my-terraform-source"
+
+    physical_resource_id {
+      type       = "Native"
+      identifier = "s3://${aws_s3_bucket.example.bucket}/terraform.tfstate"
+    }
+  }
+
+  depends_on = [aws_s3_object.tfstate, aws_s3_bucket_policy.example]
+
+  tags = {
+    Environment = "example"
+  }
+}
+
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -93,55 +142,6 @@ resource "aws_s3_object" "tfstate" {
       }
     ]
   })
-}
-
-resource "aws_resiliencehub_app" "example" {
-  name                    = "example-app"
-  description             = "Example app with Terraform source"
-  app_assessment_schedule = "Disabled"
-
-  app_template {
-    version = "2.0"
-
-    resource {
-      name = "lambda-function"
-      type = "AWS::Lambda::Function"
-
-      logical_resource_id {
-        identifier            = "MyLambda"
-        terraform_source_name = "my-terraform-source"
-      }
-    }
-
-    app_component {
-      name           = "appcommon"
-      type           = "AWS::ResilienceHub::AppCommonAppComponent"
-      resource_names = []
-    }
-
-    app_component {
-      name           = "compute-tier"
-      type           = "AWS::ResilienceHub::ComputeAppComponent"
-      resource_names = ["lambda-function"]
-    }
-  }
-
-  resource_mapping {
-    mapping_type          = "Terraform"
-    resource_name         = "lambda-function"
-    terraform_source_name = "my-terraform-source"
-
-    physical_resource_id {
-      type       = "Native"
-      identifier = "s3://${aws_s3_bucket.example.bucket}/terraform.tfstate"
-    }
-  }
-
-  depends_on = [aws_s3_object.tfstate, aws_s3_bucket_policy.example]
-
-  tags = {
-    Environment = "example"
-  }
 }
 ```
 

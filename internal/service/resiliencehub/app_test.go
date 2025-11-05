@@ -36,16 +36,18 @@ func TestAccResilienceHubApp_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resiliencehub", regexache.MustCompile(`app/.+`)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -67,7 +69,7 @@ func TestAccResilienceHubApp_terraformSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_terraformSource(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resiliencehub", regexache.MustCompile(`app/.+`)),
@@ -95,7 +97,7 @@ func TestAccResilienceHubApp_complete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_complete(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Complete test app"),
@@ -124,14 +126,14 @@ func TestAccResilienceHubApp_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccAppConfig_updateTemplate(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
@@ -141,7 +143,7 @@ func TestAccResilienceHubApp_update(t *testing.T) {
 			},
 			{
 				Config: testAccAppConfig_updateResourceMapping(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_mapping.0.mapping_type", "Terraform"),
@@ -160,7 +162,7 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfresiliencehub.FindAppByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfresiliencehub.FindAppByARN(ctx, conn, rs.Primary.Attributes["arn"])
 			if errs.IsA[*retry.NotFoundError](err) {
 				return nil
 			}
@@ -168,7 +170,7 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("ResilienceHub App %s still exists", rs.Primary.ID)
+			return fmt.Errorf("ResilienceHub App %s still exists", rs.Primary.Attributes["arn"])
 		}
 
 		return nil
@@ -184,7 +186,7 @@ func testAccCheckAppExists(ctx context.Context, n string, v *resiliencehub.Descr
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ResilienceHubClient(ctx)
 
-		output, err := tfresiliencehub.FindAppByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfresiliencehub.FindAppByARN(ctx, conn, rs.Primary.Attributes["arn"])
 		if err != nil {
 			return err
 		}
@@ -198,8 +200,7 @@ func testAccCheckAppExists(ctx context.Context, n string, v *resiliencehub.Descr
 func testAccAppConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_app" "test" {
-  name                    = %[1]q
-  app_assessment_schedule = "Disabled"
+  name = %[1]q
 
   app_template {
     version = "2.0"
@@ -280,7 +281,7 @@ resource "aws_s3_object" "tfstate" {
 resource "aws_resiliencehub_app" "test" {
   name                    = %[1]q
   description             = "Test app with S3 Terraform source"
-  app_assessment_schedule = "Disabled"
+  assessment_schedule = "Disabled"
 
   app_template {
     version = "2.0"
@@ -329,7 +330,7 @@ func testAccAppConfig_complete(rName string) string {
 resource "aws_resiliencehub_app" "test" {
   name                    = %[1]q
   description             = "Complete test app"
-  app_assessment_schedule = "Daily"
+  assessment_schedule = "Daily"
 
   app_template {
     version = "2.0"
@@ -384,7 +385,7 @@ func testAccAppConfig_updateTemplate(rName string) string {
 resource "aws_resiliencehub_app" "test" {
   name                    = %[1]q
   description             = "Updated description"
-  app_assessment_schedule = "Disabled"
+  assessment_schedule = "Disabled"
 
   app_template {
     version = "2.0"
@@ -420,7 +421,7 @@ func testAccAppConfig_updateResourceMapping(rName string) string {
 resource "aws_resiliencehub_app" "test" {
   name                    = %[1]q
   description             = "Updated description"
-  app_assessment_schedule = "Disabled"
+  assessment_schedule = "Disabled"
 
   app_template {
     version = "2.0"

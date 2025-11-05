@@ -1,8 +1,6 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-provider "null" {}
-
 resource "aws_resiliencehub_app" "test" {
   name = var.rName
 
@@ -15,32 +13,20 @@ resource "aws_resiliencehub_app" "test" {
       resource_names = []
     }
   }
-
-  tags = {
-    (var.unknownTagKey) = null_resource.test.id
-    (var.knownTagKey)   = var.knownTagValue
-  }
 }
-
-resource "null_resource" "test" {}
 
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
-
-variable "unknownTagKey" {
-  type     = string
-  nullable = false
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.0.0"
+    }
+  }
 }
 
-variable "knownTagKey" {
-  type     = string
-  nullable = false
-}
-
-variable "knownTagValue" {
-  type     = string
-  nullable = false
-}
+provider "aws" {}

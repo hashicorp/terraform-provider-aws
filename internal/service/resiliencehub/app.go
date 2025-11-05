@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,6 +41,8 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resiliencehub;resiliencehub.DescribeAppOutput")
 // @Testing(importStateIdAttribute="arn")
+// @Testing(preIdentityVersion="v5.100.0")
+// @ArnIdentity
 func newAppResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appResource{}
 
@@ -52,9 +55,6 @@ func newAppResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 
 func (r *appResource) ValidateModel(ctx context.Context, schema *schema.Schema) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	// Create a minimal valid state for validation
-	// This is just to ensure the schema and model are compatible
 	return diags
 }
 
@@ -63,18 +63,19 @@ const (
 )
 
 type appResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[appResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"app_assessment_schedule": schema.StringAttribute{
+			"assessment_schedule": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AppAssessmentScheduleType](),
 				Optional:   true,
+				Computed:   true,
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
@@ -85,7 +86,6 @@ func (r *appResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 			"drift_status": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -266,10 +266,10 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	plan.ID = types.StringValue(aws.ToString(output.App.AppArn))
+	plan.AppArn = types.StringValue(aws.ToString(output.App.AppArn))
 
 	// Use AutoFlex to flatten the created app back to plan
-	resp.Diagnostics.Append(flex.Flatten(ctx, output.App, &plan, flex.WithNoIgnoredFieldNames())...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, output.App, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -325,7 +325,7 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	app, err := waitAppCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	app, err := waitAppCreated(ctx, conn, plan.AppArn.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForCreation, ResNameApp, name, err),
@@ -334,12 +334,8 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	// Handle drift status - ensure it's never unknown
-	if app.DriftStatus != "" {
-		plan.DriftStatus = types.StringValue(string(app.DriftStatus))
-	} else {
-		plan.DriftStatus = types.StringValue("NotChecked")
-	}
+	plan.DriftStatus = types.StringValue(string(app.DriftStatus))
+	plan.AssessmentSchedule = fwtypes.StringEnumValue(app.AssessmentSchedule)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -353,31 +349,31 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	conn := r.Meta().ResilienceHubClient(ctx)
 
-	output, err := FindAppByARN(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	output, err := FindAppByARN(ctx, conn, state.AppArn.ValueString())
+	if intretry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionSetting, ResNameApp, state.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionSetting, ResNameApp, state.AppArn.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	// Use AutoFlex to flatten output to state
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &state, flex.WithNoIgnoredFieldNames())...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Ensure ID is set correctly for import
-	state.ID = types.StringValue(aws.ToString(output.AppArn))
+	// Ensure AppArn is set correctly for import
+	state.AppArn = types.StringValue(aws.ToString(output.AppArn))
 
 	// Read app template from draft version
 	templateInput := &resiliencehub.DescribeAppVersionTemplateInput{
-		AppArn:     state.ID.ValueStringPointer(),
+		AppArn:     state.AppArn.ValueStringPointer(),
 		AppVersion: aws.String("draft"),
 	}
 
@@ -415,7 +411,7 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	// First try draft version
 	inputSourcesInput := &resiliencehub.ListAppInputSourcesInput{
-		AppArn:     state.ID.ValueStringPointer(),
+		AppArn:     state.AppArn.ValueStringPointer(),
 		AppVersion: aws.String("draft"),
 	}
 
@@ -451,13 +447,7 @@ func (r *appResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		state.ResourceMapping = resourceMappings
 	}
 
-	// Handle tags - use listTags to get all tags including provider tags
-	tags, err := listTags(ctx, conn, state.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to list tags", err.Error())
-		return
-	}
-	setTagsOut(ctx, tags.Map())
+	setTagsOut(ctx, output.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -477,7 +467,7 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		!plan.AssessmentSchedule.Equal(state.AssessmentSchedule) ||
 		!plan.PolicyArn.Equal(state.PolicyArn) {
 		input := &resiliencehub.UpdateAppInput{
-			AppArn: plan.ID.ValueStringPointer(),
+			AppArn: plan.AppArn.ValueStringPointer(),
 		}
 
 		// Use AutoFlex to expand plan to input
@@ -489,7 +479,7 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		_, err := conn.UpdateApp(ctx, input)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionUpdating, ResNameApp, plan.ID.ValueString(), err),
+				create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionUpdating, ResNameApp, plan.AppArn.ValueString(), err),
 				err.Error(),
 			)
 			return
@@ -506,14 +496,14 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 			}
 
 			templateInput := &resiliencehub.PutDraftAppVersionTemplateInput{
-				AppArn:          plan.ID.ValueStringPointer(),
+				AppArn:          plan.AppArn.ValueStringPointer(),
 				AppTemplateBody: aws.String(templateBody),
 			}
 
 			_, err := conn.PutDraftAppVersionTemplate(ctx, templateInput)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionUpdating, ResNameApp, plan.ID.ValueString(), err),
+					create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionUpdating, ResNameApp, plan.AppArn.ValueString(), err),
 					err.Error(),
 				)
 				return
@@ -533,7 +523,7 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 			// Only call ImportResourcesToDraftAppVersion if we have actual sources to import
 			if len(sourceArns) > 0 || len(terraformSources) > 0 {
 				importInput := &resiliencehub.ImportResourcesToDraftAppVersionInput{
-					AppArn:           plan.ID.ValueStringPointer(),
+					AppArn:           plan.AppArn.ValueStringPointer(),
 					SourceArns:       sourceArns,
 					TerraformSources: terraformSources,
 				}
@@ -541,7 +531,7 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 				_, err := conn.ImportResourcesToDraftAppVersion(ctx, importInput)
 				if err != nil {
 					resp.Diagnostics.AddError(
-						create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionUpdating, ResNameApp, plan.ID.ValueString(), err),
+						create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionUpdating, ResNameApp, plan.AppArn.ValueString(), err),
 						err.Error(),
 					)
 					return
@@ -552,9 +542,9 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	// Handle tag updates - use TagsAll to include provider tags
 	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := updateTags(ctx, conn, plan.ID.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
+		if err := updateTags(ctx, conn, plan.AppArn.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionUpdating, ResNameApp, plan.ID.ValueString(), err),
+				create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionUpdating, ResNameApp, plan.AppArn.ValueString(), err),
 				err.Error(),
 			)
 			return
@@ -562,21 +552,18 @@ func (r *appResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	app, err := waitAppUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	app, err := waitAppUpdated(ctx, conn, plan.AppArn.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForUpdate, ResNameApp, plan.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForUpdate, ResNameApp, plan.AppArn.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	// Update computed values from the returned app
-	if app.DriftStatus != "" {
-		plan.DriftStatus = types.StringValue(string(app.DriftStatus))
-	} else {
-		plan.DriftStatus = types.StringValue("NotChecked")
-	}
+	plan.DriftStatus = types.StringValue(string(app.DriftStatus))
+	plan.AssessmentSchedule = fwtypes.StringEnumValue(app.AssessmentSchedule)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -591,7 +578,7 @@ func (r *appResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	conn := r.Meta().ResilienceHubClient(ctx)
 
 	_, err := conn.DeleteApp(ctx, &resiliencehub.DeleteAppInput{
-		AppArn: state.ID.ValueStringPointer(),
+		AppArn: state.AppArn.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -600,17 +587,17 @@ func (r *appResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionDeleting, ResNameApp, state.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionDeleting, ResNameApp, state.AppArn.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitAppDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitAppDeleted(ctx, conn, state.AppArn.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForDeletion, ResNameApp, state.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.ResilienceHub, create.ErrActionWaitingForDeletion, ResNameApp, state.AppArn.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -625,8 +612,7 @@ func FindAppByARN(ctx context.Context, conn *resiliencehub.Client, arn string) (
 	output, err := conn.DescribeApp(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 	if err != nil {
@@ -678,7 +664,7 @@ func waitAppUpdated(ctx context.Context, conn *resiliencehub.Client, arn string,
 
 func waitAppDeleted(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.App, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: append(enum.Slice(awstypes.AppStatusTypeActive), "Deleting"),
+		Pending: enum.Slice(awstypes.AppStatusTypeActive, awstypes.AppStatusTypeDeleting),
 		Target:  []string{},
 		Refresh: statusApp(ctx, conn, arn),
 		Timeout: timeout,
@@ -695,7 +681,7 @@ func waitAppDeleted(ctx context.Context, conn *resiliencehub.Client, arn string,
 func statusApp(ctx context.Context, conn *resiliencehub.Client, arn string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := FindAppByARN(ctx, conn, arn)
-		if tfresource.NotFound(err) {
+		if intretry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -708,14 +694,13 @@ func statusApp(ctx context.Context, conn *resiliencehub.Client, arn string) retr
 
 // Data model
 type appResourceModel struct {
+	framework.WithRegionModel
 	AppArn             types.String                                           `tfsdk:"arn"`
-	AssessmentSchedule fwtypes.StringEnum[awstypes.AppAssessmentScheduleType] `tfsdk:"app_assessment_schedule"`
+	AssessmentSchedule fwtypes.StringEnum[awstypes.AppAssessmentScheduleType] `tfsdk:"assessment_schedule"`
 	AppTemplate        types.List                                             `tfsdk:"app_template" autoflex:"-"`
 	Description        types.String                                           `tfsdk:"description"`
 	DriftStatus        types.String                                           `tfsdk:"drift_status"`
-	ID                 types.String                                           `tfsdk:"id" autoflex:"-"`
 	Name               types.String                                           `tfsdk:"name"`
-	Region             types.String                                           `tfsdk:"region" autoflex:"-"`
 	PolicyArn          types.String                                           `tfsdk:"resiliency_policy_arn"`
 	ResourceMapping    types.List                                             `tfsdk:"resource_mapping" autoflex:"-"`
 	Tags               tftags.Map                                             `tfsdk:"tags" autoflex:"-"`

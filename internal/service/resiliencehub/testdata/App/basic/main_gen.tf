@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_resiliencehub_app" "test" {
   name = var.rName
 
@@ -10,6 +13,10 @@ resource "aws_resiliencehub_app" "test" {
       resource_names = []
     }
   }
+}
 
-{{- template "tags" . }}
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
