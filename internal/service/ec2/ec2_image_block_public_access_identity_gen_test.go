@@ -5,6 +5,7 @@ package ec2_test
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -25,6 +26,7 @@ func testAccEC2ImageBlockPublicAccess_IdentitySerial(t *testing.T) {
 		acctest.CtBasic:             testAccEC2ImageBlockPublicAccess_Identity_Basic,
 		"ExistingResource":          testAccEC2ImageBlockPublicAccess_Identity_ExistingResource,
 		"ExistingResourceNoRefresh": testAccEC2ImageBlockPublicAccess_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccEC2ImageBlockPublicAccess_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -49,9 +51,44 @@ func testAccEC2ImageBlockPublicAccess_Identity_Basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ImageBlockPublicAccess/basic/"),
 				ConfigVariables: config.Variables{},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+					}),
+				},
+			},
+		},
+	})
+}
+
+func testAccEC2ImageBlockPublicAccess_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_ec2_image_block_public_access.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ImageBlockPublicAccess/region_override/"),
+				ConfigVariables: config.Variables{
+					"region": config.StringVariable(acctest.AlternateRegion()),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 					}),
 				},
 			},
@@ -96,6 +133,7 @@ func testAccEC2ImageBlockPublicAccess_Identity_ExistingResource(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: knownvalue.Null(),
+						names.AttrRegion:    knownvalue.Null(),
 					}),
 				},
 			},
@@ -116,6 +154,7 @@ func testAccEC2ImageBlockPublicAccess_Identity_ExistingResource(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 					}),
 				},
 			},
@@ -155,6 +194,105 @@ func testAccEC2ImageBlockPublicAccess_Identity_ExistingResource_NoRefresh_NoChan
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ImageBlockPublicAccess/basic/"),
 				ConfigVariables:          config.Variables{},
+			},
+		},
+	})
+}
+
+// Resource Identity version 1 was added in version 6.20.0
+func testAccEC2ImageBlockPublicAccess_Identity_Upgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_ec2_image_block_public_access.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			// Step 1: Create with Identity version 0
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ImageBlockPublicAccess/basic_v6.19.0/"),
+				ConfigVariables: config.Variables{},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectHasIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ImageBlockPublicAccess/basic/"),
+				ConfigVariables:          config.Variables{},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+					}),
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity version 1 was added in version 6.20.0
+func testAccEC2ImageBlockPublicAccess_Identity_Upgrade_NoRefresh(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_ec2_image_block_public_access.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create with Identity version 0
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ImageBlockPublicAccess/basic_v6.19.0/"),
+				ConfigVariables: config.Variables{},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectHasIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ImageBlockPublicAccess/basic/"),
+				ConfigVariables:          config.Variables{},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+					}),
+				},
 			},
 		},
 	})
