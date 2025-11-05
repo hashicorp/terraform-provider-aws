@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codeconnections"
 	smithyendpoints "github.com/aws/smithy-go/endpoints"
@@ -46,7 +47,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params codeconnections.
 
 		endpoint, err = r.defaultResolver.ResolveEndpoint(ctx, params)
 		if err != nil {
-			return endpoint, err
+			return endpoint, smarterr.NewError(err)
 		}
 
 		tflog.Debug(ctx, "endpoint resolved", map[string]any{
@@ -66,7 +67,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params codeconnections.
 				return
 			}
 		} else {
-			return endpoint, err
+			return endpoint, smarterr.NewError(err)
 		}
 	}
 

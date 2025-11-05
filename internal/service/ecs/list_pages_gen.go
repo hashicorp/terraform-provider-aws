@@ -5,6 +5,7 @@ package ecs
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 )
@@ -13,7 +14,7 @@ func describeCapacityProvidersPages(ctx context.Context, conn *ecs.Client, input
 	for {
 		output, err := conn.DescribeCapacityProviders(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

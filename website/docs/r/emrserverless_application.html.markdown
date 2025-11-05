@@ -59,6 +59,42 @@ resource "aws_emrserverless_application" "example" {
 }
 ```
 
+### Monitoring Configuration Usage
+
+```terraform
+resource "aws_emrserverless_application" "example" {
+  name          = "example"
+  release_label = "emr-7.1.0"
+  type          = "spark"
+
+  monitoring_configuration {
+    cloudwatch_logging_configuration {
+      enabled                = true
+      log_group_name         = "/aws/emr-serverless/example"
+      log_stream_name_prefix = "spark-logs"
+
+      log_types {
+        name   = "SPARK_DRIVER"
+        values = ["STDOUT", "STDERR"]
+      }
+
+      log_types {
+        name   = "SPARK_EXECUTOR"
+        values = ["STDOUT"]
+      }
+    }
+
+    managed_persistence_monitoring_configuration {
+      enabled = true
+    }
+
+    prometheus_monitoring_configuration {
+      remote_write_url = "https://prometheus-remote-write-endpoint.example.com/api/v1/write"
+    }
+  }
+}
+```
+
 ### Runtime Configuration Usage
 
 ```terraform
@@ -97,6 +133,7 @@ This resource supports the following arguments:
 * `initial_capacity` - (Optional) The capacity to initialize when the application is created.
 * `interactive_configuration` - (Optional) Enables the interactive use cases to use when running an application.
 * `maximum_capacity` - (Optional) The maximum capacity to allocate when the application is created. This is cumulative across all workers at any given point in time, not just when an application is created. No new resources will be created once any one of the defined limits is hit.
+* `monitoring_configuration` - (Optional) The configuration setting for monitoring.
 * `name` - (Required) The name of the application.
 * `network_configuration` - (Optional) The network configuration for customer VPC connectivity.
 * `release_label` - (Required) The EMR release version associated with the application.
@@ -128,6 +165,40 @@ This resource supports the following arguments:
 * `cpu` - (Required) The maximum allowed CPU for an application.
 * `disk` - (Optional) The maximum allowed disk for an application.
 * `memory` - (Required) The maximum allowed resources for an application.
+
+### monitoring_configuration Arguments
+
+* `cloudwatch_logging_configuration` - (Optional) The Amazon CloudWatch configuration for monitoring logs.
+* `s3_monitoring_configuration` - (Optional) The Amazon S3 configuration for monitoring log publishing.
+* `managed_persistence_monitoring_configuration` - (Optional) The managed log persistence configuration for monitoring logs.
+* `prometheus_monitoring_configuration` - (Optional) The Prometheus configuration for monitoring metrics.
+
+#### cloudwatch_logging_configuration Arguments
+
+* `enabled` - (Required) Enables CloudWatch logging.
+* `log_group_name` - (Optional) The name of the log group in Amazon CloudWatch Logs where you want to publish your logs.
+* `log_stream_name_prefix` - (Optional) Prefix for the CloudWatch log stream name.
+* `log_types` - (Optional) The types of logs that you want to publish to CloudWatch. If you don't specify any log types, driver STDOUT and STDERR logs will be published to CloudWatch Logs by default. See [log_types](#log_types-arguments) for more details.
+* `encryption_key_arn` - (Optional) The AWS Key Management Service (KMS) key ARN to encrypt the logs that you store in CloudWatch Logs.
+
+##### log_types Arguments
+
+* `name` - (Required) The worker type. Valid values are `SPARK_DRIVER`, `SPARK_EXECUTOR`, `HIVE_DRIVER`, and `TEZ_TASK`.
+* `values` - (Required) The list of log types to publish. Valid values are `STDOUT`, `STDERR`, `HIVE_LOG`, `TEZ_AM`, and `SYSTEM_LOGS`.
+
+#### s3_monitoring_configuration Arguments
+
+* `log_uri` - (Optional) The Amazon S3 destination URI for log publishing.
+* `encryption_key_arn` - (Optional) The KMS key ARN to encrypt the logs published to the given Amazon S3 destination.
+
+#### managed_persistence_monitoring_configuration Arguments
+
+* `enabled` - (Optional) Enables managed log persistence for monitoring logs.
+* `encryption_key_arn` - (Optional) The KMS key ARN to encrypt the logs stored in managed persistence.
+
+#### prometheus_monitoring_configuration Arguments
+
+* `remote_write_url` - (Optional) The Prometheus remote write URL for sending metrics. Only supported in EMR 7.1.0 and later versions.
 
 ### network_configuration Arguments
 
@@ -181,7 +252,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EMR Severless applications using the `id`. For example:
+Using `terraform import`, import EMR Serverless applications using the `id`. For example:
 
 ```console
 % terraform import aws_emrserverless_application.example id
