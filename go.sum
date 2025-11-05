@@ -565,8 +565,8 @@ github.com/aws/aws-sdk-go-v2/service/workmail v1.36.8 h1:oHtcXkhT12ePAHIaagvFTxt
 github.com/aws/aws-sdk-go-v2/service/workmail v1.36.8/go.mod h1:JW6rMNuboHOnWx7I1fZfHAG1kcUiBZfTkZuD69oNw2w=
 github.com/aws/aws-sdk-go-v2/service/workspaces v1.64.2 h1:U1NCC1loRNJZmPyZ4fChpmaXXMNc6Z7sobgKcaIJ8KY=
 github.com/aws/aws-sdk-go-v2/service/workspaces v1.64.2/go.mod h1:TmJI48Dm4ftRxBmMoZOeC8Et2WEStJoPpv8BoXZ/eZw=
-github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.33.2 h1:aYdOX7EB/df8y8XjjFIAS0Sfr3oJv2Li2pErUr/5Dj8=
-github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.33.2/go.mod h1:QHEyIt1ZCAMLh65T2ROEN+dHWgdYK4B4vUeYFOhWkEA=
+github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.33.3 h1:79PtELyWQItacygUX3OdYvBBbGuZ4jdhlcRbiTM00tE=
+github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.33.3/go.mod h1:V4nPCxgIBn6Yf5JhnI3Cs0iKVTB+wkzXG8fEGYqLYkU=
 github.com/aws/aws-sdk-go-v2/service/xray v1.36.8 h1:eWzUqjREL4Mxl58l18hX+uoPM83EDfPpfxmLyM6sG/A=
 github.com/aws/aws-sdk-go-v2/service/xray v1.36.8/go.mod h1:o22UGYe6jw/m7k4eUZBBMg2Tv/6MXor+CLJT2GzYFPY=
 github.com/aws/smithy-go v1.23.2 h1:Crv0eatJUQhaManss33hS5r40CG3ZFH+21XSkqMrIUM=
