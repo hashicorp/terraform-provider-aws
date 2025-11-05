@@ -447,7 +447,11 @@ func (d ResourceDatum) GenerateRegionOverrideTest() bool {
 	return !d.IsGlobal && d.HasRegionOverrideTest
 }
 
-func (d ResourceDatum) HasInherentRegion() bool {
+func (d ResourceDatum) HasInherentRegionIdentity() bool {
+	return d.IsARNIdentity() || d.IsCustomInherentRegionIdentity
+}
+
+func (d ResourceDatum) HasInherentRegionImportID() bool {
 	return d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity
 }
 
@@ -913,10 +917,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if d.IsGlobal {
 		d.HasRegionOverrideTest = false
-	}
-
-	if len(d.identityAttributes) == 1 {
-		d.identityAttribute = d.identityAttributes[0].name
 	}
 
 	if hasIdentity {
