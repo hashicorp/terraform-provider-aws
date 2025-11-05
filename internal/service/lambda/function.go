@@ -551,8 +551,11 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		Timeout:      aws.Int32(int32(d.Get(names.AttrTimeout).(int))),
 	}
 
+	// check if function is associated with a capacity provider.
+	// this will indicate the type of publish we need to do.
 	if _, ok := d.GetOk("capacity_provider_config"); ok {
-		// use value for capacity provider
+		// new api with publish options
+		// input.CapacityProviderConfig = expandCapacityProviderConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("filename"); ok {
@@ -1667,6 +1670,16 @@ func signerServiceIsAvailable(region string) bool {
 	_, ok := availableRegions[region]
 
 	return ok
+}
+
+// TODO needs to be completed when SDK is available
+func flattenCapacityProviderConfig(apiObject any) []any {
+	return nil
+}
+
+// TODO needs to be completed when SDK is available
+func expandCapacityProviderConfig(tfList []any) any {
+	return nil
 }
 
 func flattenEnvironment(apiObject *awstypes.EnvironmentResponse) []any {

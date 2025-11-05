@@ -10,7 +10,8 @@ import (
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -28,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda/mocks"
 	awsmocktypes "github.com/hashicorp/terraform-provider-aws/internal/service/lambda/mocks/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -188,7 +188,7 @@ func (r *resourceCapacityProvider) Schema(ctx context.Context, _ resource.Schema
 }
 
 func (r *resourceCapacityProvider) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	conn := mocks.LambdaClient(ctx)
+	conn := r.Meta().LambdaClient(ctx)
 
 	var plan resourceCapacityProviderModel
 	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
@@ -196,7 +196,7 @@ func (r *resourceCapacityProvider) Create(ctx context.Context, request resource.
 		return
 	}
 
-	var input awsmocktypes.CreateCapacityProviderInput
+	var input lambda.CreateCapacityProviderInput
 	smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CapacityProvider")))
 	if response.Diagnostics.HasError() {
 		return
@@ -229,7 +229,7 @@ func (r *resourceCapacityProvider) Create(ctx context.Context, request resource.
 }
 
 func (r *resourceCapacityProvider) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := mocks.LambdaClient(ctx)
+	conn := r.Meta().LambdaClient(ctx)
 
 	var state resourceCapacityProviderModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -257,7 +257,7 @@ func (r *resourceCapacityProvider) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	conn := mocks.LambdaClient(ctx)
+	conn := r.Meta().LambdaClient(ctx)
 
 	var plan, state resourceCapacityProviderModel
 	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
@@ -273,7 +273,7 @@ func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.
 	}
 
 	if diff.HasChanges() {
-		var input awsmocktypes.UpdateCapacityProviderInput
+		var input lambda.UpdateCapacityProviderInput
 		smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CapacityProvider")))
 		if response.Diagnostics.HasError() {
 			return
@@ -306,7 +306,7 @@ func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.
 }
 
 func (r *resourceCapacityProvider) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	conn := mocks.LambdaClient(ctx)
+	conn := r.Meta().LambdaClient(ctx)
 
 	var state resourceCapacityProviderModel
 	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
@@ -314,7 +314,9 @@ func (r *resourceCapacityProvider) Delete(ctx context.Context, request resource.
 		return
 	}
 
-	input := awsmocktypes.DeleteCapacityProviderInput{}
+	input := lambda.DeleteCapacityProviderInput{
+		CapacityProviderName: state.ARN.ValueStringPointer(),
+	}
 
 	_, err := conn.DeleteCapacityProvider(ctx, &input)
 	if err != nil {
@@ -338,10 +340,10 @@ func (r *resourceCapacityProvider) ImportState(ctx context.Context, request reso
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
-func waitCapacityProviderActive(ctx context.Context, conn *mocks.Client, id string, timeout time.Duration) (*awsmocktypes.GetCapacityProviderOutput, error) {
+func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*awsmocktypes.GetCapacityProviderOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending:                   enum.Slice(awsmocktypes.StatePending),
-		Target:                    enum.Slice(awsmocktypes.StateActive),
+		Pending:                   enum.Slice(awstypes.CapacityProviderStatePending),
+		Target:                    enum.Slice(awstypes.CapacityProviderStateActive),
 		Refresh:                   statusCapacityProvider(ctx, conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
@@ -355,9 +357,9 @@ func waitCapacityProviderActive(ctx context.Context, conn *mocks.Client, id stri
 	return nil, smarterr.NewError(err)
 }
 
-func waitCapacityProviderDeleted(ctx context.Context, conn *mocks.Client, id string, timeout time.Duration) (*awsmocktypes.DeleteCapacityProviderOutput, error) {
+func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*awsmocktypes.DeleteCapacityProviderOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending: enum.Slice(awsmocktypes.StatePending, awsmocktypes.StateDeleting),
+		Pending: enum.Slice(awstypes.CapacityProviderStatePending, awstypes.CapacityProviderStateDeleting),
 		Target:  []string{},
 		Refresh: statusCapacityProvider(ctx, conn, id),
 		Timeout: timeout,
@@ -371,7 +373,7 @@ func waitCapacityProviderDeleted(ctx context.Context, conn *mocks.Client, id str
 	return nil, smarterr.NewError(err)
 }
 
-func statusCapacityProvider(ctx context.Context, conn *mocks.Client, id string) sdkretry.StateRefreshFunc {
+func statusCapacityProvider(ctx context.Context, conn *lambda.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findCapacityProviderByARN(ctx, conn, id)
 		if retry.NotFound(err) {
@@ -386,8 +388,8 @@ func statusCapacityProvider(ctx context.Context, conn *mocks.Client, id string) 
 	}
 }
 
-func findCapacityProviderByARN(ctx context.Context, conn *mocks.Client, id string) (*awsmocktypes.GetCapacityProviderOutput, error) {
-	input := awsmocktypes.GetCapacityProviderInput{
+func findCapacityProviderByARN(ctx context.Context, conn *lambda.Client, id string) (*awstypes.CapacityProvider, error) {
+	input := lambda.GetCapacityProviderInput{
 		CapacityProviderName: aws.String(id),
 	}
 
@@ -406,7 +408,7 @@ func findCapacityProviderByARN(ctx context.Context, conn *mocks.Client, id strin
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
 	}
 
-	return out, nil
+	return out.CapacityProvider, nil
 }
 
 type resourceCapacityProviderModel struct {
