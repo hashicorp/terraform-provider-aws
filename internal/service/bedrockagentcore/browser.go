@@ -35,7 +35,6 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -353,7 +352,7 @@ func waitBrowserDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 func statusBrowser(conn *bedrockagentcorecontrol.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findBrowserByID(ctx, conn, id)
-		if intretry.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

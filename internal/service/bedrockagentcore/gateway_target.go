@@ -38,7 +38,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -710,7 +709,7 @@ func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol
 func statusGatewayTarget(conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findGatewayTargetByTwoPartKey(ctx, conn, gatewayIdentifier, targetID)
-		if intretry.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
