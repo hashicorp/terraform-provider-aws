@@ -191,7 +191,7 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 
 func (r *gatewayResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var data gatewayResourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}

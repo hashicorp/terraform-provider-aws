@@ -250,7 +250,7 @@ func (r *agentRuntimeEndpointResource) Delete(ctx context.Context, request resou
 func (r *agentRuntimeEndpointResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	parts := strings.Split(request.ID, ",")
 	if len(parts) != 2 {
-		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "agent_runtime_id,name"`, request.ID))
+		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf(`Unexpected format for import ID (%s), use: "agent_runtime_id,name"`, request.ID))
 		return
 	}
 

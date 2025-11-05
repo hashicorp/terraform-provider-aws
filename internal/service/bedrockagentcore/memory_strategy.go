@@ -33,8 +33,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -225,10 +225,7 @@ func (m errorIfSingleBlockRemoved) PlanModifyList(ctx context.Context, req planm
 	}
 
 	if len(stateList.Elements()) == 1 && len(planList.Elements()) == 0 {
-		resp.Diagnostics.AddError(
-			"Invalid Configuration Change",
-			fmt.Sprintf("Removing the previously configured %q block is not allowed. Re-add the block or recreate the resource manually if you truly intend to remove it.", m.label),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("Removing the previously configured %q block is not allowed. Re-add the block or recreate the resource manually if you truly intend to remove it.", m.label))
 	}
 }
 
@@ -246,10 +243,7 @@ func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request res
 
 	if data.Type.ValueEnum() == awstypes.MemoryStrategyTypeCustom {
 		if data.Configuration.IsNull() || data.Configuration.IsUnknown() {
-			response.Diagnostics.AddError(
-				"Invalid Configuration",
-				"When type is `CUSTOM`, the configuration block is required.",
-			)
+			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is `CUSTOM`, the configuration block is required."))
 			return
 		} else {
 			c, diags := data.Configuration.ToPtr(ctx)
@@ -258,18 +252,12 @@ func (r *resourceMemoryStrategy) ValidateConfig(ctx context.Context, request res
 				return
 			}
 			if c.Type.ValueEnum() == awstypes.OverrideTypeSummaryOverride && !(c.Extraction.IsNull() || c.Extraction.IsUnknown()) {
-				response.Diagnostics.AddError(
-					"Invalid Configuration",
-					"When configuration type is `SUMMARY_OVERRIDE`, the extraction block cannot be defined.",
-				)
+				smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When configuration type is `SUMMARY_OVERRIDE`, the extraction block cannot be defined."))
 			}
 		}
 	} else {
 		if !(data.Configuration.IsNull() || data.Configuration.IsUnknown()) {
-			response.Diagnostics.AddError(
-				"Invalid Configuration",
-				"When type is not `CUSTOM`, the configuration block must be omitted.",
-			)
+			smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("When type is not `CUSTOM`, the configuration block must be omitted."))
 		}
 	}
 }
@@ -352,7 +340,7 @@ func (r *resourceMemoryStrategy) Read(ctx context.Context, request resource.Read
 
 	out, err := findMemoryStrategyByTwoPartKey(ctx, conn, state.MemoryID.ValueString(), state.MemoryStrategyID.ValueString())
 	if intretry.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -476,7 +464,7 @@ func (r *resourceMemoryStrategy) ImportState(ctx context.Context, request resour
 	const idParts = 2
 	parts, err := intflex.ExpandResourceId(request.ID, idParts, false)
 	if err != nil {
-		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "memory_id,strategy_id"`, request.ID))
+		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf(`Unexpected format for import ID (%s), use: "memory_id,strategy_id"`, request.ID))
 		return
 	}
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("memory_id"), parts[0]))
@@ -524,7 +512,7 @@ func memoryStrategyRetryable(deleteOp bool) tfresource.Retryable {
 
 		switch {
 		case errs.IsA[*awstypes.ConflictException](err):
-			return true, err
+			return true, smarterr.NewError(err)
 
 		case errs.IsA[*awstypes.ValidationException](err):
 			msg := err.Error()
@@ -532,11 +520,11 @@ func memoryStrategyRetryable(deleteOp bool) tfresource.Retryable {
 				return false, nil
 			}
 			if strings.Contains(msg, msgMemoryStrategiesBeingModified) || strings.Contains(msg, msgMemoryStrategyTransitionalState) {
-				return true, err
+				return true, smarterr.NewError(err)
 			}
 		}
 
-		return false, err
+		return false, smarterr.NewError(err)
 	}
 }
 
@@ -592,7 +580,7 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 	memory, err := findMemoryByID(ctx, conn, memoryID)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	result, err := tfresource.AssertSingleValueResult(tfslices.Filter(memory.Strategies, func(v awstypes.MemoryStrategy) bool {

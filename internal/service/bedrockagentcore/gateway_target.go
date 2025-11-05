@@ -617,7 +617,7 @@ func (r *gatewayTargetResource) ImportState(ctx context.Context, request resourc
 	parts := strings.Split(request.ID, ",")
 
 	if len(parts) != 2 {
-		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "GatewayIdentifier,TargetId"`, request.ID))
+		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf(`Unexpected format for import ID (%s), use: "GatewayIdentifier,TargetId"`, request.ID))
 		return
 	}
 

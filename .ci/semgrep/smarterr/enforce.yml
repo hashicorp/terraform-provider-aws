@@ -131,6 +131,16 @@ rules:
           return nil, $ERR
       - pattern-not-inside: |
           return nil, smarterr.NewError(...)
+      - pattern-not-inside: |
+          func $FUNC(...) (..., diag.Diagnostics) {
+            ...
+            return nil, $ERR
+          }
+      - pattern-not-inside: |
+          smerr.AddEnrich(...)
+          if $DIAGS.HasError() {
+            return nil, $ERR
+          }
     paths:
       include:
         - "/internal/service/appsync/"
@@ -148,6 +158,16 @@ rules:
           return $VALUE, nil
       - pattern-not-inside: |
           return $VALUE, smarterr.NewError(...)
+      - pattern-not-inside: |
+          func $FUNC(...) (..., diag.Diagnostics) {
+            ...
+            return $VALUE, $ERR
+          }
+      - pattern-not-inside: |
+          smerr.AddEnrich(...)
+          if $DIAGS.HasError() {
+            return $VALUE, $ERR
+          }
     paths:
       include:
         - "/internal/service/appsync/"
