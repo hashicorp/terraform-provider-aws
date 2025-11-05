@@ -119,16 +119,16 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if eq .PlannableResourceAction "Replace" -}}
 			plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 		{{ end -}}
-		{{ if .ArnIdentity -}}
+		{{ if .HasInherentRegionIdentity -}}
 			{{ if eq .PlannableResourceAction "Replace" -}}
-				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }})),
 				{{ if .HasIdentityDuplicateAttrs -}}
 					{{ range .IdentityDuplicateAttrs -}}
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ . }})),
 					{{ end -}}
 				{{ end -}}
 			{{ else -}}
-				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
 				{{ if .HasIdentityDuplicateAttrs -}}
 					{{ range .IdentityDuplicateAttrs -}}
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
@@ -146,13 +146,6 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			{{ range .IdentityAttributes -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
 			{{ end -}}
-		{{ else if ne .IdentityAttribute "" -}}
-			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
-			{{ if .HasIdentityDuplicateAttrs -}}
-				{{ range .IdentityDuplicateAttrs -}}
-					plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
-				{{ end -}}
-			{{ end -}}
 		{{ end -}}
 		{{ if not .IsGlobal -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -169,16 +162,16 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if eq .PlannableResourceAction "Replace" -}}
 			plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 		{{ end -}}
-		{{ if .ArnIdentity -}}
+		{{ if .HasInherentRegionIdentity -}}
 			{{ if eq .PlannableResourceAction "Replace" -}}
-				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }})),
 				{{ if .HasIdentityDuplicateAttrs -}}
 					{{ range .IdentityDuplicateAttrs -}}
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ . }})),
 					{{ end -}}
 				{{ end -}}
 			{{ else -}}
-				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
 				{{ if .HasIdentityDuplicateAttrs -}}
 					{{ range .IdentityDuplicateAttrs -}}
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
@@ -192,13 +185,6 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
-			{{ end -}}
-		{{ else if ne .IdentityAttribute "" -}}
-			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
-			{{ if .HasIdentityDuplicateAttrs -}}
-				{{ range .IdentityDuplicateAttrs -}}
-					plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
-				{{ end -}}
 			{{ end -}}
 		{{ end -}}
 		{{ if not .IsGlobal -}}
@@ -458,7 +444,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 			{{ if not .NoImport }}
-				{{ if .HasInherentRegion }}
+				{{ if .HasInherentRegionImportID }}
 					// Step {{ ($step = inc $step) | print }}: Import command with appended "@<region>"
 				{{- else }}
 					// Step {{ ($step = inc $step) | print }}: Import command
@@ -475,7 +461,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					},
 					{{- template "ImportCommandWithIDBodyCrossRegion" . -}}
 				},
-				{{ if .HasInherentRegion }}
+				{{ if .HasInherentRegionImportID }}
 					// Step {{ ($step = inc $step) | print }}: Import command without appended "@<region>"
 					{
 						{{ if .UseAlternateAccount -}}
@@ -490,7 +476,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						{{- template "ImportCommandWithIDBody" . -}}
 					},
 				{{ end }}
-				{{ if .HasInherentRegion }}
+				{{ if .HasInherentRegionImportID }}
 					// Step {{ ($step = inc $step) | print }}: Import block with Import ID and appended "@<region>"
 				{{- else }}
 					// Step {{ ($step = inc $step) | print }}: Import block with Import ID
@@ -511,7 +497,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						ExpectNonEmptyPlan: true,
 					{{ end -}}
 				},
-				{{ if .HasInherentRegion }}
+				{{ if .HasInherentRegionImportID }}
 					// Step {{ ($step = inc $step) | print }}: Import block with Import ID and no appended "@<region>"
 					{
 						{{ if .UseAlternateAccount -}}
