@@ -24,7 +24,7 @@ For more information about the image criteria that can be set, see the [AWS docu
 resource "aws_ec2_allowed_images_settings" "example" {
   state = "enabled"
 
-  image_criteria {
+  image_criterion {
     image_providers = ["amazon"]
   }
 }
@@ -36,7 +36,7 @@ resource "aws_ec2_allowed_images_settings" "example" {
 resource "aws_ec2_allowed_images_settings" "example" {
   state = "audit-mode"
 
-  image_criteria {
+  image_criterion {
     image_providers = ["amazon", "123456789012"]
   }
 }
@@ -47,11 +47,11 @@ resource "aws_ec2_allowed_images_settings" "example" {
 This resource supports the following arguments:
 
 - `state` - (Required) State of the allowed images settings. Valid values are `enabled` or `audit-mode`.
-- `image_criteria` - (Optional) List of image criteria blocks. Maximum of 10 criteria blocks allowed. See [`image_criteria`](#image_criteria) below.
+- `image_criterion` - (Optional) List of image criteria. Maximum of 10 criterion blocks allowed. See [`image_criterion`](#image_criterion) below.
 
-### `image_criteria`
+### `image_criterion`
 
-The `image_criteria` block supports the following:
+The `image_criterion` block supports the following:
 
 - `image_names` - (Optional) Set of AMI name patterns to allow. Maximum of 50 names.
 - `image_providers` - (Optional) Set of image providers to allow. Maximum of 200 providers. Valid values include `amazon`, `aws-marketplace`, `aws-backup-vault`, `none`, or a 12-digit AWS account ID.

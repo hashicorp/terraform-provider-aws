@@ -151,9 +151,9 @@ func testAccEC2AllowedImagesSettings_imageCriteria(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.image_providers.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "image_criteria.0.image_providers.*", "amazon"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_providers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_criterion.0.image_providers.*", "amazon"),
 				),
 			},
 			{
@@ -185,11 +185,11 @@ func testAccEC2AllowedImagesSettings_imageCriteriaMultiple(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.image_providers.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "image_criteria.0.image_providers.*", "amazon"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.1.image_providers.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "image_criteria.1.image_providers.*", "aws-marketplace"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_providers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_criterion.0.image_providers.*", "amazon"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.1.image_providers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_criterion.1.image_providers.*", "aws-marketplace"),
 				),
 			},
 			{
@@ -221,10 +221,10 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithNames(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.image_names.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "image_criteria.0.image_names.*", "al2023-ami-*"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "image_criteria.0.image_names.*", "ubuntu/images/*"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_names.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_criterion.0.image_names.*", "al2023-ami-*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_criterion.0.image_names.*", "ubuntu/images/*"),
 				),
 			},
 			{
@@ -256,9 +256,9 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithMarketplace(t *testing.T) 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.marketplace_product_codes.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "image_criteria.0.marketplace_product_codes.*", "abcdef123456"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.marketplace_product_codes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_criterion.0.marketplace_product_codes.*", "abcdef123456"),
 				),
 			},
 			{
@@ -290,9 +290,9 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithCreationDate(t *testing.T)
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.creation_date_condition.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.creation_date_condition.maximum_days_since_created", "365"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.creation_date_condition.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.creation_date_condition.maximum_days_since_created", "365"),
 				),
 			},
 			{
@@ -324,9 +324,9 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithDeprecationTime(t *testing
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.deprecation_time_condition.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.deprecation_time_condition.maximum_days_since_deprecated", "30"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.deprecation_time_condition.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.deprecation_time_condition.maximum_days_since_deprecated", "30"),
 				),
 			},
 			{
@@ -358,12 +358,12 @@ func testAccEC2AllowedImagesSettings_imageCriteriaComplete(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.image_names.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.image_providers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.marketplace_product_codes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.creation_date_condition.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.0.deprecation_time_condition.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_providers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.marketplace_product_codes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.creation_date_condition.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.deprecation_time_condition.%", "1"),
 				),
 			},
 			{
@@ -425,14 +425,14 @@ func testAccEC2AllowedImagesSettings_imageCriteriaUpdate(t *testing.T) {
 				Config: testAccEC2AllowedImagesSettingsConfig_imageCriteria(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings1),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 				),
 			},
 			{
 				Config: testAccEC2AllowedImagesSettingsConfig_imageCriteriaMultiple(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEC2AllowedImagesSettingsExists(ctx, resourceName, &settings2),
-					resource.TestCheckResourceAttr(resourceName, "image_criteria.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "2"),
 				),
 			},
 		},
@@ -507,7 +507,7 @@ func testAccEC2AllowedImagesSettingsConfig_imageCriteria() string {
 resource "aws_ec2_allowed_images_settings" "test" {
   state = "enabled"
 
-  image_criteria {
+  image_criterion {
     image_providers = ["amazon"]
   }
 }
@@ -519,11 +519,11 @@ func testAccEC2AllowedImagesSettingsConfig_imageCriteriaMultiple() string {
 resource "aws_ec2_allowed_images_settings" "test" {
   state = "enabled"
 
-  image_criteria {
+  image_criterion {
     image_providers = ["amazon"]
   }
 
-  image_criteria {
+  image_criterion {
     image_providers = ["aws-marketplace"]
   }
 }
@@ -535,7 +535,7 @@ func testAccEC2AllowedImagesSettingsConfig_imageCriteriaWithNames() string {
 resource "aws_ec2_allowed_images_settings" "test" {
   state = "enabled"
 
-  image_criteria {
+  image_criterion {
     image_names = [
       "al2023-ami-*",
       "ubuntu/images/*"
@@ -550,7 +550,7 @@ func testAccEC2AllowedImagesSettingsConfig_imageCriteriaWithMarketplace() string
 resource "aws_ec2_allowed_images_settings" "test" {
   state = "enabled"
 
-  image_criteria {
+  image_criterion {
     image_providers         = ["aws-marketplace"]
     marketplace_product_codes = ["abcdef123456"]
   }
@@ -563,7 +563,7 @@ func testAccEC2AllowedImagesSettingsConfig_imageCriteriaWithCreationDate() strin
 resource "aws_ec2_allowed_images_settings" "test" {
   state = "enabled"
 
-  image_criteria {
+  image_criterion {
     image_providers = ["amazon"]
     
     creation_date_condition {
@@ -579,7 +579,7 @@ func testAccEC2AllowedImagesSettingsConfig_imageCriteriaWithDeprecationTime() st
 resource "aws_ec2_allowed_images_settings" "test" {
   state = "enabled"
 
-  image_criteria {
+  image_criterion {
     image_providers = ["amazon"]
     
     deprecation_time_condition {
@@ -595,7 +595,7 @@ func testAccEC2AllowedImagesSettingsConfig_imageCriteriaComplete() string {
 resource "aws_ec2_allowed_images_settings" "test" {
   state = "enabled"
 
-  image_criteria {
+  image_criterion {
     image_names             = ["al2023-ami-*"]
     image_providers         = ["amazon"]
     marketplace_product_codes = ["abc123def456"]

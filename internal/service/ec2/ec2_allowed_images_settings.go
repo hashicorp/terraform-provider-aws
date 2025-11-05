@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -45,15 +46,19 @@ type allowedImagesSettingsResource struct {
 func (r *allowedImagesSettingsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			// "managed_by": schema.StringAttribute{
+			// 	Computed: true,
+			// 	PlanModifiers: []planmodifier.String{
+			// 		stringplanmodifier.UseStateForUnknown(),
+			// 	},
+			// },
 			names.AttrState: schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					stringvalidator.OneOf("enabled", "audit-mode"),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.AllowedImagesSettingsEnabledState](),
+				Required:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"image_criteria": schema.ListNestedBlock{
+			"image_criterion": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[imageCriterionModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(10),
@@ -61,6 +66,7 @@ func (r *allowedImagesSettingsResource) Schema(ctx context.Context, request reso
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"image_names": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
 							Validators: []validator.Set{
@@ -72,6 +78,7 @@ func (r *allowedImagesSettingsResource) Schema(ctx context.Context, request reso
 							},
 						},
 						"image_providers": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
 							Validators: []validator.Set{
@@ -79,12 +86,13 @@ func (r *allowedImagesSettingsResource) Schema(ctx context.Context, request reso
 								setvalidator.ValueStringsAre(
 									stringvalidator.Any(
 										stringvalidator.OneOf("amazon", "aws-marketplace", "aws-backup-vault", "none"),
-										stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9]{12}$`), "must be a valid AWS account ID"),
+										fwvalidators.AWSAccountID(),
 									),
 								),
 							},
 						},
 						"marketplace_product_codes": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
 							Validators: []validator.Set{
@@ -345,14 +353,15 @@ func (r *allowedImagesSettingsResource) ImportState(ctx context.Context, req res
 
 type allowedImagesSettingsResourceModel struct {
 	framework.WithRegionModel
-	State         types.String                                         `tfsdk:"state"`
-	ImageCriteria fwtypes.ListNestedObjectValueOf[imageCriterionModel] `tfsdk:"image_criteria"`
+	ImageCriteria fwtypes.ListNestedObjectValueOf[imageCriterionModel] `tfsdk:"image_criterion"`
+	// ManagedBy     types.String                                                   `tfsdk:"managed_by"`
+	State fwtypes.StringEnum[awstypes.AllowedImagesSettingsEnabledState] `tfsdk:"state"`
 }
 
 type imageCriterionModel struct {
-	ImageNames               fwtypes.SetValueOf[types.String]                                   `tfsdk:"image_names"`
-	ImageProviders           fwtypes.SetValueOf[types.String]                                   `tfsdk:"image_providers"`
-	MarketplaceProductCodes  fwtypes.SetValueOf[types.String]                                   `tfsdk:"marketplace_product_codes"`
+	ImageNames               fwtypes.SetOfString                                                `tfsdk:"image_names"`
+	ImageProviders           fwtypes.SetOfString                                                `tfsdk:"image_providers"`
+	MarketplaceProductCodes  fwtypes.SetOfString                                                `tfsdk:"marketplace_product_codes"`
 	CreationDateCondition    fwtypes.ObjectValueOf[imageCriterionCreationDateConditionModel]    `tfsdk:"creation_date_condition"`
 	DeprecationTimeCondition fwtypes.ObjectValueOf[imageCriterionDeprecationTimeConditionModel] `tfsdk:"deprecation_time_condition"`
 }
