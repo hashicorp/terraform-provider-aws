@@ -636,6 +636,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if d.Implementation == tests.ImplementationSDK {
 					attrs = append(attrs, "id")
+				} else {
+					if !slices.Contains(attrs, "id") {
+						d.SetImportStateIDAttribute(d.identityAttribute)
+					}
 				}
 				slices.Sort(attrs)
 				attrs = slices.Compact(attrs)
@@ -656,6 +660,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if d.Implementation == tests.ImplementationSDK {
 					attrs = append(attrs, "id")
+				} else {
+					if !slices.Contains(attrs, "id") {
+						d.SetImportStateIDAttribute(d.identityAttribute)
+					}
 				}
 				slices.Sort(attrs)
 				attrs = slices.Compact(attrs)

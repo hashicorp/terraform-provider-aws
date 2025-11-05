@@ -83,6 +83,10 @@ func (c CommonArgs) ImportStateIDAttribute() string {
 	return namesgen.ConstOrQuote(c.importStateIDAttribute)
 }
 
+func (c *CommonArgs) SetImportStateIDAttribute(attrName string) {
+	c.importStateIDAttribute = attrName
+}
+
 func (c CommonArgs) HasImportIgnore() bool {
 	return len(c.ImportIgnore) > 0
 }
