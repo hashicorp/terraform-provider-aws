@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/account v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.37.11
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.45.3
-	github.com/aws/aws-sdk-go-v2/service/amp v1.41.0
+	github.com/aws/aws-sdk-go-v2/service/amp v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.32.10
