@@ -141,6 +141,7 @@ var (
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone         = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
 	ErrCodeInvalidSpotDatafeedNotFound                          = errCodeInvalidSpotDatafeedNotFound
 	ExpandIPPerms                                               = expandIPPerms
+	FindAllowedImagesSettings                                   = findAllowedImagesSettings
 	FindAvailabilityZones                                       = findAvailabilityZones
 	FindCapacityReservationByID                                 = findCapacityReservationByID
 	FindCarrierGatewayByID                                      = findCarrierGatewayByID

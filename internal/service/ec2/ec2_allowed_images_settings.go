@@ -33,21 +33,17 @@ import (
 
 // @FrameworkResource("aws_ec2_allowed_images_settings", name="Allowed Images Settings")
 func newAllowedImagesSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAllowedImagesSettings{}
+	r := &allowedImagesSettingsResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameEC2AllowedImagesSettings = "Allowed Images Settings"
-)
-
-type resourceAllowedImagesSettings struct {
-	framework.ResourceWithModel[resourceAllowedImagesSettingsModel]
+type allowedImagesSettingsResource struct {
+	framework.ResourceWithModel[allowedImagesSettingsResourceModel]
 }
 
-func (r *resourceAllowedImagesSettings) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *allowedImagesSettingsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrState: schema.StringAttribute{
 				Required: true,
@@ -140,10 +136,10 @@ func (r *resourceAllowedImagesSettings) Schema(ctx context.Context, req resource
 	}
 }
 
-func (r *resourceAllowedImagesSettings) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *allowedImagesSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	var plan resourceAllowedImagesSettingsModel
+	var plan allowedImagesSettingsResourceModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -166,10 +162,10 @@ func (r *resourceAllowedImagesSettings) Create(ctx context.Context, req resource
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceAllowedImagesSettings) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *allowedImagesSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	var state resourceAllowedImagesSettingsModel
+	var state allowedImagesSettingsResourceModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -200,10 +196,10 @@ func (r *resourceAllowedImagesSettings) Read(ctx context.Context, req resource.R
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceAllowedImagesSettings) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *allowedImagesSettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	var plan, state resourceAllowedImagesSettingsModel
+	var plan, state allowedImagesSettingsResourceModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -228,10 +224,10 @@ func (r *resourceAllowedImagesSettings) Update(ctx context.Context, req resource
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *resourceAllowedImagesSettings) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *allowedImagesSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	var state resourceAllowedImagesSettingsModel
+	var state allowedImagesSettingsResourceModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -266,7 +262,7 @@ func (r *resourceAllowedImagesSettings) Delete(ctx context.Context, req resource
 	}
 }
 
-func (r *resourceAllowedImagesSettings) updateAllowedImagesSettingsState(ctx context.Context, conn *ec2.Client, plan *resourceAllowedImagesSettingsModel, diags *diag.Diagnostics) {
+func (r *allowedImagesSettingsResource) updateAllowedImagesSettingsState(ctx context.Context, conn *ec2.Client, plan *allowedImagesSettingsResourceModel, diags *diag.Diagnostics) {
 	stateValue := plan.State.ValueString()
 
 	if slices.Contains(awstypes.AllowedImagesSettingsEnabledState.Values(""), awstypes.AllowedImagesSettingsEnabledState(stateValue)) {
@@ -312,7 +308,7 @@ func (r *resourceAllowedImagesSettings) updateAllowedImagesSettingsState(ctx con
 	}
 }
 
-func (r *resourceAllowedImagesSettings) updateImageCriteria(ctx context.Context, conn *ec2.Client, plan *resourceAllowedImagesSettingsModel, diags *diag.Diagnostics) {
+func (r *allowedImagesSettingsResource) updateImageCriteria(ctx context.Context, conn *ec2.Client, plan *allowedImagesSettingsResourceModel, diags *diag.Diagnostics) {
 	if plan.ImageCriteria.IsUnknown() {
 		return
 	}
@@ -343,11 +339,11 @@ func (r *resourceAllowedImagesSettings) updateImageCriteria(ctx context.Context,
 	smerr.EnrichAppend(ctx, diags, flex.Flatten(ctx, out, plan))
 }
 
-func (r *resourceAllowedImagesSettings) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *allowedImagesSettingsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrRegion), req, resp)
 }
 
-type resourceAllowedImagesSettingsModel struct {
+type allowedImagesSettingsResourceModel struct {
 	framework.WithRegionModel
 	State         types.String                                         `tfsdk:"state"`
 	ImageCriteria fwtypes.ListNestedObjectValueOf[imageCriterionModel] `tfsdk:"image_criteria"`

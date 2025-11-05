@@ -6,19 +6,18 @@ package ec2_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2AllowedImagesSettings_serial(t *testing.T) {
@@ -449,41 +448,39 @@ func testAccCheckEC2AllowedImagesSettingsDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			out, err := conn.GetAllowedImagesSettings(ctx, &ec2.GetAllowedImagesSettingsInput{})
+			_, err := tfec2.FindAllowedImagesSettings(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			// Settings should be disabled after destroy
-			if aws.ToString(out.State) != "disabled" {
-				return errors.New("EC2 Allowed Images Settings not disabled")
-			}
-
-			// Image criteria should be empty after destroy
-			if len(out.ImageCriteria) > 0 {
-				return errors.New("EC2 Allowed Images Settings not empty")
-			}
+			return errors.New("EC2 Allowed Images Settings still exists")
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEC2AllowedImagesSettingsExists(ctx context.Context, name string, settings *ec2.GetAllowedImagesSettingsOutput) resource.TestCheckFunc {
+func testAccCheckEC2AllowedImagesSettingsExists(ctx context.Context, n string, v *ec2.GetAllowedImagesSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEC2AllowedImagesSettings, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		out, err := conn.GetAllowedImagesSettings(ctx, &ec2.GetAllowedImagesSettingsInput{})
+		output, err := tfec2.FindAllowedImagesSettings(ctx, conn)
+
 		if err != nil {
 			return err
 		}
 
-		*settings = *out
+		*v = *output
 
 		return nil
 	}
