@@ -2003,8 +2003,14 @@ func disableInstanceAPITermination(ctx context.Context, conn *ec2.Client, id str
 // as input by first stopping the EC2 instance before the modification
 // and then starting up the EC2 instance after modification.
 // Reference: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html
-func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client, input *ec2.ModifyInstanceAttributeInput, attrName string) error {
+func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client, input *ec2.ModifyInstanceAttributeInput, attrName string, preserve_state bool) error {
 	id := aws.ToString(input.InstanceId)
+
+	_, state, err := statusInstance(ctx, conn, id)()
+
+	if err != nil {
+		return err
+	}
 
 	if err := stopInstance(ctx, conn, id, false, instanceStopTimeout); err != nil {
 		return err
@@ -2014,8 +2020,10 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client,
 		return fmt.Errorf("modifying EC2 Instance (%s) %s attribute: %w", id, attrName, err)
 	}
 
-	if err := startInstance(ctx, conn, id, true, instanceStartTimeout); err != nil {
-		return err
+	if strings.ToLower(state) != "stopped" && strings.ToLower(state) != "stopping" {
+		if err := startInstance(ctx, conn, id, true, instanceStartTimeout); err != nil {
+			return err
+		}
 	}
 
 	return nil
