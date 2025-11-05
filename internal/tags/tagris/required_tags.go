@@ -34,7 +34,7 @@ func GetRequiredTags(ctx context.Context, awsConfig aws.Config) (map[string]tfta
 func convert(ctx context.Context, reqTags []types.RequiredTag) map[string]tftags.KeyValueTags {
 	m := make(map[string]tftags.KeyValueTags, len(reqTags))
 	for _, t := range reqTags {
-		tfType, ok := lookup[aws.ToString(t.ResourceType)]
+		tfType, ok := Lookup[aws.ToString(t.ResourceType)]
 		if !ok {
 			continue
 		}
@@ -47,12 +47,4 @@ func convert(ctx context.Context, reqTags []types.RequiredTag) map[string]tftags
 		}
 	}
 	return m
-}
-
-// lookup cross references Tagris resource type names to a corresponding
-// Terraform resource type
-var lookup = map[string]string{
-	"logs:log-group":   "aws_cloudwatch_log_group",
-	"s3:bucket":        "aws_s3_bucket",
-	"iot:billinggroup": "aws_iot_billing_group",
 }
