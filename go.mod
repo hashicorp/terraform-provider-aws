@@ -238,7 +238,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.35.10
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.39.14
-	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.33.4
+	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.33.5
 	github.com/aws/aws-sdk-go-v2/service/ses v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.54.1
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.39.10
