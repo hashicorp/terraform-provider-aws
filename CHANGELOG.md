@@ -10,14 +10,17 @@ ENHANCEMENTS:
 * data-source/aws_kinesis_stream: Add `max_record_size_in_kib` attribute ([#44915](https://github.com/hashicorp/terraform-provider-aws/issues/44915))
 * resource/aws_cloudfront_distribution: Add `logging_v1_enabled` attribute ([#44838](https://github.com/hashicorp/terraform-provider-aws/issues/44838))
 * resource/aws_ec2_client_vpn_route: Allow IPv6 address ranges for `destination_cidr_block` ([#44926](https://github.com/hashicorp/terraform-provider-aws/issues/44926))
+* resource/aws_ec2_instance_connect_endpoint: Add `ip_address_type` argument ([#44616](https://github.com/hashicorp/terraform-provider-aws/issues/44616))
 * resource/aws_eks_node_group: Add `max_parallel_nodes_repaired_count`, `max_parallel_nodes_repaired_percentage`, `max_unhealthy_node_threshold_count`, `max_unhealthy_node_threshold_percentage`, and `node_repair_config_overrides` to the `node_repair_config` schema ([#44894](https://github.com/hashicorp/terraform-provider-aws/issues/44894))
 * resource/aws_elasticache_replication_group: Add `node_group_configuration` block to support availability zone specification and snapshot restoration for cluster mode enabled replication groups ([#44879](https://github.com/hashicorp/terraform-provider-aws/issues/44879))
 * resource/aws_glue_job: Ensure that `timeout` is unconfigured for Ray jobs ([#35012](https://github.com/hashicorp/terraform-provider-aws/issues/35012))
 * resource/aws_kinesis_stream: Add `max_record_size_in_kib` argument to support for Kinesis 10MiB payloads. This functionality requires the `kinesis:UpdateMaxRecordSize` IAM permission ([#44915](https://github.com/hashicorp/terraform-provider-aws/issues/44915))
 * resource/aws_transfer_server: Add support for `TransferSecurityPolicy-AS2Restricted-2025-07` `security_policy_name` value ([#44865](https://github.com/hashicorp/terraform-provider-aws/issues/44865))
+* resource/aws_transfer_server: Support `TransferSecurityPolicy-AS2Restricted-2025-07` as a valid value for `security_policy_name` ([#44652](https://github.com/hashicorp/terraform-provider-aws/issues/44652))
 
 BUG FIXES:
 
+* provider: Support `us-isob-west-1` as a valid AWS Region ([#44944](https://github.com/hashicorp/terraform-provider-aws/issues/44944))
 * resource/aws_cloudfront_distribution: Change `logging_config.bucket` argument from `Required` to `Optional` ([#44838](https://github.com/hashicorp/terraform-provider-aws/issues/44838))
 * resource/aws_cloudfront_distribution: Fix inability to configure `logging_config.include_cookies` argument while keeping V1 logging disabled ([#44838](https://github.com/hashicorp/terraform-provider-aws/issues/44838))
 * resource/aws_cloudfront_vpc_origin: Fix `Source type "...cloudfront.originSSLProtocolsModel" does not implement attr.Value` and `missing required field, CreateVpcOriginInput.VpcOriginEndpointConfig` errors. This fixes a regression introduced in [v6.17.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6170-october-16-2025) ([#44861](https://github.com/hashicorp/terraform-provider-aws/issues/44861))
