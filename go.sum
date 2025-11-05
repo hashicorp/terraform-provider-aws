@@ -77,8 +77,8 @@ github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.1 h1:jh5RzCpaQUpcUkxM+SYgacL+
 github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.1/go.mod h1:xcEbbUjLqajeslIydrSJhESXNlGMtfXmu7MLY6ONlzY=
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.3 h1:MY0ipQXQ3c++MZtnY7pF1uHu2vByFEoCUun/5zIjPmk=
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.3/go.mod h1:rI1byQGgb9tUXBvo3uLFrRXRzaCJayw+CiqAnDgYSKw=
-github.com/aws/aws-sdk-go-v2/service/appstream v1.50.3 h1:cEoWm2nBv/E2XWrEtF1IwQKR/x+o8D+XpolwjqO41X8=
-github.com/aws/aws-sdk-go-v2/service/appstream v1.50.3/go.mod h1:YGnGCWYIkK3EqbsPa55hHiK/SCuTNP1jmRJ9FPAQbv0=
+github.com/aws/aws-sdk-go-v2/service/appstream v1.50.4 h1:cq3Q4bOTAgzMjfj8iWP0A4/abnykkXbuK0yk8US254I=
+github.com/aws/aws-sdk-go-v2/service/appstream v1.50.4/go.mod h1:flCm0TnAjuMbHs8YaGjVjQjUUsa5EP5O6nC4Zpt080E=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.52.0 h1:4hbjAlkZds0XVlrB0Cn4yNv3ax4m2awxqx00GkcHyas=
 github.com/aws/aws-sdk-go-v2/service/appsync v1.52.0/go.mod h1:HPxk2OrrN8yHuD4B31eQiKQAP7QEwK5DqMyI9nrG+gE=
 github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.2.11 h1:6AIb8+ZgMZ0go0o71MEh6JRJa2Gj8v5UBeIXEl1c71o=
