@@ -9,6 +9,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-sdkdiag-appendfromerr
     languages: [go]
@@ -20,6 +21,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-sdkdiag-appenderrorf
     languages: [go]
@@ -32,6 +34,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-create-appenddiagerror
     languages: [go]
@@ -42,6 +45,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-diagnostics-adderror
     languages: [go]
@@ -56,6 +60,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-create-adderror
     languages: [go]
@@ -66,6 +71,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-direct-diag-adderror
     languages: [go]
@@ -78,6 +84,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-direct-diag-appenderrorf
     languages: [go]
@@ -88,6 +95,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-direct-diag-appendfromerr
     languages: [go]
@@ -98,6 +106,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-direct-diag-append
     languages: [go]
@@ -111,6 +120,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-bare-return-err
     languages: [go]
@@ -125,6 +135,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-bare-return-value-err
     languages: [go]
@@ -141,6 +152,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
       exclude:
         - "*_test.go"
 
@@ -157,6 +169,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
       exclude:
         - "*_test.go"
 
@@ -172,6 +185,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
 
   - id: go-no-fmt-errorf-return
     languages: [go]
@@ -185,6 +199,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
       exclude:
         - "*_test.go"
 
@@ -203,6 +218,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
       exclude:
         - "*_test.go"
 
@@ -219,6 +235,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
       exclude:
         - "*_test.go"
 
@@ -235,6 +252,7 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
       exclude:
         - "*_test.go"
 
@@ -250,3 +268,4 @@ rules:
       include:
         - "/internal/service/appsync/"
         - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
