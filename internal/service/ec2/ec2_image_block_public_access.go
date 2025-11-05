@@ -23,7 +23,7 @@ import (
 
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
 // @SingletonIdentity
-// @IdentityVersion(1)
+// @IdentityVersion(1, identityUpgraders="imageBlockPublicAccessIdentityUpgradeV0")
 // @V60SDKv2Fix
 // @NoImport
 // @Testing(checkDestroyNoop=true)
@@ -109,6 +109,8 @@ func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceD
 
 	return diags
 }
+
+var imageBlockPublicAccessIdentityUpgradeV0 schema.IdentityUpgrader
 
 func imageBlockPublicAccessDisabledState_Values() []string {
 	return enum.Values[awstypes.ImageBlockPublicAccessDisabledState]()
