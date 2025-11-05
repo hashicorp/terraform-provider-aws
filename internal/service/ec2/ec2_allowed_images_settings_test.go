@@ -565,7 +565,7 @@ resource "aws_ec2_allowed_images_settings" "test" {
 
   image_criterion {
     image_providers = ["amazon"]
-    
+
     creation_date_condition {
       maximum_days_since_created = 365
     }
@@ -581,7 +581,7 @@ resource "aws_ec2_allowed_images_settings" "test" {
 
   image_criterion {
     image_providers = ["amazon"]
-    
+
     deprecation_time_condition {
       maximum_days_since_deprecated = 30
     }
@@ -596,14 +596,14 @@ resource "aws_ec2_allowed_images_settings" "test" {
   state = "enabled"
 
   image_criterion {
-    image_names              = ["al2023-ami-*"]
-    image_providers          = ["amazon"]
+    image_names               = ["al2023-ami-*"]
+    image_providers           = ["amazon"]
     marketplace_product_codes = ["abc123def456"]
-    
+
     creation_date_condition {
       maximum_days_since_created = 180
     }
-    
+
     deprecation_time_condition {
       maximum_days_since_deprecated = 60
     }
