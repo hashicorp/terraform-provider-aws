@@ -22,7 +22,7 @@ import (
 
 // @SDKResource("aws_redshift_cluster_snapshot", name="Cluster Snapshot")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.Snapshot")
 func resourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
