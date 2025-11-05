@@ -88,6 +88,45 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"capacity_provider_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ec2_managed_instance_capacity_provider_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_provider_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"function_autoscaling_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"min_execution_environments": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"max_execution_environments": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"code_sha256": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -510,6 +549,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		Role:         aws.String(d.Get(names.AttrRole).(string)),
 		Tags:         getTagsIn(ctx),
 		Timeout:      aws.Int32(int32(d.Get(names.AttrTimeout).(int))),
+	}
+
+	if _, ok := d.GetOk("capacity_provider_config"); ok {
+		// use value for capacity provider
 	}
 
 	if v, ok := d.GetOk("filename"); ok {
