@@ -381,7 +381,7 @@ type ResourceDatum struct {
 	ARNFormat                      string
 	arnAttribute                   string
 	isARNFormatGlobal              triBoolean
-	ArnIdentity                    bool
+	isARNIdentity                  bool
 	MutableIdentity                bool
 	IsGlobal                       bool
 	isSingleton                    bool
@@ -424,7 +424,7 @@ func (d ResourceDatum) IDAttrDuplicates() string {
 }
 
 func (d ResourceDatum) IsARNIdentity() bool {
-	return d.ArnIdentity
+	return d.isARNIdentity
 }
 
 func (d ResourceDatum) ARNAttribute() string {
@@ -624,7 +624,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "ArnIdentity":
 				hasIdentity = true
-				d.ArnIdentity = true
+				d.isARNIdentity = true
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					d.arnAttribute = "arn"
