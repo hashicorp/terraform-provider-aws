@@ -321,6 +321,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `aiml_options` - (Optional) Configuration block for parameters required to enable all machine learning features. Detailed below.
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain.
 * `advanced_options` - (Optional) Key-value string pairs to specify advanced configuration options. Note that the values for these configuration options must be strings (wrapped in quotes) or they may be wrong and cause a perpetual diff, causing Terraform to want to recreate your OpenSearch domain on every apply.
 * `advanced_security_options` - (Optional) Configuration block for [fine-grained access control](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/fgac.html). Detailed below.
@@ -354,6 +355,19 @@ The following arguments are optional:
 * `master_user_arn` - (Optional) ARN for the main user. Only specify if `internal_user_database_enabled` is not set or set to `false`.
 * `master_user_name` - (Optional) Main user's username, which is stored in the Amazon OpenSearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
 * `master_user_password` - (Optional) Main user's password, which is stored in the Amazon OpenSearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
+
+### aiml_options
+
+* `natural_language_query_generation_options` - (Optional) Configuration block for parameters required for natural language query generation on the specified domain.
+* `s3_vectors_engine` - (Optional) Configuration block for parameters required to enable S3 vectors engine features on the specified domain.
+
+#### natural_language_query_generation_options
+
+* `desired_state` - (Optional)  The desired state of the natural language query generation feature. Valid values are `ENABLED` and `DISABLED`.
+
+#### s3_vectors_engine
+
+* `enabled` - (Optional) Enables S3 vectors engine features.
 
 ### auto_tune_options
 
