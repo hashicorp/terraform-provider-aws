@@ -1141,6 +1141,12 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			FunctionName: aws.String(d.Id()),
 		}
 
+		// check if function is associated with a capacity provider.
+		// this will indicate the type of publish we need to do.
+		if _, ok := d.GetOk("capacity_provider_config"); ok {
+			// new api with publish options
+		}
+
 		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PublishVersion(ctx, &input)
 		}, "in progress")
