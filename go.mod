@@ -232,7 +232,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.9
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.39.11
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.65.1
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.65.2
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.39.0
