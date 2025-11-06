@@ -304,16 +304,16 @@ type awsFunctionAssociationsForFlatten struct {
 }
 
 type tfFunctionAssociationsModelForFlatten struct {
-	FunctionAssociations fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"function_associations" autoflex:",wrapper=items"`
+	FunctionAssociations fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"function_associations" autoflex:",xmlwrapper=items"`
 }
 
 // TF model types with wrapper tags (for flattening - AWS to TF)
 type tfStatusCodesModelForFlatten struct {
-	StatusCodes fwtypes.SetValueOf[types.Int64] `tfsdk:"status_codes" autoflex:",wrapper=items"`
+	StatusCodes fwtypes.SetValueOf[types.Int64] `tfsdk:"status_codes" autoflex:",xmlwrapper=items"`
 }
 
 type tfHeadersModelForFlatten struct {
-	Headers fwtypes.ListValueOf[types.String] `tfsdk:"headers" autoflex:",wrapper=items"`
+	Headers fwtypes.ListValueOf[types.String] `tfsdk:"headers" autoflex:",xmlwrapper=items"`
 }
 
 func TestFlattenXMLWrapper(t *testing.T) {

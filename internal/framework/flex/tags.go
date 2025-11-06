@@ -54,7 +54,7 @@ func (o tagOptions) NoXMLWrapper() bool {
 	return o.Contains("noxmlwrapper")
 }
 
-func (o tagOptions) WrapperField() string {
+func (o tagOptions) XMLWrapperField() string {
 	if len(o) == 0 {
 		return ""
 	}
@@ -62,7 +62,7 @@ func (o tagOptions) WrapperField() string {
 	for s != "" {
 		var option string
 		option, s, _ = strings.Cut(s, ",")
-		if name, value, found := strings.Cut(option, "="); found && name == "wrapper" {
+		if name, value, found := strings.Cut(option, "="); found && name == "xmlwrapper" {
 			return value
 		}
 	}

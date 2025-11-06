@@ -185,7 +185,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Map:
-		diags.Append(flattener.map_(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+		diags.Append(flattener.map_(ctx, sourcePath, vFrom, targetPath, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Struct:
@@ -193,7 +193,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Interface:
-		diags.Append(flattener.interface_(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.interface_(ctx, vFrom, tTo, vTo, fieldOpts)...)
 		return diags
 	}
 
@@ -612,7 +612,7 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 	return diags
 }
 
-func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
@@ -846,7 +846,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 }
 
 // map_ copies an AWS API map value to a compatible Plugin Framework value.
-func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tMapKey := vFrom.Type().Key(); tMapKey.Kind() {
@@ -1731,7 +1731,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		for toField := range tfreflect.ExportedStructFields(typeTo) {
 			toFieldName := toField.Name
 			_, toOpts := autoflexTags(toField)
-			if wrapperField := toOpts.WrapperField(); wrapperField != "" {
+			if wrapperField := toOpts.XMLWrapperField(); wrapperField != "" {
 				toFieldVal := valTo.FieldByIndex(toField.Index)
 				if !toFieldVal.CanSet() {
 					continue
@@ -1807,7 +1807,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		})
 
 		// Check if target has wrapper tag and source is an XML wrapper struct
-		if wrapperField := toFieldOpts.WrapperField(); wrapperField != "" {
+		if wrapperField := toFieldOpts.XMLWrapperField(); wrapperField != "" {
 			fromFieldVal := valFrom.FieldByIndex(fromField.Index)
 			if isXMLWrapperStruct(fromFieldVal.Type()) {
 				tflog.SubsystemTrace(ctx, subsystemName, "Converting XML wrapper struct to collection", map[string]any{
