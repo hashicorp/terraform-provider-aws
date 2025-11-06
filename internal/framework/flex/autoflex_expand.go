@@ -1583,8 +1583,6 @@ func isXMLWrapperStruct(t reflect.Type) bool {
 		return false
 	}
 
-	//quantityField.Anonymous
-
 	// Quantity should be *int32
 	if quantityField.Type.Elem().Kind() != reflect.Int32 {
 		return false
