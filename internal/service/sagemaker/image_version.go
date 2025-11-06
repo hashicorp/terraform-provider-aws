@@ -6,6 +6,8 @@ package sagemaker
 import (
 	"context"
 	"log"
+	"strconv"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -163,11 +165,13 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if _, err := conn.CreateImageVersion(ctx, &input); err != nil {
+	result, err := conn.CreateImageVersion(ctx, &input)
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
 	}
 
-	out, err := waitImageVersionCreated(ctx, conn, name)
+	version := extractVersionFromArn(aws.ToString(result.ImageVersionArn))
+	out, err := waitImageVersionCreatedByVersion(ctx, conn, name, version)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image Version (%s) to be created: %s", d.Id(), err)
 	}
@@ -410,6 +414,18 @@ func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Cl
 	}
 
 	return output.SageMakerImageVersionAliases, nil
+}
+
+// extractVersionFromArn extracts the version number from an ImageVersionArn
+// ARN format: arn:aws:sagemaker:region:account:image-version/image-name/version
+func extractVersionFromArn(arn string) int32 {
+	parts := strings.Split(arn, "/")
+	if len(parts) >= 3 {
+		if version, err := strconv.ParseInt(parts[len(parts)-1], 10, 32); err == nil {
+			return int32(version)
+		}
+	}
+	return 0
 }
 
 // expandImageVersionResourceID wraps flex.ExpandResourceId and handles conversion
