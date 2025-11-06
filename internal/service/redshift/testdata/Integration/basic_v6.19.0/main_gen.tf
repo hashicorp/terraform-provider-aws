@@ -13,10 +13,39 @@ resource "aws_redshift_integration" "test" {
   ]
 }
 
-# testAccIntegrationConfig_base
+# testAccIntegrationConfig_source_DynamoDBTable
 
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
+# The "aws_redshiftserverless_resource_policy" resource doesn't support the following action types.
+# Therefore we need to use the "aws_redshift_resource_policy" resource for RedShift-serverless instead.
+resource "aws_redshift_resource_policy" "test" {
+  resource_arn = aws_redshiftserverless_namespace.test.arn
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "redshift.amazonaws.com"
+        }
+        Action   = "redshift:AuthorizeInboundIntegration"
+        Resource = aws_redshiftserverless_namespace.test.arn
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn" = aws_dynamodb_table.test.arn
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "redshift:CreateInboundIntegration"
+        Resource = aws_redshiftserverless_namespace.test.arn
+      }
+    ]
+  })
+}
 
 resource "aws_dynamodb_table" "test" {
   name           = var.rName
@@ -78,6 +107,11 @@ resource "aws_dynamodb_resource_policy" "test" {
   })
 }
 
+# testAccIntegrationConfig_base
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = var.rName
 }
@@ -89,38 +123,6 @@ resource "aws_redshiftserverless_workgroup" "test" {
 
   publicly_accessible = false
   subnet_ids          = aws_subnet.test[*].id
-}
-
-# The "aws_redshiftserverless_resource_policy" resource doesn't support the following action types.
-# Therefore we need to use the "aws_redshift_resource_policy" resource for RedShift-serverless instead.
-resource "aws_redshift_resource_policy" "test" {
-  resource_arn = aws_redshiftserverless_namespace.test.arn
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "redshift.amazonaws.com"
-        }
-        Action   = "redshift:AuthorizeInboundIntegration"
-        Resource = aws_redshiftserverless_namespace.test.arn
-        Condition = {
-          StringEquals = {
-            "aws:SourceArn" = aws_dynamodb_table.test.arn
-          }
-        }
-      },
-      {
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "redshift:CreateInboundIntegration"
-        Resource = aws_redshiftserverless_namespace.test.arn
-      }
-    ]
-  })
 }
 
 # acctest.ConfigVPCWithSubnets(rName, 2)
@@ -152,6 +154,7 @@ data "aws_availability_zones" "available" {
 locals {
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string
