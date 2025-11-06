@@ -57,8 +57,7 @@ type Config struct {
 	SkipRequestingAccountId        bool
 	STSRegion                      string
 	SuppressDebugLog               bool
-	TagPolicyEnforced              bool
-	TagPolicySeverity              string
+	TagPolicyConfig                *tftags.TagPolicyConfig
 	TerraformVersion               string
 	Token                          string
 	TokenBucketRateLimiterCapacity int
@@ -195,7 +194,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 
 	// Fetch tag policy details when enforced
-	if c.TagPolicyEnforced {
+	if c.TagPolicyConfig != nil {
 		tflog.Debug(ctx, "Retrieving tag policy details")
 		reqTags, err := tagris.GetRequiredTags(ctx, cfg)
 		if err != nil {
@@ -206,16 +205,13 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 					fmt.Sprintf("\n\nOriginal error: %s", err)))
 			return nil, diags
 		}
-
-		client.tagPolicyConfig = &tftags.TagPolicyConfig{
-			Level:        c.TagPolicySeverity,
-			RequiredTags: reqTags,
-		}
+		c.TagPolicyConfig.RequiredTags = reqTags
 	}
 
 	client.accountID = accountID
 	client.defaultTagsConfig = c.DefaultTagsConfig
 	client.ignoreTagsConfig = c.IgnoreTagsConfig
+	client.tagPolicyConfig = c.TagPolicyConfig
 	client.terraformVersion = c.TerraformVersion
 
 	// Used for lazy-loading AWS API clients.

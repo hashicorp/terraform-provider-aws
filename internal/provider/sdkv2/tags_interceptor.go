@@ -328,7 +328,7 @@ func validateRequiredTags() customizeDiffInterceptor {
 								detail := fmt.Sprintf("An organizational tag policy requires the following tags for %s: %s", typeName, missing)
 
 								// CustomizeDiff does not support diagnostics (only an error return)
-								switch policy.Level {
+								switch policy.Severity {
 								case "warning":
 									// Warning diagnostics are only logged
 									tflog.Warn(ctx, "Required Tags Validation", map[string]any{

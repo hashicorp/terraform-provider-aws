@@ -308,7 +308,7 @@ func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context,
 						summary := "Missing Required Tags"
 						detail := fmt.Sprintf("An organizational tag policy requires the following tags for %s: %s", typeName, missing)
 
-						switch policy.Level {
+						switch policy.Severity {
 						case "warning":
 							opts.response.Diagnostics.AddAttributeWarning(path.Root(names.AttrTags), summary, detail)
 						default:

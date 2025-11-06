@@ -46,6 +46,19 @@ const (
 	// provider configuration. When multiple key prefixes are provided, the values are
 	// comma-separated.
 	IgnoreTagsKeyPrefixesEnvVar = "TF_AWS_IGNORE_TAGS_KEY_PREFIXES"
+
+	// Environment variable specifying whether organizational tag policies should be enforced
+	//
+	// Valid values are "true" and "false". Any other value will trigger an error during
+	// provider initialization.
+	TagPolicyEnforcedEnvVar = "TF_AWS_TAG_POLICY_ENFORCED"
+
+	// Environment variable specifying the severity of tag policy violation diagnostics
+	//
+	// Valid values are "error" and "warning". Any other value will trigger an error during
+	// provider initialization. If this variable is omitted when TF_AWS_TAG_POLICY_ENFORCED
+	// is set to true, the diagnostic severity will default to "error".
+	TagPolicySeverityEnvVar = "TF_AWS_TAG_POLICY_SEVERITY"
 )
 
 // DefaultConfig contains tags to default across all resources.
@@ -61,12 +74,12 @@ type IgnoreConfig struct {
 
 // TagPolicyConfig contains options related to organizational tagging policies.
 type TagPolicyConfig struct {
-	// Level indicates the severity of the diagnostic
+	// Severity indicates the severity of the diagnostic
 	//
 	// Must be one of "error" or "warning". This is a higher level abstraction on
 	// the diagnostic severity types exposed by the plugin libraries, as it must be
 	// shared across both Plugin SDK V2 and Plugin Framework based resources.
-	Level string
+	Severity string
 
 	// RequiredTags is a mapping of Terraform resource type names to the required
 	// tags defined in the effective tag policy
