@@ -170,7 +170,7 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
 	}
 
-	version := extractVersionFromArn(aws.ToString(result.ImageVersionArn))
+	version := extractVersionFromARN(aws.ToString(result.ImageVersionArn))
 	out, err := waitImageVersionCreatedByVersion(ctx, conn, name, version)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image Version (%s) to be created: %s", d.Id(), err)
@@ -386,9 +386,9 @@ func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Cl
 	return output.SageMakerImageVersionAliases, nil
 }
 
-// extractVersionFromArn extracts the version number from an ImageVersionArn
+// extractVersionFromARN extracts the version number from an ImageVersionArn
 // ARN format: arn:aws:sagemaker:region:account:image-version/image-name/version
-func extractVersionFromArn(arn string) int32 {
+func extractVersionFromARN(arn string) int32 {
 	parts := strings.Split(arn, "/")
 	if len(parts) >= 3 {
 		if version, err := strconv.ParseInt(parts[len(parts)-1], 10, 32); err == nil {
