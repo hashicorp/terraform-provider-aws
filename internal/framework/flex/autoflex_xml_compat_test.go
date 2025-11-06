@@ -364,20 +364,16 @@ func TestFlattenXMLWrapper(t *testing.T) {
 			},
 			Target: &tfFunctionAssociationsModelForFlatten{},
 			WantTarget: &tfFunctionAssociationsModelForFlatten{
-				FunctionAssociations: func() fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] {
-					elems := []*FunctionAssociationTF{
-						{
-							EventType:   types.StringValue("viewer-request"),
-							FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/example-function"),
-						},
-						{
-							EventType:   types.StringValue("viewer-response"),
-							FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/another-function"),
-						},
-					}
-					setValue, _ := fwtypes.NewSetNestedObjectValueOfSlice(ctx, elems, nil)
-					return setValue
-				}(),
+				FunctionAssociations: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*FunctionAssociationTF{
+					{
+						EventType:   types.StringValue("viewer-request"),
+						FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/example-function"),
+					},
+					{
+						EventType:   types.StringValue("viewer-response"),
+						FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/another-function"),
+					},
+				}),
 			},
 		},
 		"empty slice to null set": {
@@ -449,4 +445,60 @@ func TestExpandNoXMLWrapper(t *testing.T) {
 	}
 
 	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+}
+
+func TestFlattenNoXMLWrapper(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"complex type - function associations": {
+			Source: DistributionConfigAWS{
+				FunctionAssociations: &FunctionAssociations{
+					Quantity: aws.Int32(2),
+					Items: []FunctionAssociation{
+						{
+							EventType:   "viewer-request",
+							FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/test-function-1"),
+						},
+						{
+							EventType:   "viewer-response",
+							FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/test-function-2"),
+						},
+					},
+				},
+			},
+			// 	Items: []FunctionAssociation{
+			// 		{
+			// 			EventType:   "viewer-request",
+			// 			FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/example-function"),
+			// 		},
+			// 		{
+			// 			EventType:   "viewer-response",
+			// 			FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/another-function"),
+			// 		},
+			// 	},
+			// 	Quantity: aws.Int32(2),
+			// },
+			Target: &DistributionConfigTFNoXMLWrapper{},
+			WantTarget: &DistributionConfigTFNoXMLWrapper{
+				FunctionAssociations: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &FunctionAssociationsTF{
+					Items: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*FunctionAssociationTF{
+						{
+							EventType:   types.StringValue("viewer-request"),
+							FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-1"),
+						},
+						{
+							EventType:   types.StringValue("viewer-response"),
+							FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-2"),
+						},
+					}),
+					Quantity: types.Int64Value(2),
+				}),
+			},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
 }
