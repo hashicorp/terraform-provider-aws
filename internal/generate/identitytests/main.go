@@ -382,7 +382,6 @@ type ResourceDatum struct {
 	MutableIdentity          bool
 	IsGlobal                 bool
 	HasRegionOverrideTest    bool
-	identityAttributes       []identityAttribute
 	IDAttrFormat             string
 	HasV6_0NullValuesError   bool
 	HasV6_0RefreshError      bool
@@ -457,25 +456,11 @@ func (r ResourceDatum) IsARNFormatGlobal() bool {
 	return r.isARNFormatGlobal == triBooleanTrue
 }
 
-func (r ResourceDatum) IdentityAttributes() []identityAttribute {
-	return r.identityAttributes
-}
-
 func (r ResourceDatum) LatestIdentityVersion() int64 {
 	if len(r.IdentityVersions) == 0 {
 		return 0
 	}
 	return slices.Max(slices.Collect(maps.Keys(r.IdentityVersions)))
-}
-
-type identityAttribute struct {
-	name        string
-	Optional    bool
-	TestNotNull bool
-}
-
-func (i identityAttribute) Name() string {
-	return namesgen.ConstOrQuote(i.name)
 }
 
 type commonConfig struct {
@@ -642,8 +627,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					continue
 				}
 
-				identityAttribute := identityAttribute{
-					name: args.Positional[0],
+				identityAttribute := common.IdentityAttribute{
+					Name_: args.Positional[0],
 				}
 
 				if attr, ok := args.Keyword["optional"]; ok {
@@ -664,7 +649,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
-				d.identityAttributes = append(d.identityAttributes, identityAttribute)
+				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
 
 			case "SingletonIdentity":
 				hasIdentity = true
