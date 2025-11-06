@@ -132,7 +132,7 @@ type DirectXMLWrapper struct {
 }
 
 type DirectWrapperTF struct {
-	Items fwtypes.SetValueOf[types.String] `tfsdk:"items"`
+	Items fwtypes.SetValueOf[types.String] `tfsdk:"items" autoflex:",xmlwrapper=items"`
 }
 
 type DirectWrapperAWS struct {
@@ -387,7 +387,7 @@ type FunctionAssociationsTF struct {
 }
 
 type DistributionConfigTFNoXMLWrapper struct {
-	FunctionAssociations fwtypes.ListNestedObjectValueOf[FunctionAssociationsTF] `tfsdk:"function_associations" autoflex:",noxmlwrapper"`
+	FunctionAssociations fwtypes.ListNestedObjectValueOf[FunctionAssociationsTF] `tfsdk:"function_associations"`
 }
 
 func TestExpandNoXMLWrapper(t *testing.T) {

@@ -50,10 +50,6 @@ func (o tagOptions) NoFlatten() bool {
 	return o.Contains("noflatten")
 }
 
-func (o tagOptions) NoXMLWrapper() bool {
-	return o.Contains("noxmlwrapper")
-}
-
 func (o tagOptions) XMLWrapperField() string {
 	if len(o) == 0 {
 		return ""

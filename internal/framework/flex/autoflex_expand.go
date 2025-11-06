@@ -628,7 +628,7 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 	switch vTo.Kind() {
 	case reflect.Struct:
 		// Check if target is an XML wrapper struct
-		if !fieldOpts.noXMLWrapper && isXMLWrapperStruct(vTo.Type()) {
+		if fieldOpts.xmlWrapper && isXMLWrapperStruct(vTo.Type()) {
 			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, "Items")...)
 			return diags
 		}
@@ -707,7 +707,7 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 	switch vTo.Kind() {
 	case reflect.Struct:
 		// Check if target is an XML wrapper struct
-		if !fieldOpts.noXMLWrapper && isXMLWrapperStruct(vTo.Type()) {
+		if fieldOpts.xmlWrapper && isXMLWrapperStruct(vTo.Type()) {
 			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, "Items")...)
 			return diags
 		}
@@ -933,7 +933,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Struct:
 		// Check if target is an XML wrapper struct before handling as generic struct
-		if !fieldOpts.noXMLWrapper && isXMLWrapperStruct(tTo) {
+		if fieldOpts.xmlWrapper && isXMLWrapperStruct(tTo) {
 			diags.Append(expander.nestedObjectCollectionToXMLWrapper(ctx, sourcePath, vFrom, targetPath, vTo)...)
 			return diags
 		}
@@ -947,7 +947,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, sourceP
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
 			// Check if target is a pointer to XML wrapper struct
-			if !fieldOpts.noXMLWrapper && isXMLWrapperStruct(tElem) {
+			if fieldOpts.xmlWrapper && isXMLWrapperStruct(tElem) {
 				// Create new instance of the XML wrapper struct
 				newWrapper := reflect.New(tElem)
 				diags.Append(expander.nestedObjectCollectionToXMLWrapper(ctx, sourcePath, vFrom, targetPath, newWrapper.Elem())...)
@@ -1221,8 +1221,8 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 		})
 
 		opts := fieldOpts{
-			legacy:       fromFieldOpts.Legacy(),
-			noXMLWrapper: fromFieldOpts.NoXMLWrapper(),
+			legacy:     fromFieldOpts.Legacy(),
+			xmlWrapper: fromFieldOpts.XMLWrapperField() != "",
 		}
 
 		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)

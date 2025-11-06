@@ -1836,9 +1836,9 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		}
 
 		opts := fieldOpts{
-			legacy:       toFieldOpts.Legacy(),
-			omitempty:    toFieldOpts.OmitEmpty(),
-			noXMLWrapper: toFieldOpts.NoXMLWrapper(),
+			legacy:     toFieldOpts.Legacy(),
+			omitempty:  toFieldOpts.OmitEmpty(),
+			xmlWrapper: toFieldOpts.XMLWrapperField() != "",
 		}
 
 		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)
