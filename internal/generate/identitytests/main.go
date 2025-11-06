@@ -381,7 +381,6 @@ type ResourceDatum struct {
 	ARNFormat                      string
 	arnAttribute                   string
 	isARNFormatGlobal              triBoolean
-	isARNIdentity                  bool
 	MutableIdentity                bool
 	IsGlobal                       bool
 	isSingleton                    bool
@@ -397,6 +396,7 @@ type ResourceDatum struct {
 	IsCustomInherentRegionIdentity bool
 	IdentityVersions               map[int64]*version.Version
 	tests.CommonArgs
+	common.ResourceIdentity
 }
 
 func (d ResourceDatum) ProviderPackage() string {
@@ -423,12 +423,8 @@ func (d ResourceDatum) IDAttrDuplicates() string {
 	return namesgen.ConstOrQuote(d.idAttrDuplicates)
 }
 
-func (d ResourceDatum) IsARNIdentity() bool {
-	return d.isARNIdentity
-}
-
 func (d ResourceDatum) IsGlobalARNFormatForRegionalResource() bool {
-	return d.isARNIdentity && !d.IsGlobal && d.IsARNFormatGlobal()
+	return d.IsARNIdentity && !d.IsGlobal && d.IsARNFormatGlobal()
 }
 
 func (d ResourceDatum) ARNAttribute() string {
@@ -452,11 +448,11 @@ func (d ResourceDatum) GenerateRegionOverrideTest() bool {
 }
 
 func (d ResourceDatum) HasInherentRegionIdentity() bool {
-	return d.IsARNIdentity() || d.IsCustomInherentRegionIdentity
+	return d.IsARNIdentity || d.IsCustomInherentRegionIdentity
 }
 
 func (d ResourceDatum) HasInherentRegionImportID() bool {
-	return d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity
+	return d.IsARNIdentity || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity
 }
 
 func (d ResourceDatum) IdentityAttribute() string {
@@ -628,7 +624,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "ArnIdentity":
 				hasIdentity = true
-				d.isARNIdentity = true
+				d.IsARNIdentity = true
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					d.arnAttribute = "arn"
