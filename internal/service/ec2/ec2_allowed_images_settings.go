@@ -149,21 +149,22 @@ func (r *allowedImagesSettingsResource) Create(ctx context.Context, request reso
 
 	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.EnableAllowedImagesSettings(ctx, &ec2.EnableAllowedImagesSettingsInput{
+	inputE := ec2.EnableAllowedImagesSettingsInput{
 		AllowedImagesSettingsState: data.State.ValueEnum(),
-	})
+	}
+	_, err := conn.EnableAllowedImagesSettings(ctx, &inputE)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
 	}
 
-	var input ec2.ReplaceImageCriteriaInAllowedImagesSettingsInput
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	var inputR ec2.ReplaceImageCriteriaInAllowedImagesSettingsInput
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &inputR))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	_, err = conn.ReplaceImageCriteriaInAllowedImagesSettings(ctx, &input)
+	_, err = conn.ReplaceImageCriteriaInAllowedImagesSettings(ctx, &inputR)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
@@ -211,9 +212,10 @@ func (r *allowedImagesSettingsResource) Update(ctx context.Context, request reso
 	conn := r.Meta().EC2Client(ctx)
 
 	if !new.State.Equal(old.State) {
-		_, err := conn.EnableAllowedImagesSettings(ctx, &ec2.EnableAllowedImagesSettingsInput{
+		input := ec2.EnableAllowedImagesSettingsInput{
 			AllowedImagesSettingsState: new.State.ValueEnum(),
-		})
+		}
+		_, err := conn.EnableAllowedImagesSettings(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err)
 			return
@@ -240,13 +242,15 @@ func (r *allowedImagesSettingsResource) Update(ctx context.Context, request reso
 func (r *allowedImagesSettingsResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.ReplaceImageCriteriaInAllowedImagesSettings(ctx, &ec2.ReplaceImageCriteriaInAllowedImagesSettingsInput{})
+	var inputR ec2.ReplaceImageCriteriaInAllowedImagesSettingsInput
+	_, err := conn.ReplaceImageCriteriaInAllowedImagesSettings(ctx, &inputR)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
 	}
 
-	_, err = conn.DisableAllowedImagesSettings(ctx, &ec2.DisableAllowedImagesSettingsInput{})
+	var inputD ec2.DisableAllowedImagesSettingsInput
+	_, err = conn.DisableAllowedImagesSettings(ctx, &inputD)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
