@@ -12,6 +12,10 @@ import (
 // Otherwise, it returns the attribute quoted. This is intended for use in
 // generated code and templates.
 func ConstOrQuote(constant string) string {
+	if constant == "" {
+		return ""
+	}
+
     allConstants := map[string]string{
     {{- range .Constants }}
         "{{ .Literal }}": "Attr{{ .Constant }}",
