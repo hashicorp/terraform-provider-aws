@@ -402,7 +402,7 @@ type ResourceDatum struct {
 	overrideIdentifierAttribute      string
 	OverrideResourceType             string
 	tests.CommonArgs
-	isARNIdentity     bool
+	common.ResourceIdentity
 	identityAttribute string
 }
 
@@ -581,7 +581,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.NoImport = true
 
 			case "ArnIdentity":
-				d.isARNIdentity = true
+				d.IsARNIdentity = true
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					d.identityAttribute = "arn"

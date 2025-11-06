@@ -214,7 +214,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
-				{{- else if $value.ARNIdentity }}
+				{{- else if $value.IsARNIdentity }}
 					{{- if $.IsGlobal }}
 						{{- if $value.HasARNAttribute }}
 							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
@@ -344,7 +344,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
-				{{- else if $value.ARNIdentity }}
+				{{- else if $value.IsARNIdentity }}
 					{{- if $.IsGlobal }}
 						{{- if $value.HasARNAttribute }}
 							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
@@ -492,7 +492,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 							{{- template "SDKv2CommonIdentityOpts" . }}
 						),
 					{{- end }}
-				{{- else if $value.ARNIdentity }}
+				{{- else if $value.IsARNIdentity }}
 					{{- if $.IsGlobal }}
 						{{- if $value.HasARNAttribute }}
 							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
@@ -608,7 +608,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
-				{{- else if $value.ARNIdentity }}
+				{{- else if $value.IsARNIdentity }}
 					{{- if $.IsGlobal }}
 						{{- if $value.HasARNAttribute }}
 							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},

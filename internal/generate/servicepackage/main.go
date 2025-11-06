@@ -95,7 +95,7 @@ func main() {
 				value.Name = val.Name
 				value.IdentityAttributes = val.IdentityAttributes
 				value.IdentityDuplicateAttrs = val.IdentityDuplicateAttrs
-				value.ARNIdentity = val.ARNIdentity
+				value.IsARNIdentity = val.IsARNIdentity
 				value.SingletonIdentity = val.SingletonIdentity
 				value.TransparentTagging = val.TransparentTagging
 				value.TagsResourceType = val.TagsResourceType
@@ -112,7 +112,7 @@ func main() {
 				value.Name = val.Name
 				value.IdentityAttributes = val.IdentityAttributes
 				value.IdentityDuplicateAttrs = val.IdentityDuplicateAttrs
-				value.ARNIdentity = val.ARNIdentity
+				value.IsARNIdentity = val.IsARNIdentity
 				value.SingletonIdentity = val.SingletonIdentity
 				value.TransparentTagging = val.TransparentTagging
 				value.TagsResourceType = val.TagsResourceType
@@ -224,7 +224,6 @@ type ResourceDatum struct {
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
 	IdentityAttributes                []identityAttribute
-	ARNIdentity                       bool
 	arnAttribute                      string
 	isARNFormatGlobal                 arnFormatState
 	SingletonIdentity                 bool
@@ -242,6 +241,7 @@ type ResourceDatum struct {
 	CustomInherentRegionIdentity      bool
 	customIdentityAttribute           string
 	CustomInherentRegionParser        string
+	common.ResourceIdentity
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -280,7 +280,7 @@ func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
 }
 
 func (r ResourceDatum) HasResourceIdentity() bool {
-	return len(r.IdentityAttributes) > 0 || r.ARNIdentity || r.SingletonIdentity || r.CustomInherentRegionIdentity
+	return len(r.IdentityAttributes) > 0 || r.IsARNIdentity || r.SingletonIdentity || r.CustomInherentRegionIdentity
 }
 
 func (r ResourceDatum) CustomIdentityAttribute() string {
@@ -485,7 +485,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.CustomImport = true
 
 			case "ArnIdentity":
-				d.ARNIdentity = true
+				d.IsARNIdentity = true
 				d.WrappedImport = true
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
