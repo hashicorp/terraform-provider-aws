@@ -23,8 +23,8 @@ type FunctionAssociation struct {
 }
 
 type FunctionAssociations struct {
-	Quantity *int32
-	Items    []FunctionAssociation
+	Items    []FunctionAssociation `json:"Items"`
+	Quantity *int32                `json:"Quantity"`
 }
 
 // Terraform model types
@@ -34,7 +34,7 @@ type FunctionAssociationTF struct {
 }
 
 type DistributionConfigTF struct {
-	FunctionAssociations fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"function_associations"`
+	FunctionAssociations fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"function_associations" autoflex:",xmlwrapper=items"`
 }
 
 type DistributionConfigAWS struct {
@@ -297,16 +297,6 @@ type awsHeadersForFlatten struct {
 	Quantity *int32
 }
 
-// CloudFront FunctionAssociation test types
-type awsFunctionAssociationsForFlatten struct {
-	Items    []FunctionAssociation `json:"Items"`
-	Quantity *int32                `json:"Quantity"`
-}
-
-type tfFunctionAssociationsModelForFlatten struct {
-	FunctionAssociations fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"function_associations" autoflex:",xmlwrapper=items"`
-}
-
 // TF model types with wrapper tags (for flattening - AWS to TF)
 type tfStatusCodesModelForFlatten struct {
 	StatusCodes fwtypes.SetValueOf[types.Int64] `tfsdk:"status_codes" autoflex:",xmlwrapper=items"`
@@ -349,7 +339,7 @@ func TestFlattenXMLWrapper(t *testing.T) {
 			},
 		},
 		"complex type - function associations": {
-			Source: awsFunctionAssociationsForFlatten{
+			Source: FunctionAssociations{
 				Items: []FunctionAssociation{
 					{
 						EventType:   "viewer-request",
@@ -362,8 +352,8 @@ func TestFlattenXMLWrapper(t *testing.T) {
 				},
 				Quantity: aws.Int32(2),
 			},
-			Target: &tfFunctionAssociationsModelForFlatten{},
-			WantTarget: &tfFunctionAssociationsModelForFlatten{
+			Target: &DistributionConfigTF{},
+			WantTarget: &DistributionConfigTF{
 				FunctionAssociations: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*FunctionAssociationTF{
 					{
 						EventType:   types.StringValue("viewer-request"),

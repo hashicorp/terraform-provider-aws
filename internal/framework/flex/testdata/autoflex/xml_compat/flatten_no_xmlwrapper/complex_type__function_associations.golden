@@ -39,26 +39,6 @@
     "@level": "trace",
     "@message": "Matched fields",
     "@module": "provider.autoflex",
-    "autoflex.source.fieldname": "Quantity",
-    "autoflex.source.path": "FunctionAssociations",
-    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
-    "autoflex.target.fieldname": "Quantity",
-    "autoflex.target.path": "FunctionAssociations",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationsTF"
-  },
-  {
-    "@level": "info",
-    "@message": "Converting",
-    "@module": "provider.autoflex",
-    "autoflex.source.path": "FunctionAssociations.Quantity",
-    "autoflex.source.type": "*int32",
-    "autoflex.target.path": "FunctionAssociations.Quantity",
-    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value"
-  },
-  {
-    "@level": "trace",
-    "@message": "Matched fields",
-    "@module": "provider.autoflex",
     "autoflex.source.fieldname": "Items",
     "autoflex.source.path": "FunctionAssociations",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
@@ -164,5 +144,25 @@
     "autoflex.source.type": "*string",
     "autoflex.target.path": "FunctionAssociations.Items[1].FunctionARN",
     "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Quantity",
+    "autoflex.source.path": "FunctionAssociations",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
+    "autoflex.target.fieldname": "Quantity",
+    "autoflex.target.path": "FunctionAssociations",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationsTF"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "FunctionAssociations.Quantity",
+    "autoflex.source.type": "*int32",
+    "autoflex.target.path": "FunctionAssociations.Quantity",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value"
   }
 ]
