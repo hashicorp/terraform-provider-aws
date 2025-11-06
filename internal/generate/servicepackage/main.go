@@ -222,7 +222,6 @@ type ResourceDatum struct {
 	TagsIdentifierAttribute           string
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
-	IdentityAttributes                []identityAttribute
 	isARNFormatGlobal                 arnFormatState
 	MutableIdentity                   bool
 	WrappedImport                     bool
@@ -239,12 +238,6 @@ type ResourceDatum struct {
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
 	return r.isARNFormatGlobal == arnFormatStateGlobal
-}
-
-type identityAttribute struct {
-	Name                  string
-	Optional              bool
-	ResourceAttributeName string
 }
 
 type goImport struct {
@@ -434,8 +427,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					continue
 				}
 
-				identityAttribute := identityAttribute{
-					Name: namesgen.ConstOrQuote(args.Positional[0]),
+				identityAttribute := common.IdentityAttribute{
+					Name_: args.Positional[0],
 				}
 
 				if attr, ok := args.Keyword["optional"]; ok {
@@ -448,7 +441,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				if attr, ok := args.Keyword["resourceAttributeName"]; ok {
-					identityAttribute.ResourceAttributeName = namesgen.ConstOrQuote(attr)
+					identityAttribute.ResourceAttributeName_ = attr
 				}
 
 				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)

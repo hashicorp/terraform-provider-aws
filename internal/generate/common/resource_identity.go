@@ -14,6 +14,7 @@ type ResourceIdentity struct {
 	IsSingletonIdentity            bool
 	IdentityAttributeName_         string
 	IdentityDuplicateAttrNames     []string
+	IdentityAttributes             []IdentityAttribute
 }
 
 func (r ResourceIdentity) HasIdentityDuplicateAttrs() bool {
@@ -24,4 +25,19 @@ func (r ResourceIdentity) IdentityDuplicateAttrs() []string {
 	return tfslices.ApplyToAll(r.IdentityDuplicateAttrNames, func(s string) string {
 		return namesgen.ConstOrQuote(s)
 	})
+}
+
+type IdentityAttribute struct {
+	Name_                  string
+	Optional               bool
+	ResourceAttributeName_ string
+	TestNotNull            bool
+}
+
+func (a IdentityAttribute) Name() string {
+	return namesgen.ConstOrQuote(a.Name_)
+}
+
+func (a IdentityAttribute) ResourceAttributeName() string {
+	return namesgen.ConstOrQuote(a.ResourceAttributeName_)
 }
