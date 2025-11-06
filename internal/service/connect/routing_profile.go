@@ -598,8 +598,7 @@ func flattenRoutingConfigQueueConfigSummaries(apiObjects []awstypes.RoutingProfi
 // value to state. Writing the value when a corresponding congiuration is not present
 // will trigger persistent drift as the object is nested within a required set attribute.
 func channelsWithCrossChannelBehavior(cfgList []any) []string {
-	c := make([]string, len(cfgList))
-
+	var c []string
 	for _, l := range cfgList {
 		m := l.(map[string]any)
 		if m == nil {
