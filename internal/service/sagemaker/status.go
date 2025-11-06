@@ -76,8 +76,6 @@ func statusImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client,
 	}
 }
 
-
-
 func statusImageVersionByID(ctx context.Context, conn *sagemaker.Client, name string, version int32) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findImageVersionByTwoPartKey(ctx, conn, name, version)

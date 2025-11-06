@@ -234,8 +234,6 @@ func waitImageVersionCreatedByVersion(ctx context.Context, conn *sagemaker.Clien
 	return nil, err
 }
 
-
-
 func waitImageVersionDeleted(ctx context.Context, conn *sagemaker.Client, name string, version int32) (*sagemaker.DescribeImageVersionOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageVersionStatusDeleting),
