@@ -586,7 +586,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the CodeBuild project.
 * `badge_url` - URL of the build badge when `badge_enabled` is enabled.
-* `id` - ARN of the CodeBuild project.
 * `public_project_alias` - The project identifier used with the public build APIs.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [
   `default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
