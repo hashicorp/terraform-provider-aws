@@ -1595,11 +1595,8 @@ func isXMLWrapperStruct(t reflect.Type) bool {
 			nNonAnonymousFields++
 		}
 	}
-	if nNonAnonymousFields != 2 {
-		return false
-	}
 
-	return true
+	return nNonAnonymousFields == 2
 }
 
 // nestedObjectCollectionToXMLWrapper converts a NestedObjectCollectionValue to an XML wrapper struct
