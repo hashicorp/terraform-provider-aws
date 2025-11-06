@@ -253,12 +253,8 @@ type identityAttribute struct {
 }
 
 type goImport struct {
-	Path              string
-	Alias             string
-	ARNIdentity       bool
-	arnAttribute      string
-	SingletonIdentity bool
-	WrappedImport     bool
+	Path  string
+	Alias string
 }
 
 func (r ResourceDatum) HasARNAttribute() bool {
