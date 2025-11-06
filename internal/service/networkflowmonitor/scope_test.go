@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkflowmonitor/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -35,7 +34,6 @@ func TestAccNetworkFlowMonitorScope_serial(t *testing.T) {
 
 func testAccNetworkFlowMonitorScope_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var scope networkflowmonitor.GetScopeOutput
 	resourceName := "aws_networkflowmonitor_scope.test"
 
 	resource.Test(t, resource.TestCase{
@@ -50,7 +48,7 @@ func testAccNetworkFlowMonitorScope_basic(t *testing.T) {
 			{
 				Config: testAccScopeConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckScopeExists(ctx, resourceName, &scope),
+					testAccCheckScopeExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "networkflowmonitor", "scope/*"),
 					resource.TestCheckResourceAttrSet(resourceName, "scope_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
@@ -67,7 +65,6 @@ func testAccNetworkFlowMonitorScope_basic(t *testing.T) {
 
 func testAccNetworkFlowMonitorScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var scope networkflowmonitor.GetScopeOutput
 	resourceName := "aws_networkflowmonitor_scope.test"
 
 	resource.Test(t, resource.TestCase{
@@ -82,7 +79,7 @@ func testAccNetworkFlowMonitorScope_disappears(t *testing.T) {
 			{
 				Config: testAccScopeConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeExists(ctx, resourceName, &scope),
+					testAccCheckScopeExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkflowmonitor.ResourceScope, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -93,7 +90,6 @@ func testAccNetworkFlowMonitorScope_disappears(t *testing.T) {
 
 func testAccNetworkFlowMonitorScope_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var scope networkflowmonitor.GetScopeOutput
 	resourceName := "aws_networkflowmonitor_scope.test"
 
 	resource.Test(t, resource.TestCase{
@@ -108,7 +104,7 @@ func testAccNetworkFlowMonitorScope_tags(t *testing.T) {
 			{
 				Config: testAccScopeConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeExists(ctx, resourceName, &scope),
+					testAccCheckScopeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -119,18 +115,18 @@ func testAccNetworkFlowMonitorScope_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScopeConfig_tags2(acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccScopeConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeExists(ctx, resourceName, &scope),
+					testAccCheckScopeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccScopeConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeExists(ctx, resourceName, &scope),
+					testAccCheckScopeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -139,7 +135,7 @@ func testAccNetworkFlowMonitorScope_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckScopeExists(ctx context.Context, n string, v *networkflowmonitor.GetScopeOutput) resource.TestCheckFunc {
+func testAccCheckScopeExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -148,15 +144,9 @@ func testAccCheckScopeExists(ctx context.Context, n string, v *networkflowmonito
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFlowMonitorClient(ctx)
 
-		output, err := tfnetworkflowmonitor.FindScopeByID(ctx, conn, rs.Primary.Attributes["scope_id"])
+		_, err := tfnetworkflowmonitor.FindScopeByID(ctx, conn, rs.Primary.Attributes["scope_id"])
 
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
+		return err
 	}
 }
 

@@ -45,11 +45,15 @@ resource "aws_networkflowmonitor_monitor" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
 * `monitor_name` - (Required) The name of the monitor. Cannot be changed after creation.
 * `scope_arn` - (Required) The Amazon Resource Name (ARN) of the scope for the monitor. Cannot be changed after creation.
+
+The following arguments are optional:
+
 * `local_resources` - (Optional) The local resources to monitor. A local resource in a workload is the location of the hosts where the Network Flow Monitor agent is installed.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `remote_resources` - (Optional) The remote resources to monitor. A remote resource is the other endpoint specified for the network flow of a workload, with a local resource.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

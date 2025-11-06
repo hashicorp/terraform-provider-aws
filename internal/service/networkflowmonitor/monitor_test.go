@@ -37,7 +37,6 @@ func TestAccNetworkFlowMonitorMonitor_serial(t *testing.T) {
 
 func testAccNetworkFlowMonitorMonitor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor networkflowmonitor.GetMonitorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkflowmonitor_monitor.test"
 
@@ -53,7 +52,7 @@ func testAccNetworkFlowMonitorMonitor_basic(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "networkflowmonitor", fmt.Sprintf("monitor/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_status"),
@@ -71,7 +70,6 @@ func testAccNetworkFlowMonitorMonitor_basic(t *testing.T) {
 
 func testAccNetworkFlowMonitorMonitor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor networkflowmonitor.GetMonitorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkflowmonitor_monitor.test"
 
@@ -87,7 +85,7 @@ func testAccNetworkFlowMonitorMonitor_disappears(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					testAccCheckMonitorExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkflowmonitor.ResourceMonitor, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,7 +96,6 @@ func testAccNetworkFlowMonitorMonitor_disappears(t *testing.T) {
 
 func testAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor networkflowmonitor.GetMonitorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkflowmonitor_monitor.test"
 
@@ -114,7 +111,7 @@ func testAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -126,18 +123,18 @@ func testAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"scope_arn"},
 			},
 			{
-				Config: testAccMonitorConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccMonitorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccMonitorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -148,7 +145,6 @@ func testAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
 
 func testAccNetworkFlowMonitorMonitor_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor networkflowmonitor.GetMonitorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkflowmonitor_monitor.test"
 
@@ -164,7 +160,7 @@ func testAccNetworkFlowMonitorMonitor_update(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "local_resources.0.type", "AWS::EC2::VPC"),
 				),
@@ -173,7 +169,7 @@ func testAccNetworkFlowMonitorMonitor_update(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_updated1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "local_resources.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "remote_resources.#", "1"),
@@ -183,7 +179,7 @@ func testAccNetworkFlowMonitorMonitor_update(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "local_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_resources.#", "1"),
@@ -194,7 +190,7 @@ func testAccNetworkFlowMonitorMonitor_update(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_updated2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "local_resources.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "remote_resources.#", "2"),
@@ -204,7 +200,7 @@ func testAccNetworkFlowMonitorMonitor_update(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName, &monitor),
+					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "local_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_resources.#", "1"),
@@ -215,7 +211,7 @@ func testAccNetworkFlowMonitorMonitor_update(t *testing.T) {
 	})
 }
 
-func testAccCheckMonitorExists(ctx context.Context, n string, v *networkflowmonitor.GetMonitorOutput) resource.TestCheckFunc {
+func testAccCheckMonitorExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -224,15 +220,9 @@ func testAccCheckMonitorExists(ctx context.Context, n string, v *networkflowmoni
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFlowMonitorClient(ctx)
 
-		output, err := tfnetworkflowmonitor.FindMonitorByName(ctx, conn, rs.Primary.Attributes["monitor_name"])
+		_, err := tfnetworkflowmonitor.FindMonitorByName(ctx, conn, rs.Primary.Attributes["monitor_name"])
 
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
+		return err
 	}
 }
 

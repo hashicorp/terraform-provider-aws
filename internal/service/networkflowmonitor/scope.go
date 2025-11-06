@@ -583,7 +583,7 @@ func (r *scopeResource) ImportState(ctx context.Context, request resource.Import
 
 		// ARN format: arn:partition:networkflowmonitor:region:account:scope/scope-id
 		parts := strings.Split(parsedARN.Resource, "/")
-		if len(parts) != 2 || parts[0] != "scope" {
+		if len(parts) != 2 || parts[0] != names.AttrScope {
 			response.Diagnostics.AddError("Invalid import ID", fmt.Sprintf("Expected ARN format 'arn:partition:networkflowmonitor:region:account:scope/scope-id', got: %s", id))
 			return
 		}
