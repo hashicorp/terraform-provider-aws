@@ -332,36 +332,6 @@ func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-// findImageVersionByName is used immediately after creation to poll for status of
-// the most recently created image version
-//
-// findImageVersionByTwoPartKey should be used for all subsequent operations once the
-// version number is assigned.
-func findImageVersionByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageVersionOutput, error) {
-	input := sagemaker.DescribeImageVersionInput{
-		ImageName: aws.String(name),
-	}
-
-	output, err := conn.DescribeImageVersion(ctx, &input)
-
-	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 // findImageVersionByTwoPartKey is used to fetch a specific version once a version number
 // is assigned
 func findImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int32) (*sagemaker.DescribeImageVersionOutput, error) {
