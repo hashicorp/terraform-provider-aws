@@ -24,8 +24,8 @@ func TestAccEC2AllowedImagesSettings_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(*testing.T){
-		"basic":                            testAccEC2AllowedImagesSettings_basic,
-		"disappears":                       testAccEC2AllowedImagesSettings_disappears,
+		acctest.CtBasic:                    testAccEC2AllowedImagesSettings_basic,
+		acctest.CtDisappears:               testAccEC2AllowedImagesSettings_disappears,
 		"auditMode":                        testAccEC2AllowedImagesSettings_auditMode,
 		"imageCriteria":                    testAccEC2AllowedImagesSettings_imageCriteria,
 		"imageCriteriaMultiple":            testAccEC2AllowedImagesSettings_imageCriteriaMultiple,
@@ -58,7 +58,7 @@ func testAccEC2AllowedImagesSettings_basic(t *testing.T) {
 				Config: testAccAllowedImagesSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 				),
 			},
 			{
@@ -150,7 +150,7 @@ func testAccEC2AllowedImagesSettings_imageCriteria(t *testing.T) {
 				Config: testAccAllowedImagesSettingsConfig_imageCriteria(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_providers.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "image_criterion.0.image_providers.*", "amazon"),
@@ -184,7 +184,7 @@ func testAccEC2AllowedImagesSettings_imageCriteriaMultiple(t *testing.T) {
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaMultiple(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_providers.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "image_criterion.0.image_providers.*", "amazon"),
@@ -220,7 +220,7 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithNames(t *testing.T) {
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaWithNames(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_names.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "image_criterion.0.image_names.*", "al2023-ami-*"),
@@ -255,7 +255,7 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithMarketplace(t *testing.T) 
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaWithMarketplace(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.marketplace_product_codes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "image_criterion.0.marketplace_product_codes.*", "abcdef123456"),
@@ -289,7 +289,7 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithCreationDate(t *testing.T)
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaWithCreationDate(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.creation_date_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.creation_date_condition.0.maximum_days_since_created", "365"),
@@ -323,7 +323,7 @@ func testAccEC2AllowedImagesSettings_imageCriteriaWithDeprecationTime(t *testing
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaWithDeprecationTime(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.deprecation_time_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.deprecation_time_condition.0.maximum_days_since_deprecated", "30"),
@@ -357,7 +357,7 @@ func testAccEC2AllowedImagesSettings_imageCriteriaComplete(t *testing.T) {
 				Config: testAccAllowedImagesSettingsConfig_imageCriteriaComplete(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_criterion.0.image_providers.#", "1"),
@@ -394,7 +394,7 @@ func testAccEC2AllowedImagesSettings_stateUpdate(t *testing.T) {
 				Config: testAccAllowedImagesSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, names.AttrEnabled),
 				),
 			},
 			{
