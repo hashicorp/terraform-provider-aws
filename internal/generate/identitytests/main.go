@@ -386,7 +386,6 @@ type ResourceDatum struct {
 	isSingleton                    bool
 	HasRegionOverrideTest          bool
 	identityAttributes             []identityAttribute
-	identityAttribute              string
 	IdentityDuplicateAttrs         []string
 	IDAttrFormat                   string
 	HasV6_0NullValuesError         bool
@@ -456,7 +455,7 @@ func (d ResourceDatum) HasInherentRegionImportID() bool {
 }
 
 func (d ResourceDatum) IdentityAttribute() string {
-	return namesgen.ConstOrQuote(d.identityAttribute)
+	return namesgen.ConstOrQuote(d.IdentityAttributeName_)
 }
 
 func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
@@ -628,10 +627,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					d.arnAttribute = "arn"
-					d.identityAttribute = "arn"
+					d.IdentityAttributeName_ = "arn"
 				} else {
 					d.arnAttribute = args.Positional[0]
-					d.identityAttribute = args.Positional[0]
+					d.IdentityAttributeName_ = args.Positional[0]
 				}
 
 				populateInherentRegionIdentity(&d, args)
@@ -640,7 +639,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				hasIdentity = true
 				d.IsCustomInherentRegionIdentity = true
 				args := common.ParseArgs(m[3])
-				d.identityAttribute = args.Positional[0]
+				d.IdentityAttributeName_ = args.Positional[0]
 
 				populateInherentRegionIdentity(&d, args)
 
@@ -976,7 +975,7 @@ func populateInherentRegionIdentity(d *ResourceDatum, args common.Args) {
 		attrs = append(attrs, "id")
 	} else {
 		if !slices.Contains(attrs, "id") {
-			d.SetImportStateIDAttribute(d.identityAttribute)
+			d.SetImportStateIDAttribute(d.IdentityAttributeName_)
 		}
 	}
 	slices.Sort(attrs)
