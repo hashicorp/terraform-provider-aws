@@ -54,7 +54,7 @@ func TestAccDataZoneDomain_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "skip_deletion_check"},
 			},
 			{
-				Config: testAccDomainConfig_description(rName, "description"),
+				Config: testAccDomainConfig_description(rName, "test_description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -64,7 +64,7 @@ func TestAccDataZoneDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_version", "V1"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrServiceRole),
 					resource.TestCheckResourceAttrSet(resourceName, "root_domain_unit_id"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test_description"),
 				),
 			},
 		},
