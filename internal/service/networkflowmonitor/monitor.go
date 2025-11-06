@@ -118,6 +118,7 @@ func (r *monitorResource) Schema(ctx context.Context, request resource.SchemaReq
 }
 
 type monitorResourceModel struct {
+	framework.WithRegionModel
 	ARN             types.String                                               `tfsdk:"arn"`
 	ID              types.String                                               `tfsdk:"id"`
 	MonitorName     types.String                                               `tfsdk:"monitor_name"`

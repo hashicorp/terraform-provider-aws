@@ -108,6 +108,7 @@ func (r *scopeResource) Schema(ctx context.Context, request resource.SchemaReque
 }
 
 type scopeResourceModel struct {
+	framework.WithRegionModel
 	ARN      types.String                                         `tfsdk:"arn"`
 	ID       types.String                                         `tfsdk:"id"`
 	ScopeId  types.String                                         `tfsdk:"scope_id"`

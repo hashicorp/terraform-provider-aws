@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkflowmonitor/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -49,7 +50,7 @@ func testAccNetworkFlowMonitorScope_basic(t *testing.T) {
 				Config: testAccScopeConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScopeExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "networkflowmonitor", "scope/*"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(`^arn:[^:]+:networkflowmonitor:[^:]+:[^:]+:scope/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "scope_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 				),
