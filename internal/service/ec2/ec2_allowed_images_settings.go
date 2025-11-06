@@ -42,12 +42,6 @@ type allowedImagesSettingsResource struct {
 func (r *allowedImagesSettingsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			// "managed_by": schema.StringAttribute{
-			// 	Computed: true,
-			// 	PlanModifiers: []planmodifier.String{
-			// 		stringplanmodifier.UseStateForUnknown(),
-			// 	},
-			// },
 			names.AttrState: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AllowedImagesSettingsEnabledState](),
 				Required:   true,
@@ -263,9 +257,8 @@ func (r *allowedImagesSettingsResource) ImportState(ctx context.Context, request
 
 type allowedImagesSettingsResourceModel struct {
 	framework.WithRegionModel
-	ImageCriteria fwtypes.ListNestedObjectValueOf[imageCriterionModel] `tfsdk:"image_criterion"`
-	// ManagedBy     types.String                                                   `tfsdk:"managed_by"`
-	State fwtypes.StringEnum[awstypes.AllowedImagesSettingsEnabledState] `tfsdk:"state"`
+	ImageCriteria fwtypes.ListNestedObjectValueOf[imageCriterionModel]           `tfsdk:"image_criterion"`
+	State         fwtypes.StringEnum[awstypes.AllowedImagesSettingsEnabledState] `tfsdk:"state"`
 }
 
 type imageCriterionModel struct {
