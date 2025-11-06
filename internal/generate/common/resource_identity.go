@@ -4,7 +4,8 @@
 package common
 
 type ResourceIdentity struct {
-	IsARNIdentity          bool
-	IsSingletonIdentity    bool
-	IdentityAttributeName_ string
+	IsARNIdentity                  bool
+	IsCustomInherentRegionIdentity bool
+	IsSingletonIdentity            bool
+	IdentityAttributeName_         string
 }

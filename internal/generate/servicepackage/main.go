@@ -236,7 +236,6 @@ type ResourceDatum struct {
 	HasIdentityFix                    bool
 	IdentityVersion                   int64
 	SDKv2IdentityUpgraders            []string
-	CustomInherentRegionIdentity      bool
 	CustomInherentRegionParser        string
 	common.ResourceIdentity
 }
@@ -273,7 +272,7 @@ func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
 }
 
 func (r ResourceDatum) HasResourceIdentity() bool {
-	return len(r.IdentityAttributes) > 0 || r.IsARNIdentity || r.IsSingletonIdentity || r.CustomInherentRegionIdentity
+	return len(r.IdentityAttributes) > 0 || r.IsARNIdentity || r.IsSingletonIdentity || r.IsCustomInherentRegionIdentity
 }
 
 func (r ResourceDatum) CustomIdentityAttribute() string {
@@ -565,7 +564,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "CustomInherentRegionIdentity":
-				d.CustomInherentRegionIdentity = true
+				d.IsCustomInherentRegionIdentity = true
 				d.WrappedImport = true
 
 				args := common.ParseArgs(m[3])

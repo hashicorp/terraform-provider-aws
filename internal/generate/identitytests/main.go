@@ -373,25 +373,24 @@ const (
 )
 
 type ResourceDatum struct {
-	service                        *serviceRecords
-	FileName                       string
-	idAttrDuplicates               string // TODO: Remove. Still needed for Parameterized Identity
-	GenerateConfig                 bool
-	ARNFormat                      string
-	arnAttribute                   string
-	isARNFormatGlobal              triBoolean
-	MutableIdentity                bool
-	IsGlobal                       bool
-	HasRegionOverrideTest          bool
-	identityAttributes             []identityAttribute
-	IdentityDuplicateAttrs         []string
-	IDAttrFormat                   string
-	HasV6_0NullValuesError         bool
-	HasV6_0RefreshError            bool
-	HasNoPreExistingResource       bool
-	PreIdentityVersion             *version.Version
-	IsCustomInherentRegionIdentity bool
-	IdentityVersions               map[int64]*version.Version
+	service                  *serviceRecords
+	FileName                 string
+	idAttrDuplicates         string // TODO: Remove. Still needed for Parameterized Identity
+	GenerateConfig           bool
+	ARNFormat                string
+	arnAttribute             string
+	isARNFormatGlobal        triBoolean
+	MutableIdentity          bool
+	IsGlobal                 bool
+	HasRegionOverrideTest    bool
+	identityAttributes       []identityAttribute
+	IdentityDuplicateAttrs   []string
+	IDAttrFormat             string
+	HasV6_0NullValuesError   bool
+	HasV6_0RefreshError      bool
+	HasNoPreExistingResource bool
+	PreIdentityVersion       *version.Version
+	IdentityVersions         map[int64]*version.Version
 	tests.CommonArgs
 	common.ResourceIdentity
 }
