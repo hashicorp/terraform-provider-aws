@@ -96,7 +96,7 @@ func main() {
 				value.IdentityAttributes = val.IdentityAttributes
 				value.IdentityDuplicateAttrs = val.IdentityDuplicateAttrs
 				value.IsARNIdentity = val.IsARNIdentity
-				value.SingletonIdentity = val.SingletonIdentity
+				value.IsSingletonIdentity = val.IsSingletonIdentity
 				value.TransparentTagging = val.TransparentTagging
 				value.TagsResourceType = val.TagsResourceType
 				value.TagsIdentifierAttribute = val.TagsIdentifierAttribute
@@ -113,7 +113,7 @@ func main() {
 				value.IdentityAttributes = val.IdentityAttributes
 				value.IdentityDuplicateAttrs = val.IdentityDuplicateAttrs
 				value.IsARNIdentity = val.IsARNIdentity
-				value.SingletonIdentity = val.SingletonIdentity
+				value.IsSingletonIdentity = val.IsSingletonIdentity
 				value.TransparentTagging = val.TransparentTagging
 				value.TagsResourceType = val.TagsResourceType
 				value.TagsIdentifierAttribute = val.TagsIdentifierAttribute
@@ -225,7 +225,6 @@ type ResourceDatum struct {
 	ValidateRegionOverrideInPartition bool
 	IdentityAttributes                []identityAttribute
 	isARNFormatGlobal                 arnFormatState
-	SingletonIdentity                 bool
 	MutableIdentity                   bool
 	WrappedImport                     bool
 	CustomImport                      bool
@@ -274,7 +273,7 @@ func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
 }
 
 func (r ResourceDatum) HasResourceIdentity() bool {
-	return len(r.IdentityAttributes) > 0 || r.IsARNIdentity || r.SingletonIdentity || r.CustomInherentRegionIdentity
+	return len(r.IdentityAttributes) > 0 || r.IsARNIdentity || r.IsSingletonIdentity || r.CustomInherentRegionIdentity
 }
 
 func (r ResourceDatum) CustomIdentityAttribute() string {
@@ -515,7 +514,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.MutableIdentity = true
 
 			case "SingletonIdentity":
-				d.SingletonIdentity = true
+				d.IsSingletonIdentity = true
 				d.WrappedImport = true
 
 				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {

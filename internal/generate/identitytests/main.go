@@ -382,7 +382,6 @@ type ResourceDatum struct {
 	isARNFormatGlobal              triBoolean
 	MutableIdentity                bool
 	IsGlobal                       bool
-	isSingleton                    bool
 	HasRegionOverrideTest          bool
 	identityAttributes             []identityAttribute
 	IdentityDuplicateAttrs         []string
@@ -430,15 +429,15 @@ func (d ResourceDatum) ARNAttribute() string {
 }
 
 func (d ResourceDatum) IsGlobalSingleton() bool {
-	return d.isSingleton && d.IsGlobal
+	return d.IsSingletonIdentity && d.IsGlobal
 }
 
 func (d ResourceDatum) IsRegionalSingleton() bool {
-	return d.isSingleton && !d.IsGlobal
+	return d.IsSingletonIdentity && !d.IsGlobal
 }
 
 func (d ResourceDatum) IsSingleton() bool {
-	return d.isSingleton
+	return d.IsSingletonIdentity
 }
 
 func (d ResourceDatum) GenerateRegionOverrideTest() bool {
@@ -676,7 +675,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "SingletonIdentity":
 				hasIdentity = true
-				d.isSingleton = true
+				d.IsSingletonIdentity = true
 				d.Serialize = true
 
 			case "ArnFormat":
