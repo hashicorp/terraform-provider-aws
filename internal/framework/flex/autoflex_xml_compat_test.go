@@ -336,3 +336,59 @@ func TestFlattenXMLWrapper(t *testing.T) {
 
 	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
 }
+
+type FunctionAssociationsTF struct {
+	Items    fwtypes.ListNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"items"`
+	Quantity types.Int64                                            `tfsdk:"quantity"`
+}
+
+type DistributionConfigTFNoXMLWrapper struct {
+	FunctionAssociations fwtypes.ListNestedObjectValueOf[FunctionAssociationsTF] `tfsdk:"function_associations" autoflex:",noxmlwrapper"`
+}
+
+func TestExpandNoXMLWrapper(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"valid function associations": {
+			Source: DistributionConfigTFNoXMLWrapper{
+				FunctionAssociations: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &FunctionAssociationsTF{
+					Items: fwtypes.NewListNestedObjectValueOfSliceMust(
+						ctx,
+						[]*FunctionAssociationTF{
+							{
+								EventType:   types.StringValue("viewer-request"),
+								FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-1"),
+							},
+							{
+								EventType:   types.StringValue("viewer-response"),
+								FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-2"),
+							},
+						},
+					),
+					Quantity: types.Int64Value(2),
+				}),
+			},
+			Target: &DistributionConfigAWS{},
+			WantTarget: &DistributionConfigAWS{
+				FunctionAssociations: &FunctionAssociations{
+					Quantity: aws.Int32(2),
+					Items: []FunctionAssociation{
+						{
+							EventType:   "viewer-request",
+							FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/test-function-1"),
+						},
+						{
+							EventType:   "viewer-response",
+							FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/test-function-2"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+}
