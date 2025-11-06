@@ -168,6 +168,11 @@ func TestExpandXMLWrapperDirect(t *testing.T) {
 func TestIsXMLWrapperStruct(t *testing.T) {
 	t.Parallel()
 
+	type embedWithField struct {
+		Count int64
+	}
+	type embedWithoutField struct{}
+
 	testCases := []struct {
 		name     string
 		input    any
@@ -181,6 +186,14 @@ func TestIsXMLWrapperStruct(t *testing.T) {
 		{
 			name:     "valid XML wrapper with slice of strings",
 			input:    DirectXMLWrapper{},
+			expected: true,
+		},
+		{
+			name: "valid XML wrapper with anonymous struct",
+			input: struct {
+				Items    []string
+				Quantity *int32
+			}{},
 			expected: true,
 		},
 		{
@@ -211,6 +224,51 @@ func TestIsXMLWrapperStruct(t *testing.T) {
 			input: struct {
 				Items    string
 				Quantity *int32
+			}{},
+			expected: false,
+		},
+		{
+			name: "struct with extra field",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				Name     string
+			}{},
+			expected: false,
+		},
+		{
+			name: "struct with anonymous embedWithField",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				embedWithField
+			}{},
+			expected: true,
+		},
+		{
+			name: "struct with anonymous embedWithoutField",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				embedWithoutField
+			}{},
+			expected: true,
+		},
+		{
+			name: "struct with private embedWithField",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				private  embedWithField
+			}{},
+			expected: false,
+		},
+		{
+			name: "struct with private embedWithoutField",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				private  embedWithoutField
 			}{},
 			expected: false,
 		},

@@ -1583,8 +1583,21 @@ func isXMLWrapperStruct(t reflect.Type) bool {
 		return false
 	}
 
+	//quantityField.Anonymous
+
 	// Quantity should be *int32
 	if quantityField.Type.Elem().Kind() != reflect.Int32 {
+		return false
+	}
+
+	// Items and Quantity should be the only non-anonymous fields
+	nNonAnonymousFields := 0
+	for i := 0; i < t.NumField(); i++ {
+		if !t.Field(i).Anonymous {
+			nNonAnonymousFields++
+		}
+	}
+	if nNonAnonymousFields != 2 {
 		return false
 	}
 
