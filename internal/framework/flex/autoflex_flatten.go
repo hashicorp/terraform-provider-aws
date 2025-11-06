@@ -1776,7 +1776,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			continue
 		}
 		toFieldName := toField.Name
-		toNameOverride, toOpts := autoflexTags(toField)
+		toNameOverride, toFieldOpts := autoflexTags(toField)
 		toFieldVal := valTo.FieldByIndex(toField.Index)
 		if toNameOverride == "-" {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored target field", map[string]any{
@@ -1785,7 +1785,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			})
 			continue
 		}
-		if toOpts.NoFlatten() {
+		if toFieldOpts.NoFlatten() {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping noflatten target field", map[string]any{
 				logAttrKeySourceFieldname: fromFieldName,
 				logAttrKeyTargetFieldname: toFieldName,
@@ -1807,7 +1807,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		})
 
 		// Check if target has wrapper tag and source is an XML wrapper struct
-		if wrapperField := toOpts.WrapperField(); wrapperField != "" {
+		if wrapperField := toFieldOpts.WrapperField(); wrapperField != "" {
 			fromFieldVal := valFrom.FieldByIndex(fromField.Index)
 			if isXMLWrapperStruct(fromFieldVal.Type()) {
 				tflog.SubsystemTrace(ctx, subsystemName, "Converting XML wrapper struct to collection", map[string]any{
@@ -1836,8 +1836,9 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		}
 
 		opts := fieldOpts{
-			legacy:    toOpts.Legacy(),
-			omitempty: toOpts.OmitEmpty(),
+			legacy:       toFieldOpts.Legacy(),
+			omitempty:    toFieldOpts.OmitEmpty(),
+			noXMLWrapper: toFieldOpts.NoXMLWrapper(),
 		}
 
 		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)
