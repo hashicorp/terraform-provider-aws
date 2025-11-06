@@ -22,7 +22,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
@@ -94,7 +93,7 @@ func main() {
 			if val, exists := v.frameworkResources[key]; exists {
 				value.Name = val.Name
 				value.IdentityAttributes = val.IdentityAttributes
-				value.IdentityDuplicateAttrs = val.IdentityDuplicateAttrs
+				value.IdentityDuplicateAttrNames = val.IdentityDuplicateAttrNames
 				value.IsARNIdentity = val.IsARNIdentity
 				value.IsSingletonIdentity = val.IsSingletonIdentity
 				value.TransparentTagging = val.TransparentTagging
@@ -111,7 +110,7 @@ func main() {
 			if val, exists := v.sdkResources[key]; exists {
 				value.Name = val.Name
 				value.IdentityAttributes = val.IdentityAttributes
-				value.IdentityDuplicateAttrs = val.IdentityDuplicateAttrs
+				value.IdentityDuplicateAttrNames = val.IdentityDuplicateAttrNames
 				value.IsARNIdentity = val.IsARNIdentity
 				value.IsSingletonIdentity = val.IsSingletonIdentity
 				value.TransparentTagging = val.TransparentTagging
@@ -229,7 +228,6 @@ type ResourceDatum struct {
 	WrappedImport                     bool
 	CustomImport                      bool
 	goImports                         []goImport
-	IdentityDuplicateAttrs            []string
 	ImportIDHandler                   string
 	SetIDAttribute                    bool
 	HasV6_0SDKv2Fix                   bool
@@ -265,10 +263,6 @@ func (r ResourceDatum) ARNAttribute() string {
 
 func (d ResourceDatum) RegionOverrideEnabled() bool {
 	return d.regionOverrideEnabled && !d.IsGlobal
-}
-
-func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
-	return len(r.IdentityDuplicateAttrs) > 0
 }
 
 func (r ResourceDatum) HasResourceIdentity() bool {
@@ -487,10 +481,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-					attrs := strings.Split(attr, ";")
-					d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
-						return namesgen.ConstOrQuote(s)
-					})
+					d.IdentityDuplicateAttrNames = strings.Split(attr, ";")
 				}
 
 			case "ArnFormat":
@@ -517,10 +508,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.WrappedImport = true
 
 				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-					attrs := strings.Split(attr, ";")
-					d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
-						return namesgen.ConstOrQuote(s)
-					})
+					d.IdentityDuplicateAttrNames = strings.Split(attr, ";")
 				}
 
 			case "NoImport":
@@ -588,10 +576,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-					attrs := strings.Split(attr, ";")
-					d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
-						return namesgen.ConstOrQuote(s)
-					})
+					d.IdentityDuplicateAttrNames = strings.Split(attr, ";")
 				}
 
 			// TODO: allow underscore?

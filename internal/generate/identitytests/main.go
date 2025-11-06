@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
@@ -384,7 +383,6 @@ type ResourceDatum struct {
 	IsGlobal                 bool
 	HasRegionOverrideTest    bool
 	identityAttributes       []identityAttribute
-	IdentityDuplicateAttrs   []string
 	IDAttrFormat             string
 	HasV6_0NullValuesError   bool
 	HasV6_0RefreshError      bool
@@ -453,10 +451,6 @@ func (d ResourceDatum) HasInherentRegionImportID() bool {
 
 func (d ResourceDatum) IdentityAttribute() string {
 	return namesgen.ConstOrQuote(d.IdentityAttributeName_)
-}
-
-func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
-	return len(r.IdentityDuplicateAttrs) > 0
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -976,8 +970,5 @@ func populateInherentRegionIdentity(d *ResourceDatum, args common.Args) {
 		}
 	}
 	slices.Sort(attrs)
-	attrs = slices.Compact(attrs)
-	d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
-		return namesgen.ConstOrQuote(s)
-	})
+	d.IdentityDuplicateAttrNames = slices.Compact(attrs)
 }
