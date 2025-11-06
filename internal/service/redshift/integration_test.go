@@ -12,11 +12,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
@@ -220,86 +217,6 @@ func TestAccRedshiftIntegration_sourceUsesS3Bucket(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    testAccIntegrationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-		},
-	})
-}
-
-func TestAccRedshiftIntegration_tags(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	ctx := acctest.Context(t)
-	var integration awstypes.Integration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_redshift_integration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccIntegrationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccIntegrationImportStateIDFunc(resourceName),
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-			{
-				Config: testAccIntegrationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-			{
-				Config: testAccIntegrationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
 			},
 		},
 	})
@@ -667,47 +584,4 @@ resource "aws_redshift_integration" "test" {
   ]
 }
 `, description, integrationName))
-}
-
-func testAccIntegrationConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(
-		testAccIntegrationConfig_source_DynamoDBTable(rName), fmt.Sprintf(`
-resource "aws_redshift_integration" "test" {
-  integration_name = %[1]q
-  source_arn       = aws_dynamodb_table.test.arn
-  target_arn       = aws_redshiftserverless_namespace.test.arn
-
-  tags = {
-    %[2]q = %[3]q
-  }
-
-  depends_on = [
-    aws_redshiftserverless_workgroup.test,
-    aws_redshift_resource_policy.test,
-    aws_dynamodb_resource_policy.test,
-  ]
-}
-`, rName, tag1Key, tag1Value))
-}
-
-func testAccIntegrationConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(
-		testAccIntegrationConfig_source_DynamoDBTable(rName), fmt.Sprintf(`
-resource "aws_redshift_integration" "test" {
-  integration_name = %[1]q
-  source_arn       = aws_dynamodb_table.test.arn
-  target_arn       = aws_redshiftserverless_namespace.test.arn
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-
-  depends_on = [
-    aws_redshiftserverless_workgroup.test,
-    aws_redshift_resource_policy.test,
-    aws_dynamodb_resource_policy.test,
-  ]
-}
-`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }

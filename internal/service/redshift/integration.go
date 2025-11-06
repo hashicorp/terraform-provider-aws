@@ -32,8 +32,8 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.Integration")
-// @Testing(tagsTest=false)
 // @Testing(preIdentityVersion="6.19.0")
+// @Testing(importStateIdAttribute="arn")
 func newIntegrationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &integrationResource{}
 
