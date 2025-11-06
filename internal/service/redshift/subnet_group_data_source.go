@@ -19,7 +19,7 @@ import (
 
 // @SDKDataSource("aws_redshift_subnet_group", name="Subnet Group")
 // @Tags
-// @Testing(tagsTest=false)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetGroupRead,
