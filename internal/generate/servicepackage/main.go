@@ -237,7 +237,6 @@ type ResourceDatum struct {
 	HasIdentityFix                    bool
 	IdentityVersion                   int64
 	CustomInherentRegionIdentity      bool
-	customIdentityAttribute           string
 	CustomInherentRegionParser        string
 	common.ResourceIdentity
 }
@@ -282,7 +281,7 @@ func (r ResourceDatum) HasResourceIdentity() bool {
 }
 
 func (r ResourceDatum) CustomIdentityAttribute() string {
-	return namesgen.ConstOrQuote(r.customIdentityAttribute)
+	return namesgen.ConstOrQuote(r.IdentityAttributeName_)
 }
 
 type ServiceDatum struct {
@@ -575,7 +574,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					continue
 				}
 
-				d.customIdentityAttribute = args.Positional[0]
+				d.IdentityAttributeName_ = args.Positional[0]
 
 				attr := args.Positional[1]
 				if funcName, importSpec, err := parseIdentifierSpec(attr); err != nil {
