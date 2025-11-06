@@ -5,5 +5,6 @@ package common
 
 type ResourceIdentity struct {
 	IsARNIdentity          bool
+	IsSingletonIdentity    bool
 	IdentityAttributeName_ string
 }

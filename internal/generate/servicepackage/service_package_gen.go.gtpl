@@ -235,7 +235,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
-				{{- else if $value.SingletonIdentity }}
+				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
@@ -365,7 +365,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
-				{{- else if $value.SingletonIdentity }}
+				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
@@ -506,7 +506,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 						inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 						{{- template "SDKv2CommonIdentityOpts" . }}
 					),
-				{{- else if $value.SingletonIdentity }}
+				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
 							{{- template "SDKv2CommonIdentityOpts" . }}
@@ -638,7 +638,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
-				{{- else if $value.SingletonIdentity }}
+				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
