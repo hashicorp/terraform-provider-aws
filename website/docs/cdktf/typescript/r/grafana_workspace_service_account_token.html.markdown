@@ -53,8 +53,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name for the token to create. The name must be unique within the workspace.
 * `secondsToLive` - (Required) Sets how long the token will be valid, in seconds. You can set the time up to 30 days in the future.
 * `serviceAccountId` - (Required) The ID of the service account for which to create a token.
@@ -69,4 +70,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `expiresAt` - Specifies when the service account token will expire.
 * `key` - The key for the service account token. Used when making calls to the Grafana HTTP APIs to authenticate and authorize the requests.
 
-<!-- cache-key: cdktf-0.20.8 input-4ecc23ccfdd5d21b6dd3384f0e310b3c13c52ded805632134356f17677649b08 -->
+<!-- cache-key: cdktf-0.20.8 input-98e0cea224ce9705a24bc19d210ea99d30c310bd089a192f43e8923fb39afe42 -->

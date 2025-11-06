@@ -12,9 +12,19 @@ Provides an SSM Parameter data source.
 
 ## Example Usage
 
+### Default
+
 ```terraform
 data "aws_ssm_parameter" "foo" {
   name = "foo"
+}
+```
+
+### With version
+
+```terraform
+data "aws_ssm_parameter" "foo" {
+  name = "foo:3"
 }
 ```
 
@@ -27,7 +37,8 @@ data "aws_ssm_parameter" "foo" {
 
 This data source supports the following arguments:
 
-* `name` - (Required) Name of the parameter.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name of the parameter. To query by parameter version use `name:version` (e.g., `foo:3`).
 * `with_decryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
 
 ## Attribute Reference

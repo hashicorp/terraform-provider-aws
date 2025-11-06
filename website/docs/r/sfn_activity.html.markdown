@@ -40,6 +40,7 @@ resource "aws_sfn_activity" "sfn_activity" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `encryption_configuration` - (Optional) Defines what encryption configuration is used to encrypt data in the Activity. For more information see the section [Data at rest encyption](https://docs.aws.amazon.com/step-functions/latest/dg/encryption-at-rest.html) in the AWS Step Functions User Guide.
 * `name` - (Required) The name of the activity to create.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -54,18 +55,34 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) that identifies the created activity.
-* `name` - The name of the activity.
-* `creation_date` - The date the activity was created.
+* `id` - Amazon Resource Name (ARN) of the activity.
+* `arn` - Amazon Resource Name (ARN) of the activity.
+* `name` - Name of the activity.
+* `creation_date` - Date the activity was created.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sfn_activity.example
+  identity = {
+    "arn" = "arn:aws:states:eu-west-1:123456789098:activity:bar"
+  }
+}
+
+resource "aws_sfn_activity" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import activities using the `arn`. For example:
 
 ```terraform
 import {
-  to = aws_sfn_activity.foo
+  to = aws_sfn_activity.example
   id = "arn:aws:states:eu-west-1:123456789098:activity:bar"
 }
 ```
@@ -73,5 +90,5 @@ import {
 Using `terraform import`, import activities using the `arn`. For example:
 
 ```console
-% terraform import aws_sfn_activity.foo arn:aws:states:eu-west-1:123456789098:activity:bar
+% terraform import aws_sfn_activity.example arn:aws:states:eu-west-1:123456789098:activity:bar
 ```

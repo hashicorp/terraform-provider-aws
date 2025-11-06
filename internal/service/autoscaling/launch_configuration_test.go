@@ -899,7 +899,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 
 resource "aws_launch_configuration" "test" {

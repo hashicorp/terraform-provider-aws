@@ -58,6 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `quick_connect_id` - (Optional) Returns information on a specific Quick Connect by Quick Connect id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Quick Connect by name
@@ -96,4 +97,4 @@ A `user_config` block contains the following arguments:
 * `contact_flow_id` - Identifier of the contact flow.
 * `user_id` - Identifier for the user.
 
-<!-- cache-key: cdktf-0.20.8 input-bdc871d416477360d2b7f78b63dc3c5783c79c91a6c8e2dcd5fcfc5f3bd008b0 -->
+<!-- cache-key: cdktf-0.20.8 input-5b091d6ff25d1c78a6bf782b1c48b38114b2e454e588af36efd75c9466b740e4 -->

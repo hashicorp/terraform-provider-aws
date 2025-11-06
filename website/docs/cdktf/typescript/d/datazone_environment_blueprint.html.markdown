@@ -48,8 +48,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainId` - (Required) ID of the domain.
 * `name` - (Required) Name of the blueprint.
 * `managed` (Required) Whether the blueprint is managed by Amazon DataZone.
@@ -62,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the blueprint
 * `blueprintProvider` - Provider of the blueprint
 
-<!-- cache-key: cdktf-0.20.8 input-4aae41440f79405cc207b075a00bfe248bee74bde2c2f2a8ab1a8f5b3f6fe80e -->
+<!-- cache-key: cdktf-0.20.8 input-dca7e9bfadbaaa4bae28f9c9109c66e593c72a400046c27b507253188da404d6 -->

@@ -54,6 +54,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) Name of the WAF rule group.
 * `metric_name` - (Optional) Name of the WAF rule group.
 
@@ -65,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the WAF rule group.
 
-<!-- cache-key: cdktf-0.20.8 input-179f6277a6e628cb8a05693d9c3d3db95bb2e260ad3e43cffc31730a1666a536 -->
+<!-- cache-key: cdktf-0.20.8 input-bb70bc005581ca28e3644651f9c5f2d63143581a987b63ace552d5a355591bf9 -->

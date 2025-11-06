@@ -28,14 +28,13 @@ data "aws_service_principal" "test" {
 This data source supports the following arguments:
 
 * `service_name` - (Required) Name of the service you want to generate a Service Principal Name for.
-* `region` - (Optional) Region you'd like the SPN for. By default, uses the current region.
+* `region` - (Optional) Region you'd like the SPN for. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - Identifier of the current Service Principal (compound of service, region and suffix). (e.g. `logs.us-east-1.amazonaws.com`in AWS Commercial, `logs.cn-north-1.amazonaws.com.cn` in AWS China).
+* `id` - Identifier of the current Service Principal (compound of service, Region and suffix). (e.g. `logs.us-east-1.amazonaws.com`in AWS Commercial, `logs.cn-north-1.amazonaws.com.cn` in AWS China).
 * `name` - Service Principal Name (e.g., `logs.amazonaws.com` in AWS Commercial, `logs.amazonaws.com.cn` in AWS China).
 * `service` - Service used for SPN generation (e.g. `logs`).
 * `suffix` - Suffix of the SPN (e.g., `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China).
-*`region` - Region identifier of the generated SPN (e.g., `us-east-1` in AWS Commercial, `cn-north-1` in AWS China).

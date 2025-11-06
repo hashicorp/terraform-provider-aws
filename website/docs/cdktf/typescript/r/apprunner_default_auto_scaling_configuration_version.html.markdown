@@ -57,6 +57,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoScalingConfigurationArn` - (Required) The ARN of the App Runner auto scaling configuration that you want to set as the default.
 
 ## Attribute Reference
@@ -95,4 +96,4 @@ Using `terraform import`, import App Runner default auto scaling configurations 
 % terraform import aws_apprunner_default_auto_scaling_configuration_version.example us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a23cec661f05dd4fdfeef2c9ef66218874f6a00d40152114c874e1c48ecfdaf2 -->
+<!-- cache-key: cdktf-0.20.8 input-98afdcb1a5e39a57d521a5d0527e09065027f02d546586f7ab934784c65995c7 -->

@@ -3,8 +3,8 @@ package s3control
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3control/types"
@@ -28,7 +28,7 @@ func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceT
 	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
 	return keyValueTags(ctx, output.Tags), nil
@@ -36,11 +36,12 @@ func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceT
 
 // ListTags lists s3control service tags and set them in Context.
 // It is called from outside this package.
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).S3ControlClient(ctx), identifier, resourceType)
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	c := meta.(*conns.AWSClient)
+	tags, err := listTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx))
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -119,7 +120,7 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -135,7 +136,7 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -144,6 +145,7 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 
 // UpdateTags updates s3control service tags.
 // It is called from outside this package.
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).S3ControlClient(ctx), identifier, resourceType, oldTags, newTags)
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	c := meta.(*conns.AWSClient)
+	return updateTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx), oldTags, newTags)
 }

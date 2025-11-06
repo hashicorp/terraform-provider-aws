@@ -96,7 +96,7 @@ class MyConvertedCode(TerraformStack):
         aws_connect_bot_association_example = ConnectBotAssociation(self, "example_3",
             instance_id=Token.as_string(aws_connect_instance_example.id),
             lex_bot=ConnectBotAssociationLexBot(
-                lex_region=Token.as_string(current.name),
+                lex_region=Token.as_string(current.region),
                 name=Token.as_string(aws_lex_bot_example.name)
             )
         )
@@ -108,6 +108,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Required) The identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 * `lex_bot` - (Required) Configuration information of an Amazon Lex (V1) bot. Detailed below.
 
@@ -149,4 +150,4 @@ Using `terraform import`, import `aws_connect_bot_association` using the Amazon 
 % terraform import aws_connect_bot_association.example aaaaaaaa-bbbb-cccc-dddd-111111111111:Example:us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a2f9c06dc453656a33c733da12968f311c1fb8ca4fa4a21171e1bb6249dad8c8 -->
+<!-- cache-key: cdktf-0.20.8 input-cf06d2e29a4d5dca95881d01cd7a4a42b636ed689c3317bd9b6716cbf428d8b5 -->

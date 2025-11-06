@@ -184,6 +184,7 @@ The following arguments are optional:
 
 * `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `auto_adjust_data` - (Optional) Object containing [AutoAdjustData](#auto-adjust-data) which determines the budget amount for an auto-adjusting budget.
+* `billing_view_arn` - (Optional) ARN of the billing view.
 * `cost_filter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget.
 * `cost_types` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `limit_amount` - (Optional) The amount of cost or usage being measured for a budget.

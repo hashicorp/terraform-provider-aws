@@ -3,12 +3,14 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_core_network_policy_attachment"
 description: |-
-  Provides a Core Network Policy Attachment resource.
+  Manages a Network Manager Core Network Policy Attachment.
 ---
 
 # Resource: aws_networkmanager_core_network_policy_attachment
 
-Provides a Core Network Policy Attachment resource. This puts a Core Network Policy to an existing Core Network and executes the change set, which deploys changes globally based on the policy submitted (Sets the policy to `LIVE`).
+Manages a Network Manager Core Network Policy Attachment.
+
+Use this resource to attach a Core Network Policy to an existing Core Network and execute the change set, which deploys changes globally based on the policy submitted (sets the policy to `LIVE`).
 
 ~> **NOTE:** Deleting this resource will not delete the current policy defined in this resource. Deleting this resource will also not revert the current `LIVE` policy to the previous version.
 
@@ -326,22 +328,22 @@ resource "aws_networkmanager_vpc_attachment" "example_us_east_1" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `core_network_id` - (Required) The ID of the core network that a policy will be attached to and made `LIVE`.
+* `core_network_id` - (Required) ID of the core network that a policy will be attached to and made `LIVE`.
 * `policy_document` - (Required) Policy document for creating a core network. Note that updating this argument will result in the new policy document version being set as the `LATEST` and `LIVE` policy document. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `update` - (Default `30m`). If this is the first time attaching a policy to a core network then this timeout value is also used as the `create` timeout value.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `state` - Current state of a core network.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `update` - (Default `30m`). If this is the first time attaching a policy to a core network then this timeout value is also used as the `create` timeout value.
 
 ## Import
 

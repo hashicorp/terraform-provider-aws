@@ -230,7 +230,7 @@ data "aws_region" "current" {}
 resource "aws_lambda_runtime_management_config" "test" {
   function_name       = aws_lambda_function.test.function_name
   update_runtime_on   = "Manual"
-  runtime_version_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}::runtime:%[1]s"
+  runtime_version_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}::runtime:%[1]s"
 }
 `, runtimeVersion))
 }

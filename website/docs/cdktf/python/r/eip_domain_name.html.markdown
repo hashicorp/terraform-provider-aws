@@ -51,6 +51,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allocation_id` - (Required) The allocation ID.
 * `domain_name` - (Required) The domain name to modify for the IP address.
 
@@ -68,4 +69,4 @@ This resource exports the following attributes in addition to the arguments abov
 - `update` - (Default `10m`)
 - `delete` - (Default `10m`)
 
-<!-- cache-key: cdktf-0.20.8 input-70f44f60b3b3f9b396177df042616f166dbf8e69070b87ce162762f2ab3aa2bd -->
+<!-- cache-key: cdktf-0.20.8 input-0c05e4f12f02cf0bf8184333431906c25d66e8f7b39d4ddafc82bbfbc41c7a4d -->

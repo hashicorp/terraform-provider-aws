@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
@@ -61,28 +60,4 @@ func statusPublishingDestination(ctx context.Context, conn *guardduty.Client, de
 
 		return output, string(output.Status), nil
 	}
-}
-
-// TODO: Migrate to shared internal package guardduty
-func getOrganizationAdminAccount(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
-	input := &guardduty.ListOrganizationAdminAccountsInput{}
-	var result *awstypes.AdminAccount
-
-	pages := guardduty.NewListOrganizationAdminAccountsPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return result, err
-		}
-
-		for _, account := range page.AdminAccounts {
-			if aws.ToString(account.AdminAccountId) == adminAccountID {
-				result = &account
-			}
-		}
-	}
-
-	return result, nil
 }

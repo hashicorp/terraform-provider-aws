@@ -430,7 +430,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 									},
 								},
 							},
-							names.AttrName: stringLenBetweenSchema(attrRequired, 1, 64),
+							names.AttrName: stringLenBetweenSchema(attrRequired, 1, 256),
 							names.AttrSchema: {
 								Type:     schema.TypeString,
 								Optional: true,

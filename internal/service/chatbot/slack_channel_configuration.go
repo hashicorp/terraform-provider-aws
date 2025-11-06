@@ -49,7 +49,7 @@ func newSlackChannelConfigurationResource(_ context.Context) (resource.ResourceW
 }
 
 type slackChannelConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[slackChannelConfigurationResourceModel]
 	framework.WithTimeouts
 }
 
@@ -59,6 +59,9 @@ func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request 
 			"chat_configuration_arn": framework.ARNAttributeComputedOnly(),
 			"configuration_name": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"guardrail_policy_arns": schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringType,
@@ -276,7 +279,7 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 		ChatConfigurationArn: data.ChatConfigurationARN.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return conn.DeleteSlackChannelConfiguration(ctx, input)
 	}, "DependencyViolation")
 
@@ -399,6 +402,7 @@ func waitSlackChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Cli
 }
 
 type slackChannelConfigurationResourceModel struct {
+	framework.WithRegionModel
 	ChatConfigurationARN      types.String                      `tfsdk:"chat_configuration_arn"`
 	ConfigurationName         types.String                      `tfsdk:"configuration_name"`
 	GuardrailPolicyARNs       fwtypes.ListValueOf[types.String] `tfsdk:"guardrail_policy_arns"`

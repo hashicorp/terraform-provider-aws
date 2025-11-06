@@ -23,10 +23,10 @@ func RegisterSweepers() {
 
 func sweepEventRules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.NotificationsClient(ctx)
-	var input notifications.ListEventRulesInput
+	var input notifications.ListNotificationConfigurationsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := notifications.NewListEventRulesPaginator(conn, &input)
+	pages := notifications.NewListNotificationConfigurationsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -34,10 +34,25 @@ func sweepEventRules(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 			return nil, err
 		}
 
-		for _, v := range page.EventRules {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newEventRuleResource, client,
-				framework.NewAttribute(names.AttrARN, aws.ToString(v.Arn))),
-			)
+		for _, v := range page.NotificationConfigurations {
+			input := notifications.ListEventRulesInput{
+				NotificationConfigurationArn: v.Arn,
+			}
+
+			pages := notifications.NewListEventRulesPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					return nil, err
+				}
+
+				for _, v := range page.EventRules {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newEventRuleResource, client,
+						framework.NewAttribute(names.AttrARN, aws.ToString(v.Arn))),
+					)
+				}
+			}
 		}
 	}
 
@@ -69,20 +84,35 @@ func sweepNotificationConfigurations(ctx context.Context, client *conns.AWSClien
 
 func sweepChannelAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.NotificationsClient(ctx)
-	var input notifications.ListChannelsInput
+	var input notifications.ListNotificationConfigurationsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := notifications.NewListChannelsPaginator(conn, &input)
+	pages := notifications.NewListNotificationConfigurationsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
 		if err != nil {
 			return nil, err
 		}
 
-		for _, v := range page.Channels {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newChannelAssociationResource, client,
-				framework.NewAttribute(names.AttrARN, v)),
-			)
+		for _, v := range page.NotificationConfigurations {
+			input := notifications.ListChannelsInput{
+				NotificationConfigurationArn: v.Arn,
+			}
+
+			pages := notifications.NewListChannelsPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, v := range page.Channels {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newChannelAssociationResource, client,
+						framework.NewAttribute(names.AttrARN, v)),
+					)
+				}
+			}
 		}
 	}
 

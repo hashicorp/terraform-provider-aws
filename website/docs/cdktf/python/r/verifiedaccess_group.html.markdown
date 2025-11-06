@@ -67,6 +67,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the verified access group.
 * `policy_document` - (Optional) The policy document that is associated with this resource.
 * `sse_configuration` - (Optional) Configuration block to use KMS keys for server-side encryption.
@@ -93,4 +94,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.20.8 input-758e23438ff4a07ded512df332a5c84f45d4f7cd61f8d3e0f6672a8111b8c5f0 -->
+<!-- cache-key: cdktf-0.20.8 input-6cca9caf24900bae1f7d709bff4e2530b64243d8ea0e74804eafb0c1623e8955 -->

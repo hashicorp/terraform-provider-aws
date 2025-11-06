@@ -47,7 +47,7 @@ resource "aws_sagemaker_flow_definition" "example" {
     task_count                            = 1
     task_description                      = "example"
     task_title                            = "example"
-    workteam_arn                          = "arn:aws:sagemaker:${data.aws_region.current.name}:394669845002:workteam/public-crowd/default"
+    workteam_arn                          = "arn:aws:sagemaker:${data.aws_region.current.region}:394669845002:workteam/public-crowd/default"
 
     public_workforce_task_price {
       amount_in_usd {
@@ -110,6 +110,7 @@ resource "aws_sagemaker_flow_definition" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `flow_definition_name` - (Required) The name of your flow definition.
 * `human_loop_config` - (Required)  An object containing information about the tasks the human reviewers will perform. See [Human Loop Config](#human-loop-config) details below.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the role needed to call other services on your behalf.

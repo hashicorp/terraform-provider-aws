@@ -90,7 +90,7 @@ func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, 
 	const (
 		timeout = 1 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, timeout, func() (any, error) {
+	localGatewayRoute, err := tfresource.RetryWhenNewResourceNotFound(ctx, timeout, func(ctx context.Context) (*awstypes.LocalGatewayRoute, error) {
 		return findLocalGatewayRouteByTwoPartKey(ctx, conn, localGatewayRouteTableID, destination)
 	}, d.IsNewResource())
 
@@ -103,8 +103,6 @@ func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Local Gateway Route (%s): %s", d.Id(), err)
 	}
-
-	localGatewayRoute := outputRaw.(*awstypes.LocalGatewayRoute)
 
 	d.Set("destination_cidr_block", localGatewayRoute.DestinationCidrBlock)
 	d.Set("local_gateway_virtual_interface_group_id", localGatewayRoute.LocalGatewayVirtualInterfaceGroupId)

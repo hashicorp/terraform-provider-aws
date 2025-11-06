@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `namePrefix` - (Optional) Specifying this limits the results to only those event buses with names that start with the specified prefix.
 
 ## Attribute Reference
@@ -57,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - The name of the event bus.
 * `policy` - The permissions policy of the event bus, describing which other AWS accounts can write events to this event bus.
 
-<!-- cache-key: cdktf-0.20.8 input-83ef90b7273675b66134dae4ccec233ed2cf671899c50363db80e083930fe6a4 -->
+<!-- cache-key: cdktf-0.20.8 input-2684d1618c9d757db402d1eaeb5c3eaf3690646e58c7760fae88175153bd0c87 -->

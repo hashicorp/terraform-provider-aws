@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_auditmanager_framework_share: Add plan-time validation of `destination_account`
+```
+
+```release-note:enhancement
+resource/aws_auditmanager_organization_admin_account_registration: Add plan-time validation of `admin_account_id`
+```

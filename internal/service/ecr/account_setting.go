@@ -32,7 +32,7 @@ func newAccountSettingResource(_ context.Context) (resource.ResourceWithConfigur
 }
 
 type accountSettingResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accountSettingResourceModel]
 	framework.WithNoOpDelete
 }
 
@@ -149,6 +149,7 @@ func (r *accountSettingResource) ImportState(ctx context.Context, request resour
 }
 
 type accountSettingResourceModel struct {
+	framework.WithRegionModel
 	Name  types.String `tfsdk:"name"`
 	Value types.String `tfsdk:"value"`
 }

@@ -24,8 +24,8 @@ data "aws_servicecatalogappregistry_attribute_group" "example" {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 ~> Exactly one of `arn`, `id`, or `name` must be set.
-
 * `arn` - (Optional) ARN of the Attribute Group to find.
 * `id`   - (Optional) ID of the Attribute Group to find.
 * `name` - (Optional) Name of the Attribute Group to find.

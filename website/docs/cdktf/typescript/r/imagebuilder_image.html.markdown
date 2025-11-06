@@ -48,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `containerRecipeArn` - (Optional) - Amazon Resource Name (ARN) of the container recipe.
 * `distributionConfigurationArn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhancedImageMetadataEnabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
@@ -62,6 +63,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `imageTestsEnabled` - (Optional) Whether image tests are enabled. Defaults to `true`.
 * `timeoutMinutes` - (Optional) Number of minutes before image tests time out. Valid values are between `60` and `1440`. Defaults to `720`.
 
@@ -69,6 +71,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `imageScanningEnabled` - (Optional) Indicates whether Image Builder keeps a snapshot of the vulnerability scans that Amazon Inspector runs against the build instance when you create a new image. Defaults to `false`.
 * `ecrConfiguration` - (Optional) Configuration block with ECR configuration. Detailed below.
 
@@ -76,6 +79,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repositoryName` - (Optional) The name of the container repository that Amazon Inspector scans to identify findings for your container images.
 * `containerTags` - (Optional) Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
 
@@ -87,6 +91,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `onFailure` - (Optional) The action to take if the workflow fails. Must be one of `CONTINUE` or `ABORT`.
 * `parallelGroup` - (Optional) The parallel group in which to run a test Workflow.
 * `parameter` - (Optional) Configuration block for the workflow parameters. Detailed below.
@@ -127,6 +132,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_image.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1"
+  }
+}
+
+resource "aws_imagebuilder_image" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Image Builder image.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image` resources using the Amazon Resource Name (ARN). For example:
 
 ```typescript
@@ -157,4 +183,4 @@ Using `terraform import`, import `aws_imagebuilder_image` resources using the Am
 % terraform import aws_imagebuilder_image.example arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cbb9db80d9b66120d07dffb432829c9d9219308f5d9c07fc66965f6a0724ebf8 -->
+<!-- cache-key: cdktf-0.20.8 input-b591ff68cf14ee9c4ee44f9c938c2314328078d376d95c053348a973ad01cc40 -->

@@ -25,16 +25,15 @@ resource "aws_rds_instance_state" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identifier` - (Required) DB Instance Identifier
 * `state` - (Required) Configured state of the DB Instance. Valid values are `available` and `stopped`.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `identifier` - DB Instance Identifier
+This resource exports no additional attributes.
 
 ## Timeouts
 
@@ -45,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS (Relational Database) RDS Instance State using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS (Relational Database) RDS Instance State using the `identifier`. For example:
 
 ```terraform
 import {
@@ -54,7 +53,7 @@ import {
 }
 ```
 
-Using `terraform import`, import RDS (Relational Database) RDS Instance State using the `example_id_arg`. For example:
+Using `terraform import`, import RDS (Relational Database) RDS Instance State using the `identifier`. For example:
 
 ```console
 % terraform import aws_rds_instance_state.example rds_instance_state-id-12345678

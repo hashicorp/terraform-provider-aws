@@ -30,6 +30,7 @@ data "aws_ec2_coip_pool" "selected" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `local_gateway_route_table_id` - (Optional) Local Gateway Route Table Id assigned to desired COIP Pool
 * `pool_id` - (Optional) ID of the specific COIP Pool to retrieve.
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match

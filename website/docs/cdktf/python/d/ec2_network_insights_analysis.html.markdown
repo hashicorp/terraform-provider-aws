@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `network_insights_analysis_id` - (Optional) ID of the Network Insights Analysis to select.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
@@ -66,4 +67,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status_message` - Message to provide more context when the `status` is `failed`.
 * `warning_message` - Warning message.
 
-<!-- cache-key: cdktf-0.20.8 input-e982dfa441992316cd5a9a78e234f9f428d9657d01c681994334db5b6f9da52d -->
+<!-- cache-key: cdktf-0.20.8 input-2b1dad20b3a069b9e72b28ef67b881e6e7007b37f371899cb9f1209e5ccd05e5 -->

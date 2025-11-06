@@ -29,8 +29,8 @@ import (
 )
 
 // @FrameworkResource("aws_verifiedpermissions_policy_template", name="Policy Template")
-func newResourcePolicyTemplate(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePolicyTemplate{}
+func newPolicyTemplateResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &policyTemplateResource{}
 
 	return r, nil
 }
@@ -39,13 +39,13 @@ const (
 	ResNamePolicyTemplate = "Policy Template"
 )
 
-type resourcePolicyTemplate struct {
-	framework.ResourceWithConfigure
+type policyTemplateResource struct {
+	framework.ResourceWithModel[policyTemplateResourceModel]
 	framework.WithImportByID
 }
 
 // Schema returns the schema for this resource.
-func (r *resourcePolicyTemplate) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *policyTemplateResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedDate: schema.StringAttribute{
@@ -80,9 +80,9 @@ func (r *resourcePolicyTemplate) Schema(ctx context.Context, request resource.Sc
 	response.Schema = s
 }
 
-func (r *resourcePolicyTemplate) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *policyTemplateResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var plan resourcePolicyTemplateData
+	var plan policyTemplateResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 
@@ -121,9 +121,9 @@ func (r *resourcePolicyTemplate) Create(ctx context.Context, request resource.Cr
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourcePolicyTemplate) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *policyTemplateResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state resourcePolicyTemplateData
+	var state policyTemplateResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -164,9 +164,9 @@ func (r *resourcePolicyTemplate) Read(ctx context.Context, request resource.Read
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourcePolicyTemplate) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *policyTemplateResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state, plan resourcePolicyTemplateData
+	var state, plan policyTemplateResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -204,9 +204,9 @@ func (r *resourcePolicyTemplate) Update(ctx context.Context, request resource.Up
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *policyTemplateResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state resourcePolicyTemplateData
+	var state policyTemplateResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -238,7 +238,8 @@ func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.De
 	}
 }
 
-type resourcePolicyTemplateData struct {
+type policyTemplateResourceModel struct {
+	framework.WithRegionModel
 	CreatedDate      timetypes.RFC3339 `tfsdk:"created_date"`
 	Description      types.String      `tfsdk:"description"`
 	ID               types.String      `tfsdk:"id"`

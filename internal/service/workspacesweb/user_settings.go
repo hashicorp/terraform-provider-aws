@@ -44,7 +44,7 @@ func newUserSettingsResource(_ context.Context) (resource.ResourceWithConfigure,
 }
 
 type userSettingsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[userSettingsResourceModel]
 }
 
 func (r *userSettingsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -364,6 +364,7 @@ func findUserSettingsByARN(ctx context.Context, conn *workspacesweb.Client, arn 
 }
 
 type userSettingsResourceModel struct {
+	framework.WithRegionModel
 	AdditionalEncryptionContext        fwtypes.MapOfString                                                      `tfsdk:"additional_encryption_context"`
 	AssociatedPortalARNs               fwtypes.ListOfString                                                     `tfsdk:"associated_portal_arns"`
 	CookieSynchronizationConfiguration fwtypes.ListNestedObjectValueOf[cookieSynchronizationConfigurationModel] `tfsdk:"cookie_synchronization_configuration"`

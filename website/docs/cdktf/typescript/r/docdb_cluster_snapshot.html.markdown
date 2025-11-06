@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dbClusterIdentifier` - (Required) The DocumentDB Cluster Identifier from which to take the snapshot.
 * `dbClusterSnapshotIdentifier` - (Required) The Identifier for the snapshot.
 
@@ -52,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `engineVersion` - Version of the database engine for this DocumentDB cluster snapshot.
 * `kmsKeyId` - If storage_encrypted is true, the AWS KMS key identifier for the encrypted DocumentDB cluster snapshot.
 * `port` - Port that the DocumentDB cluster was listening on at the time of the snapshot.
-* `source_db_cluster_snapshot_identifier` - The DocumentDB Cluster Snapshot Arn that the DocumentDB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
+* `sourceDbClusterSnapshotIdentifier` - The DocumentDB Cluster Snapshot Arn that the DocumentDB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `storageEncrypted` - Specifies whether the DocumentDB cluster snapshot is encrypted.
 * `status` - The status of this DocumentDB Cluster Snapshot.
 * `vpcId` - The VPC ID associated with the DocumentDB cluster snapshot.
@@ -95,4 +96,4 @@ Using `terraform import`, import `aws_docdb_cluster_snapshot` using the cluster 
 % terraform import aws_docdb_cluster_snapshot.example my-cluster-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8dd2ea6e382c4e0856668c83fa43a1a39b2e7be56350a64cc442fe4366d3e1c4 -->
+<!-- cache-key: cdktf-0.20.8 input-a1c40d5f22cc1773471bd12192d1fec2743d0f4e0704571093be44b20332f548 -->

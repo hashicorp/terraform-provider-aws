@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the API Gateway VPC Link to look up. If no API Gateway VPC Link is found with this name, an error will be returned.
  If multiple API Gateway VPC Links are found with this name, an error will be returned.
 
@@ -52,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `target_arns` - List of network load balancer arns in the VPC targeted by the VPC link. Currently AWS only supports 1 target.
 * `tags` - Key-value map of resource tags
 
-<!-- cache-key: cdktf-0.20.8 input-364e46fd1fc5b1b7b5488a633d13bfdf5b289cec2047ac097ff291819fa42699 -->
+<!-- cache-key: cdktf-0.20.8 input-bad6face85e008d7be4bdcc584ea652f8203b23413587b48bfc0ab4a4fcb4096 -->

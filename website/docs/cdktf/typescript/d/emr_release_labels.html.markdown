@@ -41,7 +41,8 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `filters` – (Optional) Filters the results of the request. Prefix specifies the prefix of release labels to return. Application specifies the application (with/without version) of release labels to return. See [Filters](#filters).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `filters` - (Optional) Filters the results of the request. Prefix specifies the prefix of release labels to return. Application specifies the application (with/without version) of release labels to return. See [Filters](#filters).
 
 ### Filters
 
@@ -54,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `releaseLabels` - Returned release labels.
 
-<!-- cache-key: cdktf-0.20.8 input-fb78ebfad85778813e9c267d6d243c73637d6545ffda61bd740d4ef131d668e1 -->
+<!-- cache-key: cdktf-0.20.8 input-ce18c371c92539c860e061844fa0b6e85c700779407878953ab5770ecbb1a8bf -->

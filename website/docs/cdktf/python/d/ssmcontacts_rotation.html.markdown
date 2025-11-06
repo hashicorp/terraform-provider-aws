@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) The Amazon Resource Name (ARN) of the rotation.
 
 ## Attribute Reference
@@ -50,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `start_time` - The date and time, in RFC 3339 format, that the rotation goes into effect.
 * `tags` - A map of tags to assign to the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-fec602a20a6eeab9eacf8fc19733de5bf83ba69d9c3bdd37c9529f43537ba570 -->
+<!-- cache-key: cdktf-0.20.8 input-40bff72e70948d1cddaa1c3d1440293d3f87a20d22494e20e8af05a669570584 -->

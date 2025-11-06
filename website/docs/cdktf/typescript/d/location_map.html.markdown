@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `mapName` - (Required) Name of the map resource.
 
 ## Attribute Reference
@@ -52,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags for the map.
 * `updateTime` - Timestamp for when the map resource was last updated in ISO 8601 format.
 
-<!-- cache-key: cdktf-0.20.8 input-52e2b2c58810a7e04e0c8cbe30b604642927d6e8456af47f6c0dea825248e36a -->
+<!-- cache-key: cdktf-0.20.8 input-542818c6a3484cd6b6c5ee1b31bbe72fa2a14698f8bfdef3777267e09268d34d -->

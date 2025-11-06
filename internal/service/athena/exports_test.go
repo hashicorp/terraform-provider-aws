@@ -13,7 +13,7 @@ var (
 	FindWorkGroupByName               = findWorkGroupByName
 	QueryExecutionResult              = queryExecutionResult
 
-	ResourceCapacityReservation = newResourceCapacityReservation
+	ResourceCapacityReservation = newCapacityReservationResource
 	ResourceDataCatalog         = resourceDataCatalog
 	ResourceDatabase            = resourceDatabase
 	ResourceNamedQuery          = resourceNamedQuery

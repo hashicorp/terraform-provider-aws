@@ -22,6 +22,7 @@ data "aws_api_gateway_domain_name" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) Fully-qualified domain name to look up. If no domain name is found, an error will be returned.
 * `domain_name_id` - (Optional) The identifier for the domain name resource. Supported only for private custom domain names.
 

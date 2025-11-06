@@ -29,16 +29,14 @@ import (
 
 // @SDKResource("aws_imagebuilder_distribution_configuration", name="Distribution Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionConfigurationCreate,
 		ReadWithoutTimeout:   resourceDistributionConfigurationRead,
 		UpdateWithoutTimeout: resourceDistributionConfigurationUpdate,
 		DeleteWithoutTimeout: resourceDistributionConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -898,7 +896,7 @@ func flattenAMIDistributionConfiguration(apiObject *awstypes.AmiDistributionConf
 	}
 
 	if v := apiObject.TargetAccountIds; v != nil {
-		tfMap["target_account_ids"] = aws.StringSlice(v)
+		tfMap["target_account_ids"] = v
 	}
 
 	return tfMap
@@ -912,7 +910,7 @@ func flattenContainerDistributionConfiguration(apiObject *awstypes.ContainerDist
 	tfMap := map[string]any{}
 
 	if v := apiObject.ContainerTags; v != nil {
-		tfMap["container_tags"] = aws.StringSlice(v)
+		tfMap["container_tags"] = v
 	}
 
 	if v := apiObject.Description; v != nil {
@@ -960,7 +958,7 @@ func flattenDistribution(apiObject awstypes.Distribution) map[string]any {
 	}
 
 	if v := apiObject.LicenseConfigurationArns; v != nil {
-		tfMap["license_configuration_arns"] = aws.StringSlice(v)
+		tfMap["license_configuration_arns"] = v
 	}
 
 	if v := apiObject.Region; v != nil {
@@ -1000,19 +998,19 @@ func flattenLaunchPermissionConfiguration(apiObject *awstypes.LaunchPermissionCo
 	tfMap := map[string]any{}
 
 	if v := apiObject.OrganizationArns; v != nil {
-		tfMap["organization_arns"] = aws.StringSlice(v)
+		tfMap["organization_arns"] = v
 	}
 
 	if v := apiObject.OrganizationalUnitArns; v != nil {
-		tfMap["organizational_unit_arns"] = aws.StringSlice(v)
+		tfMap["organizational_unit_arns"] = v
 	}
 
 	if v := apiObject.UserGroups; v != nil {
-		tfMap["user_groups"] = aws.StringSlice(v)
+		tfMap["user_groups"] = v
 	}
 
 	if v := apiObject.UserIds; v != nil {
-		tfMap["user_ids"] = aws.StringSlice(v)
+		tfMap["user_ids"] = v
 	}
 
 	return tfMap

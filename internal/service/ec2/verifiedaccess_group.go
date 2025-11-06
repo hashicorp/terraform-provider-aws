@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -105,7 +105,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 
 	input := &ec2.CreateVerifiedAccessGroupInput{
 		ClientToken:              aws.String(id.UniqueId()),
-		TagSpecifications:        getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessGroup),
+		TagSpecifications:        getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessGroup),
 		VerifiedAccessInstanceId: aws.String(d.Get("verifiedaccess_instance_id").(string)),
 	}
 
@@ -257,12 +257,12 @@ func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func expandVerifiedAccessSseSpecificationRequest(tfMap map[string]any) *types.VerifiedAccessSseSpecificationRequest {
+func expandVerifiedAccessSseSpecificationRequest(tfMap map[string]any) *awstypes.VerifiedAccessSseSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.VerifiedAccessSseSpecificationRequest{}
+	apiObject := &awstypes.VerifiedAccessSseSpecificationRequest{}
 
 	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
 		apiObject.KmsKeyArn = aws.String(v)
@@ -275,7 +275,7 @@ func expandVerifiedAccessSseSpecificationRequest(tfMap map[string]any) *types.Ve
 	return apiObject
 }
 
-func flattenVerifiedAccessSseSpecificationResponse(apiObject *types.VerifiedAccessSseSpecificationResponse) []any {
+func flattenVerifiedAccessSseSpecificationResponse(apiObject *awstypes.VerifiedAccessSseSpecificationResponse) []any {
 	if apiObject == nil {
 		return nil
 	}

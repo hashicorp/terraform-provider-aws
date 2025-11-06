@@ -21,8 +21,11 @@ func (o *FinderOptions) ReturnFirstMatch() bool {
 
 type FinderOptionsFunc func(*FinderOptions)
 
-func WithReturnFirstMatch() FinderOptionsFunc {
-	return func(o *FinderOptions) {
-		o.returnFirstMatch = true
-	}
+// WithReturnFirstMatch is a finder option to enable paginated operations to short
+// circuit after the first filter match
+//
+// This option should only be used when only a single match will ever be returned
+// from the specified filter.
+var WithReturnFirstMatch = func(o *FinderOptions) {
+	o.returnFirstMatch = true
 }

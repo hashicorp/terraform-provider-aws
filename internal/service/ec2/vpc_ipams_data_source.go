@@ -22,7 +22,7 @@ func newIPAMsDataSource(context.Context) (datasource.DataSourceWithConfigure, er
 }
 
 type ipamsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[ipamsDataSourceModel]
 }
 
 func (d *ipamsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -36,7 +36,7 @@ func (d *ipamsDataSource) Schema(ctx context.Context, request datasource.SchemaR
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrFilter: customFiltersBlock(),
+			names.AttrFilter: customFiltersBlock(ctx),
 		},
 	}
 }
@@ -77,7 +77,8 @@ func (d *ipamsDataSource) Read(ctx context.Context, request datasource.ReadReque
 }
 
 type ipamsDataSourceModel struct {
-	Filters types.Set                                  `tfsdk:"filter"`
+	framework.WithRegionModel
+	Filters customFilters                              `tfsdk:"filter"`
 	IpamIDs fwtypes.ListOfString                       `tfsdk:"ipam_ids"`
 	Ipams   fwtypes.ListNestedObjectValueOf[ipamModel] `tfsdk:"ipams"`
 }

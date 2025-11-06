@@ -395,7 +395,6 @@ func resourceUserPool() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringLenBetween(1, 128),
 					validation.StringMatch(regexache.MustCompile(`[\w\s+=,.@-]+`),
@@ -860,7 +859,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.UserPoolTier = v
 	}
 
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateUserPool(ctx, input)
 	}, userPoolErrorRetryable)
 
@@ -880,7 +879,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.SoftwareTokenMfaConfiguration = expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]any))
 		}
 
-		if v := d.Get("email_mfa_configuration").([]any); len(v) > 0 && v[0] != nil {
+		if v, ok := d.Get("email_mfa_configuration").([]any); ok && len(v) > 0 {
 			input.EmailMfaConfiguration = expandEmailMFAConfigType(v)
 		}
 
@@ -898,7 +897,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.WebAuthnConfiguration = expandWebAuthnConfigurationConfigType(webAuthnConfig)
 		}
 
-		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.SetUserPoolMfaConfig(ctx, input)
 		}, userPoolErrorRetryable)
 
@@ -1046,7 +1045,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 		}
 
-		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.SetUserPoolMfaConfig(ctx, input)
 		}, userPoolErrorRetryable)
 
@@ -1069,6 +1068,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		"email_verification_message",
 		"email_verification_subject",
 		"lambda_config",
+		names.AttrName,
 		"password_policy",
 		"sign_in_policy",
 		"sms_authentication_message",
@@ -1152,6 +1152,10 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.MfaConfiguration = awstypes.UserPoolMfaType(v.(string))
 		}
 
+		if v, ok := d.GetOk(names.AttrName); ok {
+			input.PoolName = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("password_policy"); ok {
 			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 				passwordPolicy := expandPasswordPolicyType(v)
@@ -1222,7 +1226,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateUserPool(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1352,8 +1356,12 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 }
 
 func expandEmailMFAConfigType(tfList []any) *awstypes.EmailMfaConfigType {
-	if len(tfList) == 0 || tfList[0] == nil {
+	if len(tfList) == 0 {
 		return nil
+	}
+
+	if tfList[0] == nil {
+		return &awstypes.EmailMfaConfigType{}
 	}
 
 	tfMap := tfList[0].(map[string]any)

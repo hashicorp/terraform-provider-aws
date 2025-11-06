@@ -88,16 +88,10 @@ func resourceIPAMPoolCIDR() *schema.Resource {
 			"netmask_length": {
 				Type:          schema.TypeInt,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.IntBetween(0, 128),
 				ConflictsWith: []string{"cidr"},
-				// NetmaskLength is not outputted by GetIpamPoolCidrsOutput
-				DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
-					if o != "0" && n == "0" {
-						return true
-					}
-					return false
-				},
 			},
 		},
 	}
@@ -171,6 +165,7 @@ func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("cidr", output.Cidr)
 	d.Set("ipam_pool_cidr_id", output.IpamPoolCidrId)
 	d.Set("ipam_pool_id", poolID)
+	d.Set("netmask_length", output.NetmaskLength)
 
 	return diags
 }

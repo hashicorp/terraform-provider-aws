@@ -62,6 +62,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `address_family` - (Required, Forces new resource) Address family (`IPv4` or `IPv6`) of this prefix list.
 * `entry` - (Optional) Configuration block for prefix list entry. Detailed below. Different entries may have overlapping CIDR blocks, but a particular CIDR should not be duplicated.
 * `max_entries` - (Required) Maximum number of entries that this prefix list can contain.
@@ -108,4 +109,4 @@ Using `terraform import`, import Prefix Lists using the `id`. For example:
 % terraform import aws_ec2_managed_prefix_list.default pl-0570a1d2d725c16be
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f31ae5e52895be9c6e214e756efedf3f324fec164272531bc7a2c04e0cb5b0ae -->
+<!-- cache-key: cdktf-0.20.8 input-b4a550b6b1d435de56f5c060d24a51e7f8ca9173ed588cb43366840a1a64e63f -->

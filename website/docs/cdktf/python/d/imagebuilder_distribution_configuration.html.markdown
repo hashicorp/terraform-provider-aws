@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the distribution configuration.
 
 ## Attribute Reference
@@ -89,4 +90,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the distribution configuration.
 * `tags` - Key-value map of resource tags for the distribution configuration.
 
-<!-- cache-key: cdktf-0.20.8 input-1186cf748fcce165a86a86223e347a0d3d787713011b15bb0071a04e483dd470 -->
+<!-- cache-key: cdktf-0.20.8 input-98663c9267023c859ae8c9b1265078e7dfdc57e80a0570154cfe38bc01eb9ee4 -->

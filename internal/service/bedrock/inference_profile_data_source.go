@@ -29,7 +29,7 @@ func newInferenceProfileDataSource(context.Context) (datasource.DataSourceWithCo
 }
 
 type inferenceProfileDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[inferenceProfileDataSourceModel]
 }
 
 func (d *inferenceProfileDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -123,6 +123,7 @@ func findInferenceProfile(ctx context.Context, conn *bedrock.Client, input *bedr
 }
 
 type inferenceProfileDataSourceModel struct {
+	framework.WithRegionModel
 	CreatedAt            timetypes.RFC3339                                           `tfsdk:"created_at"`
 	Description          types.String                                                `tfsdk:"description"`
 	InferenceProfileARN  fwtypes.ARN                                                 `tfsdk:"inference_profile_arn"`
