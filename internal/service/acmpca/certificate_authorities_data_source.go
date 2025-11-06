@@ -53,7 +53,7 @@ func (d *dataSourceCertificateAuthorities) Read(ctx context.Context, req datasou
 	conn := d.Meta().ACMPCAClient(ctx)
 
 	var data dataSourceCertificateAuthoritiesModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -64,7 +64,7 @@ func (d *dataSourceCertificateAuthorities) Read(ctx context.Context, req datasou
 	}
 	data.ARNs = flex.FlattenFrameworkStringValueListOfString(ctx, out)
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID)
 }
 
 type dataSourceCertificateAuthoritiesModel struct {
@@ -75,11 +75,11 @@ type dataSourceCertificateAuthoritiesModel struct {
 
 func findCertificateAuthorities(ctx context.Context, client *acmpca.Client, resourceOwner string) ([]string, error) {
 	var arns []string
-	input := &acmpca.ListCertificateAuthoritiesInput{}
+	var input acmpca.ListCertificateAuthoritiesInput
 	if resourceOwner != "" {
 		input.ResourceOwner = awstypes.ResourceOwner(resourceOwner)
 	}
-	paginator := acmpca.NewListCertificateAuthoritiesPaginator(client, input)
+	paginator := acmpca.NewListCertificateAuthoritiesPaginator(client, &input)
 
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
