@@ -538,7 +538,7 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 }
 
 // string copies a Plugin Framework Object(ish) value to a compatible AWS API value.
-func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, vFrom basetypes.ObjectValuable, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+func (expander autoExpander) object(ctx context.Context, sourcePath path.Path, vFrom basetypes.ObjectValuable, targetPath path.Path, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	_, d := vFrom.ToObjectValue(ctx)
@@ -766,7 +766,7 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 }
 
 // map_ copies a Plugin Framework Map(ish) value to a compatible AWS API value.
-func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuable, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToMapValue(ctx)
