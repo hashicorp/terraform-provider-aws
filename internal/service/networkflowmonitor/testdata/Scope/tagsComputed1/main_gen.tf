@@ -21,11 +21,6 @@ resource "aws_networkflowmonitor_scope" "test" {
 }
 resource "null_resource" "test" {}
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "unknownTagKey" {
   type     = string
