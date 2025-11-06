@@ -403,7 +403,6 @@ type ResourceDatum struct {
 	OverrideResourceType             string
 	tests.CommonArgs
 	common.ResourceIdentity
-	identityAttribute string
 }
 
 func (d ResourceDatum) ProviderPackage() string {
@@ -584,9 +583,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.IsARNIdentity = true
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
-					d.identityAttribute = "arn"
+					d.IdentityAttributeName_ = "arn"
 				} else {
-					d.identityAttribute = args.Positional[0]
+					d.IdentityAttributeName_ = args.Positional[0]
 				}
 
 				populateInherentRegionIdentity(&d, args)
@@ -785,7 +784,7 @@ func populateInherentRegionIdentity(d *ResourceDatum, args common.Args) {
 		attrs = append(attrs, "id")
 	} else {
 		if !slices.Contains(attrs, "id") {
-			d.SetImportStateIDAttribute(d.identityAttribute)
+			d.SetImportStateIDAttribute(d.IdentityAttributeName_)
 		}
 	}
 	slices.Sort(attrs)

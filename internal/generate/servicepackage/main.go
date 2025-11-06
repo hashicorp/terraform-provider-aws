@@ -224,7 +224,6 @@ type ResourceDatum struct {
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
 	IdentityAttributes                []identityAttribute
-	arnAttribute                      string
 	isARNFormatGlobal                 arnFormatState
 	SingletonIdentity                 bool
 	MutableIdentity                   bool
@@ -264,11 +263,11 @@ type goImport struct {
 }
 
 func (r ResourceDatum) HasARNAttribute() bool {
-	return r.arnAttribute != "" && r.arnAttribute != "arn"
+	return r.IdentityAttributeName_ != "" && r.IdentityAttributeName_ != "arn"
 }
 
 func (r ResourceDatum) ARNAttribute() string {
-	return namesgen.ConstOrQuote(r.arnAttribute)
+	return namesgen.ConstOrQuote(r.IdentityAttributeName_)
 }
 
 func (d ResourceDatum) RegionOverrideEnabled() bool {
@@ -489,9 +488,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.WrappedImport = true
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
-					d.arnAttribute = "arn"
+					d.IdentityAttributeName_ = "arn"
 				} else {
-					d.arnAttribute = args.Positional[0]
+					d.IdentityAttributeName_ = args.Positional[0]
 				}
 
 				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
