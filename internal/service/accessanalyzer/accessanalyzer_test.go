@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // AccessAnalyzer is limited to one per region, so run serially locally and in TeamCity.
@@ -39,7 +38,7 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).AccessAnalyzerClient(ctx)
 
 	input := accessanalyzer.ListAnalyzersInput{}
 

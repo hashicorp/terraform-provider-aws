@@ -246,8 +246,8 @@ resource "aws_route_table" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route Tables using the route table `id`. For example:
 
@@ -272,4 +272,4 @@ Using `terraform import`, import Route Tables using the route table `id`. For ex
 % terraform import aws_route_table.public_rt rtb-4e616f6d69
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dfc865151610891586f4609992c49179736f292de315b5eaa86d4c26acb2026e -->
+<!-- cache-key: cdktf-0.20.8 input-769bbdab5afd29d8c9925635bbb3cf43c34cbc6f91e98b69dab3af677aabb13e -->

@@ -91,6 +91,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ecs_capacity_provider.example
+  identity = {
+    "arn" = "arn:aws:ecs:us-west-2:123456789012:capacity-provider/example"
+  }
+}
+
+resource "aws_ecs_capacity_provider" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the ECS capacity provider.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Capacity Providers using the `arn`. For example:
 
 ```python
@@ -114,4 +135,4 @@ Using `terraform import`, import ECS Capacity Providers using the `arn`. For exa
 % terraform import aws_ecs_capacity_provider.example arn:aws:ecs:us-west-2:123456789012:capacity-provider/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2516056f1c4e1179e2b7386c133e4f8ad12dbac1c07ceb86ae644b74e4e339f1 -->
+<!-- cache-key: cdktf-0.20.8 input-352e670e03671f7c2d8eb7a6ddb021cc5fb8574c986523e2be32b741c2136e91 -->

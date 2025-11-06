@@ -358,7 +358,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 			"host":         *instance.PrivateIpAddress,
 		})
 	}
-	if err := readBlockDevices(ctx, d, meta, instance, false); err != nil {
+	if err := readBlockDevices(ctx, d, meta.(*conns.AWSClient), instance, false); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 

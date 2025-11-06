@@ -136,6 +136,7 @@ var (
 	CheckMostRecentAndMissingFilters                            = checkMostRecentAndMissingFilters
 	CustomFiltersSchema                                         = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                    = customerGatewayConfigurationToTunnelInfo
+	DefaultIPv6CIDRBlockAssociation                             = defaultIPv6CIDRBlockAssociation
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone         = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
 	ErrCodeInvalidSpotDatafeedNotFound                          = errCodeInvalidSpotDatafeedNotFound
 	ExpandIPPerms                                               = expandIPPerms
@@ -162,7 +163,7 @@ var (
 	FindHostByID                                                = findHostByID
 	FindIPAMByID                                                = findIPAMByID
 	FindIPAMPoolAllocationByTwoPartKey                          = findIPAMPoolAllocationByTwoPartKey
-	FindIPAMPoolAllocationsForVPC                               = findIPAMPoolAllocationsForVPC
+	FindIPAMPoolAllocationForResource                           = findIPAMPoolAllocationForResource
 	FindIPAMPoolByID                                            = findIPAMPoolByID
 	FindIPAMPoolCIDRByTwoPartKey                                = findIPAMPoolCIDRByTwoPartKey
 	FindIPAMResourceDiscoveryAssociationByID                    = findIPAMResourceDiscoveryAssociationByID

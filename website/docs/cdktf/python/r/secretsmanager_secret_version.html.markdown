@@ -138,8 +138,8 @@ resource "aws_secretsmanager_secret_version" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_version` using the secret ID and version ID. For example:
 
@@ -164,4 +164,4 @@ Using `terraform import`, import `aws_secretsmanager_secret_version` using the s
 % terraform import aws_secretsmanager_secret_version.example 'arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1e3a90bc99f337e1c7e4358cccb69498c355b48270b1ffd37fcf464baf19302f -->
+<!-- cache-key: cdktf-0.20.8 input-fc8a23275ada9475c3bc2e4d14a782882cf9cbdf4a6bf4bbb9f29faf6be79826 -->
