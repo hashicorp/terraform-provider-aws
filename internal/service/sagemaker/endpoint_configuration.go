@@ -251,6 +251,12 @@ func resourceEndpointConfiguration() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validPrefix,
 			},
+			names.AttrExecutionRoleARN: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"production_variants": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -317,7 +323,6 @@ func resourceEndpointConfiguration() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.FloatAtLeast(0),
-							Default:      1,
 						},
 						names.AttrInstanceType: {
 							Type:             schema.TypeString,
@@ -333,7 +338,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 						},
 						"model_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 						},
 						"routing_config": {
@@ -489,7 +494,6 @@ func resourceEndpointConfiguration() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.FloatAtLeast(0),
-							Default:      1,
 						},
 						names.AttrInstanceType: {
 							Type:             schema.TypeString,
@@ -505,7 +509,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 						},
 						"model_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 						},
 						"routing_config": {
@@ -679,6 +683,10 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 		Tags:               getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
+		createOpts.ExecutionRoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		createOpts.KmsKeyId = aws.String(v.(string))
 	}
@@ -724,6 +732,7 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
 	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(endpointConfig.EndpointConfigName)))
+	d.Set(names.AttrExecutionRoleARN, endpointConfig.ExecutionRoleArn)
 	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
@@ -806,8 +815,10 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]any)
 
-		l := awstypes.ProductionVariant{
-			ModelName: aws.String(data["model_name"].(string)),
+		l := awstypes.ProductionVariant{}
+
+		if v, ok := data["model_name"].(string); ok && v != "" {
+			l.ModelName = aws.String(v)
 		}
 
 		if v, ok := data["initial_instance_count"].(int); ok && v > 0 {
@@ -836,7 +847,7 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 			l.VariantName = aws.String(id.UniqueId())
 		}
 
-		if v, ok := data["initial_variant_weight"].(float64); ok {
+		if v, ok := data["initial_variant_weight"].(float64); ok && v > 0 {
 			l.InitialVariantWeight = aws.Float32(float32(v))
 		}
 
@@ -856,7 +867,7 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 			l.CoreDumpConfig = expandCoreDumpConfig(v)
 		}
 
-		if v, ok := data["enable_ssm_access"].(bool); ok {
+		if v, ok := data["enable_ssm_access"].(bool); ok && v {
 			l.EnableSSMAccess = aws.Bool(v)
 		}
 
