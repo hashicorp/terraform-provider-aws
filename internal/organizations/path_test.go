@@ -130,3 +130,18 @@ func TestBuildPrincipalOrgPath_AccountNestedOUs(t *testing.T) {
 		t.Errorf("expected %s, got %s", expected, path)
 	}
 }
+
+func TestBuildPrincipalOrgPath_RootAsChild(t *testing.T) {
+	ctx := context.Background()
+	client := &mockOrganizationsClient{
+		OrganizationID: "o-org456",
+		ParentsMap: map[string][]types.Parent{
+			"r-root123": {}, // root has no parent
+		},
+	}
+
+	_, err := BuildPrincipalOrgPath(ctx, client, "r-root123")
+	if err == nil {
+		t.Fatal("expected error when root has no parent")
+	}
+}
