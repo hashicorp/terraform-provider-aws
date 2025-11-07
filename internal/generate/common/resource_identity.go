@@ -8,6 +8,13 @@ import (
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
+type Implementation string
+
+const (
+	ImplementationFramework Implementation = "framework"
+	ImplementationSDK       Implementation = "sdk"
+)
+
 type ResourceIdentity struct {
 	IsARNIdentity                  bool
 	IsCustomInherentRegionIdentity bool
