@@ -50,7 +50,7 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerifyIdentifierAttribute: names.AttrDomainName,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "account", names.AttrDomainName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrDomainName, "account"),
 			},
 		},
 	})
