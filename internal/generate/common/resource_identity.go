@@ -20,6 +20,10 @@ type ResourceIdentity struct {
 	CustomInherentRegionParser     string
 }
 
+func (r ResourceIdentity) HasResourceIdentity() bool {
+	return len(r.IdentityAttributes) > 0 || r.IsARNIdentity || r.IsSingletonIdentity || r.IsCustomInherentRegionIdentity
+}
+
 func (r ResourceIdentity) HasIdentityDuplicateAttrs() bool {
 	return len(r.IdentityDuplicateAttrNames) > 0
 }
