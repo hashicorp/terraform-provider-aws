@@ -323,6 +323,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.FloatAtLeast(0),
+							Default:      1,
 						},
 						names.AttrInstanceType: {
 							Type:             schema.TypeString,
@@ -494,6 +495,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.FloatAtLeast(0),
+							Default:      1,
 						},
 						names.AttrInstanceType: {
 							Type:             schema.TypeString,
@@ -847,8 +849,19 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 			l.VariantName = aws.String(id.UniqueId())
 		}
 
-		if v, ok := data["initial_variant_weight"].(float64); ok && v > 0 {
-			l.InitialVariantWeight = aws.Float32(float32(v))
+		// IC endpoints do not have model_name set, special handling
+		if modelName, ok := data["model_name"].(string); ok && modelName != "" {
+			// Traditional endpoint: send the weight value (including 0 if explicitly set)
+			// IC endpoint: AWS rejects 0 weight for variants without model_name, but returns 0 in read
+			if v, ok := data["initial_variant_weight"].(float64); ok {
+				l.InitialVariantWeight = aws.Float32(float32(v))
+			}
+
+			// Only set EnableSSMAccess if model_name is provided (traditional endpoint)
+			// For Inference Component endpoints (no model_name), AWS rejects this field
+			if v, ok := data["enable_ssm_access"].(bool); ok {
+				l.EnableSSMAccess = aws.Bool(v)
+			}
 		}
 
 		if v, ok := data["accelerator_type"].(string); ok && v != "" {
@@ -865,10 +878,6 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 
 		if v, ok := data["core_dump_config"].([]any); ok && len(v) > 0 {
 			l.CoreDumpConfig = expandCoreDumpConfig(v)
-		}
-
-		if v, ok := data["enable_ssm_access"].(bool); ok && v {
-			l.EnableSSMAccess = aws.Bool(v)
 		}
 
 		if v, ok := data["managed_instance_scaling"].([]any); ok && len(v) > 0 {
@@ -890,12 +899,26 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]a
 
 	for _, i := range list {
 		l := map[string]any{
-			"accelerator_type":       i.AcceleratorType,
-			names.AttrInstanceType:   i.InstanceType,
-			"inference_ami_version":  i.InferenceAmiVersion,
-			"initial_variant_weight": aws.ToFloat32(i.InitialVariantWeight),
-			"model_name":             aws.ToString(i.ModelName),
-			"variant_name":           aws.ToString(i.VariantName),
+			"accelerator_type":      i.AcceleratorType,
+			names.AttrInstanceType:  i.InstanceType,
+			"inference_ami_version": i.InferenceAmiVersion,
+			"model_name":            aws.ToString(i.ModelName),
+			"variant_name":          aws.ToString(i.VariantName),
+		}
+
+		// Traditional endpoints have model_name set
+		// Inference Component endpoints do not have model_name set
+		// Special handling
+		if i.ModelName != nil && aws.ToString(i.ModelName) != "" {
+			if i.InitialVariantWeight != nil {
+				l["initial_variant_weight"] = aws.ToFloat32(i.InitialVariantWeight)
+			}
+
+			if i.EnableSSMAccess != nil {
+				l["enable_ssm_access"] = aws.ToBool(i.EnableSSMAccess)
+			}
+		} else {
+			l["initial_variant_weight"] = float64(1) // Default value in schema, spoof to avoid diff
 		}
 
 		if i.InitialInstanceCount != nil {
@@ -924,10 +947,6 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]a
 
 		if i.CoreDumpConfig != nil {
 			l["core_dump_config"] = flattenCoreDumpConfig(i.CoreDumpConfig)
-		}
-
-		if i.EnableSSMAccess != nil {
-			l["enable_ssm_access"] = aws.ToBool(i.EnableSSMAccess)
 		}
 
 		if i.ManagedInstanceScaling != nil {

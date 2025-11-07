@@ -944,7 +944,7 @@ func TestAccSageMakerEndpointConfiguration_upgradeToEnableSSMAccess(t *testing.T
 	})
 }
 
-func TestAccSageMakerEndpointConfiguration_productionVariantsManagedInstanceScaling(t *testing.T) {
+func TestAccSageMakerEndpointConfiguration_ProductionVariants_managedInstanceScaling(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
@@ -979,7 +979,7 @@ func TestAccSageMakerEndpointConfiguration_productionVariantsManagedInstanceScal
 	})
 }
 
-func TestAccSageMakerEndpointConfiguration_productionVariantsManagedInstanceScalingZero(t *testing.T) {
+func TestAccSageMakerEndpointConfiguration_ProductionVariants_managedInstanceScalingZero(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
@@ -1962,13 +1962,13 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {
-  name                = %[1]q
-  execution_role_arn  = aws_iam_role.test.arn
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
 
   production_variants {
-    variant_name = "variant-1"
-	initial_instance_count = 1
-	instance_type          = "ml.g5.xlarge"
+    variant_name           = "variant-1"
+    initial_instance_count = 1
+    instance_type          = "ml.g5.xlarge"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
