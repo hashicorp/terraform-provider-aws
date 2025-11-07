@@ -137,6 +137,9 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 			}
 		})
 		d.IdentityDuplicateAttrNames = slices.Compact(attrs)
+
+	case "MutableIdentity":
+		d.MutableIdentity = true
 	}
 
 	return nil
