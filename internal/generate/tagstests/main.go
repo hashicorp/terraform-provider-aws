@@ -677,7 +677,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if len(tlsKeyCN) == 0 {
 			tlsKeyCN = "acctest.RandomDomain().String()"
 			d.GoImports = append(d.GoImports,
-				tests.GoImport{
+				common.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 				},
 			)
@@ -709,7 +709,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if !generatorSeen {
 				d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
 				d.GoImports = append(d.GoImports,
-					tests.GoImport{
+					common.GoImport{
 						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 					},
 				)

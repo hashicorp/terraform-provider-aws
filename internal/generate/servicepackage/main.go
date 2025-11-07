@@ -140,7 +140,7 @@ func main() {
 			SDKListResources:        v.sdkListResources,
 		}
 
-		var imports []goImport
+		var imports []common.GoImport
 		for _, resource := range v.actions {
 			imports = append(imports, resource.goImports...)
 		}
@@ -165,7 +165,7 @@ func main() {
 		for _, resource := range v.sdkListResources {
 			imports = append(imports, resource.goImports...)
 		}
-		slices.SortFunc(imports, func(a, b goImport) int {
+		slices.SortFunc(imports, func(a, b common.GoImport) int {
 			if n := strings.Compare(a.Path, b.Path); n != 0 {
 				return n
 			}
@@ -225,7 +225,7 @@ type ResourceDatum struct {
 	isARNFormatGlobal                 arnFormatState
 	WrappedImport                     bool
 	CustomImport                      bool
-	goImports                         []goImport
+	goImports                         []common.GoImport
 	ImportIDHandler                   string
 	SetIDAttribute                    bool
 	HasV6_0SDKv2Fix                   bool
@@ -236,11 +236,6 @@ type ResourceDatum struct {
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
 	return r.isARNFormatGlobal == arnFormatStateGlobal
-}
-
-type goImport struct {
-	Path  string
-	Alias string
 }
 
 func (r ResourceDatum) HasARNAttribute() bool {
@@ -274,7 +269,7 @@ type ServiceDatum struct {
 	SDKDataSources          map[string]ResourceDatum
 	SDKResources            map[string]ResourceDatum
 	SDKListResources        map[string]ResourceDatum
-	GoImports               []goImport
+	GoImports               []common.GoImport
 }
 
 //go:embed service_package_gen.go.gtpl
@@ -500,7 +495,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "ImportIDHandler":
 				args := common.ParseArgs(m[3])
 				attr := args.Positional[0]
-				if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
+				if typeName, importSpec, err := common.ParseIdentifierSpec(attr); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%q at %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
 				} else {
@@ -548,7 +543,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.IdentityAttributeName_ = args.Positional[0]
 
 				attr := args.Positional[1]
-				if funcName, importSpec, err := parseIdentifierSpec(attr); err != nil {
+				if funcName, importSpec, err := common.ParseIdentifierSpec(attr); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%q at %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
 				} else {
@@ -817,26 +812,4 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	}
 
 	return v
-}
-
-func parseIdentifierSpec(s string) (string, *goImport, error) {
-	parts := strings.Split(s, ";")
-	switch len(parts) {
-	case 1:
-		return parts[0], nil, nil
-
-	case 2:
-		return parts[1], &goImport{
-			Path: parts[0],
-		}, nil
-
-	case 3:
-		return parts[2], &goImport{
-			Path:  parts[0],
-			Alias: parts[1],
-		}, nil
-
-	default:
-		return "", nil, fmt.Errorf("invalid generator value: %q", s)
-	}
 }

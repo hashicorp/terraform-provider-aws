@@ -717,10 +717,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["idAttrDuplicates"]; ok {
 					d.idAttrDuplicates = attr
 					d.GoImports = append(d.GoImports,
-						tests.GoImport{
+						common.GoImport{
 							Path: "github.com/hashicorp/terraform-plugin-testing/config",
 						},
-						tests.GoImport{
+						common.GoImport{
 							Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
 						},
 					)
@@ -822,7 +822,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if len(tlsKeyCN) == 0 {
 			tlsKeyCN = "acctest.RandomDomain().String()"
 			d.GoImports = append(d.GoImports,
-				tests.GoImport{
+				common.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 				},
 			)
@@ -853,10 +853,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if !skip {
 			if d.idAttrDuplicates != "" {
 				d.GoImports = append(d.GoImports,
-					tests.GoImport{
+					common.GoImport{
 						Path: "github.com/hashicorp/terraform-plugin-testing/config",
 					},
-					tests.GoImport{
+					common.GoImport{
 						Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
 					},
 				)
@@ -872,11 +872,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if !generatorSeen {
 				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
 				d.GoImports = append(d.GoImports,
-					tests.GoImport{
+					common.GoImport{
 						Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
 						Alias: "sdkacctest",
 					},
-					tests.GoImport{
+					common.GoImport{
 						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 					},
 				)
