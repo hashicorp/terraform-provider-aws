@@ -44,6 +44,7 @@ import (
 // @FrameworkResource("aws_s3tables_table", name="Table")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableOutput")
+// @Testing(importStateIdAttribute="arn")
 // @Testing(importStateIdFunc="testAccTableImportStateIdFunc")
 // @Testing(preCheck="testAccPreCheck")
 func newTableResource(_ context.Context) (resource.ResourceWithConfigure, error) {

@@ -8,7 +8,7 @@ provider "aws" {
 }
 
 resource "aws_s3tables_table" "test" {
-  name             = var.rName
+  name             = replace(var.rName, "-", "_")
   namespace        = aws_s3tables_namespace.test.namespace
   table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
   format           = "ICEBERG"
@@ -17,7 +17,7 @@ resource "aws_s3tables_table" "test" {
 }
 
 resource "aws_s3tables_namespace" "test" {
-  namespace        = var.rName
+  namespace        = replace(var.rName, "-", "_")
   table_bucket_arn = aws_s3tables_table_bucket.test.arn
 
   lifecycle {
