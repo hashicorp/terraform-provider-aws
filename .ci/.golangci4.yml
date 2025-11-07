@@ -155,6 +155,18 @@ linters:
         text: 'SA1019: \w+.(\w+) is deprecated:'
       - linters:
           - staticcheck
+        path: internal/service/qldb/
+        text: 'SA1019: "github.com/aws/aws-sdk-go-v2/service/qldb" is deprecated:'
+      - linters:
+          - staticcheck
+        path: internal/service/qldb/
+        text: 'SA1019: \w+.(\w+) is deprecated:'
+      - linters:
+          - staticcheck
+        path: internal/service/quicksight/
+        text: 'SA1019: \w+.(\w+) is deprecated:'
+      - linters:
+          - staticcheck
         path: internal/service/s3/
         text: 'SA1019: \w+.(\w+) is deprecated:'
       - linters:

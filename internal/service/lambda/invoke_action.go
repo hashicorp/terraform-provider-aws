@@ -173,22 +173,7 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 	// Handle different invocation types
 	switch invocationType {
 	case awstypes.InvocationTypeRequestResponse:
-		// For synchronous invocations, we get an immediate response
-		statusCode := output.StatusCode
-		payloadLength := len(output.Payload)
-
-		var message string
-		if logType == awstypes.LogTypeTail && output.LogResult != nil {
-			message = fmt.Sprintf("Lambda function %s invoked successfully (status: %d, payload: %d bytes, logs included)",
-				functionName, statusCode, payloadLength)
-		} else {
-			message = fmt.Sprintf("Lambda function %s invoked successfully (status: %d, payload: %d bytes)",
-				functionName, statusCode, payloadLength)
-		}
-
-		resp.SendProgress(action.InvokeProgressEvent{
-			Message: message,
-		})
+		a.handleSyncInvocation(resp, functionName, output, logType)
 
 	case awstypes.InvocationTypeEvent:
 		// For asynchronous invocations, we only get confirmation that the request was accepted
@@ -212,5 +197,33 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 		"executed_version":   aws.ToString(output.ExecutedVersion),
 		"has_logs":           output.LogResult != nil,
 		"payload_length":     len(output.Payload),
+	})
+}
+
+func (a *invokeAction) handleSyncInvocation(resp *action.InvokeResponse, functionName string, output *lambda.InvokeOutput, logType awstypes.LogType) {
+	statusCode := output.StatusCode
+	payloadLength := len(output.Payload)
+
+	// Send success message
+	resp.SendProgress(action.InvokeProgressEvent{
+		Message: fmt.Sprintf("Lambda function %s invoked successfully (status: %d, payload: %d bytes)",
+			functionName, statusCode, payloadLength),
+	})
+
+	// Output logs if available
+	if logType != awstypes.LogTypeTail || output.LogResult == nil {
+		return
+	}
+
+	logData, err := base64.StdEncoding.DecodeString(aws.ToString(output.LogResult))
+	if err != nil {
+		resp.SendProgress(action.InvokeProgressEvent{
+			Message: fmt.Sprintf("Failed to decode Lambda logs: %s", err),
+		})
+		return
+	}
+
+	resp.SendProgress(action.InvokeProgressEvent{
+		Message: fmt.Sprintf("Lambda function logs:\n%s", string(logData)),
 	})
 }
