@@ -458,18 +458,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "CustomImport":
 				d.CustomImport = true
 
-			case "ArnIdentity":
-				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
-					continue
-				}
-
-			case "CustomInherentRegionIdentity":
-				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
-					continue
-				}
-
 			case "ArnFormat":
 				if attr, ok := args.Keyword["global"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -534,6 +522,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "IdentityFix":
 				d.HasIdentityFix = true
+
+			default:
+				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+					continue
+				}
 			}
 		}
 	}
