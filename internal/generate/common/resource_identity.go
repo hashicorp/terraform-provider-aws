@@ -14,6 +14,23 @@ import (
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
+type TriBoolean uint
+
+const (
+	TriBooleanUnset TriBoolean = iota
+	TriBooleanTrue
+	TriBooleanFalse
+)
+
+func TriBool(b bool) TriBoolean {
+	if b {
+		return TriBooleanTrue
+	} else {
+		return TriBooleanFalse
+	}
+
+}
+
 type Implementation string
 
 const (

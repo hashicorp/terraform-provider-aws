@@ -107,12 +107,8 @@ func main() {
 		}
 
 		if resource.IsGlobal {
-			if resource.isARNFormatGlobal == triBooleanUnset {
-				if resource.IsGlobal {
-					resource.isARNFormatGlobal = triBooleanTrue
-				} else {
-					resource.isARNFormatGlobal = triBooleanFalse
-				}
+			if resource.isARNFormatGlobal == common.TriBooleanUnset {
+				resource.isARNFormatGlobal = common.TriBool(resource.IsGlobal)
 			}
 		}
 
@@ -364,14 +360,6 @@ func (sr serviceRecords) ARNNamespace() string {
 	return sr.primary.ARNNamespace()
 }
 
-type triBoolean uint
-
-const (
-	triBooleanUnset triBoolean = iota
-	triBooleanTrue
-	triBooleanFalse
-)
-
 type ResourceDatum struct {
 	service                  *serviceRecords
 	FileName                 string
@@ -379,7 +367,7 @@ type ResourceDatum struct {
 	GenerateConfig           bool
 	ARNFormat                string
 	arnAttribute             string
-	isARNFormatGlobal        triBoolean
+	isARNFormatGlobal        common.TriBoolean
 	IsGlobal                 bool
 	HasRegionOverrideTest    bool
 	IDAttrFormat             string
@@ -449,7 +437,7 @@ func (d ResourceDatum) HasInherentRegionImportID() bool {
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
-	return r.isARNFormatGlobal == triBooleanTrue
+	return r.isARNFormatGlobal == common.TriBooleanTrue
 }
 
 func (r ResourceDatum) LatestIdentityVersion() int64 {
@@ -608,11 +596,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
-						if b {
-							d.isARNFormatGlobal = triBooleanTrue
-						} else {
-							d.isARNFormatGlobal = triBooleanFalse
-						}
+						d.isARNFormatGlobal = common.TriBool(b)
 					}
 				}
 
