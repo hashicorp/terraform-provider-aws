@@ -93,6 +93,7 @@ The following arguments are required:
   Must be between 1 and 255 characters in length.
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that contains this Namespace.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The following arguments are optional:
 
@@ -194,6 +195,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `modified_at` - Date and time when the namespace was last modified.
 * `modified_by` - Account ID of the account that last modified the namespace.
 * `owner_account_id` - Account ID of the account that owns the namespace.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - Type of the table.
   One of `customer` or `aws`.
 * `version_token` - Identifier for the current version of table data.

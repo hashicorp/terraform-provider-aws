@@ -89,6 +89,7 @@ func TestAccS3TablesTable_basic(t *testing.T) {
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
 			{
