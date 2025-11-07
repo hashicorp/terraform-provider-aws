@@ -391,7 +391,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"endpoint": schema.StringAttribute{
+												names.AttrEndpoint: schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.RegexMatches(
