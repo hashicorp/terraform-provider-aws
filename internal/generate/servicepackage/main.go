@@ -231,7 +231,6 @@ type ResourceDatum struct {
 	HasV6_0SDKv2Fix                   bool
 	HasIdentityFix                    bool
 	SDKv2IdentityUpgraders            []string
-	CustomInherentRegionParser        string
 	common.ResourceIdentity
 }
 
