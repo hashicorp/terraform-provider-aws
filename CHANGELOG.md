@@ -1,5 +1,9 @@
 ## 6.21.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_sagemaker_endpoint: Fix bug where `endpoint_config_name` was not correctly updated, causing the endpoint to retain the old configuration ([#42843](https://github.com/hashicorp/terraform-provider-aws/issues/42843))
+
 ## 6.20.0 (November 6, 2025)
 
 FEATURES:
