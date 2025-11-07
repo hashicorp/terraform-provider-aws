@@ -526,14 +526,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		line := line.Text
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			switch annotationName := m[1]; annotationName {
+			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
 			case "FrameworkDataSource":
 				d.IsDataSource = true
 				fallthrough
 
 			case "FrameworkResource":
 				d.Implementation = common.ImplementationFramework
-				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -551,7 +550,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "SDKResource":
 				d.Implementation = common.ImplementationSDK
-				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -572,7 +570,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "Tags":
 				tagged = true
-				args := common.ParseArgs(m[3])
 				if _, ok := args.Keyword["identifierAttribute"]; ok {
 					hasIdentifierAttribute = true
 				}
@@ -581,12 +578,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.NoImport = true
 
 			case "ArnIdentity":
-				args := common.ParseArgs(m[3])
 				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports)
 
 			case "Testing":
-				args := common.ParseArgs(m[3])
-
 				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
