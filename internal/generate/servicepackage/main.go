@@ -417,32 +417,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.TagsResourceType = attr
 				}
 
-			case "IdentityAttribute":
-				d.WrappedImport = true
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				identityAttribute := common.IdentityAttribute{
-					Name_: args.Positional[0],
-				}
-
-				if attr, ok := args.Keyword["optional"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						identityAttribute.Optional = b
-					}
-				}
-
-				if attr, ok := args.Keyword["resourceAttributeName"]; ok {
-					identityAttribute.ResourceAttributeName_ = attr
-				}
-
-				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
-
 			case "WrappedImport":
 				if len(args.Positional) != 1 {
 					v.errs = append(v.errs, fmt.Errorf("WrappedImport missing required parameter: at %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -535,7 +509,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		}
 	}
 
-	if d.IsARNIdentity || d.IsCustomInherentRegionIdentity {
+	if d.IsARNIdentity || d.IsCustomInherentRegionIdentity || d.IsParameterizedIdentity() {
 		d.WrappedImport = true
 	}
 

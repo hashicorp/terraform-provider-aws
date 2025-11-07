@@ -589,36 +589,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.Name = strings.ReplaceAll(attr, "-", "")
 				}
 
-			case "IdentityAttribute":
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				identityAttribute := common.IdentityAttribute{
-					Name_: args.Positional[0],
-				}
-
-				if attr, ok := args.Keyword["optional"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						identityAttribute.Optional = b
-					}
-				}
-
-				if attr, ok := args.Keyword["testNotNull"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						identityAttribute.TestNotNull = b
-					}
-				}
-
-				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
-
 			case "SingletonIdentity":
 				d.IsSingletonIdentity = true
 				d.Serialize = true
