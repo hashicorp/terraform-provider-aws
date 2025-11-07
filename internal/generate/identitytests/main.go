@@ -650,9 +650,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.IDAttrFormat = args.Positional[0]
 				}
 
-			case "MutableIdentity":
-				d.MutableIdentity = true
-
 			case "Region":
 				if attr, ok := args.Keyword["global"]; ok {
 					if global, err := strconv.ParseBool(attr); err != nil {

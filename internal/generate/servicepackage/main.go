@@ -473,9 +473,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
-			case "MutableIdentity":
-				d.MutableIdentity = true
-
 			case "SingletonIdentity":
 				d.IsSingletonIdentity = true
 				d.WrappedImport = true
