@@ -51,9 +51,8 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateId:                        domainName,
 				ImportStateVerifyIdentifierAttribute: names.AttrDomainName,
-				ImportStateIdFunc:                    testAccAuthorizeVPCEndpointAccessImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrDomainName),
 			},
 		},
 	})
@@ -96,7 +95,7 @@ func testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx context.Context) resource
 				continue
 			}
 
-			_, err := tfopensearch.FindAuthorizeVPCEndpointAccessByNameAndAccount(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["account"])
+			_, err := tfopensearch.FindAuthorizeVPCEndpointAccessByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["account"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -126,7 +125,7 @@ func testAccCheckAuthorizeVPCEndpointAccessExists(ctx context.Context, name stri
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
-		resp, err := tfopensearch.FindAuthorizeVPCEndpointAccessByNameAndAccount(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["account"])
+		resp, err := tfopensearch.FindAuthorizeVPCEndpointAccessByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["account"])
 		if err != nil {
 			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVPCEndpointAccess, rs.Primary.ID, err)
 		}
@@ -134,17 +133,6 @@ func testAccCheckAuthorizeVPCEndpointAccessExists(ctx context.Context, name stri
 		*authorizevpcendpointaccess = *resp
 
 		return nil
-	}
-}
-
-func testAccAuthorizeVPCEndpointAccessImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrDomainName], nil
 	}
 }
 

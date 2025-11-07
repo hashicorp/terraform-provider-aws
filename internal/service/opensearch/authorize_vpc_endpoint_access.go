@@ -118,7 +118,7 @@ func (r *authorizeVPCEndpointAccessResource) Read(ctx context.Context, req resou
 		return
 	}
 
-	out, err := findAuthorizeVPCEndpointAccessByNameAndAccount(ctx, conn, state.DomainName.ValueString(), state.Account.ValueString())
+	out, err := findAuthorizeVPCEndpointAccessByTwoPartKey(ctx, conn, state.DomainName.ValueString(), state.Account.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -169,12 +169,12 @@ func (r *authorizeVPCEndpointAccessResource) ImportState(ctx context.Context, re
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrDomainName), req, resp)
 }
 
-func findAuthorizeVPCEndpointAccessByNameAndAccount(ctx context.Context, conn *opensearch.Client, domainName string, account string) (*awstypes.AuthorizedPrincipal, error) {
-	input := &opensearch.ListVpcEndpointAccessInput{
+func findAuthorizeVPCEndpointAccessByTwoPartKey(ctx context.Context, conn *opensearch.Client, domainName, account string) (*awstypes.AuthorizedPrincipal, error) {
+	input := opensearch.ListVpcEndpointAccessInput{
 		DomainName: aws.String(domainName),
 	}
 
-	return findAuthorizeVPCEndpointAccess(ctx, conn, input, func(ap *awstypes.AuthorizedPrincipal) bool {
+	return findAuthorizeVPCEndpointAccess(ctx, conn, &input, func(ap *awstypes.AuthorizedPrincipal) bool {
 		// AWS API documentation, and the SDK for Go following it, seems to be wrong for the possible values for PrincipalType.
 		// It states it can be "AWS_ACCOUNT" or "AWS_SERVICE", but in practice for accounts the value is "AWS Account".
 		// Hence, not using the constant awstypes.PrincipalTypeAwsAccount from the SDK.
@@ -183,22 +183,16 @@ func findAuthorizeVPCEndpointAccessByNameAndAccount(ctx context.Context, conn *o
 }
 
 func findAuthorizeVPCEndpointAccess(ctx context.Context, conn *opensearch.Client, input *opensearch.ListVpcEndpointAccessInput, filter tfslices.Predicate[*awstypes.AuthorizedPrincipal]) (*awstypes.AuthorizedPrincipal, error) {
-	output, err := findAuthorizeVPCEndpointAccesses(ctx, conn, input)
+	output, err := findAuthorizeVPCEndpointAccesses(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	for _, authorizedPrincipal := range output {
-		if filter(&authorizedPrincipal) {
-			return &authorizedPrincipal, nil
-		}
-	}
-
-	return nil, tfresource.NewEmptyResultError(input)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAuthorizeVPCEndpointAccesses(ctx context.Context, conn *opensearch.Client, input *opensearch.ListVpcEndpointAccessInput) ([]awstypes.AuthorizedPrincipal, error) {
+func findAuthorizeVPCEndpointAccesses(ctx context.Context, conn *opensearch.Client, input *opensearch.ListVpcEndpointAccessInput, filter tfslices.Predicate[*awstypes.AuthorizedPrincipal]) ([]awstypes.AuthorizedPrincipal, error) {
 	var output []awstypes.AuthorizedPrincipal
 
 	err := listVPCEndpointAccessPages(ctx, conn, input, func(page *opensearch.ListVpcEndpointAccessOutput, lastPage bool) bool {
@@ -206,7 +200,11 @@ func findAuthorizeVPCEndpointAccesses(ctx context.Context, conn *opensearch.Clie
 			return !lastPage
 		}
 
-		output = append(output, page.AuthorizedPrincipalList...)
+		for _, v := range page.AuthorizedPrincipalList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 
 		return !lastPage
 	})
