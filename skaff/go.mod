@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/skaff
 
-go 1.24.8
+go 1.24.10
 
 require (
 	github.com/YakDriver/regexache v0.24.0
