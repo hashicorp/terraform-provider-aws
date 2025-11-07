@@ -466,8 +466,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports)
 
 			case "ArnFormat":
-				args := common.ParseArgs(m[3])
-
 				if attr, ok := args.Keyword["global"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -496,7 +494,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.WrappedImport = false
 
 			case "ImportIDHandler":
-				args := common.ParseArgs(m[3])
 				attr := args.Positional[0]
 				if typeName, importSpec, err := common.ParseIdentifierSpec(attr); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%q at %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -518,7 +515,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "IdentityVersion":
-				args := common.ParseArgs(m[3])
 				attr := args.Positional[0]
 				if i, err := strconv.ParseInt(attr, 10, 64); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("invalid IdentityVersion value: %q at %s. Should be integer value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
