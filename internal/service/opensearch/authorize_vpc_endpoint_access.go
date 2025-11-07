@@ -19,8 +19,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -79,7 +81,7 @@ func (r *authorizeVPCEndpointAccessResource) Create(ctx context.Context, req res
 		DomainName: plan.DomainName.ValueStringPointer(),
 	}
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -101,7 +103,7 @@ func (r *authorizeVPCEndpointAccessResource) Create(ctx context.Context, req res
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -120,6 +122,7 @@ func (r *authorizeVPCEndpointAccessResource) Read(ctx context.Context, req resou
 
 	out, err := findAuthorizeVPCEndpointAccessByTwoPartKey(ctx, conn, state.DomainName.ValueString(), state.Account.ValueString())
 	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -131,7 +134,7 @@ func (r *authorizeVPCEndpointAccessResource) Read(ctx context.Context, req resou
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -165,8 +168,20 @@ func (r *authorizeVPCEndpointAccessResource) Delete(ctx context.Context, req res
 	}
 }
 
-func (r *authorizeVPCEndpointAccessResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrDomainName), req, resp)
+func (r *authorizeVPCEndpointAccessResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	const (
+		authorizeVPCEndpointAccessImportIDParts = 2
+	)
+	parts, err := intflex.ExpandResourceId(request.ID, authorizeVPCEndpointAccessImportIDParts, true)
+
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("account"), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrDomainName), parts[0])...)
 }
 
 func findAuthorizeVPCEndpointAccessByTwoPartKey(ctx context.Context, conn *opensearch.Client, domainName, account string) (*awstypes.AuthorizedPrincipal, error) {
