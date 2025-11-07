@@ -223,7 +223,7 @@ type ResourceDatum struct {
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
 	isARNFormatGlobal                 arnFormatState
-	WrappedImport                     bool
+	wrappedImport                     common.TriBoolean
 	CustomImport                      bool
 	goImports                         []common.GoImport
 	ImportIDHandler                   string
@@ -252,6 +252,10 @@ func (d ResourceDatum) RegionOverrideEnabled() bool {
 
 func (r ResourceDatum) CustomIdentityAttribute() string {
 	return namesgen.ConstOrQuote(r.IdentityAttributeName())
+}
+
+func (r ResourceDatum) WrappedImport() bool {
+	return r.wrappedImport == common.TriBooleanTrue
 }
 
 type ServiceDatum struct {
@@ -426,7 +430,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, fmt.Errorf("invalid WrappedImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
 					} else {
-						d.WrappedImport = b
+						d.wrappedImport = common.TriBool(b)
 					}
 				}
 
@@ -449,14 +453,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "SingletonIdentity":
 				d.IsSingletonIdentity = true
-				d.WrappedImport = true
+				d.wrappedImport = common.TriBooleanTrue
 
 				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
 					d.IdentityDuplicateAttrNames = strings.Split(attr, ";")
 				}
 
 			case "NoImport":
-				d.WrappedImport = false
+				d.wrappedImport = common.TriBooleanFalse
 
 			case "ImportIDHandler":
 				attr := args.Positional[0]
@@ -509,8 +513,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		}
 	}
 
-	if d.IsARNIdentity || d.IsCustomInherentRegionIdentity || d.IsParameterizedIdentity() {
-		d.WrappedImport = true
+	if d.HasResourceIdentity() {
+		if d.wrappedImport == common.TriBooleanUnset {
+			d.wrappedImport = common.TriBooleanTrue
+		}
 	}
 
 	// Then build the resource maps, looking for duplicates.
