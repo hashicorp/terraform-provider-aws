@@ -69,6 +69,10 @@ func dataSourceOrganization() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"principal_org_path": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"aws_service_access_principals": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -262,6 +266,9 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "setting roots: %s", err)
 		}
 	}
+
+	// Set principal_org_path for organization (its own ID)
+	d.Set("principal_org_path", aws.ToString(org.Id))
 
 	return diags
 }
