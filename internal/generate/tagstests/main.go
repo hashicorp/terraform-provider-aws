@@ -581,7 +581,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "ArnIdentity":
 				args := common.ParseArgs(m[3])
-				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity)
+				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports)
 
 			case "Testing":
 				args := common.ParseArgs(m[3])

@@ -4,6 +4,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -68,7 +69,7 @@ func (a IdentityAttribute) ResourceAttributeName() string {
 	return namesgen.ConstOrQuote(a.ResourceAttributeName_)
 }
 
-func ParseResourceIdentity(annotationName string, args Args, implementation Implementation, d *ResourceIdentity) error {
+func ParseResourceIdentity(annotationName string, args Args, implementation Implementation, d *ResourceIdentity, goImports *[]GoImport) error {
 	switch annotationName {
 	case "ArnIdentity":
 		d.IsARNIdentity = true
@@ -76,6 +77,45 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 			d.IdentityAttributeName_ = "arn"
 		} else {
 			d.IdentityAttributeName_ = args.Positional[0]
+		}
+
+		var attrs []string
+		if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+			attrs = strings.Split(attr, ";")
+		}
+		if implementation == ImplementationSDK {
+			attrs = append(attrs, "id")
+		}
+
+		// Sort `id` to first position, the rest alphabetically
+		slices.SortFunc(attrs, func(a, b string) int {
+			if a == "id" {
+				return -1
+			} else if b == "id" {
+				return 1
+			} else {
+				return strings.Compare(a, b)
+			}
+		})
+		d.IdentityDuplicateAttrNames = slices.Compact(attrs)
+
+	case "CustomInherentRegionIdentity":
+		d.IsCustomInherentRegionIdentity = true
+
+		if len(args.Positional) < 2 {
+			return errors.New("CustomInherentRegionIdentity missing required parameters")
+		}
+
+		d.IdentityAttributeName_ = args.Positional[0]
+
+		attr := args.Positional[1]
+		if funcName, importSpec, err := ParseIdentifierSpec(attr); err != nil {
+			return fmt.Errorf("%q: %w", attr, err)
+		} else {
+			d.CustomInherentRegionParser = funcName
+			if importSpec != nil {
+				*goImports = append(*goImports, *importSpec)
+			}
 		}
 
 		var attrs []string

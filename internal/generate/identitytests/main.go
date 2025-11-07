@@ -595,15 +595,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "ArnIdentity":
 				hasIdentity = true
 				args := common.ParseArgs(m[3])
-				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity)
+				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports)
 
 			case "CustomInherentRegionIdentity":
 				hasIdentity = true
-				d.IsCustomInherentRegionIdentity = true
 				args := common.ParseArgs(m[3])
-				d.IdentityAttributeName_ = args.Positional[0]
-
-				populateInherentRegionIdentity(&d, args)
+				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports)
 
 			case "IdentityAttribute":
 				hasIdentity = true
@@ -883,6 +880,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 			if d.IsARNIdentity {
 				d.arnAttribute = d.IdentityAttributeName()
+			}
+			if d.IsARNIdentity || d.IsCustomInherentRegionIdentity {
 				if d.Implementation == common.ImplementationFramework {
 					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
 						d.SetImportStateIDAttribute(d.IdentityAttributeName())
@@ -934,20 +933,4 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 	if err := tf.Write(); err != nil {
 		g.Fatalf("generating file (%s): %s", mainPath, err)
 	}
-}
-
-func populateInherentRegionIdentity(d *ResourceDatum, args common.Args) {
-	var attrs []string
-	if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-		attrs = strings.Split(attr, ";")
-	}
-	if d.Implementation == common.ImplementationSDK {
-		attrs = append(attrs, "id")
-	} else {
-		if !slices.Contains(attrs, "id") {
-			d.SetImportStateIDAttribute(d.IdentityAttributeName())
-		}
-	}
-	slices.Sort(attrs)
-	d.IdentityDuplicateAttrNames = slices.Compact(attrs)
 }

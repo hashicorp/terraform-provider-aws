@@ -460,7 +460,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.CustomImport = true
 
 			case "ArnIdentity":
-				common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity)
+				common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports)
+
+			case "CustomInherentRegionIdentity":
+				common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports)
 
 			case "ArnFormat":
 				args := common.ParseArgs(m[3])
@@ -529,34 +532,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.SDKv2IdentityUpgraders = attrs
 				}
 
-			case "CustomInherentRegionIdentity":
-				d.IsCustomInherentRegionIdentity = true
-				d.WrappedImport = true
-
-				args := common.ParseArgs(m[3])
-
-				if len(args.Positional) < 2 {
-					v.errs = append(v.errs, fmt.Errorf("CustomInherentRegionIdentity missing required parameters: at %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				d.IdentityAttributeName_ = args.Positional[0]
-
-				attr := args.Positional[1]
-				if funcName, importSpec, err := common.ParseIdentifierSpec(attr); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%q at %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					continue
-				} else {
-					d.CustomInherentRegionParser = funcName
-					if importSpec != nil {
-						d.goImports = append(d.goImports, *importSpec)
-					}
-				}
-
-				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-					d.IdentityDuplicateAttrNames = strings.Split(attr, ";")
-				}
-
 			// TODO: allow underscore?
 			case "V60SDKv2Fix":
 				d.HasV6_0SDKv2Fix = true
@@ -567,7 +542,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		}
 	}
 
-	if d.IsARNIdentity {
+	if d.IsARNIdentity || d.IsCustomInherentRegionIdentity {
 		d.WrappedImport = true
 	}
 
