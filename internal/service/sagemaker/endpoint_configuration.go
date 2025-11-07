@@ -6,6 +6,7 @@ package sagemaker
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -324,6 +325,19 @@ func resourceEndpointConfiguration() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.FloatAtLeast(0),
 							Default:      1,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// Suppress diff when model_name is empty (Inference Components)
+								// AWS returns 0 but schema has default of 1
+								if strings.Contains(k, "production_variants") || strings.Contains(k, "shadow_production_variants") {
+									parts := strings.Split(k, ".")
+									if len(parts) >= 2 {
+										prefix := strings.Join(parts[:len(parts)-1], ".")
+										modelName := d.Get(prefix + ".model_name").(string)
+										return modelName == ""
+									}
+								}
+								return false
+							},
 						},
 						names.AttrInstanceType: {
 							Type:             schema.TypeString,
@@ -496,6 +510,19 @@ func resourceEndpointConfiguration() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.FloatAtLeast(0),
 							Default:      1,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// Suppress diff when model_name is empty (Inference Components)
+								// AWS returns 0 but schema has default of 1
+								if strings.Contains(k, "production_variants") || strings.Contains(k, "shadow_production_variants") {
+									parts := strings.Split(k, ".")
+									if len(parts) >= 2 {
+										prefix := strings.Join(parts[:len(parts)-1], ".")
+										modelName := d.Get(prefix + ".model_name").(string)
+										return modelName == ""
+									}
+								}
+								return false
+							},
 						},
 						names.AttrInstanceType: {
 							Type:             schema.TypeString,
@@ -819,8 +846,23 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 
 		l := awstypes.ProductionVariant{}
 
+		// Traditional endpoint: set ModelName
+		// IC endpoint: omit ModelName
+		// Special traditional/IC handling
 		if v, ok := data["model_name"].(string); ok && v != "" {
 			l.ModelName = aws.String(v)
+
+			// Traditional endpoint: set InitialVariantWeight
+			// IC endpoint: must not be set but pre-existing default value of 1
+			if v, ok := data["initial_variant_weight"].(float64); ok {
+				l.InitialVariantWeight = aws.Float32(float32(v))
+			}
+
+			// Traditional endpoint: set EnableSSMAccess
+			// IC endpoints: must not be set
+			if v, ok := data["enable_ssm_access"].(bool); ok {
+				l.EnableSSMAccess = aws.Bool(v)
+			}
 		}
 
 		if v, ok := data["initial_instance_count"].(int); ok && v > 0 {
@@ -847,21 +889,6 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 			l.VariantName = aws.String(v)
 		} else {
 			l.VariantName = aws.String(id.UniqueId())
-		}
-
-		// IC endpoints do not have model_name set, special handling
-		if modelName, ok := data["model_name"].(string); ok && modelName != "" {
-			// Traditional endpoint: send the weight value (including 0 if explicitly set)
-			// IC endpoint: AWS rejects 0 weight for variants without model_name, but returns 0 in read
-			if v, ok := data["initial_variant_weight"].(float64); ok {
-				l.InitialVariantWeight = aws.Float32(float32(v))
-			}
-
-			// Only set EnableSSMAccess if model_name is provided (traditional endpoint)
-			// For Inference Component endpoints (no model_name), AWS rejects this field
-			if v, ok := data["enable_ssm_access"].(bool); ok {
-				l.EnableSSMAccess = aws.Bool(v)
-			}
 		}
 
 		if v, ok := data["accelerator_type"].(string); ok && v != "" {
@@ -917,8 +944,6 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]a
 			if i.EnableSSMAccess != nil {
 				l["enable_ssm_access"] = aws.ToBool(i.EnableSSMAccess)
 			}
-		} else {
-			l["initial_variant_weight"] = float64(1) // Default value in schema, spoof to avoid diff
 		}
 
 		if i.InitialInstanceCount != nil {

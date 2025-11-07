@@ -41,9 +41,9 @@ This resource supports the following arguments:
 * `kms_key_arn` - (Optional) ARN of a AWS KMS key that SageMaker AI uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
 * `name_prefix` - (Optional) Unique endpoint configuration name beginning with the specified prefix. Conflicts with `name`.
 * `name` - (Optional) Name of the endpoint configuration. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
-* `production_variants` - (Required) List each model that you want to host at this endpoint. Fields are documented below.
+* `production_variants` - (Required) List each model that you want to host at this endpoint. [See below](#production_variants).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `shadow_production_variants` - (Optional) Models that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on `oroduction_variants`. If you use this field, you can only specify one variant for `production_variants` and one variant for `shadow_production_variants`. Fields are documented below.
+* `shadow_production_variants` - (Optional) Models that you want to host at this endpoint in shadow mode with production traffic replicated from the model specified on `oroduction_variants`. If you use this field, you can only specify one variant for `production_variants` and one variant for `shadow_production_variants`. [See below](#production_variants) (same arguments as `production_variants`).
 * `tags` - (Optional) Mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### production_variants
@@ -51,10 +51,10 @@ This resource supports the following arguments:
 * `accelerator_type` - (Optional) Size of the Elastic Inference (EI) instance to use for the production variant.
 * `container_startup_health_check_timeout_in_seconds` - (Optional) Timeout value, in seconds, for your inference container to pass health check by SageMaker AI Hosting. For more information about health check, see [How Your Container Should Respond to Health Check (Ping) Requests](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-code.html#your-algorithms-inference-algo-ping-requests). Valid values between `60` and `3600`.
 * `core_dump_config` - (Optional) Core dump configuration from the model container when the process crashes. Fields are documented below.
-* `enable_ssm_access` - (Optional) Whether to turn on native AWS SSM access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind endpoints.
+* `enable_ssm_access` - (Optional) Whether to turn on native AWS SSM access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind endpoints. Ignored if `model_name` is not set (Inference Components endpoint).
 * `inference_ami_version` - (Optional) Option from a collection of preconfigured AMI images. Each image is configured by AWS with a set of software and driver versions. AWS optimizes these configurations for different machine learning workloads.
 * `initial_instance_count` - (Optional) Initial number of instances used for auto-scaling.
-* `initial_variant_weight` - (Optional) Initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, AWS defaults to `1.0`.
+* `initial_variant_weight` - (Optional) Initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, defaults to `1.0`. Ignored if `model_name` is not set (Inference Components endpoint).
 * `instance_type` - (Optional)  Type of instance to start.
 * `managed_instance_scaling` - (Optional) Control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
 * `model_data_download_timeout_in_seconds` - (Optional) Timeout value, in seconds, to download and extract the model that you want to host from S3 to the individual inference instance associated with this production variant. Valid values between `60` and `3600`.
