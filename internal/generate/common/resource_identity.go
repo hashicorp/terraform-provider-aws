@@ -24,7 +24,7 @@ type ResourceIdentity struct {
 	IsARNIdentity                  bool
 	IsCustomInherentRegionIdentity bool
 	IsSingletonIdentity            bool
-	IdentityAttributeName_         string
+	identityAttributeName          string
 	IdentityDuplicateAttrNames     []string
 	IdentityAttributes             []IdentityAttribute
 	MutableIdentity                bool
@@ -41,7 +41,7 @@ func (d ResourceIdentity) IdentityAttribute() string {
 }
 
 func (d ResourceIdentity) IdentityAttributeName() string {
-	return d.IdentityAttributeName_
+	return d.identityAttributeName
 }
 
 func (r ResourceIdentity) HasIdentityDuplicateAttrs() bool {
@@ -74,9 +74,9 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 	case "ArnIdentity":
 		d.IsARNIdentity = true
 		if len(args.Positional) == 0 {
-			d.IdentityAttributeName_ = "arn"
+			d.identityAttributeName = "arn"
 		} else {
-			d.IdentityAttributeName_ = args.Positional[0]
+			d.identityAttributeName = args.Positional[0]
 		}
 
 		var attrs []string
@@ -106,7 +106,7 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 			return errors.New("CustomInherentRegionIdentity missing required parameters")
 		}
 
-		d.IdentityAttributeName_ = args.Positional[0]
+		d.identityAttributeName = args.Positional[0]
 
 		attr := args.Positional[1]
 		if funcName, importSpec, err := ParseIdentifierSpec(attr); err != nil {
