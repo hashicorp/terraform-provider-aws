@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_opensearch_authorize_vpc_endpoint_access: Fix reading the resource when more than one principal is authorized
+```

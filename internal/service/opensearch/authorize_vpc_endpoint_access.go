@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -117,7 +118,7 @@ func (r *authorizeVPCEndpointAccessResource) Read(ctx context.Context, req resou
 		return
 	}
 
-	out, err := findAuthorizeVPCEndpointAccessByName(ctx, conn, state.DomainName.ValueString())
+	out, err := findAuthorizeVPCEndpointAccessByNameAndAccount(ctx, conn, state.DomainName.ValueString(), state.Account.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -168,22 +169,33 @@ func (r *authorizeVPCEndpointAccessResource) ImportState(ctx context.Context, re
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrDomainName), req, resp)
 }
 
-func findAuthorizeVPCEndpointAccessByName(ctx context.Context, conn *opensearch.Client, domainName string) (*awstypes.AuthorizedPrincipal, error) {
-	in := &opensearch.ListVpcEndpointAccessInput{
+func findAuthorizeVPCEndpointAccessByNameAndAccount(ctx context.Context, conn *opensearch.Client, domainName string, account string) (*awstypes.AuthorizedPrincipal, error) {
+	input := &opensearch.ListVpcEndpointAccessInput{
 		DomainName: aws.String(domainName),
 	}
 
-	return findAuthorizeVPCEndpointAccess(ctx, conn, in)
+	return findAuthorizeVPCEndpointAccess(ctx, conn, input, func(ap *awstypes.AuthorizedPrincipal) bool {
+		// AWS API documentation, and the SDK for Go following it, seems to be wrong for the possible values for PrincipalType.
+		// It states it can be "AWS_ACCOUNT" or "AWS_SERVICE", but in practice for accounts the value is "AWS Account".
+		// Hence, not using the constant awstypes.PrincipalTypeAwsAccount from the SDK.
+		return ap.PrincipalType == "AWS Account" && aws.ToString(ap.Principal) == account
+	})
 }
 
-func findAuthorizeVPCEndpointAccess(ctx context.Context, conn *opensearch.Client, input *opensearch.ListVpcEndpointAccessInput) (*awstypes.AuthorizedPrincipal, error) {
+func findAuthorizeVPCEndpointAccess(ctx context.Context, conn *opensearch.Client, input *opensearch.ListVpcEndpointAccessInput, filter tfslices.Predicate[*awstypes.AuthorizedPrincipal]) (*awstypes.AuthorizedPrincipal, error) {
 	output, err := findAuthorizeVPCEndpointAccesses(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	for _, authorizedPrincipal := range output {
+		if filter(&authorizedPrincipal) {
+			return &authorizedPrincipal, nil
+		}
+	}
+
+	return nil, tfresource.NewEmptyResultError(input)
 }
 
 func findAuthorizeVPCEndpointAccesses(ctx context.Context, conn *opensearch.Client, input *opensearch.ListVpcEndpointAccessInput) ([]awstypes.AuthorizedPrincipal, error) {

@@ -96,7 +96,7 @@ func testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx context.Context) resource
 				continue
 			}
 
-			_, err := tfopensearch.FindAuthorizeVPCEndpointAccessByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
+			_, err := tfopensearch.FindAuthorizeVPCEndpointAccessByNameAndAccount(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["account"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -126,7 +126,7 @@ func testAccCheckAuthorizeVPCEndpointAccessExists(ctx context.Context, name stri
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
-		resp, err := tfopensearch.FindAuthorizeVPCEndpointAccessByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
+		resp, err := tfopensearch.FindAuthorizeVPCEndpointAccessByNameAndAccount(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["account"])
 		if err != nil {
 			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVPCEndpointAccess, rs.Primary.ID, err)
 		}
