@@ -4,6 +4,7 @@
 package common
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
@@ -99,4 +100,31 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 	}
 
 	return nil
+}
+
+type GoImport struct {
+	Path  string
+	Alias string
+}
+
+func ParseIdentifierSpec(s string) (string, *GoImport, error) {
+	parts := strings.Split(s, ";")
+	switch len(parts) {
+	case 1:
+		return parts[0], nil, nil
+
+	case 2:
+		return parts[1], &GoImport{
+			Path: parts[0],
+		}, nil
+
+	case 3:
+		return parts[2], &GoImport{
+			Path:  parts[0],
+			Alias: parts[1],
+		}, nil
+
+	default:
+		return "", nil, fmt.Errorf("invalid generator value: %q", s)
+	}
 }
