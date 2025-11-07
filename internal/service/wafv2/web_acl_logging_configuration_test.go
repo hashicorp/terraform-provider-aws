@@ -81,7 +81,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *t
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"single_header.0.name": "referer",
+						"single_header.0.name": "sso.csrf",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
 						"single_header.0.name": "user-agent",
@@ -801,7 +801,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 
   redacted_fields {
     single_header {
-      name = "referer"
+      name = "sso.csrf"
     }
   }
 
