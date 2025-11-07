@@ -17,6 +17,7 @@ type ResourceIdentity struct {
 	IdentityAttributes             []IdentityAttribute
 	MutableIdentity                bool
 	IdentityVersion                int64
+	CustomInherentRegionParser     string
 }
 
 func (r ResourceIdentity) HasIdentityDuplicateAttrs() bool {
