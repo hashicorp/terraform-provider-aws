@@ -255,10 +255,6 @@ func (d ResourceDatum) RegionOverrideEnabled() bool {
 	return d.regionOverrideEnabled && !d.IsGlobal
 }
 
-func (r ResourceDatum) HasResourceIdentity() bool {
-	return len(r.IdentityAttributes) > 0 || r.IsARNIdentity || r.IsSingletonIdentity || r.IsCustomInherentRegionIdentity
-}
-
 func (r ResourceDatum) CustomIdentityAttribute() string {
 	return namesgen.ConstOrQuote(r.IdentityAttributeName_)
 }
@@ -374,8 +370,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
+		var implementation common.Implementation
+
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
+			case "FrameworkResource":
+				implementation = common.ImplementationFramework
+
+			case "SDKResource":
+				implementation = common.ImplementationSDK
+
 			case "Region":
 				if attr, ok := args.Keyword["global"]; ok {
 					if global, err := strconv.ParseBool(attr); err != nil {
@@ -461,18 +465,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.CustomImport = true
 
 			case "ArnIdentity":
-				d.IsARNIdentity = true
-				d.WrappedImport = true
-				args := common.ParseArgs(m[3])
-				if len(args.Positional) == 0 {
-					d.IdentityAttributeName_ = "arn"
-				} else {
-					d.IdentityAttributeName_ = args.Positional[0]
-				}
-
-				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-					d.IdentityDuplicateAttrNames = strings.Split(attr, ";")
-				}
+				common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity)
 
 			case "ArnFormat":
 				args := common.ParseArgs(m[3])
@@ -577,6 +570,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.HasIdentityFix = true
 			}
 		}
+	}
+
+	if d.IsARNIdentity {
+		d.WrappedImport = true
 	}
 
 	// Then build the resource maps, looking for duplicates.

@@ -597,18 +597,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "ArnIdentity":
-				hasIdentity = true
-				d.IsARNIdentity = true
 				args := common.ParseArgs(m[3])
-				if len(args.Positional) == 0 {
-					d.arnAttribute = "arn"
-					d.IdentityAttributeName_ = "arn"
-				} else {
-					d.arnAttribute = args.Positional[0]
-					d.IdentityAttributeName_ = args.Positional[0]
-				}
-
-				populateInherentRegionIdentity(&d, args)
+				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity)
 
 			case "CustomInherentRegionIdentity":
 				hasIdentity = true
@@ -893,6 +883,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 					},
 				)
+			}
+			if d.IsARNIdentity {
+				if d.Implementation == common.ImplementationFramework {
+					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
+						d.SetImportStateIDAttribute(d.IdentityAttributeName_)
+					}
+				}
 			}
 			v.identityResources = append(v.identityResources, d)
 		}

@@ -580,15 +580,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.NoImport = true
 
 			case "ArnIdentity":
-				d.IsARNIdentity = true
 				args := common.ParseArgs(m[3])
-				if len(args.Positional) == 0 {
-					d.IdentityAttributeName_ = "arn"
-				} else {
-					d.IdentityAttributeName_ = args.Positional[0]
-				}
-
-				populateInherentRegionIdentity(&d, args)
+				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity)
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
@@ -721,6 +714,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					},
 				)
 			}
+			if d.IsARNIdentity {
+				if d.Implementation == common.ImplementationFramework {
+					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
+						d.SetImportStateIDAttribute(d.IdentityAttributeName_)
+					}
+				}
+			}
 			v.taggedResources = append(v.taggedResources, d)
 		}
 	}
@@ -773,20 +773,4 @@ func count[T any](s iter.Seq[T], f func(T) bool) (c int) {
 		}
 	}
 	return c
-}
-
-func populateInherentRegionIdentity(d *ResourceDatum, args common.Args) {
-	var attrs []string
-	if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-		attrs = strings.Split(attr, ";")
-	}
-	if d.Implementation == common.ImplementationSDK {
-		attrs = append(attrs, "id")
-	} else {
-		if !slices.Contains(attrs, "id") {
-			d.SetImportStateIDAttribute(d.IdentityAttributeName_)
-		}
-	}
-	slices.Sort(attrs)
-	attrs = slices.Compact(attrs)
 }

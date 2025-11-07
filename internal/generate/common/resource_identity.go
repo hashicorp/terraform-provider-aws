@@ -4,6 +4,9 @@
 package common
 
 import (
+	"slices"
+	"strings"
+
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
@@ -54,4 +57,38 @@ func (a IdentityAttribute) Name() string {
 
 func (a IdentityAttribute) ResourceAttributeName() string {
 	return namesgen.ConstOrQuote(a.ResourceAttributeName_)
+}
+
+func ParseResourceIdentity(annotationName string, args Args, implementation Implementation, d *ResourceIdentity) error {
+	switch annotationName {
+	case "ArnIdentity":
+		d.IsARNIdentity = true
+		if len(args.Positional) == 0 {
+			d.IdentityAttributeName_ = "arn"
+		} else {
+			d.IdentityAttributeName_ = args.Positional[0]
+		}
+
+		var attrs []string
+		if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+			attrs = strings.Split(attr, ";")
+		}
+		if implementation == ImplementationSDK {
+			attrs = append(attrs, "id")
+		}
+
+		// Sort `id` to first position, the rest alphabetically
+		slices.SortFunc(attrs, func(a, b string) int {
+			if a == "id" {
+				return -1
+			} else if b == "id" {
+				return 1
+			} else {
+				return strings.Compare(a, b)
+			}
+		})
+		d.IdentityDuplicateAttrNames = slices.Compact(attrs)
+	}
+
+	return nil
 }
