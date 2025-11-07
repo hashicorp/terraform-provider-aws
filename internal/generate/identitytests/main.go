@@ -594,6 +594,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "ArnIdentity":
+				hasIdentity = true
 				args := common.ParseArgs(m[3])
 				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity)
 
@@ -882,6 +883,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				)
 			}
 			if d.IsARNIdentity {
+				d.arnAttribute = d.IdentityAttributeName()
 				if d.Implementation == common.ImplementationFramework {
 					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
 						d.SetImportStateIDAttribute(d.IdentityAttributeName())
