@@ -94,6 +94,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newAllowedImagesSettingsResource,
+			TypeName: "aws_ec2_allowed_images_settings",
+			Name:     "Allowed Images Settings",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newCapacityBlockReservationResource,
 			TypeName: "aws_ec2_capacity_block_reservation",
 			Name:     "Capacity Block Reservation",

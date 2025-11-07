@@ -1,16 +1,22 @@
-## 6.20.0 (Unreleased)
+## 6.21.0 (Unreleased)
+
+## 6.20.0 (November 6, 2025)
 
 FEATURES:
 
+* **New Resource:** `aws_ec2_allowed_images_settings` ([#44800](https://github.com/hashicorp/terraform-provider-aws/issues/44800))
 * **New Resource:** `aws_fis_target_account_configuration` ([#44875](https://github.com/hashicorp/terraform-provider-aws/issues/44875))
 * **New Resource:** `aws_invoicing_invoice_unit` ([#44892](https://github.com/hashicorp/terraform-provider-aws/issues/44892))
 
 ENHANCEMENTS:
 
+* data-source/aws_connect_routing_profile: Add `media_concurrencies.cross_channel_behavior` attribute ([#44934](https://github.com/hashicorp/terraform-provider-aws/issues/44934))
 * data-source/aws_elasticache_replication_group: Add `node_group_configuration` attribute to expose node group details including availability zones, replica counts, and slot ranges ([#44879](https://github.com/hashicorp/terraform-provider-aws/issues/44879))
 * data-source/aws_kinesis_stream: Add `max_record_size_in_kib` attribute ([#44915](https://github.com/hashicorp/terraform-provider-aws/issues/44915))
 * data-source/aws_opensearch_domain: Add `identity_center_options` attribute ([#44626](https://github.com/hashicorp/terraform-provider-aws/issues/44626))
+* provider: Support `us-isob-west-1` as a valid AWS Region ([#44944](https://github.com/hashicorp/terraform-provider-aws/issues/44944))
 * resource/aws_cloudfront_distribution: Add `logging_v1_enabled` attribute ([#44838](https://github.com/hashicorp/terraform-provider-aws/issues/44838))
+* resource/aws_connect_routing_profile: Add `media_concurrencies.cross_channel_behavior` argument ([#44934](https://github.com/hashicorp/terraform-provider-aws/issues/44934))
 * resource/aws_ec2_client_vpn_route: Allow IPv6 address ranges for `destination_cidr_block` ([#44926](https://github.com/hashicorp/terraform-provider-aws/issues/44926))
 * resource/aws_ec2_instance_connect_endpoint: Add `ip_address_type` argument ([#44616](https://github.com/hashicorp/terraform-provider-aws/issues/44616))
 * resource/aws_eks_node_group: Add `max_parallel_nodes_repaired_count`, `max_parallel_nodes_repaired_percentage`, `max_unhealthy_node_threshold_count`, `max_unhealthy_node_threshold_percentage`, and `node_repair_config_overrides` to the `node_repair_config` schema ([#44894](https://github.com/hashicorp/terraform-provider-aws/issues/44894))
@@ -23,7 +29,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* provider: Support `us-isob-west-1` as a valid AWS Region ([#44944](https://github.com/hashicorp/terraform-provider-aws/issues/44944))
+* resource/aws_cloudfront_continuous_deployment_policy: Fix `Source type "...cloudfront.stagingDistributionDNSNamesModel" does not implement attr.Value` error. This fixes a regression introduced in [v6.17.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6170-october-16-2025) ([#44972](https://github.com/hashicorp/terraform-provider-aws/issues/44972))
 * resource/aws_cloudfront_distribution: Change `logging_config.bucket` argument from `Required` to `Optional` ([#44838](https://github.com/hashicorp/terraform-provider-aws/issues/44838))
 * resource/aws_cloudfront_distribution: Fix inability to configure `logging_config.include_cookies` argument while keeping V1 logging disabled ([#44838](https://github.com/hashicorp/terraform-provider-aws/issues/44838))
 * resource/aws_cloudfront_vpc_origin: Fix `Source type "...cloudfront.originSSLProtocolsModel" does not implement attr.Value` and `missing required field, CreateVpcOriginInput.VpcOriginEndpointConfig` errors. This fixes a regression introduced in [v6.17.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6170-october-16-2025) ([#44861](https://github.com/hashicorp/terraform-provider-aws/issues/44861))

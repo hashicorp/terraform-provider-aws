@@ -278,9 +278,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
-	input := lakeformation.ListPermissionsInput{
-		Resource: &awstypes.Resource{},
-	}
+	var input lakeformation.ListPermissionsInput
 
 	principalIdentifier := d.Get(names.AttrPrincipal).(string)
 	if includePrincipalIdentifierInList(principalIdentifier) {
@@ -294,38 +292,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	if _, ok := d.GetOk("catalog_resource"); ok {
-		input.Resource.Catalog = ExpandCatalogResource()
-	}
-
-	if v, ok := d.GetOk("data_cells_filter"); ok {
-		input.Resource.DataCellsFilter = ExpandDataCellsFilter(v.([]any))
-	}
-
-	if v, ok := d.GetOk("data_location"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.Resource.DataLocation = ExpandDataLocationResource(v.([]any)[0].(map[string]any))
-	}
-
-	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]any)[0].(map[string]any))
-	}
-
-	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.Resource.LFTag = ExpandLFTagKeyResource(v.([]any)[0].(map[string]any))
-	}
-
-	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]any)[0].(map[string]any))
-	}
-
-	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
-	}
-
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		// can't ListPermissions for TableWithColumns, so use Table instead
-		input.Resource.Table = ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any))
-	}
+	populateResourceForRead(&input, d)
 
 	filter := permissionsFilter(d)
 
