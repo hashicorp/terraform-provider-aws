@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -142,13 +143,20 @@ func (r *catalogTableOptimizerResource) Schema(ctx context.Context, _ resource.S
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"snapshot_retention_period_in_days": schema.Int32Attribute{
+												"clean_expired_files": schema.BoolAttribute{
 													Optional: true,
 												},
 												"number_of_snapshots_to_retain": schema.Int32Attribute{
 													Optional: true,
 												},
-												"clean_expired_files": schema.BoolAttribute{
+												"run_rate_in_hours": schema.Int32Attribute{
+													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.UseStateForUnknown(),
+													},
+												},
+												"snapshot_retention_period_in_days": schema.Int32Attribute{
 													Optional: true,
 												},
 											},
@@ -171,11 +179,18 @@ func (r *catalogTableOptimizerResource) Schema(ctx context.Context, _ resource.S
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
+												names.AttrLocation: schema.StringAttribute{
+													Optional: true,
+												},
 												"orphan_file_retention_period_in_days": schema.Int32Attribute{
 													Optional: true,
 												},
-												names.AttrLocation: schema.StringAttribute{
+												"run_rate_in_hours": schema.Int32Attribute{
 													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.UseStateForUnknown(),
+													},
 												},
 											},
 										},
@@ -209,28 +224,24 @@ func (r *catalogTableOptimizerResource) Create(ctx context.Context, request reso
 		return
 	}
 
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.CreateTableOptimizer(ctx, &input)
 		if err != nil {
 			// Retry IAM propagation errors
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "does not have the correct trust policies and is unable to be assumed by our service") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "does not have the proper IAM permissions to call Glue APIs") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateTableOptimizer(ctx, &input)
-	}
 
 	if err != nil {
 		id, _ := flex.FlattenResourceId([]string{
@@ -244,6 +255,28 @@ func (r *catalogTableOptimizerResource) Create(ctx context.Context, request reso
 			create.ProblemStandardMessage(names.Glue, create.ErrActionCreating, ResNameCatalogTableOptimizer, id, err),
 			err.Error(),
 		)
+		return
+	}
+
+	output, err := findCatalogTableOptimizer(ctx, conn, plan.CatalogID.ValueString(), plan.DatabaseName.ValueString(), plan.TableName.ValueString(), plan.Type.ValueString())
+	if err != nil {
+		id, _ := flex.FlattenResourceId([]string{
+			plan.CatalogID.ValueString(),
+			plan.DatabaseName.ValueString(),
+			plan.TableName.ValueString(),
+			plan.Type.ValueString(),
+		}, idParts, false)
+
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Glue, create.ErrActionReading, ResNameCatalogTableOptimizer, id, err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.TableOptimizer, &plan)...)
+
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -324,6 +357,27 @@ func (r *catalogTableOptimizerResource) Update(ctx context.Context, request reso
 				create.ProblemStandardMessage(names.Glue, create.ErrActionUpdating, ResNameCatalogTableOptimizer, id, err),
 				err.Error(),
 			)
+			return
+		}
+		output, err := findCatalogTableOptimizer(ctx, conn, plan.CatalogID.ValueString(), plan.DatabaseName.ValueString(), plan.TableName.ValueString(), plan.Type.ValueString())
+		if err != nil {
+			id, _ := flex.FlattenResourceId([]string{
+				plan.CatalogID.ValueString(),
+				plan.DatabaseName.ValueString(),
+				plan.TableName.ValueString(),
+				plan.Type.ValueString(),
+			}, idParts, false)
+
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Glue, create.ErrActionReading, ResNameCatalogTableOptimizer, id, err),
+				err.Error(),
+			)
+			return
+		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, output.TableOptimizer, &plan)...)
+
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -413,9 +467,10 @@ type retentionConfigurationData struct {
 }
 
 type icebergRetentionConfigurationData struct {
-	SnapshotRetentionPeriodInDays types.Int32 `tfsdk:"snapshot_retention_period_in_days"`
-	NumberOfSnapshotsToRetain     types.Int32 `tfsdk:"number_of_snapshots_to_retain"`
 	CleanExpiredFiles             types.Bool  `tfsdk:"clean_expired_files"`
+	NumberOfSnapshotsToRetain     types.Int32 `tfsdk:"number_of_snapshots_to_retain"`
+	RunRateInHours                types.Int32 `tfsdk:"run_rate_in_hours"`
+	SnapshotRetentionPeriodInDays types.Int32 `tfsdk:"snapshot_retention_period_in_days"`
 }
 
 type orphanFileDeletionConfigurationData struct {
@@ -423,8 +478,9 @@ type orphanFileDeletionConfigurationData struct {
 }
 
 type icebergOrphanFileDeletionConfigurationData struct {
-	OrphanFileRetentionPeriodInDays types.Int32  `tfsdk:"orphan_file_retention_period_in_days"`
 	Location                        types.String `tfsdk:"location"`
+	OrphanFileRetentionPeriodInDays types.Int32  `tfsdk:"orphan_file_retention_period_in_days"`
+	RunRateInHours                  types.Int32  `tfsdk:"run_rate_in_hours"`
 }
 
 type compactionConfigurationData struct {

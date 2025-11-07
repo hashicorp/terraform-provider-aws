@@ -41,6 +41,8 @@ func testAccSafetyRule_assertionRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "wait_period_ms", "5000"),
 					resource.TestCheckResourceAttr(resourceName, "asserted_controls.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -108,6 +110,72 @@ func testAccSafetyRule_gatingRule(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSafetyRule_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Route53RecoveryControlConfigEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSafetyRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSafetyRuleConfig_routingControl_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSafetyRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, "wait_period_ms", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "target_controls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "gating_controls.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSafetyRuleConfig_routingControl_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSafetyRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, "wait_period_ms", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "target_controls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "gating_controls.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccSafetyRuleConfig_routingControl_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSafetyRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, "wait_period_ms", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "target_controls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "gating_controls.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -217,4 +285,77 @@ resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
   }
 }
 `, rName)
+}
+
+func testAccSafetyRuleConfig_routingControl_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_route53recoverycontrolconfig_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53recoverycontrolconfig_control_panel" "test" {
+  name        = %[1]q
+  cluster_arn = aws_route53recoverycontrolconfig_cluster.test.arn
+}
+
+resource "aws_route53recoverycontrolconfig_routing_control" "test" {
+  name              = %[1]q
+  cluster_arn       = aws_route53recoverycontrolconfig_cluster.test.arn
+  control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.arn
+}
+
+resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
+  name              = %[1]q
+  control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.arn
+  wait_period_ms    = 5000
+  gating_controls   = [aws_route53recoverycontrolconfig_routing_control.test.arn]
+  target_controls   = [aws_route53recoverycontrolconfig_routing_control.test.arn]
+
+  rule_config {
+    inverted  = false
+    threshold = 0
+    type      = "AND"
+  }
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccSafetyRuleConfig_routingControl_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_route53recoverycontrolconfig_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53recoverycontrolconfig_control_panel" "test" {
+  name        = %[1]q
+  cluster_arn = aws_route53recoverycontrolconfig_cluster.test.arn
+}
+
+resource "aws_route53recoverycontrolconfig_routing_control" "test" {
+  name              = %[1]q
+  cluster_arn       = aws_route53recoverycontrolconfig_cluster.test.arn
+  control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.arn
+}
+
+resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
+  name              = %[1]q
+  control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.arn
+  wait_period_ms    = 5000
+  gating_controls   = [aws_route53recoverycontrolconfig_routing_control.test.arn]
+  target_controls   = [aws_route53recoverycontrolconfig_routing_control.test.arn]
+
+  rule_config {
+    inverted  = false
+    threshold = 0
+    type      = "AND"
+  }
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

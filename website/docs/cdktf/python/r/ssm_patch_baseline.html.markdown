@@ -221,6 +221,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_patch_baseline.example
+  identity = {
+    id = "pb-12345678"
+  }
+}
+
+resource "aws_ssm_patch_baseline" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the patch baseline.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Patch Baselines using their baseline ID. For example:
 
 ```python
@@ -244,4 +270,4 @@ Using `terraform import`, import SSM Patch Baselines using their baseline ID. Fo
 % terraform import aws_ssm_patch_baseline.example pb-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-33d16d977b42dbb1e87b1827c1cd685e2dbf491f1c74dcc6edc266e23590dec0 -->
+<!-- cache-key: cdktf-0.20.8 input-94387a30bc11dfbdb19ce1ccfaa3d6957e74ca8bcd4b01b6d6296789b1187934 -->

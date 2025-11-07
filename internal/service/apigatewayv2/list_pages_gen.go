@@ -5,6 +5,7 @@ package apigatewayv2
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 )
@@ -13,7 +14,7 @@ func getAPIMappingsPages(ctx context.Context, conn *apigatewayv2.Client, input *
 	for {
 		output, err := conn.GetApiMappings(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -29,7 +30,7 @@ func getAPIsPages(ctx context.Context, conn *apigatewayv2.Client, input *apigate
 	for {
 		output, err := conn.GetApis(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -45,7 +46,7 @@ func getDomainNamesPages(ctx context.Context, conn *apigatewayv2.Client, input *
 	for {
 		output, err := conn.GetDomainNames(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -61,7 +62,7 @@ func getIntegrationsPages(ctx context.Context, conn *apigatewayv2.Client, input 
 	for {
 		output, err := conn.GetIntegrations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -77,7 +78,7 @@ func getRoutesPages(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 	for {
 		output, err := conn.GetRoutes(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -93,7 +94,7 @@ func getStagesPages(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 	for {
 		output, err := conn.GetStages(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -109,7 +110,7 @@ func getVPCLinksPages(ctx context.Context, conn *apigatewayv2.Client, input *api
 	for {
 		output, err := conn.GetVpcLinks(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

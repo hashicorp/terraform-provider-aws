@@ -51,7 +51,9 @@ CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
 CloudWatch Network Monitor
+CloudWatch NetworkFlow Monitor
 CloudWatch Observability Access Manager
+CloudWatch Observability Admin
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
@@ -259,6 +261,7 @@ WAF Classic Regional
 Wavelength
 Web Services Budgets
 Well-Architected Tool
+WorkMail
 WorkSpaces
 WorkSpaces Web
 X-Ray

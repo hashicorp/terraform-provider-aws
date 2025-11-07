@@ -15,10 +15,14 @@ var (
 	ResourceNetworkSettings                      = newNetworkSettingsResource
 	ResourceNetworkSettingsAssociation           = newNetworkSettingsAssociationResource
 	ResourcePortal                               = newPortalResource
+	ResourceSessionLogger                        = newSessionLoggerResource
+	ResourceSessionLoggerAssociation             = newSessionLoggerAssociationResource
 	ResourceTrustStore                           = newTrustStoreResource
+	ResourceTrustStoreAssociation                = newTrustStoreAssociationResource
 	ResourceUserAccessLoggingSettings            = newUserAccessLoggingSettingsResource
 	ResourceUserAccessLoggingSettingsAssociation = newUserAccessLoggingSettingsAssociationResource
 	ResourceUserSettings                         = newUserSettingsResource
+	ResourceUserSettingsAssociation              = newUserSettingsAssociationResource
 
 	FindBrowserSettingsByARN           = findBrowserSettingsByARN
 	FindDataProtectionSettingsByARN    = findDataProtectionSettingsByARN
@@ -26,6 +30,7 @@ var (
 	FindIPAccessSettingsByARN          = findIPAccessSettingsByARN
 	FindNetworkSettingsByARN           = findNetworkSettingsByARN
 	FindPortalByARN                    = findPortalByARN
+	FindSessionLoggerByARN             = findSessionLoggerByARN
 	FindTrustStoreByARN                = findTrustStoreByARN
 	FindUserAccessLoggingSettingsByARN = findUserAccessLoggingSettingsByARN
 	FindUserSettingsByARN              = findUserSettingsByARN

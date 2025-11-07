@@ -14,12 +14,14 @@ func TestAccGlue_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"CatalogTableOptimizer": {
-			acctest.CtBasic:                 testAccCatalogTableOptimizer_basic,
-			"compactionConfiguration":       testAccCatalogTableOptimizer_CompactionConfiguration,
-			"deleteOrphanFileConfiguration": testAccCatalogTableOptimizer_DeleteOrphanFileConfiguration,
-			acctest.CtDisappears:            testAccCatalogTableOptimizer_disappears,
-			"retentionConfiguration":        testAccCatalogTableOptimizer_RetentionConfiguration,
-			"update":                        testAccCatalogTableOptimizer_update,
+			acctest.CtBasic:                                   testAccCatalogTableOptimizer_basic,
+			"compactionConfiguration":                         testAccCatalogTableOptimizer_CompactionConfiguration,
+			"deleteOrphanFileConfiguration":                   testAccCatalogTableOptimizer_DeleteOrphanFileConfiguration,
+			"deleteOrphanFileConfigurationWithRunRateInHours": testAccCatalogTableOptimizer_DeleteOrphanFileConfigurationWithRunRateInHours,
+			acctest.CtDisappears:                              testAccCatalogTableOptimizer_disappears,
+			"retentionConfiguration":                          testAccCatalogTableOptimizer_RetentionConfiguration,
+			"retentionConfigurationWithRunRateInHours":        testAccCatalogTableOptimizer_RetentionConfigurationWithRunRateInHours,
+			"update": testAccCatalogTableOptimizer_update,
 		},
 		"DataCatalogEncryptionSettings": {
 			acctest.CtBasic: testAccDataCatalogEncryptionSettings_basic,

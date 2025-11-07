@@ -18,9 +18,10 @@ var (
 	ResourceTagOption                     = resourceTagOption
 	ResourceTagOptionResourceAssociation  = resourceTagOptionResourceAssociation
 
-	FindPortfolioByID                 = findPortfolioByID
-	FindPortfolioShare                = findPortfolioShare
-	FindPrincipalPortfolioAssociation = findPrincipalPortfolioAssociation
+	FindPortfolioByID                  = findPortfolioByID
+	FindPortfolioShare                 = findPortfolioShare
+	FindPrincipalPortfolioAssociation  = findPrincipalPortfolioAssociation
+	FindProvisionedProductByTwoPartKey = findProvisionedProductByTwoPartKey
 
 	BudgetResourceAssociationParseID             = budgetResourceAssociationParseID
 	ProductPortfolioAssociationParseID           = productPortfolioAssociationParseID
@@ -36,7 +37,6 @@ var (
 	WaitOrganizationsAccessStable           = waitOrganizationsAccessStable
 	WaitProductPortfolioAssociationDeleted  = waitProductPortfolioAssociationDeleted
 	WaitProductPortfolioAssociationReady    = waitProductPortfolioAssociationReady
-	WaitProvisionedProductReady             = waitProvisionedProductReady
 	WaitTagOptionResourceAssociationDeleted = waitTagOptionResourceAssociationDeleted
 	WaitTagOptionResourceAssociationReady   = waitTagOptionResourceAssociationReady
 

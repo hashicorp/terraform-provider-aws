@@ -143,9 +143,7 @@ class MyConvertedCode extends TerraformStack {
               lambdaAuthorizerConfig: [
                 {
                   authorizerResultTtlInSeconds: 300,
-                  authorizerUri: Token.asString(
-                    awsLambdaFunctionExample.invokeArn
-                  ),
+                  authorizerUri: Token.asString(awsLambdaFunctionExample.arn),
                 },
               ],
             },
@@ -201,7 +199,7 @@ The `eventConfig` block supports the following:
 
 The `authProvider` block supports the following:
 
-* `authType` - (Required) Type of authentication provider. Valid values: `AMAZON_COGNITO_USER_POOLS`, `AWS_LAMBDA`, `OPENID_CONNECT`, `API_KEY`.
+* `authType` - (Required) Type of authentication provider. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`.
 * `cognitoConfig` - (Optional) Configuration for Cognito user pool authentication. Required when `authType` is `AMAZON_COGNITO_USER_POOLS`. See [Cognito Config](#cognito-config) below.
 * `lambdaAuthorizerConfig` - (Optional) Configuration for Lambda authorization. Required when `authType` is `AWS_LAMBDA`. See [Lambda Authorizer Config](#lambda-authorizer-config) below.
 * `openidConnectConfig` - (Optional) Configuration for OpenID Connect. Required when `authType` is `OPENID_CONNECT`. See [OpenID Connect Config](#openid-connect-config) below.
@@ -282,4 +280,4 @@ Using `terraform import`, import AppSync Event API using the `apiId`. For exampl
 % terraform import aws_appsync_api.example example-api-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7aad35e5a1b1cc865678d856567b2b1903c5a96019160119e25b683b6ae0add1 -->
+<!-- cache-key: cdktf-0.20.8 input-74fb27b1696903fd614d76d6fac81cdf06401389b6850147060d1cb8c8c5f1c7 -->

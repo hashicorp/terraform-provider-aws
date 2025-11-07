@@ -390,6 +390,12 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"source_kms_key_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"image_uri"},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrTimeout: {
@@ -575,6 +581,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.SnapStart = expandSnapStart(v.([]any))
 	}
 
+	if v, ok := d.GetOk("source_kms_key_arn"); ok {
+		input.Code.SourceKMSKeyArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("tracing_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.TracingConfig = &awstypes.TracingConfig{
 			Mode: awstypes.TracingMode(v.([]any)[0].(map[string]any)[names.AttrMode].(string)),
@@ -669,6 +679,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	function := output.Configuration
+	functionCode := output.Code
 	d.Set("architectures", function.Architectures)
 	functionARN := aws.ToString(function.FunctionArn)
 	d.Set(names.AttrARN, functionARN)
@@ -728,6 +739,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	d.Set("source_code_hash", d.Get("source_code_hash"))
 	d.Set("source_code_size", function.CodeSize)
+	d.Set("source_kms_key_arn", functionCode.SourceKMSKeyArn)
 	d.Set(names.AttrTimeout, function.Timeout)
 	tracingConfigMode := awstypes.TracingModePassThrough
 	if function.TracingConfig != nil {
@@ -797,6 +809,15 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+
+	codeUpdateCompleted := false
+	defer func() {
+		if !codeUpdateCompleted {
+			// If an error occurs before completing the code update,
+			// reset non-refreshable attributes to pre-apply state.
+			resetNonRefreshableAttributes(d)
+		}
+	}()
 
 	if d.HasChange("code_signing_config_arn") {
 		if v, ok := d.GetOk("code_signing_config_arn"); ok {
@@ -1000,17 +1021,14 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 		}
 
+		// If source_kms_key_arn is set, it should be always included in the update
+		if v, ok := d.GetOk("source_kms_key_arn"); ok {
+			input.SourceKMSKeyArn = aws.String(v.(string))
+		}
+
 		_, err := conn.UpdateFunctionCode(ctx, &input)
 
 		if err != nil {
-			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Error occurred while GetObject.") {
-				// As s3_bucket, s3_key and s3_object_version aren't set in resourceFunctionRead(), don't ovewrite the last known good values.
-				for _, key := range []string{names.AttrS3Bucket, "s3_key", "s3_object_version"} {
-					old, _ := d.GetChange(key)
-					d.Set(key, old)
-				}
-			}
-
 			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) code: %s", d.Id(), err)
 		}
 
@@ -1018,6 +1036,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) code update: %s", d.Id(), err)
 		}
 	}
+	codeUpdateCompleted = true
 
 	if d.HasChange("reserved_concurrent_executions") {
 		if v, ok := d.Get("reserved_concurrent_executions").(int); ok && v >= 0 {
@@ -1255,7 +1274,7 @@ func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData,
 	} else {
 		defaultSG, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, ec2Conn, "default", vpcID)
 		if err != nil || defaultSG == nil {
-			return fmt.Errorf("finding VPC (%s) default security group: %s", vpcID, err)
+			return fmt.Errorf("finding VPC (%s) default security group: %w", vpcID, err)
 		}
 		replacementSGIDs = []string{aws.ToString(defaultSG.GroupId)}
 	}
@@ -1270,11 +1289,11 @@ func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData,
 	if _, err := retryFunctionOp(ctx, func() (*lambda.UpdateFunctionConfigurationOutput, error) {
 		return conn.UpdateFunctionConfiguration(ctx, input)
 	}); err != nil {
-		return fmt.Errorf("updating Lambda Function (%s) configuration: %s", d.Id(), err)
+		return fmt.Errorf("updating Lambda Function (%s) configuration: %w", d.Id(), err)
 	}
 
 	if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for Lambda Function (%s) configuration update: %s", d.Id(), err)
+		return fmt.Errorf("waiting for Lambda Function (%s) configuration update: %w", d.Id(), err)
 	}
 
 	return nil
@@ -1403,7 +1422,7 @@ type functionCU interface {
 
 func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*T, error) {
 	output, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return f()
 		},
 		func(err error) (bool, error) {
@@ -1435,7 +1454,7 @@ func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*
 			functionExtraThrottlingTimeout = 9 * time.Minute
 		)
 		output, err = tfresource.RetryWhen(ctx, functionExtraThrottlingTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return f()
 			},
 			func(err error) (bool, error) {
@@ -1489,6 +1508,7 @@ func needsFunctionCodeUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange(names.AttrS3Bucket) ||
 		d.HasChange("s3_key") ||
 		d.HasChange("s3_object_version") ||
+		d.HasChange("source_kms_key_arn") ||
 		d.HasChange("image_uri") ||
 		d.HasChange("architectures")
 }
@@ -1742,4 +1762,16 @@ func flattenSnapStart(apiObject *awstypes.SnapStartResponse) []any {
 	}
 
 	return []any{tfMap}
+}
+
+// Non-API attributes (which cannot be refreshed via AWS API calls) in the state are updated even if the update fails.
+// Therefore, reset them to the previous value when the update fails.
+// https://developer.hashicorp.com/terraform/plugin/framework/diagnostics#how-errors-affect-state
+func resetNonRefreshableAttributes(d *schema.ResourceData) {
+	for _, key := range []string{names.AttrS3Bucket, "s3_key", "s3_object_version", "source_code_hash", "filename"} {
+		if d.HasChange(key) {
+			old, _ := d.GetChange(key)
+			d.Set(key, old)
+		}
+	}
 }

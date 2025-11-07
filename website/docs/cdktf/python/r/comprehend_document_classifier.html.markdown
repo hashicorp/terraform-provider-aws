@@ -143,6 +143,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_comprehend_document_classifier.example
+  identity = {
+    "arn" = "arn:aws:comprehend:us-west-2:123456789012:document-classifier/example"
+  }
+}
+
+resource "aws_comprehend_document_classifier" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Comprehend document classifier.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Comprehend Document Classifier using the ARN. For example:
 
 ```python
@@ -166,4 +187,4 @@ Using `terraform import`, import Comprehend Document Classifier using the ARN. F
 % terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cc259bf7ecbb6f8e46398eaa9e07d953aa96a2746be4eb7426332e194ab53797 -->
+<!-- cache-key: cdktf-0.20.8 input-317ec230d3232bb1b1affc53203bb287102dc692e0069be2b2d526135393945d -->

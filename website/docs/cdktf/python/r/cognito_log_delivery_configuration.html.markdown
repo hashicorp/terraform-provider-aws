@@ -246,6 +246,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cognito_log_delivery_configuration.example
+  identity = {
+    user_pool_id = "us-west-2_example123"
+  }
+}
+
+resource "aws_cognito_log_delivery_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `user_pool_id` (String) ID of the Cognito User Pool.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito IDP (Identity Provider) Log Delivery Configuration using the `user_pool_id`. For example:
 
 ```python
@@ -269,4 +295,4 @@ Using `terraform import`, import Cognito IDP (Identity Provider) Log Delivery Co
 % terraform import aws_cognito_log_delivery_configuration.example us-west-2_example123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-06bcd87e77c8f84d74082358026627ce29979429c9b1eb667b8e9760f15f7795 -->
+<!-- cache-key: cdktf-0.20.8 input-7543d894dcf1f7f94ebc040bfd28f6fdafe47cb1aca6ab151b7e875300edf9c1 -->
