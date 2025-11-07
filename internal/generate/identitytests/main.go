@@ -547,7 +547,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		HasRegionOverrideTest: true,
 		IdentityVersions:      make(map[int64]*version.Version, 0),
 	}
-	hasIdentity := false
 	skip := false
 	generatorSeen := false
 	tlsKey := false
@@ -591,15 +590,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "ArnIdentity":
-				hasIdentity = true
 				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports)
 
 			case "CustomInherentRegionIdentity":
-				hasIdentity = true
 				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports)
 
 			case "IdentityAttribute":
-				hasIdentity = true
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -630,7 +626,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
 
 			case "SingletonIdentity":
-				hasIdentity = true
 				d.IsSingletonIdentity = true
 				d.Serialize = true
 
@@ -714,9 +709,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 				if attr, ok := args.Keyword["identityTest"]; ok {
 					switch attr {
-					case "true":
-						hasIdentity = true
-
 					case "false":
 						v.g.Infof("Skipping Identity test for %s.%s", v.packageName, v.functionName)
 						skip = true
@@ -835,7 +827,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		d.HasRegionOverrideTest = false
 	}
 
-	if hasIdentity {
+	if d.HasResourceIdentity() {
 		if !skip {
 			if d.idAttrDuplicates != "" {
 				d.GoImports = append(d.GoImports,
