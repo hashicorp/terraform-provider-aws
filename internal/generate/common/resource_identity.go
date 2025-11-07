@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -32,8 +33,12 @@ type ResourceIdentity struct {
 	CustomInherentRegionParser     string
 }
 
+func (r ResourceIdentity) IsParameterizedIdentity() bool {
+	return len(r.IdentityAttributes) > 0
+}
+
 func (r ResourceIdentity) HasResourceIdentity() bool {
-	return len(r.IdentityAttributes) > 0 || r.IsARNIdentity || r.IsSingletonIdentity || r.IsCustomInherentRegionIdentity
+	return r.IsParameterizedIdentity() || r.IsARNIdentity || r.IsSingletonIdentity || r.IsCustomInherentRegionIdentity
 }
 
 func (d ResourceIdentity) IdentityAttribute() string {
@@ -101,6 +106,37 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 				*goImports = append(*goImports, *importSpec)
 			}
 		}
+
+	case "IdentityAttribute":
+		if len(args.Positional) == 0 {
+			return errors.New("no Identity attribute name")
+		}
+
+		identityAttribute := IdentityAttribute{
+			Name_: args.Positional[0],
+		}
+
+		if attr, ok := args.Keyword["optional"]; ok {
+			if b, err := strconv.ParseBool(attr); err != nil {
+				return fmt.Errorf("invalid optional value: %q. Should be boolean value.", attr)
+			} else {
+				identityAttribute.Optional = b
+			}
+		}
+
+		if attr, ok := args.Keyword["resourceAttributeName"]; ok {
+			identityAttribute.ResourceAttributeName_ = attr
+		}
+
+		if attr, ok := args.Keyword["testNotNull"]; ok {
+			if b, err := strconv.ParseBool(attr); err != nil {
+				return fmt.Errorf("invalid optional value: %q. Should be boolean value.", attr)
+			} else {
+				identityAttribute.TestNotNull = b
+			}
+		}
+
+		d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
 
 	case "MutableIdentity":
 		d.MutableIdentity = true
