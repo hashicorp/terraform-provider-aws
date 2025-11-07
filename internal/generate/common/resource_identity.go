@@ -15,6 +15,7 @@ type ResourceIdentity struct {
 	IdentityAttributeName_         string
 	IdentityDuplicateAttrNames     []string
 	IdentityAttributes             []IdentityAttribute
+	MutableIdentity                bool
 }
 
 func (r ResourceIdentity) HasIdentityDuplicateAttrs() bool {

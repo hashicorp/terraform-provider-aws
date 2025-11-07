@@ -379,7 +379,6 @@ type ResourceDatum struct {
 	ARNFormat                string
 	arnAttribute             string
 	isARNFormatGlobal        triBoolean
-	MutableIdentity          bool
 	IsGlobal                 bool
 	HasRegionOverrideTest    bool
 	IDAttrFormat             string
