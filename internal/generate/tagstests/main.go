@@ -717,7 +717,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if d.IsARNIdentity {
 				if d.Implementation == common.ImplementationFramework {
 					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
-						d.SetImportStateIDAttribute(d.IdentityAttributeName_)
+						d.SetImportStateIDAttribute(d.IdentityAttributeName())
 					}
 				}
 			}

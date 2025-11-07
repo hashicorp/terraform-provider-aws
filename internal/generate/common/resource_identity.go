@@ -34,6 +34,14 @@ func (r ResourceIdentity) HasResourceIdentity() bool {
 	return len(r.IdentityAttributes) > 0 || r.IsARNIdentity || r.IsSingletonIdentity || r.IsCustomInherentRegionIdentity
 }
 
+func (d ResourceIdentity) IdentityAttribute() string {
+	return namesgen.ConstOrQuote(d.IdentityAttributeName())
+}
+
+func (d ResourceIdentity) IdentityAttributeName() string {
+	return d.IdentityAttributeName_
+}
+
 func (r ResourceIdentity) HasIdentityDuplicateAttrs() bool {
 	return len(r.IdentityDuplicateAttrNames) > 0
 }

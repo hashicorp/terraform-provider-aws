@@ -447,10 +447,6 @@ func (d ResourceDatum) HasInherentRegionImportID() bool {
 	return d.IsARNIdentity || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity
 }
 
-func (d ResourceDatum) IdentityAttribute() string {
-	return namesgen.ConstOrQuote(d.IdentityAttributeName_)
-}
-
 func (r ResourceDatum) IsARNFormatGlobal() bool {
 	return r.isARNFormatGlobal == triBooleanTrue
 }
@@ -887,7 +883,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if d.IsARNIdentity {
 				if d.Implementation == common.ImplementationFramework {
 					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
-						d.SetImportStateIDAttribute(d.IdentityAttributeName_)
+						d.SetImportStateIDAttribute(d.IdentityAttributeName())
 					}
 				}
 			}
@@ -947,7 +943,7 @@ func populateInherentRegionIdentity(d *ResourceDatum, args common.Args) {
 		attrs = append(attrs, "id")
 	} else {
 		if !slices.Contains(attrs, "id") {
-			d.SetImportStateIDAttribute(d.IdentityAttributeName_)
+			d.SetImportStateIDAttribute(d.IdentityAttributeName())
 		}
 	}
 	slices.Sort(attrs)

@@ -244,11 +244,11 @@ type goImport struct {
 }
 
 func (r ResourceDatum) HasARNAttribute() bool {
-	return r.IdentityAttributeName_ != "" && r.IdentityAttributeName_ != "arn"
+	return r.IdentityAttributeName() != "" && r.IdentityAttributeName() != "arn"
 }
 
 func (r ResourceDatum) ARNAttribute() string {
-	return namesgen.ConstOrQuote(r.IdentityAttributeName_)
+	return namesgen.ConstOrQuote(r.IdentityAttributeName())
 }
 
 func (d ResourceDatum) RegionOverrideEnabled() bool {
@@ -256,7 +256,7 @@ func (d ResourceDatum) RegionOverrideEnabled() bool {
 }
 
 func (r ResourceDatum) CustomIdentityAttribute() string {
-	return namesgen.ConstOrQuote(r.IdentityAttributeName_)
+	return namesgen.ConstOrQuote(r.IdentityAttributeName())
 }
 
 type ServiceDatum struct {
