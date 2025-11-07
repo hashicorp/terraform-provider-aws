@@ -223,7 +223,6 @@ type ResourceDatum struct {
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
 	isARNFormatGlobal                 arnFormatState
-	MutableIdentity                   bool
 	WrappedImport                     bool
 	CustomImport                      bool
 	goImports                         []goImport
