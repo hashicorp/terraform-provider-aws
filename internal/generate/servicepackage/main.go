@@ -230,7 +230,6 @@ type ResourceDatum struct {
 	SetIDAttribute                    bool
 	HasV6_0SDKv2Fix                   bool
 	HasIdentityFix                    bool
-	IdentityVersion                   int64
 	CustomInherentRegionParser        string
 	common.ResourceIdentity
 }
