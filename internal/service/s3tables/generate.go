@@ -3,6 +3,7 @@
 
 //go:generate go run ../../generate/servicepackage/main.go
 //go:generate go run ../../generate/identitytests/main.go
+//go:generate go run ../../generate/tags/main.go -ListTags -UpdateTags -ServiceTagsMap -KVTValues
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package s3tables
