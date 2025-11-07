@@ -294,11 +294,11 @@ The following arguments are required:
 
 * `name` - (Required) Name of the gateway target.
 * `gateway_identifier` - (Required) Identifier of the gateway that this target belongs to.
-* `credential_provider_configuration` - (Required) Configuration for authenticating requests to the target. See [`credential_provider_configuration`](#credential_provider_configuration) below.
 * `target_configuration` - (Required) Configuration for the target endpoint. See [`target_configuration`](#target_configuration) below.
 
 The following arguments are optional:
 
+* `credential_provider_configuration` - (Optional) Configuration for authenticating requests to the target. Required when using `lambda`, `open_api_schema` and `smithy_model` in `mcp` block. If using `mcp_server` in `mcp` block with no authorization, it should not be specified. See [`credential_provider_configuration`](#credential_provider_configuration) below.
 * `description` - (Optional) Description of the gateway target.
 * `region` - (Optional) AWS region where the resource will be created. If not provided, the region from the provider configuration will be used.
 
