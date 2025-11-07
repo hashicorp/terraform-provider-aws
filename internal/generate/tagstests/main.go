@@ -576,12 +576,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "NoImport":
 				d.NoImport = true
 
-			case "ArnIdentity":
-				if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
-					continue
-				}
-
 			case "Testing":
 				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -665,6 +659,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
 					tlsKeyCN = attr
+				}
+
+			default:
+				if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+					continue
 				}
 			}
 		}

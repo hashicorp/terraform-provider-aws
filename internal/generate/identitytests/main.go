@@ -589,18 +589,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.Name = strings.ReplaceAll(attr, "-", "")
 				}
 
-			case "ArnIdentity":
-				if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
-					continue
-				}
-
-			case "CustomInherentRegionIdentity":
-				if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
-					continue
-				}
-
 			case "IdentityAttribute":
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -797,6 +785,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					}
 					d.IdentityVersions[identityVersion] = providerVersion
+				}
+
+			default:
+				if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+					continue
 				}
 			}
 		}
