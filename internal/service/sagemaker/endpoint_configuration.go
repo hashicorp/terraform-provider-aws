@@ -327,7 +327,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 							Default:      1,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// Suppress diff when model_name is empty (Inference Components)
-								// AWS returns 0 but schema has default of 1
+								// AWS returns nil but schema has default of 1
 								if strings.Contains(k, "production_variants") || strings.Contains(k, "shadow_production_variants") {
 									parts := strings.Split(k, ".")
 									if len(parts) >= 2 {
@@ -512,7 +512,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 							Default:      1,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// Suppress diff when model_name is empty (Inference Components)
-								// AWS returns 0 but schema has default of 1
+								// AWS returns nil but schema has default of 1
 								if strings.Contains(k, "production_variants") || strings.Contains(k, "shadow_production_variants") {
 									parts := strings.Split(k, ".")
 									if len(parts) >= 2 {
