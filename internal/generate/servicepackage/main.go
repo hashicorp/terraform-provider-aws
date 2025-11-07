@@ -460,10 +460,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.CustomImport = true
 
 			case "ArnIdentity":
-				common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports)
+				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+					continue
+				}
 
 			case "CustomInherentRegionIdentity":
-				common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports)
+				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+					continue
+				}
 
 			case "ArnFormat":
 				if attr, ok := args.Keyword["global"]; ok {

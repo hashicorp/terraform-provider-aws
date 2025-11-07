@@ -577,7 +577,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.NoImport = true
 
 			case "ArnIdentity":
-				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports)
+				if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+					continue
+				}
 
 			case "Testing":
 				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
