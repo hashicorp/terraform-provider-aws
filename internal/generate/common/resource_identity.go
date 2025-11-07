@@ -79,25 +79,7 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 			d.identityAttributeName = args.Positional[0]
 		}
 
-		var attrs []string
-		if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-			attrs = strings.Split(attr, ";")
-		}
-		if implementation == ImplementationSDK {
-			attrs = append(attrs, "id")
-		}
-
-		// Sort `id` to first position, the rest alphabetically
-		slices.SortFunc(attrs, func(a, b string) int {
-			if a == "id" {
-				return -1
-			} else if b == "id" {
-				return 1
-			} else {
-				return strings.Compare(a, b)
-			}
-		})
-		d.IdentityDuplicateAttrNames = slices.Compact(attrs)
+		parseIdentityDuplicateAttrNames(args, implementation, d)
 
 	case "CustomInherentRegionIdentity":
 		d.IsCustomInherentRegionIdentity = true
@@ -108,6 +90,8 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 
 		d.identityAttributeName = args.Positional[0]
 
+		parseIdentityDuplicateAttrNames(args, implementation, d)
+
 		attr := args.Positional[1]
 		if funcName, importSpec, err := ParseIdentifierSpec(attr); err != nil {
 			return fmt.Errorf("%q: %w", attr, err)
@@ -117,26 +101,6 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 				*goImports = append(*goImports, *importSpec)
 			}
 		}
-
-		var attrs []string
-		if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-			attrs = strings.Split(attr, ";")
-		}
-		if implementation == ImplementationSDK {
-			attrs = append(attrs, "id")
-		}
-
-		// Sort `id` to first position, the rest alphabetically
-		slices.SortFunc(attrs, func(a, b string) int {
-			if a == "id" {
-				return -1
-			} else if b == "id" {
-				return 1
-			} else {
-				return strings.Compare(a, b)
-			}
-		})
-		d.IdentityDuplicateAttrNames = slices.Compact(attrs)
 
 	case "MutableIdentity":
 		d.MutableIdentity = true
@@ -170,4 +134,27 @@ func ParseIdentifierSpec(s string) (string, *GoImport, error) {
 	default:
 		return "", nil, fmt.Errorf("invalid generator value: %q", s)
 	}
+}
+
+func parseIdentityDuplicateAttrNames(args Args, implementation Implementation, d *ResourceIdentity) {
+	var attrs []string
+	if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+		attrs = strings.Split(attr, ";")
+	}
+	if implementation == ImplementationSDK {
+		attrs = append(attrs, "id")
+	}
+
+	// Sort `id` to first position, the rest alphabetically
+	slices.SortFunc(attrs, func(a, b string) int {
+		if a == "id" {
+			return -1
+		} else if b == "id" {
+			return 1
+		} else {
+			return strings.Compare(a, b)
+		}
+	})
+	d.IdentityDuplicateAttrNames = slices.Compact(attrs)
+
 }
