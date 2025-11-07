@@ -25,7 +25,7 @@ func BuildPrincipalOrgPath(ctx context.Context, client organizationsClient, chil
 	currentID := childID
 
 	for {
-		pathSegments = append([]string{currentID}, pathSegments...)
+		pathSegments = append(pathSegments, currentID)
 
 		output, err := client.ListParents(ctx, &organizations.ListParentsInput{
 			ChildId: aws.String(currentID),
@@ -48,6 +48,10 @@ func BuildPrincipalOrgPath(ctx context.Context, client organizationsClient, chil
 			}
 			orgID := aws.ToString(orgOut.Organization.Id)
 			rootID := parentID
+
+			for i, j := 0, len(pathSegments)-1; i < j; i, j = i+1, j-1 {
+				pathSegments[i], pathSegments[j] = pathSegments[j], pathSegments[i]
+			}
 
 			fullPath := fmt.Sprintf("%s/%s/%s/", orgID, rootID, strings.Join(pathSegments, "/"))
 			return fullPath, nil
