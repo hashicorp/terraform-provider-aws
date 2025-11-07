@@ -964,10 +964,6 @@ func setFromCacheCluster(d *schema.ResourceData, c *awstypes.CacheCluster) error
 	engine := aws.ToString(c.Engine)
 	d.Set(names.AttrEngine, engine)
 	switch engine {
-	case engineValkey:
-		if err := setEngineVersionValkey(d, c.EngineVersion); err != nil {
-			return err // nosemgrep:ci.bare-error-returns
-		}
 	case engineRedis:
 		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
@@ -1021,7 +1017,7 @@ func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.Re
 	if diff.Id() == "" || !diff.HasChange("node_type") {
 		return nil
 	}
-	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis || v.(string) == engineValkey {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
 		return nil
 	}
 	return diff.ForceNew("node_type")
@@ -1029,7 +1025,7 @@ func clusterForceNewOnMemcachedNodeTypeChange(_ context.Context, diff *schema.Re
 
 // clusterValidateMemcachedSnapshotIdentifier validates that `final_snapshot_identifier` is not set when `engine` is "memcached"
 func clusterValidateMemcachedSnapshotIdentifier(_ context.Context, diff *schema.ResourceDiff, v any) error {
-	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis || v.(string) == engineValkey {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
 		return nil
 	}
 	if _, ok := diff.GetOk(names.AttrFinalSnapshotIdentifier); !ok {
