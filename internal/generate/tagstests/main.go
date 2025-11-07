@@ -398,7 +398,7 @@ type ResourceDatum struct {
 	TagsUpdateForceNew               bool
 	TagsUpdateGetTagsIn              bool // TODO: Works around a bug when getTagsIn() is used to pass tags directly to Update call
 	IsDataSource                     bool
-	DataSourceResourceImplementation tests.Implementation
+	DataSourceResourceImplementation common.Implementation
 	overrideIdentifierAttribute      string
 	OverrideResourceType             string
 	tests.CommonArgs
@@ -531,7 +531,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				fallthrough
 
 			case "FrameworkResource":
-				d.Implementation = tests.ImplementationFramework
+				d.Implementation = common.ImplementationFramework
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -549,7 +549,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				fallthrough
 
 			case "SDKResource":
-				d.Implementation = tests.ImplementationSDK
+				d.Implementation = common.ImplementationSDK
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -780,7 +780,7 @@ func populateInherentRegionIdentity(d *ResourceDatum, args common.Args) {
 	if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
 		attrs = strings.Split(attr, ";")
 	}
-	if d.Implementation == tests.ImplementationSDK {
+	if d.Implementation == common.ImplementationSDK {
 		attrs = append(attrs, "id")
 	} else {
 		if !slices.Contains(attrs, "id") {

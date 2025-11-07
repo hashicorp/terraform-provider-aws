@@ -17,17 +17,10 @@ import (
 	"golang.org/x/text/language"
 )
 
-type Implementation string
-
-const (
-	ImplementationFramework Implementation = "framework"
-	ImplementationSDK       Implementation = "sdk"
-)
-
 type CommonArgs struct {
 	Name           string // Resource Type Name
 	TypeName       string // Terraform Type Name
-	Implementation Implementation
+	Implementation common.Implementation
 
 	// CheckDestroy
 	CheckDestroyNoop bool
