@@ -558,13 +558,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		line := line.Text
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			switch annotationName := m[1]; annotationName {
+			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
 			case "FrameworkDataSource":
 				break
 
 			case "FrameworkResource":
 				d.Implementation = common.ImplementationFramework
-				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -581,7 +580,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "SDKResource":
 				d.Implementation = common.ImplementationSDK
-				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -595,17 +593,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "ArnIdentity":
 				hasIdentity = true
-				args := common.ParseArgs(m[3])
 				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports)
 
 			case "CustomInherentRegionIdentity":
 				hasIdentity = true
-				args := common.ParseArgs(m[3])
 				common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports)
 
 			case "IdentityAttribute":
 				hasIdentity = true
-				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -641,7 +636,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.Serialize = true
 
 			case "ArnFormat":
-				args := common.ParseArgs(m[3])
 				if len(args.Positional) > 0 {
 					d.ARNFormat = args.Positional[0]
 				}
@@ -664,7 +658,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "IdAttrFormat":
-				args := common.ParseArgs(m[3])
 				if len(args.Positional) > 0 {
 					d.IDAttrFormat = args.Positional[0]
 				}
@@ -673,7 +666,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.MutableIdentity = true
 
 			case "Region":
-				args := common.ParseArgs(m[3])
 				if attr, ok := args.Keyword["global"]; ok {
 					if global, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -690,7 +682,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.HasV6_0NullValuesError = true
 				d.PreIdentityVersion = v5_100_0
 
-				args := common.ParseArgs(m[3])
 				if attr, ok := args.Keyword["v60RefreshError"]; ok {
 					if b, err := tests.ParseBoolAttr("v60RefreshError", attr); err != nil {
 						v.errs = append(v.errs, err)
@@ -700,8 +691,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "Testing":
-				args := common.ParseArgs(m[3])
-
 				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
