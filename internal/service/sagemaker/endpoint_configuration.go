@@ -327,7 +327,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 							Default:      1,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// Suppress diff when model_name is empty (Inference Components)
-								// AWS returns nil but schema has default of 1
+								// AWS returns nil but schema has default of 1 (there for backwards compatibility)
 								if strings.Contains(k, "production_variants") || strings.Contains(k, "shadow_production_variants") {
 									parts := strings.Split(k, ".")
 									if len(parts) >= 2 {
@@ -512,7 +512,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 							Default:      1,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// Suppress diff when model_name is empty (Inference Components)
-								// AWS returns nil but schema has default of 1
+								// AWS returns nil but schema has default of 1 (there for backwards compatibility)
 								if strings.Contains(k, "production_variants") || strings.Contains(k, "shadow_production_variants") {
 									parts := strings.Split(k, ".")
 									if len(parts) >= 2 {
@@ -929,7 +929,6 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]a
 			"accelerator_type":      i.AcceleratorType,
 			names.AttrInstanceType:  i.InstanceType,
 			"inference_ami_version": i.InferenceAmiVersion,
-			"model_name":            aws.ToString(i.ModelName),
 			"variant_name":          aws.ToString(i.VariantName),
 		}
 
@@ -937,6 +936,8 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]a
 		// Inference Component endpoints do not have model_name set
 		// Special handling
 		if i.ModelName != nil && aws.ToString(i.ModelName) != "" {
+			l["model_name"] = aws.ToString(i.ModelName)
+
 			if i.InitialVariantWeight != nil {
 				l["initial_variant_weight"] = aws.ToFloat32(i.InitialVariantWeight)
 			}
