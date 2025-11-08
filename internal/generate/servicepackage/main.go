@@ -92,10 +92,7 @@ func main() {
 		for key, value := range v.frameworkListResources {
 			if val, exists := v.frameworkResources[key]; exists {
 				value.Name = val.Name
-				value.IdentityAttributes = val.IdentityAttributes
-				value.IdentityDuplicateAttrNames = val.IdentityDuplicateAttrNames
-				value.IsARNIdentity = val.IsARNIdentity
-				value.IsSingletonIdentity = val.IsSingletonIdentity
+				value.ResourceIdentity = val.ResourceIdentity
 				value.TransparentTagging = val.TransparentTagging
 				value.TagsResourceType = val.TagsResourceType
 				value.TagsIdentifierAttribute = val.TagsIdentifierAttribute
@@ -109,10 +106,7 @@ func main() {
 		for key, value := range v.sdkListResources {
 			if val, exists := v.sdkResources[key]; exists {
 				value.Name = val.Name
-				value.IdentityAttributes = val.IdentityAttributes
-				value.IdentityDuplicateAttrNames = val.IdentityDuplicateAttrNames
-				value.IsARNIdentity = val.IsARNIdentity
-				value.IsSingletonIdentity = val.IsSingletonIdentity
+				value.ResourceIdentity = val.ResourceIdentity
 				value.TransparentTagging = val.TransparentTagging
 				value.TagsResourceType = val.TagsResourceType
 				value.TagsIdentifierAttribute = val.TagsIdentifierAttribute
