@@ -40,7 +40,7 @@ const (
 
 type ResourceIdentity struct {
 	isARNIdentity                  bool
-	IsCustomInherentRegionIdentity bool
+	isCustomInherentRegionIdentity bool
 	IsSingletonIdentity            bool
 	identityAttributeName          string
 	IdentityDuplicateAttrNames     []string
@@ -51,15 +51,19 @@ type ResourceIdentity struct {
 }
 
 func (r ResourceIdentity) HasResourceIdentity() bool {
-	return r.IsParameterizedIdentity() || r.isARNIdentity || r.IsSingletonIdentity || r.IsCustomInherentRegionIdentity
+	return r.IsParameterizedIdentity() || r.isARNIdentity || r.IsSingletonIdentity || r.isCustomInherentRegionIdentity
 }
 
 func (d ResourceIdentity) HasInherentRegionIdentity() bool {
-	return d.isARNIdentity || d.IsCustomInherentRegionIdentity
+	return d.isARNIdentity || d.isCustomInherentRegionIdentity
 }
 
 func (d ResourceIdentity) IsARNIdentity() bool {
 	return d.isARNIdentity
+}
+
+func (d ResourceIdentity) IsCustomInherentRegionIdentity() bool {
+	return d.isCustomInherentRegionIdentity
 }
 
 func (r ResourceIdentity) IsParameterizedIdentity() bool {
@@ -112,7 +116,7 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 		parseIdentityDuplicateAttrNames(args, implementation, d)
 
 	case "CustomInherentRegionIdentity":
-		d.IsCustomInherentRegionIdentity = true
+		d.isCustomInherentRegionIdentity = true
 
 		if len(args.Positional) < 2 {
 			return errors.New("CustomInherentRegionIdentity missing required parameters")
