@@ -39,7 +39,7 @@ const (
 )
 
 type ResourceIdentity struct {
-	IsARNIdentity                  bool
+	isARNIdentity                  bool
 	IsCustomInherentRegionIdentity bool
 	IsSingletonIdentity            bool
 	identityAttributeName          string
@@ -51,7 +51,15 @@ type ResourceIdentity struct {
 }
 
 func (r ResourceIdentity) HasResourceIdentity() bool {
-	return r.IsParameterizedIdentity() || r.IsARNIdentity || r.IsSingletonIdentity || r.IsCustomInherentRegionIdentity
+	return r.IsParameterizedIdentity() || r.isARNIdentity || r.IsSingletonIdentity || r.IsCustomInherentRegionIdentity
+}
+
+func (d ResourceIdentity) HasInherentRegionIdentity() bool {
+	return d.isARNIdentity || d.IsCustomInherentRegionIdentity
+}
+
+func (d ResourceIdentity) IsARNIdentity() bool {
+	return d.isARNIdentity
 }
 
 func (r ResourceIdentity) IsParameterizedIdentity() bool {
@@ -94,7 +102,7 @@ func (a IdentityAttribute) ResourceAttributeName() string {
 func ParseResourceIdentity(annotationName string, args Args, implementation Implementation, d *ResourceIdentity, goImports *[]GoImport) error {
 	switch annotationName {
 	case "ArnIdentity":
-		d.IsARNIdentity = true
+		d.isARNIdentity = true
 		if len(args.Positional) == 0 {
 			d.identityAttributeName = "arn"
 		} else {
