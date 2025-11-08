@@ -711,12 +711,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					},
 				)
 			}
-			if d.IsARNIdentity {
+			if d.IsARNIdentity || d.IsCustomInherentRegionIdentity {
 				if d.Implementation == common.ImplementationFramework {
 					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
 						d.SetImportStateIDAttribute(d.IdentityAttributeName())
 					}
 				}
+			}
+			if d.IsSingletonIdentity {
+				d.Serialize = true
 			}
 			v.taggedResources = append(v.taggedResources, d)
 		}
