@@ -232,12 +232,8 @@ func (r ResourceDatum) IsARNFormatGlobal() bool {
 	return r.isARNFormatGlobal == arnFormatStateGlobal
 }
 
-func (r ResourceDatum) HasARNAttribute() bool {
+func (r ResourceDatum) HasAlternateARNAttribute() bool {
 	return r.IdentityAttributeName() != "" && r.IdentityAttributeName() != "arn"
-}
-
-func (r ResourceDatum) ARNAttribute() string {
-	return namesgen.ConstOrQuote(r.IdentityAttributeName())
 }
 
 func (d ResourceDatum) RegionOverrideEnabled() bool {
