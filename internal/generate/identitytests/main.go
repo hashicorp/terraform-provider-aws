@@ -428,7 +428,7 @@ func (d ResourceDatum) GenerateRegionOverrideTest() bool {
 }
 
 func (d ResourceDatum) HasInherentRegionImportID() bool {
-	return d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity
+	return d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity()
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
