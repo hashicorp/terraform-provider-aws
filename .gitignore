@@ -53,3 +53,4 @@ awssdk.patch
 
 # go-vcr recordings
 /testdata
+/.kiro
