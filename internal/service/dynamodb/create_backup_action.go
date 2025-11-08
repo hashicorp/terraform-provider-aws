@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @Action(aws_dynamodb_create_backup, name="Create Backup")
@@ -47,7 +48,7 @@ func (a *createBackupAction) Schema(ctx context.Context, req action.SchemaReques
 	resp.Schema = schema.Schema{
 		Description: "Creates an on-demand backup of a DynamoDB table. The backup is created asynchronously and typically completes within minutes.",
 		Attributes: map[string]schema.Attribute{
-			"table_name": schema.StringAttribute{
+			names.AttrTableName: schema.StringAttribute{
 				Description: "The name or ARN of the DynamoDB table to backup",
 				Required:    true,
 				Validators: []validator.String{
@@ -92,8 +93,8 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 
 	// Log operation start
 	tflog.Info(ctx, "Starting DynamoDB create backup action", map[string]any{
-		"table_name":  tableName,
-		"backup_name": backupName,
+		names.AttrTableName: tableName,
+		"backup_name":       backupName,
 	})
 
 	// Send initial progress message
@@ -122,13 +123,8 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 				continue
 			}
 
-			// Retry if another backup operation is in progress
-			if errs.IsA[*awstypes.BackupInUseException](err) {
-				continue
-			}
-
-			// Retry if rate limit is exceeded
-			if errs.IsA[*awstypes.LimitExceededException](err) {
+			// Retry if another backup operation is in progress or rate limit is exceeded
+			if errs.IsA[*awstypes.BackupInUseException](err) || errs.IsA[*awstypes.LimitExceededException](err) {
 				continue
 			}
 		}
@@ -176,7 +172,7 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 
 	// Log completion with table name and backup ARN
 	tflog.Info(ctx, "DynamoDB create backup action completed successfully", map[string]any{
-		"table_name": tableName,
-		"backup_arn": backupArn,
+		names.AttrTableName: tableName,
+		"backup_arn":        backupArn,
 	})
 }
