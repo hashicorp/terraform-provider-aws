@@ -50,12 +50,12 @@ type ResourceIdentity struct {
 	CustomInherentRegionParser     string
 }
 
-func (r ResourceIdentity) IsParameterizedIdentity() bool {
-	return len(r.IdentityAttributes) > 0
-}
-
 func (r ResourceIdentity) HasResourceIdentity() bool {
 	return r.IsParameterizedIdentity() || r.IsARNIdentity || r.IsSingletonIdentity || r.IsCustomInherentRegionIdentity
+}
+
+func (r ResourceIdentity) IsParameterizedIdentity() bool {
+	return len(r.IdentityAttributes) > 0
 }
 
 func (d ResourceIdentity) IdentityAttribute() string {
@@ -157,6 +157,14 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 
 	case "MutableIdentity":
 		d.MutableIdentity = true
+
+	case "SingletonIdentity":
+		d.IsSingletonIdentity = true
+
+		// FIXME: Not actually for Global, but the value is never used
+		d.identityAttributeName = "region"
+
+		parseIdentityDuplicateAttrNames(args, implementation, d)
 	}
 
 	return nil

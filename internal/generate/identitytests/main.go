@@ -577,10 +577,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.Name = strings.ReplaceAll(attr, "-", "")
 				}
 
-			case "SingletonIdentity":
-				d.IsSingletonIdentity = true
-				d.Serialize = true
-
 			case "ArnFormat":
 				if len(args.Positional) > 0 {
 					d.ARNFormat = args.Positional[0]
@@ -770,10 +766,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		}
 	}
 
-	if d.IsRegionalSingleton() {
-		d.idAttrDuplicates = "region"
-	}
-
 	if d.IsGlobal {
 		d.HasRegionOverrideTest = false
 	}
@@ -819,6 +811,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.SetImportStateIDAttribute(d.IdentityAttributeName())
 					}
 				}
+			}
+			if d.IsSingletonIdentity {
+				d.Serialize = true
 			}
 			v.identityResources = append(v.identityResources, d)
 		}

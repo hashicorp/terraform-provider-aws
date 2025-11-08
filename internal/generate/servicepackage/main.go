@@ -451,14 +451,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
-			case "SingletonIdentity":
-				d.IsSingletonIdentity = true
-				d.wrappedImport = common.TriBooleanTrue
-
-				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-					d.IdentityDuplicateAttrNames = strings.Split(attr, ";")
-				}
-
 			case "NoImport":
 				d.wrappedImport = common.TriBooleanFalse
 
