@@ -718,7 +718,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 			}
-			if d.IsSingletonIdentity {
+			if d.IsSingletonIdentity() {
 				d.Serialize = true
 			}
 			v.taggedResources = append(v.taggedResources, d)

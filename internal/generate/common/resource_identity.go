@@ -41,7 +41,7 @@ const (
 type ResourceIdentity struct {
 	isARNIdentity                  bool
 	isCustomInherentRegionIdentity bool
-	IsSingletonIdentity            bool
+	isSingletonIdentity            bool
 	identityAttributeName          string
 	IdentityDuplicateAttrNames     []string
 	IdentityAttributes             []IdentityAttribute
@@ -51,7 +51,7 @@ type ResourceIdentity struct {
 }
 
 func (r ResourceIdentity) HasResourceIdentity() bool {
-	return r.IsParameterizedIdentity() || r.isARNIdentity || r.IsSingletonIdentity || r.isCustomInherentRegionIdentity
+	return r.IsParameterizedIdentity() || r.isARNIdentity || r.isSingletonIdentity || r.isCustomInherentRegionIdentity
 }
 
 func (d ResourceIdentity) HasInherentRegionIdentity() bool {
@@ -68,6 +68,10 @@ func (d ResourceIdentity) IsCustomInherentRegionIdentity() bool {
 
 func (r ResourceIdentity) IsParameterizedIdentity() bool {
 	return len(r.IdentityAttributes) > 0
+}
+
+func (d ResourceIdentity) IsSingletonIdentity() bool {
+	return d.isSingletonIdentity
 }
 
 func (d ResourceIdentity) IdentityAttribute() string {
@@ -171,7 +175,7 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 		d.MutableIdentity = true
 
 	case "SingletonIdentity":
-		d.IsSingletonIdentity = true
+		d.isSingletonIdentity = true
 
 		// FIXME: Not actually for Global, but the value is never used
 		d.identityAttributeName = "region"

@@ -412,15 +412,15 @@ func (d ResourceDatum) ARNAttribute() string {
 }
 
 func (d ResourceDatum) IsGlobalSingleton() bool {
-	return d.IsSingletonIdentity && d.IsGlobal
+	return d.IsSingletonIdentity() && d.IsGlobal
 }
 
 func (d ResourceDatum) IsRegionalSingleton() bool {
-	return d.IsSingletonIdentity && !d.IsGlobal
+	return d.IsSingletonIdentity() && !d.IsGlobal
 }
 
 func (d ResourceDatum) IsSingleton() bool {
-	return d.IsSingletonIdentity
+	return d.IsSingletonIdentity()
 }
 
 func (d ResourceDatum) GenerateRegionOverrideTest() bool {
@@ -808,7 +808,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 			}
-			if d.IsSingletonIdentity {
+			if d.IsSingletonIdentity() {
 				d.Serialize = true
 			}
 			v.identityResources = append(v.identityResources, d)
