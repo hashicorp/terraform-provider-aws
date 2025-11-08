@@ -210,21 +210,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 					{{- end }}
 				{{- else if $value.IsARNIdentity }}
 					{{- if $.IsGlobal }}
-						{{- if $value.HasARNAttribute }}
-							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.HasAlternateARNAttribute }}
+							inttypes.GlobalARNIdentityNamed({{ $value.IdentityAttribute }},
 						{{- else }}
 							inttypes.GlobalARNIdentity(
 						{{- end }}
 					{{- else }}
 						{{- if $value.IsARNFormatGlobal }}
-							{{- if $value.HasARNAttribute }}
-								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							{{- if $value.HasAlternateARNAttribute }}
+								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.IdentityAttribute }},
 							{{- else }}
 								inttypes.RegionalResourceWithGlobalARNFormat(
 							{{- end }}
 						{{- else }}
-							{{- if $value.HasARNAttribute }}
-								inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+							{{- if $value.HasAlternateARNAttribute }}
+								inttypes.RegionalARNIdentityNamed({{ $value.IdentityAttribute }},
 							{{- else }}
 								inttypes.RegionalARNIdentity(
 							{{- end }}
@@ -340,21 +340,21 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 					{{- end }}
 				{{- else if $value.IsARNIdentity }}
 					{{- if $.IsGlobal }}
-						{{- if $value.HasARNAttribute }}
-							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.HasAlternateARNAttribute }}
+							inttypes.GlobalARNIdentityNamed({{ $value.IdentityAttribute }},
 						{{- else }}
 							inttypes.GlobalARNIdentity(
 						{{- end }}
 					{{- else }}
 						{{- if $value.IsARNFormatGlobal }}
-							{{- if $value.HasARNAttribute }}
-								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							{{- if $value.HasAlternateARNAttribute }}
+								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.IdentityAttribute }},
 							{{- else }}
 								inttypes.RegionalResourceWithGlobalARNFormat(
 							{{- end }}
 						{{- else }}
-							{{- if $value.HasARNAttribute }}
-								inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+							{{- if $value.HasAlternateARNAttribute }}
+								inttypes.RegionalARNIdentityNamed({{ $value.IdentityAttribute }},
 							{{- else }}
 								inttypes.RegionalARNIdentity(
 							{{- end }}
@@ -491,14 +491,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 					{{- end }}
 				{{- else if $value.IsARNIdentity }}
 					{{- if $.IsGlobal }}
-						{{- if $value.HasARNAttribute }}
-							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.HasAlternateARNAttribute }}
+							inttypes.GlobalARNIdentityNamed({{ $value.IdentityAttribute }},
 						{{- else }}
 							inttypes.GlobalARNIdentity(
 						{{- end }}
 					{{- else -}}
-						{{- if $value.HasARNAttribute }}
-							inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.HasAlternateARNAttribute }}
+							inttypes.RegionalARNIdentityNamed({{ $value.IdentityAttribute }},
 						{{- else }}
 							inttypes.RegionalARNIdentity(
 						{{- end }}
@@ -613,21 +613,21 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 					{{- end }}
 				{{- else if $value.IsARNIdentity }}
 					{{- if $.IsGlobal }}
-						{{- if $value.HasARNAttribute }}
-							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.HasAlternateARNAttribute }}
+							inttypes.GlobalARNIdentityNamed({{ $value.IdentityAttribute }},
 						{{- else }}
 							inttypes.GlobalARNIdentity(
 						{{- end }}
 					{{- else }}
 						{{- if $value.IsARNFormatGlobal }}
-							{{- if $value.HasARNAttribute }}
-								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							{{- if $value.HasAlternateARNAttribute }}
+								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.IdentityAttribute }},
 							{{- else }}
 								inttypes.RegionalResourceWithGlobalARNFormat(
 							{{- end }}
 						{{- else -}}
-							{{- if $value.HasARNAttribute }}
-								inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+							{{- if $value.HasAlternateARNAttribute }}
+								inttypes.RegionalARNIdentityNamed({{ $value.IdentityAttribute }},
 							{{- else }}
 								inttypes.RegionalARNIdentity(
 							{{- end }}
