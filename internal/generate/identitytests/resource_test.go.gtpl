@@ -271,14 +271,14 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 							tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNNamespace }}", "{{ .ARNFormat }}"),
 						{{ end -}}
 					{{ end -}}
-					{{ if .HasIdentityDuplicateAttrs -}}
+					{{ if .IsGlobalSingleton -}}
+						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
+					{{ else if .HasIdentityDuplicateAttrs -}}
 						{{ range .IdentityDuplicateAttrs -}}
 							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttribute }}), compare.ValuesSame()),
 						{{ end -}}
 					{{ else if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
-					{{ else if .IsGlobalSingleton -}}
-						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 					{{ end -}}
 					{{ if not .IsGlobal -}}
 						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
