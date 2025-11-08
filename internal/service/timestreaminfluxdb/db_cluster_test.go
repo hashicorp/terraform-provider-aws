@@ -48,6 +48,7 @@ func TestAccTimestreamInfluxDBDBCluster_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream-influxdb", regexache.MustCompile(`db-cluster/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "db_storage_type", string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_type"),
 					resource.TestCheckResourceAttr(resourceName, "failover_mode", string(awstypes.FailoverModeAutomatic)),
 					resource.TestCheckResourceAttrSet(resourceName, "influx_auth_parameters_secret_arn"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
@@ -533,6 +534,7 @@ func TestAccTimestreamInfluxDBDBCluster_dbParameterGroupV3(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream-influxdb", regexache.MustCompile(`db-cluster/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "db_parameter_group_identifier", "InfluxDBV3Core"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_type"),
 					// Verify cluster was created successfully without requiring allocated_storage, bucket, organization, username, or password
 				),
 			},

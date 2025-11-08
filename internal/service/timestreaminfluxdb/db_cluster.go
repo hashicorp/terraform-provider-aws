@@ -145,6 +145,13 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Description: `Specifies the type of cluster to create.`,
 			},
+			"engine_type": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: `The database engine type of the DB cluster.`,
+			},
 			names.AttrEndpoint: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -689,6 +696,7 @@ type dbClusterResourceModel struct {
 	DBParameterGroupIdentifier    types.String                                                           `tfsdk:"db_parameter_group_identifier"`
 	DBStorageType                 fwtypes.StringEnum[awstypes.DbStorageType]                             `tfsdk:"db_storage_type"`
 	DeploymentType                fwtypes.StringEnum[awstypes.ClusterDeploymentType]                     `tfsdk:"deployment_type"`
+	EngineType                    types.String                                                           `tfsdk:"engine_type"`
 	Endpoint                      types.String                                                           `tfsdk:"endpoint"`
 	FailoverMode                  fwtypes.StringEnum[awstypes.FailoverMode]                              `tfsdk:"failover_mode"`
 	ID                            types.String                                                           `tfsdk:"id"`
