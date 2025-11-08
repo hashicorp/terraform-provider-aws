@@ -404,7 +404,7 @@ func (d ResourceDatum) IDAttrDuplicates() string {
 }
 
 func (d ResourceDatum) IsGlobalARNFormatForRegionalResource() bool {
-	return d.IsARNIdentity && !d.IsGlobal && d.IsARNFormatGlobal()
+	return d.IsARNIdentity() && !d.IsGlobal && d.IsARNFormatGlobal()
 }
 
 func (d ResourceDatum) ARNAttribute() string {
@@ -427,12 +427,8 @@ func (d ResourceDatum) GenerateRegionOverrideTest() bool {
 	return !d.IsGlobal && d.HasRegionOverrideTest
 }
 
-func (d ResourceDatum) HasInherentRegionIdentity() bool {
-	return d.IsARNIdentity || d.IsCustomInherentRegionIdentity
-}
-
 func (d ResourceDatum) HasInherentRegionImportID() bool {
-	return d.IsARNIdentity || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity
+	return d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -802,10 +798,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					},
 				)
 			}
-			if d.IsARNIdentity {
+			if d.IsARNIdentity() {
 				d.arnAttribute = d.IdentityAttributeName()
 			}
-			if d.IsARNIdentity || d.IsCustomInherentRegionIdentity {
+			if d.HasInherentRegionIdentity() {
 				if d.Implementation == common.ImplementationFramework {
 					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
 						d.SetImportStateIDAttribute(d.IdentityAttributeName())

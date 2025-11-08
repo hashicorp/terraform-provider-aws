@@ -711,7 +711,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					},
 				)
 			}
-			if d.IsARNIdentity || d.IsCustomInherentRegionIdentity {
+			if d.HasInherentRegionIdentity() {
 				if d.Implementation == common.ImplementationFramework {
 					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
 						d.SetImportStateIDAttribute(d.IdentityAttributeName())
