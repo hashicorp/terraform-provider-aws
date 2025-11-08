@@ -239,10 +239,6 @@ func (d ResourceDatum) RegionOverrideEnabled() bool {
 	return d.regionOverrideEnabled && !d.IsGlobal
 }
 
-func (r ResourceDatum) CustomIdentityAttribute() string {
-	return namesgen.ConstOrQuote(r.IdentityAttributeName())
-}
-
 func (r ResourceDatum) WrappedImport() bool {
 	return r.wrappedImport == common.TriBooleanTrue
 }
