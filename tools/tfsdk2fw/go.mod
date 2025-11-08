@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
-go 1.24.8
+go 1.24.10
 
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.38.1
@@ -28,7 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.13 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.13 // indirect
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.44.10 // indirect
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.45.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/account v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/acm v1.37.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.45.3 // indirect
@@ -52,7 +52,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.60.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/backup v1.49.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/backup v1.50.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/batch v1.58.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.48.4 // indirect
@@ -91,7 +91,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.48.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.59.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/connect v1.143.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/connect v1.144.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.26.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.2 // indirect
@@ -116,7 +116,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.10.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.52.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.262.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.263.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.51.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.67.2 // indirect
@@ -139,7 +139,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.37.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fms v1.44.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.63.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/gamelift v1.47.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/gamelift v1.48.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.31.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glue v1.132.1 // indirect
@@ -149,7 +149,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.65.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.49.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.33.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.34.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.48.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.44.10 // indirect
@@ -220,7 +220,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.40.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.33.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.95.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.96.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.26.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.108.7 // indirect
@@ -243,10 +243,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.90.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.66.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3tables v1.10.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.220.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3tables v1.11.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.5.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.221.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.39.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.65.2 // indirect
@@ -263,7 +263,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/signer v1.31.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.13 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.66.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.31.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.39.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.10 // indirect
@@ -294,7 +294,7 @@ require (
 	github.com/aws/smithy-go v1.23.2 // indirect
 	github.com/beevik/etree v1.6.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
-	github.com/cedar-policy/cedar-go v1.2.9 // indirect
+	github.com/cedar-policy/cedar-go v1.3.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fatih/color v1.18.0 // indirect
