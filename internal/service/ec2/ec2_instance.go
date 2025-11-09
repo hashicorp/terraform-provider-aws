@@ -491,6 +491,12 @@ func resourceInstance() *schema.Resource {
 				Optional:     true,
 				AtLeastOneOf: []string{names.AttrInstanceType, names.AttrLaunchTemplate},
 			},
+			"preserve_state": {
+				Type:     schema.TypeBool,
+				Computed: false,
+				Optional: true,
+				Default:  false,
+			},
 			"ipv6_address_count": {
 				Type:          schema.TypeInt,
 				Optional:      true,
@@ -1552,6 +1558,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	preserve_state := d.Get("preserve_state").(bool)
+
 	// See also CustomizeDiff.
 	if d.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") && !d.IsNewResource() {
 		// For each argument change, we start and stop the instance
@@ -1568,7 +1576,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					},
 				}
 
-				if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, fmt.Sprintf("InstanceType (%s)", instanceType)); err != nil {
+				if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, fmt.Sprintf("InstanceType (%s)", instanceType), preserve_state); err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) type: %s", d.Id(), err)
 				}
 			}
@@ -1593,7 +1601,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				},
 			}
 
-			if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, "UserData"); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, "UserData", preserve_state); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) user data: %s", d.Id(), err)
 			}
 		}
@@ -1613,7 +1621,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				},
 			}
 
-			if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, "UserData (base64)"); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, "UserData (base64)", preserve_state); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) user data base64: %s", d.Id(), err)
 			}
 		}
