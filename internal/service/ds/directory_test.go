@@ -57,6 +57,7 @@ func TestAccDSDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enable_directory_data_access", "false"),
 				),
 			},
 			{
