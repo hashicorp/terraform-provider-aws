@@ -12,8 +12,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfobservabilityadmin "github.com/hashicorp/terraform-provider-aws/internal/service/observabilityadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,6 +34,12 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_basic(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			// https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-cloudwatch.html.
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/observabilityadmin.amazonaws.com")
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "observabilityadmin.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/logs-centralization.observabilityadmin.amazonaws.com")
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
@@ -39,14 +50,16 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_basic(t *testing
 				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "rule_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "rule_arn"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "rule.0.destination.0.account"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arn"), tfknownvalue.RegionalARNExact("observabilityadmin", `organization-centralization-rule/`+rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -68,6 +81,8 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_disappears(t *te
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
@@ -81,6 +96,14 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_disappears(t *te
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfobservabilityadmin.ResourceCentralizationRuleForOrganization, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -88,13 +111,15 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_disappears(t *te
 
 func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule1, rule2, rule3 observabilityadmin.GetCentralizationRuleForOrganizationOutput
+	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
@@ -104,7 +129,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 			{
 				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule1),
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.encrypted_log_group_strategy", "SKIP"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.log_group_selection_criteria", "*"),
@@ -114,11 +139,16 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccCentralizationRuleForOrganizationConfig_updated(rName, endpoints.EuWest1RegionID, endpoints.UsWest1RegionID, endpoints.ApSoutheast1RegionID, endpoints.UsEast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule2),
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
 					// Test regions updated from 1 to 2
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.0", endpoints.ApSoutheast1RegionID),
@@ -138,11 +168,16 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Team", "observability"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccCentralizationRuleForOrganizationConfig_updatedLogFilter(rName, endpoints.EuWest1RegionID, endpoints.UsWest1RegionID, endpoints.ApSoutheast1RegionID, endpoints.UsEast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule3),
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
 					// Test log_group_selection_criteria updated from "*" to OAM filter
 					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.log_group_selection_criteria", "LogGroupName LIKE '/aws/lambda%'"),
 					// Ensure other values remain the same
@@ -157,6 +192,11 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 					resource.TestCheckResourceAttr(resourceName, "tags.Team", "observability"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Filter", "lambda-logs"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
