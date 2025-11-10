@@ -118,6 +118,15 @@ func TestAccAthenaPreparedStatement_update(t *testing.T) {
 					acctest.CheckResourceAttrHasSuffix(resourceName, "query_statement", updatedCondition),
 				),
 			},
+			{
+				Config: testAccPreparedStatementUsingEOTSyntax_basic(rName, updatedCondition, "desc3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPreparedStatementExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrHasSuffix(resourceName, "query_statement", updatedCondition),
+				),
+			},
 		},
 	})
 }
@@ -197,6 +206,22 @@ resource "aws_athena_prepared_statement" "test" {
   name            = %[1]q
   description     = %[3]q
   query_statement = "SELECT * FROM ${aws_athena_database.test.name} WHERE %[2]s"
+  workgroup       = aws_athena_workgroup.test.name
+}
+`, rName, condition, description))
+}
+
+func testAccPreparedStatementUsingEOTSyntax_basic(rName, condition, description string) string {
+	return acctest.ConfigCompose(testAccPreparedStatementConfig_base(rName), fmt.Sprintf(`
+resource "aws_athena_prepared_statement" "test_multiline" {
+  name            = %[1]q
+  description     = %[3]q
+  query_statement = <<-EOT
+SELECT *
+FROM ${aws_athena_database.test.name}
+-- test
+WHERE %[2]s
+EOT
   workgroup       = aws_athena_workgroup.test.name
 }
 `, rName, condition, description))
