@@ -2791,6 +2791,8 @@ func expandCanaryConfiguration(canaryConfig map[string]any) (*float64, *int32, e
 
 	if cp, ok := canaryConfig["canary_percent"].(float64); ok {
 		canaryPercentRet = aws.Float64(cp)
+	} else {
+		return nil, nil, fmt.Errorf("canary_percent is required for canary deployment configuration")
 	}
 	if cbtm, ok := canaryConfig["canary_bake_time_in_minutes"].(string); ok {
 		canaryBakeTimeInMinutes := nullable.Int(cbtm)
@@ -2810,6 +2812,8 @@ func expandLinearConfiguration(linearConfig map[string]any) (*float64, *int32, e
 
 	if sp, ok := linearConfig["step_percent"].(float64); ok {
 		stepPercentRet = aws.Float64(sp)
+	} else {
+		return nil, nil, fmt.Errorf("step_percent is required for linear deployment configuration")
 	}
 	if sbtm, ok := linearConfig["step_bake_time_in_minutes"].(string); ok {
 		stepBakeTimeInMinutes := nullable.Int(sbtm)
