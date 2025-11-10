@@ -9,7 +9,7 @@ godebug tlsmlkem=0
 require (
 	github.com/ProtonMail/go-crypto v1.3.0
 	github.com/YakDriver/go-version v0.1.0
-	github.com/YakDriver/regexache v0.24.0
+	github.com/YakDriver/regexache v0.25.0
 	github.com/YakDriver/smarterr v0.7.0
 	github.com/aws/aws-sdk-go-v2 v1.39.6
 	github.com/aws/aws-sdk-go-v2/config v1.31.17
@@ -303,7 +303,7 @@ require (
 	github.com/hashicorp/terraform-plugin-mux v0.21.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.38.1
 	github.com/hashicorp/terraform-plugin-testing v1.14.0-beta.1.0.20251013071646-7ed2ee242705
-	github.com/jaswdr/faker/v2 v2.8.1
+	github.com/jaswdr/faker/v2 v2.9.0
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/mattbaird/jsonpatch v0.0.0-20240118010651-0ba75a80ca38
 	github.com/mitchellh/copystructure v1.2.0
