@@ -46,6 +46,8 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateVerify: true,
 {{ if .HasImportStateIDAttribute -}}
 	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttribute }},
+{{ else if and (eq .Implementation "framework") (.ArnIdentity) (not .HasIdentityDuplicateAttrs) -}}
+	ImportStateVerifyIdentifierAttribute: {{ .ARNAttribute }},
 {{ end }}
 {{- end }}
 
@@ -55,6 +57,8 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ else if and (eq .Implementation "framework") (.ArnIdentity) (not .HasIdentityDuplicateAttrs) -}}
+	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ARNAttribute }}),
 {{ end -}}
 {{ template "CommonImportBody" . -}}
 {{- if .HasImportIgnore -}}
@@ -69,7 +73,9 @@ CheckDestroy: acctest.CheckDestroyNoop,
 {{ if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, {{ .ImportStateIDFunc }}),
 {{ else if .HasImportStateIDAttribute -}}
-	// TODO
+	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ else if and (eq .Implementation "framework") (.ArnIdentity) (not .HasIdentityDuplicateAttrs) -}}
+	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ARNAttribute }}),
 {{ else -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 {{ end -}}
@@ -89,6 +95,8 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ else if and (eq .Implementation "framework") (.ArnIdentity) (not .HasIdentityDuplicateAttrs) -}}
+	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ARNAttribute }}),
 {{ end -}}
 {{ end }}
 
@@ -99,7 +107,9 @@ CheckDestroy: acctest.CheckDestroyNoop,
 {{ if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, {{ .ImportStateIDFunc }}),
 {{ else if .HasImportStateIDAttribute -}}
-	// TODO
+	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ else if and (eq .Implementation "framework") (.ArnIdentity) (not .HasIdentityDuplicateAttrs) -}}
+	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ARNAttribute }}),
 {{ else -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 {{ end -}}
@@ -148,6 +158,11 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			{{ end -}}
 		{{ else if ne .IdentityAttribute "" -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
+			{{ if .HasIdentityDuplicateAttrs -}}
+				{{ range .IdentityDuplicateAttrs -}}
+					plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
+				{{ end -}}
+			{{ end -}}
 		{{ end -}}
 		{{ if not .IsGlobal -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -180,14 +195,20 @@ ImportPlanChecks: resource.ImportPlanChecks{
 					{{ end -}}
 				{{ end -}}
 			{{ end -}}
-		{{ end -}}
-		{{ if .IsRegionalSingleton -}}
+		{{ else if .IsRegionalSingleton -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
 		{{ else if .IsGlobalSingleton -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
+			{{ end -}}
+		{{ else if ne .IdentityAttribute "" -}}
+			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
+			{{ if .HasIdentityDuplicateAttrs -}}
+				{{ range .IdentityDuplicateAttrs -}}
+					plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
+				{{ end -}}
 			{{ end -}}
 		{{ end -}}
 		{{ if not .IsGlobal -}}
@@ -227,9 +248,11 @@ func {{ template "testname" . }}_IdentitySerial(t *testing.T) {
 	{{- end }}
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             {{ template "testname" . }}_Identity_Basic,
-		"ExistingResource":          {{ template "testname" . }}_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": {{ template "testname" . }}_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic: {{ template "testname" . }}_Identity_Basic,
+		{{ if .PreIdentityVersion -}}
+			"ExistingResource":          {{ template "testname" . }}_Identity_ExistingResource,
+			"ExistingResourceNoRefresh": {{ template "testname" . }}_Identity_ExistingResource_NoRefresh_NoChange,
+		{{ end -}}
 		{{ if .GenerateRegionOverrideTest -}}
 			"RegionOverride": {{ template "testname" . }}_Identity_RegionOverride,
 		{{ end -}}
@@ -297,6 +320,11 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 							names.AttrAccountID: tfknownvalue.AccountID(),
 							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 						}),
+					{{ else if .IsCustomInherentRegionIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 					{{ else -}}
 						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 							names.AttrAccountID: tfknownvalue.AccountID(),
@@ -418,6 +446,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							names.AttrAccountID: tfknownvalue.AccountID(),
 							names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 						}),
+					{{ else if .IsCustomInherentRegionIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 					{{ else -}}
 						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 							names.AttrAccountID: tfknownvalue.AccountID(),
@@ -594,6 +627,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								names.AttrAccountID: tfknownvalue.AccountID(),
 							}),
+						{{ else if .IsCustomInherentRegionIdentity -}}
+							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+							}),
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 						{{ else -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								names.AttrAccountID: tfknownvalue.AccountID(),
@@ -711,6 +749,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								names.AttrAccountID: tfknownvalue.AccountID(),
 							}),
+						{{ else if .IsCustomInherentRegionIdentity -}}
+							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+							}),
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 						{{ else -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								names.AttrAccountID: tfknownvalue.AccountID(),
@@ -842,6 +885,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								names.AttrAccountID: tfknownvalue.AccountID(),
 							}),
+						{{ else if .IsCustomInherentRegionIdentity -}}
+							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+							}),
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 						{{ else -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								names.AttrAccountID: tfknownvalue.AccountID(),
@@ -978,6 +1026,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 									names.AttrAccountID: tfknownvalue.AccountID(),
 								}),
+							{{ else if .IsCustomInherentRegionIdentity -}}
+								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+									{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+								}),
+								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 							{{ else -}}
 								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 									names.AttrAccountID: tfknownvalue.AccountID(),
@@ -1186,6 +1239,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 									names.AttrAccountID: tfknownvalue.AccountID(),
 								}),
+							{{ else if .IsCustomInherentRegionIdentity -}}
+								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+									{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+								}),
+								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
 							{{ else -}}
 								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 									names.AttrAccountID: tfknownvalue.AccountID(),
@@ -1257,4 +1315,197 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 			})
 		}
 	{{ end }}
+{{ end }}
+
+{{ if gt (len .IdentityVersions) 1 }}
+// Resource Identity version {{ .LatestIdentityVersion }} was added in version {{ index .IdentityVersions .LatestIdentityVersion }}
+func {{ template "testname" . }}_Identity_Upgrade(t *testing.T) {
+	{{- template "Init" . }}
+
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
+		{{ template "TestCaseSetupNoProviders" . }}
+		Steps: []resource.TestStep{
+			{{ $step := 1 -}}
+			// Step {{ $step }}: Create with Identity version 0
+			{
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderNameAlternate),
+				{{ end -}}
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v{{ VersionDecrementMinor (index .IdentityVersions 1) }}/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				{{ if .HasExistsFunc -}}
+				Check:  resource.ComposeAggregateTestCheckFunc(
+					{{- template "ExistsCheck" . -}}
+				),
+				{{ end -}}
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectHasIdentity(resourceName),
+				},
+			},
+
+			// Step {{ ($step = inc $step) | print }}: Current version
+			{
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+				{{ else -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ .ARNAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						}),
+					{{ else if .IsGlobalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+						}),
+					{{ else if .IsCustomInherentRegionIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
+					{{ else -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							{{ if not .IsGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ range .IdentityAttributes -}}
+								{{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
+							{{ end }}
+						}),
+						{{ range .IdentityAttributes -}}
+							{{ if not .Optional -}}
+								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+							{{ end -}}
+						{{ end }}
+					{{ end -}}
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity version {{ .LatestIdentityVersion }} was added in version {{ index .IdentityVersions .LatestIdentityVersion }}
+func {{ template "testname" . }}_Identity_Upgrade_NoRefresh(t *testing.T) {
+	{{- template "Init" . }}
+
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
+		{{ template "TestCaseSetupNoProviders" . }}
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{{ $step := 1 -}}
+			// Step {{ $step }}: Create with Identity version 0
+			{
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+				{{ end -}}
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v{{ VersionDecrementMinor (index .IdentityVersions 1) }}/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				{{ if .HasExistsFunc -}}
+				Check:  resource.ComposeAggregateTestCheckFunc(
+					{{- template "ExistsCheck" . -}}
+				),
+				{{ end -}}
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectHasIdentity(resourceName),
+				},
+			},
+
+			// Step {{ ($step = inc $step) | print }}: Current version
+			{
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+				{{ else -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ .ARNAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						}),
+					{{ else if .IsGlobalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+						}),
+					{{ else if .IsCustomInherentRegionIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ .CustomIdentityAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .CustomIdentityAttribute }})),
+					{{ else -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							{{ if not .IsGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ range .IdentityAttributes -}}
+								{{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
+							{{ end }}
+						}),
+						{{ range .IdentityAttributes -}}
+							{{ if not .Optional -}}
+								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+							{{ end -}}
+						{{ end }}
+					{{ end -}}
+				},
+			},
+		},
+	})
+}
 {{ end }}

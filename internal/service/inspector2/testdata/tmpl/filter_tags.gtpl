@@ -1,4 +1,5 @@
 resource "aws_inspector2_filter" "test" {
+{{- template "region" }}
   name   = var.rName
   action = "NONE"
   filter_criteria {

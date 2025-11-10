@@ -5,6 +5,7 @@ package cloudfront
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 )
@@ -13,7 +14,7 @@ func listContinuousDeploymentPoliciesPages(ctx context.Context, conn *cloudfront
 	for {
 		output, err := conn.ListContinuousDeploymentPolicies(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.ContinuousDeploymentPolicyList.NextMarker) == ""

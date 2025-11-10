@@ -79,8 +79,7 @@ resource "aws_bedrockagentcore_gateway" "example" {
 
 The following arguments are required:
 
-* `authorizer_configuration` - (Required) Configuration for request authorization. See [`authorizer_configuration`](#authorizer_configuration) below.
-* `authorizer_type` - (Required) Type of authorizer to use. Valid values: `CUSTOM_JWT`, `AWS_IAM`.
+* `authorizer_type` - (Required) Type of authorizer to use. Valid values: `CUSTOM_JWT`, `AWS_IAM`. When set to `CUSTOM_JWT`, `authorizer_configuration` block is required.
 * `name` - (Required) Name of the gateway.
 * `protocol_type` - (Required) Protocol type for the gateway. Valid values: `MCP`.
 * `role_arn` - (Required) ARN of the IAM role that the gateway assumes to access AWS services.
@@ -88,6 +87,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `authorizer_configuration` - (Optional) Configuration for request authorization. Required when `authorizer_type` is set to `CUSTOM_JWT`. See [`authorizer_configuration`](#authorizer_configuration) below.
 * `description` - (Optional) Description of the gateway.
 * `exception_level` - (Optional) Exception level for the gateway. Valid values: `INFO`, `WARN`, `ERROR`.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the gateway data.
@@ -119,7 +119,7 @@ The `protocol_configuration` block supports the following:
 The `mcp` block supports the following:
 
 * `instructions` - (Optional) Instructions for the MCP protocol configuration.
-* `search_type` - (Optional) Search type for MCP. Valid values: `SEMANTIC`, `HYBRID`.
+* `search_type` - (Optional) Search type for MCP. Valid values: `SEMANTIC`.
 * `supported_versions` - (Optional) Set of supported MCP protocol versions.
 
 ## Attribute Reference
