@@ -147,6 +147,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
@@ -328,6 +329,7 @@ func registerSweepers() {
 	s3.RegisterSweepers()
 	s3control.RegisterSweepers()
 	s3tables.RegisterSweepers()
+	s3vectors.RegisterSweepers()
 	sagemaker.RegisterSweepers()
 	scheduler.RegisterSweepers()
 	schemas.RegisterSweepers()
