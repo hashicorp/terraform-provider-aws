@@ -82,6 +82,9 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_disappears(t *te
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/observabilityadmin.amazonaws.com")
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "observabilityadmin.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/logs-centralization.observabilityadmin.amazonaws.com")
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 			testAccPreCheck(ctx, t)
 		},
@@ -119,6 +122,9 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/observabilityadmin.amazonaws.com")
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "observabilityadmin.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/logs-centralization.observabilityadmin.amazonaws.com")
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 			testAccPreCheck(ctx, t)
 		},
@@ -293,11 +299,6 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
         log_group_selection_criteria = "*"
       }
     }
-  }
-
-  tags = {
-    Name        = %[1]q
-    Environment = "test"
   }
 }
 `, rName, dstRegion, srcRegion)
