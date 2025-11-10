@@ -81,7 +81,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.59.2
 	github.com/aws/aws-sdk-go-v2/service/connect v1.144.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.1
-	github.com/aws/aws-sdk-go-v2/service/controltower v1.26.10
+	github.com/aws/aws-sdk-go-v2/service/controltower v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.59.2
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.20.10
@@ -104,7 +104,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.52.4
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.263.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.264.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.51.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.67.2
@@ -154,7 +154,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.10
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.11
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.32.9
-	github.com/aws/aws-sdk-go-v2/service/kms v1.47.1
+	github.com/aws/aws-sdk-go-v2/service/kms v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.45.9
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.81.1
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.13.10
@@ -188,7 +188,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/odb v1.5.4
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.52.10
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.3
@@ -264,7 +264,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.53.4
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.67.4
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.29.9
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.19.4
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.9
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.10
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.68.4
