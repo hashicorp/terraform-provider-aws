@@ -5,6 +5,7 @@ package applicationsignals
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/applicationsignals"
@@ -36,7 +37,7 @@ func (d *dataSourceServiceLevelObjective) Schema(ctx context.Context, req dataso
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"created_time": schema.StringAttribute{
+			names.AttrCreatedTime: schema.StringAttribute{
 				Computed: true,
 			},
 			"last_updated_time": schema.StringAttribute{
@@ -145,7 +146,7 @@ func (d *dataSourceServiceLevelObjective) Schema(ctx context.Context, req dataso
 										"metric_stat": schema.SingleNestedBlock{
 											CustomType: fwtypes.NewObjectTypeOf[metricStatModel](ctx),
 											Attributes: map[string]schema.Attribute{
-												"period": schema.StringAttribute{Computed: true},
+												"period": schema.Int32Attribute{Computed: true},
 												"stat":   schema.StringAttribute{Computed: true},
 												"unit":   schema.StringAttribute{Computed: true},
 											},
@@ -196,6 +197,9 @@ func (d *dataSourceServiceLevelObjective) Read(ctx context.Context, req datasour
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.String())
 		return
 	}
+
+	data.CreatedTime = types.StringValue(aws.ToTime(out.CreatedTime).Format(time.RFC3339))
+	data.LastUpdatedTime = types.StringValue(aws.ToTime(out.LastUpdatedTime).Format(time.RFC3339))
 
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data), smerr.ID, data.ID.String())
 	if resp.Diagnostics.HasError() {
@@ -288,13 +292,13 @@ type sliMetricModel struct {
 }
 
 type metricDataQueryModel struct {
-	Id         types.String `tfsdk:"id"`
-	AccountId  types.String `tfsdk:"account_id"`
-	Expression types.String `tfsdk:"expression"`
-	Label      types.String `tfsdk:"label"`
-	MetricStat types.String `tfsdk:"metric_stat"`
-	Period     types.Int32  `tfsdk:"period"`
-	ReturnData types.Bool   `tfsdk:"return_data"`
+	Id         types.String                           `tfsdk:"id"`
+	AccountId  types.String                           `tfsdk:"account_id"`
+	Expression types.String                           `tfsdk:"expression"`
+	Label      types.String                           `tfsdk:"label"`
+	MetricStat fwtypes.ObjectValueOf[metricStatModel] `tfsdk:"metric_stat"`
+	Period     types.Int32                            `tfsdk:"period"`
+	ReturnData types.Bool                             `tfsdk:"return_data"`
 }
 
 type metricStatModel struct {
