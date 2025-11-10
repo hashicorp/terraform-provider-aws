@@ -35,12 +35,18 @@ import (
 )
 
 // @FrameworkResource("aws_s3tables_table_bucket", name="Table Bucket")
+// @ArnIdentity
+// @ArnFormat("bucket/{name}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableBucketOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(preIdentityVersion="6.19.0")
 func newTableBucketResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableBucketResource{}, nil
 }
 
 type tableBucketResource struct {
 	framework.ResourceWithModel[tableBucketResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *tableBucketResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -432,7 +438,7 @@ func (r *tableBucketResource) Delete(ctx context.Context, request resource.Delet
 }
 
 func (r *tableBucketResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
+	r.WithImportByIdentity.ImportState(ctx, request, response)
 
 	// Set force_destroy to false on import to prevent accidental deletion
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrForceDestroy), types.BoolValue(false))...)

@@ -46,6 +46,8 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateVerify: true,
 {{ if .HasImportStateIDAttribute -}}
 	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttribute }},
+{{ else if and (eq .Implementation "framework") (.ArnIdentity) (not .HasIdentityDuplicateAttrs) -}}
+	ImportStateVerifyIdentifierAttribute: {{ .ARNAttribute }},
 {{ end }}
 {{- end }}
 
@@ -55,6 +57,8 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ else if and (eq .Implementation "framework") (.ArnIdentity) (not .HasIdentityDuplicateAttrs) -}}
+	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ARNAttribute }}),
 {{ end -}}
 {{ template "CommonImportBody" . -}}
 {{- if .HasImportIgnore -}}
@@ -70,6 +74,8 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, {{ .ImportStateIDFunc }}),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ else if and (eq .Implementation "framework") (.ArnIdentity) (not .HasIdentityDuplicateAttrs) -}}
+	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ARNAttribute }}),
 {{ else -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 {{ end -}}
@@ -89,6 +95,8 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ else if and (eq .Implementation "framework") (.ArnIdentity) (not .HasIdentityDuplicateAttrs) -}}
+	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ARNAttribute }}),
 {{ end -}}
 {{ end }}
 
@@ -100,6 +108,8 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, {{ .ImportStateIDFunc }}),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ else if and (eq .Implementation "framework") (.ArnIdentity) (not .HasIdentityDuplicateAttrs) -}}
+	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ARNAttribute }}),
 {{ else -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 {{ end -}}
