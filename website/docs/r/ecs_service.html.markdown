@@ -130,7 +130,7 @@ resource "aws_ecs_service" "example" {
   # ... other configurations ...
 
   deployment_configuration {
-    strategy              = "LINEAR"
+    strategy             = "LINEAR"
     bake_time_in_minutes = 10
 
     linear_configuration {
@@ -151,7 +151,7 @@ resource "aws_ecs_service" "example" {
   # ... other configurations ...
 
   deployment_configuration {
-    strategy              = "CANARY"
+    strategy             = "CANARY"
     bake_time_in_minutes = 15
 
     canary_configuration {
