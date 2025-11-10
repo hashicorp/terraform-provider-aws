@@ -80,6 +80,9 @@ var IAMPolicyDocumentSchemaRequired = sync.OnceValue(jsonDocumentSchemaRequiredF
 // IAMPolicyDocumentSchemaRequiredForceNew returns the standard schema for a required, force-new IAM policy JSON document.
 var IAMPolicyDocumentSchemaRequiredForceNew = sync.OnceValue(jsonDocumentSchemaRequiredForceNewFunc(SuppressEquivalentIAMPolicyDocuments))
 
+// JSONDocumentSchemaOptional returns the standard schema for an optional JSON document.
+var JSONDocumentSchemaOptional = sync.OnceValue(jsonDocumentSchemaOptionalFunc(SuppressEquivalentJSONDocuments))
+
 // JSONDocumentSchemaOptionalForceNew returns the standard schema for an optional, force-new JSON document.
 var JSONDocumentSchemaOptionalForceNew = sync.OnceValue(jsonDocumentSchemaOptionalForceNewFunc(SuppressEquivalentJSONDocuments))
 
