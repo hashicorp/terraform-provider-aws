@@ -107,9 +107,57 @@ func (d *dataSourceServiceLevelObjective) Schema(ctx context.Context, req dataso
 					"request_based_sli_metric": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[requestBasedSliMetricModel](ctx),
 						Attributes: map[string]schema.Attribute{
+							"dependency_config": schema.StringAttribute{Computed: true},
+							"key_attributes":    schema.StringAttribute{Computed: true},
 							"metric_type":       schema.StringAttribute{Computed: true},
 							"operation_name":    schema.StringAttribute{Computed: true},
-							"dependency_config": schema.StringAttribute{Computed: true},
+						},
+						Blocks: map[string]schema.Block{
+							"total_request_count_metric": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[metricDataQueryModel](ctx),
+								NestedObject: schema.NestedBlockObject{
+									CustomType: fwtypes.NewObjectTypeOf[metricDataQueryModel](ctx),
+									Attributes: map[string]schema.Attribute{
+										"id":          schema.StringAttribute{Computed: true},
+										"account_id":  schema.StringAttribute{Computed: true},
+										"expression":  schema.StringAttribute{Computed: true},
+										"label":       schema.StringAttribute{Computed: true},
+										"period":      schema.Int32Attribute{Computed: true},
+										"return_data": schema.BoolAttribute{Computed: true},
+									},
+									Blocks: map[string]schema.Block{
+										"metric_stat": schema.SingleNestedBlock{
+											CustomType: fwtypes.NewObjectTypeOf[metricStatModel](ctx),
+											Attributes: map[string]schema.Attribute{
+												"period": schema.Int32Attribute{Computed: true},
+												"stat":   schema.StringAttribute{Computed: true},
+												"unit":   schema.StringAttribute{Computed: true},
+											},
+											Blocks: map[string]schema.Block{
+												"metric": schema.SingleNestedBlock{
+													CustomType: fwtypes.NewObjectTypeOf[metricModel](ctx),
+													Attributes: map[string]schema.Attribute{
+														"metric_name": schema.StringAttribute{Computed: true},
+														"namespace":   schema.StringAttribute{Computed: true},
+													},
+													Blocks: map[string]schema.Block{
+														"dimensions": schema.ListNestedBlock{
+															CustomType: fwtypes.NewListNestedObjectTypeOf[dimensionModel](ctx),
+															NestedObject: schema.NestedBlockObject{
+																CustomType: fwtypes.NewObjectTypeOf[dimensionModel](ctx),
+																Attributes: map[string]schema.Attribute{
+																	"name":  schema.StringAttribute{Computed: true},
+																	"value": schema.StringAttribute{Computed: true},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -278,14 +326,16 @@ type burnRateConfigurationModel struct {
 }
 
 type requestBasedSliMetricModel struct {
-	MetricType       types.String `tfsdk:"metric_type"`
-	OperationName    types.String `tfsdk:"operation_name"`
-	DependencyConfig types.String `tfsdk:"dependency_config"`
+	TotalRequestCountMetric fwtypes.ListNestedObjectValueOf[metricDataQueryModel] `tfsdk:"total_request_count_metric"`
+	DependencyConfig        fwtypes.ObjectValueOf[dependencyConfigModel]          `tfsdk:"dependency_config"`
+	KeyAttributes           types.String                                          `tfsdk:"key_attributes"`
+	MetricType              types.String                                          `tfsdk:"metric_type"`
+	OperationName           types.String                                          `tfsdk:"operation_name"`
 }
 
 type sliMetricModel struct {
 	MetricDataQueries fwtypes.ListNestedObjectValueOf[metricDataQueryModel] `tfsdk:"metric_data_queries"`
-	DependencyConfig  types.String                                          `tfsdk:"dependency_config"`
+	DependencyConfig  fwtypes.ObjectValueOf[dependencyConfigModel]          `tfsdk:"dependency_config"`
 	KeyAttributes     types.String                                          `tfsdk:"key_attributes"`
 	MetricType        types.String                                          `tfsdk:"metric_type"`
 	OperationName     types.String                                          `tfsdk:"operation_name"`
@@ -317,4 +367,9 @@ type metricModel struct {
 type dimensionModel struct {
 	Name  types.String `tfsdk:"name"`
 	Value types.String `tfsdk:"value"`
+}
+
+type dependencyConfigModel struct {
+	DependencyKeyAttributes types.String `tfsdk:"dependency_key_attributes"`
+	DependencyOperationName types.String `tfsdk:"dependency_operation_name"`
 }
