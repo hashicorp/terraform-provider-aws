@@ -13,7 +13,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.3 // indirect
 	github.com/ProtonMail/go-crypto v1.3.0 // indirect
 	github.com/YakDriver/go-version v0.1.0 // indirect
-	github.com/YakDriver/regexache v0.24.0 // indirect
+	github.com/YakDriver/regexache v0.25.0 // indirect
 	github.com/YakDriver/smarterr v0.7.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
