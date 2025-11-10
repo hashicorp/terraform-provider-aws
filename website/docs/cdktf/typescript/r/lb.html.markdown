@@ -238,6 +238,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lb.example
+  identity = {
+    "arn" = "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188"
+  }
+}
+
+resource "aws_lb" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the load balancer.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import LBs using their ARN. For example:
 
 ```typescript
@@ -268,4 +289,4 @@ Using `terraform import`, import LBs using their ARN. For example:
 % terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3fb8883ab0f77b6fe1471bcbb3d9dde0e9100401b7fb486eb3cb5b14f712e2ef -->
+<!-- cache-key: cdktf-0.20.8 input-80575d39126e332a829ef7957d9fa14578860b32c27733db7e7e98c7eb900b39 -->

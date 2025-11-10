@@ -1179,7 +1179,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if v := d.Get("database_insights_mode"); v.(string) != "" {
-			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+			// If the cluster is part of a global cluster, defer Database Insights settings
+			// to the modifyDbClusterInput to prevent them from being reset.
+			if _, ok := d.GetOk("global_cluster_identifier"); ok {
+				modifyDbClusterInput.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+				requiresModifyDbCluster = true
+			} else {
+				input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+			}
 		}
 
 		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
@@ -1588,8 +1595,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
+		storageType := d.Get(names.AttrStorageType).(string)
 		if d.HasChange(names.AttrAllocatedStorage) {
 			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
+			if isProvisionedIOPSStorageType(storageType) {
+				// When modifying Provisioned IOPS storage, a value for both allocated storage and iops must be specified.
+				input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
+			}
 		}
 
 		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
@@ -1687,6 +1699,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange(names.AttrIOPS) {
 			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
+			if isProvisionedIOPSStorageType(storageType) {
+				// When modifying Provisioned IOPS storage, a value for both allocated storage and iops must be specified.
+				input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
+			}
 		}
 
 		if d.HasChange("manage_master_user_password") {
@@ -1933,11 +1949,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 					)
 
 					if err != nil {
-						return false, fmt.Errorf("modifying RDS Cluster (%s) DeletionProtection=false: %s", d.Id(), err)
+						return false, fmt.Errorf("modifying RDS Cluster (%s) DeletionProtection=false: %w", d.Id(), err)
 					}
 
 					if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutDelete)); err != nil {
-						return false, fmt.Errorf("waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+						return false, fmt.Errorf("waiting for RDS Cluster (%s) update: %w", d.Id(), err)
 					}
 				}
 
@@ -2376,4 +2392,8 @@ func flattenServerlessV2ScalingConfigurationInfo(apiObject *types.ServerlessV2Sc
 	}
 
 	return tfMap
+}
+
+func isProvisionedIOPSStorageType(storageType string) bool {
+	return storageType == storageTypeIO1 || storageType == storageTypeIO2
 }

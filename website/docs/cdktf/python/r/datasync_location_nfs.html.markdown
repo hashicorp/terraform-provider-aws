@@ -70,6 +70,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_location_nfs.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567"
+  }
+}
+
+resource "aws_datasync_location_nfs" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DataSync NFS location.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_nfs` using the DataSync Task Amazon Resource Name (ARN). For example:
 
 ```python
@@ -93,4 +114,4 @@ Using `terraform import`, import `aws_datasync_location_nfs` using the DataSync 
 % terraform import aws_datasync_location_nfs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f240fbe4a449dfba36c7ea5e857026af75a0722e9f076d806f78dde5203da54d -->
+<!-- cache-key: cdktf-0.20.8 input-ec645f4b8a4ce1a81c45a9f2360adb8210b56e0c4731c5452caecc0b9d8237d8 -->

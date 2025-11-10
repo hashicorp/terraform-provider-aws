@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -269,9 +270,15 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
-	} else if v := policy.ResourcePolicy; v != nil {
-		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(v))
+		if strings.Contains(err.Error(), "contains invalid principals") {
+			diags = sdkdiag.AppendWarningf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
+		} else {
+			return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
+		}
+	}
+
+	if policy != nil && policy.ResourcePolicy != nil {
+		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(policy.ResourcePolicy))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

@@ -32,7 +32,7 @@ func testAccDataCellsFilter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 			testAccDataCellsFilterPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -69,7 +69,7 @@ func testAccDataCellsFilter_columnWildcard(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 			testAccDataCellsFilterPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -102,7 +102,7 @@ func testAccDataCellsFilter_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 			testAccDataCellsFilterPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -137,7 +137,7 @@ func testAccDataCellsFilter_rowFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 			testAccDataCellsFilterPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),

@@ -244,7 +244,6 @@ func findTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.
 	var output []awstypes.ScalableTarget
 
 	pages := applicationautoscaling.NewDescribeScalableTargetsPaginator(conn, &input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

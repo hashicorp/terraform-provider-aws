@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,6 +40,12 @@ func resourceImageRecipe() *schema.Resource {
 		DeleteWithoutTimeout: resourceImageRecipeDelete,
 
 		Schema: map[string]*schema.Schema{
+			"ami_tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -98,7 +105,7 @@ func resourceImageRecipe() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(125, 1000),
+										ValidateFunc: validation.IntBetween(125, 2000),
 									},
 									names.AttrVolumeSize: {
 										Type:         schema.TypeInt,
@@ -251,6 +258,10 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:        getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("ami_tags"); ok {
+		input.AmiTags = flex.ExpandStringValueMap(v.(map[string]any))
+	}
+
 	if v, ok := d.GetOk("block_device_mapping"); ok && v.(*schema.Set).Len() > 0 {
 		input.BlockDeviceMappings = expandInstanceBlockDeviceMappings(v.(*schema.Set).List())
 	}
@@ -325,6 +336,11 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta a
 	if err := d.Set("component", flattenComponentConfigurations(imageRecipe.Components)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting component: %s", err)
 	}
+
+	if err := d.Set("ami_tags", flex.FlattenStringValueMap(imageRecipe.AmiTags)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ami_tags: %s", err)
+	}
+
 	d.Set("date_created", imageRecipe.DateCreated)
 	d.Set(names.AttrDescription, imageRecipe.Description)
 	d.Set(names.AttrName, imageRecipe.Name)

@@ -217,6 +217,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_task.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:task/task-12345678901234567"
+  }
+}
+
+resource "aws_datasync_task" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DataSync task.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_task` using the DataSync Task Amazon Resource Name (ARN). For example:
 
 ```python
@@ -240,4 +261,4 @@ Using `terraform import`, import `aws_datasync_task` using the DataSync Task Ama
 % terraform import aws_datasync_task.example arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e345ae4963038d5596f0040049ba40af169207efd7ca0c2a4edceda7b6f026d2 -->
+<!-- cache-key: cdktf-0.20.8 input-c7c96effac34fccbf05e0ad55f111b3e26bd733738a2cf5818f21693a8d3d5ee -->

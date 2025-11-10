@@ -301,6 +301,54 @@ func TestAccCognitoIDPManagedLoginBranding_updateSettings(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/44188.
+func TestAccCognitoIDPManagedLoginBranding_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.ManagedLoginBrandingType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource1Name := "aws_cognito_managed_login_branding.test1"
+	resource2Name := "aws_cognito_managed_login_branding.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedLoginBrandingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccManagedLoginBrandingConfig_multiple(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckManagedLoginBrandingExists(ctx, resource1Name, &v1),
+					testAccCheckManagedLoginBrandingExists(ctx, resource2Name, &v2),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resource1Name, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resource1Name, tfjsonpath.New("use_cognito_provided_values"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resource2Name, tfjsonpath.New("use_cognito_provided_values"), knownvalue.Bool(true)),
+				},
+			},
+			{
+				ResourceName:                         resource1Name,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "managed_login_branding_id",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resource1Name, ",", names.AttrUserPoolID, "managed_login_branding_id"),
+			},
+			{
+				ResourceName:                         resource2Name,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "managed_login_branding_id",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resource2Name, ",", names.AttrUserPoolID, "managed_login_branding_id"),
+			},
+		},
+	})
+}
+
 func testAccCheckManagedLoginBrandingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
@@ -1313,4 +1361,45 @@ resource "aws_cognito_managed_login_branding" "test" {
   })
 }
 `)
+}
+
+func testAccManagedLoginBrandingConfig_multiple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user_pool_client" "test0" {
+  name                = "%[1]s-0"
+  user_pool_id        = aws_cognito_user_pool.test.id
+  explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
+}
+
+resource "aws_cognito_user_pool_client" "test1" {
+  name                = "%[1]s-1"
+  user_pool_id        = aws_cognito_user_pool_client.test0.user_pool_id
+  explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
+}
+
+resource "aws_cognito_user_pool_client" "test2" {
+  name                = "%[1]s-2"
+  user_pool_id        = aws_cognito_user_pool_client.test1.user_pool_id
+  explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
+}
+
+resource "aws_cognito_managed_login_branding" "test1" {
+  # Cross over user pool client IDs to test read logic.
+  client_id    = aws_cognito_user_pool_client.test2.id
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  use_cognito_provided_values = true
+}
+
+resource "aws_cognito_managed_login_branding" "test2" {
+  client_id    = aws_cognito_user_pool_client.test1.id
+  user_pool_id = aws_cognito_managed_login_branding.test1.user_pool_id
+
+  use_cognito_provided_values = true
+}
+`, rName)
 }

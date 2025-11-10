@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -57,7 +59,7 @@ func (e expectIdentityRegionalARNFormatCheck) CheckState(ctx context.Context, re
 
 	knownCheck := e.checkFactory(e.arnService, arnString)
 	if err = knownCheck.CheckValue(value); err != nil {
-		response.Error = fmt.Errorf("checking value for attribute at path: %s.%s, err: %s", e.base.ResourceAddress(), attrPath, err)
+		response.Error = fmt.Errorf("checking value for attribute at path: %s.%s, err: %w", e.base.ResourceAddress(), attrPath, err)
 		return
 	}
 }
@@ -86,7 +88,7 @@ func ExpectIdentityRegionalARNAlternateRegionFormat(resourceAddress string, arnS
 
 // createDeltaString prints the map keys that are present in mapA and not present in mapB
 func createDeltaString[T any, V any](mapA map[string]T, mapB map[string]V, msgPrefix string) string {
-	deltaMsg := ""
+	var deltaMsg strings.Builder
 
 	deltaMap := make(map[string]T, len(mapA))
 	maps.Copy(deltaMap, mapA)
@@ -98,12 +100,12 @@ func createDeltaString[T any, V any](mapA map[string]T, mapB map[string]V, msgPr
 
 	for i, k := range deltaKeys {
 		if i == 0 {
-			deltaMsg += msgPrefix
+			deltaMsg.WriteString(msgPrefix)
 		} else {
-			deltaMsg += ", "
+			deltaMsg.WriteString(", ")
 		}
-		deltaMsg += fmt.Sprintf("%q", k)
+		deltaMsg.WriteString(strconv.Quote(k))
 	}
 
-	return deltaMsg
+	return deltaMsg.String()
 }

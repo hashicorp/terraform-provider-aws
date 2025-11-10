@@ -446,7 +446,7 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 			}
 
 			if _, err := waitEntityRecognizerDeleted(ctx, conn, aws.ToString(v.EntityRecognizerArn), d.Timeout(schema.TimeoutDelete)); err != nil {
-				return fmt.Errorf("waiting for version (%s) to be deleted: %s", aws.ToString(v.VersionName), err)
+				return fmt.Errorf("waiting for version (%s) to be deleted: %w", aws.ToString(v.VersionName), err)
 			}
 
 			ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -541,9 +541,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 		return nil
 	}, tfresource.WithPollInterval(entityRegcognizerPollInterval))
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateEntityRecognizer(ctx, in)
-	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Entity Recognizer (%s): %s", action, d.Get(names.AttrName).(string), err)
 	}

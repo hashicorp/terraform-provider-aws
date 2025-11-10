@@ -13,8 +13,12 @@ import (
 const (
 	HTTPKeyRequestBody  = "http.request.body"
 	HTTPKeyResponseBody = "http.response.body"
-	KeyResourceId       = "id"
+	KeyResourceId       = "tf_aws.resource_attribute." + "id"
 )
+
+func ResourceAttributeKey(name string) string {
+	return "tf_aws.resource_attribute." + name
+}
 
 // MaskSensitiveValuesByKey masks sensitive values using tflog
 func MaskSensitiveValuesByKey(ctx context.Context, keys ...string) context.Context {

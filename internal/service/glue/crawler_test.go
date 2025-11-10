@@ -1779,12 +1779,12 @@ func testAccCheckCrawlerConfiguration(crawler *awstypes.Crawler, acctestJSON str
 		apiJSON := aws.ToString(crawler.Configuration)
 		apiJSONBuffer := bytes.NewBufferString("")
 		if err := json.Compact(apiJSONBuffer, []byte(apiJSON)); err != nil {
-			return fmt.Errorf("unable to compact API configuration JSON: %s", err)
+			return fmt.Errorf("unable to compact API configuration JSON: %w", err)
 		}
 
 		acctestJSONBuffer := bytes.NewBufferString("")
 		if err := json.Compact(acctestJSONBuffer, []byte(acctestJSON)); err != nil {
-			return fmt.Errorf("unable to compact acceptance test configuration JSON: %s", err)
+			return fmt.Errorf("unable to compact acceptance test configuration JSON: %w", err)
 		}
 
 		if !verify.JSONBytesEqual(apiJSONBuffer.Bytes(), acctestJSONBuffer.Bytes()) {

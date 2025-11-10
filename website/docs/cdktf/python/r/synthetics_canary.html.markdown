@@ -50,22 +50,22 @@ The following arguments are required:
 * `handler` - (Required) Entry point to use for the source code when running the canary. This value must end with the string `.handler` .
 * `name` - (Required) Name for this canary. Has a maximum length of 255 characters. Valid characters are lowercase alphanumeric, hyphen, or underscore.
 * `runtime_version` - (Required) Runtime version to use for the canary. Versions change often so consult the [Amazon CloudWatch documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html) for the latest valid versions. Values include `syn-python-selenium-1.0`, `syn-nodejs-puppeteer-3.0`, `syn-nodejs-2.2`, `syn-nodejs-2.1`, `syn-nodejs-2.0`, and `syn-1.0`.
-* `schedule` -  (Required) Configuration block providing how often the canary is to run and when these test runs are to stop. Detailed below.
+* `schedule` -  (Required) Configuration block providing how often the canary is to run and when these test runs are to stop. Detailed [below](#schedule).
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `artifact_config` - (Optional) configuration for canary artifacts, including the encryption-at-rest settings for artifacts that the canary uploads to Amazon S3. See [Artifact Config](#artifact_config).
 * `delete_lambda` - (Optional)  Specifies whether to also delete the Lambda functions and layers used by this canary. The default is `false`.
-* `vpc_config` - (Optional) Configuration block. Detailed below.
 * `failure_retention_period` - (Optional) Number of days to retain data about failed runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
-* `run_config` - (Optional) Configuration block for individual canary runs. Detailed below.
+* `run_config` - (Optional) Configuration block for individual canary runs. Detailed [below](#run_config).
 * `s3_bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. **Conflicts with `zip_file`.**
 * `s3_key` - (Optional) S3 key of your script. **Conflicts with `zip_file`.**
 * `s3_version` - (Optional) S3 version ID of your script. **Conflicts with `zip_file`.**
 * `start_canary` - (Optional) Whether to run or stop the canary.
 * `success_retention_period` - (Optional) Number of days to retain data about successful runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `artifact_config` - (Optional) configuration for canary artifacts, including the encryption-at-rest settings for artifacts that the canary uploads to Amazon S3. See [Artifact Config](#artifact_config).
+* `vpc_config` - (Optional) Configuration block. Detailed [below](#vpc_config).
 * `zip_file` - (Optional) ZIP file that contains the script, if you input your canary script directly into the canary instead of referring to an S3 location. It can be up to 225KB. **Conflicts with `s3_bucket`, `s3_key`, and `s3_version`.**
 
 ### artifact_config
@@ -81,6 +81,11 @@ The following arguments are optional:
 
 * `expression` - (Required) Rate expression or cron expression that defines how often the canary is to run. For rate expression, the syntax is `rate(number unit)`. _unit_ can be `minute`, `minutes`, or `hour`. For cron expression, the syntax is `cron(expression)`. For more information about the syntax for cron expressions, see [Scheduling canary runs using cron](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_cron.html).
 * `duration_in_seconds` - (Optional) Duration in seconds, for the canary to continue making regular runs according to the schedule in the Expression value.
+* `retry_config` - (Optional) Configuration block for canary retries. Detailed [below](#retry_config).
+
+### retry_config
+
+* `max_retries` - (Required) Maximum number of retries. The value must be less than or equal to `2`. If `max_retries` is `2`, `run_config.timeout_in_seconds` should be less than 600 seconds. Defaults to `0`.
 
 ### run_config
 
@@ -146,4 +151,4 @@ Using `terraform import`, import Synthetics Canaries using the `name`. For examp
 % terraform import aws_synthetics_canary.some some-canary
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ce31e30842bcb0fef9854f7cce1c3cb76a024d5d0ab7908147cf5ae6a64428ed -->
+<!-- cache-key: cdktf-0.20.8 input-05ba0a7112390909e166b1b357db2e99908a15660f37475ca4ce1115bab5423d -->
