@@ -1216,6 +1216,7 @@ EOF
 }
 
 func testAccTopicConfig_iamEventualConsistency(rName string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   assume_role {
