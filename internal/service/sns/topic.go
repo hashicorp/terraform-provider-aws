@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -52,17 +51,7 @@ var (
 			Optional:     true,
 			ValidateFunc: validation.IntBetween(0, 100),
 		},
-		"archive_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONWithEmptyDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v any) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
+		"archive_policy": sdkv2.JSONDocumentWithEmptySchemaOptional(),
 		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
@@ -76,17 +65,7 @@ var (
 			Optional: true,
 			Default:  false,
 		},
-		"delivery_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v any) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
+		"delivery_policy": sdkv2.JSONDocumentSchemaOptional(),
 		names.AttrDisplayName: {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -170,18 +149,7 @@ var (
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		names.AttrPolicy: {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			Computed:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v any) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
+		names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 		"signature_version": {
 			Type:         schema.TypeInt,
 			Optional:     true,
