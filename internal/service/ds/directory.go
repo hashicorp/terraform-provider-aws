@@ -362,12 +362,12 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 		d.Set("vpc_settings", nil)
 	}
 
-	dda, err := getDirectoryDataAccess(ctx, conn, d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading directory data access: %s", err)
-	}
-	if dda.DataAccessStatus == awstypes.DataAccessStatusEnabled {
-		d.Set("enable_directory_data_access", true)
+	if dir.Type == awstypes.DirectoryTypeMicrosoftAd {
+		dda, err := getDirectoryDataAccess(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading directory data access: %s", err)
+		}
+		d.Set("enable_directory_data_access", dda.DataAccessStatus == awstypes.DataAccessStatusEnabled)
 	} else {
 		d.Set("enable_directory_data_access", false)
 	}
