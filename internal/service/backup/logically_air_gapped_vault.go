@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -71,6 +72,13 @@ func (r *logicallyAirGappedVaultResource) Schema(ctx context.Context, request re
 				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
+				},
+			},
+			"encryption_key_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   false,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
@@ -200,6 +208,7 @@ type logicallyAirGappedVaultResourceModel struct {
 	ID               types.String   `tfsdk:"id"`
 	MaxRetentionDays types.Int64    `tfsdk:"max_retention_days"`
 	MinRetentionDays types.Int64    `tfsdk:"min_retention_days"`
+	EncryptionKeyArn fwtypes.ARN    `tfsdk:"encryption_key_arn"`
 	Tags             tftags.Map     `tfsdk:"tags"`
 	TagsAll          tftags.Map     `tfsdk:"tags_all"`
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
