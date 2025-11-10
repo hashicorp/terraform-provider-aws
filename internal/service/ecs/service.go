@@ -1390,8 +1390,8 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 
 			if awstypes.DeploymentStrategy(strategy) == awstypes.DeploymentStrategyLinear {
-				if v, ok := config["linear_configuration"].([]interface{}); ok && len(v) > 0 {
-					if linearConfig, ok := v[0].(map[string]interface{}); ok {
+				if v, ok := config["linear_configuration"].([]any); ok && len(v) > 0 {
+					if linearConfig, ok := v[0].(map[string]any); ok {
 						sp, sbtm, err := expandLinearConfiguration(linearConfig)
 						if err != nil {
 							return sdkdiag.AppendFromErr(diags, err)
@@ -1405,8 +1405,8 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 
 			if awstypes.DeploymentStrategy(strategy) == awstypes.DeploymentStrategyCanary {
-				if v, ok := config["canary_configuration"].([]interface{}); ok && len(v) > 0 {
-					if canaryConfig, ok := v[0].(map[string]interface{}); ok {
+				if v, ok := config["canary_configuration"].([]any); ok && len(v) > 0 {
+					if canaryConfig, ok := v[0].(map[string]any); ok {
 						cp, cbtm, err := expandCanaryConfiguration(canaryConfig)
 						if err != nil {
 							return sdkdiag.AppendFromErr(diags, err)
@@ -1716,8 +1716,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 					}
 
 					if awstypes.DeploymentStrategy(strategy) == awstypes.DeploymentStrategyLinear {
-						if v, ok := config["linear_configuration"].([]interface{}); ok && len(v) > 0 {
-							if linearConfig, ok := v[0].(map[string]interface{}); ok {
+						if v, ok := config["linear_configuration"].([]any); ok && len(v) > 0 {
+							if linearConfig, ok := v[0].(map[string]any); ok {
 								sp, sbtm, err := expandLinearConfiguration(linearConfig)
 								if err != nil {
 									return sdkdiag.AppendFromErr(diags, err)
@@ -1731,8 +1731,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 					}
 
 					if awstypes.DeploymentStrategy(strategy) == awstypes.DeploymentStrategyCanary {
-						if v, ok := config["canary_configuration"].([]interface{}); ok && len(v) > 0 {
-							if canaryConfig, ok := v[0].(map[string]interface{}); ok {
+						if v, ok := config["canary_configuration"].([]any); ok && len(v) > 0 {
+							if canaryConfig, ok := v[0].(map[string]any); ok {
 								cp, cbtm, err := expandCanaryConfiguration(canaryConfig)
 								if err != nil {
 									return sdkdiag.AppendFromErr(diags, err)

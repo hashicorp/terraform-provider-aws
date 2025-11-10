@@ -4460,8 +4460,8 @@ resource "aws_ecs_service" "test" {
     bake_time_in_minutes = 2
 
     linear_configuration {
-      step_percent                = 50
-      step_bake_time_in_minutes   = 1
+      step_percent              = 50
+      step_bake_time_in_minutes = 1
     }
   }
 
@@ -4496,8 +4496,8 @@ resource "aws_ecs_service" "test" {
     bake_time_in_minutes = 3
 
     linear_configuration {
-      step_percent                = 25
-      step_bake_time_in_minutes   = 2
+      step_percent              = 25
+      step_bake_time_in_minutes = 2
     }
   }
 
@@ -4532,8 +4532,8 @@ resource "aws_ecs_service" "test" {
     bake_time_in_minutes = 0
 
     linear_configuration {
-      step_percent                = 100
-      step_bake_time_in_minutes   = 0
+      step_percent              = 100
+      step_bake_time_in_minutes = 0
     }
   }
 
@@ -4626,8 +4626,8 @@ resource "aws_ecs_service" "test" {
     bake_time_in_minutes = 1
 
     linear_configuration {
-      step_percent                = 50
-      step_bake_time_in_minutes   = 1
+      step_percent              = 50
+      step_bake_time_in_minutes = 1
     }
   }
 
@@ -4680,8 +4680,8 @@ resource "aws_ecs_service" "test" {
     bake_time_in_minutes = 2
 
     canary_configuration {
-      canary_percent                = 20
-      canary_bake_time_in_minutes   = 1
+      canary_percent              = 20
+      canary_bake_time_in_minutes = 1
     }
   }
 
@@ -4716,8 +4716,8 @@ resource "aws_ecs_service" "test" {
     bake_time_in_minutes = 3
 
     canary_configuration {
-      canary_percent                = 10
-      canary_bake_time_in_minutes   = 2
+      canary_percent              = 10
+      canary_bake_time_in_minutes = 2
     }
   }
 
@@ -4752,8 +4752,8 @@ resource "aws_ecs_service" "test" {
     bake_time_in_minutes = 0
 
     canary_configuration {
-      canary_percent                = 100
-      canary_bake_time_in_minutes   = 0
+      canary_percent              = 100
+      canary_bake_time_in_minutes = 0
     }
   }
 
@@ -4846,8 +4846,8 @@ resource "aws_ecs_service" "test" {
     bake_time_in_minutes = 1
 
     canary_configuration {
-      canary_percent                = 20
-      canary_bake_time_in_minutes   = 1
+      canary_percent              = 20
+      canary_bake_time_in_minutes = 1
     }
   }
 
