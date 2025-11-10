@@ -2785,14 +2785,14 @@ func expandBakeTimeInMinutes(bakeTimeStr string) (*int32, error) {
 	return ptrBakeTimeRet, nil
 }
 
-func expandCanaryConfiguration(canary_config map[string]any) (*float64, *int32, error) {
+func expandCanaryConfiguration(canaryConfig map[string]any) (*float64, *int32, error) {
 	var canaryPercentRet *float64
 	var ptrCanaryBakeTimeRet *int32
 
-	if cp, ok := canary_config["canary_percent"].(float64); ok {
+	if cp, ok := canaryConfig["canary_percent"].(float64); ok {
 		canaryPercentRet = aws.Float64(cp)
 	}
-	if cbtm, ok := canary_config["canary_bake_time_in_minutes"].(string); ok {
+	if cbtm, ok := canaryConfig["canary_bake_time_in_minutes"].(string); ok {
 		canaryBakeTimeInMinutes := nullable.Int(cbtm)
 		value, _, err := canaryBakeTimeInMinutes.ValueInt32()
 		if err != nil {
@@ -2804,14 +2804,14 @@ func expandCanaryConfiguration(canary_config map[string]any) (*float64, *int32, 
 	return canaryPercentRet, ptrCanaryBakeTimeRet, nil
 }
 
-func expandLinearConfiguration(linear_config map[string]any) (*float64, *int32, error) {
+func expandLinearConfiguration(linearConfig map[string]any) (*float64, *int32, error) {
 	var stepPercentRet *float64
 	var ptrStepBakeTimeRet *int32
 
-	if sp, ok := linear_config["step_percent"].(float64); ok {
+	if sp, ok := linearConfig["step_percent"].(float64); ok {
 		stepPercentRet = aws.Float64(sp)
 	}
-	if sbtm, ok := linear_config["step_bake_time_in_minutes"].(string); ok {
+	if sbtm, ok := linearConfig["step_bake_time_in_minutes"].(string); ok {
 		stepBakeTimeInMinutes := nullable.Int(sbtm)
 		value, _, err := stepBakeTimeInMinutes.ValueInt32()
 		if err != nil {
