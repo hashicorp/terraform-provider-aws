@@ -339,9 +339,9 @@ data "aws_odb_db_servers" "test" {
 resource "aws_odb_cloud_vm_cluster" "test" {
   display_name                    = %[3]q
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
-  cpu_core_count                  = 6
-  gi_version                      = "23.0.0.0"
-  hostname_prefix                 = "apollo12"
+  cpu_core_count                  = 16
+  gi_version                      = "26.0.0.0"
+  hostname_prefix                 = "apollo-12"
   ssh_public_keys                 = ["%[4]s"]
   odb_network_id                  = aws_odb_network.test.id
   is_local_backup_enabled         = true
@@ -373,9 +373,9 @@ data "aws_odb_db_servers" "test" {
 resource "aws_odb_cloud_vm_cluster" "test" {
   display_name                    = %[3]q
   cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
-  cpu_core_count                  = 6
-  gi_version                      = "23.0.0.0"
-  hostname_prefix                 = "apollo12"
+  cpu_core_count                  = 16
+  gi_version                      = "26.0.0.0"
+  hostname_prefix                 = "apollo-12"
   ssh_public_keys                 = ["%[4]s"]
   odb_network_id                  = aws_odb_network.test.id
   is_local_backup_enabled         = true
