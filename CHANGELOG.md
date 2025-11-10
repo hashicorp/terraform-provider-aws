@@ -4,11 +4,14 @@ ENHANCEMENTS:
 
 * resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.mcp_server` block ([#44991](https://github.com/hashicorp/terraform-provider-aws/issues/44991))
 * resource/aws_bedrockagentcore_gateway_target: Make `credential_provider_configuration` block optional ([#44991](https://github.com/hashicorp/terraform-provider-aws/issues/44991))
+* resource/aws_s3tables_table: Add tagging support ([#44996](https://github.com/hashicorp/terraform-provider-aws/issues/44996))
+* resource/aws_s3tables_table_bucket: Add tagging support ([#44996](https://github.com/hashicorp/terraform-provider-aws/issues/44996))
 * resource/aws_sagemaker_endpoint_configuration: Add `execution_role_arn` argument and make `model_name` optional in `production_variants` and `shadow_production_variants` blocks to support Inference Components ([#44977](https://github.com/hashicorp/terraform-provider-aws/issues/44977))
 * resource/aws_sns_topic: Fix `AuthorizationError ... is not authorized to perform: iam:PassRole on resource ...` IAM eventual consistency errors on Create and Update ([#45018](https://github.com/hashicorp/terraform-provider-aws/issues/45018))
 
 BUG FIXES:
 
+* provider: Fix situation where refreshes of removed infrastructure appear as errors rather than warnings ([#45022](https://github.com/hashicorp/terraform-provider-aws/issues/45022))
 * resource/aws_opensearch_authorize_vpc_endpoint_access: Fix reading the resource when more than one principal is authorized. The [import ID](https://developer.hashicorp.com/terraform/language/block/import#id) has changed from `domain_name` to `domain_name` and `account` separated by a comma ([#44982](https://github.com/hashicorp/terraform-provider-aws/issues/44982))
 * resource/aws_sagemaker_endpoint: Fix bug where `endpoint_config_name` was not correctly updated, causing the endpoint to retain the old configuration ([#42843](https://github.com/hashicorp/terraform-provider-aws/issues/42843))
 * resource/aws_wafv2_web_acl_logging_configuration: Fix the validation for `redacted_fields.single_header.name` ([#44987](https://github.com/hashicorp/terraform-provider-aws/issues/44987))
