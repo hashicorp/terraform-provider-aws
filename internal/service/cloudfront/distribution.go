@@ -739,6 +739,11 @@ func resourceDistribution() *schema.Resource {
 										Default:      30,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
+									names.AttrOwnerAccountID: {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
 									"vpc_origin_id": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -2530,11 +2535,17 @@ func expandVPCOriginConfig(tfMap map[string]any) *awstypes.VpcOriginConfig {
 		return nil
 	}
 
-	return &awstypes.VpcOriginConfig{
+	apiObject := &awstypes.VpcOriginConfig{
 		OriginKeepaliveTimeout: aws.Int32(int32(tfMap["origin_keepalive_timeout"].(int))),
 		OriginReadTimeout:      aws.Int32(int32(tfMap["origin_read_timeout"].(int))),
 		VpcOriginId:            aws.String(tfMap["vpc_origin_id"].(string)),
 	}
+
+	if v, ok := tfMap[names.AttrOwnerAccountID].(string); ok && v != "" {
+		apiObject.OwnerAccountId = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func flattenOriginShield(apiObject *awstypes.OriginShield) map[string]any {
@@ -2563,11 +2574,17 @@ func flattenVPCOriginConfig(apiObject *awstypes.VpcOriginConfig) map[string]any 
 		return nil
 	}
 
-	return map[string]any{
+	tfMap := map[string]any{
 		"origin_keepalive_timeout": aws.ToInt32(apiObject.OriginKeepaliveTimeout),
 		"origin_read_timeout":      aws.ToInt32(apiObject.OriginReadTimeout),
 		"vpc_origin_id":            aws.ToString(apiObject.VpcOriginId),
 	}
+
+	if apiObject.OwnerAccountId != nil {
+		tfMap[names.AttrOwnerAccountID] = aws.ToString(apiObject.OwnerAccountId)
+	}
+
+	return tfMap
 }
 
 func expandCustomErrorResponses(tfList []any) *awstypes.CustomErrorResponses {
