@@ -5,30 +5,23 @@ package observabilityadmin_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfobservabilityadmin "github.com/hashicorp/terraform-provider-aws/internal/service/observabilityadmin"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccObservabilityAdminCentralizationRuleForOrganization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
@@ -68,10 +61,6 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_basic(t *testing
 
 func TestAccObservabilityAdminCentralizationRuleForOrganization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
@@ -99,10 +88,6 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_disappears(t *te
 
 func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var rule1, rule2, rule3 observabilityadmin.GetCentralizationRuleForOrganizationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
@@ -195,38 +180,37 @@ func testAccCheckCentralizationRuleForOrganizationDestroy(ctx context.Context) r
 
 			_, err := tfobservabilityadmin.FindCentralizationRuleForOrganizationByID(ctx, conn, rs.Primary.ID)
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return create.Error(names.ObservabilityAdmin, create.ErrActionCheckingDestroyed, tfobservabilityadmin.ResNameCentralizationRuleForOrganization, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.ObservabilityAdmin, create.ErrActionCheckingDestroyed, tfobservabilityadmin.ResNameCentralizationRuleForOrganization, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Observability Admin Centralization Rule For Organization %s still exists", rs.Primary.Attributes["rule_name"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckCentralizationRuleForOrganizationExists(ctx context.Context, name string, rule *observabilityadmin.GetCentralizationRuleForOrganizationOutput) resource.TestCheckFunc {
+func testAccCheckCentralizationRuleForOrganizationExists(ctx context.Context, n string, v *observabilityadmin.GetCentralizationRuleForOrganizationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.ObservabilityAdmin, create.ErrActionCheckingExistence, tfobservabilityadmin.ResNameCentralizationRuleForOrganization, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAdminClient(ctx)
 
-		ruleName := rs.Primary.Attributes["rule_name"]
+		output, err := tfobservabilityadmin.FindCentralizationRuleForOrganizationByID(ctx, conn, rs.Primary.Attributes["rule_name"])
 
-		output, err := tfobservabilityadmin.FindCentralizationRuleForOrganizationByID(ctx, conn, ruleName)
 		if err != nil {
-			return create.Error(names.ObservabilityAdmin, create.ErrActionCheckingExistence, tfobservabilityadmin.ResNameCentralizationRuleForOrganization, ruleName, err)
+			return err
 		}
 
-		*rule = *output
+		*v = *output
 
 		return nil
 	}

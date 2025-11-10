@@ -24,7 +24,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceCentralizationRuleForOrganization,
+			Factory:  newCentralizationRuleForOrganizationResource,
 			TypeName: "aws_observabilityadmin_centralization_rule_for_organization",
 			Name:     "Centralization Rule For Organization",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

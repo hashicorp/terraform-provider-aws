@@ -5,6 +5,7 @@ package observabilityadmin
 
 // Exports for use in tests only.
 var (
-	ResourceCentralizationRuleForOrganization = newResourceCentralizationRuleForOrganization
-	FindCentralizationRuleForOrganizationByID = findCentralizationRuleForOrganizationByRuleName
+	ResourceCentralizationRuleForOrganization = newCentralizationRuleForOrganizationResource
+
+	FindCentralizationRuleForOrganizationByID = findCentralizationRuleForOrganizationByID
 )
