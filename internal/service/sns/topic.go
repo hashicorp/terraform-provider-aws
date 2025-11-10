@@ -306,12 +306,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.SetId(aws.ToString(output.TopicArn))
 
-	// Retry for eventual consistency; if ABAC is in use, this takes some time
-	// usually about 10s, presumably for tags really to be there, and we get a
-	// permissions error.
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *types.AuthorizationErrorException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return nil, putTopicAttributes(ctx, conn, d.Id(), attributes)
-	}, "no identity-based policy allows")
+	err = putTopicAttributes(ctx, conn, d.Id(), attributes)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -453,7 +448,25 @@ func putTopicAttributes(ctx context.Context, conn *sns.Client, arn string, attri
 			continue
 		}
 
-		err := putTopicAttribute(ctx, conn, arn, name, value)
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func(ctx context.Context) (any, error) {
+				return nil, putTopicAttribute(ctx, conn, arn, name, value)
+			},
+			func(err error) (bool, error) {
+				// Retry for eventual consistency; if ABAC is in use, this takes some time
+				// usually about 10s, presumably for tags really to be there, and we get a
+				// permissions error.
+				if errs.IsAErrorMessageContains[*types.AuthorizationErrorException](err, "no identity-based policy allows") {
+					return true, err
+				}
+
+				if errs.IsAErrorMessageContains[*types.AuthorizationErrorException](err, "is not authorized to perform") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		if err != nil {
 			return err
@@ -467,14 +480,14 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 	const (
 		timeout = 2 * time.Minute
 	)
-	input := &sns.SetTopicAttributesInput{
+	input := sns.SetTopicAttributesInput{
 		AttributeName:  aws.String(name),
 		AttributeValue: aws.String(value),
 		TopicArn:       aws.String(arn),
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *types.InvalidParameterException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.SetTopicAttributes(ctx, input)
+		return conn.SetTopicAttributes(ctx, &input)
 	})
 
 	if err != nil {
