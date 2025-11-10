@@ -106,8 +106,9 @@ func (d *dataSourceServiceLevelObjective) Schema(ctx context.Context, req dataso
 					"request_based_sli_metric": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[requestBasedSliMetricModel](ctx),
 						Attributes: map[string]schema.Attribute{
-							"metric_type":    schema.StringAttribute{Computed: true},
-							"operation_name": schema.StringAttribute{Computed: true},
+							"metric_type":       schema.StringAttribute{Computed: true},
+							"operation_name":    schema.StringAttribute{Computed: true},
+							"dependency_config": schema.StringAttribute{Computed: true},
 						},
 					},
 				},
@@ -117,6 +118,18 @@ func (d *dataSourceServiceLevelObjective) Schema(ctx context.Context, req dataso
 				Attributes: map[string]schema.Attribute{
 					"metric_threshold":    schema.Float64Attribute{Computed: true},
 					"comparison_operator": schema.StringAttribute{Computed: true},
+				},
+				Blocks: map[string]schema.Block{
+					"sli_metric": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[sliMetricModel](ctx),
+						Attributes: map[string]schema.Attribute{
+							"metric_data_queries": schema.StringAttribute{Computed: true},
+							"dependency_config":   schema.StringAttribute{Computed: true},
+							"key_attributes":      schema.StringAttribute{Computed: true},
+							"metric_type":         schema.StringAttribute{Computed: true},
+							"operation_name":      schema.StringAttribute{Computed: true},
+						},
+					},
 				},
 			},
 		},
@@ -199,8 +212,9 @@ type rollingIntervalModel struct {
 }
 
 type sliModel struct {
-	MetricThreshold    types.Float64 `tfsdk:"metric_threshold"`
-	ComparisonOperator types.String  `tfsdk:"comparison_operator"`
+	MetricThreshold    types.Float64                         `tfsdk:"metric_threshold"`
+	ComparisonOperator types.String                          `tfsdk:"comparison_operator"`
+	SliMetric          fwtypes.ObjectValueOf[sliMetricModel] `tfsdk:"sli_metric"`
 }
 
 type requestBasedSliModel struct {
@@ -214,6 +228,15 @@ type burnRateConfigurationModel struct {
 }
 
 type requestBasedSliMetricModel struct {
-	MetricType    types.String `tfsdk:"metric_type"`
-	OperationName types.String `tfsdk:"operation_name"`
+	MetricType       types.String `tfsdk:"metric_type"`
+	OperationName    types.String `tfsdk:"operation_name"`
+	DependencyConfig types.String `tfsdk:"dependency_config"`
+}
+
+type sliMetricModel struct {
+	MetricDataQueries types.String `tfsdk:"metric_data_queries"`
+	DependencyConfig  types.String `tfsdk:"dependency_config"`
+	KeyAttributes     types.String `tfsdk:"key_attributes"`
+	MetricType        types.String `tfsdk:"metric_type"`
+	OperationName     types.String `tfsdk:"operation_name"`
 }
