@@ -8,7 +8,6 @@ ENHANCEMENTS:
 * data-source/aws_s3_bucket: Add hosted zone ID for `ap-southeast-6` AWS Region ([#44132](https://github.com/hashicorp/terraform-provider-aws/issues/44132))
 * resource/aws_cloudfront_distribution: Add `origin.response_completion_timeout` argument ([#44163](https://github.com/hashicorp/terraform-provider-aws/issues/44163))
 * resource/aws_ecs_account_setting_default: Support `dualStackIPv6` as a valid value for `name` ([#44165](https://github.com/hashicorp/terraform-provider-aws/issues/44165))
-* resource/aws_ecs_service: Add support for `LINEAR` and `CANARY` deployment strategies with `deployment_configuration.linear_configuration` and `deployment_configuration.canary_configuration` blocks
 * resource/aws_opensearch_package: Add `engine_version` argument ([#44155](https://github.com/hashicorp/terraform-provider-aws/issues/44155))
 * resource/aws_opensearch_package: Add waiter to ensure package validation completes ([#44155](https://github.com/hashicorp/terraform-provider-aws/issues/44155))
 
