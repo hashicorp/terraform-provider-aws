@@ -72,15 +72,16 @@ func (d *dataSourceServiceLevelObjective) Schema(ctx context.Context, req dataso
 							"calendar_interval": schema.SingleNestedBlock{
 								CustomType: fwtypes.NewObjectTypeOf[calendarIntervalModel](ctx),
 								Attributes: map[string]schema.Attribute{
-									"start_time": schema.StringAttribute{Computed: true},
-									"end_time":   schema.StringAttribute{Computed: true},
-									"timezone":   schema.StringAttribute{Computed: true},
+									"duration":      schema.Int32Attribute{Computed: true},
+									"duration_unit": schema.StringAttribute{Computed: true},
+									"start_time":    schema.StringAttribute{Computed: true},
 								},
 							},
 							"rolling_interval": schema.SingleNestedBlock{
 								CustomType: fwtypes.NewObjectTypeOf[rollingIntervalModel](ctx),
 								Attributes: map[string]schema.Attribute{
-									"look_back_period": schema.Int64Attribute{Computed: true},
+									"duration":      schema.Int32Attribute{Computed: true},
+									"duration_unit": schema.StringAttribute{Computed: true},
 								},
 							},
 						},
@@ -100,6 +101,15 @@ func (d *dataSourceServiceLevelObjective) Schema(ctx context.Context, req dataso
 				Attributes: map[string]schema.Attribute{
 					"metric_threshold":    schema.Float64Attribute{Computed: true},
 					"comparison_operator": schema.StringAttribute{Computed: true},
+				},
+				Blocks: map[string]schema.Block{
+					"request_based_sli_metric": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[requestBasedSliMetricModel](ctx),
+						Attributes: map[string]schema.Attribute{
+							"metric_type":    schema.StringAttribute{Computed: true},
+							"operation_name": schema.StringAttribute{Computed: true},
+						},
+					},
 				},
 			},
 			"sli": schema.SingleNestedBlock{
@@ -152,15 +162,18 @@ func findServiceLevelObjectiveByID(ctx context.Context, conn *applicationsignals
 
 type dataSourceServiceLevelObjectiveModel struct {
 	framework.WithRegionModel
-	ID               types.String                                `tfsdk:"id"`
-	ARN              types.String                                `tfsdk:"arn"`
-	Name             types.String                                `tfsdk:"name"`
-	Description      types.String                                `tfsdk:"description"`
-	MetricSourceType types.String                                `tfsdk:"metric_source_type"`
-	EvaluationType   types.String                                `tfsdk:"evaluation_type"`
-	Goal             fwtypes.ObjectValueOf[goalModel]            `tfsdk:"goal"`
-	Sli              fwtypes.ObjectValueOf[sliModel]             `tfsdk:"sli"`
-	RequestBasedSli  fwtypes.ObjectValueOf[requestBasedSliModel] `tfsdk:"request_based_sli"`
+	ID                     types.String                                                `tfsdk:"id"`
+	ARN                    types.String                                                `tfsdk:"arn"`
+	CreatedTime            types.String                                                `tfsdk:"created_time"`
+	BurnRateConfigurations fwtypes.ListNestedObjectValueOf[burnRateConfigurationModel] `tfsdk:"burn_rate_configurations"`
+	LastUpdatedTime        types.String                                                `tfsdk:"last_updated_time"`
+	Name                   types.String                                                `tfsdk:"name"`
+	Description            types.String                                                `tfsdk:"description"`
+	MetricSourceType       types.String                                                `tfsdk:"metric_source_type"`
+	EvaluationType         types.String                                                `tfsdk:"evaluation_type"`
+	Goal                   fwtypes.ObjectValueOf[goalModel]                            `tfsdk:"goal"`
+	Sli                    fwtypes.ObjectValueOf[sliModel]                             `tfsdk:"sli"`
+	RequestBasedSli        fwtypes.ObjectValueOf[requestBasedSliModel]                 `tfsdk:"request_based_sli"`
 }
 
 type goalModel struct {
@@ -175,13 +188,14 @@ type intervalModel struct {
 }
 
 type calendarIntervalModel struct {
-	StartTime types.String `tfsdk:"start_time"`
-	EndTime   types.String `tfsdk:"end_time"`
-	Timezone  types.String `tfsdk:"timezone"`
+	Duration     types.Int32  `tfsdk:"duration"`
+	DurationUnit types.String `tfsdk:"duration_unit"`
+	StartTime    types.String `tfsdk:"start_time"`
 }
 
 type rollingIntervalModel struct {
-	LookBackPeriod types.Int64 `tfsdk:"look_back_period"`
+	Duration     types.Int32  `tfsdk:"duration"`
+	DurationUnit types.String `tfsdk:"duration_unit"`
 }
 
 type sliModel struct {
