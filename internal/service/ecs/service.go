@@ -2777,7 +2777,7 @@ func expandBakeTimeInMinutes(bakeTimeStr string) (*int32, error) {
 	if !bakeTime.IsNull() {
 		value, _, err := bakeTime.ValueInt32()
 		if err != nil {
-			return nil, nil
+			return nil, err
 		}
 		ptrBakeTimeRet = aws.Int32(value)
 	}
@@ -2815,7 +2815,7 @@ func expandLinearConfiguration(linear_config map[string]any) (*float64, *int32, 
 		stepBakeTimeInMinutes := nullable.Int(sbtm)
 		value, _, err := stepBakeTimeInMinutes.ValueInt32()
 		if err != nil {
-			return nil, nil, nil
+			return nil, nil, err
 		}
 		ptrStepBakeTimeRet = aws.Int32(value)
 	}
