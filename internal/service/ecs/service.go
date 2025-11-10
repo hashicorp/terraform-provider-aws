@@ -2713,11 +2713,11 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 func flattenCanaryConfiguration(apiObject *awstypes.CanaryConfiguration) []map[string]any {
 	tfMap := map[string]any{}
 
-	if v := (*apiObject).CanaryBakeTimeInMinutes; v != nil {
+	if v := apiObject.CanaryBakeTimeInMinutes; v != nil {
 		tfMap["canary_bake_time_in_minutes"] = flex.Int32ToStringValue(v)
 	}
 
-	tfMap["canary_percent"] = aws.ToFloat64((*apiObject).CanaryPercent)
+	tfMap["canary_percent"] = aws.ToFloat64(apiObject.CanaryPercent)
 
 	return []map[string]any{tfMap}
 }
@@ -2725,11 +2725,11 @@ func flattenCanaryConfiguration(apiObject *awstypes.CanaryConfiguration) []map[s
 func flattenLinearConfiguration(apiObject *awstypes.LinearConfiguration) []map[string]any {
 	tfMap := map[string]any{}
 
-	if v := (*apiObject).StepBakeTimeInMinutes; v != nil {
+	if v := apiObject.StepBakeTimeInMinutes; v != nil {
 		tfMap["step_bake_time_in_minutes"] = flex.Int32ToStringValue(v)
 	}
 
-	tfMap["step_percent"] = aws.ToFloat64((*apiObject).StepPercent)
+	tfMap["step_percent"] = aws.ToFloat64(apiObject.StepPercent)
 
 	return []map[string]any{tfMap}
 }
