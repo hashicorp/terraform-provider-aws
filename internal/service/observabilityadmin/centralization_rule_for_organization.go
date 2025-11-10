@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -52,6 +53,10 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 			"rule_arn": framework.ARNAttributeComputedOnly(),
 			"rule_name": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 100),
+					stringvalidator.RegexMatches(regexache.MustCompile(`[0-9A-Za-z-_.#/]+`), ""),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -80,9 +85,15 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 								Attributes: map[string]schema.Attribute{
 									"account": schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											fwvalidators.AWSAccountID(),
+										},
 									},
 									names.AttrRegion: schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											fwvalidators.AWSRegion(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -100,12 +111,15 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															names.AttrRegion: schema.StringAttribute{
-																Optional: true,
-															},
 															names.AttrKMSKeyARN: schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
 																Optional:   true,
+															},
+															names.AttrRegion: schema.StringAttribute{
+																Optional: true,
+																Validators: []validator.String{
+																	fwvalidators.AWSRegion(),
+																},
 															},
 														},
 													},
@@ -117,25 +131,13 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"encryption_strategy": schema.StringAttribute{
-																Required:   true,
-																CustomType: fwtypes.StringEnumType[awstypes.EncryptionStrategy](),
-																Validators: []validator.String{
-																	stringvalidator.OneOf(
-																		string(awstypes.EncryptionStrategyAwsOwned),
-																		string(awstypes.EncryptionStrategyCustomerManaged),
-																	),
-																},
-															},
 															"encryption_conflict_resolution_strategy": schema.StringAttribute{
 																Optional:   true,
 																CustomType: fwtypes.StringEnumType[awstypes.EncryptionConflictResolutionStrategy](),
-																Validators: []validator.String{
-																	stringvalidator.OneOf(
-																		string(awstypes.EncryptionConflictResolutionStrategyAllow),
-																		string(awstypes.EncryptionConflictResolutionStrategySkip),
-																	),
-																},
+															},
+															"encryption_strategy": schema.StringAttribute{
+																Required:   true,
+																CustomType: fwtypes.StringEnumType[awstypes.EncryptionStrategy](),
 															},
 															names.AttrKMSKeyARN: schema.StringAttribute{
 																CustomType: fwtypes.ARNType,
@@ -163,11 +165,16 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 										ElementType: types.StringType,
 										Validators: []validator.Set{
 											setvalidator.SizeAtLeast(1),
+											setvalidator.ValueStringsAre(fwvalidators.AWSRegion()),
 										},
 										Required: true,
 									},
 									names.AttrScope: schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthAtLeast(1),
+											stringvalidator.LengthAtMost(2000),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -181,12 +188,6 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 												"encrypted_log_group_strategy": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.EncryptedLogGroupStrategy](),
 													Required:   true,
-													Validators: []validator.String{
-														stringvalidator.OneOf(
-															string(awstypes.EncryptedLogGroupStrategyAllow),
-															string(awstypes.EncryptedLogGroupStrategySkip),
-														),
-													},
 												},
 												"log_group_selection_criteria": schema.StringAttribute{
 													Required: true,
@@ -204,11 +205,6 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
@@ -436,12 +432,12 @@ type sourceLogsConfigurationModel struct {
 }
 
 type logsBackupConfigurationModel struct {
-	Region    types.String `tfsdk:"region"`
 	KMSKeyARN fwtypes.ARN  `tfsdk:"kms_key_arn"`
+	Region    types.String `tfsdk:"region"`
 }
 
 type logsEncryptionConfigurationModel struct {
-	EncryptionStrategy                   fwtypes.StringEnum[awstypes.EncryptionStrategy]                   `tfsdk:"encryption_strategy"`
 	EncryptionConflictResolutionStrategy fwtypes.StringEnum[awstypes.EncryptionConflictResolutionStrategy] `tfsdk:"encryption_conflict_resolution_strategy"`
+	EncryptionStrategy                   fwtypes.StringEnum[awstypes.EncryptionStrategy]                   `tfsdk:"encryption_strategy"`
 	KMSKeyARN                            fwtypes.ARN                                                       `tfsdk:"kms_key_arn"`
 }
