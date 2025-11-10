@@ -108,7 +108,7 @@ func (d *dataSourceServiceLevelObjective) Schema(ctx context.Context, req dataso
 						CustomType: fwtypes.NewObjectTypeOf[requestBasedSliMetricModel](ctx),
 						Attributes: map[string]schema.Attribute{
 							"dependency_config": schema.StringAttribute{Computed: true},
-							"key_attributes":    schema.StringAttribute{Computed: true},
+							"key_attributes":    schema.MapAttribute{CustomType: fwtypes.MapOfStringType, ElementType: types.StringType, Computed: true},
 							"metric_type":       schema.StringAttribute{Computed: true},
 							"operation_name":    schema.StringAttribute{Computed: true},
 						},
@@ -173,7 +173,7 @@ func (d *dataSourceServiceLevelObjective) Schema(ctx context.Context, req dataso
 						CustomType: fwtypes.NewObjectTypeOf[sliMetricModel](ctx),
 						Attributes: map[string]schema.Attribute{
 							"dependency_config": schema.StringAttribute{Computed: true},
-							"key_attributes":    schema.StringAttribute{Computed: true},
+							"key_attributes":    schema.MapAttribute{CustomType: fwtypes.MapOfStringType, ElementType: types.StringType, Computed: true},
 							"metric_type":       schema.StringAttribute{Computed: true},
 							"operation_name":    schema.StringAttribute{Computed: true},
 						},
@@ -246,8 +246,12 @@ func (d *dataSourceServiceLevelObjective) Read(ctx context.Context, req datasour
 		return
 	}
 
+	// Handling
+
 	data.CreatedTime = types.StringValue(aws.ToTime(out.CreatedTime).Format(time.RFC3339))
 	data.LastUpdatedTime = types.StringValue(aws.ToTime(out.LastUpdatedTime).Format(time.RFC3339))
+
+	// Handling over
 
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data), smerr.ID, data.ID.String())
 	if resp.Diagnostics.HasError() {
@@ -328,7 +332,7 @@ type burnRateConfigurationModel struct {
 type requestBasedSliMetricModel struct {
 	TotalRequestCountMetric fwtypes.ListNestedObjectValueOf[metricDataQueryModel] `tfsdk:"total_request_count_metric"`
 	DependencyConfig        fwtypes.ObjectValueOf[dependencyConfigModel]          `tfsdk:"dependency_config"`
-	KeyAttributes           types.String                                          `tfsdk:"key_attributes"`
+	KeyAttributes           fwtypes.MapOfString                                   `tfsdk:"key_attributes"`
 	MetricType              types.String                                          `tfsdk:"metric_type"`
 	OperationName           types.String                                          `tfsdk:"operation_name"`
 }
@@ -336,7 +340,7 @@ type requestBasedSliMetricModel struct {
 type sliMetricModel struct {
 	MetricDataQueries fwtypes.ListNestedObjectValueOf[metricDataQueryModel] `tfsdk:"metric_data_queries"`
 	DependencyConfig  fwtypes.ObjectValueOf[dependencyConfigModel]          `tfsdk:"dependency_config"`
-	KeyAttributes     types.String                                          `tfsdk:"key_attributes"`
+	KeyAttributes     fwtypes.MapOfString                                   `tfsdk:"key_attributes"`
 	MetricType        types.String                                          `tfsdk:"metric_type"`
 	OperationName     types.String                                          `tfsdk:"operation_name"`
 }
