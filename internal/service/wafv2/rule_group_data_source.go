@@ -46,7 +46,7 @@ func dataSourceRuleGroup() *schema.Resource {
 	}
 }
 
-func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 	name := d.Get(names.AttrName).(string)

@@ -209,7 +209,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The unique identifier for the AWS account in which the anomaly subscription ought to be created.
 * `frequency` - (Required) The frequency that anomaly reports are sent. Valid Values: `DAILY` | `IMMEDIATE` | `WEEKLY`.
@@ -258,6 +258,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ce_anomaly_subscription.example
+  identity = {
+    "arn" = "arn:aws:ce::123456789012:anomalysubscription/12345678-1234-1234-1234-123456789012"
+  }
+}
+
+resource "aws_ce_anomaly_subscription" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Cost Explorer anomaly subscription.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_anomaly_subscription` using the `id`. For example:
 
 ```python
@@ -281,4 +302,4 @@ Using `terraform import`, import `aws_ce_anomaly_subscription` using the `id`. F
 % terraform import aws_ce_anomaly_subscription.example AnomalySubscriptionARN
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-63ec9cc6bec0513ad1339c3379640be986b78ea317d466c40cff0931f5a83aff -->
+<!-- cache-key: cdktf-0.20.8 input-8ebdbbbe8f94c0259259a58d449cf7fa63a9809639b663d306898521f3f3603c -->

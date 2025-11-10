@@ -66,7 +66,7 @@ func dataSourceGroup() *schema.Resource {
 	}
 }
 
-func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -107,10 +107,10 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func dataSourceGroupUsersRead(iamUsers []awstypes.User) []map[string]interface{} {
-	users := make([]map[string]interface{}, 0, len(iamUsers))
+func dataSourceGroupUsersRead(iamUsers []awstypes.User) []map[string]any {
+	users := make([]map[string]any, 0, len(iamUsers))
 	for _, i := range iamUsers {
-		u := make(map[string]interface{})
+		u := make(map[string]any)
 		u[names.AttrARN] = aws.ToString(i.Arn)
 		u["user_id"] = aws.ToString(i.UserId)
 		u[names.AttrUserName] = aws.ToString(i.UserName)

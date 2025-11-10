@@ -546,12 +546,12 @@ func testAccCheckStackInstancesExists(ctx context.Context, resourceName string, 
 		callAs := rs.Primary.Attributes["call_as"]
 
 		var accounts []string
-		for i := 0; i < attributeLength(rs.Primary.Attributes["accounts.#"]); i++ {
+		for i := range attributeLength(rs.Primary.Attributes["accounts.#"]) {
 			accounts = append(accounts, rs.Primary.Attributes[fmt.Sprintf("accounts.%d", i)])
 		}
 
 		var regions []string
-		for i := 0; i < attributeLength(rs.Primary.Attributes["regions.#"]); i++ {
+		for i := range attributeLength(rs.Primary.Attributes["regions.#"]) {
 			regions = append(regions, rs.Primary.Attributes[fmt.Sprintf("regions.%d", i)])
 		}
 
@@ -594,12 +594,12 @@ func testAccCheckStackInstancesForOrganizationalUnitExists(ctx context.Context, 
 		stackSetName := parts[0]
 		callAs := rs.Primary.Attributes["call_as"]
 		var accounts []string
-		for i := 0; i < attributeLength(rs.Primary.Attributes["accounts.#"]); i++ {
+		for i := range attributeLength(rs.Primary.Attributes["accounts.#"]) {
 			accounts = append(accounts, rs.Primary.Attributes[fmt.Sprintf("accounts.%d", i)])
 		}
 
 		var regions []string
-		for i := 0; i < attributeLength(rs.Primary.Attributes["regions.#"]); i++ {
+		for i := range attributeLength(rs.Primary.Attributes["regions.#"]) {
 			regions = append(regions, rs.Primary.Attributes[fmt.Sprintf("regions.%d", i)])
 		}
 
@@ -638,12 +638,12 @@ func testAccCheckStackInstancesForOrganizationalUnitDestroy(ctx context.Context)
 			stackSetName := parts[0]
 			callAs := rs.Primary.Attributes["call_as"]
 			var accounts []string
-			for i := 0; i < attributeLength(rs.Primary.Attributes["accounts.#"]); i++ {
+			for i := range attributeLength(rs.Primary.Attributes["accounts.#"]) {
 				accounts = append(accounts, rs.Primary.Attributes[fmt.Sprintf("accounts.%d", i)])
 			}
 
 			var regions []string
-			for i := 0; i < attributeLength(rs.Primary.Attributes["regions.#"]); i++ {
+			for i := range attributeLength(rs.Primary.Attributes["regions.#"]) {
 				regions = append(regions, rs.Primary.Attributes[fmt.Sprintf("regions.%d", i)])
 			}
 
@@ -687,12 +687,12 @@ func testAccCheckStackInstancesDestroy(ctx context.Context) resource.TestCheckFu
 			stackSetName := parts[0]
 			callAs := rs.Primary.Attributes["call_as"]
 			var accounts []string
-			for i := 0; i < attributeLength(rs.Primary.Attributes["accounts.#"]); i++ {
+			for i := range attributeLength(rs.Primary.Attributes["accounts.#"]) {
 				accounts = append(accounts, rs.Primary.Attributes[fmt.Sprintf("accounts.%d", i)])
 			}
 
 			var regions []string
-			for i := 0; i < attributeLength(rs.Primary.Attributes["regions.#"]); i++ {
+			for i := range attributeLength(rs.Primary.Attributes["regions.#"]) {
 				regions = append(regions, rs.Primary.Attributes[fmt.Sprintf("regions.%d", i)])
 			}
 

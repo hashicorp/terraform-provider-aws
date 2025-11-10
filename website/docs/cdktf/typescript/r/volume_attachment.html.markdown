@@ -57,6 +57,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `deviceName` - (Required) The device name to expose to the instance (for
 example, `/dev/sdh` or `xvdh`).  See [Device Naming on Linux Instances][1] and [Device Naming on Windows Instances][2] for more information.
 * `instanceId` - (Required) ID of the Instance to attach to
@@ -117,4 +118,4 @@ Using `terraform import`, import EBS Volume Attachments using `DEVICE_NAME:VOLUM
 [2]: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/device_naming.html#available-ec2-device-names
 [3]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-detaching-volume.html
 
-<!-- cache-key: cdktf-0.20.8 input-8d70c75bb952f6c2a4ba80ab20190c8861ad57f287b2752a94e208c0c56f0a76 -->
+<!-- cache-key: cdktf-0.20.8 input-fa8088d5153a164542fe015c85358c50c9465c2f1ff8b627c8783a4ed0454d5e -->

@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_guardduty_organization_configuration: The `auto_enable` attribute has been removed
+```
+
+```release-note:note
+resource/aws_guardduty_organization_configuration: `datasources` now returns a deprecation warning
+```

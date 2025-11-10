@@ -17,11 +17,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2SerialConsoleAccess_basic(t *testing.T) {
+func TestAccEC2SerialConsoleAccess_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"Resource": {
+			acctest.CtBasic: testAccEC2SerialConsoleAccess_basic,
+			"Identity":      testAccEC2SerialConsoleAccess_IdentitySerial,
+		},
+		"DataSource": {
+			acctest.CtBasic: testAccEC2SerialConsoleAccessDataSource_basic,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
+func testAccEC2SerialConsoleAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_serial_console_access.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -54,7 +70,8 @@ func testAccCheckSerialConsoleAccessDestroy(ctx context.Context) resource.TestCh
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		response, err := conn.GetSerialConsoleAccessStatus(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
+		input := ec2.GetSerialConsoleAccessStatusInput{}
+		response, err := conn.GetSerialConsoleAccessStatus(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -80,7 +97,8 @@ func testAccCheckSerialConsoleAccess(ctx context.Context, n string, enabled bool
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		response, err := conn.GetSerialConsoleAccessStatus(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
+		input := ec2.GetSerialConsoleAccessStatusInput{}
+		response, err := conn.GetSerialConsoleAccessStatus(ctx, &input)
 		if err != nil {
 			return err
 		}

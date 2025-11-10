@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,6 +36,7 @@ func TestAccWAFByteMatchSet_basic(t *testing.T) {
 				Config: testAccByteMatchSetConfig_basic(byteMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`bytematchset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, byteMatchSet),
 					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{

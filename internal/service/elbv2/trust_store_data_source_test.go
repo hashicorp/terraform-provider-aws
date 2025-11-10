@@ -18,6 +18,7 @@ func TestAccELBV2TrustStoreDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	datasourceNameByName := "data.aws_lb_trust_store.named"
 	datasourceNameByArn := "data.aws_lb_trust_store.with_arn"
+	resourceName := "aws_lb_trust_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -29,14 +30,14 @@ func TestAccELBV2TrustStoreDataSource_basic(t *testing.T) {
 				Config: testAccTrustStoreDataSourceConfig_withName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceNameByName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(datasourceNameByName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceNameByName, names.AttrARN, resourceName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccTrustStoreDataSourceConfig_withARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceNameByArn, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(datasourceNameByArn, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceNameByArn, names.AttrARN, resourceName, names.AttrARN),
 				),
 			},
 		},

@@ -1,0 +1,67 @@
+```release-note:enhancement
+resource/aws_waf_byte_match_set: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_waf_sql_injection_match_set: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_route53_traffic_policy: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_route53_traffic_policy_instance: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_cache_policy: Add `arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_cloudfront_cache_policy: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_continuous_deployment_policy: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_field_level_encryption_config: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_field_level_encryption_profile: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_origin_access_control: Add `arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_cloudfront_origin_access_control: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_origin_access_identity: Add `arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_cloudfront_origin_access_identity: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_origin_request_policy: Add `arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_cloudfront_origin_request_policy: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_response_headers_policy: Add `arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_cloudfront_response_headers_policy: Add `arn` attribute
+```

@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,9 +32,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -189,20 +191,10 @@ func resourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				ConflictsWith: []string{
+					"replicate_source_db",
 					"s3_import",
-				},
-				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					for _, conflictAttr := range []string{
-						"replicate_source_db",
-						// s3_import is handled by the schema ConflictsWith
-						"snapshot_identifier",
-						"restore_to_point_in_time",
-					} {
-						if _, ok := d.GetOk(conflictAttr); ok {
-							return true
-						}
-					}
-					return false
+					"restore_to_point_in_time",
+					"snapshot_identifier",
 				},
 			},
 			"copy_tags_to_snapshot": {
@@ -219,6 +211,12 @@ func resourceInstance() *schema.Resource {
 			"customer_owned_ip_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+			},
+			"database_insights_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.DatabaseInsightsMode](),
 			},
 			"db_name": {
 				Type:     schema.TypeString,
@@ -303,7 +301,7 @@ func resourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					value := v.(string)
 					return strings.ToLower(value)
 				},
@@ -404,7 +402,7 @@ func resourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					if v != nil {
 						value := v.(string)
 						return strings.ToLower(value)
@@ -416,7 +414,7 @@ func resourceInstance() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrPassword},
+				ConflictsWith: []string{names.AttrPassword, "password_wo"},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -497,7 +495,20 @@ func resourceInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"manage_master_user_password"},
+				ConflictsWith: []string{"manage_master_user_password", "password_wo"},
+			},
+			"password_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				WriteOnly:     true,
+				Sensitive:     true,
+				ConflictsWith: []string{"manage_master_user_password", names.AttrPassword},
+				RequiredWith:  []string{"password_wo_version"},
+			},
+			"password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"password_wo"},
 			},
 			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
@@ -687,7 +698,6 @@ func resourceInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil
@@ -728,7 +738,7 @@ func resourceInstance() *schema.Resource {
 	}
 }
 
-func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -753,21 +763,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	var resourceID string // will be assigned depending on how it is created
 
-	if _, ok := d.GetOk("character_set_name"); ok {
-		charSetPath := cty.GetAttrPath("character_set_name")
-		for _, conflictAttr := range []string{
-			"replicate_source_db",
-			// s3_import is handled by the schema ConflictsWith
-			"snapshot_identifier",
-			"restore_to_point_in_time",
-		} {
-			if _, ok := d.GetOk(conflictAttr); ok {
-				diags = append(diags, errs.NewAttributeConflictsWillBeError(
-					charSetPath,
-					cty.GetAttrPath(conflictAttr),
-				))
-			}
-		}
+	// get write-only value from configuration
+	passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
 	}
 
 	if v, ok := d.GetOk("replicate_source_db"); ok {
@@ -798,6 +798,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.CustomIamInstanceProfile = aws.String(v.(string))
 		}
 
+		if v := d.Get("database_insights_mode"); v.(string) != "" {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+		}
+
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
@@ -814,8 +818,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
-			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]any)) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]any))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -1001,6 +1005,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
+
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
+			requiresModifyDbInstance = true
+		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
 		if _, ok := d.GetOk(names.AttrAllocatedStorage); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
@@ -1015,7 +1024,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return diags
 		}
 
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+		tfMap := v.([]any)[0].(map[string]any)
 		input := &rds.RestoreDBInstanceFromS3Input{
 			AllocatedStorage:        aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int))),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
@@ -1044,6 +1053,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("backup_window"); ok {
 			input.PreferredBackupWindow = aws.String(v.(string))
+		}
+
+		if v := d.Get("database_insights_mode"); v.(string) != "" {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
 		}
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
@@ -1114,6 +1127,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 
+		if passwordWO != "" {
+			input.MasterUserPassword = aws.String(passwordWO)
+		}
+
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
 			input.EnablePerformanceInsights = aws.Bool(v.(bool))
 		}
@@ -1143,7 +1160,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.RestoreDBInstanceFromS3(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1249,8 +1266,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
-			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]any)) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]any))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -1357,6 +1374,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
 			modifyDbInstanceInput.EnablePerformanceInsights = aws.Bool(v.(bool))
 			requiresModifyDbInstance = true
@@ -1393,7 +1415,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.RestoreDBInstanceFromDBSnapshot(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1432,8 +1454,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		resourceID = aws.ToString(output.DBInstance.DbiResourceId)
 		d.SetId(resourceID)
-	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		input := &rds.RestoreDBInstanceToPointInTimeInput{
 			AutoMinorVersionUpgrade:    aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
@@ -1514,8 +1536,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
-			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]any)) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]any))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
@@ -1583,6 +1605,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
+		if passwordWO != "" {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(passwordWO)
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
@@ -1604,7 +1631,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.RestoreDBInstanceToPointInTime(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1679,6 +1706,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.EnableCustomerOwnedIp = aws.Bool(v.(bool))
 		}
 
+		if v := d.Get("database_insights_mode"); v.(string) != "" {
+			input.DatabaseInsightsMode = types.DatabaseInsightsMode(v.(string))
+		}
+
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
@@ -1695,8 +1726,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
-			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]any)) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]any))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -1779,6 +1810,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 
+		if passwordWO != "" {
+			input.MasterUserPassword = aws.String(passwordWO)
+		}
+
 		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
@@ -1816,7 +1851,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.CreateDBInstance(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1892,7 +1927,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -1933,6 +1968,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("copy_tags_to_snapshot", v.CopyTagsToSnapshot)
 	d.Set("custom_iam_instance_profile", v.CustomIamInstanceProfile)
 	d.Set("customer_owned_ip_enabled", v.CustomerOwnedIpEnabled)
+	d.Set("database_insights_mode", v.DatabaseInsightsMode)
 	d.Set("db_name", v.DBName)
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
@@ -1983,7 +2019,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// Expose the MasterUserSecret structure as a computed attribute
 	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
 	if v.MasterUserSecret != nil {
-		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(v.MasterUserSecret)}); err != nil {
+		if err := d.Set("master_user_secret", []any{flattenManagedMasterUserSecret(v.MasterUserSecret)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
 		}
 	} else {
@@ -2049,7 +2085,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v.ListenerEndpoint != nil {
-		if err := d.Set("listener_endpoint", []interface{}{flattenEndpoint(v.ListenerEndpoint)}); err != nil {
+		if err := d.Set("listener_endpoint", []any{flattenEndpoint(v.ListenerEndpoint)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting listener_endpoint: %s", err)
 		}
 	} else {
@@ -2063,10 +2099,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutUpdate))
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 
 	// Separate request to promote a database.
 	if d.HasChange("replicate_source_db") {
@@ -2230,7 +2266,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				timeout = 5 * time.Minute
 			)
 			_, err = tfresource.RetryWhen(ctx, timeout,
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.DeleteDBInstance(ctx, input)
 				},
 				func(err error) (bool, error) {
@@ -2294,6 +2330,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
 
 			if err != nil {
+				// Handle virtual attribute
+				if input.ManageMasterUserPassword != nil {
+					// Attempted change, but update error as it's a stopped instance, so revert to original value
+					old, _ := d.GetChange("manage_master_user_password")
+					d.Set("manage_master_user_password", old.(bool))
+				}
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 		}
@@ -2302,7 +2344,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
-func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -2329,7 +2371,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
 		if v, ok := d.GetOk(names.AttrDeletionProtection); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
 			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (interface{}, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.ModifyDBInstance(ctx, &rds.ModifyDBInstanceInput{
 						ApplyImmediately:     aws.Bool(true),
 						DBInstanceIdentifier: aws.String(d.Get(names.AttrIdentifier).(string)),
@@ -2378,7 +2420,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
 	// from any API call, so we need to default skip_final_snapshot to true so
 	// that final_snapshot_identifier is not required.
@@ -2389,7 +2431,7 @@ func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta inte
 
 func dbInstanceCreateReadReplica(ctx context.Context, conn *rds.Client, input *rds.CreateDBInstanceReadReplicaInput) (*rds.CreateDBInstanceReadReplicaOutput, error) {
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateDBInstanceReadReplica(ctx, input)
 		},
 		errCodeInvalidParameterValue, "ENHANCED_MONITORING")
@@ -2401,7 +2443,8 @@ func dbInstanceCreateReadReplica(ctx context.Context, conn *rds.Client, input *r
 	return outputRaw.(*rds.CreateDBInstanceReadReplicaOutput), nil
 }
 
-func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.ResourceData) bool {
+func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.ResourceData) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	needsModify := false
 
 	if d.HasChanges(names.AttrAllocatedStorage, names.AttrIOPS) {
@@ -2444,6 +2487,15 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		input.EnableCustomerOwnedIp = aws.Bool(d.Get("customer_owned_ip_enabled").(bool))
 	}
 
+	if d.HasChange("database_insights_mode") {
+		input.DatabaseInsightsMode = types.DatabaseInsightsMode(d.Get("database_insights_mode").(string))
+		input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+		if v, ok := d.Get("performance_insights_kms_key_id").(string); ok && v != "" {
+			input.PerformanceInsightsKMSKeyId = aws.String(v)
+		}
+		input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(d.Get("performance_insights_retention_period").(int)))
+	}
+
 	if d.HasChange("db_subnet_group_name") {
 		needsModify = true
 		input.DBSubnetGroupName = aws.String(d.Get("db_subnet_group_name").(string))
@@ -2468,8 +2520,8 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 	} else if d.HasChanges("domain_auth_secret_arn", "domain_dns_ips", "domain_fqdn", "domain_ou") {
 		needsModify = true
 		input.DomainAuthSecretArn = aws.String(d.Get("domain_auth_secret_arn").(string))
-		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
-			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]any)) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]any))
 		}
 		input.DomainFqdn = aws.String(d.Get("domain_fqdn").(string))
 		input.DomainOu = aws.String(d.Get("domain_ou").(string))
@@ -2576,6 +2628,18 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		}
 	}
 
+	if d.HasChange("password_wo_version") {
+		passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
+		diags = append(diags, di...)
+		if diags.HasError() {
+			return false, diags
+		}
+
+		if passwordWO != "" {
+			input.MasterUserPassword = aws.String(passwordWO)
+		}
+	}
+
 	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
 		needsModify = true
 		input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
@@ -2640,12 +2704,12 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		}
 	}
 
-	return needsModify
+	return needsModify, diags
 }
 
 func dbInstanceModify(ctx context.Context, conn *rds.Client, resourceID string, input *rds.ModifyDBInstanceInput, timeout time.Duration) error {
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.ModifyDBInstance(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -2788,7 +2852,7 @@ func findDBInstances(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*types.DBInstanceNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -2808,8 +2872,8 @@ func findDBInstances(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 	return output, nil
 }
 
-func statusDBInstance(ctx context.Context, conn *rds.Client, id string, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDBInstance(conn *rds.Client, id string, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id, optFns...)
 
 		if tfresource.NotFound(err) {
@@ -2853,7 +2917,7 @@ func waitDBInstanceAvailable(ctx context.Context, conn *rds.Client, id string, t
 			instanceStatusUpgrading,
 		},
 		Target:  []string{instanceStatusAvailable, instanceStatusStorageOptimization},
-		Refresh: statusDBInstance(ctx, conn, id),
+		Refresh: statusDBInstance(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -2887,7 +2951,7 @@ func waitDBInstanceStopped(ctx context.Context, conn *rds.Client, id string, tim
 			instanceStatusUpgrading,
 		},
 		Target:                    []string{instanceStatusStopped},
-		Refresh:                   statusDBInstance(ctx, conn, id),
+		Refresh:                   statusDBInstance(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 		Delay:                     10 * time.Second,
@@ -2931,7 +2995,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.Client, id string, tim
 			instanceStatusStorageOptimization,
 		},
 		Target:  []string{},
-		Refresh: statusDBInstance(ctx, conn, id),
+		Refresh: statusDBInstance(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -2958,7 +3022,7 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds.Client, id strin
 
 	// Eventual consistency check.
 	if aws.ToString(output.BlueGreenDeploymentIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -2984,7 +3048,7 @@ func findBlueGreenDeployments(ctx context.Context, conn *rds.Client, input *rds.
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.BlueGreenDeploymentNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -3004,8 +3068,8 @@ func findBlueGreenDeployments(ctx context.Context, conn *rds.Client, input *rds.
 	return output, nil
 }
 
-func statusBlueGreenDeployment(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusBlueGreenDeployment(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -3031,7 +3095,7 @@ func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING"},
 		Target:  []string{"AVAILABLE"},
-		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Refresh: statusBlueGreenDeployment(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -3057,7 +3121,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds.C
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"AVAILABLE", "SWITCHOVER_IN_PROGRESS"},
 		Target:  []string{"SWITCHOVER_COMPLETED"},
-		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Refresh: statusBlueGreenDeployment(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -3087,7 +3151,7 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING", "AVAILABLE", "SWITCHOVER_IN_PROGRESS", "SWITCHOVER_COMPLETED", "INVALID_CONFIGURATION", "SWITCHOVER_FAILED", "DELETING"},
 		Target:  []string{},
-		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Refresh: statusBlueGreenDeployment(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -3109,12 +3173,12 @@ func dbInstanceValidBlueGreenEngines() []string {
 	}
 }
 
-func flattenEndpoint(apiObject *types.Endpoint) map[string]interface{} {
+func flattenEndpoint(apiObject *types.Endpoint) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Address; v != nil {
 		tfMap[names.AttrAddress] = aws.ToString(v)

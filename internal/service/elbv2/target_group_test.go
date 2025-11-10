@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -107,14 +108,15 @@ func TestAccELBV2TargetGroup_basic(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -287,12 +289,13 @@ func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 				Config: testAccTargetGroupConfig_backwardsCompatibility(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -332,12 +335,13 @@ func TestAccELBV2TargetGroup_ProtocolVersion_basic(t *testing.T) {
 				Config: testAccTargetGroupConfig_protocolVersion(rName, "HTTP2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP2"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -501,11 +505,12 @@ func TestAccELBV2TargetGroup_HealthCheck_tcpHTTPS(t *testing.T) {
 				Config: testAccTargetGroupConfig_typeTCPHTTPHealthCheck(rName, "/healthz", 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &confBefore),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8082"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "300"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
@@ -523,11 +528,12 @@ func TestAccELBV2TargetGroup_HealthCheck_tcpHTTPS(t *testing.T) {
 				Config: testAccTargetGroupConfig_typeTCPHTTPHealthCheck(rName, "/healthz2", 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &confAfter),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8082"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "300"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
@@ -561,7 +567,7 @@ func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "0"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 				),
@@ -570,7 +576,7 @@ func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 				),
@@ -595,11 +601,12 @@ func TestAccELBV2TargetGroup_udp(t *testing.T) {
 				Config: testAccTargetGroupConfig_basicUdp(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "514"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "UDP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "514"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
@@ -750,12 +757,13 @@ func TestAccELBV2TargetGroup_Defaults_application(t *testing.T) {
 				Config: testAccTargetGroupConfig_albDefaults(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
@@ -795,11 +803,12 @@ timeout  = 4
 				Config: testAccTargetGroupConfig_nlbDefaults(rName, healthCheckValid),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
@@ -833,7 +842,7 @@ func TestAccELBV2TargetGroup_HealthCheck_enable(t *testing.T) {
 				Config: testAccTargetGroupConfig_noHealthcheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
@@ -843,7 +852,7 @@ func TestAccELBV2TargetGroup_HealthCheck_enable(t *testing.T) {
 				Config: testAccTargetGroupConfig_enableHealthcheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
@@ -869,11 +878,12 @@ func TestAccELBV2TargetGroup_NetworkLB_tcpHealthCheckUpdated(t *testing.T) {
 				Config: testAccTargetGroupConfig_typeTCP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8082"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "proxy_protocol_v2", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "connection_termination", acctest.CtFalse),
@@ -894,11 +904,12 @@ func TestAccELBV2TargetGroup_NetworkLB_tcpHealthCheckUpdated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup2),
 					testAccCheckTargetGroupNotRecreated(&targetGroup1, &targetGroup2),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8082"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
@@ -1250,6 +1261,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 func TestAccELBV2TargetGroup_Stickiness_invalidALB(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1278,9 +1290,13 @@ func TestAccELBV2TargetGroup_Stickiness_invalidALB(t *testing.T) {
 				ExpectError: regexache.MustCompile("You cannot enable stickiness on target groups with the TLS protocol"),
 			},
 			{
-				Config:             testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "lb_cookie", false, "round_robin"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "lb_cookie", false, "round_robin"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
 			},
 		},
 	})
@@ -1420,11 +1436,12 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_appStickiness(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
@@ -1441,11 +1458,12 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_appStickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
@@ -1467,11 +1485,12 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_appStickiness(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
@@ -1509,11 +1528,12 @@ func TestAccELBV2TargetGroup_Stickiness_updateStickinessType(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
@@ -1535,11 +1555,12 @@ func TestAccELBV2TargetGroup_Stickiness_updateStickinessType(t *testing.T) {
 				Config: testAccTargetGroupConfig_appStickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
@@ -1561,11 +1582,12 @@ func TestAccELBV2TargetGroup_Stickiness_updateStickinessType(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
@@ -1603,11 +1625,12 @@ func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
@@ -1628,11 +1651,12 @@ func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
 				Config: testAccTargetGroupConfig_updateHealthCheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
@@ -1669,11 +1693,12 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickiness(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
@@ -1690,11 +1715,12 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
@@ -1715,11 +1741,12 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickiness(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
@@ -1756,7 +1783,7 @@ func TestAccELBV2TargetGroup_HealthCheck_without(t *testing.T) {
 				Config: testAccTargetGroupConfig_noHealthcheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
@@ -1782,11 +1809,12 @@ func TestAccELBV2TargetGroup_ALBAlias_basic(t *testing.T) {
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "instance"),
@@ -2202,11 +2230,12 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
@@ -2226,11 +2255,12 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 				Config: testAccTargetGroupConfig_albUpdateHealthCheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
@@ -2266,7 +2296,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "round_robin"),
 				),
@@ -2275,7 +2305,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "round_robin"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "round_robin"),
 				),
@@ -2284,7 +2314,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "least_outstanding_requests"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "least_outstanding_requests"),
 				),
@@ -2293,7 +2323,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "weighted_random"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "weighted_random"),
 				),
@@ -2340,7 +2370,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAnomalyMitigation(t *te
 				Config: testAccTargetGroupConfig_albLoadBalancingAnomalyMitigation(rName, false, "weighted_random", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_anomaly_mitigation", "off"),
 				),
@@ -2349,7 +2379,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAnomalyMitigation(t *te
 				Config: testAccTargetGroupConfig_albLoadBalancingAnomalyMitigation(rName, true, "weighted_random", "off"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_anomaly_mitigation", "off"),
 				),
@@ -2358,7 +2388,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAnomalyMitigation(t *te
 				Config: testAccTargetGroupConfig_albLoadBalancingAnomalyMitigation(rName, true, "weighted_random", "on"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_anomaly_mitigation", "on"),
 				),
@@ -2383,7 +2413,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingCrossZoneEnabled(t *tes
 				Config: testAccTargetGroupConfig_albLoadBalancingCrossZoneEnabled(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", "use_load_balancer_configuration"),
 				),
@@ -2392,7 +2422,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingCrossZoneEnabled(t *tes
 				Config: testAccTargetGroupConfig_albLoadBalancingCrossZoneEnabled(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", acctest.CtTrue),
 				),
@@ -2401,7 +2431,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingCrossZoneEnabled(t *tes
 				Config: testAccTargetGroupConfig_albLoadBalancingCrossZoneEnabled(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", acctest.CtFalse),
 				),
@@ -2426,11 +2456,12 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_albStickiness(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
@@ -2447,11 +2478,12 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_albStickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
@@ -2472,11 +2504,12 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_albStickiness(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
@@ -3689,7 +3722,7 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 					Config:          testAccTargetGroupConfig_Instance_protocolVersion(protocol, "HTTP1"),
 					PreCheck:        preCheck,
 					PostCheck:       postCheck,
-				}.Steps(),
+				}.Steps(resourceName),
 			})
 		})
 	}
@@ -3761,7 +3794,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults_MigrateV0(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -3813,7 +3846,7 @@ func TestAccELBV2TargetGroup_Lambda_vpc_MigrateV0(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
 				resource.TestCheckResourceAttr(resourceName, names.AttrVPCID, ""), // Should be Null
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -3879,7 +3912,7 @@ func TestAccELBV2TargetGroup_Lambda_protocol_MigrateV0(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
 						resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, ""), // Should be Null
 					),
-				}.Steps(),
+				}.Steps(resourceName),
 			})
 		})
 	}
@@ -3933,7 +3966,7 @@ func TestAccELBV2TargetGroup_Lambda_protocolVersion_MigrateV0(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
 				resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -3985,7 +4018,7 @@ func TestAccELBV2TargetGroup_Lambda_port_MigrateV0(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
 				resource.TestCheckResourceAttr(resourceName, names.AttrPort, "0"), // Should be Null
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -4061,7 +4094,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic_MigrateV0(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "35"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -4176,6 +4209,11 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
 				)
+				step.ConfigPlanChecks = resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				}
 			} else {
 				t.Fatal("invalid test case, one of invalidHealthCheckProtocol or warning must be set")
 			}
@@ -4190,8 +4228,15 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 							VersionConstraint: "5.26.0",
 						},
 					},
-					Config:   config,
-					PlanOnly: true,
+					Config: config,
+					ConfigPlanChecks: resource.ConfigPlanChecks{
+						PreApply: []plancheck.PlanCheck{
+							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						},
+						PostApplyPostRefresh: []plancheck.PlanCheck{
+							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						},
+					},
 				})
 			}
 
@@ -4305,7 +4350,7 @@ type testAccMigrateTest struct {
 	PostCheck resource.TestCheckFunc
 }
 
-func (t testAccMigrateTest) Steps() []resource.TestStep {
+func (t testAccMigrateTest) Steps(resourceName string) []resource.TestStep {
 	return []resource.TestStep{
 		{
 			ExternalProviders: map[string]resource.ExternalProvider{
@@ -4316,6 +4361,11 @@ func (t testAccMigrateTest) Steps() []resource.TestStep {
 			},
 			Config: t.Config,
 			Check:  t.PreCheck,
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+				},
+			},
 		},
 		{
 			ExternalProviders: map[string]resource.ExternalProvider{
@@ -4324,8 +4374,15 @@ func (t testAccMigrateTest) Steps() []resource.TestStep {
 					VersionConstraint: t.NextVersion,
 				},
 			},
-			Config:   t.Config,
-			PlanOnly: true,
+			Config: t.Config,
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+				},
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+				},
+			},
 		},
 		{
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -43,6 +43,7 @@ resource "aws_emr_managed_scaling_policy" "samplepolicy" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_id` - (Required) ID of the EMR cluster
 * `compute_limits` - (Required) Configuration block with compute limit settings. Described below.
 

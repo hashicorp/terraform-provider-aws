@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_location_tracker_associations")
+// @SDKDataSource("aws_location_tracker_associations", name="Tracker Associations")
 func DataSourceTrackerAssociations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTrackerAssociationsRead,
@@ -40,7 +40,7 @@ const (
 	DSNameTrackerAssociations = "Tracker Associations Data Source"
 )
 
-func dataSourceTrackerAssociationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTrackerAssociationsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)

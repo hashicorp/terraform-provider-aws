@@ -151,7 +151,7 @@ func resourceLayerVersion() *schema.Resource {
 	}
 }
 
-func resourceLayerVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLayerVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -217,7 +217,7 @@ func resourceLayerVersionCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceLayerVersionRead(ctx, d, meta)...)
 }
 
-func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -256,7 +256,7 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 

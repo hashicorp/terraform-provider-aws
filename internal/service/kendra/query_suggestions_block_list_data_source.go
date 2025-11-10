@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kendra_query_suggestions_block_list")
+// @SDKDataSource("aws_kendra_query_suggestions_block_list", name="Query Suggestions Block List")
 func DataSourceQuerySuggestionsBlockList() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQuerySuggestionsBlockListRead,
@@ -102,7 +102,7 @@ func DataSourceQuerySuggestionsBlockList() *schema.Resource {
 	}
 }
 
-func dataSourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)

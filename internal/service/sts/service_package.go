@@ -9,16 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*sts.Client, error) {
+func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string]any) []func(*sts.Options) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return sts.NewFromConfig(cfg,
-		sts.WithEndpointResolverV2(newEndpointResolverV2()),
-		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	return []func(*sts.Options){
 		func(o *sts.Options) {
 			if stsRegion := config["sts_region"].(string); stsRegion != "" {
 				tflog.Info(ctx, "overriding region", map[string]any{
@@ -27,5 +23,6 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 				})
 				o.Region = stsRegion
 			}
-		}), nil
+		},
+	}
 }

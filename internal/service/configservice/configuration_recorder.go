@@ -150,7 +150,7 @@ func resourceConfigurationRecorder() *schema.Resource {
 	}
 }
 
-func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -162,12 +162,12 @@ func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceDat
 		},
 	}
 
-	if v, ok := d.GetOk("recording_group"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ConfigurationRecorder.RecordingGroup = expandRecordingGroup(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("recording_group"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ConfigurationRecorder.RecordingGroup = expandRecordingGroup(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("recording_mode"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ConfigurationRecorder.RecordingMode = expandRecordingMode(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("recording_mode"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ConfigurationRecorder.RecordingMode = expandRecordingMode(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.PutConfigurationRecorder(ctx, input)
@@ -183,7 +183,7 @@ func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceConfigurationRecorderRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationRecorderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationRecorderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -215,14 +215,15 @@ func resourceConfigurationRecorderRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceConfigurationRecorderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationRecorderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ConfigService Configuration Recorder: %s", d.Id())
-	_, err := conn.DeleteConfigurationRecorder(ctx, &configservice.DeleteConfigurationRecorderInput{
+	input := configservice.DeleteConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConfigurationRecorder(ctx, &input)
 
 	if errs.IsA[*types.NoSuchConfigurationRecorderException](err) {
 		return diags
@@ -235,21 +236,21 @@ func resourceConfigurationRecorderDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceConfigurationRecorderCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourceConfigurationRecorderCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if diff.Id() == "" { // New resource.
-		if v, ok := diff.GetOk("recording_group"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			tfMap := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := diff.GetOk("recording_group"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			tfMap := v.([]any)[0].(map[string]any)
 
 			if h, ok := tfMap["all_supported"]; ok {
-				if i, ok := tfMap["recording_strategy"]; ok && len(i.([]interface{})) > 0 && i.([]interface{})[0] != nil {
-					strategy := i.([]interface{})[0].(map[string]interface{})
+				if i, ok := tfMap["recording_strategy"]; ok && len(i.([]any)) > 0 && i.([]any)[0] != nil {
+					strategy := i.([]any)[0].(map[string]any)
 
 					if j, ok := strategy["use_only"].(string); ok {
 						if h.(bool) && j != string(types.RecordingStrategyTypeAllSupportedResourceTypes) {
 							return errors.New(` Invalid record group strategy  , all_supported must be set to true  `)
 						}
 
-						if k, ok := tfMap["exclusion_by_resource_types"]; ok && len(k.([]interface{})) > 0 && k.([]interface{})[0] != nil {
+						if k, ok := tfMap["exclusion_by_resource_types"]; ok && len(k.([]any)) > 0 && k.([]any)[0] != nil {
 							if h.(bool) {
 								return errors.New(` Invalid record group , all_supported must be set to false when exclusion_by_resource_types is set `)
 							}
@@ -277,7 +278,7 @@ func resourceConfigurationRecorderCustomizeDiff(_ context.Context, diff *schema.
 									return errors.New(` Invalid record group strategy ,  use only must be set to INCLUSION_BY_RESOURCE_TYPES`)
 								}
 
-								if m, ok := tfMap["exclusion_by_resource_types"]; ok && len(m.([]interface{})) > 0 && i.([]interface{})[0] != nil {
+								if m, ok := tfMap["exclusion_by_resource_types"]; ok && len(m.([]any)) > 0 && i.([]any)[0] != nil {
 									return errors.New(` Invalid record group , exclusion_by_resource_types must not be set when resource_types is set `)
 								}
 							}
@@ -330,7 +331,7 @@ func findConfigurationRecorders(ctx context.Context, conn *configservice.Client,
 	return output.ConfigurationRecorders, nil
 }
 
-func expandRecordingGroup(tfMap map[string]interface{}) *types.RecordingGroup {
+func expandRecordingGroup(tfMap map[string]any) *types.RecordingGroup {
 	if tfMap == nil {
 		return nil
 	}
@@ -341,16 +342,16 @@ func expandRecordingGroup(tfMap map[string]interface{}) *types.RecordingGroup {
 		apiObject.AllSupported = v.(bool)
 	}
 
-	if v, ok := tfMap["exclusion_by_resource_types"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.ExclusionByResourceTypes = expandExclusionByResourceTypes(v.([]interface{}))
+	if v, ok := tfMap["exclusion_by_resource_types"]; ok && len(v.([]any)) > 0 {
+		apiObject.ExclusionByResourceTypes = expandExclusionByResourceTypes(v.([]any))
 	}
 
 	if v, ok := tfMap["include_global_resource_types"]; ok {
 		apiObject.IncludeGlobalResourceTypes = v.(bool)
 	}
 
-	if v, ok := tfMap["recording_strategy"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.RecordingStrategy = expandRecordingStrategy(v.([]interface{}))
+	if v, ok := tfMap["recording_strategy"]; ok && len(v.([]any)) > 0 {
+		apiObject.RecordingStrategy = expandRecordingStrategy(v.([]any))
 	}
 
 	if v, ok := tfMap["resource_types"]; ok && v.(*schema.Set).Len() > 0 {
@@ -360,12 +361,12 @@ func expandRecordingGroup(tfMap map[string]interface{}) *types.RecordingGroup {
 	return apiObject
 }
 
-func expandExclusionByResourceTypes(tfList []interface{}) *types.ExclusionByResourceTypes {
+func expandExclusionByResourceTypes(tfList []any) *types.ExclusionByResourceTypes {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -379,12 +380,12 @@ func expandExclusionByResourceTypes(tfList []interface{}) *types.ExclusionByReso
 	return apiObject
 }
 
-func expandRecordingStrategy(tfList []interface{}) *types.RecordingStrategy {
+func expandRecordingStrategy(tfList []any) *types.RecordingStrategy {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -398,7 +399,7 @@ func expandRecordingStrategy(tfList []interface{}) *types.RecordingStrategy {
 	return apiObject
 }
 
-func expandRecordingMode(tfMap map[string]interface{}) *types.RecordingMode {
+func expandRecordingMode(tfMap map[string]any) *types.RecordingMode {
 	if tfMap == nil {
 		return nil
 	}
@@ -409,14 +410,14 @@ func expandRecordingMode(tfMap map[string]interface{}) *types.RecordingMode {
 		apiObject.RecordingFrequency = types.RecordingFrequency(v)
 	}
 
-	if v, ok := tfMap["recording_mode_override"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.RecordingModeOverrides = expandRecordingModeOverride(v.([]interface{}))
+	if v, ok := tfMap["recording_mode_override"]; ok && len(v.([]any)) > 0 {
+		apiObject.RecordingModeOverrides = expandRecordingModeOverride(v.([]any))
 	}
 
 	return apiObject
 }
 
-func expandRecordingModeOverride(tfList []interface{}) []types.RecordingModeOverride {
+func expandRecordingModeOverride(tfList []any) []types.RecordingModeOverride {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -424,7 +425,7 @@ func expandRecordingModeOverride(tfList []interface{}) []types.RecordingModeOver
 	var apiObjects []types.RecordingModeOverride
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -449,12 +450,12 @@ func expandRecordingModeOverride(tfList []interface{}) []types.RecordingModeOver
 	return apiObjects
 }
 
-func flattenRecordingGroup(apiObject *types.RecordingGroup) []interface{} {
+func flattenRecordingGroup(apiObject *types.RecordingGroup) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"all_supported":                 apiObject.AllSupported,
 		"include_global_resource_types": apiObject.IncludeGlobalResourceTypes,
 	}
@@ -471,41 +472,41 @@ func flattenRecordingGroup(apiObject *types.RecordingGroup) []interface{} {
 		tfMap["resource_types"] = apiObject.ResourceTypes
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenExclusionByResourceTypes(apiObject *types.ExclusionByResourceTypes) []interface{} {
+func flattenExclusionByResourceTypes(apiObject *types.ExclusionByResourceTypes) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ResourceTypes != nil {
 		tfMap["resource_types"] = apiObject.ResourceTypes
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRecordingStrategy(apiObject *types.RecordingStrategy) []interface{} {
+func flattenRecordingStrategy(apiObject *types.RecordingStrategy) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"use_only": apiObject.UseOnly,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRecordingMode(apiObject *types.RecordingMode) []interface{} {
+func flattenRecordingMode(apiObject *types.RecordingMode) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"recording_frequency": apiObject.RecordingFrequency,
 	}
 
@@ -513,18 +514,18 @@ func flattenRecordingMode(apiObject *types.RecordingMode) []interface{} {
 		tfMap["recording_mode_override"] = flattenRecordingModeOverrides(apiObject.RecordingModeOverrides)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRecordingModeOverrides(apiObjects []types.RecordingModeOverride) []interface{} {
+func flattenRecordingModeOverrides(apiObjects []types.RecordingModeOverride) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrDescription: aws.ToString(apiObject.Description),
 			"recording_frequency": apiObject.RecordingFrequency,
 			"resource_types":      apiObject.ResourceTypes,

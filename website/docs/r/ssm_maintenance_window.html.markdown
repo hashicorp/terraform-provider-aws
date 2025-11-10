@@ -25,6 +25,7 @@ resource "aws_ssm_maintenance_window" "production" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the maintenance window.
 * `schedule` - (Required) The schedule of the Maintenance Window in the form of a [cron or rate expression](https://docs.aws.amazon.com/systems-manager/latest/userguide/reference-cron-and-rate-expressions.html).
 * `cutoff` - (Required) The number of hours before the end of the Maintenance Window that Systems Manager stops scheduling new tasks for execution.
@@ -34,7 +35,7 @@ This resource supports the following arguments:
 * `enabled` - (Optional) Whether the maintenance window is enabled. Default: `true`.
 * `end_date` - (Optional) Timestamp in [ISO-8601 extended format](https://www.iso.org/iso-8601-date-and-time-format.html) when to no longer run the maintenance window.
 * `schedule_timezone` - (Optional) Timezone for schedule in [Internet Assigned Numbers Authority (IANA) Time Zone Database format](https://www.iana.org/time-zones). For example: `America/Los_Angeles`, `etc/UTC`, or `Asia/Seoul`.
-* `schedule_offset` - (Optional) The number of days to wait after the date and time specified by a CRON expression before running the maintenance window.
+* `schedule_offset` - (Optional) The number of days to wait after the date and time specified by a CRON expression before running the maintenance window. Valid range is `1` to `6`.
 * `start_date` - (Optional) Timestamp in [ISO-8601 extended format](https://www.iso.org/iso-8601-date-and-time-format.html) when to begin the maintenance window.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -47,11 +48,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_maintenance_window.example
+  identity = {
+    id = "mw-0123456789"
+  }
+}
+
+resource "aws_ssm_maintenance_window" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the maintenance window.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM  Maintenance Windows using the maintenance window `id`. For example:
 
 ```terraform
 import {
-  to = aws_ssm_maintenance_window.imported-window
+  to = aws_ssm_maintenance_window.example
   id = "mw-0123456789"
 }
 ```
@@ -59,5 +86,5 @@ import {
 Using `terraform import`, import SSM  Maintenance Windows using the maintenance window `id`. For example:
 
 ```console
-% terraform import aws_ssm_maintenance_window.imported-window mw-0123456789
+% terraform import aws_ssm_maintenance_window.example mw-0123456789
 ```

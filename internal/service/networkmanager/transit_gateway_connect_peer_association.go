@@ -66,7 +66,7 @@ func resourceTransitGatewayConnectPeerAssociation() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayConnectPeerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayConnectPeerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -100,7 +100,7 @@ func resourceTransitGatewayConnectPeerAssociationCreate(ctx context.Context, d *
 	return append(diags, resourceTransitGatewayConnectPeerAssociationRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -131,7 +131,7 @@ func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *sc
 	return diags
 }
 
-func resourceTransitGatewayConnectPeerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayConnectPeerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -247,7 +247,7 @@ func findTransitGatewayConnectPeerAssociationByTwoPartKey(ctx context.Context, c
 }
 
 func statusTransitGatewayConnectPeerAssociationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectPeerARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayConnectPeerAssociationByTwoPartKey(ctx, conn, globalNetworkID, connectPeerARN)
 
 		if tfresource.NotFound(err) {

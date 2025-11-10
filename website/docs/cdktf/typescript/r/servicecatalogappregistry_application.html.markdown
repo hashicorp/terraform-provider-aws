@@ -72,6 +72,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the application.
 * `tags` - (Optional) A map of tags assigned to the Application. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -116,4 +117,4 @@ Using `terraform import`, import AWS Service Catalog AppRegistry Application usi
 % terraform import aws_servicecatalogappregistry_application.example application-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f0c92694572270bb5029249cae9c161a665b8f56a076a6d38b4ae4b80fa8213d -->
+<!-- cache-key: cdktf-0.20.8 input-dc983417a0181c712064395019f911606bf752136c7e80a12ff6e984aa7dfe98 -->

@@ -48,12 +48,12 @@ func dataSourceLinks() *schema.Resource {
 	}
 }
 
-func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &networkmanager.GetLinksInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
@@ -81,7 +81,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	for _, v := range output {
 		if len(tagsToMatch) > 0 {
-			if !KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
+			if !keyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
 				continue
 			}
 		}

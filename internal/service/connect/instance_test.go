@@ -36,7 +36,7 @@ func testAccInstance_basic(t *testing.T) {
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "connect", regexache.MustCompile(`instance/.+`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", acctest.CtTrue), //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", acctest.CtFalse),       //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", acctest.CtTrue),             //verified default result from ListInstanceAttributes()
@@ -47,7 +47,7 @@ func testAccInstance_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexache.MustCompile(rName)),
 					resource.TestCheckResourceAttr(resourceName, "multi_party_conference_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", acctest.CtTrue),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrServiceRole, "iam", regexache.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrServiceRole, "iam", regexache.MustCompile(`role/aws-service-role/connect.amazonaws.com/AWSServiceRoleForAmazonConnect_[A-Za-z0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.InstanceStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -61,7 +61,7 @@ func testAccInstance_basic(t *testing.T) {
 				Config: testAccInstanceConfig_basicFlipped(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "connect", regexache.MustCompile(`instance/.+`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", acctest.CtFalse),

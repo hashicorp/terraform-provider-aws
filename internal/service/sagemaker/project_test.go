@@ -185,7 +185,7 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Project (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Project (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Project %s still exists", rs.Primary.ID)

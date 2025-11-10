@@ -56,14 +56,14 @@ func dataSourceVirtualNode() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceVirtualNodeSpecSchema()),
+				"spec":         sdkv2.ComputedOnlyFromSchema(resourceVirtualNodeSpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},
 	}
 }
 
-func dataSourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 

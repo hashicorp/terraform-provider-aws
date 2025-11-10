@@ -51,7 +51,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The CIDR location ID.
+* `id` - (**Deprecated**) The ID of the CIDR collection concatenated with the name of the CIDR location.
 
 ## Import
 
@@ -78,4 +78,4 @@ Using `terraform import`, import CIDR locations using their the CIDR collection 
 % terraform import aws_route53_cidr_location.example 9ac32814-3e67-0932-6048-8d779cc6f511,office
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-31ac6f8e84b90ca850c2546849f62b830a0e3054286c7dd59d0dfb835b14de38 -->
+<!-- cache-key: cdktf-0.20.8 input-4e7ba09d895a7489ff6797f161cf580ea11708a251becadb98035bcce5f409c0 -->

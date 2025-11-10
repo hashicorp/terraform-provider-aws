@@ -42,6 +42,7 @@ func TestAccVPCEndpointDataSource_gatewayBasic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "route_table_ids.#", resourceName, "route_table_ids.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrServiceName, resourceName, names.AttrServiceName),
+					resource.TestCheckResourceAttrPair(datasourceName, "service_region", resourceName, "service_region"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(datasourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
@@ -267,7 +268,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   tags = {
     Name = %[1]q
@@ -296,7 +297,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   tags = {
     Name = %[1]q
@@ -323,7 +324,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   tags = {
     Name = %[1]q
@@ -353,7 +354,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   tags = {
     Name = %[1]q
@@ -398,7 +399,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   route_table_ids = [
     aws_route_table.test.id,
@@ -451,7 +452,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
   vpc_endpoint_type   = "Interface"
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ec2"
   private_dns_enabled = false
 
   subnet_ids = [

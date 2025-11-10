@@ -1,5 +1,5 @@
 ---
-subcategory: "Meta Data Sources"
+subcategory: "Billing"
 layout: "aws"
 page_title: "AWS: aws_billing_service_account"
 description: |-
@@ -68,6 +68,10 @@ class MyConvertedCode(TerraformStack):
         aws_s3_bucket_policy_allow_billing_logging.override_logical_id("allow_billing_logging")
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -75,4 +79,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the AWS billing service account.
 * `arn` - ARN of the AWS billing service account.
 
-<!-- cache-key: cdktf-0.20.8 input-8925e83aaf4808ed4c7dc3e71d2003c1129f36ec86722b8b5095c47d2188bd28 -->
+<!-- cache-key: cdktf-0.20.8 input-5e4aecb4542e1fd678c59e2c83de1c72ab4c3d23d3792e816fa407b1d4d0b6d5 -->

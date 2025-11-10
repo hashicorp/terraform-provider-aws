@@ -8,14 +8,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -143,34 +140,6 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 	})
 }
 
-func testAccCheckUserExists(ctx context.Context, resourceName string, appStreamUser *awstypes.User) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
-
-		userName, authType, err := tfappstream.DecodeUserID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		user, err := tfappstream.FindUserByTwoPartKey(ctx, conn, userName, authType)
-		if tfresource.NotFound(err) {
-			return fmt.Errorf("AppStream User %q does not exist", rs.Primary.ID)
-		}
-		if err != nil {
-			return err
-		}
-
-		*appStreamUser = *user
-
-		return nil
-	}
-}
-
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
@@ -180,14 +149,9 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			userName, authType, err := tfappstream.DecodeUserID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
+			_, err := tfappstream.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], awstypes.AuthenticationType(rs.Primary.Attributes["authentication_type"]))
 
-			resp, err := conn.DescribeUsers(ctx, &appstream.DescribeUsersInput{AuthenticationType: awstypes.AuthenticationType(authType)})
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -195,18 +159,29 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			found := false
-
-			for _, out := range resp.Users {
-				if aws.ToString(out.UserName) == userName {
-					found = true
-				}
-			}
-
-			if found {
-				return fmt.Errorf("AppStream User %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("AppStream User %s still exists", rs.Primary.ID)
 		}
+
+		return nil
+	}
+}
+
+func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.User) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+
+		output, err := tfappstream.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], awstypes.AuthenticationType(rs.Primary.Attributes["authentication_type"]))
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
 
 		return nil
 	}

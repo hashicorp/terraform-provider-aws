@@ -21,7 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,12 +37,8 @@ const (
 )
 
 type templateAliasResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[templateAliasResourceModel]
 	framework.WithImportByID
-}
-
-func (r *templateAliasResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_quicksight_template_alias"
 }
 
 func (r *templateAliasResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -53,16 +50,9 @@ func (r *templateAliasResource) Schema(ctx context.Context, req resource.SchemaR
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrAWSAccountID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrARN:          framework.ARNAttributeComputedOnly(),
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
+			names.AttrID:           framework.IDAttribute(),
 			"template_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -77,51 +67,51 @@ func (r *templateAliasResource) Schema(ctx context.Context, req resource.SchemaR
 }
 
 func (r *templateAliasResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightClient(ctx)
-
-	var plan resourceTemplateAliasData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var data templateAliasResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
+	if data.AWSAccountID.IsUnknown() {
+		data.AWSAccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
-	awsAccountID, templateID, aliasName := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.TemplateID), flex.StringValueFromFramework(ctx, plan.AliasName)
+
+	conn := r.Meta().QuickSightClient(ctx)
+
+	awsAccountID, templateID, aliasName := fwflex.StringValueFromFramework(ctx, data.AWSAccountID), fwflex.StringValueFromFramework(ctx, data.TemplateID), fwflex.StringValueFromFramework(ctx, data.AliasName)
 	in := &quicksight.CreateTemplateAliasInput{
 		AliasName:             aws.String(aliasName),
 		AwsAccountId:          aws.String(awsAccountID),
 		TemplateId:            aws.String(templateID),
-		TemplateVersionNumber: plan.TemplateVersionNumber.ValueInt64Pointer(),
+		TemplateVersionNumber: data.TemplateVersionNumber.ValueInt64Pointer(),
 	}
 
 	out, err := conn.CreateTemplateAlias(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameTemplateAlias, plan.AliasName.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameTemplateAlias, data.AliasName.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.TemplateAlias == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameTemplateAlias, plan.AliasName.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameTemplateAlias, data.AliasName.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	plan.ID = types.StringValue(templateAliasCreateResourceID(awsAccountID, templateID, aliasName))
-	plan.ARN = flex.StringToFramework(ctx, out.TemplateAlias.Arn)
+	data.ID = types.StringValue(templateAliasCreateResourceID(awsAccountID, templateID, aliasName))
+	data.ARN = fwflex.StringToFramework(ctx, out.TemplateAlias.Arn)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
 func (r *templateAliasResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceTemplateAliasData
+	var state templateAliasResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -149,11 +139,11 @@ func (r *templateAliasResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
-	state.AliasName = flex.StringToFramework(ctx, out.AliasName)
-	state.TemplateVersionNumber = flex.Int64ToFramework(ctx, out.TemplateVersionNumber)
-	state.AWSAccountID = flex.StringValueToFramework(ctx, awsAccountID)
-	state.TemplateID = flex.StringValueToFramework(ctx, templateID)
+	state.ARN = fwflex.StringToFramework(ctx, out.Arn)
+	state.AliasName = fwflex.StringToFramework(ctx, out.AliasName)
+	state.TemplateVersionNumber = fwflex.Int64ToFramework(ctx, out.TemplateVersionNumber)
+	state.AWSAccountID = fwflex.StringValueToFramework(ctx, awsAccountID)
+	state.TemplateID = fwflex.StringValueToFramework(ctx, templateID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -161,7 +151,7 @@ func (r *templateAliasResource) Read(ctx context.Context, req resource.ReadReque
 func (r *templateAliasResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan, state resourceTemplateAliasData
+	var plan, state templateAliasResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -201,7 +191,7 @@ func (r *templateAliasResource) Update(ctx context.Context, req resource.UpdateR
 			return
 		}
 
-		plan.ARN = flex.StringToFramework(ctx, out.TemplateAlias.Arn)
+		plan.ARN = fwflex.StringToFramework(ctx, out.TemplateAlias.Arn)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -210,7 +200,7 @@ func (r *templateAliasResource) Update(ctx context.Context, req resource.UpdateR
 func (r *templateAliasResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceTemplateAliasData
+	var state templateAliasResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -294,7 +284,8 @@ func templateAliasParseResourceID(id string) (string, string, string, error) {
 	return parts[0], parts[1], parts[2], nil
 }
 
-type resourceTemplateAliasData struct {
+type templateAliasResourceModel struct {
+	framework.WithRegionModel
 	AliasName             types.String `tfsdk:"alias_name"`
 	ARN                   types.String `tfsdk:"arn"`
 	AWSAccountID          types.String `tfsdk:"aws_account_id"`

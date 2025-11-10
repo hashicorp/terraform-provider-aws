@@ -92,8 +92,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `awsAccountId` - (Optional) AWS account ID.
+* `awsAccountId` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `dnsResolvers` - (Optional) A list of IP addresses of DNS resolver endpoints for the VPC connection.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -145,4 +146,4 @@ Using `terraform import`, import QuickSight VPC connection using the AWS account
 % terraform import aws_quicksight_vpc_connection.example 123456789012,example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1a701376d2bcc1e947dddba8bc678a08ec6fbb9c8fee2196563da6dc0a40c77f -->
+<!-- cache-key: cdktf-0.20.8 input-ae3c915381b1ba6d5e681c0a980c1b83de3ace8d8974e83e7d0a0b8787015237 -->

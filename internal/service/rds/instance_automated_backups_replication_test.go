@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
@@ -34,7 +35,10 @@ func TestAccRDSInstanceAutomatedBackupsReplication_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_basic(rName),
@@ -68,7 +72,10 @@ func TestAccRDSInstanceAutomatedBackupsReplication_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_basic(rName),
@@ -98,7 +105,10 @@ func TestAccRDSInstanceAutomatedBackupsReplication_retentionPeriod(t *testing.T)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_retentionPeriod(rName),
@@ -132,7 +142,10 @@ func TestAccRDSInstanceAutomatedBackupsReplication_kmsEncrypted(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_kmsEncrypted(rName),
@@ -192,7 +205,10 @@ func testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx context.Context)
 }
 
 func testAccInstanceAutomatedBackupsReplicationConfig_base(rName string, storageEncrypted bool) string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -261,7 +277,8 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   engine                  = data.aws_rds_engine_version.default.engine
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "avoid-plaintext-passwords"
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
   username                = "tfacctest"
   backup_retention_period = 7
   skip_final_snapshot     = true
@@ -293,7 +310,9 @@ resource "aws_db_instance_automated_backups_replication" "test" {
 func testAccInstanceAutomatedBackupsReplicationConfig_kmsEncrypted(rName string) string {
 	return acctest.ConfigCompose(testAccInstanceAutomatedBackupsReplicationConfig_base(rName, true), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_db_instance_automated_backups_replication" "test" {

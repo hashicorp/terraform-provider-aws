@@ -21,9 +21,10 @@ func TestValidPrincipal(t *testing.T) {
 	}
 
 	validNames := []string{
-		"IAM_ALLOWED_PRINCIPALS", // Special principal
-		acctest.Ct12Digit,        // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
-		"111122223333",           // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
+		"IAM_ALLOWED_PRINCIPALS",     // Special principal
+		"123456789012:IAMPrincipals", // Special principal, Example Account ID (Valid looking but not real)
+		acctest.Ct12Digit,            // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
+		"111122223333",               // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
 		"arn:aws-us-gov:iam::357342307427:role/tf-acc-test-3217321001347236965",          // lintignore:AWSAT005          // IAM Role
 		"arn:aws:iam::123456789012:user/David",                                           // lintignore:AWSAT005          // IAM User
 		"arn:aws:iam::123456789012:federated-user/David",                                 // lintignore:AWSAT005          // IAM Federated User
@@ -45,7 +46,10 @@ func TestValidPrincipal(t *testing.T) {
 	invalidNames := []string{
 		"IAM_NOT_ALLOWED_PRINCIPALS", // doesn't exist
 		names.AttrARN,
-		"1234567890125", //not an account id
+		"1234567890125",               //not an account id
+		"IAMPrincipals",               // incorrect representation
+		"1234567890125:IAMPrincipals", // incorrect representation, account id invalid length
+		"1234567890125:IAMPrincipal",
 		"arn:aws",
 		"arn:aws:logs",            //lintignore:AWSAT005
 		"arn:aws:logs:region:*:*", //lintignore:AWSAT005

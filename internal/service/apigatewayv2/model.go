@@ -71,7 +71,7 @@ func resourceModel() *schema.Resource {
 				),
 				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -80,7 +80,7 @@ func resourceModel() *schema.Resource {
 	}
 }
 
-func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -107,7 +107,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
-func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -131,7 +131,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -165,15 +165,16 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
-func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Model: %s", d.Id())
-	_, err := conn.DeleteModel(ctx, &apigatewayv2.DeleteModelInput{
+	input := apigatewayv2.DeleteModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		ModelId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteModel(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -186,7 +187,7 @@ func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceModelImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceModelImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/model-id'", d.Id())

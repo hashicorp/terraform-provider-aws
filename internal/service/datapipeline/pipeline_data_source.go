@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_datapipeline_pipeline")
+// @SDKDataSource("aws_datapipeline_pipeline", name="Pipeline")
 // @Tags
 // @Testing(tagsIdentifierAttribute="id", tagsResourceType="Pipeline")
 func dataSourcePipeline() *schema.Resource {
@@ -39,7 +39,7 @@ func dataSourcePipeline() *schema.Resource {
 	}
 }
 
-func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)

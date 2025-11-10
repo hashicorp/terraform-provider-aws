@@ -45,7 +45,7 @@ func dataSourceCiphertext() *schema.Resource {
 	}
 }
 
-func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -55,8 +55,8 @@ func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta 
 		Plaintext: []byte(d.Get("plaintext").(string)),
 	}
 
-	if v, ok := d.GetOk("context"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EncryptionContext = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("context"); ok && len(v.(map[string]any)) > 0 {
+		input.EncryptionContext = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	output, err := conn.Encrypt(ctx, input)

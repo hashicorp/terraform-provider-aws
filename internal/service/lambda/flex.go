@@ -11,14 +11,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func flattenLayers(apiObjects []awstypes.Layer) []interface{} {
+func flattenLayers(apiObjects []awstypes.Layer) []any {
 	return flex.FlattenStringValueList(tfslices.ApplyToAll(apiObjects, func(v awstypes.Layer) string {
 		return aws.ToString(v.Arn)
 	}))
 }
 
-func flattenVPCConfigResponse(apiObject *awstypes.VpcConfigResponse) []interface{} {
-	tfMap := make(map[string]interface{})
+func flattenVPCConfigResponse(apiObject *awstypes.VpcConfigResponse) []any {
+	tfMap := make(map[string]any)
 
 	if apiObject == nil {
 		return nil
@@ -35,5 +35,5 @@ func flattenVPCConfigResponse(apiObject *awstypes.VpcConfigResponse) []interface
 		tfMap[names.AttrVPCID] = aws.ToString(apiObject.VpcId)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

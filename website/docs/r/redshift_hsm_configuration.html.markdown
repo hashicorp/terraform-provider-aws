@@ -27,6 +27,7 @@ resource "aws_redshift_hsm_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Required, Forces new resource) A text description of the HSM configuration to be created.
 * `hsm_configuration_identifier` - (Required, Forces new resource) The identifier to be assigned to the new Amazon Redshift HSM configuration.
 * `hsm_ip_address` - (Required, Forces new resource) The IP address that the Amazon Redshift cluster must use to access the HSM.

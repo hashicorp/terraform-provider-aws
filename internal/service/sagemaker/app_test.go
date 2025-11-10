@@ -312,7 +312,7 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("SageMaker App (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI App (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -50,7 +50,7 @@ func resourceVPCEndpointConnectionAccepter() *schema.Resource {
 	}
 }
 
-func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -77,7 +77,7 @@ func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.
 	return append(diags, resourceVPCEndpointConnectionAccepterRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -105,7 +105,7 @@ func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -115,10 +115,11 @@ func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Rejecting VPC Endpoint Connection: %s", d.Id())
-	_, err = conn.RejectVpcEndpointConnections(ctx, &ec2.RejectVpcEndpointConnectionsInput{
+	input := ec2.RejectVpcEndpointConnectionsInput{
 		ServiceId:      aws.String(serviceID),
 		VpcEndpointIds: []string{vpcEndpointID},
-	})
+	}
+	_, err = conn.RejectVpcEndpointConnections(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
 		return diags

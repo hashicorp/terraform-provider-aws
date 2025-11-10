@@ -52,7 +52,7 @@ func resourceDomainMailFrom() *schema.Resource {
 	}
 }
 
-func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -76,7 +76,7 @@ func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDomainMailFromRead(ctx, d, meta)...)
 }
 
-func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -99,7 +99,7 @@ func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceDomainMailFromDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainMailFromDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 

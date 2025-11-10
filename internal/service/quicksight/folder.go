@@ -55,13 +55,7 @@ func resourceFolder() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrAWSAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
 			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -110,12 +104,10 @@ func resourceFolder() *schema.Resource {
 			names.AttrTags:        tftags.TagsSchema(),
 			names.AttrTagsAll:     tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -155,7 +147,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceFolderRead(ctx, d, meta)...)
 }
 
-func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -201,7 +193,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -252,7 +244,7 @@ func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceFolderRead(ctx, d, meta)...)
 }
 
-func resourceFolderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFolderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 

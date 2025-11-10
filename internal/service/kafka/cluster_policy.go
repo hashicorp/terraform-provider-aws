@@ -50,7 +50,7 @@ func resourceClusterPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -59,7 +59,7 @@ func resourceClusterPolicy() *schema.Resource {
 	}
 }
 
-func resourceClusterPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -91,7 +91,7 @@ func resourceClusterPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceClusterPolicyRead(ctx, d, meta)...)
 }
 
-func resourceClusterPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -123,7 +123,7 @@ func resourceClusterPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceClusterPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 

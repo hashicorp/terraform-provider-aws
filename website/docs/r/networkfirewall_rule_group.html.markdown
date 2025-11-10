@@ -257,24 +257,61 @@ resource "aws_networkfirewall_rule_group" "example" {
 }
 ```
 
+### Example with S3 as source for the suricata rules
+
+```terraform
+
+data "aws_s3_object" "suricata_rules" {
+  bucket = aws_s3_bucket.suricata_rules.id
+  key    = "rules/custom.rules"
+}
+
+resource "aws_networkfirewall_rule_group" "s3_rules_example" {
+  capacity = 1000
+  name     = "my-terraform-s3-rules"
+  type     = "STATEFUL"
+
+  rule_group {
+    rule_variables {
+      ip_sets {
+        key = "HOME_NET"
+        ip_set {
+          definition = ["10.0.0.0/16", "192.168.0.0/16", "172.16.0.0/12"]
+        }
+      }
+      port_sets {
+        key = "HTTP_PORTS"
+        port_set {
+          definition = ["443", "80"]
+        }
+      }
+    }
+
+    rules_source {
+      rules_string = data.aws_s3_object.suricata_rules.body
+    }
+  }
+
+  tags = {
+    ManagedBy = "terraform"
+  }
+
+}
+
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `capacity` - (Required, Forces new resource) The maximum number of operating resources that this rule group can use. For a stateless rule group, the capacity required is the sum of the capacity requirements of the individual rules. For a stateful rule group, the minimum capacity required is the number of individual rules.
-
 * `description` - (Optional) A friendly description of the rule group.
-
 * `encryption_configuration` - (Optional) KMS encryption configuration settings. See [Encryption Configuration](#encryption-configuration) below for details.
-
 * `name` - (Required, Forces new resource) A friendly name of the rule group.
-
 * `rule_group` - (Optional) A configuration block that defines the rule group rules. Required unless `rules` is specified. See [Rule Group](#rule-group) below for details.
-
 * `rules` - (Optional) The stateful rule group rules specifications in Suricata file format, with one rule per line. Use this to import your existing Suricata compatible rule groups. Required unless `rule_group` is specified.
-
 * `tags` - (Optional) A map of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
 * `type` - (Required) Whether the rule group is stateless (containing stateless rules) or stateful (containing stateful rules). Valid values include: `STATEFUL` or `STATELESS`.
 
 ### Encryption Configuration
@@ -354,7 +391,7 @@ The `rules_source` block supports the following arguments:
 
 * `rules_source_list` - (Optional) A configuration block containing **stateful** inspection criteria for a domain list rule group. See [Rules Source List](#rules-source-list) below for details.
 
-* `rules_string` - (Optional) The fully qualified name of a file in an S3 bucket that contains Suricata compatible intrusion preventions system (IPS) rules or the Suricata rules as a string. These rules contain **stateful** inspection criteria and the action to take for traffic that matches the criteria.
+* `rules_string` - (Optional) Stateful inspection criteria, provided in Suricata compatible rules. These rules contain the inspection criteria and the action to take for traffic that matches the criteria, so this type of rule group doesn’t have a separate action setting.
 
 * `stateful_rule` - (Optional) Set of configuration blocks containing **stateful** inspection criteria for 5-tuple rules to be used together in a rule group. See [Stateful Rule](#stateful-rule) below for details.
 
@@ -482,7 +519,7 @@ The `dimension` block supports the following argument:
 
 The `destination` block supports the following argument:
 
-* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
+* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4 and IPv6.
 
 ### Destination Port
 
@@ -496,7 +533,7 @@ The `destination_port` block supports the following arguments:
 
 The `source` block supports the following argument:
 
-* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
+* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4 and IPv6.
 
 ### Source Port
 

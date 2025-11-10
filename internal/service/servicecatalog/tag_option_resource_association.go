@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -68,7 +67,7 @@ func resourceTagOptionResourceAssociation() *schema.Resource {
 	}
 }
 
-func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -78,25 +77,21 @@ func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.R
 	}
 
 	var output *servicecatalog.AssociateTagOptionWithResourceOutput
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		output, err = conn.AssociateTagOptionWithResource(ctx, input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.AssociateTagOptionWithResource(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "associating Service Catalog Tag Option with Resource: %s", err)
@@ -111,7 +106,7 @@ func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceTagOptionResourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -150,7 +145,7 @@ func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceTagOptionResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 

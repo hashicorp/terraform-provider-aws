@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dynamodb_table_export: Add `export_type` and `incremental_export_specification` arguments
+```

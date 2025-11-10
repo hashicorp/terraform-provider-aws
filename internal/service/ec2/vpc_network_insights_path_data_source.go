@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,6 +47,20 @@ func dataSourceNetworkInsightsPath() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrFilter: customFiltersSchema(),
+			"filter_at_destination": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: sdkv2.ComputedOnlyFromResourceSchema(networkInsightsPathFilterSchema()),
+				},
+			},
+			"filter_at_source": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: sdkv2.ComputedOnlyFromResourceSchema(networkInsightsPathFilterSchema()),
+				},
+			},
 			"network_insights_path_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -72,7 +87,7 @@ func dataSourceNetworkInsightsPath() *schema.Resource {
 	}
 }
 
-func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -104,6 +119,16 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrDestinationARN, nip.DestinationArn)
 	d.Set("destination_ip", nip.DestinationIp)
 	d.Set("destination_port", nip.DestinationPort)
+	if v := nip.FilterAtDestination; v != nil {
+		d.Set("filter_at_destination", []any{flattenPathFilter(v)})
+	} else {
+		d.Set("filter_at_destination", nil)
+	}
+	if v := nip.FilterAtSource; v != nil {
+		d.Set("filter_at_source", []any{flattenPathFilter(v)})
+	} else {
+		d.Set("filter_at_source", nil)
+	}
 	d.Set("network_insights_path_id", networkInsightsPathID)
 	d.Set(names.AttrProtocol, nip.Protocol)
 	d.Set(names.AttrSource, nip.Source)

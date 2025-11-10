@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_oam_links")
+// @SDKDataSource("aws_oam_links", name="Links")
 func DataSourceLinks() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLinksRead,
@@ -34,7 +34,7 @@ const (
 	DSNameLinks = "Links Data Source"
 )
 
-func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 

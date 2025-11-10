@@ -96,11 +96,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `aws_account_id` - (Optional, Forces new resource) AWS account ID.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `dashboard_publish_options` - (Optional) Options for publishing the dashboard. See [dashboard_publish_options](#dashboard_publish_options).
 * `definition` - (Optional) A detailed dashboard definition. Only one of `definition` or `source_entity` should be configured. See [definition](#definition).
 * `parameters` - (Optional) The parameters for the creation of the dashboard, which you want to use to override the default settings. A dashboard can have any type of parameters, and some parameters might accept multiple values. See [parameters](#parameters).
 * `permissions` - (Optional) A set of resource permissions on the dashboard. Maximum of 64 items. See [permissions](#permissions).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_entity` - (Optional) The entity that you are using as a source when you create the dashboard (template). Only one of `definition` or `source_entity` should be configured. See [source_entity](#source_entity).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `theme_arn` - (Optional) The Amazon Resource Name (ARN) of the theme that is being used for this dashboard. The theme ARN must exist in the same AWS account where you create the dashboard.

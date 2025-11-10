@@ -31,6 +31,12 @@ class MyConvertedCode(TerraformStack):
         DataAwsSpotDatafeedSubscription(self, "default")
 ```
 
+## Argument Reference
+
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -38,4 +44,4 @@ This data source exports the following attributes in addition to the arguments a
 * `bucket` - The name of the Amazon S3 bucket where the spot instance data feed is located.
 * `prefix` - The prefix for the data feed files.
 
-<!-- cache-key: cdktf-0.20.8 input-f231709e414cb2b084c8f726dda58b101b775c84880328bfce777fc17ccd706e -->
+<!-- cache-key: cdktf-0.20.8 input-ac165901dfe6b005ad8aacf1ee8ac193ddf5999eb7376e95812b93e63189817e -->

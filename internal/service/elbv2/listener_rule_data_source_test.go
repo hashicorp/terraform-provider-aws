@@ -47,12 +47,12 @@ func TestAccELBV2ListenerRuleDataSource_byARN(t *testing.T) {
 					// action
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"authenticate_cognito": knownvalue.Null(),
-							"authenticate_oidc":    knownvalue.Null(),
-							"fixed_response":       knownvalue.Null(),
+							"authenticate_cognito": knownvalue.ListExact([]knownvalue.Check{}),
+							"authenticate_oidc":    knownvalue.ListExact([]knownvalue.Check{}),
+							"fixed_response":       knownvalue.ListExact([]knownvalue.Check{}),
 							"forward":              knownvalue.NotNull(),
 							"order":                knownvalue.NotNull(),
-							"redirect":             knownvalue.Null(),
+							"redirect":             knownvalue.ListExact([]knownvalue.Check{}),
 							names.AttrType:         knownvalue.NotNull(),
 						}),
 					})),
@@ -68,10 +68,12 @@ func TestAccELBV2ListenerRuleDataSource_byARN(t *testing.T) {
 						compare.ValuesSame(),
 					),
 
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward"), knownvalue.ObjectExact(map[string]knownvalue.Check{
-						"stickiness": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrDuration: knownvalue.Null(),
-							names.AttrEnabled:  knownvalue.Bool(false),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"stickiness": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrDuration: knownvalue.Null(),
+								names.AttrEnabled:  knownvalue.Bool(false),
+							}),
 						}),
 						"target_group": knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -82,16 +84,19 @@ func TestAccELBV2ListenerRuleDataSource_byARN(t *testing.T) {
 					})),
 
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtMapKey("target_group").AtSliceIndex(0).AtMapKey(names.AttrARN),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtSliceIndex(0).AtMapKey("target_group").AtSliceIndex(0).AtMapKey(names.AttrARN),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("target_group_arn"),
 						compare.ValuesSame(),
 					),
 
 					// condition
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
-						expectKnownCondition("host_header", knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
-								knownvalue.StringExact("example.com"),
+						expectKnownCondition("host_header", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"regex_values": knownvalue.Null(),
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("example.com"),
+								}),
 							}),
 						})),
 					})),
@@ -133,12 +138,12 @@ func TestAccELBV2ListenerRuleDataSource_byListenerAndPriority(t *testing.T) {
 					// action
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"authenticate_cognito": knownvalue.Null(),
-							"authenticate_oidc":    knownvalue.Null(),
-							"fixed_response":       knownvalue.Null(),
+							"authenticate_cognito": knownvalue.ListExact([]knownvalue.Check{}),
+							"authenticate_oidc":    knownvalue.ListExact([]knownvalue.Check{}),
+							"fixed_response":       knownvalue.ListExact([]knownvalue.Check{}),
 							"forward":              knownvalue.NotNull(),
 							"order":                knownvalue.NotNull(),
-							"redirect":             knownvalue.Null(),
+							"redirect":             knownvalue.ListExact([]knownvalue.Check{}),
 							names.AttrType:         knownvalue.NotNull(),
 						}),
 					})),
@@ -154,10 +159,12 @@ func TestAccELBV2ListenerRuleDataSource_byListenerAndPriority(t *testing.T) {
 						compare.ValuesSame(),
 					),
 
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward"), knownvalue.ObjectExact(map[string]knownvalue.Check{
-						"stickiness": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrDuration: knownvalue.Null(),
-							names.AttrEnabled:  knownvalue.Bool(false),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"stickiness": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrDuration: knownvalue.Null(),
+								names.AttrEnabled:  knownvalue.Bool(false),
+							}),
 						}),
 						"target_group": knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -168,16 +175,19 @@ func TestAccELBV2ListenerRuleDataSource_byListenerAndPriority(t *testing.T) {
 					})),
 
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtMapKey("target_group").AtSliceIndex(0).AtMapKey(names.AttrARN),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtSliceIndex(0).AtMapKey("target_group").AtSliceIndex(0).AtMapKey(names.AttrARN),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("target_group_arn"),
 						compare.ValuesSame(),
 					),
 
 					// condition
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
-						expectKnownCondition("host_header", knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
-								knownvalue.StringExact("example.com"),
+						expectKnownCondition("host_header", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"regex_values": knownvalue.Null(),
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("example.com"),
+								}),
 							}),
 						})),
 					})),
@@ -221,11 +231,11 @@ func TestAccELBV2ListenerRuleDataSource_actionAuthenticateCognito(t *testing.T) 
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"authenticate_cognito": knownvalue.NotNull(),
-							"authenticate_oidc":    knownvalue.Null(),
-							"fixed_response":       knownvalue.Null(),
-							"forward":              knownvalue.Null(),
+							"authenticate_oidc":    knownvalue.ListExact([]knownvalue.Check{}),
+							"fixed_response":       knownvalue.ListExact([]knownvalue.Check{}),
+							"forward":              knownvalue.ListExact([]knownvalue.Check{}),
 							"order":                knownvalue.NotNull(),
-							"redirect":             knownvalue.Null(),
+							"redirect":             knownvalue.ListExact([]knownvalue.Check{}),
 							names.AttrType:         knownvalue.NotNull(),
 						}),
 						knownvalue.NotNull(),
@@ -242,9 +252,9 @@ func TestAccELBV2ListenerRuleDataSource_actionAuthenticateCognito(t *testing.T) 
 						compare.ValuesSame(),
 					),
 
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_cognito"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_cognito").AtSliceIndex(0), knownvalue.NotNull()),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_cognito"),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_cognito").AtSliceIndex(0),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_cognito").AtSliceIndex(0),
 						compare.ValuesSame(),
 					),
@@ -284,12 +294,12 @@ func TestAccELBV2ListenerRuleDataSource_actionAuthenticateOIDC(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"authenticate_cognito": knownvalue.Null(),
+							"authenticate_cognito": knownvalue.ListExact([]knownvalue.Check{}),
 							"authenticate_oidc":    knownvalue.NotNull(),
-							"fixed_response":       knownvalue.Null(),
-							"forward":              knownvalue.Null(),
+							"fixed_response":       knownvalue.ListExact([]knownvalue.Check{}),
+							"forward":              knownvalue.ListExact([]knownvalue.Check{}),
 							"order":                knownvalue.NotNull(),
-							"redirect":             knownvalue.Null(),
+							"redirect":             knownvalue.ListExact([]knownvalue.Check{}),
 							names.AttrType:         knownvalue.NotNull(),
 						}),
 						knownvalue.NotNull(),
@@ -306,54 +316,54 @@ func TestAccELBV2ListenerRuleDataSource_actionAuthenticateOIDC(t *testing.T) {
 						compare.ValuesSame(),
 					),
 
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0), knownvalue.NotNull()),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("authentication_request_extra_params"),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("authentication_request_extra_params"),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("authentication_request_extra_params"),
 						compare.ValuesSame(),
 					),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("authorization_endpoint"),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("authorization_endpoint"),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("authorization_endpoint"),
 						compare.ValuesSame(),
 					),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey(names.AttrClientID),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey(names.AttrClientID),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey(names.AttrClientID),
 						compare.ValuesSame(),
 					),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey(names.AttrIssuer),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey(names.AttrIssuer),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey(names.AttrIssuer),
 						compare.ValuesSame(),
 					),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("on_unauthenticated_request"),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("on_unauthenticated_request"),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("on_unauthenticated_request"),
 						compare.ValuesSame(),
 					),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey(names.AttrScope),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey(names.AttrScope),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey(names.AttrScope),
 						compare.ValuesSame(),
 					),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("session_cookie_name"),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("session_cookie_name"),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("session_cookie_name"),
 						compare.ValuesSame(),
 					),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("session_timeout"),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("session_timeout"),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("session_timeout"),
 						compare.ValuesSame(),
 					),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("token_endpoint"),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("token_endpoint"),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("token_endpoint"),
 						compare.ValuesSame(),
 					),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("user_info_endpoint"),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("user_info_endpoint"),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("user_info_endpoint"),
 						compare.ValuesSame(),
 					),
@@ -391,12 +401,12 @@ func TestAccELBV2ListenerRuleDataSource_actionFixedResponse(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"authenticate_cognito": knownvalue.Null(),
-							"authenticate_oidc":    knownvalue.Null(),
+							"authenticate_cognito": knownvalue.ListExact([]knownvalue.Check{}),
+							"authenticate_oidc":    knownvalue.ListExact([]knownvalue.Check{}),
 							"fixed_response":       knownvalue.NotNull(),
-							"forward":              knownvalue.Null(),
+							"forward":              knownvalue.ListExact([]knownvalue.Check{}),
 							"order":                knownvalue.NotNull(),
-							"redirect":             knownvalue.Null(),
+							"redirect":             knownvalue.ListExact([]knownvalue.Check{}),
 							names.AttrType:         knownvalue.NotNull(),
 						}),
 					})),
@@ -412,9 +422,9 @@ func TestAccELBV2ListenerRuleDataSource_actionFixedResponse(t *testing.T) {
 						compare.ValuesSame(),
 					),
 
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("fixed_response"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("fixed_response").AtSliceIndex(0), knownvalue.NotNull()),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("fixed_response"),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("fixed_response").AtSliceIndex(0),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("fixed_response").AtSliceIndex(0),
 						compare.ValuesSame(),
 					),
@@ -453,12 +463,12 @@ func TestAccELBV2ListenerRuleDataSource_actionForwardWeightedStickiness(t *testi
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"authenticate_cognito": knownvalue.Null(),
-							"authenticate_oidc":    knownvalue.Null(),
-							"fixed_response":       knownvalue.Null(),
+							"authenticate_cognito": knownvalue.ListExact([]knownvalue.Check{}),
+							"authenticate_oidc":    knownvalue.ListExact([]knownvalue.Check{}),
+							"fixed_response":       knownvalue.ListExact([]knownvalue.Check{}),
 							"forward":              knownvalue.NotNull(),
 							"order":                knownvalue.NotNull(),
-							"redirect":             knownvalue.Null(),
+							"redirect":             knownvalue.ListExact([]knownvalue.Check{}),
 							names.AttrType:         knownvalue.NotNull(),
 						}),
 					})),
@@ -474,17 +484,17 @@ func TestAccELBV2ListenerRuleDataSource_actionForwardWeightedStickiness(t *testi
 						compare.ValuesSame(),
 					),
 
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtSliceIndex(0), knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"stickiness":   knownvalue.NotNull(),
 						"target_group": knownvalue.NotNull(),
 					})),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtMapKey("stickiness"),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtSliceIndex(0).AtMapKey("stickiness").AtSliceIndex(0),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtSliceIndex(0).AtMapKey("stickiness").AtSliceIndex(0),
 						compare.ValuesSame(),
 					),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtMapKey("target_group"),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtSliceIndex(0).AtMapKey("target_group"),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtSliceIndex(0).AtMapKey("target_group"),
 						compare.ValuesSame(),
 					),
@@ -522,10 +532,10 @@ func TestAccELBV2ListenerRuleDataSource_actionRedirect(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"authenticate_cognito": knownvalue.Null(),
-							"authenticate_oidc":    knownvalue.Null(),
-							"fixed_response":       knownvalue.Null(),
-							"forward":              knownvalue.Null(),
+							"authenticate_cognito": knownvalue.ListExact([]knownvalue.Check{}),
+							"authenticate_oidc":    knownvalue.ListExact([]knownvalue.Check{}),
+							"fixed_response":       knownvalue.ListExact([]knownvalue.Check{}),
+							"forward":              knownvalue.ListExact([]knownvalue.Check{}),
 							"order":                knownvalue.NotNull(),
 							"redirect":             knownvalue.NotNull(),
 							names.AttrType:         knownvalue.NotNull(),
@@ -543,9 +553,9 @@ func TestAccELBV2ListenerRuleDataSource_actionRedirect(t *testing.T) {
 						compare.ValuesSame(),
 					),
 
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("redirect"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("redirect").AtSliceIndex(0), knownvalue.NotNull()),
 					statecheck.CompareValuePairs(
-						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("redirect"),
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("redirect").AtSliceIndex(0),
 						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("redirect").AtSliceIndex(0),
 						compare.ValuesSame(),
 					),
@@ -578,10 +588,52 @@ func TestAccELBV2ListenerRuleDataSource_conditionHostHeader(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
-						expectKnownCondition("host_header", knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
-								knownvalue.StringExact("example.com"),
-								knownvalue.StringExact("www.example.com"),
+						expectKnownCondition("host_header", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"regex_values": knownvalue.Null(),
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("example.com"),
+									knownvalue.StringExact("www.example.com"),
+								}),
+							}),
+						})),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_conditionHostHeaderRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_conditionHostHeaderRegex(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
+						expectKnownCondition("host_header", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"regex_values": knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("^example\\.com$"),
+									knownvalue.StringExact("^www[0-9]+\\.example\\.com$"),
+								}),
+								names.AttrValues: knownvalue.Null(),
 							}),
 						})),
 					})),
@@ -614,11 +666,54 @@ func TestAccELBV2ListenerRuleDataSource_conditionHTTPHeader(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
-						expectKnownCondition("http_header", knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"http_header_name": knownvalue.StringExact("X-Forwarded-For"),
-							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
-								knownvalue.StringExact("192.168.1.*"),
-								knownvalue.StringExact("10.0.0.*"),
+						expectKnownCondition("http_header", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"http_header_name": knownvalue.StringExact("X-Forwarded-For"),
+								"regex_values":     knownvalue.Null(),
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("192.168.1.*"),
+									knownvalue.StringExact("10.0.0.*"),
+								}),
+							}),
+						})),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_conditionHTTPHeaderRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_conditionHTTPHeaderRegex(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
+						expectKnownCondition("http_header", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"http_header_name": knownvalue.StringExact("User-Agent"),
+								"regex_values": knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("A.+"),
+									knownvalue.StringExact("B.*C"),
+								}),
+								names.AttrValues: knownvalue.Null(),
 							}),
 						})),
 					})),
@@ -651,10 +746,12 @@ func TestAccELBV2ListenerRuleDataSource_conditionHTTPRequestMethod(t *testing.T)
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
-						expectKnownCondition("http_request_method", knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
-								knownvalue.StringExact("GET"),
-								knownvalue.StringExact("POST"),
+						expectKnownCondition("http_request_method", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("GET"),
+									knownvalue.StringExact("POST"),
+								}),
 							}),
 						})),
 					})),
@@ -687,10 +784,52 @@ func TestAccELBV2ListenerRuleDataSource_conditionPathPattern(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
-						expectKnownCondition("path_pattern", knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
-								knownvalue.StringExact("/public/*"),
-								knownvalue.StringExact("/cgi-bin/*"),
+						expectKnownCondition("path_pattern", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"regex_values": knownvalue.Null(),
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("/public/*"),
+									knownvalue.StringExact("/cgi-bin/*"),
+								}),
+							}),
+						})),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_conditionPathPatternRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_conditionPathPatternRegex(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
+						expectKnownCondition("path_pattern", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"regex_values": knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("^\\/api\\/(.*)$"),
+									knownvalue.StringExact("^\\/api2\\/(.*)$"),
+								}),
+								names.AttrValues: knownvalue.Null(),
 							}),
 						})),
 					})),
@@ -723,15 +862,17 @@ func TestAccELBV2ListenerRuleDataSource_conditionQueryString(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
-						expectKnownCondition("query_string", knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									names.AttrKey:   knownvalue.StringExact("one"),
-									names.AttrValue: knownvalue.StringExact("un"),
-								}),
-								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									names.AttrKey:   knownvalue.StringExact("two"),
-									names.AttrValue: knownvalue.StringExact("deux"),
+						expectKnownCondition("query_string", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										names.AttrKey:   knownvalue.StringExact("one"),
+										names.AttrValue: knownvalue.StringExact("un"),
+									}),
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										names.AttrKey:   knownvalue.StringExact("two"),
+										names.AttrValue: knownvalue.StringExact("deux"),
+									}),
 								}),
 							}),
 						})),
@@ -765,10 +906,12 @@ func TestAccELBV2ListenerRuleDataSource_conditionSourceIP(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
-						expectKnownCondition("source_ip", knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
-								knownvalue.StringExact("192.168.0.0/16"),
-								knownvalue.StringExact("dead:cafe::/64"),
+						expectKnownCondition("source_ip", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact("192.168.0.0/16"),
+									knownvalue.StringExact("dead:cafe::/64"),
+								}),
 							}),
 						})),
 					})),
@@ -778,14 +921,72 @@ func TestAccELBV2ListenerRuleDataSource_conditionSourceIP(t *testing.T) {
 	})
 }
 
+func TestAccELBV2ListenerRuleDataSource_transform(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_transform(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("transform"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrType: knownvalue.StringExact(string(awstypes.TransformTypeEnumHostHeaderRewrite)),
+							"host_header_rewrite_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"rewrite": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"regex":   knownvalue.StringExact("^mywebsite-(.+).com$"),
+											"replace": knownvalue.StringExact("internal.dev.$1.myweb.com"),
+										}),
+									}),
+								}),
+							}),
+							"url_rewrite_config": knownvalue.ListExact([]knownvalue.Check{}),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrType:               knownvalue.StringExact(string(awstypes.TransformTypeEnumUrlRewrite)),
+							"host_header_rewrite_config": knownvalue.ListExact([]knownvalue.Check{}),
+							"url_rewrite_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"rewrite": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"regex":   knownvalue.StringExact("^/dp/([A-Za-z0-9]+)/?$"),
+											"replace": knownvalue.StringExact("/product.php?id=$1"),
+										}),
+									}),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func expectKnownCondition(key string, check knownvalue.Check) knownvalue.Check {
 	checks := map[string]knownvalue.Check{
-		"host_header":         knownvalue.Null(),
-		"http_header":         knownvalue.Null(),
-		"http_request_method": knownvalue.Null(),
-		"path_pattern":        knownvalue.Null(),
-		"query_string":        knownvalue.Null(),
-		"source_ip":           knownvalue.Null(),
+		"host_header":         knownvalue.ListExact([]knownvalue.Check{}),
+		"http_header":         knownvalue.ListExact([]knownvalue.Check{}),
+		"http_request_method": knownvalue.ListExact([]knownvalue.Check{}),
+		"path_pattern":        knownvalue.ListExact([]knownvalue.Check{}),
+		"query_string":        knownvalue.ListExact([]knownvalue.Check{}),
+		"source_ip":           knownvalue.ListExact([]knownvalue.Check{}),
 	}
 	checks[key] = check
 	return knownvalue.ObjectExact(checks)
@@ -1164,6 +1365,30 @@ resource "aws_lb_listener_rule" "test" {
 `)
 }
 
+func testAccListenerRuleDataSourceConfig_conditionHostHeaderRegex(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    host_header {
+      regex_values = ["^example\\.com$", "^www[0-9]+\\.example\\.com$"]
+    }
+  }
+}
+`)
+}
+
 func testAccListenerRuleDataSourceConfig_conditionHTTPHeader(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
 data "aws_lb_listener_rule" "test" {
@@ -1183,6 +1408,31 @@ resource "aws_lb_listener_rule" "test" {
     http_header {
       http_header_name = "X-Forwarded-For"
       values           = ["192.168.1.*", "10.0.0.*"]
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleDataSourceConfig_conditionHTTPHeaderRegex(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    http_header {
+      http_header_name = "User-Agent"
+      regex_values     = ["A.+", "B.*C"]
     }
   }
 }
@@ -1231,6 +1481,30 @@ resource "aws_lb_listener_rule" "test" {
   condition {
     path_pattern {
       values = ["/public/*", "/cgi-bin/*"]
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleDataSourceConfig_conditionPathPatternRegex(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      regex_values = ["^\\/api\\/(.*)$", "^\\/api2\\/(.*)$"]
     }
   }
 }
@@ -1287,6 +1561,49 @@ resource "aws_lb_listener_rule" "test" {
         "192.168.0.0/16",
         "dead:cafe::/64",
       ]
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleDataSourceConfig_transform(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["*"]
+    }
+  }
+
+  transform {
+    type = "host-header-rewrite"
+    host_header_rewrite_config {
+      rewrite {
+        regex   = "^mywebsite-(.+).com$"
+        replace = "internal.dev.$1.myweb.com"
+      }
+    }
+  }
+
+  transform {
+    type = "url-rewrite"
+    url_rewrite_config {
+      rewrite {
+        regex   = "^/dp/([A-Za-z0-9]+)/?$"
+        replace = "/product.php?id=$1"
+      }
     }
   }
 }

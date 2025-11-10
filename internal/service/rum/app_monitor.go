@@ -134,8 +134,19 @@ func resourceAppMonitor() *schema.Resource {
 			},
 			names.AttrDomain: {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{names.AttrDomain, "domain_list"},
 				ValidateFunc: validation.StringLenBetween(1, 253),
+			},
+			"domain_list": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MaxItems:     5,
+				ExactlyOneOf: []string{names.AttrDomain, "domain_list"},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 253),
+				},
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
@@ -146,12 +157,10 @@ func resourceAppMonitor() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
@@ -159,16 +168,23 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &rum.CreateAppMonitorInput{
 		Name:         aws.String(name),
 		CwLogEnabled: aws.Bool(d.Get("cw_log_enabled").(bool)),
-		Domain:       aws.String(d.Get(names.AttrDomain).(string)),
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("app_monitor_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AppMonitorConfiguration = expandAppMonitorConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("app_monitor_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AppMonitorConfiguration = expandAppMonitorConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("custom_events"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CustomEvents = expandCustomEvents(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("custom_events"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.CustomEvents = expandCustomEvents(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk(names.AttrDomain); ok {
+		input.Domain = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("domain_list"); ok && len(v.([]any)) > 0 {
+		input.DomainList = flex.ExpandStringValueList(v.([]any))
 	}
 
 	_, err := conn.CreateAppMonitor(ctx, input)
@@ -182,7 +198,7 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAppMonitorRead(ctx, d, meta)...)
 }
 
-func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
@@ -198,11 +214,11 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("app_monitor_configuration", []interface{}{flattenAppMonitorConfiguration(appMon.AppMonitorConfiguration)}); err != nil {
+	if err := d.Set("app_monitor_configuration", []any{flattenAppMonitorConfiguration(appMon.AppMonitorConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting app_monitor_configuration: %s", err)
 	}
 
-	if err := d.Set("custom_events", []interface{}{flattenCustomEvents(appMon.CustomEvents)}); err != nil {
+	if err := d.Set("custom_events", []any{flattenCustomEvents(appMon.CustomEvents)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting custom_events: %s", err)
 	}
 
@@ -219,6 +235,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("cw_log_enabled", appMon.DataStorage.CwLog.CwLogEnabled)
 	d.Set("cw_log_group", appMon.DataStorage.CwLog.CwLogGroup)
 	d.Set(names.AttrDomain, appMon.Domain)
+	d.Set("domain_list", appMon.DomainList)
 	d.Set(names.AttrName, name)
 
 	setTagsOut(ctx, appMon.Tags)
@@ -226,7 +243,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
@@ -236,11 +253,11 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange("app_monitor_configuration") {
-			input.AppMonitorConfiguration = expandAppMonitorConfiguration(d.Get("app_monitor_configuration").([]interface{})[0].(map[string]interface{}))
+			input.AppMonitorConfiguration = expandAppMonitorConfiguration(d.Get("app_monitor_configuration").([]any)[0].(map[string]any))
 		}
 
 		if d.HasChange("custom_events") {
-			input.CustomEvents = expandCustomEvents(d.Get("custom_events").([]interface{})[0].(map[string]interface{}))
+			input.CustomEvents = expandCustomEvents(d.Get("custom_events").([]any)[0].(map[string]any))
 		}
 
 		if d.HasChange("cw_log_enabled") {
@@ -248,7 +265,15 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange(names.AttrDomain) {
-			input.Domain = aws.String(d.Get(names.AttrDomain).(string))
+			if v, ok := d.GetOk(names.AttrDomain); ok {
+				input.Domain = aws.String(v.(string))
+			}
+		}
+
+		if d.HasChange("domain_list") {
+			if v, ok := d.GetOk("domain_list"); ok && len(v.([]any)) > 0 {
+				input.DomainList = flex.ExpandStringValueList(v.([]any))
+			}
 		}
 
 		_, err := conn.UpdateAppMonitor(ctx, input)
@@ -261,7 +286,7 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAppMonitorRead(ctx, d, meta)...)
 }
 
-func resourceAppMonitorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppMonitorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
@@ -306,7 +331,7 @@ func findAppMonitorByName(ctx context.Context, conn *rum.Client, name string) (*
 	return output.AppMonitor, nil
 }
 
-func expandAppMonitorConfiguration(tfMap map[string]interface{}) *awstypes.AppMonitorConfiguration {
+func expandAppMonitorConfiguration(tfMap map[string]any) *awstypes.AppMonitorConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -352,12 +377,12 @@ func expandAppMonitorConfiguration(tfMap map[string]interface{}) *awstypes.AppMo
 	return config
 }
 
-func flattenAppMonitorConfiguration(apiObject *awstypes.AppMonitorConfiguration) map[string]interface{} {
+func flattenAppMonitorConfiguration(apiObject *awstypes.AppMonitorConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.GuestRoleArn; v != nil {
 		tfMap["guest_role_arn"] = aws.ToString(v)
@@ -396,7 +421,7 @@ func flattenAppMonitorConfiguration(apiObject *awstypes.AppMonitorConfiguration)
 	return tfMap
 }
 
-func expandCustomEvents(tfMap map[string]interface{}) *awstypes.CustomEvents {
+func expandCustomEvents(tfMap map[string]any) *awstypes.CustomEvents {
 	if tfMap == nil {
 		return nil
 	}
@@ -410,12 +435,12 @@ func expandCustomEvents(tfMap map[string]interface{}) *awstypes.CustomEvents {
 	return config
 }
 
-func flattenCustomEvents(apiObject *awstypes.CustomEvents) map[string]interface{} {
+func flattenCustomEvents(apiObject *awstypes.CustomEvents) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrStatus: apiObject.Status,
 	}
 

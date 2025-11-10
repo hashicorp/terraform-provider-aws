@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
 	"strconv"
 	"strings"
 	"time"
@@ -36,7 +37,7 @@ func resourceIntegration() *schema.Resource {
 		DeleteWithoutTimeout: resourceIntegrationDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD", d.Id())
@@ -159,11 +160,11 @@ func resourceIntegration() *schema.Resource {
 	}
 }
 
-func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.PutIntegrationInput{
+	input := apigateway.PutIntegrationInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
@@ -204,27 +205,27 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.PassthroughBehavior = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("request_parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.RequestParameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("request_parameters"); ok && len(v.(map[string]any)) > 0 {
+		input.RequestParameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("request_templates"); ok && len(v.(map[string]interface{})) > 0 {
-		input.RequestTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("request_templates"); ok && len(v.(map[string]any)) > 0 {
+		input.RequestTemplates = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("timeout_milliseconds"); ok {
 		input.TimeoutInMillis = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("tls_config"); ok && len(v.([]interface{})) > 0 {
-		input.TlsConfig = expandTLSConfig(v.([]interface{}))
+	if v, ok := d.GetOk("tls_config"); ok && len(v.([]any)) > 0 {
+		input.TlsConfig = expandTLSConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrURI); ok {
 		input.Uri = aws.String(v.(string))
 	}
 
-	_, err := conn.PutIntegration(ctx, input)
+	_, err := conn.PutIntegration(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Integration: %s", err)
 	}
@@ -234,7 +235,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -264,9 +265,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("request_parameters", integration.RequestParameters)
 	// We need to explicitly convert key = nil values into key = "", which aws.ToStringMap() removes
 	requestTemplates := make(map[string]string)
-	for k, v := range integration.RequestTemplates {
-		requestTemplates[k] = v
-	}
+	maps.Copy(requestTemplates, integration.RequestTemplates)
 	d.Set("request_templates", requestTemplates)
 	d.Set("timeout_milliseconds", integration.TimeoutInMillis)
 	d.Set(names.AttrType, integration.Type)
@@ -279,7 +278,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -290,8 +289,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("request_templates") {
 		o, n := d.GetChange("request_templates")
 
-		os := o.(map[string]interface{})
-		ns := n.(map[string]interface{})
+		os := o.(map[string]any)
+		ns := n.(map[string]any)
 
 		// Handle Removal
 		for k := range os {
@@ -327,8 +326,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("request_parameters") {
 		o, n := d.GetChange("request_parameters")
 
-		os := o.(map[string]interface{})
-		ns := n.(map[string]interface{})
+		os := o.(map[string]any)
+		ns := n.(map[string]any)
 
 		// Handle Removal
 		for k, v := range os {
@@ -452,8 +451,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("tls_config") {
-		if v, ok := d.GetOk("tls_config"); ok && len(v.([]interface{})) > 0 {
-			m := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := d.GetOk("tls_config"); ok && len(v.([]any)) > 0 {
+			m := v.([]any)[0].(map[string]any)
 
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
@@ -483,14 +482,14 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	// based on those results.
 
 	if len(operations) > 0 {
-		input := &apigateway.UpdateIntegrationInput{
+		input := apigateway.UpdateIntegrationInput{
 			HttpMethod:      aws.String(d.Get("http_method").(string)),
 			PatchOperations: operations,
 			ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
 			RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 		}
 
-		_, err := conn.UpdateIntegration(ctx, input)
+		_, err := conn.UpdateIntegration(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Integration, initial (%s): %s", d.Id(), err)
 		}
@@ -574,14 +573,13 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if len(lackingOperations) > 0 {
-			input := &apigateway.UpdateIntegrationInput{
+			input := apigateway.UpdateIntegrationInput{
 				HttpMethod:      aws.String(d.Get("http_method").(string)),
 				PatchOperations: lackingOperations,
 				ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
 				RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 			}
-
-			_, err = conn.UpdateIntegration(ctx, input)
+			_, err = conn.UpdateIntegration(ctx, &input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating API Gateway Integration, secondary (%s): %s", d.Id(), err)
 			}
@@ -591,16 +589,17 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Integration: %s", d.Id())
-	_, err := conn.DeleteIntegration(ctx, &apigateway.DeleteIntegrationInput{
+	input := apigateway.DeleteIntegrationInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-	})
+	}
+	_, err := conn.DeleteIntegration(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -629,13 +628,13 @@ func parameterizeParameter(s string, paramType string) string {
 }
 
 func findIntegrationByThreePartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID string) (*apigateway.GetIntegrationOutput, error) {
-	input := &apigateway.GetIntegrationInput{
+	input := apigateway.GetIntegrationInput{
 		HttpMethod: aws.String(httpMethod),
 		ResourceId: aws.String(resourceID),
 		RestApiId:  aws.String(apiID),
 	}
 
-	output, err := conn.GetIntegration(ctx, input)
+	output, err := conn.GetIntegration(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -655,13 +654,13 @@ func findIntegrationByThreePartKey(ctx context.Context, conn *apigateway.Client,
 	return output, nil
 }
 
-func expandTLSConfig(vConfig []interface{}) *types.TlsConfig {
+func expandTLSConfig(vConfig []any) *types.TlsConfig {
 	config := &types.TlsConfig{}
 
 	if len(vConfig) == 0 || vConfig[0] == nil {
 		return config
 	}
-	mConfig := vConfig[0].(map[string]interface{})
+	mConfig := vConfig[0].(map[string]any)
 
 	if insecureSkipVerification, ok := mConfig["insecure_skip_verification"].(bool); ok {
 		config.InsecureSkipVerification = insecureSkipVerification
@@ -669,12 +668,12 @@ func expandTLSConfig(vConfig []interface{}) *types.TlsConfig {
 	return config
 }
 
-func flattenTLSConfig(config *types.TlsConfig) []interface{} {
+func flattenTLSConfig(config *types.TlsConfig) []any {
 	if config == nil {
 		return nil
 	}
 
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		"insecure_skip_verification": config.InsecureSkipVerification,
 	}}
 }

@@ -50,7 +50,7 @@ func resourceCache() *schema.Resource {
 	}
 }
 
-func resourceCacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCacheCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -95,7 +95,7 @@ func resourceCacheCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceCacheRead(ctx, d, meta)...)
 }
 
-func resourceCacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCacheRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 

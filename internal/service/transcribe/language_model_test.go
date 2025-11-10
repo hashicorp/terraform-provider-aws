@@ -44,9 +44,11 @@ func TestAccTranscribeLanguageModel_basic(t *testing.T) {
 				Config: testAccLanguageModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "language-model/{model_name}"),
 					resource.TestCheckResourceAttr(resourceName, "base_model_name", "NarrowBand"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "model_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
+					resource.TestCheckResourceAttr(resourceName, "model_name", rName),
 				),
 			},
 			{

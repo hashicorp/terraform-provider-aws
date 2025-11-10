@@ -56,13 +56,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `user_id` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific User by name
 * `user_id` - (Optional) Returns information on a specific User by User id
+
+~> **NOTE:** `instance_id` and one of either `name` or `user_id` is required.
 
 ## Attribute Reference
 
@@ -86,6 +87,7 @@ An `identity_info` block supports the following attributes:
 * `email` - The email address.
 * `first_name` - The first name.
 * `last_name` - The last name.
+* `secondary_email` - The secondary email address. If present, email notifications will be sent to this email address instead of the primary one.
 
 ### `phone_config`
 
@@ -96,4 +98,4 @@ A `phone_config` block supports the following attributes:
 * `desk_phone_number` - The phone number for the user's desk phone.
 * `phone_type` - The phone type. Valid values are `DESK_PHONE` and `SOFT_PHONE`.
 
-<!-- cache-key: cdktf-0.20.8 input-c25bf43664c73166a832756c06c50d944796dfadba58e27c218ef474c427f5f9 -->
+<!-- cache-key: cdktf-0.20.8 input-3130859da24bb2310def4e794e06761b2aa633dc3b3825657c8eb8e08107cd3f -->

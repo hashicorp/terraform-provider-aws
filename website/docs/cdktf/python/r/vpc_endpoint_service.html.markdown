@@ -65,6 +65,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `acceptance_required` - (Required) Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
 * `allowed_principals` - (Optional) The ARNs of one or more principals allowed to discover the endpoint service.
 * `gateway_load_balancer_arns` - (Optional) Amazon Resource Names (ARNs) of one or more Gateway Load Balancers for the endpoint service.
@@ -118,4 +119,4 @@ Using `terraform import`, import VPC Endpoint Services using the VPC endpoint se
 % terraform import aws_vpc_endpoint_service.foo vpce-svc-0f97a19d3fa8220bc
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-15284f16ae4e5654c4db1cf2a04dc3b77d5b6519edeab7fa47c530d9faf16ebf -->
+<!-- cache-key: cdktf-0.20.8 input-d14bf6794aa2cdf620677726cfb066fce475af6d4838958613a8b8183e622088 -->

@@ -90,10 +90,11 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			spaceName := rs.Primary.Attributes["space_name"]
 
-			_, err := conn.GetProject(ctx, &codecatalyst.GetProjectInput{
+			input := codecatalyst.GetProjectInput{
 				Name:      aws.String(rs.Primary.ID),
 				SpaceName: aws.String(spaceName),
-			})
+			}
+			_, err := conn.GetProject(ctx, &input)
 			if errs.IsA[*types.AccessDeniedException](err) {
 				continue
 			}
@@ -122,10 +123,11 @@ func testAccCheckProjectExists(ctx context.Context, name string, project *codeca
 		spaceName := rs.Primary.Attributes["space_name"]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCatalystClient(ctx)
-		resp, err := conn.GetProject(ctx, &codecatalyst.GetProjectInput{
+		input := codecatalyst.GetProjectInput{
 			Name:      aws.String(rs.Primary.ID),
 			SpaceName: aws.String(spaceName),
-		})
+		}
+		resp, err := conn.GetProject(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.CodeCatalyst, create.ErrActionCheckingExistence, tfcodecatalyst.ResNameProject, rs.Primary.ID, err)

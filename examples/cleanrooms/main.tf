@@ -11,8 +11,8 @@ provider "aws" {
 
 resource "aws_cleanrooms_collaboration" "test_collab" {
   name                     = "terraform-example-collaboration"
-  creator_member_abilities = ["CAN_QUERY", "CAN_RECEIVE_RESULTS"]
-  creator_display_name     = "Creator "
+  creator_member_abilities = ["CAN_QUERY"]
+  creator_display_name     = "Creator"
   description              = "I made this collaboration with terraform!"
   query_log_status         = "DISABLED"
 
@@ -26,7 +26,27 @@ resource "aws_cleanrooms_collaboration" "test_collab" {
   member {
     account_id       = 123456789012
     display_name     = "Other member"
-    member_abilities = []
+    member_abilities = ["CAN_RECEIVE_RESULTS"]
+  }
+
+  tags = {
+    Project = "Terraform"
+  }
+}
+
+resource "aws_cleanrooms_membership" "test_membership" {
+  collaboration_id = aws_cleanrooms_collaboration.test_collab.id
+  query_log_status = "DISABLED"
+
+  default_result_configuration {
+    role_arn = "arn:aws:iam::123456789012:role/role-name"
+    output_configuration {
+      s3 {
+        bucket        = "test-bucket"
+        result_format = "PARQUET"
+        key_prefix    = "test-prefix"
+      }
+    }
   }
 
   tags = {

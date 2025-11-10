@@ -27,12 +27,8 @@ func newVPCEndpointPrivateDNSResource(_ context.Context) (resource.ResourceWithC
 }
 
 type vpcEndpointPrivateDNSResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcEndpointPrivateDNSResourceModel]
 	framework.WithNoOpDelete
-}
-
-func (*vpcEndpointPrivateDNSResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpc_endpoint_private_dns"
 }
 
 func (r *vpcEndpointPrivateDNSResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -135,6 +131,7 @@ func (r *vpcEndpointPrivateDNSResource) ImportState(ctx context.Context, request
 }
 
 type vpcEndpointPrivateDNSResourceModel struct {
+	framework.WithRegionModel
 	PrivateDNSEnabled types.Bool   `tfsdk:"private_dns_enabled"`
 	VPCEndpointID     types.String `tfsdk:"vpc_endpoint_id"`
 }

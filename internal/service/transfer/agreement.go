@@ -78,12 +78,10 @@ func resourceAgreement() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAgreementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgreementCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -112,7 +110,7 @@ func resourceAgreementCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceAgreementRead(ctx, d, meta)...)
 }
 
-func resourceAgreementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgreementRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -147,7 +145,7 @@ func resourceAgreementRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceAgreementUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgreementUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -192,7 +190,7 @@ func resourceAgreementUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceAgreementRead(ctx, d, meta)...)
 }
 
-func resourceAgreementDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgreementDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -202,10 +200,11 @@ func resourceAgreementDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Agreement: %s", d.Id())
-	_, err = conn.DeleteAgreement(ctx, &transfer.DeleteAgreementInput{
+	input := transfer.DeleteAgreementInput{
 		AgreementId: aws.String(agreementID),
 		ServerId:    aws.String(serverID),
-	})
+	}
+	_, err = conn.DeleteAgreement(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

@@ -33,6 +33,7 @@ func TestAccCloudFrontCachePolicy_basic(t *testing.T) {
 				Config: testAccCachePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "cache-policy/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "86400"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),

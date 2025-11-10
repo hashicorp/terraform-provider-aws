@@ -37,7 +37,7 @@ func resourceVPCPeeringConnectionOptions() *schema.Resource {
 	}
 }
 
-func resourceVPCPeeringConnectionOptionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCPeeringConnectionOptionsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -57,7 +57,7 @@ func resourceVPCPeeringConnectionOptionsCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceVPCPeeringConnectionOptionsRead(ctx, d, meta)...)
 }
 
-func resourceVPCPeeringConnectionOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCPeeringConnectionOptionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -76,7 +76,7 @@ func resourceVPCPeeringConnectionOptionsRead(ctx context.Context, d *schema.Reso
 	d.Set("vpc_peering_connection_id", vpcPeeringConnection.VpcPeeringConnectionId)
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("accepter", []any{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting accepter: %s", err)
 		}
 	} else {
@@ -84,7 +84,7 @@ func resourceVPCPeeringConnectionOptionsRead(ctx context.Context, d *schema.Reso
 	}
 
 	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("requester", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("requester", []any{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting requester: %s", err)
 		}
 	} else {
@@ -94,7 +94,7 @@ func resourceVPCPeeringConnectionOptionsRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceVPCPeeringConnectionOptionsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCPeeringConnectionOptionsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -111,7 +111,7 @@ func resourceVPCPeeringConnectionOptionsUpdate(ctx context.Context, d *schema.Re
 	return append(diags, resourceVPCPeeringConnectionOptionsRead(ctx, d, meta)...)
 }
 
-func resourceVPCPeeringConnectionOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCPeeringConnectionOptionsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var
 	// Don't do anything with the underlying VPC Peering Connection.
 	diags diag.Diagnostics

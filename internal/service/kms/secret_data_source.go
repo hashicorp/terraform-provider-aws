@@ -16,7 +16,7 @@ const secretRemovedMessage = "This data source has been replaced with the `aws_k
 // @SDKDataSource("aws_kms_secret", name="Secret")
 func dataSourceSecret() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: func(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		ReadWithoutTimeout: func(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 			return diag.Errorf(secretRemovedMessage) // nosemgrep:ci.semgrep.pluginsdk.avoid-diag_Errorf
 		},
 

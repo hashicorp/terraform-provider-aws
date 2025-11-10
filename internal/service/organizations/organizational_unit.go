@@ -20,22 +20,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_organizations_organizational_unit", name="Organizational Unit")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.OrganizationalUnit")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="6.4.0")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 func resourceOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationalUnitCreate,
 		ReadWithoutTimeout:   resourceOrganizationalUnitRead,
 		UpdateWithoutTimeout: resourceOrganizationalUnitUpdate,
 		DeleteWithoutTimeout: resourceOrganizationalUnitDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"accounts": {
@@ -80,12 +80,10 @@ func resourceOrganizationalUnit() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -96,7 +94,7 @@ func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceDat
 		Tags:     getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateOrganizationalUnit(ctx, input)
 	})
 
@@ -109,7 +107,7 @@ func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceOrganizationalUnitRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -147,7 +145,7 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceOrganizationalUnitUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationalUnitUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -167,7 +165,7 @@ func resourceOrganizationalUnitUpdate(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceOrganizationalUnitDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationalUnitDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -216,15 +214,15 @@ func findOrganizationalUnit(ctx context.Context, conn *organizations.Client, inp
 	return output.OrganizationalUnit, nil
 }
 
-func flattenOrganizationalUnitAccounts(apiObjects []awstypes.Account) []interface{} {
+func flattenOrganizationalUnitAccounts(apiObjects []awstypes.Account) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			names.AttrARN:   aws.ToString(apiObject.Arn),
 			names.AttrEmail: aws.ToString(apiObject.Email),
 			names.AttrID:    aws.ToString(apiObject.Id),

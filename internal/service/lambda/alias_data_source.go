@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lambda_alias", Name="Alias")
+// @SDKDataSource("aws_lambda_alias", name="Alias")
 func dataSourceAlias() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAliasRead,
@@ -48,7 +48,7 @@ func dataSourceAlias() *schema.Resource {
 	}
 }
 
-func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 

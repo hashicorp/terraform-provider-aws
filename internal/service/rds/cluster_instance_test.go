@@ -1399,7 +1399,9 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -1663,7 +1665,7 @@ resource "aws_rds_cluster" "alternate" {
   storage_encrypted             = true
   skip_final_snapshot           = true
   replication_source_identifier = aws_rds_cluster.test.arn
-  source_region                 = data.aws_region.current.name
+  source_region                 = data.aws_region.current.region
 
   depends_on = [
     aws_rds_cluster_instance.test,
@@ -1714,6 +1716,7 @@ func testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraMySQL1(rName,
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_cluster" "test" {
@@ -1743,6 +1746,7 @@ func testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraPostgresql(rN
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_cluster" "test" {

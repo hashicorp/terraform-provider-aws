@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -76,11 +75,10 @@ func resourceEventIntegration() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
@@ -89,7 +87,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 	input := &appintegrations.CreateEventIntegrationInput{
 		ClientToken:    aws.String(id.UniqueId()),
 		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
-		EventFilter:    expandEventFilter(d.Get("event_filter").([]interface{})),
+		EventFilter:    expandEventFilter(d.Get("event_filter").([]any)),
 		Name:           aws.String(name),
 		Tags:           getTagsIn(ctx),
 	}
@@ -115,16 +113,17 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceEventIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
 	name := d.Id()
 
-	resp, err := conn.GetEventIntegration(ctx, &appintegrations.GetEventIntegrationInput{
+	input := appintegrations.GetEventIntegrationInput{
 		Name: aws.String(name),
-	})
+	}
+	resp, err := conn.GetEventIntegration(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] AppIntegrations Event Integration (%s) not found, removing from state", d.Id())
@@ -154,7 +153,7 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
@@ -162,10 +161,11 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 	name := d.Id()
 
 	if d.HasChange(names.AttrDescription) {
-		_, err := conn.UpdateEventIntegration(ctx, &appintegrations.UpdateEventIntegrationInput{
+		input := appintegrations.UpdateEventIntegrationInput{
 			Name:        aws.String(name),
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
-		})
+		}
+		_, err := conn.UpdateEventIntegration(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EventIntegration (%s): %s", d.Id(), err)
@@ -175,16 +175,17 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceEventIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
 	name := d.Id()
 
-	_, err := conn.DeleteEventIntegration(ctx, &appintegrations.DeleteEventIntegrationInput{
+	input := appintegrations.DeleteEventIntegrationInput{
 		Name: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteEventIntegration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -197,12 +198,12 @@ func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func expandEventFilter(eventFilter []interface{}) *awstypes.EventFilter {
+func expandEventFilter(eventFilter []any) *awstypes.EventFilter {
 	if len(eventFilter) == 0 || eventFilter[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := eventFilter[0].(map[string]interface{})
+	tfMap, ok := eventFilter[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -214,14 +215,14 @@ func expandEventFilter(eventFilter []interface{}) *awstypes.EventFilter {
 	return result
 }
 
-func flattenEventFilter(eventFilter *awstypes.EventFilter) []interface{} {
+func flattenEventFilter(eventFilter *awstypes.EventFilter) []any {
 	if eventFilter == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		names.AttrSource: aws.ToString(eventFilter.Source),
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }

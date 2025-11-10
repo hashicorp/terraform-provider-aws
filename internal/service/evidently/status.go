@@ -12,7 +12,7 @@ import (
 )
 
 func statusFeature(ctx context.Context, conn *evidently.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		featureName, projectNameOrARN, err := FeatureParseID(id)
 
 		if err != nil {
@@ -34,7 +34,7 @@ func statusFeature(ctx context.Context, conn *evidently.Client, id string) retry
 }
 
 func statusLaunch(ctx context.Context, conn *evidently.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		launchName, projectNameOrARN, err := LaunchParseID(id)
 
 		if err != nil {
@@ -56,7 +56,7 @@ func statusLaunch(ctx context.Context, conn *evidently.Client, id string) retry.
 }
 
 func statusProject(ctx context.Context, conn *evidently.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := FindProjectByNameOrARN(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

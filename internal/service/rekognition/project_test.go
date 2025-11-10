@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -25,7 +26,7 @@ import (
 func TestAccRekognitionProject_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rProjectId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_project.test"
 	feature := "CONTENT_MODERATION"
 	autoUpdate := "ENABLED"
@@ -38,17 +39,19 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_contentModeration(rProjectId, autoUpdate),
+				Config: testAccProjectConfig_contentModeration(rName, autoUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, rProjectId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rProjectId),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rekognition", regexache.MustCompile(`project/`+rName+`/\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", autoUpdate),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -63,7 +66,7 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 func TestAccRekognitionProject_ContentModeration(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rProjectId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_project.test"
 	feature := "CONTENT_MODERATION"
 
@@ -77,23 +80,23 @@ func TestAccRekognitionProject_ContentModeration(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_contentModeration(rProjectId+"-1", "ENABLED"),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccProjectConfig_contentModeration(rName+"-1", "ENABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, rProjectId+"-1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rProjectId+"-1"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName+"-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rekognition", regexache.MustCompile(`project/`+rName+`-1/\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
 				),
 			},
 			{
-				Config: testAccProjectConfig_contentModeration(rProjectId+"-2", "DISABLED"),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccProjectConfig_contentModeration(rName+"-2", "DISABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, rProjectId+"-2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rProjectId+"-2"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName+"-2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-2"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rekognition", regexache.MustCompile(`project/`+rName+`-2/\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
 				),
@@ -105,7 +108,7 @@ func TestAccRekognitionProject_ContentModeration(t *testing.T) {
 func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rProjectId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_project.test"
 	feature := "CUSTOM_LABELS"
 
@@ -117,16 +120,17 @@ func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_customLabels(rProjectId),
+				Config: testAccProjectConfig_customLabels(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, rProjectId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rProjectId),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rekognition", regexache.MustCompile(`project/`+rName+`/\d+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
+					resource.TestCheckNoResourceAttr(resourceName, "auto_update"),
 				),
 			},
 			{
@@ -141,7 +145,7 @@ func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 func TestAccRekognitionProject_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rProjectId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_project.test"
 	feature := "CONTENT_MODERATION"
 	autoUpdate := "ENABLED"
@@ -154,15 +158,78 @@ func TestAccRekognitionProject_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_contentModeration(rProjectId, autoUpdate),
+				Config: testAccProjectConfig_contentModeration(rName, autoUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceProject, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRekognitionProject_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rProjectId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rekognition_project.test"
+	feature := "CUSTOM_LABELS"
+
+	tags1 := `
+  tags = {
+    key1 = "value1"
+  }
+`
+	tags2 := `
+  tags = {
+    key1 = "value1"
+    key2 = "value2"
+  }
+`
+	tags3 := `
+  tags = {
+    key2 = "value2"
+  }
+`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
+			testAccProjectPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_tags(rProjectId, tags1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				Config: testAccProjectConfig_tags(rProjectId, tags2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccProjectConfig_tags(rProjectId, tags3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -229,22 +296,33 @@ func testAccProjectPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccProjectConfig_contentModeration(rProjectId string, autoUpdate string) string {
+func testAccProjectConfig_contentModeration(rName string, autoUpdate string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_project" "test" {
   name        = %[1]q
   auto_update = %[2]q
   feature     = "CONTENT_MODERATION"
 }
-`, rProjectId, autoUpdate)
+`, rName, autoUpdate)
 }
 
 // auto-update not supported for custom_labels
-func testAccProjectConfig_customLabels(rProjectId string) string {
+func testAccProjectConfig_customLabels(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_project" "test" {
   name    = %[1]q
   feature = "CUSTOM_LABELS"
 }
-`, rProjectId)
+`, rName)
+}
+
+func testAccProjectConfig_tags(rName, tags string) string {
+	return fmt.Sprintf(`
+resource "aws_rekognition_project" "test" {
+  name    = %[1]q
+  feature = "CUSTOM_LABELS"
+
+%[2]s
+}
+`, rName, tags)
 }

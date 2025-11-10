@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,8 +76,6 @@ func ResourceGeofenceCollection() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -86,7 +83,7 @@ const (
 	ResNameGeofenceCollection = "Geofence Collection"
 )
 
-func resourceGeofenceCollectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGeofenceCollectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
@@ -118,7 +115,7 @@ func resourceGeofenceCollectionCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceGeofenceCollectionRead(ctx, d, meta)...)
 }
 
-func resourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
@@ -145,7 +142,7 @@ func resourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceGeofenceCollectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGeofenceCollectionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
@@ -174,7 +171,7 @@ func resourceGeofenceCollectionUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceGeofenceCollectionRead(ctx, d, meta)...)
 }
 
-func resourceGeofenceCollectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGeofenceCollectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)

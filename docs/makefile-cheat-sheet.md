@@ -121,14 +121,20 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `go-build` | Provider Checks / go-build | ✔️ |  |  |
 | `go-misspell` | Provider Checks / misspell | ✔️ |  |  |
 | `golangci-lint`<sup>M</sup> | All golangci-lint Checks | ✔️ |  | `K`, `PKG`, `TEST` |
-| `golangci-lint1` | golangci-lint Checks / 1 of 2 | ✔️ |  | `K`, `PKG`, `TEST` |
-| `golangci-lint2` | golangci-lint Checks / 2 of 2 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint1` | golangci-lint Checks / 1 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint2` | golangci-lint Checks / 2 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint3` | golangci-lint Checks / 3 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint4` | golangci-lint Checks / 4 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `golangci-lint5` | golangci-lint Checks / 5 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
 | `help` | Display help |  |  |  |
 | `import-lint` | Provider Checks / import-lint | ✔️ |  | `K`, `PKG`, `TEST` |
 | `install`<sup>M</sup> | = `build` |  |  | `GO_VER` |
 | `lint`<sup>M</sup> | Legacy target, use caution |  | ✔️ |  |
 | `lint-fix`<sup>M</sup> | Fix acceptance test, website, and docs linter findings |  | ✔️ |  |
 | `misspell`<sup>M</sup> | Run all CI misspell checks | ✔️ |  |  |
+| `modern-check` | Check for modern Go | ✔️ |  | `TEST` |
+| `modern-fix` | Fix checks for modern Go | ✔️ |  | `TEST` |
+| `pr-target-check` | Pull Request Target Check | ✔️ |  |  |
 | `prereq-go` | Install the project's Go version |  |  | `GO_VER` |
 | `provider-lint` | ProviderLint Checks / providerlint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |
@@ -144,6 +150,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `semgrep-naming-cae`<sup>D</sup> | Semgrep Checks / Naming Scan Caps/`AWS`/EC2 | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-service-naming`<sup>D</sup> | Semgrep Checks / Service Name Scan A-Z | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-validate` | Validate Semgrep configuration files |  |  |  |
+| `semgrep-vcr` | Enable VCR support with Semgrep --autofix |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `skaff`<sup>D</sup> | Install skaff |  |  | `GO_VER` |
 | `skaff-check-compile` | Skaff Checks / Compile skaff | ✔️ |  |  |
 | `sweep`<sup>D</sup> | Run sweepers |  |  | `GO_VER`, `SWEEP_DIR`, `SWEEP_TIMEOUT`, `SWEEP`, `SWEEPARGS` |
@@ -166,6 +173,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `tfsdk2fw`<sup>D</sup> | Install tfsdk2fw |  |  | `GO_VER` |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |
 | `ts`<sup>M</sup> | Alias to `testacc-short` |  |  |  |
+| `vcr-enable` | Enable Go-VCR support |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `website`<sup>M</sup> | Run all CI website checks | ✔️ |  |  |
 | `website-link-check` | Check website links |  | ✔️ |  |
 | `website-link-check-ghrc` | Check website links with ghrc |  | ✔️ |  |

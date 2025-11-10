@@ -181,11 +181,11 @@ func dataSourceTargetGroup() *schema.Resource {
 	}
 }
 
-func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &elasticloadbalancingv2.DescribeTargetGroupsInput{}
 
@@ -263,7 +263,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s) attributes: %s", d.Id(), err)
 	}
 
-	if err := d.Set("stickiness", []interface{}{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
+	if err := d.Set("stickiness", []any{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
 	}
 

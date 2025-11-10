@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcId` - (Required) The ID of the VPC to associate with the carrier gateway.
 
@@ -81,4 +82,4 @@ Using `terraform import`, import `aws_ec2_carrier_gateway` using the carrier gat
 % terraform import aws_ec2_carrier_gateway.example cgw-12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9d4096fc983e6a4fb708311553dddf500634237507ba8f350eee35f1f925e85c -->
+<!-- cache-key: cdktf-0.20.8 input-14eb3df479680f95c4bd454d47477d0d6ae13f08ce411334576bd8acd3055abc -->

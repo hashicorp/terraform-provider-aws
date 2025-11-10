@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sns_topic")
+// @SDKDataSource("aws_sns_topic", name="Topic")
 // @Testing(tagsTest=true)
 // @Tags(identifierAttribute="arn")
 func dataSourceTopic() *schema.Resource {
@@ -41,7 +41,7 @@ func dataSourceTopic() *schema.Resource {
 	}
 }
 
-func dataSourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 

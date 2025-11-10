@@ -54,7 +54,7 @@ func dataSourceDocument() *schema.Resource {
 	}
 }
 
-func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 

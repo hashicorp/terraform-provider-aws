@@ -24,23 +24,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const BucketACLSeparator = ","
-
 // @SDKResource("aws_s3_bucket_acl", name="Bucket ACL")
+// @IdentityAttribute("bucket")
+// @IdentityAttribute("expected_bucket_owner", optional="true")
+// @IdentityAttribute("acl", optional="true", testNotNull="true")
+// @MutableIdentity
+// @ImportIDHandler("bucketACLImportID")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(checkDestroyNoop=true)
+// @Testing(importIgnore="access_control_policy.0.grant.0.grantee.0.display_name;access_control_policy.0.owner.0.display_name")
+// @Testing(plannableImportAction="NoOp")
 func resourceBucketACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketACLCreate,
 		ReadWithoutTimeout:   resourceBucketACLRead,
 		UpdateWithoutTimeout: resourceBucketACLUpdate,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"access_control_policy": {
@@ -69,6 +73,8 @@ func resourceBucketACL() *schema.Resource {
 												names.AttrDisplayName: {
 													Type:     schema.TypeString,
 													Computed: true,
+													Deprecated: "display_name is deprecated. This attribute is no longer returned by " +
+														"AWS and will be removed in a future major version.",
 												},
 												names.AttrID: {
 													Type:     schema.TypeString,
@@ -104,6 +110,8 @@ func resourceBucketACL() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										Deprecated: "display_name is deprecated. This attribute is no longer returned by " +
+											"AWS and will be removed in a future major version.",
 									},
 									names.AttrID: {
 										Type:     schema.TypeString,
@@ -148,7 +156,7 @@ func resourceBucketACL() *schema.Resource {
 	}
 }
 
-func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -168,11 +176,11 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	if v, ok := d.GetOk("access_control_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AccessControlPolicy = expandAccessControlPolicy(v.([]interface{}))
+	if v, ok := d.GetOk("access_control_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AccessControlPolicy = expandAccessControlPolicy(v.([]any))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketAcl(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -184,9 +192,9 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) ACL: %s", bucket, err)
 	}
 
-	d.SetId(BucketACLCreateResourceID(bucket, expectedBucketOwner, acl))
+	d.SetId(createBucketACLResourceID(bucket, expectedBucketOwner, acl))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findBucketACL(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -197,11 +205,11 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceBucketACLRead(ctx, d, meta)...)
 }
 
-func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, acl, err := BucketACLParseResourceID(d.Id())
+	bucket, expectedBucketOwner, acl, err := parseBucketACLResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -232,11 +240,11 @@ func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket, expectedBucketOwner, acl, err := BucketACLParseResourceID(d.Id())
+	bucket, expectedBucketOwner, acl, err := parseBucketACLResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -253,7 +261,7 @@ func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if d.HasChange("access_control_policy") {
-		input.AccessControlPolicy = expandAccessControlPolicy(d.Get("access_control_policy").([]interface{}))
+		input.AccessControlPolicy = expandAccessControlPolicy(d.Get("access_control_policy").([]any))
 	}
 
 	if d.HasChange("acl") {
@@ -269,7 +277,7 @@ func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.HasChange("acl") {
 		// Set new ACL value back in resource ID
-		d.SetId(BucketACLCreateResourceID(bucket, expectedBucketOwner, acl))
+		d.SetId(createBucketACLResourceID(bucket, expectedBucketOwner, acl))
 	}
 
 	return append(diags, resourceBucketACLRead(ctx, d, meta)...)
@@ -303,12 +311,12 @@ func findBucketACL(ctx context.Context, conn *s3.Client, bucket, expectedBucketO
 	return output, nil
 }
 
-func expandAccessControlPolicy(l []interface{}) *types.AccessControlPolicy {
+func expandAccessControlPolicy(l []any) *types.AccessControlPolicy {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -319,25 +327,25 @@ func expandAccessControlPolicy(l []interface{}) *types.AccessControlPolicy {
 		result.Grants = expandGrants(v.List())
 	}
 
-	if v, ok := tfMap[names.AttrOwner].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrOwner].([]any); ok && len(v) > 0 && v[0] != nil {
 		result.Owner = expandOwner(v)
 	}
 
 	return result
 }
 
-func expandGrants(l []interface{}) []types.Grant {
+func expandGrants(l []any) []types.Grant {
 	var grants []types.Grant
 
 	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		grant := types.Grant{}
 
-		if v, ok := tfMap["grantee"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap["grantee"].([]any); ok && len(v) > 0 && v[0] != nil {
 			grant.Grantee = expandACLGrantee(v)
 		}
 
@@ -351,12 +359,12 @@ func expandGrants(l []interface{}) []types.Grant {
 	return grants
 }
 
-func expandACLGrantee(l []interface{}) *types.Grantee {
+func expandACLGrantee(l []any) *types.Grantee {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -382,12 +390,12 @@ func expandACLGrantee(l []interface{}) *types.Grantee {
 	return result
 }
 
-func expandOwner(l []interface{}) *types.Owner {
+func expandOwner(l []any) *types.Owner {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -405,12 +413,12 @@ func expandOwner(l []interface{}) *types.Owner {
 	return owner
 }
 
-func flattenBucketACL(apiObject *s3.GetBucketAclOutput) []interface{} {
+func flattenBucketACL(apiObject *s3.GetBucketAclOutput) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if len(apiObject.Grants) > 0 {
 		m["grant"] = flattenGrants(apiObject.Grants)
@@ -420,14 +428,14 @@ func flattenBucketACL(apiObject *s3.GetBucketAclOutput) []interface{} {
 		m[names.AttrOwner] = flattenOwner(apiObject.Owner)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenGrants(grants []types.Grant) []interface{} {
-	var results []interface{}
+func flattenGrants(grants []types.Grant) []any {
+	var results []any
 
 	for _, grant := range grants {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"permission": grant.Permission,
 		}
 
@@ -441,12 +449,12 @@ func flattenGrants(grants []types.Grant) []interface{} {
 	return results
 }
 
-func flattenACLGrantee(grantee *types.Grantee) []interface{} {
+func flattenACLGrantee(grantee *types.Grantee) []any {
 	if grantee == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrType: grantee.Type,
 	}
 
@@ -466,15 +474,15 @@ func flattenACLGrantee(grantee *types.Grantee) []interface{} {
 		m[names.AttrURI] = aws.ToString(grantee.URI)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOwner(owner *types.Owner) []interface{} {
+func flattenOwner(owner *types.Owner) []any {
 	if owner == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if owner.DisplayName != nil {
 		m[names.AttrDisplayName] = aws.ToString(owner.DisplayName)
@@ -484,29 +492,31 @@ func flattenOwner(owner *types.Owner) []interface{} {
 		m[names.AttrID] = aws.ToString(owner.ID)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-// BucketACLCreateResourceID is a method for creating an ID string
+const bucketACLSeparator = ","
+
+// createBucketACLResourceID is a method for creating an ID string
 // with the bucket name and optional accountID and/or ACL.
-func BucketACLCreateResourceID(bucket, expectedBucketOwner, acl string) string {
+func createBucketACLResourceID(bucket, expectedBucketOwner, acl string) string {
 	if expectedBucketOwner == "" {
 		if acl == "" {
 			return bucket
 		}
-		return strings.Join([]string{bucket, acl}, BucketACLSeparator)
+		return strings.Join([]string{bucket, acl}, bucketACLSeparator)
 	}
 
 	if acl == "" {
-		return strings.Join([]string{bucket, expectedBucketOwner}, BucketACLSeparator)
+		return strings.Join([]string{bucket, expectedBucketOwner}, bucketACLSeparator)
 	}
 
-	return strings.Join([]string{bucket, expectedBucketOwner, acl}, BucketACLSeparator)
+	return strings.Join([]string{bucket, expectedBucketOwner, acl}, bucketACLSeparator)
 }
 
-// BucketACLParseResourceID is a method for parsing the ID string
+// parseBucketACLResourceID is a method for parsing the ID string
 // for the bucket name, accountID, and ACL if provided.
-func BucketACLParseResourceID(id string) (string, string, string, error) {
+func parseBucketACLResourceID(id string) (string, string, string, error) {
 	// For only bucket name in the ID  e.g. my-bucket or My_Bucket
 	// ~> On or after 3/1/2018: Bucket names can consist of only lowercase letters, numbers, dots, and hyphens; Max 63 characters
 	// ~> Before 3/1/2018: Bucket names could consist of uppercase letters and underscores if in us-east-1; Max 255 characters
@@ -528,33 +538,63 @@ func BucketACLParseResourceID(id string) (string, string, string, error) {
 
 	// Bucket and Account ID ONLY
 	if bucketAndOwnerRegex.MatchString(id) {
-		parts := strings.Split(id, BucketACLSeparator)
+		parts := strings.Split(id, bucketACLSeparator)
 		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-			return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET%sEXPECTED_BUCKET_OWNER", id, BucketACLSeparator)
+			return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET%sEXPECTED_BUCKET_OWNER", id, bucketACLSeparator)
 		}
 		return parts[0], parts[1], "", nil
 	}
 
 	// Bucket and ACL ONLY
 	if bucketAndAclRegex.MatchString(id) {
-		parts := strings.Split(id, BucketACLSeparator)
+		parts := strings.Split(id, bucketACLSeparator)
 		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-			return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET%sACL", id, BucketACLSeparator)
+			return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET%sACL", id, bucketACLSeparator)
 		}
 		return parts[0], "", parts[1], nil
 	}
 
 	// Bucket, Account ID, and ACL
 	if bucketOwnerAclRegex.MatchString(id) {
-		parts := strings.Split(id, BucketACLSeparator)
+		parts := strings.Split(id, bucketACLSeparator)
 		if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-			return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET%[2]sEXPECTED_BUCKET_OWNER%[2]sACL", id, BucketACLSeparator)
+			return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET%[2]sEXPECTED_BUCKET_OWNER%[2]sACL", id, bucketACLSeparator)
 		}
 		return parts[0], parts[1], parts[2], nil
 	}
 
 	return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET or BUCKET%[2]sEXPECTED_BUCKET_OWNER or BUCKET%[2]sACL "+
-		"or BUCKET%[2]sEXPECTED_BUCKET_OWNER%[2]sACL", id, BucketACLSeparator)
+		"or BUCKET%[2]sEXPECTED_BUCKET_OWNER%[2]sACL", id, bucketACLSeparator)
+}
+
+var _ inttypes.SDKv2ImportID = bucketACLImportID{}
+
+type bucketACLImportID struct{}
+
+func (bucketACLImportID) Create(d *schema.ResourceData) string {
+	bucket := d.Get(names.AttrBucket).(string)
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
+	acl := d.Get("acl").(string)
+	return createBucketACLResourceID(bucket, expectedBucketOwner, acl)
+}
+
+func (bucketACLImportID) Parse(id string) (string, map[string]string, error) {
+	bucket, expectedBucketOwner, acl, err := parseBucketACLResourceID(id)
+	if err != nil {
+		return id, nil, err
+	}
+
+	results := map[string]string{
+		names.AttrBucket: bucket,
+	}
+	if expectedBucketOwner != "" {
+		results[names.AttrExpectedBucketOwner] = expectedBucketOwner
+	}
+	if acl != "" {
+		results["acl"] = acl
+	}
+
+	return id, results, nil
 }
 
 // These should be defined in the AWS SDK for Go. There is an issue, https://github.com/aws/aws-sdk-go/issues/2683.

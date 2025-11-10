@@ -215,16 +215,14 @@ func resourceNFSFileShare() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
-	fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
+	fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]any))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -255,7 +253,7 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("cache_attributes"); ok {
-		input.CacheAttributes = expandNFSFileShareCacheAttributes(v.([]interface{}))
+		input.CacheAttributes = expandNFSFileShareCacheAttributes(v.([]any))
 	}
 
 	if v, ok := d.GetOk("file_share_name"); ok {
@@ -289,7 +287,7 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceNFSFileShareRead(ctx, d, meta)...)
 }
 
-func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -339,12 +337,12 @@ func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
+		fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]any))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -367,7 +365,7 @@ func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if v, ok := d.GetOk("cache_attributes"); ok {
-			input.CacheAttributes = expandNFSFileShareCacheAttributes(v.([]interface{}))
+			input.CacheAttributes = expandNFSFileShareCacheAttributes(v.([]any))
 		}
 
 		if v, ok := d.GetOk("file_share_name"); ok {
@@ -436,7 +434,7 @@ func findNFSFileShares(ctx context.Context, conn *storagegateway.Client, input *
 }
 
 func statusNFSFileShare(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findNFSFileShareByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -506,7 +504,7 @@ func waitNFSFileShareDeleted(ctx context.Context, conn *storagegateway.Client, a
 	return nil, err
 }
 
-func resourceNFSFileShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNFSFileShareDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -530,12 +528,12 @@ func resourceNFSFileShareDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func expandNFSFileShareDefaults(tfList []interface{}) (*awstypes.NFSFileShareDefaults, error) {
+func expandNFSFileShareDefaults(tfList []any) (*awstypes.NFSFileShareDefaults, error) {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil, nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	groupID, err := strconv.ParseInt(tfMap["group_id"].(string), 10, 64)
 	if err != nil {
@@ -557,27 +555,27 @@ func expandNFSFileShareDefaults(tfList []interface{}) (*awstypes.NFSFileShareDef
 	return apiObject, nil
 }
 
-func flattenNFSFileShareDefaults(apiObject *awstypes.NFSFileShareDefaults) []interface{} {
+func flattenNFSFileShareDefaults(apiObject *awstypes.NFSFileShareDefaults) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"directory_mode":  aws.ToString(apiObject.DirectoryMode),
 		"file_mode":       aws.ToString(apiObject.FileMode),
 		"group_id":        strconv.Itoa(int(aws.ToInt64(apiObject.GroupId))),
 		names.AttrOwnerID: strconv.Itoa(int(aws.ToInt64(apiObject.OwnerId))),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandNFSFileShareCacheAttributes(tfList []interface{}) *awstypes.CacheAttributes {
+func expandNFSFileShareCacheAttributes(tfList []any) *awstypes.CacheAttributes {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &awstypes.CacheAttributes{
 		CacheStaleTimeoutInSeconds: aws.Int32(int32(tfMap["cache_stale_timeout_in_seconds"].(int))),
@@ -586,14 +584,14 @@ func expandNFSFileShareCacheAttributes(tfList []interface{}) *awstypes.CacheAttr
 	return apiObject
 }
 
-func flattenNFSFileShareCacheAttributes(apiObject *awstypes.CacheAttributes) []interface{} {
+func flattenNFSFileShareCacheAttributes(apiObject *awstypes.CacheAttributes) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"cache_stale_timeout_in_seconds": aws.ToInt32(apiObject.CacheStaleTimeoutInSeconds),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

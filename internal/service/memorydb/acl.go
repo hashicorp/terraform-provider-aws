@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,8 +38,6 @@ func resourceACL() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -81,7 +78,7 @@ func resourceACL() *schema.Resource {
 	}
 }
 
-func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -110,7 +107,7 @@ func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceACLRead(ctx, d, meta)...)
 }
 
-func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -135,7 +132,7 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -194,7 +191,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceACLRead(ctx, d, meta)...)
 }
 
-func resourceACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceACLDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -261,7 +258,7 @@ func findACLs(ctx context.Context, conn *memorydb.Client, input *memorydb.Descri
 }
 
 func statusACL(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findACLByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -301,10 +298,12 @@ func waitACLDeleted(ctx context.Context, conn *memorydb.Client, name string) (*a
 		timeout = 5 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{aclStatusDeleting},
-		Target:  []string{},
-		Refresh: statusACL(ctx, conn, name),
-		Timeout: timeout,
+		Pending:      []string{aclStatusDeleting},
+		Target:       []string{},
+		Refresh:      statusACL(ctx, conn, name),
+		Timeout:      timeout,
+		Delay:        30 * time.Second,
+		PollInterval: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

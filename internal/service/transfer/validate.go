@@ -9,7 +9,7 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-func validServerID(v interface{}, k string) (ws []string, errors []error) {
+func validServerID(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
@@ -23,7 +23,7 @@ func validServerID(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validUserName(v interface{}, k string) (ws []string, errors []error) {
+func validUserName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
 	if !regexache.MustCompile(`^[\w][\w@.-]{2,99}$`).MatchString(value) {

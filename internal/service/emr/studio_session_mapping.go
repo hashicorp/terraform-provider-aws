@@ -71,7 +71,7 @@ func resourceStudioSessionMapping() *schema.Resource {
 	}
 }
 
-func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -105,7 +105,7 @@ func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceStudioSessionMappingRead(ctx, d, meta)...)
 }
 
-func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -130,7 +130,7 @@ func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -160,7 +160,7 @@ func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceStudioSessionMappingRead(ctx, d, meta)...)
 }
 
-func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 

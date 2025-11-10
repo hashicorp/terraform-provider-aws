@@ -52,7 +52,7 @@ func resourceEventStream() *schema.Resource {
 	}
 }
 
-func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -69,13 +69,9 @@ func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// Retry for IAM eventual consistency
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.BadRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.BadRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutEventStream(ctx, &req)
 	}, "make sure the IAM Role is configured correctly")
-
-	if tfresource.TimedOut(err) { // nosemgrep:ci.helper-schema-TimeoutError-check-doesnt-return-output
-		_, err = conn.PutEventStream(ctx, &req)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting Pinpoint Event Stream for application %s: %s", applicationId, err)
@@ -86,7 +82,7 @@ func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceEventStreamRead(ctx, d, meta)...)
 }
 
-func resourceEventStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -111,7 +107,7 @@ func resourceEventStreamRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceEventStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventStreamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 

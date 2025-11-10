@@ -10,7 +10,7 @@ description: |-
 
 Terraform data source for managing an AWS Transfer Family Connector.
 
-### Basic Usage
+## Example Usage
 
 ```terraform
 data "aws_transfer_connector" "test" {
@@ -20,8 +20,9 @@ data "aws_transfer_connector" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Unique identifier for connector
 
 ## Attribute Reference
@@ -45,7 +46,7 @@ This data source exports the following attributes in addition to the arguments a
 * `service_managed_egress_ip_addresses` - List of egress Ip addresses.
 * `sftp_config` - Object containing the following attributes:
     * `trusted_host_keys` - List of the public portions of the host keys that are used to identify the servers the connector is connected to.
-    * `user_secret_id` - Identifer for the secret in AWS Secrets Manager that contains the SFTP user's private key, and/or password.
+    * `user_secret_id` - Identifier for the secret in AWS Secrets Manager that contains the SFTP user's private key, and/or password.
 * `tags` - Object containing the following attributes:
     * `key` - Name of the tag.
     * `value` - Values associated with the tags key.

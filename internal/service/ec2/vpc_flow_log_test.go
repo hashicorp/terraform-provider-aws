@@ -12,8 +12,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -23,9 +28,9 @@ import (
 func TestAccVPCFlowLog_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	iamRoleResourceName := "aws_iam_role.test"
-	resourceName := "aws_flow_log.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -42,9 +47,8 @@ func TestAccVPCFlowLog_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-flow-log/fl-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "deliver_cross_account_role", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "log_destination", cloudwatchLogGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, cloudwatchLogGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "600"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_type", "ALL"),
@@ -92,9 +96,9 @@ func TestAccVPCFlowLog_logFormat(t *testing.T) {
 func TestAccVPCFlowLog_subnetID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	iamRoleResourceName := "aws_iam_role.test"
-	resourceName := "aws_flow_log.test"
 	subnetResourceName := "aws_subnet.test.0"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -109,9 +113,8 @@ func TestAccVPCFlowLog_subnetID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "log_destination", cloudwatchLogGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, cloudwatchLogGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "600"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "traffic_type", "ALL"),
@@ -129,9 +132,9 @@ func TestAccVPCFlowLog_subnetID(t *testing.T) {
 func TestAccVPCFlowLog_transitGatewayID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	iamRoleResourceName := "aws_iam_role.test"
-	resourceName := "aws_flow_log.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -147,9 +150,8 @@ func TestAccVPCFlowLog_transitGatewayID(t *testing.T) {
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-flow-log/fl-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "log_destination", cloudwatchLogGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, cloudwatchLogGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),
@@ -166,9 +168,9 @@ func TestAccVPCFlowLog_transitGatewayID(t *testing.T) {
 func TestAccVPCFlowLog_transitGatewayAttachmentID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	iamRoleResourceName := "aws_iam_role.test"
-	resourceName := "aws_flow_log.test"
 	transitGatewayAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -184,9 +186,8 @@ func TestAccVPCFlowLog_transitGatewayAttachmentID(t *testing.T) {
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-flow-log/fl-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "log_destination", cloudwatchLogGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, cloudwatchLogGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayAttachmentResourceName, names.AttrID),
 				),
@@ -203,8 +204,8 @@ func TestAccVPCFlowLog_transitGatewayAttachmentID(t *testing.T) {
 func TestAccVPCFlowLog_LogDestinationType_cloudWatchLogs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowLog awstypes.FlowLog
-	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_flow_log.test"
+	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -219,8 +220,8 @@ func TestAccVPCFlowLog_LogDestinationType_cloudWatchLogs(t *testing.T) {
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					// We automatically trim :* from ARNs if present
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "log_destination", "logs", fmt.Sprintf("log-group:%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "log_destination", cloudwatchLogGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, cloudwatchLogGroupResourceName, names.AttrName),
 				),
 			},
 			{
@@ -251,7 +252,6 @@ func TestAccVPCFlowLog_LogDestinationType_kinesisFirehose(t *testing.T) {
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", kinesisFirehoseResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "kinesis-data-firehose"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 				),
 			},
 			{
@@ -282,7 +282,6 @@ func TestAccVPCFlowLog_LogDestinationType_s3(t *testing.T) {
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 				),
 			},
 			{
@@ -331,7 +330,6 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DO_plainText(t *testing.T) {
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "plain-text"),
 				),
 			},
@@ -363,7 +361,6 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOPlainText_hiveCompatible(t *testing
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "plain-text"),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.per_hour_partition", acctest.CtTrue),
@@ -397,7 +394,6 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DO_parquet(t *testing.T) {
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "parquet"),
 				),
 			},
@@ -429,7 +425,6 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOParquet_hiveCompatible(t *testing.T
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "parquet"),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", acctest.CtTrue),
 				),
@@ -462,7 +457,6 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOParquetHiveCompatible_perHour(t *te
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "parquet"),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.per_hour_partition", acctest.CtTrue),
@@ -575,6 +569,119 @@ func TestAccVPCFlowLog_disappears(t *testing.T) {
 	})
 }
 
+func TestAccVPCFlowLog_upgradeFromV5(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckFlowLogDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccVPCFlowLogConfig_destinationTypeCloudWatchLogs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrLogGroupName), knownvalue.NotNull()),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccVPCFlowLogConfig_destinationTypeCloudWatchLogs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrLogGroupName)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPCFlowLog_upgradeFromV5PlanRefreshFalse(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckFlowLogDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccVPCFlowLogConfig_destinationTypeCloudWatchLogs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrLogGroupName), knownvalue.NotNull()),
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrRegion)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccVPCFlowLogConfig_destinationTypeCloudWatchLogs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrLogGroupName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckFlowLogExists(ctx context.Context, n string, v *awstypes.FlowLog) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -662,10 +769,11 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = aws_iam_role.test.arn
-  log_group_name = aws_cloudwatch_log_group.test.name
-  traffic_type   = "ALL"
-  vpc_id         = aws_vpc.test.id
+  iam_role_arn         = aws_iam_role.test.arn
+  log_destination      = aws_cloudwatch_log_group.test.arn
+  log_destination_type = "cloud-watch-logs"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
 }
 `, rName))
 }
@@ -904,10 +1012,11 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = aws_iam_role.test.arn
-  log_group_name = aws_cloudwatch_log_group.test.name
-  subnet_id      = aws_subnet.test[0].id
-  traffic_type   = "ALL"
+  iam_role_arn         = aws_iam_role.test.arn
+  log_destination      = aws_cloudwatch_log_group.test.arn
+  log_destination_type = "cloud-watch-logs"
+  subnet_id            = aws_subnet.test[0].id
+  traffic_type         = "ALL"
 
   tags = {
     Name = %[1]q
@@ -998,10 +1107,11 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = aws_iam_role.test.arn
-  log_group_name = aws_cloudwatch_log_group.test.name
-  traffic_type   = "ALL"
-  vpc_id         = aws_vpc.test.id
+  iam_role_arn         = aws_iam_role.test.arn
+  log_destination      = aws_cloudwatch_log_group.test.arn
+  log_destination_type = "cloud-watch-logs"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -1042,10 +1152,11 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = aws_iam_role.test.arn
-  log_group_name = aws_cloudwatch_log_group.test.name
-  traffic_type   = "ALL"
-  vpc_id         = aws_vpc.test.id
+  iam_role_arn         = aws_iam_role.test.arn
+  log_destination      = aws_cloudwatch_log_group.test.arn
+  log_destination_type = "cloud-watch-logs"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -1087,10 +1198,11 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn   = aws_iam_role.test.arn
-  log_group_name = aws_cloudwatch_log_group.test.name
-  traffic_type   = "ALL"
-  vpc_id         = aws_vpc.test.id
+  iam_role_arn         = aws_iam_role.test.arn
+  log_destination      = aws_cloudwatch_log_group.test.arn
+  log_destination_type = "cloud-watch-logs"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
 
   max_aggregation_interval = 60
 
@@ -1140,7 +1252,8 @@ resource "aws_cloudwatch_log_group" "test" {
 
 resource "aws_flow_log" "test" {
   iam_role_arn             = aws_iam_role.test.arn
-  log_group_name           = aws_cloudwatch_log_group.test.name
+  log_destination          = aws_cloudwatch_log_group.test.arn
+  log_destination_type     = "cloud-watch-logs"
   max_aggregation_interval = 60
   transit_gateway_id       = aws_ec2_transit_gateway.test.id
 
@@ -1200,7 +1313,8 @@ resource "aws_cloudwatch_log_group" "test" {
 
 resource "aws_flow_log" "test" {
   iam_role_arn                  = aws_iam_role.test.arn
-  log_group_name                = aws_cloudwatch_log_group.test.name
+  log_destination               = aws_cloudwatch_log_group.test.arn
+  log_destination_type          = "cloud-watch-logs"
   max_aggregation_interval      = 60
   transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test.id
 

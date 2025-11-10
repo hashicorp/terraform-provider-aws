@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,8 +42,6 @@ func resourceRoutingProfile() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -80,6 +77,20 @@ func resourceRoutingProfile() *schema.Resource {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 10),
+						},
+						"cross_channel_behavior": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"behavior_type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.BehaviorType](),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -135,13 +146,13 @@ func resourceRoutingProfile() *schema.Resource {
 	}
 }
 
-func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	name := d.Get(names.AttrName).(string)
-	input := &connect.CreateRoutingProfileInput{
+	input := connect.CreateRoutingProfileInput{
 		DefaultOutboundQueueId: aws.String(d.Get("default_outbound_queue_id").(string)),
 		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		InstanceId:             aws.String(instanceID),
@@ -159,7 +170,7 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		input.QueueConfigs = queueConfigs
 	}
 
-	output, err := conn.CreateRoutingProfile(ctx, input)
+	output, err := conn.CreateRoutingProfile(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Routing Profile (%s): %s", name, err)
@@ -179,7 +190,7 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRoutingProfileRead(ctx, d, meta)...)
 }
 
-func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -188,7 +199,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	routingProfile, err := findRoutingProfileByTwoPartKey(ctx, conn, instanceID, routingProfileID)
+	output, err := findRoutingProfileByTwoPartKey(ctx, conn, instanceID, routingProfileID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Routing Profile (%s) not found, removing from state", d.Id())
@@ -200,15 +211,15 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Connect Routing Profile (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, routingProfile.RoutingProfileArn)
-	d.Set("default_outbound_queue_id", routingProfile.DefaultOutboundQueueId)
-	d.Set(names.AttrDescription, routingProfile.Description)
+	d.Set(names.AttrARN, output.RoutingProfileArn)
+	d.Set("default_outbound_queue_id", output.DefaultOutboundQueueId)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrInstanceID, instanceID)
-	if err := d.Set("media_concurrencies", flattenMediaConcurrencies(routingProfile.MediaConcurrencies)); err != nil {
+	if err := d.Set("media_concurrencies", flattenMediaConcurrencies(output.MediaConcurrencies, d.Get("media_concurrencies").(*schema.Set).List())); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting media_concurrencies: %s", err)
 	}
-	d.Set(names.AttrName, routingProfile.Name)
-	d.Set("routing_profile_id", routingProfile.RoutingProfileId)
+	d.Set(names.AttrName, output.Name)
+	d.Set("routing_profile_id", output.RoutingProfileId)
 
 	queueConfigs, err := findRoutingConfigQueueConfigSummariesByTwoPartKey(ctx, conn, instanceID, routingProfileID)
 
@@ -220,12 +231,12 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting queue_configs: %s", err)
 	}
 
-	setTagsOut(ctx, routingProfile.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
-func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -242,13 +253,13 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChange("media_concurrencies") {
 		// updates to concurrency
-		input := &connect.UpdateRoutingProfileConcurrencyInput{
+		input := connect.UpdateRoutingProfileConcurrencyInput{
 			InstanceId:         aws.String(instanceID),
 			MediaConcurrencies: expandMediaConcurrencies(d.Get("media_concurrencies").(*schema.Set).List()),
 			RoutingProfileId:   aws.String(routingProfileID),
 		}
 
-		_, err = conn.UpdateRoutingProfileConcurrency(ctx, input)
+		_, err = conn.UpdateRoutingProfileConcurrency(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Connect Routing Profile (%s) Concurrency: %s", d.Id(), err)
@@ -257,13 +268,13 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChange("default_outbound_queue_id") {
 		// updates to default outbound queue id
-		input := &connect.UpdateRoutingProfileDefaultOutboundQueueInput{
+		input := connect.UpdateRoutingProfileDefaultOutboundQueueInput{
 			DefaultOutboundQueueId: aws.String(d.Get("default_outbound_queue_id").(string)),
 			InstanceId:             aws.String(instanceID),
 			RoutingProfileId:       aws.String(routingProfileID),
 		}
 
-		_, err = conn.UpdateRoutingProfileDefaultOutboundQueue(ctx, input)
+		_, err = conn.UpdateRoutingProfileDefaultOutboundQueue(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Connect Routing Profile (%s) DefaultOutboundQueue: %s", d.Id(), err)
@@ -272,14 +283,14 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges(names.AttrName, names.AttrDescription) {
 		// updates to name and/or description
-		input := &connect.UpdateRoutingProfileNameInput{
+		input := connect.UpdateRoutingProfileNameInput{
 			Description:      aws.String(d.Get(names.AttrDescription).(string)),
 			InstanceId:       aws.String(instanceID),
 			Name:             aws.String(d.Get(names.AttrName).(string)),
 			RoutingProfileId: aws.String(routingProfileID),
 		}
 
-		_, err = conn.UpdateRoutingProfileName(ctx, input)
+		_, err = conn.UpdateRoutingProfileName(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Connect Routing Profile (%s) Name: %s", d.Id(), err)
@@ -306,7 +317,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRoutingProfileRead(ctx, d, meta)...)
 }
 
-func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -316,10 +327,11 @@ func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Routing Profile: %s", d.Id())
-	_, err = conn.DeleteRoutingProfile(ctx, &connect.DeleteRoutingProfileInput{
+	input := connect.DeleteRoutingProfileInput{
 		InstanceId:       aws.String(instanceID),
 		RoutingProfileId: aws.String(routingProfileID),
-	})
+	}
+	_, err = conn.DeleteRoutingProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -370,31 +382,31 @@ func updateRoutingProfileQueueAssociations(ctx context.Context, conn *connect.Cl
 		}
 
 		if len(queueReferences) > 0 {
-			input := &connect.DisassociateRoutingProfileQueuesInput{
+			input := connect.DisassociateRoutingProfileQueuesInput{
 				InstanceId:       aws.String(instanceID),
 				QueueReferences:  queueReferences,
 				RoutingProfileId: aws.String(routingProfileID),
 			}
 
-			_, err := conn.DisassociateRoutingProfileQueues(ctx, input)
+			_, err := conn.DisassociateRoutingProfileQueues(ctx, &input)
 
 			if err != nil {
-				return fmt.Errorf("disassociating Connect Routing Profile (%s) queues: %s", routingProfileID, err)
+				return fmt.Errorf("disassociating Connect Routing Profile (%s) queues: %w", routingProfileID, err)
 			}
 		}
 	}
 
 	for chunk := range slices.Chunk(add, routingProfileQueueAssociationChunkSize) {
-		input := &connect.AssociateRoutingProfileQueuesInput{
+		input := connect.AssociateRoutingProfileQueuesInput{
 			InstanceId:       aws.String(instanceID),
 			QueueConfigs:     chunk,
 			RoutingProfileId: aws.String(routingProfileID),
 		}
 
-		_, err := conn.AssociateRoutingProfileQueues(ctx, input)
+		_, err := conn.AssociateRoutingProfileQueues(ctx, &input)
 
 		if err != nil {
-			return fmt.Errorf("associating Connect Routing Profile (%s) queues: %s", routingProfileID, err)
+			return fmt.Errorf("associating Connect Routing Profile (%s) queues: %w", routingProfileID, err)
 		}
 	}
 
@@ -402,12 +414,12 @@ func updateRoutingProfileQueueAssociations(ctx context.Context, conn *connect.Cl
 }
 
 func findRoutingProfileByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, routingProfileID string) (*awstypes.RoutingProfile, error) {
-	input := &connect.DescribeRoutingProfileInput{
+	input := connect.DescribeRoutingProfileInput{
 		InstanceId:       aws.String(instanceID),
 		RoutingProfileId: aws.String(routingProfileID),
 	}
 
-	return findRoutingProfile(ctx, conn, input)
+	return findRoutingProfile(ctx, conn, &input)
 }
 
 func findRoutingProfile(ctx context.Context, conn *connect.Client, input *connect.DescribeRoutingProfileInput) (*awstypes.RoutingProfile, error) {
@@ -433,13 +445,13 @@ func findRoutingProfile(ctx context.Context, conn *connect.Client, input *connec
 
 func findRoutingConfigQueueConfigSummariesByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, routingProfileID string) ([]awstypes.RoutingProfileQueueConfigSummary, error) {
 	const maxResults = 60
-	input := &connect.ListRoutingProfileQueuesInput{
+	input := connect.ListRoutingProfileQueuesInput{
 		InstanceId:       aws.String(instanceID),
 		MaxResults:       aws.Int32(maxResults),
 		RoutingProfileId: aws.String(routingProfileID),
 	}
 
-	return findRoutingConfigQueueConfigSummaries(ctx, conn, input)
+	return findRoutingConfigQueueConfigSummaries(ctx, conn, &input)
 }
 
 func findRoutingConfigQueueConfigSummaries(ctx context.Context, conn *connect.Client, input *connect.ListRoutingProfileQueuesInput) ([]awstypes.RoutingProfileQueueConfigSummary, error) {
@@ -466,7 +478,7 @@ func findRoutingConfigQueueConfigSummaries(ctx context.Context, conn *connect.Cl
 	return output, nil
 }
 
-func expandMediaConcurrencies(tfList []interface{}) []awstypes.MediaConcurrency {
+func expandMediaConcurrencies(tfList []any) []awstypes.MediaConcurrency {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -474,24 +486,36 @@ func expandMediaConcurrencies(tfList []interface{}) []awstypes.MediaConcurrency 
 	apiObjects := []awstypes.MediaConcurrency{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.MediaConcurrency{
 			Channel:     awstypes.Channel(tfMap["channel"].(string)),
 			Concurrency: aws.Int32(int32(tfMap["concurrency"].(int))),
 		}
+
+		if v, ok := tfMap["cross_channel_behavior"].([]any); ok && len(v) > 0 {
+			apiObject.CrossChannelBehavior = expandCrossChannelBehavior(v)
+		}
+
 		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency) []interface{} {
-	tfList := []interface{}{}
+func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency, mediaConcurrencyCfg []any) []any {
+	tfList := []any{}
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"channel":     apiObject.Channel,
 			"concurrency": aws.ToInt32(apiObject.Concurrency),
+		}
+
+		// Only write cross_channel_behavior to state when explicitly configured
+		channel := string(apiObject.Channel)
+		ccbChannels := channelsWithCrossChannelBehavior(mediaConcurrencyCfg)
+		if apiObject.CrossChannelBehavior != nil && slices.Contains(ccbChannels, channel) {
+			tfMap["cross_channel_behavior"] = flattenCrossChannelBehavior(apiObject.CrossChannelBehavior)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -500,7 +524,31 @@ func flattenMediaConcurrencies(apiObjects []awstypes.MediaConcurrency) []interfa
 	return tfList
 }
 
-func expandRoutingProfileQueueConfigs(tfList []interface{}) []awstypes.RoutingProfileQueueConfig {
+func expandCrossChannelBehavior(tfList []any) *awstypes.CrossChannelBehavior {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	return &awstypes.CrossChannelBehavior{
+		BehaviorType: awstypes.BehaviorType(tfMap["behavior_type"].(string)),
+	}
+}
+
+func flattenCrossChannelBehavior(apiObject *awstypes.CrossChannelBehavior) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	return []map[string]any{
+		{
+			"behavior_type": string(apiObject.BehaviorType),
+		},
+	}
+}
+
+func expandRoutingProfileQueueConfigs(tfList []any) []awstypes.RoutingProfileQueueConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -508,7 +556,7 @@ func expandRoutingProfileQueueConfigs(tfList []interface{}) []awstypes.RoutingPr
 	apiObjects := []awstypes.RoutingProfileQueueConfig{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.RoutingProfileQueueConfig{
 			Delay:    aws.Int32(int32(tfMap["delay"].(int))),
 			Priority: aws.Int32(int32(tfMap[names.AttrPriority].(int))),
@@ -524,11 +572,11 @@ func expandRoutingProfileQueueConfigs(tfList []interface{}) []awstypes.RoutingPr
 	return apiObjects
 }
 
-func flattenRoutingConfigQueueConfigSummaries(apiObjects []awstypes.RoutingProfileQueueConfigSummary) []interface{} {
-	tfList := []interface{}{}
+func flattenRoutingConfigQueueConfigSummaries(apiObjects []awstypes.RoutingProfileQueueConfigSummary) []any {
+	tfList := []any{}
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"channel":          apiObject.Channel,
 			"delay":            apiObject.Delay,
 			names.AttrPriority: aws.ToInt32(apiObject.Priority),
@@ -541,4 +589,26 @@ func flattenRoutingConfigQueueConfigSummaries(apiObjects []awstypes.RoutingProfi
 	}
 
 	return tfList
+}
+
+// channelsWithCrossChannelBehavior returns a list of channel names which have
+// cross_channel_behavior set
+//
+// This data structure can be used to determine when to write the remote cross_channel_behavior
+// value to state. Writing the value when a corresponding congiuration is not present
+// will trigger persistent drift as the object is nested within a required set attribute.
+func channelsWithCrossChannelBehavior(cfgList []any) []string {
+	var c []string
+	for _, l := range cfgList {
+		m := l.(map[string]any)
+		if m == nil {
+			continue
+		}
+
+		if v, ok := m["cross_channel_behavior"].([]any); ok && len(v) > 0 {
+			c = append(c, m["channel"].(string))
+		}
+	}
+
+	return c
 }

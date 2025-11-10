@@ -19,7 +19,8 @@ resource "aws_sesv2_configuration_set" "example" {
   configuration_set_name = "example"
 
   delivery_options {
-    tls_policy = "REQUIRE"
+    max_delivery_seconds = 300
+    tls_policy           = "REQUIRE"
   }
 
   reputation_options {
@@ -36,6 +37,7 @@ resource "aws_sesv2_configuration_set" "example" {
 
   tracking_options {
     custom_redirect_domain = "example.com"
+    https_policy           = "REQUIRE"
   }
 }
 ```
@@ -44,6 +46,7 @@ resource "aws_sesv2_configuration_set" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration_set_name` - (Required) The name of the configuration set.
 * `delivery_options` - (Optional) An object that defines the dedicated IP pool that is used to send emails that you send using the configuration set. See [`delivery_options` Block](#delivery_options-block) for details.
 * `reputation_options` - (Optional) An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set. See [`reputation_options` Block](#reputation_options-block) for details.
@@ -57,6 +60,7 @@ This resource supports the following arguments:
 
 The `delivery_options` configuration block supports the following arguments:
 
+* `max_delivery_seconds` - The maximum amount of time, in seconds, that Amazon SES API v2 will attempt delivery of email. If specified, the value must greater than or equal to 300 seconds (5 minutes) and less than or equal to 50400 seconds (840 minutes).
 * `sending_pool_name` - (Optional) The name of the dedicated IP pool to associate with the configuration set.
 * `tls_policy` - (Optional) Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS). Valid values: `REQUIRE`, `OPTIONAL`.
 
@@ -83,6 +87,7 @@ The `suppression_options` configuration block supports the following arguments:
 The `tracking_options` configuration block supports the following arguments:
 
 * `custom_redirect_domain` - (Required) The domain to use for tracking open and click events.
+* `https_policy`: The https policy to use for tracking open and click events. Valid values are `REQUIRE`, `REQUIRE_OPEN_ONLY` or `OPTIONAL`.
 
 ### `vdm_options` Block
 

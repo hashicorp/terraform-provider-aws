@@ -44,13 +44,13 @@ func dataSourceKafkaVersion() *schema.Resource { // nosemgrep:ci.kafka-in-func-n
 	}
 }
 
-func dataSourceKafkaVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.kafka-in-func-name
+func dataSourceKafkaVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.kafka-in-func-name
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	var preferredVersions []string
-	if v, ok := d.GetOk("preferred_versions"); ok && len(v.([]interface{})) > 0 {
-		preferredVersions = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("preferred_versions"); ok && len(v.([]any)) > 0 {
+		preferredVersions = flex.ExpandStringValueList(v.([]any))
 	} else if v, ok := d.GetOk(names.AttrVersion); ok {
 		preferredVersions = []string{v.(string)}
 	}

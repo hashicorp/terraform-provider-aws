@@ -93,7 +93,7 @@ resource "aws_mq_broker" "test" {
   deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
   engine_type        = "ActiveMQ"
   engine_version     = "5.17.6"
-  host_instance_type = "mq.t2.micro"
+  host_instance_type = "mq.t3.micro"
 
   maintenance_window_start_time {
     day_of_week = "TUESDAY"

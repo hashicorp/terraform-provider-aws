@@ -22,7 +22,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -66,7 +65,7 @@ func resourceWorkerConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					switch v := v.(type) {
 					case string:
 						return decodePropertiesFileContent(v)
@@ -78,12 +77,10 @@ func resourceWorkerConfiguration() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaConnectClient(ctx)
 
@@ -109,7 +106,7 @@ func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceWorkerConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaConnectClient(ctx)
 
@@ -140,7 +137,7 @@ func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceWorkerConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkerConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// This update function is for updating tags only - there is no update action for this resource.
@@ -148,7 +145,7 @@ func resourceWorkerConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceWorkerConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceWorkerConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkerConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaConnectClient(ctx)
 
@@ -198,7 +195,7 @@ func findWorkerConfigurationByARN(ctx context.Context, conn *kafkaconnect.Client
 }
 
 func statusWorkerConfiguration(ctx context.Context, conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findWorkerConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

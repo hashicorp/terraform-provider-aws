@@ -31,6 +31,7 @@ resource "aws_macie2_classification_export_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `s3_destination` - (Required) Configuration block for a S3 Destination. Defined below
 
 ### s3_destination Configuration Block
@@ -51,17 +52,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_classification_export_configuration` using the account ID and region. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_classification_export_configuration` using the region. For example:
 
 ```terraform
 import {
   to = aws_macie2_classification_export_configuration.example
-  id = "123456789012:us-west-2"
+  id = "us-west-2"
 }
 ```
 
-Using `terraform import`, import `aws_macie2_classification_export_configuration` using the account ID and region. For example:
+Using `terraform import`, import `aws_macie2_classification_export_configuration` using the region. For example:
 
 ```console
-% terraform import aws_macie2_classification_export_configuration.example 123456789012:us-west-2
+% terraform import aws_macie2_classification_export_configuration.example us-west-2
 ```

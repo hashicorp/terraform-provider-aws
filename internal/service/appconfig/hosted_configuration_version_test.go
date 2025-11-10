@@ -9,16 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appconfig"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -87,71 +85,35 @@ func testAccCheckHostedConfigurationVersionDestroy(ctx context.Context) resource
 				continue
 			}
 
-			appID, confProfID, versionNumber, err := tfappconfig.HostedConfigurationVersionParseID(rs.Primary.ID)
+			_, err := tfappconfig.FindHostedConfigurationVersionByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrApplicationID], rs.Primary.Attributes["configuration_profile_id"], flex.StringValueToInt32Value(rs.Primary.Attributes["version_number"]))
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
 
-			input := &appconfig.GetHostedConfigurationVersionInput{
-				ApplicationId:          aws.String(appID),
-				ConfigurationProfileId: aws.String(confProfID),
-				VersionNumber:          aws.Int32(versionNumber),
-			}
-
-			output, err := conn.GetHostedConfigurationVersion(ctx, input)
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error reading AppConfig Hosted Configuration Version (%s): %w", rs.Primary.ID, err)
-			}
-
-			if output != nil {
-				return fmt.Errorf("AppConfig Hosted Configuration Version (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("AppConfig Hosted Configuration Version %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckHostedConfigurationVersionExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckHostedConfigurationVersionExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Resource not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
-		}
-
-		appID, confProfID, versionNumber, err := tfappconfig.HostedConfigurationVersionParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
-		output, err := conn.GetHostedConfigurationVersion(ctx, &appconfig.GetHostedConfigurationVersionInput{
-			ApplicationId:          aws.String(appID),
-			ConfigurationProfileId: aws.String(confProfID),
-			VersionNumber:          aws.Int32(versionNumber),
-		})
+		_, err := tfappconfig.FindHostedConfigurationVersionByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrApplicationID], rs.Primary.Attributes["configuration_profile_id"], flex.StringValueToInt32Value(rs.Primary.Attributes["version_number"]))
 
-		if err != nil {
-			return fmt.Errorf("error reading AppConfig Hosted Configuration Version (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("AppConfig Hosted Configuration Version (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 

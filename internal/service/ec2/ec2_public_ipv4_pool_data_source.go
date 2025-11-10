@@ -71,7 +71,7 @@ func dataSourcePublicIPv4Pool() *schema.Resource {
 	}
 }
 
-func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -98,8 +98,8 @@ func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func flattenPublicIPv4PoolRange(apiObject awstypes.PublicIpv4PoolRange) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenPublicIPv4PoolRange(apiObject awstypes.PublicIpv4PoolRange) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AddressCount; v != nil {
 		tfMap["address_count"] = aws.ToInt32(v)
@@ -120,12 +120,12 @@ func flattenPublicIPv4PoolRange(apiObject awstypes.PublicIpv4PoolRange) map[stri
 	return tfMap
 }
 
-func flattenPublicIPv4PoolRanges(apiObjects []awstypes.PublicIpv4PoolRange) []interface{} {
+func flattenPublicIPv4PoolRanges(apiObjects []awstypes.PublicIpv4PoolRange) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPublicIPv4PoolRange(apiObject))

@@ -127,7 +127,7 @@ func resourceOutboundConnection() *schema.Resource {
 	}
 }
 
-func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -135,9 +135,9 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 	input := &opensearch.CreateOutboundConnectionInput{
 		ConnectionAlias:      aws.String(connectionAlias),
 		ConnectionMode:       awstypes.ConnectionMode(d.Get("connection_mode").(string)),
-		ConnectionProperties: expandOutboundConnectionConnectionProperties(d.Get("connection_properties").([]interface{})),
-		LocalDomainInfo:      expandOutboundConnectionDomainInfo(d.Get("local_domain_info").([]interface{})),
-		RemoteDomainInfo:     expandOutboundConnectionDomainInfo(d.Get("remote_domain_info").([]interface{})),
+		ConnectionProperties: expandOutboundConnectionConnectionProperties(d.Get("connection_properties").([]any)),
+		LocalDomainInfo:      expandOutboundConnectionDomainInfo(d.Get("local_domain_info").([]any)),
+		RemoteDomainInfo:     expandOutboundConnectionDomainInfo(d.Get("remote_domain_info").([]any)),
 	}
 
 	output, err := conn.CreateOutboundConnection(ctx, input)
@@ -171,7 +171,7 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceOutboundConnectionRead(ctx, d, meta)...)
 }
 
-func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -197,7 +197,7 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -286,7 +286,7 @@ func findOutboundConnections(ctx context.Context, conn *opensearch.Client, input
 }
 
 func statusOutboundConnection(ctx context.Context, conn *opensearch.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findOutboundConnectionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -350,12 +350,12 @@ func waitOutboundConnectionDeleted(ctx context.Context, conn *opensearch.Client,
 	return nil, err
 }
 
-func expandOutboundConnectionDomainInfo(vOptions []interface{}) *awstypes.DomainInformationContainer {
+func expandOutboundConnectionDomainInfo(vOptions []any) *awstypes.DomainInformationContainer {
 	if len(vOptions) == 0 || vOptions[0] == nil {
 		return nil
 	}
 
-	mOptions := vOptions[0].(map[string]interface{})
+	mOptions := vOptions[0].(map[string]any)
 
 	return &awstypes.DomainInformationContainer{
 		AWSDomainInformation: &awstypes.AWSDomainInformation{
@@ -366,56 +366,56 @@ func expandOutboundConnectionDomainInfo(vOptions []interface{}) *awstypes.Domain
 	}
 }
 
-func flattenOutboundConnectionDomainInfo(domainInfo *awstypes.DomainInformationContainer) []interface{} {
+func flattenOutboundConnectionDomainInfo(domainInfo *awstypes.DomainInformationContainer) []any {
 	if domainInfo == nil || domainInfo.AWSDomainInformation == nil {
 		return nil
 	}
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		names.AttrOwnerID:    aws.ToString(domainInfo.AWSDomainInformation.OwnerId),
 		names.AttrDomainName: aws.ToString(domainInfo.AWSDomainInformation.DomainName),
 		names.AttrRegion:     aws.ToString(domainInfo.AWSDomainInformation.Region),
 	}}
 }
 
-func expandOutboundConnectionConnectionProperties(cProperties []interface{}) *awstypes.ConnectionProperties {
+func expandOutboundConnectionConnectionProperties(cProperties []any) *awstypes.ConnectionProperties {
 	if len(cProperties) == 0 || cProperties[0] == nil {
 		return nil
 	}
 
-	mOptions := cProperties[0].(map[string]interface{})
+	mOptions := cProperties[0].(map[string]any)
 
 	return &awstypes.ConnectionProperties{
-		CrossClusterSearch: expandOutboundConnectionCrossClusterSearchConnectionProperties(mOptions["cross_cluster_search"].([]interface{})),
+		CrossClusterSearch: expandOutboundConnectionCrossClusterSearchConnectionProperties(mOptions["cross_cluster_search"].([]any)),
 	}
 }
 
-func flattenOutboundConnectionConnectionProperties(cProperties *awstypes.ConnectionProperties) []interface{} {
+func flattenOutboundConnectionConnectionProperties(cProperties *awstypes.ConnectionProperties) []any {
 	if cProperties == nil {
 		return nil
 	}
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		"cross_cluster_search": flattenOutboundConnectionCrossClusterSearchConnectionProperties(cProperties.CrossClusterSearch),
 		names.AttrEndpoint:     aws.ToString(cProperties.Endpoint),
 	}}
 }
 
-func expandOutboundConnectionCrossClusterSearchConnectionProperties(cProperties []interface{}) *awstypes.CrossClusterSearchConnectionProperties {
+func expandOutboundConnectionCrossClusterSearchConnectionProperties(cProperties []any) *awstypes.CrossClusterSearchConnectionProperties {
 	if len(cProperties) == 0 || cProperties[0] == nil {
 		return nil
 	}
 
-	mOptions := cProperties[0].(map[string]interface{})
+	mOptions := cProperties[0].(map[string]any)
 
 	return &awstypes.CrossClusterSearchConnectionProperties{
 		SkipUnavailable: awstypes.SkipUnavailableStatus(mOptions["skip_unavailable"].(string)),
 	}
 }
 
-func flattenOutboundConnectionCrossClusterSearchConnectionProperties(cProperties *awstypes.CrossClusterSearchConnectionProperties) []interface{} {
+func flattenOutboundConnectionCrossClusterSearchConnectionProperties(cProperties *awstypes.CrossClusterSearchConnectionProperties) []any {
 	if cProperties == nil {
 		return nil
 	}
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		"skip_unavailable": cProperties.SkipUnavailable,
 	}}
 }

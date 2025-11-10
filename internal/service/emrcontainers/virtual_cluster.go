@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -108,12 +107,10 @@ func resourceVirtualCluster() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
@@ -123,8 +120,8 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("container_provider"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ContainerProvider = expandContainerProvider(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("container_provider"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ContainerProvider = expandContainerProvider(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateVirtualCluster(ctx, input)
@@ -138,7 +135,7 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceVirtualClusterRead(ctx, d, meta)...)
 }
 
-func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
@@ -156,7 +153,7 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set(names.AttrARN, vc.Arn)
 	if vc.ContainerProvider != nil {
-		if err := d.Set("container_provider", []interface{}{flattenContainerProvider(vc.ContainerProvider)}); err != nil {
+		if err := d.Set("container_provider", []any{flattenContainerProvider(vc.ContainerProvider)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting container_provider: %s", err)
 		}
 	} else {
@@ -169,12 +166,12 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceVirtualClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceVirtualClusterRead(ctx, d, meta)
 }
 
-func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
@@ -251,7 +248,7 @@ func findVirtualClusterByID(ctx context.Context, conn *emrcontainers.Client, id 
 }
 
 func statusVirtualCluster(ctx context.Context, conn *emrcontainers.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVirtualClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -284,7 +281,7 @@ func waitVirtualClusterDeleted(ctx context.Context, conn *emrcontainers.Client, 
 	return nil, err
 }
 
-func expandContainerProvider(tfMap map[string]interface{}) *awstypes.ContainerProvider {
+func expandContainerProvider(tfMap map[string]any) *awstypes.ContainerProvider {
 	if tfMap == nil {
 		return nil
 	}
@@ -295,8 +292,8 @@ func expandContainerProvider(tfMap map[string]interface{}) *awstypes.ContainerPr
 		apiObject.Id = aws.String(v)
 	}
 
-	if v, ok := tfMap["info"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Info = expandContainerInfo(v[0].(map[string]interface{}))
+	if v, ok := tfMap["info"].([]any); ok && len(v) > 0 {
+		apiObject.Info = expandContainerInfo(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
@@ -306,21 +303,21 @@ func expandContainerProvider(tfMap map[string]interface{}) *awstypes.ContainerPr
 	return apiObject
 }
 
-func expandContainerInfo(tfMap map[string]interface{}) awstypes.ContainerInfo {
+func expandContainerInfo(tfMap map[string]any) awstypes.ContainerInfo {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.ContainerInfoMemberEksInfo{}
 
-	if v, ok := tfMap["eks_info"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Value = expandEKSInfo(v[0].(map[string]interface{}))
+	if v, ok := tfMap["eks_info"].([]any); ok && len(v) > 0 {
+		apiObject.Value = expandEKSInfo(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandEKSInfo(tfMap map[string]interface{}) awstypes.EksInfo {
+func expandEKSInfo(tfMap map[string]any) awstypes.EksInfo {
 	apiObject := awstypes.EksInfo{}
 
 	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
@@ -330,19 +327,19 @@ func expandEKSInfo(tfMap map[string]interface{}) awstypes.EksInfo {
 	return apiObject
 }
 
-func flattenContainerProvider(apiObject *awstypes.ContainerProvider) map[string]interface{} {
+func flattenContainerProvider(apiObject *awstypes.ContainerProvider) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Id; v != nil {
 		tfMap[names.AttrID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Info; v != nil {
-		tfMap["info"] = []interface{}{flattenContainerInfo(v)}
+		tfMap["info"] = []any{flattenContainerInfo(v)}
 	}
 
 	tfMap[names.AttrType] = string(apiObject.Type)
@@ -350,27 +347,27 @@ func flattenContainerProvider(apiObject *awstypes.ContainerProvider) map[string]
 	return tfMap
 }
 
-func flattenContainerInfo(apiObject awstypes.ContainerInfo) map[string]interface{} {
+func flattenContainerInfo(apiObject awstypes.ContainerInfo) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	switch v := apiObject.(type) {
 	case *awstypes.ContainerInfoMemberEksInfo:
-		tfMap["eks_info"] = []interface{}{flattenEKSInfo(&v.Value)}
+		tfMap["eks_info"] = []any{flattenEKSInfo(&v.Value)}
 	}
 
 	return tfMap
 }
 
-func flattenEKSInfo(apiObject *awstypes.EksInfo) map[string]interface{} {
+func flattenEKSInfo(apiObject *awstypes.EksInfo) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Namespace; v != nil {
 		tfMap[names.AttrNamespace] = aws.ToString(v)

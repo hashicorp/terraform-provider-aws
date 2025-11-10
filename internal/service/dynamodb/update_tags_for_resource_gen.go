@@ -3,9 +3,9 @@ package dynamodb
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -27,36 +27,36 @@ func updateTagsResource(ctx context.Context, conn *dynamodb.Client, identifier s
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.DynamoDB)
 	if len(removedTags) > 0 {
-		input := &dynamodb.UntagResourceInput{
+		input := dynamodb.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.DynamoDB)
 	if len(updatedTags) > 0 {
-		input := &dynamodb.TagResourceInput{
+		input := dynamodb.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
 	if len(removedTags) > 0 || len(updatedTags) > 0 {
 		if err := waitTagsPropagedForResource(ctx, conn, identifier, newTags, optFns...); err != nil {
-			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -71,7 +71,7 @@ func waitTagsPropagedForResource(ctx context.Context, conn *dynamodb.Client, id 
 		names.AttrTags: tags,
 	})
 
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := listTags(ctx, conn, id, optFns...)
 
 		if tfresource.NotFound(err) {
@@ -79,7 +79,7 @@ func waitTagsPropagedForResource(ctx context.Context, conn *dynamodb.Client, id 
 		}
 
 		if err != nil {
-			return false, err
+			return false, smarterr.NewError(err)
 		}
 
 		if inContext, ok := tftags.FromContext(ctx); ok {

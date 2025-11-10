@@ -53,12 +53,12 @@ var geospatialWindowOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-func expandGeospatialMapStyleOptions(tfList []interface{}) *awstypes.GeospatialMapStyleOptions {
+func expandGeospatialMapStyleOptions(tfList []any) *awstypes.GeospatialMapStyleOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -72,12 +72,12 @@ func expandGeospatialMapStyleOptions(tfList []interface{}) *awstypes.GeospatialM
 	return apiObject
 }
 
-func expandGeospatialWindowOptions(tfList []interface{}) *awstypes.GeospatialWindowOptions {
+func expandGeospatialWindowOptions(tfList []any) *awstypes.GeospatialWindowOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -87,19 +87,19 @@ func expandGeospatialWindowOptions(tfList []interface{}) *awstypes.GeospatialWin
 	if v, ok := tfMap["map_zoom_mode"].(string); ok && v != "" {
 		apiObject.MapZoomMode = awstypes.MapZoomMode(v)
 	}
-	if v, ok := tfMap["bounds"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["bounds"].([]any); ok && len(v) > 0 {
 		apiObject.Bounds = expandGeospatialCoordinateBounds(v)
 	}
 
 	return apiObject
 }
 
-func expandGeospatialCoordinateBounds(tfList []interface{}) *awstypes.GeospatialCoordinateBounds {
+func expandGeospatialCoordinateBounds(tfList []any) *awstypes.GeospatialCoordinateBounds {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -122,39 +122,39 @@ func expandGeospatialCoordinateBounds(tfList []interface{}) *awstypes.Geospatial
 	return apiObject
 }
 
-func flattenGeospatialMapStyleOptions(apiObject *awstypes.GeospatialMapStyleOptions) []interface{} {
+func flattenGeospatialMapStyleOptions(apiObject *awstypes.GeospatialMapStyleOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"base_map_style": apiObject.BaseMapStyle,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGeospatialWindowOptions(apiObject *awstypes.GeospatialWindowOptions) []interface{} {
+func flattenGeospatialWindowOptions(apiObject *awstypes.GeospatialWindowOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Bounds != nil {
 		tfMap["bounds"] = flattenGeospatialCoordinateBounds(apiObject.Bounds)
 	}
 	tfMap["map_zoom_mode"] = apiObject.MapZoomMode
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGeospatialCoordinateBounds(apiObject *awstypes.GeospatialCoordinateBounds) []interface{} {
+func flattenGeospatialCoordinateBounds(apiObject *awstypes.GeospatialCoordinateBounds) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.East != nil {
 		tfMap["east"] = aws.ToFloat64(apiObject.East)
@@ -169,5 +169,5 @@ func flattenGeospatialCoordinateBounds(apiObject *awstypes.GeospatialCoordinateB
 		tfMap["west"] = aws.ToFloat64(apiObject.West)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

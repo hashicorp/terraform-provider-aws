@@ -6,7 +6,7 @@ rules:
     message: Use the constant `acctest.Ct{{ .Constant }}` for the string literal "{{ .Literal }}" in test files
     paths:
       include:
-        - "internal/service/**/*_test.go"
+        - "/internal/service/**/*_test.go"
     {{- if .AltLiteral }}
     pattern-either:
       - pattern: '"{{ .Literal }}"'

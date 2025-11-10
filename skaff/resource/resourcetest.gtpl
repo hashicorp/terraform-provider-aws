@@ -48,6 +48,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -176,7 +177,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheck{{ .Resource }}Exists(ctx, resourceName, &{{ .ResourceLower }}),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
@@ -186,7 +187,11 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "{{ .ServicePackage }}", regexache.MustCompile(`{{ .ResourceLower }}:+.`)),
+					{{- if .IncludeComments }}
+					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
+					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
+					{{- end }}
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "{{ .ServicePackage }}", regexache.MustCompile(`{{ .ResourceLower }}:.+$`)),
 				),
 			},
 			{
@@ -221,7 +226,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheck{{ .Resource }}Exists(ctx, resourceName, &{{ .ResourceLower }}),
 					{{- if .PluginFramework }}
 					{{- if .IncludeComments }}
@@ -238,6 +243,11 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 					{{- end }}
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

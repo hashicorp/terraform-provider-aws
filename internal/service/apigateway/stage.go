@@ -41,7 +41,7 @@ func resourceStage() *schema.Resource {
 		DeleteWithoutTimeout: resourceStageDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/STAGE-NAME", d.Id())
@@ -164,19 +164,17 @@ func resourceStage() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
 	deploymentID := d.Get("deployment_id").(string)
-	input := &apigateway.CreateStageInput{
+	input := apigateway.CreateStageInput{
 		RestApiId:    aws.String(apiID),
 		StageName:    aws.String(stageName),
 		DeploymentId: aws.String(deploymentID),
@@ -194,8 +192,8 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		waitForCache = true
 	}
 
-	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CanarySettings = expandCanarySettings(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.CanarySettings = expandCanarySettings(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -206,15 +204,15 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.DocumentationVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("variables"); ok && len(v.(map[string]interface{})) > 0 {
-		input.Variables = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("variables"); ok && len(v.(map[string]any)) > 0 {
+		input.Variables = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("xray_tracing_enabled"); ok {
 		input.TracingEnabled = v.(bool)
 	}
 
-	output, err := conn.CreateStage(ctx, input)
+	output, err := conn.CreateStage(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Stage (%s): %s", stageName, err)
@@ -238,7 +236,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceStageRead(ctx, d, meta)...)
 }
 
-func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -292,7 +290,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -328,8 +326,8 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if d.HasChange("canary_settings") {
 			oldCanarySettingsRaw, newCanarySettingsRaw := d.GetChange("canary_settings")
 			operations = appendCanarySettingsPatchOperations(operations,
-				oldCanarySettingsRaw.([]interface{}),
-				newCanarySettingsRaw.([]interface{}),
+				oldCanarySettingsRaw.([]any),
+				newCanarySettingsRaw.([]any),
 			)
 		}
 		if d.HasChange("deployment_id") {
@@ -362,12 +360,12 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 		if d.HasChange("variables") {
 			o, n := d.GetChange("variables")
-			oldV := o.(map[string]interface{})
-			newV := n.(map[string]interface{})
+			oldV := o.(map[string]any)
+			newV := n.(map[string]any)
 			operations = append(operations, diffVariablesOps(oldV, newV, "/variables/")...)
 		}
 		if d.HasChange("access_log_settings") {
-			accessLogSettings := d.Get("access_log_settings").([]interface{})
+			accessLogSettings := d.Get("access_log_settings").([]any)
 			if len(accessLogSettings) == 1 {
 				operations = append(operations,
 					types.PatchOperation{
@@ -387,13 +385,13 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		input := &apigateway.UpdateStageInput{
+		input := apigateway.UpdateStageInput{
 			RestApiId:       aws.String(apiID),
 			StageName:       aws.String(stageName),
 			PatchOperations: operations,
 		}
 
-		output, err := conn.UpdateStage(ctx, input)
+		output, err := conn.UpdateStage(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Stage (%s): %s", d.Id(), err)
@@ -409,15 +407,16 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceStageRead(ctx, d, meta)...)
 }
 
-func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Stage: %s", d.Id())
-	_, err := conn.DeleteStage(ctx, &apigateway.DeleteStageInput{
+	input := apigateway.DeleteStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 		StageName: aws.String(d.Get("stage_name").(string)),
-	})
+	}
+	_, err := conn.DeleteStage(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -431,12 +430,12 @@ func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func findStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, stageName string) (*apigateway.GetStageOutput, error) {
-	input := &apigateway.GetStageInput{
+	input := apigateway.GetStageInput{
 		RestApiId: aws.String(apiID),
 		StageName: aws.String(stageName),
 	}
 
-	output, err := conn.GetStage(ctx, input)
+	output, err := conn.GetStage(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -457,7 +456,7 @@ func findStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, 
 }
 
 func stageCacheStatus(ctx context.Context, conn *apigateway.Client, restApiId, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStageByTwoPartKey(ctx, conn, restApiId, name)
 
 		if tfresource.NotFound(err) {
@@ -517,7 +516,7 @@ func waitStageCacheUpdated(ctx context.Context, conn *apigateway.Client, apiID, 
 	return nil, err
 }
 
-func diffVariablesOps(oldVars, newVars map[string]interface{}, prefix string) []types.PatchOperation {
+func diffVariablesOps(oldVars, newVars map[string]any, prefix string) []types.PatchOperation {
 	ops := make([]types.PatchOperation, 0)
 
 	for k := range oldVars {
@@ -548,10 +547,10 @@ func diffVariablesOps(oldVars, newVars map[string]interface{}, prefix string) []
 	return ops
 }
 
-func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, 1)
+func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[string]any {
+	result := make([]map[string]any, 0, 1)
 	if accessLogSettings != nil {
-		result = append(result, map[string]interface{}{
+		result = append(result, map[string]any{
 			names.AttrDestinationARN: aws.ToString(accessLogSettings.DestinationArn),
 			names.AttrFormat:         aws.ToString(accessLogSettings.Format),
 		})
@@ -559,7 +558,7 @@ func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[
 	return result
 }
 
-func expandCanarySettings(tfMap map[string]interface{}) *types.CanarySettings {
+func expandCanarySettings(tfMap map[string]any) *types.CanarySettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -572,7 +571,7 @@ func expandCanarySettings(tfMap map[string]interface{}) *types.CanarySettings {
 		apiObject.PercentTraffic = v
 	}
 
-	if v, ok := tfMap["stage_variable_overrides"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["stage_variable_overrides"].(map[string]any); ok && len(v) > 0 {
 		apiObject.StageVariableOverrides = flex.ExpandStringValueMap(v)
 	}
 
@@ -583,8 +582,8 @@ func expandCanarySettings(tfMap map[string]interface{}) *types.CanarySettings {
 	return apiObject
 }
 
-func flattenCanarySettings(canarySettings *types.CanarySettings) []interface{} {
-	settings := make(map[string]interface{})
+func flattenCanarySettings(canarySettings *types.CanarySettings) []any {
+	settings := make(map[string]any)
 
 	if canarySettings == nil {
 		return nil
@@ -600,32 +599,32 @@ func flattenCanarySettings(canarySettings *types.CanarySettings) []interface{} {
 	settings["use_stage_cache"] = canarySettings.UseStageCache
 	settings["deployment_id"] = canarySettings.DeploymentId
 
-	return []interface{}{settings}
+	return []any{settings}
 }
 
-func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldCanarySettingsRaw, newCanarySettingsRaw []interface{}) []types.PatchOperation {
+func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldCanarySettingsRaw, newCanarySettingsRaw []any) []types.PatchOperation {
 	if len(newCanarySettingsRaw) == 0 { // Schema guarantees either 0 or 1
 		return append(operations, types.PatchOperation{
 			Op:   types.Op("remove"),
 			Path: aws.String("/canarySettings"),
 		})
 	}
-	newSettings := newCanarySettingsRaw[0].(map[string]interface{})
+	newSettings := newCanarySettingsRaw[0].(map[string]any)
 
-	var oldSettings map[string]interface{}
+	var oldSettings map[string]any
 	if len(oldCanarySettingsRaw) == 1 { // Schema guarantees either 0 or 1
-		oldSettings = oldCanarySettingsRaw[0].(map[string]interface{})
+		oldSettings = oldCanarySettingsRaw[0].(map[string]any)
 	} else {
-		oldSettings = map[string]interface{}{
+		oldSettings = map[string]any{
 			"percent_traffic":          0.0,
-			"stage_variable_overrides": make(map[string]interface{}),
+			"stage_variable_overrides": make(map[string]any),
 			"use_stage_cache":          false,
 			"deployment_id":            "",
 		}
 	}
 
-	oldOverrides := oldSettings["stage_variable_overrides"].(map[string]interface{})
-	newOverrides := newSettings["stage_variable_overrides"].(map[string]interface{})
+	oldOverrides := oldSettings["stage_variable_overrides"].(map[string]any)
+	newOverrides := newSettings["stage_variable_overrides"].(map[string]any)
 	operations = append(operations, diffVariablesOps(oldOverrides, newOverrides, "/canarySettings/stageVariableOverrides/")...)
 
 	oldPercentTraffic := oldSettings["percent_traffic"].(float64)

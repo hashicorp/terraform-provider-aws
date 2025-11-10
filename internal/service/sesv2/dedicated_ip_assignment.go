@@ -61,7 +61,7 @@ const (
 	resNameDedicatedIPAssignment = "Dedicated IP Assignment"
 )
 
-func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -83,7 +83,7 @@ func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceDedicatedIPAssignmentRead(ctx, d, meta)...)
 }
 
-func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -110,7 +110,7 @@ func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 

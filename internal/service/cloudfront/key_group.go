@@ -55,7 +55,7 @@ func resourceKeyGroup() *schema.Resource {
 	}
 }
 
-func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -84,7 +84,7 @@ func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceKeyGroupRead(ctx, d, meta)...)
 }
 
-func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -109,7 +109,7 @@ func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -137,7 +137,7 @@ func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceKeyGroupRead(ctx, d, meta)...)
 }
 
-func resourceKeyGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 

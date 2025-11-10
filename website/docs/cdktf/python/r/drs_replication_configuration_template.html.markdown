@@ -28,7 +28,7 @@ from cdktf import Fn, Token, TerraformStack
 #
 from imports.aws.drs_replication_configuration_template import DrsReplicationConfigurationTemplate
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, ebsEncryption, stagingAreaTags):
+    def __init__(self, scope, name, *, stagingAreaTags):
         super().__init__(scope, name)
         DrsReplicationConfigurationTemplate(self, "example",
             associate_default_security_group=False,
@@ -36,7 +36,7 @@ class MyConvertedCode(TerraformStack):
             create_public_ip=False,
             data_plane_routing="PRIVATE_IP",
             default_large_staging_disk_type="GP2",
-            ebs_ecryption="DEFAULT",
+            ebs_encryption="DEFAULT",
             ebs_encryption_key_arn="arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
             pit_policy=[DrsReplicationConfigurationTemplatePitPolicy(
                 enabled=True,
@@ -63,7 +63,6 @@ class MyConvertedCode(TerraformStack):
                 Fn.lookup_nested(aws_security_group_example, ["*", "id"])),
             staging_area_subnet_id=Token.as_string(aws_subnet_example.id),
             use_dedicated_replication_server=False,
-            ebs_encryption=ebs_encryption,
             staging_area_tags=staging_area_tags
         )
 ```
@@ -88,6 +87,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_replicate_new_disks` - (Optional) Whether to allow the AWS replication agent to automatically replicate newly added disks.
 * `tags` - (Optional) Set of tags to be associated with the Replication Configuration Template resource.
 
@@ -142,4 +142,4 @@ Using `terraform import`, import DRS Replication Configuration Template using th
 % terraform import aws_drs_replication_configuration_template.example templateid
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6c07abef7048c3cc06087a9898fdf05a3940fa2b0415a9b5c550b599e682141f -->
+<!-- cache-key: cdktf-0.20.8 input-dee126f30e4a14dba110538299426855959f9b711786ddac39da32700eeeb735 -->

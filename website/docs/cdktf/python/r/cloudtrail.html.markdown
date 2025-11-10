@@ -57,7 +57,7 @@ class MyConvertedCode(TerraformStack):
                 actions=["s3:GetBucketAcl"],
                 condition=[DataAwsIamPolicyDocumentStatementCondition(
                     test="StringEquals",
-                    values=["arn:${" + data_aws_partition_current.partition + "}:cloudtrail:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:trail/example"
+                    values=["arn:${" + data_aws_partition_current.partition + "}:cloudtrail:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:trail/example"
                     ],
                     variable="aws:SourceArn"
                 )
@@ -78,7 +78,7 @@ class MyConvertedCode(TerraformStack):
                     variable="s3:x-amz-acl"
                 ), DataAwsIamPolicyDocumentStatementCondition(
                     test="StringEquals",
-                    values=["arn:${" + data_aws_partition_current.partition + "}:cloudtrail:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:trail/example"
+                    values=["arn:${" + data_aws_partition_current.partition + "}:cloudtrail:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:trail/example"
                     ],
                     variable="aws:SourceArn"
                 )
@@ -372,6 +372,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `advanced_event_selector` - (Optional) Specifies an advanced event selector for enabling data event logging. Fields documented below. Conflicts with `event_selector`.
 * `cloud_watch_logs_group_arn` - (Optional) Log group name using an ARN that represents the log group to which CloudTrail logs will be delivered. Note that CloudTrail requires the Log Stream wildcard.
 * `cloud_watch_logs_role_arn` - (Optional) Role for the CloudWatch Logs endpoint to assume to write to a user’s log group.
@@ -384,7 +385,7 @@ The following arguments are optional:
 * `is_organization_trail` - (Optional) Whether the trail is an AWS Organizations trail. Organization trails log events for the master account and all member accounts. Can only be created in the organization master account. Defaults to `false`.
 * `kms_key_id` - (Optional) KMS key ARN to use to encrypt the logs delivered by CloudTrail.
 * `s3_key_prefix` - (Optional) S3 key prefix that follows the name of the bucket you have designated for log file delivery.
-* `sns_topic_name` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery.
+* `sns_topic_name` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery. Specify the SNS topic ARN if it resides in another region.
 * `tags` - (Optional) Map of tags to assign to the trail. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### event_selector
@@ -425,6 +426,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
 * `id` - ARN of the trail.
+* `sns_topic_arn` - ARN of the Amazon SNS topic that CloudTrail uses to send notifications when log files are delivered.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -452,4 +454,4 @@ Using `terraform import`, import Cloudtrails using the `arn`. For example:
 % terraform import aws_cloudtrail.sample arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5ed397d637a150a8f46c866261ad00abfa51b67e2e83e6d4564b95a1f22de811 -->
+<!-- cache-key: cdktf-0.20.8 input-a1f175998792e4fbf1f09fac4172e6ca4d2fdde7fc2ceb0d008fa36c132b4212 -->

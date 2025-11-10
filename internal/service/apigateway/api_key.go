@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -81,17 +80,15 @@ func resourceAPIKey() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(20, 128),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &apigateway.CreateApiKeyInput{
+	input := apigateway.CreateApiKeyInput{
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Enabled:     d.Get(names.AttrEnabled).(bool),
 		Name:        aws.String(name),
@@ -103,7 +100,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.CustomerId = aws.String(v.(string))
 	}
 
-	apiKey, err := conn.CreateApiKey(ctx, input)
+	apiKey, err := conn.CreateApiKey(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway API Key (%s): %s", name, err)
@@ -114,7 +111,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
 }
 
-func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -186,15 +183,16 @@ func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []types.PatchOperati
 	return operations
 }
 
-func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		_, err := conn.UpdateApiKey(ctx, &apigateway.UpdateApiKeyInput{
+		input := apigateway.UpdateApiKeyInput{
 			ApiKey:          aws.String(d.Id()),
 			PatchOperations: resourceAPIKeyUpdateOperations(d),
-		})
+		}
+		_, err := conn.UpdateApiKey(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway API Key (%s): %s", d.Id(), err)
@@ -204,14 +202,15 @@ func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
 }
 
-func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway API Key: %s", d.Id())
-	_, err := conn.DeleteApiKey(ctx, &apigateway.DeleteApiKeyInput{
+	input := apigateway.DeleteApiKeyInput{
 		ApiKey: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteApiKey(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -225,12 +224,12 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func findAPIKeyByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetApiKeyOutput, error) {
-	input := &apigateway.GetApiKeyInput{
+	input := apigateway.GetApiKeyInput{
 		ApiKey:       aws.String(id),
 		IncludeValue: aws.Bool(true),
 	}
 
-	output, err := conn.GetApiKey(ctx, input)
+	output, err := conn.GetApiKey(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{

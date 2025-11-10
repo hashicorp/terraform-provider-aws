@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -63,27 +62,25 @@ func resourceVPCLink() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &apigateway.CreateVpcLinkInput{
+	input := apigateway.CreateVpcLinkInput{
 		Name:       aws.String(name),
 		Tags:       getTagsIn(ctx),
-		TargetArns: flex.ExpandStringValueList(d.Get("target_arns").([]interface{})),
+		TargetArns: flex.ExpandStringValueList(d.Get("target_arns").([]any)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateVpcLink(ctx, input)
+	output, err := conn.CreateVpcLink(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway VPC Link (%s): %s", name, err)
@@ -98,7 +95,7 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceVPCLinkRead(ctx, d, meta)...)
 }
 
-func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -124,7 +121,7 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -147,12 +144,12 @@ func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			})
 		}
 
-		input := &apigateway.UpdateVpcLinkInput{
+		input := apigateway.UpdateVpcLinkInput{
 			PatchOperations: operations,
 			VpcLinkId:       aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateVpcLink(ctx, input)
+		_, err := conn.UpdateVpcLink(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway VPC Link (%s): %s", d.Id(), err)
@@ -166,14 +163,15 @@ func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceVPCLinkRead(ctx, d, meta)...)
 }
 
-func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway VPC Link: %s", d.Id())
-	_, err := conn.DeleteVpcLink(ctx, &apigateway.DeleteVpcLinkInput{
+	input := apigateway.DeleteVpcLinkInput{
 		VpcLinkId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVpcLink(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -191,11 +189,11 @@ func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func findVPCLinkByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetVpcLinkOutput, error) {
-	input := &apigateway.GetVpcLinkInput{
+	input := apigateway.GetVpcLinkInput{
 		VpcLinkId: aws.String(id),
 	}
 
-	output, err := conn.GetVpcLink(ctx, input)
+	output, err := conn.GetVpcLink(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -216,7 +214,7 @@ func findVPCLinkByID(ctx context.Context, conn *apigateway.Client, id string) (*
 }
 
 func vpcLinkStatus(ctx context.Context, conn *apigateway.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCLinkByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

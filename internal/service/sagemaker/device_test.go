@@ -165,7 +165,7 @@ func testAccCheckDeviceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Device %q still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Device %q still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -41,13 +41,12 @@ func resourceConfigurationAggregator() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			// This is to prevent this error:
 			// All fields are ForceNew or Computed w/out Optional, Update is superfluous
-			customdiff.ForceNewIfChange("account_aggregation_source", func(_ context.Context, old, new, meta interface{}) bool {
-				return len(old.([]interface{})) == 0 && len(new.([]interface{})) > 0
+			customdiff.ForceNewIfChange("account_aggregation_source", func(_ context.Context, old, new, meta any) bool {
+				return len(old.([]any)) == 0 && len(new.([]any)) > 0
 			}),
-			customdiff.ForceNewIfChange("organization_aggregation_source", func(_ context.Context, old, new, meta interface{}) bool {
-				return len(old.([]interface{})) == 0 && len(new.([]interface{})) > 0
+			customdiff.ForceNewIfChange("organization_aggregation_source", func(_ context.Context, old, new, meta any) bool {
+				return len(old.([]any)) == 0 && len(new.([]any)) > 0
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -127,7 +126,7 @@ func resourceConfigurationAggregator() *schema.Resource {
 	}
 }
 
-func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -138,12 +137,12 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 			Tags:                        getTagsIn(ctx),
 		}
 
-		if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {
-			input.AccountAggregationSources = expandAccountAggregationSources(v.([]interface{}))
+		if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]any)) > 0 {
+			input.AccountAggregationSources = expandAccountAggregationSources(v.([]any))
 		}
 
-		if v, ok := d.GetOk("organization_aggregation_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.OrganizationAggregationSource = expandOrganizationAggregationSource(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("organization_aggregation_source"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.OrganizationAggregationSource = expandOrganizationAggregationSource(v.([]any)[0].(map[string]any))
 		}
 
 		output, err := conn.PutConfigurationAggregator(ctx, input)
@@ -160,7 +159,7 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceConfigurationAggregatorRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -188,14 +187,15 @@ func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceConfigurationAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ConfigService Configuration Aggregator: %s", d.Id())
-	_, err := conn.DeleteConfigurationAggregator(ctx, &configservice.DeleteConfigurationAggregatorInput{
+	input := configservice.DeleteConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConfigurationAggregator(ctx, &input)
 
 	if errs.IsA[*types.NoSuchConfigurationAggregatorException](err) {
 		return diags
@@ -250,7 +250,7 @@ func findConfigurationAggregators(ctx context.Context, conn *configservice.Clien
 	return output, nil
 }
 
-func expandAccountAggregationSources(tfList []interface{}) []types.AccountAggregationSource {
+func expandAccountAggregationSources(tfList []any) []types.AccountAggregationSource {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -258,7 +258,7 @@ func expandAccountAggregationSources(tfList []interface{}) []types.AccountAggreg
 	var apiObjects []types.AccountAggregationSource
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -267,11 +267,11 @@ func expandAccountAggregationSources(tfList []interface{}) []types.AccountAggreg
 			AllAwsRegions: tfMap["all_regions"].(bool),
 		}
 
-		if v, ok := tfMap["account_ids"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["account_ids"].([]any); ok && len(v) > 0 {
 			apiObject.AccountIds = flex.ExpandStringValueList(v)
 		}
 
-		if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["regions"].([]any); ok && len(v) > 0 {
 			apiObject.AwsRegions = flex.ExpandStringValueList(v)
 		}
 
@@ -281,7 +281,7 @@ func expandAccountAggregationSources(tfList []interface{}) []types.AccountAggreg
 	return apiObjects
 }
 
-func expandOrganizationAggregationSource(tfMap map[string]interface{}) *types.OrganizationAggregationSource {
+func expandOrganizationAggregationSource(tfMap map[string]any) *types.OrganizationAggregationSource {
 	if tfMap == nil {
 		return nil
 	}
@@ -291,38 +291,38 @@ func expandOrganizationAggregationSource(tfMap map[string]interface{}) *types.Or
 		RoleArn:       aws.String(tfMap[names.AttrRoleARN].(string)),
 	}
 
-	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["regions"].([]any); ok && len(v) > 0 {
 		apiObject.AwsRegions = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func flattenAccountAggregationSources(apiObjects []types.AccountAggregationSource) []interface{} {
+func flattenAccountAggregationSources(apiObjects []types.AccountAggregationSource) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	apiObject := apiObjects[0]
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"account_ids": apiObject.AccountIds,
 		"all_regions": apiObject.AllAwsRegions,
 		"regions":     apiObject.AwsRegions,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenOrganizationAggregationSource(apiObject *types.OrganizationAggregationSource) []interface{} {
+func flattenOrganizationAggregationSource(apiObject *types.OrganizationAggregationSource) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"all_regions":     apiObject.AllAwsRegions,
 		"regions":         apiObject.AwsRegions,
 		names.AttrRoleARN: aws.ToString(apiObject.RoleArn),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

@@ -39,17 +39,18 @@ func resourceVPCEndpointServiceAllowedPrincipal() *schema.Resource {
 	}
 }
 
-func resourceVPCEndpointServiceAllowedPrincipalCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointServiceAllowedPrincipalCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	principalARN := d.Get("principal_arn").(string)
 
-	output, err := conn.ModifyVpcEndpointServicePermissions(ctx, &ec2.ModifyVpcEndpointServicePermissionsInput{
+	input := ec2.ModifyVpcEndpointServicePermissionsInput{
 		AddAllowedPrincipals: []string{principalARN},
 		ServiceId:            aws.String(serviceID),
-	})
+	}
+	output, err := conn.ModifyVpcEndpointServicePermissions(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "modifying EC2 VPC Endpoint Service (%s) permissions: %s", serviceID, err)
@@ -64,7 +65,7 @@ func resourceVPCEndpointServiceAllowedPrincipalCreate(ctx context.Context, d *sc
 	return append(diags, resourceVPCEndpointServiceAllowedPrincipalRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointServiceAllowedPrincipalRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointServiceAllowedPrincipalRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -88,17 +89,18 @@ func resourceVPCEndpointServiceAllowedPrincipalRead(ctx context.Context, d *sche
 	return diags
 }
 
-func resourceVPCEndpointServiceAllowedPrincipalDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointServiceAllowedPrincipalDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	principalARN := d.Get("principal_arn").(string)
 
-	_, err := conn.ModifyVpcEndpointServicePermissions(ctx, &ec2.ModifyVpcEndpointServicePermissionsInput{
+	input := ec2.ModifyVpcEndpointServicePermissionsInput{
 		RemoveAllowedPrincipals: []string{principalARN},
 		ServiceId:               aws.String(serviceID),
-	})
+	}
+	_, err := conn.ModifyVpcEndpointServicePermissions(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
 		return diags

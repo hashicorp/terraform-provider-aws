@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_s3_object: Add `checksum_crc64nvme` attribute
+```
+
+```release-note:enhancement
+resource/aws_s3_object_copy: Add `checksum_crc64nvme` attribute
+```
+
+```release-note:enhancement
+data-source/aws_s3_object: Add `checksum_crc64nvme` attribute
+```

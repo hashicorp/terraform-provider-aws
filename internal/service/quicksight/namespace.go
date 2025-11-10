@@ -25,7 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,6 +38,7 @@ import (
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 func newNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &namespaceResource{}
+
 	r.SetDefaultCreateTimeout(2 * time.Minute)
 	r.SetDefaultDeleteTimeout(2 * time.Minute)
 
@@ -48,28 +50,16 @@ const (
 )
 
 type namespaceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[namespaceResourceModel]
 	framework.WithTimeouts
-	framework.WithNoOpUpdate[resourceNamespaceData]
 	framework.WithImportByID
-}
-
-func (r *namespaceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_quicksight_namespace"
 }
 
 func (r *namespaceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrAWSAccountID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			names.AttrARN:          framework.ARNAttributeComputedOnly(),
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
 			"capacity_region": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -110,21 +100,21 @@ func (r *namespaceResource) Schema(ctx context.Context, req resource.SchemaReque
 }
 
 func (r *namespaceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightClient(ctx)
-
-	var plan resourceNamespaceData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var data namespaceResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
+	if data.AWSAccountID.IsUnknown() {
+		data.AWSAccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
-	awsAccountID, namespace := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.Namespace)
+
+	conn := r.Meta().QuickSightClient(ctx)
+
+	awsAccountID, namespace := fwflex.StringValueFromFramework(ctx, data.AWSAccountID), fwflex.StringValueFromFramework(ctx, data.Namespace)
 	in := quicksight.CreateNamespaceInput{
 		AwsAccountId:  aws.String(awsAccountID),
-		IdentityStore: awstypes.IdentityStore(plan.IdentityStore.ValueString()),
+		IdentityStore: awstypes.IdentityStore(data.IdentityStore.ValueString()),
 		Namespace:     aws.String(namespace),
 		Tags:          getTagsIn(ctx),
 	}
@@ -132,41 +122,41 @@ func (r *namespaceResource) Create(ctx context.Context, req resource.CreateReque
 	out, err := conn.CreateNamespace(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameNamespace, plan.Namespace.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameNamespace, data.Namespace.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameNamespace, plan.Namespace.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameNamespace, data.Namespace.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, namespaceCreateResourceID(awsAccountID, namespace))
+	data.ID = fwflex.StringValueToFramework(ctx, namespaceCreateResourceID(awsAccountID, namespace))
 
-	waitOut, err := waitNamespaceCreated(ctx, conn, awsAccountID, namespace, r.CreateTimeout(ctx, plan.Timeouts))
+	waitOut, err := waitNamespaceCreated(ctx, conn, awsAccountID, namespace, r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, resNameNamespace, plan.Namespace.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, resNameNamespace, data.Namespace.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	plan.ARN = flex.StringToFramework(ctx, waitOut.Arn)
-	plan.CapacityRegion = flex.StringToFramework(ctx, waitOut.CapacityRegion)
-	plan.CreationStatus = flex.StringValueToFramework(ctx, waitOut.CreationStatus)
-	plan.IdentityStore = flex.StringValueToFramework(ctx, waitOut.IdentityStore)
+	data.ARN = fwflex.StringToFramework(ctx, waitOut.Arn)
+	data.CapacityRegion = fwflex.StringToFramework(ctx, waitOut.CapacityRegion)
+	data.CreationStatus = fwflex.StringValueToFramework(ctx, waitOut.CreationStatus)
+	data.IdentityStore = fwflex.StringValueToFramework(ctx, waitOut.IdentityStore)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
 func (r *namespaceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceNamespaceData
+	var state namespaceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -194,12 +184,12 @@ func (r *namespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
-	state.CapacityRegion = flex.StringToFramework(ctx, out.CapacityRegion)
-	state.CreationStatus = flex.StringValueToFramework(ctx, out.CreationStatus)
-	state.IdentityStore = flex.StringValueToFramework(ctx, out.IdentityStore)
-	state.AWSAccountID = flex.StringValueToFramework(ctx, awsAccountID)
-	state.Namespace = flex.StringValueToFramework(ctx, namespace)
+	state.ARN = fwflex.StringToFramework(ctx, out.Arn)
+	state.CapacityRegion = fwflex.StringToFramework(ctx, out.CapacityRegion)
+	state.CreationStatus = fwflex.StringValueToFramework(ctx, out.CreationStatus)
+	state.IdentityStore = fwflex.StringValueToFramework(ctx, out.IdentityStore)
+	state.AWSAccountID = fwflex.StringValueToFramework(ctx, awsAccountID)
+	state.Namespace = fwflex.StringValueToFramework(ctx, namespace)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -207,7 +197,7 @@ func (r *namespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 func (r *namespaceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceNamespaceData
+	var state namespaceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -246,10 +236,6 @@ func (r *namespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 		)
 		return
 	}
-}
-
-func (r *namespaceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findNamespaceByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) (*awstypes.NamespaceInfoV2, error) {
@@ -301,7 +287,8 @@ func namespaceParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-type resourceNamespaceData struct {
+type namespaceResourceModel struct {
+	framework.WithRegionModel
 	ARN            types.String   `tfsdk:"arn"`
 	AWSAccountID   types.String   `tfsdk:"aws_account_id"`
 	CapacityRegion types.String   `tfsdk:"capacity_region"`
@@ -351,7 +338,7 @@ func waitNamespaceDeleted(ctx context.Context, conn *quicksight.Client, awsAccou
 }
 
 func statusNamespace(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findNamespaceByTwoPartKey(ctx, conn, awsAccountID, namespace)
 
 		if tfresource.NotFound(err) {

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-version"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -512,6 +513,10 @@ func (d *mockForceNewDiffer) Get(key string) any {
 	return d.old
 }
 
+func (d *mockForceNewDiffer) GetOk(key string) (any, bool) {
+	return "", false
+}
+
 func (d *mockForceNewDiffer) HasChange(key string) bool {
 	return d.hasChange || d.old != d.new
 }
@@ -790,6 +795,18 @@ func (d *mockChangesDiffer) GetOk(string) (any, bool) {
 	return nil, false
 }
 
+func (d *mockChangesDiffer) GetRawConfig() cty.Value {
+	return cty.NilVal
+}
+
+func (d *mockChangesDiffer) GetRawPlan() cty.Value {
+	return cty.NilVal
+}
+
+func (d *mockChangesDiffer) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
+	return cty.NilVal
+}
+
 func (d *mockChangesDiffer) HasChange(key string) bool {
 	return d.values[key].HasChange()
 }
@@ -802,7 +819,7 @@ func (d *mockChangesDiffer) GetChange(key string) (any, any) {
 	return d.values[key].GetChange()
 }
 
-func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
+func TestParamGroupNameRequiresEngineOrMajorVersionUpgrade(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
@@ -901,7 +918,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 				diff.id = "some id"
 			}
 
-			err := tfelasticache.ParamGroupNameRequiresMajorVersionUpgrade(diff)
+			err := tfelasticache.ParamGroupNameRequiresEngineOrMajorVersionUpgrade(diff)
 
 			if testcase.expectError == nil {
 				if err != nil {

@@ -50,7 +50,7 @@ func resourceDomainIdentity() *schema.Resource {
 	}
 }
 
-func resourceDomainIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainIdentityCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -70,7 +70,7 @@ func resourceDomainIdentityCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceDomainIdentityRead(ctx, d, meta)...)
 }
 
-func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -100,7 +100,7 @@ func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceDomainIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainIdentityDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 

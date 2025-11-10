@@ -48,7 +48,7 @@ func testAccObservabilityAccessManagerLink_basic(t *testing.T) {
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "oam", regexache.MustCompile(`link/.+$`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "oam", "link/{link_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "label"),
 					resource.TestCheckResourceAttr(resourceName, "label_template", "$AccountName"),
 					resource.TestCheckResourceAttrSet(resourceName, "link_id"),
@@ -396,7 +396,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -420,7 +420,11 @@ resource "aws_oam_sink_policy" "test" {
 resource "aws_oam_link" "test" {
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName))
 }
@@ -448,7 +452,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -472,7 +476,11 @@ resource "aws_oam_sink_policy" "test" {
 resource "aws_oam_link" "test" {
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric", "AWS::Logs::LogGroup"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName))
 }
@@ -500,7 +508,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -524,10 +532,14 @@ resource "aws_oam_sink_policy" "test" {
 resource "aws_oam_link" "test" {
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   tags = {
     %[2]q = %[3]q
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName, tag1Key, tag1Value))
 }
@@ -555,7 +567,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -579,12 +591,16 @@ resource "aws_oam_sink_policy" "test" {
 resource "aws_oam_link" "test" {
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
 
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
@@ -612,7 +628,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -641,7 +657,11 @@ resource "aws_oam_link" "test" {
     }
   }
   resource_types  = ["AWS::Logs::LogGroup"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName, filter))
 }
@@ -669,7 +689,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -698,7 +718,11 @@ resource "aws_oam_link" "test" {
     }
   }
   resource_types  = ["AWS::CloudWatch::Metric"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 `, rName, filter))
 }

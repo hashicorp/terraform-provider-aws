@@ -50,6 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - Description of the bot locale. Use this to help identify the bot locale in lists.
 * `voice_settings` - Amazon Polly voice ID that Amazon Lex uses for voice interaction with the user. See [`voice_settings`](#voice-settings).
 

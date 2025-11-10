@@ -725,7 +725,7 @@ resource "aws_sagemaker_model" "test" {
 
 resource "aws_iam_policy" "test" {
   name        = %[1]q
-  description = "Allow SageMaker to create model"
+  description = "Allow SageMaker AI to create model"
   policy      = data.aws_iam_policy_document.policy.json
 }
 
@@ -804,11 +804,11 @@ locals {
     sa-east-1      = "270155090741"
   }
 
-  account = local.region_account_map[data.aws_region.current.name]
+  account = local.region_account_map[data.aws_region.current.region]
 
   model_package_name = format(
     "arn:aws:sagemaker:%%s:%%s:model-package/hf-textgeneration-gpt2-cpu-b73b575105d336b680d151277ebe4ee0",
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     local.account
   )
 }
@@ -908,7 +908,7 @@ resource "aws_sagemaker_model" "test" {
 
 resource "aws_iam_policy" "test" {
   name        = %[1]q
-  description = "Allow SageMaker to create model"
+  description = "Allow SageMaker AI to create model"
   policy      = data.aws_iam_policy_document.policy.json
 }
 
@@ -1097,7 +1097,7 @@ resource "aws_sagemaker_model" "test" {
       s3_data_source {
         compression_type = "None"
         s3_data_type     = "S3Prefix"
-        s3_uri           = format("s3://jumpstart-private-cache-prod-%%s/meta-textgeneration/meta-textgeneration-llama-2-13b-f/artifacts/inference-prepack/v1.0.0/", data.aws_region.current.name)
+        s3_uri           = format("s3://jumpstart-private-cache-prod-%%s/meta-textgeneration/meta-textgeneration-llama-2-13b-f/artifacts/inference-prepack/v1.0.0/", data.aws_region.current.region)
         model_access_config {
           accept_eula = true
         }

@@ -17,7 +17,6 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -56,7 +55,6 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -64,10 +62,6 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccCertificateAuthorityDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
-			},
 			{
 				Config: testAccCertificateAuthorityDataSourceConfig_s3ObjectACLARN(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(

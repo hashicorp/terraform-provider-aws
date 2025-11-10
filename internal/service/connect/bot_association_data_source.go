@@ -48,15 +48,15 @@ func dataSourceBotAssociation() *schema.Resource {
 	}
 }
 
-func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	var name, region string
-	if v, ok := d.GetOk("lex_bot"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		lexBot := expandLexBot(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("lex_bot"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		lexBot := expandLexBot(v.([]any)[0].(map[string]any))
 		name = aws.ToString(lexBot.Name)
 		region = aws.ToString(lexBot.LexRegion)
 		if region == "" {

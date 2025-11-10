@@ -29,16 +29,14 @@ import (
 
 // @SDKResource("aws_imagebuilder_distribution_configuration", name="Distribution Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionConfigurationCreate,
 		ReadWithoutTimeout:   resourceDistributionConfigurationRead,
 		UpdateWithoutTimeout: resourceDistributionConfigurationUpdate,
 		DeleteWithoutTimeout: resourceDistributionConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -309,6 +307,29 @@ func resourceDistributionConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"ssm_parameter_configuration": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ami_account_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidAccountID,
+									},
+									"data_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.SsmParameterDataType](),
+									},
+									"parameter_name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1011),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -321,12 +342,10 @@ func resourceDistributionConfiguration() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -358,7 +377,7 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceDistributionConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -388,7 +407,7 @@ func resourceDistributionConfigurationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -415,7 +434,7 @@ func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceDistributionConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceDistributionConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDistributionConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -460,14 +479,14 @@ func findDistributionConfigurationByARN(ctx context.Context, conn *imagebuilder.
 	return output.DistributionConfiguration, nil
 }
 
-func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *awstypes.AmiDistributionConfiguration {
+func expandAMIDistributionConfiguration(tfMap map[string]any) *awstypes.AmiDistributionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.AmiDistributionConfiguration{}
 
-	if v, ok := tfMap["ami_tags"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["ami_tags"].(map[string]any); ok && len(v) > 0 {
 		apiObject.AmiTags = flex.ExpandStringValueMap(v)
 	}
 
@@ -479,8 +498,8 @@ func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *awstypes.
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := tfMap["launch_permission"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.LaunchPermission = expandLaunchPermissionConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["launch_permission"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.LaunchPermission = expandLaunchPermissionConfiguration(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -494,7 +513,7 @@ func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *awstypes.
 	return apiObject
 }
 
-func expandContainerDistributionConfiguration(tfMap map[string]interface{}) *awstypes.ContainerDistributionConfiguration {
+func expandContainerDistributionConfiguration(tfMap map[string]any) *awstypes.ContainerDistributionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -509,14 +528,14 @@ func expandContainerDistributionConfiguration(tfMap map[string]interface{}) *aws
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap["target_repository"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.TargetRepository = expandTargetContainerRepository(v[0].(map[string]interface{}))
+	if v, ok := tfMap["target_repository"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.TargetRepository = expandTargetContainerRepository(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandLaunchTemplateConfigurations(tfList []interface{}) []awstypes.LaunchTemplateConfiguration {
+func expandLaunchTemplateConfigurations(tfList []any) []awstypes.LaunchTemplateConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -524,7 +543,7 @@ func expandLaunchTemplateConfigurations(tfList []interface{}) []awstypes.LaunchT
 	var apiObjects []awstypes.LaunchTemplateConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -542,19 +561,67 @@ func expandLaunchTemplateConfigurations(tfList []interface{}) []awstypes.LaunchT
 	return apiObjects
 }
 
-func expandDistribution(tfMap map[string]interface{}) *awstypes.Distribution {
+func expandSSMParameterConfigurations(tfList []any) []awstypes.SsmParameterConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.SsmParameterConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandSSMParameterConfiguration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandSSMParameterConfiguration(tfMap map[string]any) *awstypes.SsmParameterConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.SsmParameterConfiguration{}
+
+	if v, ok := tfMap["ami_account_id"].(string); ok && v != "" {
+		apiObject.AmiAccountId = aws.String(v)
+	}
+
+	if v, ok := tfMap["data_type"].(string); ok && v != "" {
+		apiObject.DataType = awstypes.SsmParameterDataType(v)
+	}
+
+	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
+		apiObject.ParameterName = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandDistribution(tfMap map[string]any) *awstypes.Distribution {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.Distribution{}
 
-	if v, ok := tfMap["ami_distribution_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AmiDistributionConfiguration = expandAMIDistributionConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["ami_distribution_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AmiDistributionConfiguration = expandAMIDistributionConfiguration(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["container_distribution_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ContainerDistributionConfiguration = expandContainerDistributionConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["container_distribution_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ContainerDistributionConfiguration = expandContainerDistributionConfiguration(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["fast_launch_configuration"].(*schema.Set); ok && v.Len() > 0 {
@@ -573,14 +640,18 @@ func expandDistribution(tfMap map[string]interface{}) *awstypes.Distribution {
 		apiObject.Region = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_export_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.S3ExportConfiguration = expandS3ExportConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3_export_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3ExportConfiguration = expandS3ExportConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["ssm_parameter_configuration"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SsmParameterConfigurations = expandSSMParameterConfigurations(v.List())
 	}
 
 	return apiObject
 }
 
-func expandDistributions(tfList []interface{}) []awstypes.Distribution {
+func expandDistributions(tfList []any) []awstypes.Distribution {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -588,7 +659,7 @@ func expandDistributions(tfList []interface{}) []awstypes.Distribution {
 	var apiObjects []awstypes.Distribution
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -613,7 +684,7 @@ func expandDistributions(tfList []interface{}) []awstypes.Distribution {
 	return apiObjects
 }
 
-func expandLaunchPermissionConfiguration(tfMap map[string]interface{}) *awstypes.LaunchPermissionConfiguration {
+func expandLaunchPermissionConfiguration(tfMap map[string]any) *awstypes.LaunchPermissionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -639,7 +710,7 @@ func expandLaunchPermissionConfiguration(tfMap map[string]interface{}) *awstypes
 	return apiObject
 }
 
-func expandTargetContainerRepository(tfMap map[string]interface{}) *awstypes.TargetContainerRepository {
+func expandTargetContainerRepository(tfMap map[string]any) *awstypes.TargetContainerRepository {
 	if tfMap == nil {
 		return nil
 	}
@@ -657,7 +728,7 @@ func expandTargetContainerRepository(tfMap map[string]interface{}) *awstypes.Tar
 	return apiObject
 }
 
-func expandFastLaunchConfigurations(tfList []interface{}) []awstypes.FastLaunchConfiguration {
+func expandFastLaunchConfigurations(tfList []any) []awstypes.FastLaunchConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -665,7 +736,7 @@ func expandFastLaunchConfigurations(tfList []interface{}) []awstypes.FastLaunchC
 	var apiObjects []awstypes.FastLaunchConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -683,7 +754,7 @@ func expandFastLaunchConfigurations(tfList []interface{}) []awstypes.FastLaunchC
 	return apiObjects
 }
 
-func expandFastLaunchConfiguration(tfMap map[string]interface{}) *awstypes.FastLaunchConfiguration {
+func expandFastLaunchConfiguration(tfMap map[string]any) *awstypes.FastLaunchConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -698,22 +769,22 @@ func expandFastLaunchConfiguration(tfMap map[string]interface{}) *awstypes.FastL
 		apiObject.Enabled = v
 	}
 
-	if v, ok := tfMap[names.AttrLaunchTemplate].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.LaunchTemplate = expandFastLaunchLaunchTemplateSpecification(v[0].(map[string]interface{}))
+	if v, ok := tfMap[names.AttrLaunchTemplate].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.LaunchTemplate = expandFastLaunchLaunchTemplateSpecification(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["max_parallel_launches"].(int); ok && v != 0 {
 		apiObject.MaxParallelLaunches = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["snapshot_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SnapshotConfiguration = expandFastLaunchSnapshotConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["snapshot_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SnapshotConfiguration = expandFastLaunchSnapshotConfiguration(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandFastLaunchLaunchTemplateSpecification(tfMap map[string]interface{}) *awstypes.FastLaunchLaunchTemplateSpecification {
+func expandFastLaunchLaunchTemplateSpecification(tfMap map[string]any) *awstypes.FastLaunchLaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -735,7 +806,7 @@ func expandFastLaunchLaunchTemplateSpecification(tfMap map[string]interface{}) *
 	return apiObject
 }
 
-func expandFastLaunchSnapshotConfiguration(tfMap map[string]interface{}) *awstypes.FastLaunchSnapshotConfiguration {
+func expandFastLaunchSnapshotConfiguration(tfMap map[string]any) *awstypes.FastLaunchSnapshotConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -749,7 +820,7 @@ func expandFastLaunchSnapshotConfiguration(tfMap map[string]interface{}) *awstyp
 	return apiObject
 }
 
-func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *awstypes.LaunchTemplateConfiguration {
+func expandLaunchTemplateConfiguration(tfMap map[string]any) *awstypes.LaunchTemplateConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -771,7 +842,7 @@ func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *awstypes.L
 	return apiObject
 }
 
-func expandS3ExportConfiguration(tfMap map[string]interface{}) *awstypes.S3ExportConfiguration {
+func expandS3ExportConfiguration(tfMap map[string]any) *awstypes.S3ExportConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -797,12 +868,12 @@ func expandS3ExportConfiguration(tfMap map[string]interface{}) *awstypes.S3Expor
 	return apiObject
 }
 
-func flattenAMIDistributionConfiguration(apiObject *awstypes.AmiDistributionConfiguration) map[string]interface{} {
+func flattenAMIDistributionConfiguration(apiObject *awstypes.AmiDistributionConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AmiTags; v != nil {
 		tfMap["ami_tags"] = aws.StringMap(v)
@@ -817,7 +888,7 @@ func flattenAMIDistributionConfiguration(apiObject *awstypes.AmiDistributionConf
 	}
 
 	if v := apiObject.LaunchPermission; v != nil {
-		tfMap["launch_permission"] = []interface{}{flattenLaunchPermissionConfiguration(v)}
+		tfMap["launch_permission"] = []any{flattenLaunchPermissionConfiguration(v)}
 	}
 
 	if v := apiObject.Name; v != nil {
@@ -825,21 +896,21 @@ func flattenAMIDistributionConfiguration(apiObject *awstypes.AmiDistributionConf
 	}
 
 	if v := apiObject.TargetAccountIds; v != nil {
-		tfMap["target_account_ids"] = aws.StringSlice(v)
+		tfMap["target_account_ids"] = v
 	}
 
 	return tfMap
 }
 
-func flattenContainerDistributionConfiguration(apiObject *awstypes.ContainerDistributionConfiguration) map[string]interface{} {
+func flattenContainerDistributionConfiguration(apiObject *awstypes.ContainerDistributionConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ContainerTags; v != nil {
-		tfMap["container_tags"] = aws.StringSlice(v)
+		tfMap["container_tags"] = v
 	}
 
 	if v := apiObject.Description; v != nil {
@@ -847,18 +918,18 @@ func flattenContainerDistributionConfiguration(apiObject *awstypes.ContainerDist
 	}
 
 	if v := apiObject.TargetRepository; v != nil {
-		tfMap["target_repository"] = []interface{}{flattenTargetContainerRepository(v)}
+		tfMap["target_repository"] = []any{flattenTargetContainerRepository(v)}
 	}
 
 	return tfMap
 }
 
-func flattenLaunchTemplateConfigurations(apiObjects []awstypes.LaunchTemplateConfiguration) []interface{} {
+func flattenLaunchTemplateConfigurations(apiObjects []awstypes.LaunchTemplateConfiguration) []any {
 	if apiObjects == nil {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenLaunchTemplateConfiguration(apiObject))
@@ -867,15 +938,15 @@ func flattenLaunchTemplateConfigurations(apiObjects []awstypes.LaunchTemplateCon
 	return tfList
 }
 
-func flattenDistribution(apiObject awstypes.Distribution) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenDistribution(apiObject awstypes.Distribution) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AmiDistributionConfiguration; v != nil {
-		tfMap["ami_distribution_configuration"] = []interface{}{flattenAMIDistributionConfiguration(v)}
+		tfMap["ami_distribution_configuration"] = []any{flattenAMIDistributionConfiguration(v)}
 	}
 
 	if v := apiObject.ContainerDistributionConfiguration; v != nil {
-		tfMap["container_distribution_configuration"] = []interface{}{flattenContainerDistributionConfiguration(v)}
+		tfMap["container_distribution_configuration"] = []any{flattenContainerDistributionConfiguration(v)}
 	}
 
 	if v := apiObject.FastLaunchConfigurations; v != nil {
@@ -887,7 +958,7 @@ func flattenDistribution(apiObject awstypes.Distribution) map[string]interface{}
 	}
 
 	if v := apiObject.LicenseConfigurationArns; v != nil {
-		tfMap["license_configuration_arns"] = aws.StringSlice(v)
+		tfMap["license_configuration_arns"] = v
 	}
 
 	if v := apiObject.Region; v != nil {
@@ -895,18 +966,22 @@ func flattenDistribution(apiObject awstypes.Distribution) map[string]interface{}
 	}
 
 	if v := apiObject.S3ExportConfiguration; v != nil {
-		tfMap["s3_export_configuration"] = []interface{}{flattenS3ExportConfiguration(v)}
+		tfMap["s3_export_configuration"] = []any{flattenS3ExportConfiguration(v)}
+	}
+
+	if v := apiObject.SsmParameterConfigurations; v != nil {
+		tfMap["ssm_parameter_configuration"] = flattenSSMParameterConfigurations(v)
 	}
 
 	return tfMap
 }
 
-func flattenDistributions(apiObjects []awstypes.Distribution) []interface{} {
+func flattenDistributions(apiObjects []awstypes.Distribution) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenDistribution(apiObject))
@@ -915,38 +990,38 @@ func flattenDistributions(apiObjects []awstypes.Distribution) []interface{} {
 	return tfList
 }
 
-func flattenLaunchPermissionConfiguration(apiObject *awstypes.LaunchPermissionConfiguration) map[string]interface{} {
+func flattenLaunchPermissionConfiguration(apiObject *awstypes.LaunchPermissionConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.OrganizationArns; v != nil {
-		tfMap["organization_arns"] = aws.StringSlice(v)
+		tfMap["organization_arns"] = v
 	}
 
 	if v := apiObject.OrganizationalUnitArns; v != nil {
-		tfMap["organizational_unit_arns"] = aws.StringSlice(v)
+		tfMap["organizational_unit_arns"] = v
 	}
 
 	if v := apiObject.UserGroups; v != nil {
-		tfMap["user_groups"] = aws.StringSlice(v)
+		tfMap["user_groups"] = v
 	}
 
 	if v := apiObject.UserIds; v != nil {
-		tfMap["user_ids"] = aws.StringSlice(v)
+		tfMap["user_ids"] = v
 	}
 
 	return tfMap
 }
 
-func flattenTargetContainerRepository(apiObject *awstypes.TargetContainerRepository) map[string]interface{} {
+func flattenTargetContainerRepository(apiObject *awstypes.TargetContainerRepository) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.RepositoryName; v != nil {
 		tfMap[names.AttrRepositoryName] = aws.ToString(v)
@@ -957,8 +1032,8 @@ func flattenTargetContainerRepository(apiObject *awstypes.TargetContainerReposit
 	return tfMap
 }
 
-func flattenLaunchTemplateConfiguration(apiObject awstypes.LaunchTemplateConfiguration) map[string]interface{} {
-	tfMap := map[string]interface{}{
+func flattenLaunchTemplateConfiguration(apiObject awstypes.LaunchTemplateConfiguration) map[string]any {
+	tfMap := map[string]any{
 		"default": apiObject.SetDefaultVersion,
 	}
 
@@ -973,12 +1048,12 @@ func flattenLaunchTemplateConfiguration(apiObject awstypes.LaunchTemplateConfigu
 	return tfMap
 }
 
-func flattenFastLaunchConfigurations(apiObjects []awstypes.FastLaunchConfiguration) []interface{} {
+func flattenFastLaunchConfigurations(apiObjects []awstypes.FastLaunchConfiguration) []any {
 	if apiObjects == nil {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenFastLaunchConfiguration(apiObject))
@@ -987,8 +1062,8 @@ func flattenFastLaunchConfigurations(apiObjects []awstypes.FastLaunchConfigurati
 	return tfList
 }
 
-func flattenFastLaunchConfiguration(apiObject awstypes.FastLaunchConfiguration) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenFastLaunchConfiguration(apiObject awstypes.FastLaunchConfiguration) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AccountId; v != nil {
 		tfMap[names.AttrAccountID] = aws.ToString(v)
@@ -997,7 +1072,7 @@ func flattenFastLaunchConfiguration(apiObject awstypes.FastLaunchConfiguration) 
 	tfMap[names.AttrEnabled] = aws.Bool(apiObject.Enabled)
 
 	if v := apiObject.LaunchTemplate; v != nil {
-		tfMap[names.AttrLaunchTemplate] = []interface{}{flattenFastLaunchLaunchTemplateSpecification(v)}
+		tfMap[names.AttrLaunchTemplate] = []any{flattenFastLaunchLaunchTemplateSpecification(v)}
 	}
 
 	if v := apiObject.MaxParallelLaunches; v != nil {
@@ -1005,18 +1080,18 @@ func flattenFastLaunchConfiguration(apiObject awstypes.FastLaunchConfiguration) 
 	}
 
 	if v := apiObject.SnapshotConfiguration; v != nil {
-		tfMap["snapshot_configuration"] = []interface{}{flattenFastLaunchSnapshotConfiguration(v)}
+		tfMap["snapshot_configuration"] = []any{flattenFastLaunchSnapshotConfiguration(v)}
 	}
 
 	return tfMap
 }
 
-func flattenFastLaunchLaunchTemplateSpecification(apiObject *awstypes.FastLaunchLaunchTemplateSpecification) map[string]interface{} {
+func flattenFastLaunchLaunchTemplateSpecification(apiObject *awstypes.FastLaunchLaunchTemplateSpecification) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.LaunchTemplateId; v != nil {
 		tfMap["launch_template_id"] = aws.ToString(v)
@@ -1033,12 +1108,12 @@ func flattenFastLaunchLaunchTemplateSpecification(apiObject *awstypes.FastLaunch
 	return tfMap
 }
 
-func flattenFastLaunchSnapshotConfiguration(apiObject *awstypes.FastLaunchSnapshotConfiguration) map[string]interface{} {
+func flattenFastLaunchSnapshotConfiguration(apiObject *awstypes.FastLaunchSnapshotConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.TargetResourceCount; v != nil {
 		tfMap["target_resource_count"] = aws.ToInt32(v)
@@ -1047,12 +1122,12 @@ func flattenFastLaunchSnapshotConfiguration(apiObject *awstypes.FastLaunchSnapsh
 	return tfMap
 }
 
-func flattenS3ExportConfiguration(apiObject *awstypes.S3ExportConfiguration) map[string]interface{} {
+func flattenS3ExportConfiguration(apiObject *awstypes.S3ExportConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"disk_image_format": apiObject.DiskImageFormat,
 	}
 
@@ -1066,6 +1141,38 @@ func flattenS3ExportConfiguration(apiObject *awstypes.S3ExportConfiguration) map
 
 	if v := apiObject.S3Prefix; v != nil {
 		tfMap["s3_prefix"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenSSMParameterConfigurations(apiObjects []awstypes.SsmParameterConfiguration) []any {
+	if apiObjects == nil {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenSSMParameterConfiguration(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenSSMParameterConfiguration(apiObject awstypes.SsmParameterConfiguration) map[string]any {
+	tfMap := map[string]any{}
+
+	if v := apiObject.AmiAccountId; v != nil {
+		tfMap["ami_account_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.DataType; string(v) != "" {
+		tfMap["data_type"] = string(v)
+	}
+
+	if v := apiObject.ParameterName; v != nil {
+		tfMap["parameter_name"] = aws.ToString(v)
 	}
 
 	return tfMap

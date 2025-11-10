@@ -37,7 +37,7 @@ func resourceEBSEncryptionByDefault() *schema.Resource {
 	}
 }
 
-func resourceEBSEncryptionByDefaultCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSEncryptionByDefaultCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -52,11 +52,12 @@ func resourceEBSEncryptionByDefaultCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceEBSEncryptionByDefaultRead(ctx, d, meta)...)
 }
 
-func resourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	resp, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+	input := ec2.GetEbsEncryptionByDefaultInput{}
+	resp, err := conn.GetEbsEncryptionByDefault(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS encryption by default: %s", err)
 	}
@@ -66,7 +67,7 @@ func resourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceEBSEncryptionByDefaultUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSEncryptionByDefaultUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -78,7 +79,7 @@ func resourceEBSEncryptionByDefaultUpdate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceEBSEncryptionByDefaultRead(ctx, d, meta)...)
 }
 
-func resourceEBSEncryptionByDefaultDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSEncryptionByDefaultDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -94,9 +95,11 @@ func setEBSEncryptionByDefault(ctx context.Context, conn *ec2.Client, enabled bo
 	var err error
 
 	if enabled {
-		_, err = conn.EnableEbsEncryptionByDefault(ctx, &ec2.EnableEbsEncryptionByDefaultInput{})
+		input := ec2.EnableEbsEncryptionByDefaultInput{}
+		_, err = conn.EnableEbsEncryptionByDefault(ctx, &input)
 	} else {
-		_, err = conn.DisableEbsEncryptionByDefault(ctx, &ec2.DisableEbsEncryptionByDefaultInput{})
+		input := ec2.DisableEbsEncryptionByDefaultInput{}
+		_, err = conn.DisableEbsEncryptionByDefault(ctx, &input)
 	}
 
 	return err

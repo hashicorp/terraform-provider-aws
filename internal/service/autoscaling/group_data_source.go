@@ -564,7 +564,7 @@ func dataSourceGroup() *schema.Resource {
 	}
 }
 
-func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -590,7 +590,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("launch_configuration", group.LaunchConfigurationName)
 	if group.LaunchTemplate != nil {
-		if err := d.Set(names.AttrLaunchTemplate, []interface{}{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {
+		if err := d.Set(names.AttrLaunchTemplate, []any{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 		}
 	} else {
@@ -601,7 +601,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("max_size", group.MaxSize)
 	d.Set("min_size", group.MinSize)
 	if group.MixedInstancesPolicy != nil {
-		if err := d.Set("mixed_instances_policy", []interface{}{flattenMixedInstancesPolicy(group.MixedInstancesPolicy)}); err != nil {
+		if err := d.Set("mixed_instances_policy", []any{flattenMixedInstancesPolicy(group.MixedInstancesPolicy)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting mixed_instances_policy: %s", err)
 		}
 	} else {
@@ -614,7 +614,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("service_linked_role_arn", group.ServiceLinkedRoleARN)
 	d.Set(names.AttrStatus, group.Status)
 	d.Set("suspended_processes", flattenSuspendedProcesses(group.SuspendedProcesses))
-	if err := d.Set("tag", listOfMap(KeyValueTags(ctx, group.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+	if err := d.Set("tag", listOfMap(keyValueTags(ctx, group.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}
 	d.Set("target_group_arns", group.TargetGroupARNs)
@@ -624,7 +624,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)
 	if group.WarmPoolConfiguration != nil {
-		if err := d.Set("warm_pool", []interface{}{flattenWarmPoolConfiguration(group.WarmPoolConfiguration)}); err != nil {
+		if err := d.Set("warm_pool", []any{flattenWarmPoolConfiguration(group.WarmPoolConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting warm_pool: %s", err)
 		}
 	} else {

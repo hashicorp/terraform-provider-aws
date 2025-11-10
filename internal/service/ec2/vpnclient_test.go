@@ -29,6 +29,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"federatedAuthWithSelfService": testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider,
 			"withClientConnect":            testAccClientVPNEndpoint_withClientConnectOptions,
 			"withClientLoginBanner":        testAccClientVPNEndpoint_withClientLoginBannerOptions,
+			"withClientRouteEnforcement":   testAccClientVPNEndpoint_withClientRouteEnforcementOptions,
 			"withLogGroup":                 testAccClientVPNEndpoint_withConnectionLogOptions,
 			"withDNSServers":               testAccClientVPNEndpoint_withDNSServers,
 			"tags":                         testAccClientVPNEndpoint_tags,
@@ -36,6 +37,8 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"selfServicePortal":            testAccClientVPNEndpoint_selfServicePortal,
 			"vpcNoSecurityGroups":          testAccClientVPNEndpoint_vpcNoSecurityGroups,
 			"vpcSecurityGroups":            testAccClientVPNEndpoint_vpcSecurityGroups,
+			"endpointIpAddressType":        testAccClientVPNEndpoint_endpointIPAddressType,
+			"trafficIpAddressType":         testAccClientVPNEndpoint_trafficIPAddressType,
 			"basicDataSource":              testAccClientVPNEndpointDataSource_basic,
 		},
 		"AuthorizationRule": {

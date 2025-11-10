@@ -83,7 +83,7 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 	}
 }
 
-func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
@@ -127,15 +127,15 @@ func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func flattenBrokerInstanceOptions(bios []types.BrokerInstanceOption) []interface{} {
+func flattenBrokerInstanceOptions(bios []types.BrokerInstanceOption) []any {
 	if len(bios) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, bio := range bios {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"engine_type":                bio.EngineType,
 			names.AttrStorageType:        bio.StorageType,
 			"supported_deployment_modes": bio.SupportedDeploymentModes,
@@ -156,15 +156,15 @@ func flattenBrokerInstanceOptions(bios []types.BrokerInstanceOption) []interface
 	return tfList
 }
 
-func flattenAvailabilityZones(azs []types.AvailabilityZone) []interface{} {
+func flattenAvailabilityZones(azs []types.AvailabilityZone) []any {
 	if len(azs) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, az := range azs {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if az.Name != nil {
 			tfMap[names.AttrName] = aws.ToString(az.Name)

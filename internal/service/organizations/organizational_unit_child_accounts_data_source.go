@@ -39,11 +39,24 @@ func dataSourceOrganizationalUnitChildAccounts() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -58,7 +71,7 @@ func dataSourceOrganizationalUnitChildAccounts() *schema.Resource {
 	}
 }
 
-func dataSourceOrganizationalUnitChildAccountsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOrganizationalUnitChildAccountsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 

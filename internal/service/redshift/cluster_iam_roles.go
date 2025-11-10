@@ -65,7 +65,7 @@ func resourceClusterIAMRoles() *schema.Resource {
 	}
 }
 
-func resourceClusterIAMRolesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterIAMRolesCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceClusterIAMRolesCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterIAMRolesRead(ctx, d, meta)...)
 }
 
-func resourceClusterIAMRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterIAMRolesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -127,7 +127,7 @@ func resourceClusterIAMRolesRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceClusterIAMRolesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterIAMRolesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -164,7 +164,7 @@ func resourceClusterIAMRolesUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterIAMRolesRead(ctx, d, meta)...)
 }
 
-func resourceClusterIAMRolesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterIAMRolesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 

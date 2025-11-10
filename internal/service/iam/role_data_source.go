@@ -83,7 +83,7 @@ func dataSourceRole() *schema.Resource {
 	}
 }
 
-func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -122,17 +122,17 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func flattenRoleLastUsed(apiObject *awstypes.RoleLastUsed) []interface{} {
+func flattenRoleLastUsed(apiObject *awstypes.RoleLastUsed) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrRegion: aws.ToString(apiObject.Region),
 	}
 
 	if apiObject.LastUsedDate != nil {
 		tfMap["last_used_date"] = apiObject.LastUsedDate.Format(time.RFC3339)
 	}
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

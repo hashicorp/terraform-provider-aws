@@ -22,6 +22,9 @@ resource "aws_dataexchange_data_set" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `asset_type` - (Required) The type of asset that is added to a data set. Valid values include `API_GATEWAY_API`, `LAKE_FORMATION_DATA_PERMISSION`, `REDSHIFT_DATA_SHARE`, `S3_DATA_ACCESS`, `S3_SNAPSHOT`.
 * `description` - (Required) A description for the data set.
 * `name` - (Required) The name of the data set.
@@ -37,17 +40,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataExchange DataSets using their ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataExchange DataSets using their `id`. For example:
 
 ```terraform
 import {
   to = aws_dataexchange_data_set.example
-  id = "arn:aws:dataexchange:us-west-2:123456789012:data-sets/4fa784c7-ccb4-4dbf-ba4f-02198320daa1"
+  id = "4fa784c7-ccb4-4dbf-ba4f-02198320daa1"
 }
 ```
 
-Using `terraform import`, import DataExchange DataSets using their ARN. For example:
+Using `terraform import`, import DataExchange DataSets using their `id`. For example:
 
 ```console
-% terraform import aws_dataexchange_data_set.example arn:aws:dataexchange:us-west-2:123456789012:data-sets/4fa784c7-ccb4-4dbf-ba4f-02198320daa1
+% terraform import aws_dataexchange_data_set.example 4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```

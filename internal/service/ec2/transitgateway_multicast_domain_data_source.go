@@ -122,7 +122,7 @@ func dataSourceTransitGatewayMulticastDomain() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -205,8 +205,8 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	return diags
 }
 
-func flattenTransitGatewayMulticastDomainAssociation(apiObject awstypes.TransitGatewayMulticastDomainAssociation) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenTransitGatewayMulticastDomainAssociation(apiObject awstypes.TransitGatewayMulticastDomainAssociation) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Subnet.SubnetId; v != nil {
 		tfMap[names.AttrSubnetID] = aws.ToString(v)
@@ -219,12 +219,12 @@ func flattenTransitGatewayMulticastDomainAssociation(apiObject awstypes.TransitG
 	return tfMap
 }
 
-func flattenTransitGatewayMulticastDomainAssociations(apiObjects []awstypes.TransitGatewayMulticastDomainAssociation) []interface{} {
+func flattenTransitGatewayMulticastDomainAssociations(apiObjects []awstypes.TransitGatewayMulticastDomainAssociation) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenTransitGatewayMulticastDomainAssociation(apiObject))
@@ -233,8 +233,8 @@ func flattenTransitGatewayMulticastDomainAssociations(apiObjects []awstypes.Tran
 	return tfList
 }
 
-func flattenTransitGatewayMulticastGroup(apiObject awstypes.TransitGatewayMulticastGroup) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenTransitGatewayMulticastGroup(apiObject awstypes.TransitGatewayMulticastGroup) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.GroupIpAddress; v != nil {
 		tfMap["group_ip_address"] = aws.ToString(v)
@@ -247,12 +247,12 @@ func flattenTransitGatewayMulticastGroup(apiObject awstypes.TransitGatewayMultic
 	return tfMap
 }
 
-func flattenTransitGatewayMulticastGroups(apiObjects []awstypes.TransitGatewayMulticastGroup) []interface{} {
+func flattenTransitGatewayMulticastGroups(apiObjects []awstypes.TransitGatewayMulticastGroup) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenTransitGatewayMulticastGroup(apiObject))

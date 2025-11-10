@@ -46,16 +46,15 @@ func dataSourceResource() *schema.Resource {
 	}
 }
 
-func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	path := d.Get(names.AttrPath).(string)
-	input := &apigateway.GetResourcesInput{
+	input := apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 	}
-
-	match, err := findResource(ctx, conn, input, func(v *types.Resource) bool {
+	match, err := findResource(ctx, conn, &input, func(v *types.Resource) bool {
 		return aws.ToString(v.Path) == path
 	})
 

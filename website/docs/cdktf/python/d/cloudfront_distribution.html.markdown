@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
 ## Attribute Reference
@@ -42,6 +44,8 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
 * `aliases` - List that contains information about CNAMEs (alternate domain names), if any, for this distribution.
+
+* `anycast_ip_list_id` - ID of the Anycast static IP list that is associated with the distribution, if any.
 
 * `arn` - ARN (Amazon Resource Name) for the distribution. For example: arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5, where 123456789012 is your AWS account ID.
 
@@ -65,4 +69,4 @@ This data source exports the following attributes in addition to the arguments a
      alias for the zone ID `Z2FDTNDATAQYW2`.
 * `web_acl_id` AWS WAF web ACL associated with this distribution.
 
-<!-- cache-key: cdktf-0.20.8 input-76fd4092d64caf3eb602d2f1b7554e0601ea2cb2c116df5092f91bc933e23c48 -->
+<!-- cache-key: cdktf-0.20.8 input-d53bc71e997f4e8ab6d41cb84814eac9d907cf5ed04187aa3ae07f02a9cbda3d -->

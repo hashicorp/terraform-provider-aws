@@ -22,9 +22,9 @@ Additional information for using AWS Directory Service with Windows File Systems
 resource "aws_fsx_windows_file_system" "example" {
   active_directory_id = aws_directory_service_directory.example.id
   kms_key_id          = aws_kms_key.example.arn
-  storage_capacity    = 300
+  storage_capacity    = 32
   subnet_ids          = [aws_subnet.example.id]
-  throughput_capacity = 1024
+  throughput_capacity = 32
 }
 ```
 
@@ -35,9 +35,9 @@ Additional information for using AWS Directory Service with Windows File Systems
 ```terraform
 resource "aws_fsx_windows_file_system" "example" {
   kms_key_id          = aws_kms_key.example.arn
-  storage_capacity    = 300
+  storage_capacity    = 32
   subnet_ids          = [aws_subnet.example.id]
-  throughput_capacity = 1024
+  throughput_capacity = 32
 
   self_managed_active_directory {
     dns_ips     = ["10.0.0.111", "10.0.0.222"]
@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `active_directory_id` - (Optional) The ID for an existing Microsoft Active Directory instance that the file system should join when it's created. Cannot be specified with `self_managed_active_directory`.
 * `aliases` - (Optional) An array DNS alias names that you want to associate with the Amazon FSx file system.  For more information, see [Working with DNS Aliases](https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-dns-aliases.html)
 * `audit_log_configuration` - (Optional) The configuration that Amazon FSx for Windows File Server uses to audit and log user accesses of files, folders, and file shares on the Amazon FSx for Windows File Server file system. See [`audit_log_configuration` Block](#audit_log_configuration-block) for details.

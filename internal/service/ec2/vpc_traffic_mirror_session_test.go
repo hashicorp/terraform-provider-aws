@@ -201,7 +201,8 @@ func TestAccVPCTrafficMirrorSession_updateTrafficMirrorTarget(t *testing.T) {
 func testAccPreCheckTrafficMirrorSession(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.DescribeTrafficMirrorSessions(ctx, &ec2.DescribeTrafficMirrorSessionsInput{})
+	input := ec2.DescribeTrafficMirrorSessionsInput{}
+	_, err := conn.DescribeTrafficMirrorSessions(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skip("skipping traffic mirror sessions acceptance test: ", err)

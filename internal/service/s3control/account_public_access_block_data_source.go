@@ -15,6 +15,7 @@ import (
 )
 
 // @SDKDataSource("aws_s3_account_public_access_block", name="Account Public Access Block")
+// @Region(global=true)
 func dataSourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccountPublicAccessBlockRead,
@@ -45,7 +46,7 @@ func dataSourceAccountPublicAccessBlock() *schema.Resource {
 	}
 }
 
-func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 

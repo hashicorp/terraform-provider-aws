@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_inspector_rules_packages")
+// @SDKDataSource("aws_inspector_rules_packages", name="Rules Packages")
 func DataSourceRulesPackages() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRulesPackagesRead,
@@ -30,7 +30,7 @@ func DataSourceRulesPackages() *schema.Resource {
 	}
 }
 
-func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 

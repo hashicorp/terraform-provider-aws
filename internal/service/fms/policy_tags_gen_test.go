@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -47,10 +46,11 @@ func testAccFMSPolicy_tagsSerial(t *testing.T) {
 
 func testAccFMSPolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -240,10 +240,11 @@ func testAccFMSPolicy_tags(t *testing.T) {
 
 func testAccFMSPolicy_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -294,8 +295,14 @@ func testAccFMSPolicy_tags_null(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -303,10 +310,11 @@ func testAccFMSPolicy_tags_null(t *testing.T) {
 
 func testAccFMSPolicy_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -353,8 +361,14 @@ func testAccFMSPolicy_tags_EmptyMap(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -362,10 +376,11 @@ func testAccFMSPolicy_tags_EmptyMap(t *testing.T) {
 
 func testAccFMSPolicy_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -445,10 +460,11 @@ func testAccFMSPolicy_tags_AddOnUpdate(t *testing.T) {
 
 func testAccFMSPolicy_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -539,10 +555,11 @@ func testAccFMSPolicy_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func testAccFMSPolicy_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -681,10 +698,11 @@ func testAccFMSPolicy_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 
 func testAccFMSPolicy_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -772,10 +790,11 @@ func testAccFMSPolicy_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 
 func testAccFMSPolicy_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -964,10 +983,11 @@ func testAccFMSPolicy_tags_DefaultTags_providerOnly(t *testing.T) {
 
 func testAccFMSPolicy_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -1132,10 +1152,11 @@ func testAccFMSPolicy_tags_DefaultTags_nonOverlapping(t *testing.T) {
 
 func testAccFMSPolicy_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -1316,10 +1337,11 @@ func testAccFMSPolicy_tags_DefaultTags_overlapping(t *testing.T) {
 
 func testAccFMSPolicy_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -1408,10 +1430,11 @@ func testAccFMSPolicy_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 
 func testAccFMSPolicy_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -1499,10 +1522,11 @@ func testAccFMSPolicy_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 
 func testAccFMSPolicy_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -1566,10 +1590,11 @@ func testAccFMSPolicy_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 
 func testAccFMSPolicy_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -1625,10 +1650,11 @@ func testAccFMSPolicy_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 
 func testAccFMSPolicy_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -1689,10 +1715,11 @@ func testAccFMSPolicy_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) 
 
 func testAccFMSPolicy_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -1753,10 +1780,11 @@ func testAccFMSPolicy_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.
 
 func testAccFMSPolicy_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -1810,10 +1838,11 @@ func testAccFMSPolicy_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func testAccFMSPolicy_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -1909,10 +1938,11 @@ func testAccFMSPolicy_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 
 func testAccFMSPolicy_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -1998,10 +2028,11 @@ func testAccFMSPolicy_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 
 func testAccFMSPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -2032,7 +2063,7 @@ func testAccFMSPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2081,7 +2112,7 @@ func testAccFMSPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2130,7 +2161,7 @@ func testAccFMSPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2159,10 +2190,11 @@ func testAccFMSPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 
 func testAccFMSPolicy_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_fms_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_fms_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx),
@@ -2191,7 +2223,7 @@ func testAccFMSPolicy_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2254,7 +2286,7 @@ func testAccFMSPolicy_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2317,7 +2349,7 @@ func testAccFMSPolicy_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),

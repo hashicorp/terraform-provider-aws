@@ -6,6 +6,7 @@ package tags
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/url"
 	"reflect"
 	"slices"
@@ -14,8 +15,6 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -321,13 +320,9 @@ func (tags KeyValueTags) Map() map[string]string {
 func (tags KeyValueTags) Merge(mergeTags KeyValueTags) KeyValueTags {
 	result := make(KeyValueTags)
 
-	for k, v := range tags {
-		result[k] = v
-	}
+	maps.Copy(result, tags)
 
-	for k, v := range mergeTags {
-		result[k] = v
-	}
+	maps.Copy(result, mergeTags)
 
 	return result
 }
@@ -560,7 +555,7 @@ func (tags KeyValueTags) URLQueryString() string {
 // map[string]string, map[string]*string, map[string]interface{}, []interface{}, and types.Map.
 // When passed []interface{}, all elements are treated as keys and assigned nil values.
 // When passed KeyValueTags or its underlying type implementation, returns itself.
-func New(ctx context.Context, i interface{}) KeyValueTags {
+func New(ctx context.Context, i any) KeyValueTags {
 	switch value := i.(type) {
 	case KeyValueTags:
 		return make(KeyValueTags).Merge(value)
@@ -587,7 +582,7 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		}
 
 		return kvtm
-	case map[string]interface{}:
+	case map[string]any:
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
@@ -609,7 +604,7 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 		}
 
 		return kvtm
-	case []interface{}:
+	case []any:
 		kvtm := make(KeyValueTags, len(value))
 
 		for _, v := range value {
@@ -890,12 +885,9 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 }
 
 // ResolveDuplicatesFramework resolves differences between incoming tags, defaultTags, and ignoreConfig
-func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, resp *resource.ReadResponse, diags *fwdiag.Diagnostics) KeyValueTags {
+func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, tagsAll Map, diags *fwdiag.Diagnostics) KeyValueTags {
 	// remove default config.
 	t := tags.RemoveDefaultConfig(defaultConfig)
-
-	var tagsAll Map
-	diags.Append(resp.State.GetAttribute(ctx, path.Root("tags"), &tagsAll)...)
 
 	if diags.HasError() {
 		return KeyValueTags{}

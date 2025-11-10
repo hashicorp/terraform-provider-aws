@@ -70,7 +70,7 @@ func resourcePreparedStatement() *schema.Resource {
 	}
 }
 
-func resourcePreparedStatementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePreparedStatementCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -97,7 +97,7 @@ func resourcePreparedStatementCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourcePreparedStatementRead(ctx, d, meta)...)
 }
 
-func resourcePreparedStatementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePreparedStatementRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -126,7 +126,7 @@ func resourcePreparedStatementRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourcePreparedStatementUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePreparedStatementUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -157,7 +157,7 @@ func resourcePreparedStatementUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourcePreparedStatementRead(ctx, d, meta)...)
 }
 
-func resourcePreparedStatementDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePreparedStatementDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -167,10 +167,11 @@ func resourcePreparedStatementDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[INFO] Deleting Athena Prepared Statement: %s", d.Id())
-	_, err = conn.DeletePreparedStatement(ctx, &athena.DeletePreparedStatementInput{
+	input := athena.DeletePreparedStatementInput{
 		StatementName: aws.String(statementName),
 		WorkGroup:     aws.String(workGroupName),
-	})
+	}
+	_, err = conn.DeletePreparedStatement(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

@@ -19,8 +19,6 @@ import (
 )
 
 const (
-	ThrottlingRetryTimeout = 10 * time.Minute
-
 	ResourcePrefix = "tf-acc-test"
 )
 
@@ -57,7 +55,7 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 		servicePackageName := sp.ServicePackageName()
 		servicePackageMap[servicePackageName] = sp
 	}
-	meta.ServicePackages = servicePackageMap
+	meta.SetServicePackages(ctx, servicePackageMap)
 
 	conf := &conns.Config{
 		MaxRetries:       5,
@@ -103,7 +101,7 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 }
 
 type Sweepable interface {
-	Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error
+	Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error
 }
 
 func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
@@ -115,7 +113,7 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 
 	for _, sweepable := range sweepables {
 		g.Go(func() error {
-			return sweepable.Delete(ctx, ThrottlingRetryTimeout, optFns...)
+			return sweepable.Delete(ctx, optFns...)
 		})
 	}
 

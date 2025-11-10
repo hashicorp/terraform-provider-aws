@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_arn` - (Required) ARN of the application.
 
 ## Attribute Reference
@@ -52,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `portal_options` - Options for the portal associated with an application. See the `aws_ssoadmin_application` [resource documentation](../r/ssoadmin_application.html.markdown#portal_options-argument-reference). The attributes are the same.
 * `status` - Status of the application.
 
-<!-- cache-key: cdktf-0.20.8 input-b8096210ea51a9d18e70341d363454abfccc3d45f7f56956f44ea2603393947a -->
+<!-- cache-key: cdktf-0.20.8 input-c45b51924b32a8a0f67ae880bd0f85456039006f546d4f5e141825fcebc23871 -->

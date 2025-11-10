@@ -71,6 +71,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `defaultBaseline` - (Optional) Filters the results against the baselines default_baseline field.
 * `namePrefix` - (Optional) Filter results by the baseline name prefix.
 * `operatingSystem` - (Optional) Specified OS for the baseline. Valid values: `AMAZON_LINUX`, `AMAZON_LINUX_2`, `UBUNTU`, `REDHAT_ENTERPRISE_LINUX`, `SUSE`, `CENTOS`, `ORACLE_LINUX`, `DEBIAN`, `MACOS`, `RASPBIAN` and `ROCKY_LINUX`.
@@ -90,6 +91,7 @@ This data source exports the following attributes in addition to the arguments a
     * `patchFilter` - Patch filter group that defines the criteria for the rule.
         * `key` - Key for the filter.
         * `values` - Value for the filter.
+* `availableSecurityUpdatesComplianceStatus` - Indicates the compliance status of managed nodes for which security-related patches are available but were not approved. Supported for Windows Server managed nodes only.
 * `globalFilter` - Set of global filters used to exclude patches from the baseline.
     * `key` - Key for the filter.
     * `values` - Value for the filter.
@@ -104,4 +106,4 @@ This data source exports the following attributes in addition to the arguments a
     * `name` - Name specified to identify the patch source.
     * `products` - Specific operating system versions a patch repository applies to.
 
-<!-- cache-key: cdktf-0.20.8 input-8ee6d71e67ed884af76dd23dafa24872940eb751791d12905502839059364dab -->
+<!-- cache-key: cdktf-0.20.8 input-86c142313f82590db73389cac99b221c89d65c61ae8d87aab57384add5cb359b -->

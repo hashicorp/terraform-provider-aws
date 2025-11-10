@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
-	cedar "github.com/cedar-policy/cedar-go/x/exp/parser"
+	"github.com/cedar-policy/cedar-go"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -33,8 +33,8 @@ import (
 )
 
 // @FrameworkResource(aws_verifiedpermissions_policy, name="Policy")
-func newResourcePolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePolicy{}
+func newPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &policyResource{}
 
 	return r, nil
 }
@@ -43,16 +43,12 @@ const (
 	ResNamePolicy = "Policy"
 )
 
-type resourcePolicy struct {
-	framework.ResourceWithConfigure
+type policyResource struct {
+	framework.ResourceWithModel[policyResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourcePolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_verifiedpermissions_policy"
-}
-
-func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedDate: schema.StringAttribute{
@@ -188,56 +184,41 @@ func statementReplaceIf(_ context.Context, req planmodifier.StringRequest, resp 
 		return
 	}
 
-	cedarPlan, err := cedar.Tokenize([]byte(req.PlanValue.ValueString()))
+	// Parse the plan policy
+	planPolicies, err := cedar.NewPolicyListFromBytes("plan.cedar", []byte(req.PlanValue.ValueString()))
 	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), err.Error())
+		resp.Diagnostics.AddError("Failed to parse plan policy", err.Error())
 		return
 	}
 
-	cedarState, err := cedar.Tokenize([]byte(req.StateValue.ValueString()))
+	// Parse the state policy
+	statePolicies, err := cedar.NewPolicyListFromBytes("state.cedar", []byte(req.StateValue.ValueString()))
 	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), err.Error())
+		resp.Diagnostics.AddError("Failed to parse state policy", err.Error())
 		return
 	}
 
-	policyPlan, err := cedar.Parse(cedarPlan)
-	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), err.Error())
-		return
+	var policyPrincipal, policyResource, policyEffect bool
+	if len(planPolicies) > 0 && len(statePolicies) > 0 {
+		planPolicyAST := planPolicies[0].AST()
+		statePolicyAST := statePolicies[0].AST()
+
+		policyEffect = planPolicyAST.Effect != statePolicyAST.Effect
+		policyPrincipal = planPolicyAST.Principal != statePolicyAST.Principal
+		policyResource = planPolicyAST.Resource != statePolicyAST.Resource
 	}
 
-	policyState, err := cedar.Parse(cedarState)
-	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), err.Error())
-		return
-	}
-
-	var policyPrincipal bool
-	if len(policyPlan) > 0 && len(policyState) > 0 && (len(policyPlan[0].Principal.Entity.Path) > 0 && (len(policyState[0].Principal.Entity.Path)) > 0) {
-		policyPrincipal = (policyPlan[0].Principal.Entity.String() != policyState[0].Principal.Entity.String()) || (policyPlan[0].Principal.Type != policyState[0].Principal.Type)
-	}
-
-	var policyResource bool
-	if len(policyPlan) > 0 && len(policyState) > 0 && (len(policyPlan[0].Resource.Entity.Path) > 0 && (len(policyState[0].Resource.Entity.Path)) > 0) {
-		policyResource = (policyPlan[0].Resource.Entity.String() != policyState[0].Resource.Entity.String()) || (policyPlan[0].Resource.Type != policyState[0].Resource.Type)
-	}
-
-	var policyEffect bool
-	if len(policyPlan) > 0 && len(policyState) > 0 {
-		policyEffect = policyPlan[0].Effect != policyState[0].Effect
-	}
-
-	resp.RequiresReplace = policyEffect || policyResource || policyPrincipal
+	resp.RequiresReplace = policyEffect || policyPrincipal || policyResource
 }
 
 const (
 	ResourcePolicyIDPartsCount = 2
 )
 
-func (r *resourcePolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
 
-	var plan resourcePolicyData
+	var plan policyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -341,10 +322,10 @@ func (r *resourcePolicy) Create(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourcePolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
 
-	var state resourcePolicyData
+	var state policyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -423,10 +404,10 @@ func (r *resourcePolicy) Read(ctx context.Context, req resource.ReadRequest, res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourcePolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
 
-	var plan, state resourcePolicyData
+	var plan, state policyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -478,10 +459,10 @@ func (r *resourcePolicy) Update(ctx context.Context, req resource.UpdateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourcePolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
 
-	var state resourcePolicyData
+	var state policyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -507,9 +488,9 @@ func (r *resourcePolicy) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (r *resourcePolicy) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *policyResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if !req.State.Raw.IsNull() && !req.Plan.Raw.IsNull() {
-		var plan, state resourcePolicyData
+		var plan, state policyResourceModel
 		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 		if resp.Diagnostics.HasError() {
@@ -563,7 +544,8 @@ func findPolicyByID(ctx context.Context, conn *verifiedpermissions.Client, id, p
 	return out, nil
 }
 
-type resourcePolicyData struct {
+type policyResourceModel struct {
+	framework.WithRegionModel
 	CreatedDate   timetypes.RFC3339                                 `tfsdk:"created_date"`
 	Definition    fwtypes.ListNestedObjectValueOf[policyDefinition] `tfsdk:"definition"`
 	ID            types.String                                      `tfsdk:"id"`

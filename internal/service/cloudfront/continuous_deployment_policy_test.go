@@ -52,8 +52,9 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 			},
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "continuous-deployment-policy/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.quantity", "1"),

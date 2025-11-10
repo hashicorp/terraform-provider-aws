@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,12 +56,10 @@ func resourceSnapshotCopyGrant() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -84,7 +81,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(name)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, 3*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, 3*time.Minute, func(ctx context.Context) (any, error) {
 		return findSnapshotCopyGrantByName(ctx, conn, d.Id())
 	})
 
@@ -95,7 +92,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceSnapshotCopyGrantRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -127,7 +124,7 @@ func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceSnapshotCopyGrantUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCopyGrantUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -135,7 +132,7 @@ func resourceSnapshotCopyGrantUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceSnapshotCopyGrantRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -152,7 +149,7 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Snapshot Copy Grant (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 3*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 3*time.Minute, func(ctx context.Context) (any, error) {
 		return findSnapshotCopyGrantByName(ctx, conn, d.Id())
 	})
 

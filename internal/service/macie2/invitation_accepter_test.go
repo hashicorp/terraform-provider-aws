@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,7 +22,7 @@ import (
 func testAccInvitationAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_macie2_invitation_accepter.member"
-	email := envvar.SkipIfEmpty(t, envVarPrincipalEmail, envVarPrincipalEmailMessageError)
+	email := acctest.SkipIfEnvVarNotSet(t, envVarPrincipalEmail)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

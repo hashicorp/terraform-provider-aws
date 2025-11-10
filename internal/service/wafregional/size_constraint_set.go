@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafregional"
@@ -84,13 +85,13 @@ func resourceSizeConstraintSet() *schema.Resource {
 	}
 }
 
-func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &wafregional.CreateSizeConstraintSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -108,7 +109,7 @@ func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceSizeConstraintSetUpdate(ctx, d, meta)...)
 }
 
-func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 
@@ -132,7 +133,7 @@ func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region(ctx)
@@ -148,20 +149,20 @@ func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceSizeConstraintSetRead(ctx, d, meta)...)
 }
 
-func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region(ctx)
 
 	if oldConstraints := d.Get("size_constraints").(*schema.Set).List(); len(oldConstraints) > 0 {
-		noConstraints := []interface{}{}
+		noConstraints := []any{}
 		if err := updateSizeConstraintSet(ctx, conn, region, d.Id(), oldConstraints, noConstraints); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	log.Printf("[INFO] Deleting WAF Regional Size Constraint Set: %s", d.Id())
-	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &wafregional.DeleteSizeConstraintSetInput{
 			ChangeToken:         token,
 			SizeConstraintSetId: aws.String(d.Id()),
@@ -206,8 +207,8 @@ func findSizeConstraintSetByID(ctx context.Context, conn *wafregional.Client, id
 	return output.SizeConstraintSet, nil
 }
 
-func updateSizeConstraintSet(ctx context.Context, conn *wafregional.Client, region, id string, oldConstraints, newConstraints []interface{}) error {
-	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+func updateSizeConstraintSet(ctx context.Context, conn *wafregional.Client, region, id string, oldConstraints, newConstraints []any) error {
+	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &wafregional.UpdateSizeConstraintSetInput{
 			ChangeToken:         token,
 			SizeConstraintSetId: aws.String(id),
@@ -224,21 +225,21 @@ func updateSizeConstraintSet(ctx context.Context, conn *wafregional.Client, regi
 	return nil
 }
 
-func diffSizeConstraints(oldS, newS []interface{}) []awstypes.SizeConstraintSetUpdate {
+func diffSizeConstraints(oldS, newS []any) []awstypes.SizeConstraintSetUpdate {
 	updates := make([]awstypes.SizeConstraintSetUpdate, 0)
 
 	for _, os := range oldS {
-		constraint := os.(map[string]interface{})
+		constraint := os.(map[string]any)
 
 		if idx, contains := sliceContainsMap(newS, constraint); contains {
-			newS = append(newS[:idx], newS[idx+1:]...)
+			newS = slices.Delete(newS, idx, idx+1)
 			continue
 		}
 
 		updates = append(updates, awstypes.SizeConstraintSetUpdate{
 			Action: awstypes.ChangeActionDelete,
 			SizeConstraint: &awstypes.SizeConstraint{
-				FieldToMatch:       expandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(constraint["field_to_match"].([]any)[0].(map[string]any)),
 				ComparisonOperator: awstypes.ComparisonOperator(constraint["comparison_operator"].(string)),
 				Size:               int64(constraint[names.AttrSize].(int)),
 				TextTransformation: awstypes.TextTransformation(constraint["text_transformation"].(string)),
@@ -247,12 +248,12 @@ func diffSizeConstraints(oldS, newS []interface{}) []awstypes.SizeConstraintSetU
 	}
 
 	for _, ns := range newS {
-		constraint := ns.(map[string]interface{})
+		constraint := ns.(map[string]any)
 
 		updates = append(updates, awstypes.SizeConstraintSetUpdate{
 			Action: awstypes.ChangeActionInsert,
 			SizeConstraint: &awstypes.SizeConstraint{
-				FieldToMatch:       expandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(constraint["field_to_match"].([]any)[0].(map[string]any)),
 				ComparisonOperator: awstypes.ComparisonOperator(constraint["comparison_operator"].(string)),
 				Size:               int64(constraint[names.AttrSize].(int)),
 				TextTransformation: awstypes.TextTransformation(constraint["text_transformation"].(string)),
@@ -262,10 +263,10 @@ func diffSizeConstraints(oldS, newS []interface{}) []awstypes.SizeConstraintSetU
 	return updates
 }
 
-func flattenSizeConstraints(sc []awstypes.SizeConstraint) []interface{} {
-	out := make([]interface{}, len(sc))
+func flattenSizeConstraints(sc []awstypes.SizeConstraint) []any {
+	out := make([]any, len(sc))
 	for i, c := range sc {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m["comparison_operator"] = c.ComparisonOperator
 		if c.FieldToMatch != nil {
 			m["field_to_match"] = flattenFieldToMatch(c.FieldToMatch)

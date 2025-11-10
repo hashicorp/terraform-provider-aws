@@ -43,6 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name or description of the IPSet.
 * `ip_set_descriptor` - (Optional) One or more pairs specifying the IP address type (IPV4 or IPV6) and the IP address range (in CIDR notation) from which web requests originate.
 
@@ -89,4 +90,4 @@ Using `terraform import`, import WAF Regional IPSets using their ID. For example
 % terraform import aws_wafregional_ipset.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bd423cc7eae4bc7869d7e7f89697634be360c63540ee5c25595e89016d52dd6a -->
+<!-- cache-key: cdktf-0.20.8 input-e027d7dc87613fd3bbd2187e6f08691963260c4edc481f4366cd94c5bfeac0db -->

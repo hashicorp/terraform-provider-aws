@@ -44,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `baselineId` - (Required) The ID of the patch baseline to register the patch group with.
 * `patchGroup` - (Required) The name of the patch group that should be registered with the patch baseline.
 
@@ -53,4 +54,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the patch group and ID of the patch baseline separated by a comma (`,`).
 
-<!-- cache-key: cdktf-0.20.8 input-8fb71b4f9d0ba4c81e7e46ea58c2d79b16be2c22faf937bdd4e9cd0fb98b0c0d -->
+<!-- cache-key: cdktf-0.20.8 input-15eb109654c06957ea79a129cbcbade166f9bc43fada6b45691cf1e55b7a06b8 -->

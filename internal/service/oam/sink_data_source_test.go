@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -23,6 +22,7 @@ func testAccObservabilityAccessManagerSinkDataSource_basic(t *testing.T) {
 	var sink oam.GetSinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_oam_sink.test"
+	resourceName := "aws_oam_sink.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -38,13 +38,12 @@ func testAccObservabilityAccessManagerSinkDataSource_basic(t *testing.T) {
 				Config: testAccSinkDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkExists(ctx, dataSourceName, &sink),
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(dataSourceName, "sink_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "sink_identifier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "sink_id", resourceName, "sink_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "sink_identifier", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "oam", regexache.MustCompile(`sink/.+$`)),
 				),
 			},
 		},

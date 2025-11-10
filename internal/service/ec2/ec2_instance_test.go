@@ -21,10 +21,16 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -192,6 +198,17 @@ func TestAccEC2Instance_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`instance/i-[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", "stop"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(true),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -252,7 +269,7 @@ func TestAccEC2Instance_inDefaultVPCBySgName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -280,7 +297,7 @@ func TestAccEC2Instance_inDefaultVPCBySgID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -302,7 +319,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 				Config: testAccInstanceConfig_atLeastOneOtherEBSVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
+					resource.TestCheckResourceAttr(resourceName, "user_data", "foo:-with-character's"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"), // This is an instance store AMI
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
@@ -313,7 +330,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			// We repeat the exact same test so that we can be sure
 			// that the user data hash stuff is working without generating
@@ -322,7 +339,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 				Config: testAccInstanceConfig_atLeastOneOtherEBSVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
+					resource.TestCheckResourceAttr(resourceName, "user_data", "foo:-with-character's"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 				),
 			},
@@ -446,7 +463,7 @@ func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -475,7 +492,7 @@ func TestAccEC2Instance_userDataBase64(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -510,7 +527,7 @@ func TestAccEC2Instance_userDataBase64_updateWithBashFile(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -545,7 +562,7 @@ func TestAccEC2Instance_userDataBase64_updateWithZipFile(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -581,7 +598,7 @@ func TestAccEC2Instance_userDataBase64_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -631,7 +648,7 @@ func TestAccEC2Instance_gp2IopsDevice(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -771,7 +788,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ephemeral_block_device", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device", names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -802,7 +819,7 @@ func TestAccEC2Instance_rootInstanceStore(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -871,7 +888,7 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ephemeral_block_device", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device", names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -913,7 +930,7 @@ func TestAccEC2Instance_sourceDestCheck(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_sourceDestEnable(rName),
@@ -957,7 +974,7 @@ func TestAccEC2Instance_autoRecovery(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_autoRecovery(rName, "disabled"),
@@ -994,13 +1011,20 @@ func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_disableAPIStop(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_disableAPIStop(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtTrue),
 				),
 			},
 		},
@@ -1030,7 +1054,7 @@ func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_disableAPITermination(rName, false),
@@ -1060,13 +1084,14 @@ func TestAccEC2Instance_disableAPITerminationFinalTrue(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1089,7 +1114,6 @@ func TestAccEC2Instance_dedicatedInstance(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "dedicated"),
-					resource.TestCheckResourceAttr(resourceName, "user_data", "562a3e32810edf6ff09994f050f12e799452379d"),
 				),
 			},
 			{
@@ -1130,7 +1154,7 @@ func TestAccEC2Instance_outpost(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1159,7 +1183,36 @@ func TestAccEC2Instance_placementGroup(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "user_data"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_placementGroupID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_placementGroupID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "placement_group_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "user_data"},
 			},
 		},
 	})
@@ -1189,7 +1242,7 @@ func TestAccEC2Instance_placementPartitionNumber(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "user_data"},
 			},
 		},
 	})
@@ -1218,13 +1271,13 @@ func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
 }
 
-func TestAccEC2Instance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T) {
+func TestAccEC2Instance_IPv6AddressCountAndSingleAddressCausesError(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1237,6 +1290,80 @@ func TestAccEC2Instance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T
 			{
 				Config:      testAccInstanceConfig_ipv6Error(rName),
 				ExpectError: regexache.MustCompile("Conflicting configuration arguments"),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_IPv6_primaryEnable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var original, updated awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_enablePrimaryIPv6(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_enablePrimaryIPv6(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &updated),
+					testAccCheckInstanceNotRecreated(&original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_IPv6_primaryDisable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var original, updated awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_enablePrimaryIPv6(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_enablePrimaryIPv6(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &updated),
+					testAccCheckInstanceRecreated(&original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1265,7 +1392,7 @@ func TestAccEC2Instance_IPv6_supportAddressCountWithIPv4(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1292,6 +1419,7 @@ func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", strconv.Itoa(originalCount)),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", strconv.Itoa(originalCount)),
 				),
 			},
 			{
@@ -1300,6 +1428,7 @@ func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", strconv.Itoa(updatedCount)),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", strconv.Itoa(updatedCount)),
 				),
 			},
 			{
@@ -1308,7 +1437,56 @@ func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", strconv.Itoa(shrunkenCount)),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", strconv.Itoa(shrunkenCount)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_IPv6AddressesExplicit(t *testing.T) {
+	ctx := acctest.Context(t)
+	var original, updated awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstance_ipv6AddressesExplicit(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+				),
+			},
+			{
+				Config: testAccInstance_ipv6AddressesExplicit(rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &updated),
+					testAccCheckInstanceRecreated(&original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "3"),
+				),
+			},
+			{
+				Config: testAccInstance_ipv6AddressesExplicit(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &updated),
+					testAccCheckInstanceRecreated(&original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1437,7 +1615,7 @@ func TestAccEC2Instance_BlockDeviceTags_volumeTags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ephemeral_block_device", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device", names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_blockDeviceTagsVolumeTags(rName),
@@ -1570,7 +1748,7 @@ func TestAccEC2Instance_BlockDeviceTags_ebsAndRoot(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ephemeral_block_device", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device", names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1757,10 +1935,22 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsRBDOverlap(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", "4"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{ // 4 defaultTags + 4 rbdTags with 2 in common
-				Config:   testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, emptyMap, rbdTags, emptyMap),
-				PlanOnly: true,
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, emptyMap, rbdTags, emptyMap),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1829,6 +2019,11 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTagsOverlap(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.every", "gnomesie"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{ // 2 defaultTags + 1 volumeTags (overlap)
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags2, emptyMap, emptyMap),
@@ -1839,6 +2034,11 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTagsOverlap(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{ // 2 defaultTags + 5 volumeTags (overlap)
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags3, emptyMap, emptyMap),
@@ -1853,10 +2053,22 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTagsOverlap(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.iz", "paws"),        // non-overlap
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.gigi", "kitty"),     // non-overlap
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{ // 2 defaultTags + 5 volumeTags (overlap)
-				Config:   testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags3, emptyMap, emptyMap),
-				PlanOnly: true,
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags3, emptyMap, emptyMap),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1895,7 +2107,7 @@ func TestAccEC2Instance_instanceProfileChange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_profile(rName1),
@@ -1954,7 +2166,7 @@ func TestAccEC2Instance_iamInstanceProfile(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1983,7 +2195,7 @@ func TestAccEC2Instance_iamInstanceProfilePath(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2022,7 +2234,7 @@ func TestAccEC2Instance_privateIP(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2061,7 +2273,7 @@ func TestAccEC2Instance_associatePublicIPAndPrivateIP(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2102,7 +2314,7 @@ func TestAccEC2Instance_Empty_privateIP(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2134,7 +2346,7 @@ func TestAccEC2Instance_PrivateDNSNameOptions_computed(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2166,7 +2378,7 @@ func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName, true, true, "ip-name"),
@@ -2272,7 +2484,7 @@ func TestAccEC2Instance_forceNewAndTagsDrift(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2291,25 +2503,61 @@ func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_type(rName, "t2.medium"),
+				Config: testAccInstanceConfig_instanceType(rName, "t2.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.medium"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrInstanceType), knownvalue.StringExact("t2.medium")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.NotNull()),
+					tfstatecheck.ExpectNotKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.NotNull()),
+					tfstatecheck.ExpectNotKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_type(rName, "t2.large"),
+				Config: testAccInstanceConfig_instanceType(rName, "t2.large"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.large"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("public_dns")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("public_ip")),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrInstanceType), knownvalue.StringExact("t2.large")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.NotNull()),
+					tfstatecheck.ExpectNotKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.NotNull()),
+					tfstatecheck.ExpectNotKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
+				},
 			},
 		},
 	})
@@ -2331,16 +2579,46 @@ func TestAccEC2Instance_changeInstanceTypeReplace(t *testing.T) {
 				Config: testAccInstanceConfig_typeReplace(rName, "m5.2xlarge"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "m5.2xlarge"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrInstanceType), knownvalue.StringExact("m5.2xlarge")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
+				},
 			},
 			{
 				Config: testAccInstanceConfig_typeReplace(rName, "m6g.2xlarge"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "m6g.2xlarge"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrInstanceType), knownvalue.StringExact("m6g.2xlarge")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
+				},
 			},
 		},
 	})
@@ -2352,11 +2630,6 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	hash := sha1.Sum([]byte("hello world"))
-	expectedUserData := hex.EncodeToString(hash[:])
-	hash2 := sha1.Sum([]byte("new world"))
-	expectedUserDataUpdated := hex.EncodeToString(hash2[:])
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -2367,23 +2640,55 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 				Config: testAccInstanceConfig_typeAndUserData(rName, "t2.medium", "hello world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.medium"),
-					resource.TestCheckResourceAttr(resourceName, "user_data", expectedUserData),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrInstanceType), knownvalue.StringExact("t2.medium")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("hello world")),
+				},
 			},
 			{
 				Config: testAccInstanceConfig_typeAndUserData(rName, "t2.large", "new world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.large"),
-					resource.TestCheckResourceAttr(resourceName, "user_data", expectedUserDataUpdated),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrInstanceType), knownvalue.StringExact("t2.large")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("new world")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2421,7 +2726,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserDataBase64(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2900,7 +3205,7 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2951,13 +3256,13 @@ func TestAccEC2Instance_gp3RootBlockDevice(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
 }
 
-func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
+func TestAccEC2Instance_PrimaryNetworkInterface_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance awstypes.Instance
 	var eni awstypes.NetworkInterface
@@ -2972,7 +3277,49 @@ func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_primaryNetworkInterface(rName),
+				Config: testAccInstanceConfig_primaryNetworkInterface_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &instance),
+					testAccCheckENIExists(ctx, eniResourceName, &eni),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_NetworkInterface_primaryNetworkInterface(t *testing.T) {
+	ctx := acctest.Context(t)
+	var instance awstypes.Instance
+	var eni awstypes.NetworkInterface
+	resourceName := "aws_instance.test"
+	eniResourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_networkInterface_primaryNetworkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					testAccCheckENIExists(ctx, eniResourceName, &eni),
@@ -2982,6 +3329,19 @@ func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 						"network_card_index": "0",
 					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							"device_index":                knownvalue.Int64Exact(0),
+							"network_card_index":          knownvalue.Int64Exact(0),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface_id"), eniResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -2993,10 +3353,11 @@ func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_networkCardIndex(t *testing.T) {
+func TestAccEC2Instance_NetworkInterface_networkCardIndex(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance awstypes.Instance
 	resourceName := "aws_instance.test"
+	eniResourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards.
@@ -3009,7 +3370,7 @@ func TestAccEC2Instance_networkCardIndex(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_networkCardIndex(rName),
+				Config: testAccInstanceConfig_networkInterface_networkCardIndex(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
@@ -3018,6 +3379,19 @@ func TestAccEC2Instance_networkCardIndex(t *testing.T) {
 						"network_card_index": "0",
 					}),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							"device_index":                knownvalue.Int64Exact(0),
+							"network_card_index":          knownvalue.Int64Exact(0),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface_id"), eniResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -3029,7 +3403,7 @@ func TestAccEC2Instance_networkCardIndex(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
+func TestAccEC2Instance_NetworkInterface_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance awstypes.Instance
 	var eni awstypes.NetworkInterface
@@ -3044,7 +3418,7 @@ func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_primaryNetworkInterfaceSourceDestCheck(rName),
+				Config: testAccInstanceConfig_networkInterface_primaryNetworkInterfaceSourceDestCheck(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					testAccCheckENIExists(ctx, eniResourceName, &eni),
@@ -3061,7 +3435,7 @@ func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_addSecondaryInterface(t *testing.T) {
+func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.Instance
 	var eniPrimary awstypes.NetworkInterface
@@ -3078,12 +3452,28 @@ func TestAccEC2Instance_addSecondaryInterface(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_addSecondaryNetworkInterfaceBefore(rName),
+				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment_Setup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
 					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckENIExists(ctx, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							"device_index":                knownvalue.Int64Exact(0),
+							"network_card_index":          knownvalue.Int64Exact(0),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface_id"), eniPrimaryResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+
+					statecheck.ExpectKnownValue(eniSecondaryResourceName, tfjsonpath.New("attachment"), knownvalue.SetExact([]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -3092,12 +3482,211 @@ func TestAccEC2Instance_addSecondaryInterface(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_addSecondaryNetworkInterfaceAfter(rName),
+				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
+					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
 					testAccCheckENIExists(ctx, eniSecondaryResourceName, &eniSecondary),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							"device_index":                knownvalue.Int64Exact(0),
+							"network_card_index":          knownvalue.Int64Exact(0),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface_id"), eniPrimaryResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+
+					statecheck.ExpectKnownValue(eniSecondaryResourceName, tfjsonpath.New("attachment"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attachment_id":      knownvalue.NotNull(),
+							"device_index":       knownvalue.Int64Exact(1),
+							"instance":           knownvalue.NotNull(),
+							"network_card_index": knownvalue.Int64Exact(0),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), eniSecondaryResourceName, tfjsonpath.New("attachment").AtSliceIndex(0).AtMapKey("instance"), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_attachmentResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before, after awstypes.Instance
+	var eniPrimary awstypes.NetworkInterface
+	var eniSecondary awstypes.NetworkInterface
+	resourceName := "aws_instance.test"
+	eniPrimaryResourceName := "aws_network_interface.primary"
+	eniSecondaryResourceName := "aws_network_interface.secondary"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_attachmentResource_Setup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &before),
+					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckENIExists(ctx, eniSecondaryResourceName, &eniSecondary),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							"device_index":                knownvalue.Int64Exact(0),
+							"network_card_index":          knownvalue.Int64Exact(0),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface_id"), eniPrimaryResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+
+					statecheck.ExpectKnownValue(eniSecondaryResourceName, tfjsonpath.New("attachment"), knownvalue.SetExact([]knownvalue.Check{})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_attachmentResource(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &after),
+					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckENIExists(ctx, eniSecondaryResourceName, &eniSecondary),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							"device_index":                knownvalue.Int64Exact(0),
+							"network_card_index":          knownvalue.Int64Exact(0),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface_id"), eniPrimaryResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+
+					statecheck.ExpectKnownValue("aws_network_interface_attachment.secondary", tfjsonpath.New("device_index"), knownvalue.Int64Exact(1)),
+					statecheck.CompareValuePairs("aws_network_interface_attachment.secondary", tfjsonpath.New(names.AttrInstanceID), resourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs("aws_network_interface_attachment.secondary", tfjsonpath.New(names.AttrNetworkInterfaceID), eniSecondaryResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_NetworkInterface_addSecondaryInterface(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before, after awstypes.Instance
+	var eniPrimary awstypes.NetworkInterface
+	var eniSecondary awstypes.NetworkInterface
+	resourceName := "aws_instance.test"
+	eniPrimaryResourceName := "aws_network_interface.primary"
+	eniSecondaryResourceName := "aws_network_interface.secondary"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_networkInterface_addSecondaryNetworkInterfaceBefore(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &before),
+					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckENIExists(ctx, eniSecondaryResourceName, &eniSecondary),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							"device_index":                knownvalue.Int64Exact(0),
+							"network_card_index":          knownvalue.Int64Exact(0),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface_id"), eniPrimaryResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_networkInterface_addSecondaryNetworkInterface(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &after),
+					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckENIExists(ctx, eniSecondaryResourceName, &eniSecondary),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "2"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							"device_index":                knownvalue.Int64Exact(0),
+							"network_card_index":          knownvalue.Int64Exact(0),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							"device_index":                knownvalue.Int64Exact(1),
+							"network_card_index":          knownvalue.Int64Exact(0),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface_id"), eniPrimaryResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3127,7 +3716,7 @@ func TestAccEC2Instance_addSecurityGroupNetworkInterface(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_addSecurityGroupAfter(rName),
@@ -3175,7 +3764,7 @@ func TestAccEC2Instance_NewNetworkInterface_publicIPAndSecondaryPrivateIPs(t *te
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3207,7 +3796,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3256,7 +3845,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3289,7 +3878,7 @@ func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPs(t *t
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3339,7 +3928,7 @@ func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPsUpdat
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3370,7 +3959,7 @@ func TestAccEC2Instance_AssociatePublic_defaultPrivate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3401,7 +3990,7 @@ func TestAccEC2Instance_AssociatePublic_defaultPublic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3432,7 +4021,7 @@ func TestAccEC2Instance_AssociatePublic_explicitPublic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3463,7 +4052,7 @@ func TestAccEC2Instance_AssociatePublic_explicitPrivate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3494,7 +4083,7 @@ func TestAccEC2Instance_AssociatePublic_overridePublic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3525,7 +4114,7 @@ func TestAccEC2Instance_AssociatePublic_overridePrivate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3827,7 +4416,7 @@ func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_getPasswordData(rName, publicKey, true),
@@ -3920,7 +4509,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				// test DiffSuppressFunc to suppress "" to "disabled"
@@ -3987,7 +4576,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				// expect recreation when it is enabled
@@ -4052,7 +4641,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
@@ -4096,7 +4685,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
@@ -4141,15 +4730,13 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(originalCoreCount)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(originalThreadsPerCore)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(originalCoreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(originalThreadsPerCore)),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, string(awstypes.AmdSevSnpSpecificationDisabled), updatedCoreCount, updatedThreadsPerCore),
@@ -4160,8 +4747,6 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(updatedCoreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
 				),
 			},
 		},
@@ -4192,15 +4777,13 @@ func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(originalCoreCount)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(originalThreadsPerCore)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(originalCoreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(originalThreadsPerCore)),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, updatedCoreCount, updatedThreadsPerCore),
@@ -4210,57 +4793,6 @@ func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(updatedCoreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2Instance_cpuOptionsCoreThreadsMigration(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v1, v2 awstypes.Instance
-	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	coreCount := 2
-	threadsPerCore := 2
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_cpuOptionsCoreThreadsDeprecated(rName, coreCount, threadsPerCore),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(coreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(threadsPerCore)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(coreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(threadsPerCore)),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
-			},
-			{
-				// EC2 instance should not be recreated
-				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, coreCount, threadsPerCore),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v2),
-					testAccCheckInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(coreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(threadsPerCore)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(coreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(threadsPerCore)),
 				),
 			},
 		},
@@ -4289,15 +4821,13 @@ func TestAccEC2Instance_cpuOptionsCoreThreadsUnspecifiedToSpecified(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(defaultCoreCount)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(defaultCoreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				// EC2 instance should not be recreated
@@ -4308,9 +4838,53 @@ func TestAccEC2Instance_cpuOptionsCoreThreadsUnspecifiedToSpecified(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(defaultCoreCount)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(defaultCoreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_upgradeV6CPUOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.95.0",
+					},
+				},
+				Config: testAccInstanceConfig_cpuOptionsCoreLegacy(rName, 2, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(2)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(2)),
+				),
+			},
+			{
+				Config:                   testAccInstanceConfig_cpuOptionsCoreThreads(rName, 2, 2),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(2)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(2)),
+				),
+				// The config plan check also ensures that the instance is not recreated
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -4367,7 +4941,7 @@ func TestAccEC2Instance_CreditSpecificationUnspecifiedToEmpty_nonBurstable(t *te
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationEmptyNonBurstable(rName),
@@ -4403,7 +4977,7 @@ func TestAccEC2Instance_CreditSpecification_unspecifiedDefaultsToStandard(t *tes
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4433,7 +5007,7 @@ func TestAccEC2Instance_CreditSpecification_standardCPUCredits(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnspecified(rName),
@@ -4471,7 +5045,7 @@ func TestAccEC2Instance_CreditSpecification_unlimitedCPUCredits(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnspecified(rName),
@@ -4509,7 +5083,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t2(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4539,7 +5113,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4569,7 +5143,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3a(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4592,14 +5166,14 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t4g(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4629,7 +5203,7 @@ func TestAccEC2Instance_CreditSpecification_updateCPUCredits(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnlimitedCPUCredits(rName),
@@ -4703,7 +5277,7 @@ func TestAccEC2Instance_CreditSpecificationT3_unspecifiedDefaultsToUnlimited(t *
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4733,7 +5307,7 @@ func TestAccEC2Instance_CreditSpecificationT3_standardCPUCredits(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnspecifiedT3(rName),
@@ -4771,7 +5345,7 @@ func TestAccEC2Instance_CreditSpecificationT3_unlimitedCPUCredits(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnspecifiedT3(rName),
@@ -4809,7 +5383,7 @@ func TestAccEC2Instance_CreditSpecificationT3_updateCPUCredits(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnlimitedCPUCreditsT3(rName),
@@ -4855,7 +5429,7 @@ func TestAccEC2Instance_CreditSpecificationStandardCPUCredits_t2Tot3Taint(t *tes
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationStandardCPUCreditsT3(rName),
@@ -4894,7 +5468,7 @@ func TestAccEC2Instance_CreditSpecificationUnlimitedCPUCredits_t2Tot3Taint(t *te
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnlimitedCPUCreditsT3(rName),
@@ -4909,7 +5483,68 @@ func TestAccEC2Instance_CreditSpecificationUnlimitedCPUCredits_t2Tot3Taint(t *te
 	})
 }
 
-func TestAccEC2Instance_UserData(t *testing.T) {
+func TestAccEC2Instance_UserData_migrate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	hash := sha1.Sum([]byte("hello world"))
+	expectedUserData := hex.EncodeToString(hash[:])
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.93.0",
+					},
+				},
+				Config: testAccInstanceConfig_userData(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact(expectedUserData)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccInstanceConfig_userData(rName, "hello world"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("hello world")),
+				},
+			},
+			{
+				// test for migration path from user_data to user_data_base64
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccInstanceConfig_userDataBase64(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data_base64"), knownvalue.StringExact("aGVsbG8gd29ybGQ=")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_UserData_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -4926,12 +5561,15 @@ func TestAccEC2Instance_UserData(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("hello world")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4954,18 +5592,24 @@ func TestAccEC2Instance_UserData_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("hello world")),
+				},
 			},
 			{
 				Config: testAccInstanceConfig_userData(rName, "new world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("new world")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4999,7 +5643,7 @@ func TestAccEC2Instance_UserData_stringToEncodedString(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5022,18 +5666,29 @@ func TestAccEC2Instance_UserData_emptyStringToUnspecified(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 			// Switching should show no difference
 			{
-				Config:             testAccInstanceConfig_userDataUnspecified(rName),
-				ExpectNonEmptyPlan: false,
-				PlanOnly:           true,
+				Config: testAccInstanceConfig_userDataUnspecified(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -5056,24 +5711,36 @@ func TestAccEC2Instance_UserData_unspecifiedToEmptyString(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			// Switching should show no difference
 			{
 				Config:             testAccInstanceConfig_userDataEmptyString(rName),
 				ExpectNonEmptyPlan: false,
-				PlanOnly:           true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
 }
 
-func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
+func TestAccEC2Instance_UserData_ReplaceOnChange_On(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance1, instance2 awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -5090,26 +5757,36 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("TestData1")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			// Switching should force a recreate
 			{
 				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData2", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
-					testAccCheckInstanceRecreated(&instance1, &instance2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("TestData2")),
+				},
 			},
 		},
 	})
 }
 
-func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
+func TestAccEC2Instance_UserData_ReplaceOnChange_On_Base64(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance1, instance2 awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -5138,14 +5815,18 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955e", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
-					testAccCheckInstanceRecreated(&instance1, &instance2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
 }
 
-func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
+func TestAccEC2Instance_UserData_ReplaceOnChange_Off(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance1, instance2 awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -5162,12 +5843,15 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("TestData1")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			// Switching should not force a recreate
 			{
@@ -5176,12 +5860,20 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
 					testAccCheckInstanceNotRecreated(&instance1, &instance2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact("TestData2")),
+				},
 			},
 		},
 	})
 }
 
-func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
+func TestAccEC2Instance_UserData_ReplaceOnChange_Off_Base64(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance1, instance2 awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -5212,6 +5904,11 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
 					testAccCheckInstanceNotRecreated(&instance1, &instance2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -5240,7 +5937,7 @@ func TestAccEC2Instance_hibernation(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_hibernation(rName, false),
@@ -5315,10 +6012,22 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccInstanceConfig_metadataOptionsUpdatedWithOptionalTokensAndDisabledHTTPEndPoint(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "optional"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "disabled"),
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5348,7 +6057,7 @@ func TestAccEC2Instance_enclaveOptions(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_enclaveOptions(rName, false),
@@ -5383,18 +6092,29 @@ func TestAccEC2Instance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "open"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			// Adding 'open' preference should show no difference
 			{
-				Config:             testAccInstanceConfig_capacityReservationSpecificationPreference(rName, "open"),
-				ExpectNonEmptyPlan: false,
-				PlanOnly:           true,
+				Config: testAccInstanceConfig_capacityReservationSpecificationPreference(rName, "open"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -5425,7 +6145,7 @@ func TestAccEC2Instance_CapacityReservationPreference_open(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5456,7 +6176,7 @@ func TestAccEC2Instance_CapacityReservationPreference_none(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5487,7 +6207,7 @@ func TestAccEC2Instance_CapacityReservation_targetID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5607,7 +6327,7 @@ func TestAccEC2Instance_basicWithSpot(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5741,50 +6461,10 @@ func TestInstanceHostIDSchema(t *testing.T) {
 	}
 }
 
-func TestInstanceCPUCoreCountSchema(t *testing.T) {
-	t.Parallel()
-
-	actualSchema := tfec2.ResourceInstance().SchemaMap()["cpu_core_count"]
-	expectedSchema := &schema.Schema{
-		Type:          schema.TypeInt,
-		Optional:      true,
-		Computed:      true,
-		ForceNew:      true,
-		Deprecated:    "use 'cpu_options' argument instead",
-		ConflictsWith: []string{"cpu_options.0.core_count"},
-	}
-	if !reflect.DeepEqual(actualSchema, expectedSchema) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			actualSchema,
-			expectedSchema)
-	}
-}
-
-func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
-	t.Parallel()
-
-	actualSchema := tfec2.ResourceInstance().SchemaMap()["cpu_threads_per_core"]
-	expectedSchema := &schema.Schema{
-		Type:          schema.TypeInt,
-		Optional:      true,
-		Computed:      true,
-		ForceNew:      true,
-		Deprecated:    "use 'cpu_options' argument instead",
-		ConflictsWith: []string{"cpu_options.0.threads_per_core"},
-	}
-	if !reflect.DeepEqual(actualSchema, expectedSchema) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			actualSchema,
-			expectedSchema)
-	}
-}
-
 func driftTags(ctx context.Context, instance *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-		_, err := conn.CreateTags(ctx, &ec2.CreateTagsInput{
+		input := ec2.CreateTagsInput{
 			Resources: []string{aws.ToString(instance.InstanceId)},
 			Tags: []awstypes.Tag{
 				{
@@ -5792,7 +6472,8 @@ func driftTags(ctx context.Context, instance *awstypes.Instance) resource.TestCh
 					Value: aws.String("Happens"),
 				},
 			},
-		})
+		}
+		_, err := conn.CreateTags(ctx, &input)
 		return err
 	}
 }
@@ -5812,9 +6493,10 @@ func testAccPreCheckHasDefaultVPCDefaultSubnets(ctx context.Context, t *testing.
 func defaultVPC(ctx context.Context, t *testing.T) string {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := conn.DescribeAccountAttributes(ctx, &ec2.DescribeAccountAttributesInput{
+	input := ec2.DescribeAccountAttributesInput{
 		AttributeNames: flex.ExpandStringyValueList[awstypes.AccountAttributeName]([]any{string(awstypes.AccountAttributeNameDefaultVpc)}),
-	})
+	}
+	output, err := conn.DescribeAccountAttributes(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		return ""
@@ -5841,7 +6523,7 @@ func hasDefaultVPC(ctx context.Context, t *testing.T) bool {
 func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeSubnetsInput{
+	input := ec2.DescribeSubnetsInput{
 		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"defaultForAz": acctest.CtTrue,
@@ -5849,7 +6531,7 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 		),
 	}
 
-	subnets, err := tfec2.FindSubnets(ctx, conn, input)
+	subnets, err := tfec2.FindSubnets(ctx, conn, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		return 0
@@ -5925,12 +6607,12 @@ func testAccAvailableAZsWavelengthZonesDefaultExcludeConfig() string {
 	return testAccAvailableAZsWavelengthZonesExcludeConfig("usw2-wl1-den-wlz1")
 }
 
-// testAccInstanceVPCConfig returns the configuration for tests that create
+// testAccInstanceConfig_vpcBase returns the configuration for tests that create
 //  1. a VPC without IPv6 support
 //  2. a subnet in the VPC that optionally assigns public IP addresses to ENIs
 //
 // The resources are named 'test'.
-func testAccInstanceVPCConfig(rName string, mapPublicIpOnLaunch bool, azIndex int) string {
+func testAccInstanceConfig_vpcBase(rName string, mapPublicIpOnLaunch bool, azIndex int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -5953,12 +6635,12 @@ resource "aws_subnet" "test" {
 `, rName, mapPublicIpOnLaunch, azIndex))
 }
 
-// testAccInstanceVPCSecurityGroupConfig returns the configuration for tests that create
+// testAccInstanceConfig_vpcSecurityGroupBase returns the configuration for tests that create
 //  1. a VPC security group
 //  2. an internet gateway in the VPC
 //
 // The resources are named 'test'.
-func testAccInstanceVPCSecurityGroupConfig(rName string) string {
+func testAccInstanceConfig_vpcSecurityGroupBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -5987,12 +6669,12 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
-// testAccInstanceVPCIPv6Config returns the configuration for tests that create
+// testAccInstanceConfig_vpcIPv6Base returns the configuration for tests that create
 //  1. a VPC with IPv6 support
 //  2. a subnet in the VPC with an assigned IPv6 CIDR block
 //
 // The resources are named 'test'.
-func testAccInstanceVPCIPv6Config(rName string) string {
+func testAccInstanceConfig_vpcIPv6Base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -6015,6 +6697,36 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName))
+}
+
+// testAccInstanceConfig_vpcEnableDNSBase returns the configuration for tests that create
+//  1. an IPv4 VPC with DNS support
+//  2. a subnet in the VPC that optionally assigns public IP addresses to ENIs
+//
+// The resources are named 'test'.
+func testAccInstanceConfig_vpcEnableDNSBase(rName string, mapPublicIpOnLaunch bool) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = aws_vpc.test.id
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, mapPublicIpOnLaunch))
 }
 
 func testAccInstanceConfig_basic() string {
@@ -6095,7 +6807,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_atLeastOneOtherEBSVolume(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAMIDataSourceConfig_latestUbuntuBionicHVMInstanceStore(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 # Ensure that there is at least 1 EBS volume in the current region.
 # See https://github.com/hashicorp/terraform/issues/1249.
@@ -6128,7 +6840,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_userData(rName, userData string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6147,7 +6859,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_userDataBase64Encoded(rName, userData string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6166,7 +6878,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_userDataBase64(rName, userData string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6185,7 +6897,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_userDataBase64Base64EncodedFile(rName, filename string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6201,14 +6913,15 @@ resource "aws_instance" "test" {
 `, rName, filename))
 }
 
-func testAccInstanceConfig_type(rName, instanceType string) string {
+func testAccInstanceConfig_instanceType(rName, instanceType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcEnableDNSBase(rName, true),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-  subnet_id = aws_subnet.test.id
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  subnet_id                   = aws_subnet.test.id
+  associate_public_ip_address = true
 
   instance_type = %[1]q
 
@@ -6228,7 +6941,7 @@ func testAccInstanceConfig_typeReplace(rName, instanceType string) string {
 	}
 	return acctest.ConfigCompose(
 		arch,
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-%[3]s.id
@@ -6250,7 +6963,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_typeAndUserData(rName, instanceType, userData string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6269,7 +6982,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_typeAndUserDataBase64(rName, instanceType, userData string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6552,7 +7265,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_sourceDestEnable(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6569,7 +7282,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_sourceDestDisable(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6587,7 +7300,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_autoRecovery(rName string, val string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6607,13 +7320,15 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_disableAPIStop(rName string, val bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami              = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type    = "t2.small"
   subnet_id        = aws_subnet.test.id
   disable_api_stop = %[2]t
+
+  force_destroy = true
 
   tags = {
     Name = %[1]q
@@ -6625,13 +7340,14 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_disableAPITermination(rName string, val bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type           = "t2.small"
   subnet_id               = aws_subnet.test.id
   disable_api_termination = %[2]t
+  force_destroy           = true
 
   tags = {
     Name = %[1]q
@@ -6643,7 +7359,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_dedicated(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 1),
+		testAccInstanceConfig_vpcBase(rName, false, 1),
 		// Prevent frequent errors like
 		//	"InsufficientInstanceCapacity: We currently do not have sufficient m1.small capacity in the Availability Zone you requested (us-west-2a)."
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[1]", "t3.small", "t3.micro", "m1.small", "a1.medium"),
@@ -6655,7 +7371,7 @@ resource "aws_instance" "test" {
   associate_public_ip_address = true
   tenancy                     = "dedicated"
   # pre-encoded base64 data
-  user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+  user_data_base64 = "3dc39dda39be1205215e776bad998da361a5955d"
 
   tags = {
     Name = %[1]q
@@ -6715,7 +7431,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_placementGroup(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
@@ -6731,7 +7447,35 @@ resource "aws_instance" "test" {
   placement_group             = aws_placement_group.test.name
 
   # pre-encoded base64 data
-  user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+  user_data_base64 = "3dc39dda39be1205215e776bad998da361a5955d"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_placementGroupID(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+}
+
+# Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type               = "c5.large"
+  subnet_id                   = aws_subnet.test.id
+  associate_public_ip_address = true
+  placement_group_id          = aws_placement_group.test.placement_group_id
+
+  # pre-encoded base64 data
+  user_data_base64 = "3dc39dda39be1205215e776bad998da361a5955d"
 
   tags = {
     Name = %[1]q
@@ -6743,7 +7487,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_placementPartitionNumber(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name            = %[1]q
@@ -6761,7 +7505,7 @@ resource "aws_instance" "test" {
   placement_partition_number  = 3
 
   # pre-encoded base64 data
-  user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+  user_data_base64 = "3dc39dda39be1205215e776bad998da361a5955d"
 
   tags = {
     Name = %[1]q
@@ -6773,7 +7517,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_ipv6Error(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCIPv6Config(rName),
+		testAccInstanceConfig_vpcIPv6Base(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6789,10 +7533,29 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
+func testAccInstanceConfig_enablePrimaryIPv6(rName string, primaryIPv6 bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcIPv6Base(rName),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami                 = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type       = "t2.micro"
+  subnet_id           = aws_subnet.test.id
+  enable_primary_ipv6 = %[1]t
+  ipv6_address_count  = 1
+
+  tags = {
+    Name = %[2]q
+  }
+}
+`, primaryIPv6, rName))
+}
+
 func testAccInstanceConfig_ipv6Support(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCIPv6Config(rName),
+		testAccInstanceConfig_vpcIPv6Base(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6810,7 +7573,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_ipv6Supportv4(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCIPv6Config(rName),
+		testAccInstanceConfig_vpcIPv6Base(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6829,7 +7592,7 @@ resource "aws_instance" "test" {
 func testAccInstance_ipv6AddressCount(rName string, ipv6AddressCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCIPv6Config(rName),
+		testAccInstanceConfig_vpcIPv6Base(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -6844,10 +7607,29 @@ resource "aws_instance" "test" {
 `, rName, ipv6AddressCount))
 }
 
+func testAccInstance_ipv6AddressesExplicit(rName string, addressCount int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcIPv6Base(rName),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami            = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type  = "t2.medium"
+  subnet_id      = aws_subnet.test.id
+  ipv6_addresses = [for i in range(%[2]d) : cidrhost(aws_subnet.test.ipv6_cidr_block, i + 10)]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, addressCount))
+}
+
 func testAccInstanceConfig_ebsKMSKeyARN(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_instance" "test" {
@@ -6879,10 +7661,11 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_rootBlockDeviceKMSKeyARN(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_instance" "test" {
@@ -7602,7 +8385,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_privateIP(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -7620,7 +8403,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_emptyPrivateIP(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -7638,7 +8421,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_associatePublicIPAndPrivateIP(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -7728,8 +8511,8 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_networkSecurityGroups(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
-		testAccInstanceVPCSecurityGroupConfig(rName),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		testAccInstanceConfig_vpcSecurityGroupBase(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -7759,8 +8542,8 @@ resource "aws_eip" "test" {
 func testAccInstanceConfig_networkVPCSecurityGroupIDs(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
-		testAccInstanceVPCSecurityGroupConfig(rName),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		testAccInstanceConfig_vpcSecurityGroupBase(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                    = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -7789,8 +8572,8 @@ resource "aws_eip" "test" {
 func testAccInstanceConfig_networkVPCRemoveSecurityGroupIDs(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
-		testAccInstanceVPCSecurityGroupConfig(rName),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		testAccInstanceConfig_vpcSecurityGroupBase(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                    = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -7840,7 +8623,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_forceNewAndTagsDrift(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -7857,7 +8640,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_forceNewAndTagsDriftUpdate(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -7871,10 +8654,30 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_primaryNetworkInterface(rName string) string {
+func testAccInstanceConfig_primaryNetworkInterface_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0), `
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t2.micro"
+
+  primary_network_interface {
+    network_interface_id = aws_network_interface.test.id
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.42"]
+}
+`)
+}
+
+func testAccInstanceConfig_networkInterface_primaryNetworkInterface(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_network_interface" "test" {
   subnet_id   = aws_subnet.test.id
@@ -7901,10 +8704,10 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_networkCardIndex(rName string) string {
+func testAccInstanceConfig_networkInterface_networkCardIndex(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_network_interface" "test" {
   subnet_id   = aws_subnet.test.id
@@ -7932,10 +8735,10 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_primaryNetworkInterfaceSourceDestCheck(rName string) string {
+func testAccInstanceConfig_networkInterface_primaryNetworkInterfaceSourceDestCheck(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_network_interface" "test" {
   subnet_id         = aws_subnet.test.id
@@ -7963,10 +8766,10 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_addSecondaryNetworkInterfaceBefore(rName string) string {
+func testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment_Setup(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_network_interface" "primary" {
   subnet_id   = aws_subnet.test.id
@@ -8002,10 +8805,10 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_addSecondaryNetworkInterfaceAfter(rName string) string {
+func testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_network_interface" "primary" {
   subnet_id   = aws_subnet.test.id
@@ -8047,10 +8850,177 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
+func testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_attachmentResource_Setup(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t2.micro"
+
+  network_interface {
+    network_interface_id = aws_network_interface.primary.id
+    device_index         = 0
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "primary" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.42"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "secondary" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.43"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_attachmentResource(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t2.micro"
+
+  network_interface {
+    network_interface_id = aws_network_interface.primary.id
+    device_index         = 0
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "primary" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.42"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "secondary" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.43"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface_attachment" "secondary" {
+  instance_id          = aws_instance.test.id
+  network_interface_id = aws_network_interface.secondary.id
+  device_index         = 1
+}
+`, rName))
+}
+
+func testAccInstanceConfig_networkInterface_addSecondaryNetworkInterfaceBefore(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t2.micro"
+
+  network_interface {
+    network_interface_id = aws_network_interface.primary.id
+    device_index         = 0
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "primary" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.42"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "secondary" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.43"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_networkInterface_addSecondaryNetworkInterface(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t2.micro"
+
+  network_interface {
+    network_interface_id = aws_network_interface.primary.id
+    device_index         = 0
+  }
+
+  network_interface {
+    network_interface_id = aws_network_interface.secondary.id
+    device_index         = 1
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "primary" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.42"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "secondary" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.43"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
 func testAccInstanceConfig_addSecurityGroupBefore(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_subnet" "test2" {
   cidr_block        = "10.1.2.0/24"
@@ -8116,7 +9086,7 @@ resource "aws_network_interface" "test" {
 func testAccInstanceConfig_addSecurityGroupAfter(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_subnet" "test2" {
   cidr_block        = "10.1.2.0/24"
@@ -8183,7 +9153,7 @@ resource "aws_network_interface" "test" {
 func testAccInstanceConfig_publicAndPrivateSecondaryIPs(rName string, isPublic bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
@@ -8217,7 +9187,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_privateIPAndSecondaryIPs(rName, privateIP, secondaryIPs string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
@@ -8250,7 +9220,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_privateIPAndSecondaryIPsNullPrivate(rName, secondaryIPs string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
@@ -8283,7 +9253,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_associatePublicDefaultPrivate(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8300,7 +9270,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_associatePublicDefaultPublic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, true, 0),
+		testAccInstanceConfig_vpcBase(rName, true, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8317,7 +9287,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_associatePublicExplicitPublic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, true, 0),
+		testAccInstanceConfig_vpcBase(rName, true, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8335,7 +9305,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_associatePublicExplicitPrivate(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, true, 0),
+		testAccInstanceConfig_vpcBase(rName, true, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8353,7 +9323,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_associatePublicOverridePublic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8371,7 +9341,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_associatePublicOverridePrivate(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, true, 0),
+		testAccInstanceConfig_vpcBase(rName, true, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8409,7 +9379,7 @@ resource "aws_instance" "test" {
 
 func testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		testAccLatestAmazonLinux2023AMIConfig(),
 		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
 		fmt.Sprintf(`
@@ -8427,7 +9397,7 @@ resource "aws_instance" "test" {
 
 func testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, amdSevSnp string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		testAccLatestAmazonLinux2023AMIConfig(),
 		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
 		fmt.Sprintf(`
@@ -8449,7 +9419,7 @@ resource "aws_instance" "test" {
 
 func testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, amdSevSnp string, coreCount, threadsPerCore int) string {
 	return acctest.ConfigCompose(
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		testAccLatestAmazonLinux2023AMIConfig(),
 		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
 		fmt.Sprintf(`
@@ -8473,7 +9443,7 @@ resource "aws_instance" "test" {
 
 func testAccInstanceConfig_cpuOptionsUnspecified(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		testAccLatestAmazonLinux2023AMIConfig(),
 		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
 		fmt.Sprintf(`
@@ -8491,7 +9461,7 @@ resource "aws_instance" "test" {
 
 func testAccInstanceConfig_cpuOptionsCoreThreads(rName string, coreCount, threadsPerCore int) string {
 	return acctest.ConfigCompose(
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		testAccLatestAmazonLinux2023AMIConfig(),
 		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
 		fmt.Sprintf(`
@@ -8512,9 +9482,10 @@ resource "aws_instance" "test" {
 `, rName, coreCount, threadsPerCore))
 }
 
-func testAccInstanceConfig_cpuOptionsCoreThreadsDeprecated(rName string, coreCount, threadsPerCore int) string {
+// DO NOT use this style of configuration in v6+!
+func testAccInstanceConfig_cpuOptionsCoreLegacy(rName string, coreCount, threadsPerCore int) string {
 	return acctest.ConfigCompose(
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		testAccLatestAmazonLinux2023AMIConfig(),
 		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
 		fmt.Sprintf(`
@@ -8536,7 +9507,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_creditSpecificationEmptyNonBurstable(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8555,7 +9526,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_creditSpecificationUnspecifiedNonBurstable(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8572,7 +9543,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_creditSpecificationUnspecified(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8589,7 +9560,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_creditSpecificationUnspecifiedT3(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8606,7 +9577,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_creditSpecificationStandardCPUCredits(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8627,7 +9598,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_creditSpecificationStandardCPUCreditsT3(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8648,7 +9619,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_creditSpecificationUnlimitedCPUCredits(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8669,7 +9640,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_creditSpecificationUnlimitedCPUCreditsT3(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8690,7 +9661,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_creditSpecificationIsNotAppliedToNonBurstable(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8721,7 +9692,7 @@ func testAccInstanceConfig_creditSpecificationUnknownCPUCredits(rName, instanceT
 
 	return acctest.ConfigCompose(
 		amiConfig,
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = %[3]s
@@ -8740,7 +9711,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_userDataUnspecified(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8757,7 +9728,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_userDataEmptyString(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8775,7 +9746,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName string, userData string, replaceOnChange string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8794,7 +9765,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName string, userData string, replaceOnChange string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
@@ -8853,7 +9824,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_metadataOptionsDefaults(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
@@ -8873,7 +9844,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_metadataOptionsDisabled(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
@@ -8895,7 +9866,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_metadataOptionsUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
@@ -8918,10 +9889,36 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
+func testAccInstanceConfig_metadataOptionsUpdatedWithOptionalTokensAndDisabledHTTPEndPoint(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  metadata_options {
+    http_endpoint               = "disabled"
+    http_protocol_ipv6          = "disabled"
+    http_tokens                 = "optional"
+    http_put_response_hop_limit = 1
+    instance_metadata_tags      = "disabled"
+  }
+}
+`, rName))
+}
+
 func testAccInstanceConfig_metadataOptionsUpdatedAgain(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
@@ -8947,7 +9944,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_enclaveOptions(rName string, enabled bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		acctest.AvailableEC2InstanceTypeForRegion("c5a.xlarge", "c5.xlarge"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
@@ -9051,7 +10048,7 @@ resource "aws_instance" "test" {
 resource "aws_ec2_capacity_reservation" "test" {
   instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
   instance_platform = %[2]q
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone = data.aws_availability_zones.available.names[1]
   instance_count    = 10
 
   tags = {
@@ -9318,7 +10315,7 @@ func testAccInstanceConfig_templateWithVPCSecurityGroups(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
-		testAccInstanceVPCConfig(rName, false, 0),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q

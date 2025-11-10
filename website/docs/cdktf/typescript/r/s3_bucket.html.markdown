@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Optional, Forces new resource) Name of the bucket. If omitted, Terraform will assign a random, unique name. Must be lowercase and less than or equal to 63 characters in length. A full list of bucket naming rules [may be found here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html). The name must not be in the format `[bucket_name]--[azid]--x-s3`. Use the [`aws_s3_directory_bucket`](s3_directory_bucket.html) resource to manage S3 Express buckets.
 * `bucketPrefix` - (Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with `bucket`. Must be lowercase and less than or equal to 37 characters in length. A full list of bucket naming rules [may be found here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
 * `forceDestroy` - (Optional, Default:`false`) Boolean that indicates all objects (including any [locked objects](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)) should be deleted from the bucket *when the bucket is destroyed* so that the bucket can be destroyed without error. These objects are *not* recoverable. This only deletes objects when the bucket is destroyed, *not* when setting this parameter to `true`. Once this parameter is set to `true`, there must be a successful `terraform apply` run before a destroy is required to update this value in the resource state. Without a successful `terraform apply` after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the bucket or destroying the bucket, this flag will not work. Additionally when importing a bucket, a successful `terraform apply` is required to set this value in state before it will take effect on a destroy operation.
@@ -321,9 +322,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Name of the bucket.
 * `arn` - ARN of the bucket. Will be of format `arn:aws:s3:::bucketname`.
 * `bucketDomainName` - Bucket domain name. Will be of format `bucketname.s3.amazonaws.com`.
+* `bucketRegion` - AWS region this bucket resides in.
 * `bucketRegionalDomainName` - The bucket region-specific domain name. The bucket domain name including the region name. Please refer to the [S3 endpoints reference](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) for format. Note: AWS CloudFront allows specifying an S3 region-specific endpoint when creating an S3 origin. This will prevent redirect issues from CloudFront to the S3 Origin URL. For more information, see the [Virtual Hosted-Style Requests for Other Regions](https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html#deprecated-global-endpoint) section in the AWS S3 User Guide.
 * `hostedZoneId` - [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
-* `region` - AWS region this bucket resides in.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `websiteEndpoint` - (**Deprecated**) Website endpoint, if the bucket is configured with a website. If not, this will be an empty string. Use the resource [`aws_s3_bucket_website_configuration`](s3_bucket_website_configuration.html.markdown) instead.
 * `websiteDomain` - (**Deprecated**) Domain of the website endpoint, if the bucket is configured with a website. If not, this will be an empty string. This is used to create Route 53 alias records. Use the resource [`aws_s3_bucket_website_configuration`](s3_bucket_website_configuration.html.markdown) instead.
@@ -339,6 +340,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) Name of the S3 bucket.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket using the `bucket`. For example:
 
 ```typescript
@@ -353,7 +380,7 @@ import { S3Bucket } from "./.gen/providers/aws/s3-bucket";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    S3Bucket.generateConfigForImport(this, "bucket", "bucket-name");
+    S3Bucket.generateConfigForImport(this, "example", "bucket-name");
   }
 }
 
@@ -362,7 +389,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import S3 bucket using the `bucket`. For example:
 
 ```console
-% terraform import aws_s3_bucket.bucket bucket-name
+% terraform import aws_s3_bucket.example bucket-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-de1ed8d1730636cc46747ac8e7877793bee46d57f6273d0fb66375754cda93c7 -->
+<!-- cache-key: cdktf-0.20.8 input-7345009d20a6fdaeaf3dc25b89aa6e9bfabb066e3defabda3d7ac42b8aa1f858 -->

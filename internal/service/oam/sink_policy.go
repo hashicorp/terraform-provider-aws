@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_oam_sink_policy")
+// @SDKResource("aws_oam_sink_policy", name="Sink Policy")
 func ResourceSinkPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSinkPolicyPut,
@@ -54,7 +54,7 @@ func ResourceSinkPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -76,7 +76,7 @@ const (
 	ResNameSinkPolicy = "Sink Policy"
 )
 
-func resourceSinkPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSinkPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
@@ -104,7 +104,7 @@ func resourceSinkPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceSinkPolicyRead(ctx, d, meta)...)
 }
 
-func resourceSinkPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSinkPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 

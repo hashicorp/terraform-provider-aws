@@ -21,12 +21,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_organizations_organization", name="Organization")
+// @IdentityAttribute("id")
+// @CustomImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.Organization")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="6.4.0")
+// @Testing(generator=false)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 func resourceOrganization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationCreate,
@@ -39,7 +47,7 @@ func resourceOrganization() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("feature_set", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("feature_set", func(_ context.Context, old, new, meta any) bool {
 				// Only changes from ALL to CONSOLIDATED_BILLING for feature_set should force a new resource.
 				return awstypes.OrganizationFeatureSet(old.(string)) == awstypes.OrganizationFeatureSetAll && awstypes.OrganizationFeatureSet(new.(string)) == awstypes.OrganizationFeatureSetConsolidatedBilling
 			}),
@@ -63,11 +71,24 @@ func resourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -130,11 +151,24 @@ func resourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -181,7 +215,7 @@ func resourceOrganization() *schema.Resource {
 	}
 }
 
-func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -224,7 +258,7 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceOrganizationRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -305,7 +339,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -359,7 +393,7 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceOrganizationRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -377,11 +411,16 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceOrganizationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceOrganizationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	identitySpec := importer.IdentitySpec(ctx)
+
+	if err := importer.GlobalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+		return nil, err
+	}
+
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	org, err := findOrganization(ctx, conn)
-
 	if err != nil {
 		return nil, err
 	}
@@ -461,9 +500,9 @@ func enablePolicyType(ctx context.Context, conn *organizations.Client, policyTyp
 }
 
 func findOrganization(ctx context.Context, conn *organizations.Client) (*awstypes.Organization, error) {
-	input := &organizations.DescribeOrganizationInput{}
+	input := organizations.DescribeOrganizationInput{}
 
-	output, err := conn.DescribeOrganization(ctx, input)
+	output, err := conn.DescribeOrganization(ctx, &input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
 		return nil, &retry.NotFoundError{
@@ -477,7 +516,7 @@ func findOrganization(ctx context.Context, conn *organizations.Client) (*awstype
 	}
 
 	if output == nil || output.Organization == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
 	return output.Organization, nil
@@ -560,35 +599,38 @@ func findDefaultRoot(ctx context.Context, conn *organizations.Client) (*awstypes
 	return tfresource.AssertFirstValueResult(output)
 }
 
-func flattenAccounts(apiObjects []awstypes.Account) []interface{} {
+func flattenAccounts(apiObjects []awstypes.Account) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
-			names.AttrARN:    aws.ToString(apiObject.Arn),
-			names.AttrEmail:  aws.ToString(apiObject.Email),
-			names.AttrID:     aws.ToString(apiObject.Id),
-			names.AttrName:   aws.ToString(apiObject.Name),
-			names.AttrStatus: apiObject.Status,
+		tfList = append(tfList, map[string]any{
+			names.AttrARN:      aws.ToString(apiObject.Arn),
+			names.AttrEmail:    aws.ToString(apiObject.Email),
+			names.AttrID:       aws.ToString(apiObject.Id),
+			"joined_method":    apiObject.JoinedMethod,
+			"joined_timestamp": aws.ToTime(apiObject.JoinedTimestamp).Format(time.RFC3339),
+			names.AttrName:     aws.ToString(apiObject.Name),
+			names.AttrStatus:   apiObject.Status,
+			names.AttrState:    apiObject.State,
 		})
 	}
 
 	return tfList
 }
 
-func flattenRoots(apiObjects []awstypes.Root) []interface{} {
+func flattenRoots(apiObjects []awstypes.Root) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, r := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			names.AttrID:   aws.ToString(r.Id),
 			names.AttrName: aws.ToString(r.Name),
 			names.AttrARN:  aws.ToString(r.Arn),
@@ -599,15 +641,15 @@ func flattenRoots(apiObjects []awstypes.Root) []interface{} {
 	return tfList
 }
 
-func flattenRootPolicyTypeSummaries(apiObjects []awstypes.PolicyTypeSummary) []interface{} {
+func flattenRootPolicyTypeSummaries(apiObjects []awstypes.PolicyTypeSummary) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			names.AttrStatus: apiObject.Status,
 			names.AttrType:   apiObject.Type,
 		})
@@ -617,7 +659,7 @@ func flattenRootPolicyTypeSummaries(apiObjects []awstypes.PolicyTypeSummary) []i
 }
 
 func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		defaultRoot, err := findDefaultRoot(ctx, conn)
 
 		if err != nil {

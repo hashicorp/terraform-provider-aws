@@ -452,12 +452,10 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -474,31 +472,31 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 	}
 
 	createOpts := &sagemaker.CreateDataQualityJobDefinitionInput{
-		DataQualityAppSpecification: expandDataQualityAppSpecification(d.Get("data_quality_app_specification").([]interface{})),
-		DataQualityJobInput:         expandDataQualityJobInput(d.Get("data_quality_job_input").([]interface{})),
-		DataQualityJobOutputConfig:  expandMonitoringOutputConfig(d.Get("data_quality_job_output_config").([]interface{})),
+		DataQualityAppSpecification: expandDataQualityAppSpecification(d.Get("data_quality_app_specification").([]any)),
+		DataQualityJobInput:         expandDataQualityJobInput(d.Get("data_quality_job_input").([]any)),
+		DataQualityJobOutputConfig:  expandMonitoringOutputConfig(d.Get("data_quality_job_output_config").([]any)),
 		JobDefinitionName:           aws.String(name),
-		JobResources:                expandMonitoringResources(d.Get("job_resources").([]interface{})),
+		JobResources:                expandMonitoringResources(d.Get("job_resources").([]any)),
 		RoleArn:                     aws.String(roleArn),
 		Tags:                        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("data_quality_baseline_config"); ok && len(v.([]interface{})) > 0 {
-		createOpts.DataQualityBaselineConfig = expandDataQualityBaselineConfig(v.([]interface{}))
+	if v, ok := d.GetOk("data_quality_baseline_config"); ok && len(v.([]any)) > 0 {
+		createOpts.DataQualityBaselineConfig = expandDataQualityBaselineConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("network_config"); ok && len(v.([]interface{})) > 0 {
-		createOpts.NetworkConfig = expandMonitoringNetworkConfig(v.([]interface{}))
+	if v, ok := d.GetOk("network_config"); ok && len(v.([]any)) > 0 {
+		createOpts.NetworkConfig = expandMonitoringNetworkConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("stopping_condition"); ok && len(v.([]interface{})) > 0 {
-		createOpts.StoppingCondition = expandMonitoringStoppingCondition(v.([]interface{}))
+	if v, ok := d.GetOk("stopping_condition"); ok && len(v.([]any)) > 0 {
+		createOpts.StoppingCondition = expandMonitoringStoppingCondition(v.([]any))
 	}
 
 	_, err := conn.CreateDataQualityJobDefinition(ctx, createOpts)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Data Quality Job Definition (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Data Quality Job Definition (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -506,20 +504,20 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceDataQualityJobDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	jobDefinition, err := findDataQualityJobDefinitionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Data Quality Job Definition (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Data Quality Job Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, jobDefinition.JobDefinitionArn)
@@ -527,36 +525,36 @@ func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.Resourc
 	d.Set(names.AttrRoleARN, jobDefinition.RoleArn)
 
 	if err := d.Set("data_quality_app_specification", flattenDataQualityAppSpecification(jobDefinition.DataQualityAppSpecification)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_app_specification for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_app_specification for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_quality_baseline_config", flattenDataQualityBaselineConfig(jobDefinition.DataQualityBaselineConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_baseline_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_baseline_config for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_quality_job_input", flattenDataQualityJobInput(jobDefinition.DataQualityJobInput)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_input for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_input for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("data_quality_job_output_config", flattenMonitoringOutputConfig(jobDefinition.DataQualityJobOutputConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_output_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_output_config for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("job_resources", flattenMonitoringResources(jobDefinition.JobResources)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting job_resources for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting job_resources for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("network_config", flattenMonitoringNetworkConfig(jobDefinition.NetworkConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting network_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting network_config for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("stopping_condition", flattenMonitoringStoppingCondition(jobDefinition.StoppingCondition)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting stopping_condition for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting stopping_condition for SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 	return diags
 }
 
-func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -564,11 +562,11 @@ func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceDataQualityJobDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[INFO] Deleting SageMaker Data Quality Job Definition: %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker AI Data Quality Job Definition: %s", d.Id())
 	_, err := conn.DeleteDataQualityJobDefinition(ctx, &sagemaker.DeleteDataQualityJobDefinitionInput{
 		JobDefinitionName: aws.String(d.Id()),
 	})
@@ -578,7 +576,7 @@ func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -609,12 +607,12 @@ func findDataQualityJobDefinitionByName(ctx context.Context, conn *sagemaker.Cli
 	return output, nil
 }
 
-func flattenDataQualityAppSpecification(config *awstypes.DataQualityAppSpecification) []map[string]interface{} {
+func flattenDataQualityAppSpecification(config *awstypes.DataQualityAppSpecification) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.ImageUri != nil {
 		m["image_uri"] = aws.ToString(config.ImageUri)
@@ -632,15 +630,15 @@ func flattenDataQualityAppSpecification(config *awstypes.DataQualityAppSpecifica
 		m["record_preprocessor_source_uri"] = aws.ToString(config.RecordPreprocessorSourceUri)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDataQualityBaselineConfig(config *awstypes.DataQualityBaselineConfig) []map[string]interface{} {
+func flattenDataQualityBaselineConfig(config *awstypes.DataQualityBaselineConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.ConstraintsResource != nil {
 		m["constraints_resource"] = flattenConstraintsResource(config.ConstraintsResource)
@@ -650,43 +648,43 @@ func flattenDataQualityBaselineConfig(config *awstypes.DataQualityBaselineConfig
 		m["statistics_resource"] = flattenMonitoringStatisticsResource(config.StatisticsResource)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenConstraintsResource(config *awstypes.MonitoringConstraintsResource) []map[string]interface{} {
+func flattenConstraintsResource(config *awstypes.MonitoringConstraintsResource) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.S3Uri != nil {
 		m["s3_uri"] = aws.ToString(config.S3Uri)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenMonitoringStatisticsResource(config *awstypes.MonitoringStatisticsResource) []map[string]interface{} {
+func flattenMonitoringStatisticsResource(config *awstypes.MonitoringStatisticsResource) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.S3Uri != nil {
 		m["s3_uri"] = aws.ToString(config.S3Uri)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDataQualityJobInput(config *awstypes.DataQualityJobInput) []map[string]interface{} {
+func flattenDataQualityJobInput(config *awstypes.DataQualityJobInput) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.EndpointInput != nil {
 		m["endpoint_input"] = flattenEndpointInput(config.EndpointInput)
@@ -696,15 +694,15 @@ func flattenDataQualityJobInput(config *awstypes.DataQualityJobInput) []map[stri
 		m["batch_transform_input"] = flattenBatchTransformInput(config.BatchTransformInput)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenBatchTransformInput(config *awstypes.BatchTransformInput) []map[string]interface{} {
+func flattenBatchTransformInput(config *awstypes.BatchTransformInput) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.LocalPath != nil {
 		m["local_path"] = aws.ToString(config.LocalPath)
@@ -722,15 +720,15 @@ func flattenBatchTransformInput(config *awstypes.BatchTransformInput) []map[stri
 
 	m["s3_input_mode"] = config.S3InputMode
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenMonitoringDatasetFormat(config *awstypes.MonitoringDatasetFormat) []map[string]interface{} {
+func flattenMonitoringDatasetFormat(config *awstypes.MonitoringDatasetFormat) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.Csv != nil {
 		m["csv"] = flattenMonitoringCSVDatasetFormat(config.Csv)
@@ -740,43 +738,43 @@ func flattenMonitoringDatasetFormat(config *awstypes.MonitoringDatasetFormat) []
 		m[names.AttrJSON] = flattenMonitoringJSONDatasetFormat(config.Json)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenMonitoringCSVDatasetFormat(config *awstypes.MonitoringCsvDatasetFormat) []map[string]interface{} {
+func flattenMonitoringCSVDatasetFormat(config *awstypes.MonitoringCsvDatasetFormat) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.Header != nil {
 		m[names.AttrHeader] = aws.ToBool(config.Header)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenMonitoringJSONDatasetFormat(config *awstypes.MonitoringJsonDatasetFormat) []map[string]interface{} {
+func flattenMonitoringJSONDatasetFormat(config *awstypes.MonitoringJsonDatasetFormat) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.Line != nil {
 		m["line"] = aws.ToBool(config.Line)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenEndpointInput(config *awstypes.EndpointInput) []map[string]interface{} {
+func flattenEndpointInput(config *awstypes.EndpointInput) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.EndpointName != nil {
 		m["endpoint_name"] = aws.ToString(config.EndpointName)
@@ -790,15 +788,15 @@ func flattenEndpointInput(config *awstypes.EndpointInput) []map[string]interface
 
 	m["s3_input_mode"] = config.S3InputMode
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenMonitoringOutputConfig(config *awstypes.MonitoringOutputConfig) []map[string]interface{} {
+func flattenMonitoringOutputConfig(config *awstypes.MonitoringOutputConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.KmsKeyId != nil {
 		m[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
@@ -808,14 +806,14 @@ func flattenMonitoringOutputConfig(config *awstypes.MonitoringOutputConfig) []ma
 		m["monitoring_outputs"] = flattenMonitoringOutputs(config.MonitoringOutputs)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenMonitoringOutputs(list []awstypes.MonitoringOutput) []map[string]interface{} {
-	outputs := make([]map[string]interface{}, 0, len(list))
+func flattenMonitoringOutputs(list []awstypes.MonitoringOutput) []map[string]any {
+	outputs := make([]map[string]any, 0, len(list))
 
 	for _, lRaw := range list {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m["s3_output"] = flattenMonitoringS3Output(lRaw.S3Output)
 		outputs = append(outputs, m)
 	}
@@ -823,12 +821,12 @@ func flattenMonitoringOutputs(list []awstypes.MonitoringOutput) []map[string]int
 	return outputs
 }
 
-func flattenMonitoringS3Output(config *awstypes.MonitoringS3Output) []map[string]interface{} {
+func flattenMonitoringS3Output(config *awstypes.MonitoringS3Output) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.LocalPath != nil {
 		m["local_path"] = aws.ToString(config.LocalPath)
@@ -840,29 +838,29 @@ func flattenMonitoringS3Output(config *awstypes.MonitoringS3Output) []map[string
 		m["s3_uri"] = aws.ToString(config.S3Uri)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenMonitoringResources(config *awstypes.MonitoringResources) []map[string]interface{} {
+func flattenMonitoringResources(config *awstypes.MonitoringResources) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.ClusterConfig != nil {
 		m["cluster_config"] = flattenMonitoringClusterConfig(config.ClusterConfig)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenMonitoringClusterConfig(config *awstypes.MonitoringClusterConfig) []map[string]interface{} {
+func flattenMonitoringClusterConfig(config *awstypes.MonitoringClusterConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.InstanceCount != nil {
 		m[names.AttrInstanceCount] = aws.ToInt32(config.InstanceCount)
@@ -878,15 +876,15 @@ func flattenMonitoringClusterConfig(config *awstypes.MonitoringClusterConfig) []
 		m["volume_size_in_gb"] = aws.ToInt32(config.VolumeSizeInGB)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenMonitoringNetworkConfig(config *awstypes.MonitoringNetworkConfig) []map[string]interface{} {
+func flattenMonitoringNetworkConfig(config *awstypes.MonitoringNetworkConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.EnableInterContainerTrafficEncryption != nil {
 		m["enable_inter_container_traffic_encryption"] = aws.ToBool(config.EnableInterContainerTrafficEncryption)
@@ -900,15 +898,15 @@ func flattenMonitoringNetworkConfig(config *awstypes.MonitoringNetworkConfig) []
 		m[names.AttrVPCConfig] = flattenVPCConfig(config.VpcConfig)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenVPCConfig(config *awstypes.VpcConfig) []map[string]interface{} {
+func flattenVPCConfig(config *awstypes.VpcConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.SecurityGroupIds != nil {
 		m[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(config.SecurityGroupIds)
@@ -918,29 +916,29 @@ func flattenVPCConfig(config *awstypes.VpcConfig) []map[string]interface{} {
 		m[names.AttrSubnets] = flex.FlattenStringValueSet(config.Subnets)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenMonitoringStoppingCondition(config *awstypes.MonitoringStoppingCondition) []map[string]interface{} {
+func flattenMonitoringStoppingCondition(config *awstypes.MonitoringStoppingCondition) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.MaxRuntimeInSeconds != nil {
 		m["max_runtime_in_seconds"] = aws.ToInt32(config.MaxRuntimeInSeconds)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandDataQualityAppSpecification(configured []interface{}) *awstypes.DataQualityAppSpecification {
+func expandDataQualityAppSpecification(configured []any) *awstypes.DataQualityAppSpecification {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.DataQualityAppSpecification{}
 
@@ -948,7 +946,7 @@ func expandDataQualityAppSpecification(configured []interface{}) *awstypes.DataQ
 		c.ImageUri = aws.String(v)
 	}
 
-	if v, ok := m[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
 		c.Environment = flex.ExpandStringValueMap(v)
 	}
 
@@ -963,32 +961,32 @@ func expandDataQualityAppSpecification(configured []interface{}) *awstypes.DataQ
 	return c
 }
 
-func expandDataQualityBaselineConfig(configured []interface{}) *awstypes.DataQualityBaselineConfig {
+func expandDataQualityBaselineConfig(configured []any) *awstypes.DataQualityBaselineConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.DataQualityBaselineConfig{}
 
-	if v, ok := m["constraints_resource"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["constraints_resource"].([]any); ok && len(v) > 0 {
 		c.ConstraintsResource = expandMonitoringConstraintsResource(v)
 	}
 
-	if v, ok := m["statistics_resource"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["statistics_resource"].([]any); ok && len(v) > 0 {
 		c.StatisticsResource = expandMonitoringStatisticsResource(v)
 	}
 
 	return c
 }
 
-func expandMonitoringConstraintsResource(configured []interface{}) *awstypes.MonitoringConstraintsResource {
+func expandMonitoringConstraintsResource(configured []any) *awstypes.MonitoringConstraintsResource {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.MonitoringConstraintsResource{}
 
@@ -999,12 +997,12 @@ func expandMonitoringConstraintsResource(configured []interface{}) *awstypes.Mon
 	return c
 }
 
-func expandMonitoringStatisticsResource(configured []interface{}) *awstypes.MonitoringStatisticsResource {
+func expandMonitoringStatisticsResource(configured []any) *awstypes.MonitoringStatisticsResource {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.MonitoringStatisticsResource{}
 
@@ -1015,32 +1013,32 @@ func expandMonitoringStatisticsResource(configured []interface{}) *awstypes.Moni
 	return c
 }
 
-func expandDataQualityJobInput(configured []interface{}) *awstypes.DataQualityJobInput {
+func expandDataQualityJobInput(configured []any) *awstypes.DataQualityJobInput {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.DataQualityJobInput{}
 
-	if v, ok := m["endpoint_input"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["endpoint_input"].([]any); ok && len(v) > 0 {
 		c.EndpointInput = expandEndpointInput(v)
 	}
 
-	if v, ok := m["batch_transform_input"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["batch_transform_input"].([]any); ok && len(v) > 0 {
 		c.BatchTransformInput = expandBatchTransformInput(v)
 	}
 
 	return c
 }
 
-func expandEndpointInput(configured []interface{}) *awstypes.EndpointInput {
+func expandEndpointInput(configured []any) *awstypes.EndpointInput {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.EndpointInput{}
 
@@ -1063,12 +1061,12 @@ func expandEndpointInput(configured []interface{}) *awstypes.EndpointInput {
 	return c
 }
 
-func expandBatchTransformInput(configured []interface{}) *awstypes.BatchTransformInput {
+func expandBatchTransformInput(configured []any) *awstypes.BatchTransformInput {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.BatchTransformInput{}
 
@@ -1076,7 +1074,7 @@ func expandBatchTransformInput(configured []interface{}) *awstypes.BatchTransfor
 		c.DataCapturedDestinationS3Uri = aws.String(v)
 	}
 
-	if v, ok := m["dataset_format"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["dataset_format"].([]any); ok && len(v) > 0 {
 		c.DatasetFormat = expandMonitoringDatasetFormat(v)
 	}
 
@@ -1095,27 +1093,27 @@ func expandBatchTransformInput(configured []interface{}) *awstypes.BatchTransfor
 	return c
 }
 
-func expandMonitoringDatasetFormat(configured []interface{}) *awstypes.MonitoringDatasetFormat {
+func expandMonitoringDatasetFormat(configured []any) *awstypes.MonitoringDatasetFormat {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.MonitoringDatasetFormat{}
 
-	if v, ok := m["csv"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["csv"].([]any); ok && len(v) > 0 {
 		c.Csv = expandMonitoringCSVDatasetFormat(v)
 	}
 
-	if v, ok := m[names.AttrJSON].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrJSON].([]any); ok && len(v) > 0 {
 		c.Json = expandMonitoringJSONDatasetFormat(v)
 	}
 
 	return c
 }
 
-func expandMonitoringJSONDatasetFormat(configured []interface{}) *awstypes.MonitoringJsonDatasetFormat {
+func expandMonitoringJSONDatasetFormat(configured []any) *awstypes.MonitoringJsonDatasetFormat {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -1126,7 +1124,7 @@ func expandMonitoringJSONDatasetFormat(configured []interface{}) *awstypes.Monit
 		return c
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 	if v, ok := m["line"]; ok {
 		c.Line = aws.Bool(v.(bool))
 	}
@@ -1134,7 +1132,7 @@ func expandMonitoringJSONDatasetFormat(configured []interface{}) *awstypes.Monit
 	return c
 }
 
-func expandMonitoringCSVDatasetFormat(configured []interface{}) *awstypes.MonitoringCsvDatasetFormat {
+func expandMonitoringCSVDatasetFormat(configured []any) *awstypes.MonitoringCsvDatasetFormat {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -1145,7 +1143,7 @@ func expandMonitoringCSVDatasetFormat(configured []interface{}) *awstypes.Monito
 		return c
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 	if v, ok := m[names.AttrHeader]; ok {
 		c.Header = aws.Bool(v.(bool))
 	}
@@ -1153,12 +1151,12 @@ func expandMonitoringCSVDatasetFormat(configured []interface{}) *awstypes.Monito
 	return c
 }
 
-func expandMonitoringOutputConfig(configured []interface{}) *awstypes.MonitoringOutputConfig {
+func expandMonitoringOutputConfig(configured []any) *awstypes.MonitoringOutputConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.MonitoringOutputConfig{}
 
@@ -1166,21 +1164,21 @@ func expandMonitoringOutputConfig(configured []interface{}) *awstypes.Monitoring
 		c.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := m["monitoring_outputs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["monitoring_outputs"].([]any); ok && len(v) > 0 {
 		c.MonitoringOutputs = expandMonitoringOutputs(v)
 	}
 
 	return c
 }
 
-func expandMonitoringOutputs(configured []interface{}) []awstypes.MonitoringOutput {
+func expandMonitoringOutputs(configured []any) []awstypes.MonitoringOutput {
 	containers := make([]awstypes.MonitoringOutput, 0, len(configured))
 
 	for _, lRaw := range configured {
-		data := lRaw.(map[string]interface{})
+		data := lRaw.(map[string]any)
 
 		l := awstypes.MonitoringOutput{
-			S3Output: expandMonitoringS3Output(data["s3_output"].([]interface{})),
+			S3Output: expandMonitoringS3Output(data["s3_output"].([]any)),
 		}
 		containers = append(containers, l)
 	}
@@ -1188,12 +1186,12 @@ func expandMonitoringOutputs(configured []interface{}) []awstypes.MonitoringOutp
 	return containers
 }
 
-func expandMonitoringS3Output(configured []interface{}) *awstypes.MonitoringS3Output {
+func expandMonitoringS3Output(configured []any) *awstypes.MonitoringS3Output {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.MonitoringS3Output{}
 
@@ -1212,28 +1210,28 @@ func expandMonitoringS3Output(configured []interface{}) *awstypes.MonitoringS3Ou
 	return c
 }
 
-func expandMonitoringResources(configured []interface{}) *awstypes.MonitoringResources {
+func expandMonitoringResources(configured []any) *awstypes.MonitoringResources {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.MonitoringResources{}
 
-	if v, ok := m["cluster_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["cluster_config"].([]any); ok && len(v) > 0 {
 		c.ClusterConfig = expandMonitoringClusterConfig(v)
 	}
 
 	return c
 }
 
-func expandMonitoringClusterConfig(configured []interface{}) *awstypes.MonitoringClusterConfig {
+func expandMonitoringClusterConfig(configured []any) *awstypes.MonitoringClusterConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.MonitoringClusterConfig{}
 
@@ -1256,12 +1254,12 @@ func expandMonitoringClusterConfig(configured []interface{}) *awstypes.Monitorin
 	return c
 }
 
-func expandMonitoringNetworkConfig(configured []interface{}) *awstypes.MonitoringNetworkConfig {
+func expandMonitoringNetworkConfig(configured []any) *awstypes.MonitoringNetworkConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.MonitoringNetworkConfig{}
 
@@ -1273,19 +1271,19 @@ func expandMonitoringNetworkConfig(configured []interface{}) *awstypes.Monitorin
 		c.EnableNetworkIsolation = aws.Bool(v.(bool))
 	}
 
-	if v, ok := m[names.AttrVPCConfig].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrVPCConfig].([]any); ok && len(v) > 0 {
 		c.VpcConfig = expandVPCConfig(v)
 	}
 
 	return c
 }
 
-func expandVPCConfig(configured []interface{}) *awstypes.VpcConfig {
+func expandVPCConfig(configured []any) *awstypes.VpcConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.VpcConfig{}
 
@@ -1300,12 +1298,12 @@ func expandVPCConfig(configured []interface{}) *awstypes.VpcConfig {
 	return c
 }
 
-func expandMonitoringStoppingCondition(configured []interface{}) *awstypes.MonitoringStoppingCondition {
+func expandMonitoringStoppingCondition(configured []any) *awstypes.MonitoringStoppingCondition {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.MonitoringStoppingCondition{}
 

@@ -86,7 +86,7 @@ func resourceBGPPeer() *schema.Resource {
 	}
 }
 
-func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -126,7 +126,7 @@ func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceBGPPeerRead(ctx, d, meta)...)
 }
 
-func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -155,7 +155,7 @@ func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -164,11 +164,12 @@ func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta int
 	asn := int32(d.Get("bgp_asn").(int))
 
 	log.Printf("[DEBUG] Deleting Direct Connect BGP peer: %s", d.Id())
-	_, err := conn.DeleteBGPPeer(ctx, &directconnect.DeleteBGPPeerInput{
+	input := directconnect.DeleteBGPPeerInput{
 		Asn:                asn,
 		CustomerAddress:    aws.String(d.Get("customer_address").(string)),
 		VirtualInterfaceId: aws.String(vifID),
-	})
+	}
+	_, err := conn.DeleteBGPPeer(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "The last BGP Peer on a Virtual Interface cannot be deleted") {
 		return diags
@@ -210,7 +211,7 @@ func findBGPPeerByThreePartKey(ctx context.Context, conn *directconnect.Client, 
 }
 
 func statusBGPPeer(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findBGPPeerByThreePartKey(ctx, conn, vifID, addrFamily, asn)
 
 		if tfresource.NotFound(err) {

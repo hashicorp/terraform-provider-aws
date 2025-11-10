@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_detective_invitation_accepter")
+// @SDKResource("aws_detective_invitation_accepter", name="Invitation Accepter")
 func ResourceInvitationAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInvitationAccepterCreate,
@@ -42,7 +42,7 @@ func ResourceInvitationAccepter() *schema.Resource {
 	}
 }
 
-func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
@@ -63,7 +63,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceInvitationAccepterRead(ctx, d, meta)...)
 }
 
-func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
@@ -85,15 +85,16 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Detective Invitation Accepter: %s", d.Id())
-	_, err := conn.DisassociateMembership(ctx, &detective.DisassociateMembershipInput{
+	input := detective.DisassociateMembershipInput{
 		GraphArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateMembership(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

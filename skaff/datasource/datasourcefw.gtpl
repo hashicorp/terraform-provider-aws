@@ -41,15 +41,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/{{ .SDKPackage }}"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 {{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 {{- end }}
@@ -78,12 +76,9 @@ const (
 )
 
 type dataSource{{ .DataSource }} struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[dataSource{{ .DataSource }}Model]
 }
 
-func (d *dataSource{{ .DataSource }}) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "{{ .ProviderResourceName }}"
-}
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====
 // In the schema, add each of the arguments and attributes in snake
@@ -112,18 +107,18 @@ func (d *dataSource{{ .DataSource }}) Metadata(_ context.Context, req datasource
 func (d *dataSource{{ .DataSource }}) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			{{- if .IncludeTags }}
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			{{- end }}
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -179,7 +174,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	// TIP: -- 2. Fetch the config
 	{{- end }}
 	var data dataSource{{ .DataSource }}Model
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -188,10 +183,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	{{- end }}
 	out, err := find{{ .DataSource }}ByName(ctx, conn, data.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, data.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.String())
 		return
 	}
 
@@ -199,7 +191,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	// TIP: -- 4. Set the ID, arguments, and attributes
 	// Using a field name prefix allows mapping fields such as `{{ .DataSource }}Id` to `ID`
 	{{- end }}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("{{ .DataSource }}"))...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("{{ .DataSource }}")), smerr.ID, data.Name.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -216,7 +208,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	{{ if .IncludeComments -}}
 	// TIP: -- 6. Set the state
 	{{- end }}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.Name.String())
 }
 
 {{ if .IncludeComments }}
@@ -234,6 +226,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 {{- end }}
 type dataSource{{ .DataSource }}Model struct {
+	framework.WithRegionModel
 	ARN             types.String                                          `tfsdk:"arn"`
 	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
 	Description     types.String                                          `tfsdk:"description"`

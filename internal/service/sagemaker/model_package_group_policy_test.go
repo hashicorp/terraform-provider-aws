@@ -115,7 +115,7 @@ func testAccCheckModelPackageGroupPolicyDestroy(ctx context.Context) resource.Te
 				return err
 			}
 
-			return fmt.Errorf("reading SageMaker Model Package Group Policy %s still exists", rs.Primary.ID)
+			return fmt.Errorf("reading SageMaker AI Model Package Group Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil

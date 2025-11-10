@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandCognitoOptions(c []interface{}) *awstypes.CognitoOptions {
+func expandCognitoOptions(c []any) *awstypes.CognitoOptions {
 	options := &awstypes.CognitoOptions{
 		Enabled: aws.Bool(false),
 	}
@@ -19,7 +19,7 @@ func expandCognitoOptions(c []interface{}) *awstypes.CognitoOptions {
 		return options
 	}
 
-	m := c[0].(map[string]interface{})
+	m := c[0].(map[string]any)
 
 	if cognitoEnabled, ok := m[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(cognitoEnabled.(bool))
@@ -40,12 +40,12 @@ func expandCognitoOptions(c []interface{}) *awstypes.CognitoOptions {
 	return options
 }
 
-func expandDomainEndpointOptions(l []interface{}) *awstypes.DomainEndpointOptions {
+func expandDomainEndpointOptions(l []any) *awstypes.DomainEndpointOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 	domainEndpointOptions := &awstypes.DomainEndpointOptions{}
 
 	if v, ok := m["enforce_https"].(bool); ok {
@@ -73,7 +73,7 @@ func expandDomainEndpointOptions(l []interface{}) *awstypes.DomainEndpointOption
 	return domainEndpointOptions
 }
 
-func expandEBSOptions(m map[string]interface{}) *awstypes.EBSOptions {
+func expandEBSOptions(m map[string]any) *awstypes.EBSOptions {
 	options := awstypes.EBSOptions{}
 
 	if ebsEnabled, ok := m["ebs_enabled"]; ok {
@@ -100,7 +100,7 @@ func expandEBSOptions(m map[string]interface{}) *awstypes.EBSOptions {
 	return &options
 }
 
-func expandEncryptAtRestOptions(m map[string]interface{}) *awstypes.EncryptionAtRestOptions {
+func expandEncryptAtRestOptions(m map[string]any) *awstypes.EncryptionAtRestOptions {
 	options := awstypes.EncryptionAtRestOptions{}
 
 	if v, ok := m[names.AttrEnabled]; ok {
@@ -113,7 +113,7 @@ func expandEncryptAtRestOptions(m map[string]interface{}) *awstypes.EncryptionAt
 	return &options
 }
 
-func expandVPCOptions(m map[string]interface{}) *awstypes.VPCOptions {
+func expandVPCOptions(m map[string]any) *awstypes.VPCOptions {
 	if m == nil {
 		return nil
 	}
@@ -130,8 +130,8 @@ func expandVPCOptions(m map[string]interface{}) *awstypes.VPCOptions {
 	return &options
 }
 
-func flattenCognitoOptions(c *awstypes.CognitoOptions) []map[string]interface{} {
-	m := map[string]interface{}{}
+func flattenCognitoOptions(c *awstypes.CognitoOptions) []map[string]any {
+	m := map[string]any{}
 
 	m[names.AttrEnabled] = aws.ToBool(c.Enabled)
 
@@ -141,15 +141,15 @@ func flattenCognitoOptions(c *awstypes.CognitoOptions) []map[string]interface{} 
 		m[names.AttrRoleARN] = aws.ToString(c.RoleArn)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDomainEndpointOptions(domainEndpointOptions *awstypes.DomainEndpointOptions) []interface{} {
+func flattenDomainEndpointOptions(domainEndpointOptions *awstypes.DomainEndpointOptions) []any {
 	if domainEndpointOptions == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"enforce_https":           aws.ToBool(domainEndpointOptions.EnforceHTTPS),
 		"tls_security_policy":     string(domainEndpointOptions.TLSSecurityPolicy),
 		"custom_endpoint_enabled": aws.ToBool(domainEndpointOptions.CustomEndpointEnabled),
@@ -163,11 +163,11 @@ func flattenDomainEndpointOptions(domainEndpointOptions *awstypes.DomainEndpoint
 		}
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenEBSOptions(o *awstypes.EBSOptions) []map[string]interface{} {
-	m := map[string]interface{}{}
+func flattenEBSOptions(o *awstypes.EBSOptions) []map[string]any {
+	m := map[string]any{}
 
 	if o.EBSEnabled != nil {
 		m["ebs_enabled"] = aws.ToBool(o.EBSEnabled)
@@ -186,15 +186,15 @@ func flattenEBSOptions(o *awstypes.EBSOptions) []map[string]interface{} {
 		m[names.AttrVolumeType] = string(o.VolumeType)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenEncryptAtRestOptions(o *awstypes.EncryptionAtRestOptions) []map[string]interface{} {
+func flattenEncryptAtRestOptions(o *awstypes.EncryptionAtRestOptions) []map[string]any {
 	if o == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if o.Enabled != nil {
 		m[names.AttrEnabled] = aws.ToBool(o.Enabled)
@@ -203,27 +203,27 @@ func flattenEncryptAtRestOptions(o *awstypes.EncryptionAtRestOptions) []map[stri
 		m[names.AttrKMSKeyID] = aws.ToString(o.KmsKeyId)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenSnapshotOptions(snapshotOptions *awstypes.SnapshotOptions) []map[string]interface{} {
+func flattenSnapshotOptions(snapshotOptions *awstypes.SnapshotOptions) []map[string]any {
 	if snapshotOptions == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"automated_snapshot_start_hour": int(aws.ToInt32(snapshotOptions.AutomatedSnapshotStartHour)),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenVPCDerivedInfo(o *awstypes.VPCDerivedInfo) map[string]interface{} {
+func flattenVPCDerivedInfo(o *awstypes.VPCDerivedInfo) map[string]any {
 	if o == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if o.AvailabilityZones != nil {
 		m[names.AttrAvailabilityZones] = flex.FlattenStringValueSet(o.AvailabilityZones)

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]awstypes.RoleMapping {
+func expandIdentityPoolRoleMappingsAttachment(rms []any) map[string]awstypes.RoleMapping {
 	values := make(map[string]awstypes.RoleMapping)
 
 	if len(rms) == 0 {
@@ -18,7 +18,7 @@ func expandIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]awst
 	}
 
 	for _, v := range rms {
-		rm := v.(map[string]interface{})
+		rm := v.(map[string]any)
 		key := rm["identity_provider"].(string)
 
 		roleMapping := awstypes.RoleMapping{
@@ -29,12 +29,12 @@ func expandIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]awst
 			roleMapping.AmbiguousRoleResolution = awstypes.AmbiguousRoleResolutionType(sv)
 		}
 
-		if mr, ok := rm["mapping_rule"].([]interface{}); ok && len(mr) > 0 {
+		if mr, ok := rm["mapping_rule"].([]any); ok && len(mr) > 0 {
 			rct := &awstypes.RulesConfigurationType{}
 			mappingRules := make([]awstypes.MappingRule, 0)
 
 			for _, r := range mr {
-				rule := r.(map[string]interface{})
+				rule := r.(map[string]any)
 				mr := awstypes.MappingRule{
 					Claim:     aws.String(rule["claim"].(string)),
 					MatchType: awstypes.MappingRuleMatchType(rule["match_type"].(string)),
@@ -55,7 +55,7 @@ func expandIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]awst
 	return values
 }
 
-func expandIdentityPoolRoles(config map[string]interface{}) map[string]string {
+func expandIdentityPoolRoles(config map[string]any) map[string]string {
 	m := map[string]string{}
 	for k, v := range config {
 		s := v.(string)
@@ -68,7 +68,7 @@ func expandIdentityProviders(s *schema.Set) []awstypes.CognitoIdentityProvider {
 	ips := make([]awstypes.CognitoIdentityProvider, 0)
 
 	for _, v := range s.List() {
-		s := v.(map[string]interface{})
+		s := v.(map[string]any)
 
 		ip := awstypes.CognitoIdentityProvider{}
 
@@ -90,7 +90,7 @@ func expandIdentityProviders(s *schema.Set) []awstypes.CognitoIdentityProvider {
 	return ips
 }
 
-func expandSupportedLoginProviders(config map[string]interface{}) map[string]string {
+func expandSupportedLoginProviders(config map[string]any) map[string]string {
 	m := map[string]string{}
 	for k, v := range config {
 		s := v.(string)
@@ -99,15 +99,15 @@ func expandSupportedLoginProviders(config map[string]interface{}) map[string]str
 	return m
 }
 
-func flattenIdentityPoolRoleMappingsAttachment(rms map[string]awstypes.RoleMapping) []map[string]interface{} {
-	roleMappings := make([]map[string]interface{}, 0)
+func flattenIdentityPoolRoleMappingsAttachment(rms map[string]awstypes.RoleMapping) []map[string]any {
+	roleMappings := make([]map[string]any, 0)
 
 	if rms == nil {
 		return roleMappings
 	}
 
 	for k, v := range rms {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 
 		if v.Type != "" {
 			m[names.AttrType] = string(v.Type)
@@ -128,11 +128,11 @@ func flattenIdentityPoolRoleMappingsAttachment(rms map[string]awstypes.RoleMappi
 	return roleMappings
 }
 
-func flattenIdentityPoolRolesAttachmentMappingRules(d []awstypes.MappingRule) []interface{} {
-	rules := make([]interface{}, 0)
+func flattenIdentityPoolRolesAttachmentMappingRules(d []awstypes.MappingRule) []any {
+	rules := make([]any, 0)
 
 	for _, rule := range d {
-		r := make(map[string]interface{})
+		r := make(map[string]any)
 		r["claim"] = aws.ToString(rule.Claim)
 		r["match_type"] = string(rule.MatchType)
 		r[names.AttrRoleARN] = aws.ToString(rule.RoleARN)
@@ -144,11 +144,11 @@ func flattenIdentityPoolRolesAttachmentMappingRules(d []awstypes.MappingRule) []
 	return rules
 }
 
-func flattenIdentityProviders(ips []awstypes.CognitoIdentityProvider) []map[string]interface{} {
-	values := make([]map[string]interface{}, 0)
+func flattenIdentityProviders(ips []awstypes.CognitoIdentityProvider) []map[string]any {
+	values := make([]map[string]any, 0)
 
 	for _, v := range ips {
-		ip := make(map[string]interface{})
+		ip := make(map[string]any)
 
 		if v.ClientId != nil {
 			ip[names.AttrClientID] = aws.ToString(v.ClientId)

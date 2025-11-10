@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -219,6 +219,11 @@ func TestAccVPCRouteTable_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -227,8 +232,15 @@ func TestAccVPCRouteTable_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 			},
 			{
 				// Verify that expanded form of the destination CIDR causes no diff.
-				Config:   testAccVPCRouteTableConfig_ipv6EgressOnlyInternetGateway(rName, "::0/0"),
-				PlanOnly: true,
+				Config: testAccVPCRouteTableConfig_ipv6EgressOnlyInternetGateway(rName, "::0/0"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1283,11 +1295,12 @@ func testAccCheckRouteTableWaitForVPCEndpointRoute(ctx context.Context, routeTab
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := conn.DescribePrefixLists(ctx, &ec2.DescribePrefixListsInput{
+		input := ec2.DescribePrefixListsInput{
 			Filters: tfec2.NewAttributeFilterList(map[string]string{
 				"prefix-list-name": aws.ToString(vpce.ServiceName),
 			}),
-		})
+		}
+		resp, err := conn.DescribePrefixLists(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -1298,15 +1311,16 @@ func testAccCheckRouteTableWaitForVPCEndpointRoute(ctx context.Context, routeTab
 
 		plId := aws.ToString(resp.PrefixLists[0].PrefixListId)
 
-		err = retry.RetryContext(ctx, 3*time.Minute, func() *retry.RetryError {
-			resp, err := conn.DescribeRouteTables(ctx, &ec2.DescribeRouteTablesInput{
+		err = tfresource.Retry(ctx, 3*time.Minute, func(ctx context.Context) *tfresource.RetryError {
+			input := ec2.DescribeRouteTablesInput{
 				RouteTableIds: []string{aws.ToString(routeTable.RouteTableId)},
-			})
+			}
+			resp, err := conn.DescribeRouteTables(ctx, &input)
 			if err != nil {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			if resp == nil || len(resp.RouteTables) == 0 {
-				return retry.NonRetryableError(fmt.Errorf("Route Table not found"))
+				return tfresource.NonRetryableError(fmt.Errorf("Route Table not found"))
 			}
 
 			for _, route := range resp.RouteTables[0].Routes {
@@ -1315,7 +1329,7 @@ func testAccCheckRouteTableWaitForVPCEndpointRoute(ctx context.Context, routeTab
 				}
 			}
 
-			return retry.RetryableError(fmt.Errorf("Route not found"))
+			return tfresource.RetryableError(fmt.Errorf("Route not found"))
 		})
 
 		return err
@@ -2171,7 +2185,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id          = aws_vpc.test.id
-  service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name    = "com.amazonaws.${data.aws_region.current.region}.s3"
   route_table_ids = [aws_route_table.test.id]
 }
 `, rName)

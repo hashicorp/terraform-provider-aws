@@ -6,36 +6,36 @@ package glue
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_registry", name="Registry")
 // @Tags(identifierAttribute="arn")
-func ResourceRegistry() *schema.Resource {
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/glue;glue.GetRegistryOutput")
+func resourceRegistry() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegistryCreate,
 		ReadWithoutTimeout:   resourceRegistryRead,
 		UpdateWithoutTimeout: resourceRegistryUpdate,
 		DeleteWithoutTimeout: resourceRegistryDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -62,7 +62,7 @@ func ResourceRegistry() *schema.Resource {
 	}
 }
 
-func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -85,11 +85,11 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceRegistryRead(ctx, d, meta)...)
 }
 
-func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	output, err := FindRegistryByID(ctx, conn, d.Id())
+	output, err := findRegistryByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Registry (%s) not found, removing from state", d.Id())
@@ -115,7 +115,7 @@ func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -138,7 +138,7 @@ func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceRegistryRead(ctx, d, meta)...)
 }
 
-func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
@@ -164,4 +164,64 @@ func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return diags
+}
+
+func findRegistryByID(ctx context.Context, conn *glue.Client, id string) (*glue.GetRegistryOutput, error) {
+	input := &glue.GetRegistryInput{
+		RegistryId: createRegistryID(id),
+	}
+
+	output, err := conn.GetRegistry(ctx, input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusRegistry(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
+	const (
+		registryStatusUnknown = "Unknown"
+	)
+	return func() (any, string, error) {
+		output, err := findRegistryByID(ctx, conn, id)
+		if err != nil {
+			return nil, registryStatusUnknown, err
+		}
+
+		if output == nil {
+			return output, registryStatusUnknown, nil
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+// waitRegistryDeleted waits for a Registry to return Deleted
+func waitRegistryDeleted(ctx context.Context, conn *glue.Client, registryID string) (*glue.GetRegistryOutput, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RegistryStatusDeleting),
+		Target:  []string{},
+		Refresh: statusRegistry(ctx, conn, registryID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*glue.GetRegistryOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }

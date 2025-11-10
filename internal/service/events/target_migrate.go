@@ -173,9 +173,9 @@ func resourceTargetV0() *schema.Resource {
 	}
 }
 
-func targetStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func targetStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
-		rawState = map[string]interface{}{}
+		rawState = map[string]any{}
 	}
 
 	if _, ok := rawState["event_bus_name"]; !ok {

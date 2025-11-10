@@ -44,7 +44,7 @@ var dataSetReferencesSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-func expandDataSetIdentifierDeclarations(tfList []interface{}) []awstypes.DataSetIdentifierDeclaration {
+func expandDataSetIdentifierDeclarations(tfList []any) []awstypes.DataSetIdentifierDeclaration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -52,7 +52,7 @@ func expandDataSetIdentifierDeclarations(tfList []interface{}) []awstypes.DataSe
 	var apiObjects []awstypes.DataSetIdentifierDeclaration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -68,7 +68,7 @@ func expandDataSetIdentifierDeclarations(tfList []interface{}) []awstypes.DataSe
 	return apiObjects
 }
 
-func expandDataSetIdentifierDeclaration(tfMap map[string]interface{}) *awstypes.DataSetIdentifierDeclaration {
+func expandDataSetIdentifierDeclaration(tfMap map[string]any) *awstypes.DataSetIdentifierDeclaration {
 	if tfMap == nil {
 		return nil
 	}
@@ -85,15 +85,15 @@ func expandDataSetIdentifierDeclaration(tfMap map[string]interface{}) *awstypes.
 	return apiObject
 }
 
-func flattenDataSetIdentifierDeclarations(apiObject []awstypes.DataSetIdentifierDeclaration) []interface{} {
+func flattenDataSetIdentifierDeclarations(apiObject []awstypes.DataSetIdentifierDeclaration) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObject {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.DataSetArn != nil {
 			tfMap["data_set_arn"] = aws.ToString(apiObject.DataSetArn)

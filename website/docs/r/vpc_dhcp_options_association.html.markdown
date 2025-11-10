@@ -23,6 +23,7 @@ resource "aws_vpc_dhcp_options_association" "dns_resolver" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_id` - (Required) The ID of the VPC to which we would like to associate a DHCP Options Set.
 * `dhcp_options_id` - (Required) The ID of the DHCP Options Set to associate to the VPC.
 

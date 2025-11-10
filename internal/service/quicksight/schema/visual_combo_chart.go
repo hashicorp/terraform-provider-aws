@@ -92,12 +92,12 @@ func comboChartVisualSchema() *schema.Schema {
 	}
 }
 
-func expandComboChartVisual(tfList []interface{}) *awstypes.ComboChartVisual {
+func expandComboChartVisual(tfList []any) *awstypes.ComboChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -107,31 +107,31 @@ func expandComboChartVisual(tfList []interface{}) *awstypes.ComboChartVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandComboChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandComboChartConfiguration(tfList []interface{}) *awstypes.ComboChartConfiguration {
+func expandComboChartConfiguration(tfList []any) *awstypes.ComboChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -141,136 +141,136 @@ func expandComboChartConfiguration(tfList []interface{}) *awstypes.ComboChartCon
 	if v, ok := tfMap["bars_arrangement"].(string); ok && v != "" {
 		apiObject.BarsArrangement = awstypes.BarsArrangement(v)
 	}
-	if v, ok := tfMap["bar_data_labels"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["bar_data_labels"].([]any); ok && len(v) > 0 {
 		apiObject.BarDataLabels = expandDataLabelOptions(v)
 	}
-	if v, ok := tfMap["category_axis"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_axis"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryAxis = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["category_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["color_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["color_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.ColorLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandComboChartFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
-	if v, ok := tfMap["line_data_labels"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["line_data_labels"].([]any); ok && len(v) > 0 {
 		apiObject.LineDataLabels = expandDataLabelOptions(v)
 	}
-	if v, ok := tfMap["primary_y_axis_display_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["primary_y_axis_display_options"].([]any); ok && len(v) > 0 {
 		apiObject.PrimaryYAxisDisplayOptions = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["primary_y_axis_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["primary_y_axis_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.PrimaryYAxisLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["reference_lines"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["reference_lines"].([]any); ok && len(v) > 0 {
 		apiObject.ReferenceLines = expandReferenceLines(v)
 	}
-	if v, ok := tfMap["secondary_y_axis_display_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["secondary_y_axis_display_options"].([]any); ok && len(v) > 0 {
 		apiObject.SecondaryYAxisDisplayOptions = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["secondary_y_axis_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["secondary_y_axis_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.SecondaryYAxisLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandComboChartSortConfiguration(v)
 	}
-	if v, ok := tfMap["tooltip"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 
 	return apiObject
 }
 
-func expandComboChartFieldWells(tfList []interface{}) *awstypes.ComboChartFieldWells {
+func expandComboChartFieldWells(tfList []any) *awstypes.ComboChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ComboChartFieldWells{}
 
-	if v, ok := tfMap["combo_chart_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["combo_chart_aggregated_field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.ComboChartAggregatedFieldWells = expandComboChartAggregatedFieldWells(v)
 	}
 
 	return apiObject
 }
 
-func expandComboChartAggregatedFieldWells(tfList []interface{}) *awstypes.ComboChartAggregatedFieldWells {
+func expandComboChartAggregatedFieldWells(tfList []any) *awstypes.ComboChartAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ComboChartAggregatedFieldWells{}
 
-	if v, ok := tfMap["bar_values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["bar_values"].([]any); ok && len(v) > 0 {
 		apiObject.BarValues = expandMeasureFields(v)
 	}
-	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["colors"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["colors"].([]any); ok && len(v) > 0 {
 		apiObject.Colors = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["line_values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["line_values"].([]any); ok && len(v) > 0 {
 		apiObject.LineValues = expandMeasureFields(v)
 	}
 
 	return apiObject
 }
 
-func expandComboChartSortConfiguration(tfList []interface{}) *awstypes.ComboChartSortConfiguration {
+func expandComboChartSortConfiguration(tfList []any) *awstypes.ComboChartSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ComboChartSortConfiguration{}
 
-	if v, ok := tfMap["category_items_limit"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_items_limit"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryItemsLimit = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["category_sort"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
 		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
-	if v, ok := tfMap["color_items_limit"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["color_items_limit"].([]any); ok && len(v) > 0 {
 		apiObject.ColorItemsLimit = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["color_sort"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["color_sort"].([]any); ok && len(v) > 0 {
 		apiObject.ColorSort = expandFieldSortOptionsList(v)
 	}
 
 	return apiObject
 }
 
-func flattenComboChartVisual(apiObject *awstypes.ComboChartVisual) []interface{} {
+func flattenComboChartVisual(apiObject *awstypes.ComboChartVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 
@@ -290,15 +290,15 @@ func flattenComboChartVisual(apiObject *awstypes.ComboChartVisual) []interface{}
 		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenComboChartConfiguration(apiObject *awstypes.ComboChartConfiguration) []interface{} {
+func flattenComboChartConfiguration(apiObject *awstypes.ComboChartConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.BarDataLabels != nil {
 		tfMap["bar_data_labels"] = flattenDataLabelOptions(apiObject.BarDataLabels)
@@ -347,29 +347,29 @@ func flattenComboChartConfiguration(apiObject *awstypes.ComboChartConfiguration)
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenComboChartFieldWells(apiObject *awstypes.ComboChartFieldWells) []interface{} {
+func flattenComboChartFieldWells(apiObject *awstypes.ComboChartFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComboChartAggregatedFieldWells != nil {
 		tfMap["combo_chart_aggregated_field_wells"] = flattenComboChartAggregatedFieldWells(apiObject.ComboChartAggregatedFieldWells)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenComboChartAggregatedFieldWells(apiObject *awstypes.ComboChartAggregatedFieldWells) []interface{} {
+func flattenComboChartAggregatedFieldWells(apiObject *awstypes.ComboChartAggregatedFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.BarValues != nil {
 		tfMap["bar_values"] = flattenMeasureFields(apiObject.BarValues)
@@ -384,15 +384,15 @@ func flattenComboChartAggregatedFieldWells(apiObject *awstypes.ComboChartAggrega
 		tfMap["line_values"] = flattenMeasureFields(apiObject.LineValues)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenComboChartSortConfiguration(apiObject *awstypes.ComboChartSortConfiguration) []interface{} {
+func flattenComboChartSortConfiguration(apiObject *awstypes.ComboChartSortConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CategoryItemsLimit != nil {
 		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
@@ -407,5 +407,5 @@ func flattenComboChartSortConfiguration(apiObject *awstypes.ComboChartSortConfig
 		tfMap["color_sort"] = flattenFieldSortOptions(apiObject.ColorSort)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

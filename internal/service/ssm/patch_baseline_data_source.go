@@ -81,6 +81,10 @@ func dataSourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
+			"available_security_updates_compliance_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"default_baseline": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -163,7 +167,7 @@ func dataSourcePatchBaseline() *schema.Resource {
 	}
 }
 
-func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -240,6 +244,7 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta int
 	if err := d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting approval_rule: %s", err)
 	}
+	d.Set("available_security_updates_compliance_status", output.AvailableSecurityUpdatesComplianceStatus)
 	d.Set("default_baseline", baseline.DefaultBaseline)
 	d.Set(names.AttrDescription, baseline.BaselineDescription)
 	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {

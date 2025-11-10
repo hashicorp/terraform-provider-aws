@@ -49,7 +49,7 @@ var (
 	FindHubByName                             = findHubByName
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
-	FindImageVersionByName                    = findImageVersionByName
+	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
 	FindMlflowTrackingServerByName            = findMlflowTrackingServerByName
 	FindModelByName                           = findModelByName
 	FindModelPackageGroupByName               = findModelPackageGroupByName

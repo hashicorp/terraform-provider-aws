@@ -19,7 +19,7 @@ func TestSubnetMigrateState(t *testing.T) {
 		ID           string
 		Attributes   map[string]string
 		Expected     string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_1_without_value": {
 			StateVersion: 0,

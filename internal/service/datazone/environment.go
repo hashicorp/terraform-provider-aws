@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -35,8 +36,8 @@ import (
 )
 
 // @FrameworkResource("aws_datazone_environment", name="Environment")
-func newResourceEnvironment(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEnvironment{}
+func newEnvironmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &environmentResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultUpdateTimeout(10 * time.Minute)
@@ -49,16 +50,12 @@ const (
 	ResNameEnvironment = "Environment"
 )
 
-type resourceEnvironment struct {
-	framework.ResourceWithConfigure
+type environmentResource struct {
+	framework.ResourceWithModel[environmentResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceEnvironment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_environment"
-}
-
-func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *environmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"account_identifier": schema.StringAttribute{
@@ -146,6 +143,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceUserParametersData](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
+					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -167,10 +165,10 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *environmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan resourceEnvironmentData
+	var plan environmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
 	if resp.Diagnostics.HasError() {
@@ -223,7 +221,7 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &state, fwflex.WithIgnoredFieldNames([]string{"UserParameters"}))...)
+	flattenEnvironment(ctx, output, &state, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -231,10 +229,10 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceEnvironment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *environmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceEnvironmentData
+	var state environmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -256,43 +254,53 @@ func (r *resourceEnvironment) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, fwflex.WithIgnoredFieldNamesAppend("UserParameters"),
-		fwflex.WithFieldNamePrefix("Environment"),
-	)...)
-
+	flattenEnvironment(ctx, out, &state, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	state.AccountIdentifier = fwflex.StringToFramework(ctx, out.AwsAccountId)
-	state.AccountRegion = fwflex.StringToFramework(ctx, out.AwsAccountRegion)
-	state.ProjectIdentifier = fwflex.StringToFramework(ctx, out.ProjectId)
-	state.ProfileIdentifier = fwflex.StringToFramework(ctx, out.EnvironmentProfileId)
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
-func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+
+func (r *environmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan, state resourceEnvironmentData
+	var plan, state environmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.GlossaryTerms.Equal(state.GlossaryTerms) {
-		in := &datazone.UpdateEnvironmentInput{}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
+	var (
+		needsUpdate bool
+	)
+	input := datazone.UpdateEnvironmentInput{
+		DomainIdentifier: plan.DomainIdentifier.ValueStringPointer(),
+		Identifier:       plan.Id.ValueStringPointer(),
+	}
 
-		if resp.Diagnostics.HasError() {
+	if !plan.Name.Equal(state.Name) {
+		needsUpdate = true
+		input.Name = plan.Name.ValueStringPointer()
+	}
+
+	if !plan.Description.Equal(state.Description) {
+		needsUpdate = true
+		input.Description = plan.Description.ValueStringPointer()
+	}
+
+	if !plan.GlossaryTerms.Equal(state.GlossaryTerms) {
+		needsUpdate = true
+		d := fwflex.Expand(ctx, &plan.GlossaryTerms, &input.GlossaryTerms)
+		resp.Diagnostics.Append(d...)
+		if d.HasError() {
 			return
 		}
-		in.Identifier = state.Id.ValueStringPointer()
+	}
 
-		out, err := conn.UpdateEnvironment(ctx, in)
+	if needsUpdate {
+		out, err := conn.UpdateEnvironment(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameEnvironment, plan.Id.String(), err),
@@ -310,7 +318,7 @@ func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateReq
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		_, err = waitEnvironmentUpdated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Id.ValueString(), updateTimeout)
+		output, err := waitEnvironmentUpdated(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Id.ValueString(), updateTimeout)
 
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -319,15 +327,20 @@ func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateReq
 			)
 			return
 		}
+
+		flattenEnvironment(ctx, output, &plan, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *environmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceEnvironmentData
+	var state environmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -365,7 +378,7 @@ func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceEnvironment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *environmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 2 {
@@ -379,8 +392,8 @@ func (r *resourceEnvironment) ImportState(ctx context.Context, req resource.Impo
 
 func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusCreating),
-		Target:                    enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusActive),
+		Pending:                   enum.Slice(awstypes.EnvironmentStatusCreating),
+		Target:                    enum.Slice(awstypes.EnvironmentStatusActive),
 		Refresh:                   statusEnvironment(ctx, conn, domainId, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -389,7 +402,7 @@ func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*datazone.GetEnvironmentOutput); ok {
-		if status, deployment := out.Status, out.LastDeployment; status == awstypes.EnvironmentStatusCreateFailed && deployment != nil {
+		if status, deployment := out.Status, out.LastDeployment; (status == awstypes.EnvironmentStatusCreateFailed || status == awstypes.EnvironmentStatusValidationFailed) && deployment != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
 		}
 		return out, err
@@ -400,8 +413,8 @@ func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId
 
 func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusUpdating),
-		Target:                    enum.Slice[awstypes.EnvironmentStatus](awstypes.EnvironmentStatusActive),
+		Pending:                   enum.Slice(awstypes.EnvironmentStatusUpdating),
+		Target:                    enum.Slice(awstypes.EnvironmentStatusActive),
 		Refresh:                   statusEnvironment(ctx, conn, domainId, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -421,10 +434,12 @@ func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId
 
 func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EnvironmentStatusDeleting, awstypes.EnvironmentStatusActive),
-		Target:  []string{},
-		Refresh: statusEnvironment(ctx, conn, domainId, id),
-		Timeout: timeout,
+		Pending:      enum.Slice(awstypes.EnvironmentStatusActive, awstypes.EnvironmentStatusDeleting, awstypes.EnvironmentStatusDeleted),
+		Target:       []string{},
+		Refresh:      statusEnvironment(ctx, conn, domainId, id),
+		Timeout:      timeout,
+		Delay:        10 * time.Second,
+		PollInterval: 5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -439,7 +454,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId
 }
 
 func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findEnvironmentByID(ctx, conn, domainId, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -479,10 +494,11 @@ func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId, i
 	return out, nil
 }
 
-type resourceEnvironmentData struct {
+type environmentResourceModel struct {
+	framework.WithRegionModel
 	AccountIdentifier    types.String                                                      `tfsdk:"account_identifier"`
 	AccountRegion        types.String                                                      `tfsdk:"account_region"`
-	BlueprintId          types.String                                                      `tfsdk:"blueprint_identifier"`
+	BlueprintIdentifier  types.String                                                      `tfsdk:"blueprint_identifier"`
 	CreatedAt            timetypes.RFC3339                                                 `tfsdk:"created_at"`
 	CreatedBy            types.String                                                      `tfsdk:"created_by"`
 	Description          types.String                                                      `tfsdk:"description"`
@@ -497,6 +513,23 @@ type resourceEnvironmentData struct {
 	ProvisionedResources fwtypes.ListNestedObjectValueOf[resourceProvisionedResourcesData] `tfsdk:"provisioned_resources"`
 	Timeouts             timeouts.Value                                                    `tfsdk:"timeouts"`
 	UserParameters       fwtypes.ListNestedObjectValueOf[resourceUserParametersData]       `tfsdk:"user_parameters"`
+}
+
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
+func flattenEnvironment(ctx context.Context, apiObject *datazone.GetEnvironmentOutput, model *environmentResourceModel, diags *diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, apiObject, model, fwflex.WithIgnoredFieldNamesAppend("UserParameters"))...)
+
+	model.AccountIdentifier = fwflex.StringToFramework(ctx, apiObject.AwsAccountId)
+	model.AccountRegion = fwflex.StringToFramework(ctx, apiObject.AwsAccountRegion)
+	model.BlueprintIdentifier = fwflex.StringToFramework(ctx, apiObject.EnvironmentBlueprintId)
+	model.ProfileIdentifier = fwflex.StringToFramework(ctx, apiObject.EnvironmentProfileId)
+	model.ProjectIdentifier = fwflex.StringToFramework(ctx, apiObject.ProjectId)
+
+	if model.UserParameters.IsNull() { // Import
+		importUserParameters(ctx, &model.UserParameters, apiObject.UserParameters, diags)
+	} else {
+		populateUserParameters(ctx, &model.UserParameters, apiObject.UserParameters, diags)
+	}
 }
 
 type resourceLastDeployment struct {
@@ -523,4 +556,39 @@ type resourceProvisionedResourcesData struct {
 type resourceUserParametersData struct {
 	Name  types.String `tfsdk:"name"`
 	Value types.String `tfsdk:"value"`
+}
+
+func importUserParameters(ctx context.Context, stateUserParams *fwtypes.ListNestedObjectValueOf[resourceUserParametersData], userParameters []awstypes.CustomParameter, diags *diag.Diagnostics) {
+	params := make([]resourceUserParametersData, 0, len(userParameters))
+	for _, param := range userParameters {
+		// If `DefaultValue` is nil, no value has been set
+		if param.DefaultValue != nil {
+			params = append(params, resourceUserParametersData{
+				Name:  fwflex.StringToFramework(ctx, param.KeyName),
+				Value: fwflex.StringToFramework(ctx, param.DefaultValue),
+			})
+		}
+	}
+	s, d := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, params)
+	diags.Append(d...)
+	if d.HasError() {
+		return
+	}
+	*stateUserParams = s
+}
+
+func populateUserParameters(ctx context.Context, stateUserParams *fwtypes.ListNestedObjectValueOf[resourceUserParametersData], userParameters []awstypes.CustomParameter, diags *diag.Diagnostics) {
+	params, d := stateUserParams.ToSlice(ctx)
+	diags.Append(d...)
+	if d.HasError() {
+		return
+	}
+	for _, p := range params {
+		for _, up := range userParameters {
+			if p.Name.ValueString() == aws.ToString(up.KeyName) {
+				p.Value = fwflex.StringToFramework(ctx, up.DefaultValue)
+				break
+			}
+		}
+	}
 }

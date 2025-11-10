@@ -26,15 +26,21 @@ import (
 )
 
 // @SDKResource("aws_organizations_delegated_administrator", name="Delegated Administrator")
+// @IdentityAttribute("service_principal")
+// @IdentityAttribute("delegated_account_id", resourceAttributeName="account_id")
+// @IdAttrFormat("{account_id}/{service_principal}")
+// @ImportIDHandler("delegatedAdministratorImportID")
+// @Testing(identityTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.DelegatedAdministrator")
+// @Testing(serialize=true)
+// @Testing(useAlternateAccount=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
+// @Testing(generator=false)
 func resourceDelegatedAdministrator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDelegatedAdministratorCreate,
 		ReadWithoutTimeout:   resourceDelegatedAdministratorRead,
 		DeleteWithoutTimeout: resourceDelegatedAdministratorDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrAccountID: {
@@ -81,7 +87,7 @@ func resourceDelegatedAdministrator() *schema.Resource {
 	}
 }
 
-func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -104,14 +110,12 @@ func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceDelegatedAdministratorRead(ctx, d, meta)...)
 }
 
-func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	accountID, servicePrincipal, err := delegatedAdministratorParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	accountID := d.Get(names.AttrAccountID).(string)
+	servicePrincipal := d.Get("service_principal").(string)
 
 	delegatedAccount, err := findDelegatedAdministratorByTwoPartKey(ctx, conn, accountID, servicePrincipal)
 
@@ -138,17 +142,14 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	accountID, servicePrincipal, err := delegatedAdministratorParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	accountID := d.Get(names.AttrAccountID).(string)
+	servicePrincipal := d.Get("service_principal").(string)
 
-	log.Printf("[DEBUG] Deleting Organizations Delegated Administrator: %s", d.Id())
-	_, err = conn.DeregisterDelegatedAdministrator(ctx, &organizations.DeregisterDelegatedAdministratorInput{
+	_, err := conn.DeregisterDelegatedAdministrator(ctx, &organizations.DeregisterDelegatedAdministratorInput{
 		AccountId:        aws.String(accountID),
 		ServicePrincipal: aws.String(servicePrincipal),
 	})
@@ -165,11 +166,11 @@ func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.Resourc
 }
 
 func findDelegatedAdministratorByTwoPartKey(ctx context.Context, conn *organizations.Client, accountID, servicePrincipal string) (*awstypes.DelegatedAdministrator, error) {
-	input := &organizations.ListDelegatedAdministratorsInput{
+	input := organizations.ListDelegatedAdministratorsInput{
 		ServicePrincipal: aws.String(servicePrincipal),
 	}
 
-	return findDelegatedAdministrator(ctx, conn, input, func(v *awstypes.DelegatedAdministrator) bool {
+	return findDelegatedAdministrator(ctx, conn, &input, func(v *awstypes.DelegatedAdministrator) bool {
 		return aws.ToString(v.Id) == accountID
 	})
 }
@@ -208,18 +209,25 @@ func findDelegatedAdministrators(ctx context.Context, conn *organizations.Client
 const delegatedAdministratorResourceIDSeparator = "/"
 
 func delegatedAdministratorCreateResourceID(accountID, servicePrincipal string) string {
-	parts := []string{accountID, servicePrincipal}
-	id := strings.Join(parts, delegatedAdministratorResourceIDSeparator)
-
-	return id
+	return accountID + delegatedAdministratorResourceIDSeparator + servicePrincipal
 }
 
-func delegatedAdministratorParseResourceID(id string) (string, string, error) {
+type delegatedAdministratorImportID struct{}
+
+func (delegatedAdministratorImportID) Create(d *schema.ResourceData) string {
+	return delegatedAdministratorCreateResourceID(d.Get(names.AttrAccountID).(string), d.Get("service_principal").(string))
+}
+
+func (delegatedAdministratorImportID) Parse(id string) (string, map[string]string, error) {
 	parts := strings.Split(id, delegatedAdministratorResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
+		result := map[string]string{
+			names.AttrAccountID: parts[0],
+			"service_principal": parts[1],
+		}
+		return id, result, nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected ACCOUNTID%[2]sSERVICEPRINCIPAL", id, delegatedAdministratorResourceIDSeparator)
+	return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected ACCOUNTID%[2]sSERVICEPRINCIPAL", id, delegatedAdministratorResourceIDSeparator)
 }

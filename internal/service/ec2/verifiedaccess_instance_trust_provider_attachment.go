@@ -46,7 +46,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachment() *schema.Resource {
 	}
 }
 
-func resourceVerifiedAccessInstanceTrustProviderAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceTrustProviderAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -70,7 +70,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentCreate(ctx context.Con
 	return append(diags, resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -97,7 +97,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx context.Conte
 	return diags
 }
 
-func resourceVerifiedAccessInstanceTrustProviderAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceTrustProviderAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -107,11 +107,12 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentDelete(ctx context.Con
 	}
 
 	log.Printf("[INFO] Deleting Verified Access Instance Trust Provider Attachment: %s", d.Id())
-	_, err = conn.DetachVerifiedAccessTrustProvider(ctx, &ec2.DetachVerifiedAccessTrustProviderInput{
+	input := ec2.DetachVerifiedAccessTrustProviderInput{
 		ClientToken:                   aws.String(id.UniqueId()),
 		VerifiedAccessInstanceId:      aws.String(vaiID),
 		VerifiedAccessTrustProviderId: aws.String(vatpID),
-	})
+	}
+	_, err = conn.DetachVerifiedAccessTrustProvider(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) ||
 		tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not attached to instance") {

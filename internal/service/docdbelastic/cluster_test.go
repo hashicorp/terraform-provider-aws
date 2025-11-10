@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdbelastic/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdocdbelastic "github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,7 +49,9 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "docdb-elastic", regexache.MustCompile(`cluster/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
@@ -55,7 +59,6 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
 			{
@@ -175,6 +178,7 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "docdb-elastic", regexache.MustCompile(`cluster/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
@@ -183,7 +187,6 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
 			{
@@ -191,6 +194,7 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "docdb-elastic", regexache.MustCompile(`cluster/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "4"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
@@ -200,7 +204,6 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
 			{
@@ -208,6 +211,7 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "docdb-elastic", regexache.MustCompile(`cluster/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "4"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
@@ -217,7 +221,6 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
 		},

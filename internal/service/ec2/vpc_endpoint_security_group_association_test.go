@@ -38,6 +38,13 @@ func TestAccVPCEndpointSecurityGroupAssociation_basic(t *testing.T) {
 					testAccCheckVPCEndpointSecurityGroupAssociationNumAssociations(&v, 2),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccVPCEndpointSecurityGroupAssociationImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replace_default_association"},
+			},
 		},
 	})
 }
@@ -112,6 +119,13 @@ func TestAccVPCEndpointSecurityGroupAssociation_replaceDefaultAssociation(t *tes
 					testAccCheckVPCEndpointSecurityGroupAssociationNumAssociations(&v, 1),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccVPCEndpointSecurityGroupAssociationImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replace_default_association"},
+			},
 		},
 	})
 }
@@ -173,6 +187,18 @@ func testAccCheckVPCEndpointSecurityGroupAssociationExists(ctx context.Context, 
 	}
 }
 
+func testAccVPCEndpointSecurityGroupAssociationImportStateIdFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		id := fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["security_group_id"])
+		return id, nil
+	}
+}
+
 func testAccCheckVPCEndpointSecurityGroupAssociationNumAssociations(v *awstypes.VpcEndpoint, n int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len := len(v.Groups); len != n {
@@ -207,7 +233,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.ec2"
   vpc_endpoint_type = "Interface"
 
   tags = {

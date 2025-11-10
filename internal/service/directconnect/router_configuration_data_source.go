@@ -76,7 +76,7 @@ func dataSourceRouterConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -120,8 +120,8 @@ func findRouterConfigurationByTwoPartKey(ctx context.Context, conn *directconnec
 	return output, nil
 }
 
-func flattenRouter(apiObject *awstypes.RouterType) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenRouter(apiObject *awstypes.RouterType) []any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Platform; v != nil {
 		tfMap["platform"] = aws.ToString(v)
@@ -147,5 +147,5 @@ func flattenRouter(apiObject *awstypes.RouterType) []interface{} {
 		tfMap["xslt_template_name_for_mac_sec"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

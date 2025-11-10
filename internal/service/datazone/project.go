@@ -33,15 +33,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_project", name="Project")
-func newResourceProject(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceProject{}
+func newProjectResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &projectResource{}
+
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultDeleteTimeout(10 * time.Minute)
+
 	return r, nil
 }
 
@@ -49,16 +52,12 @@ const (
 	ResNameProject = "Project"
 )
 
-type resourceProject struct {
-	framework.ResourceWithConfigure
+type projectResource struct {
+	framework.ResourceWithModel[projectResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceProject) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_project"
-}
-
-func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
@@ -80,7 +79,6 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 			"glossary_terms": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
-
 				Validators: []validator.List{
 					listvalidator.SizeBetween(1, 20),
 					listvalidator.ValueStringsAre(stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}$`), "must conform to: ^[a-zA-Z0-9_-]{1,36}$ ")),
@@ -140,8 +138,8 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceProjectData
+func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan projectResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -201,9 +199,9 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var state resourceProjectData
+	var state projectResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -230,10 +228,10 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *projectResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan, state resourceProjectData
+	var plan, state projectResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -272,10 +270,10 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *projectResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceProjectData
+	var state projectResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -290,10 +288,10 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	_, err := conn.DeleteProject(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
-			return
-		}
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+	if err != nil && !errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "is already DELETING") {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameProject, state.ID.String(), err),
 			err.Error(),
@@ -304,7 +302,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitProjectDeleted(ctx, conn, state.DomainIdentifier.ValueString(), state.ID.ValueString(), deleteTimeout)
 
-	if err != nil && !errs.IsA[*awstypes.AccessDeniedException](err) {
+	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForDeletion, ResNameProject, state.ID.String(), err),
 			err.Error(),
@@ -313,7 +311,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *resourceProject) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *projectResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ":")
 
 	if len(parts) != 2 {
@@ -345,10 +343,12 @@ func waitProjectCreated(ctx context.Context, conn *datazone.Client, domain strin
 
 func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain string, identifier string, timeout time.Duration) (*datazone.GetProjectOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
-		Target:  []string{},
-		Refresh: statusProject(ctx, conn, domain, identifier),
-		Timeout: timeout,
+		Pending:      enum.Slice(awstypes.ProjectStatusDeleting, awstypes.ProjectStatusActive),
+		Target:       []string{},
+		Refresh:      statusProject(ctx, conn, domain, identifier),
+		Delay:        5 * time.Second,
+		PollInterval: 10 * time.Second,
+		Timeout:      timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -360,7 +360,7 @@ func waitProjectDeleted(ctx context.Context, conn *datazone.Client, domain strin
 }
 
 func statusProject(ctx context.Context, conn *datazone.Client, domain string, identifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findProjectByID(ctx, conn, domain, identifier)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -370,7 +370,15 @@ func statusProject(ctx context.Context, conn *datazone.Client, domain string, id
 			return nil, "", err
 		}
 
-		return out, aws.ToString((*string)(&out.ProjectStatus)), nil
+		if len(out.FailureReasons) > 0 {
+			if err := errors.Join(tfslices.ApplyToAll(out.FailureReasons, func(e awstypes.ProjectDeletionError) error {
+				return errors.New(aws.ToString(e.Message))
+			})...); err != nil {
+				return nil, "", err
+			}
+		}
+
+		return out, string(out.ProjectStatus), nil
 	}
 }
 
@@ -390,14 +398,15 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 		return nil, err
 	}
 
-	if out == nil || !(out.FailureReasons == nil) {
+	if out == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
 	return out, nil
 }
 
-type resourceProjectData struct {
+type projectResourceModel struct {
+	framework.WithRegionModel
 	Description       types.String                                            `tfsdk:"description"`
 	DomainIdentifier  types.String                                            `tfsdk:"domain_identifier"`
 	Name              types.String                                            `tfsdk:"name"`

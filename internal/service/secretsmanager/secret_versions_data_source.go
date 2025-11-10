@@ -21,23 +21,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_secretsmanager_secret_versions, name="Secret Versions")
-func newDataSourceSecretVersions(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceSecretVersions{}, nil
+func newSecretVersionsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &secretVersionsDataSource{}, nil
 }
 
 const (
 	DSNameSecretVersions = "Secret Versions Data Source"
 )
 
-type dataSourceSecretVersions struct {
-	framework.DataSourceWithConfigure
+type secretVersionsDataSource struct {
+	framework.DataSourceWithModel[secretVersionsDataSourceModel]
 }
 
-func (d *dataSourceSecretVersions) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_secretsmanager_secret_versions"
-}
-
-func (d *dataSourceSecretVersions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *secretVersionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -55,18 +51,15 @@ func (d *dataSourceSecretVersions) Schema(ctx context.Context, req datasource.Sc
 			"secret_id": schema.StringAttribute{
 				Required: true,
 			},
-			"versions": schema.ListAttribute{
-				Computed:   true,
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsVersionsData](ctx),
-			},
+			"versions": framework.DataSourceComputedListOfObjectAttribute[dsVersionsData](ctx),
 		},
 	}
 }
 
-func (d *dataSourceSecretVersions) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *secretVersionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().SecretsManagerClient(ctx)
 
-	var data dsSecretVersionsData
+	var data secretVersionsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -82,7 +75,7 @@ func (d *dataSourceSecretVersions) Read(ctx context.Context, req datasource.Read
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.SecretsManager, create.ErrActionReading, DSNameSecretVersions, data.Arn.String(), err),
+				create.ProblemStandardMessage(names.SecretsManager, create.ErrActionReading, DSNameSecretVersions, data.ARN.String(), err),
 				err.Error(),
 			)
 			return
@@ -106,8 +99,9 @@ func (d *dataSourceSecretVersions) Read(ctx context.Context, req datasource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dsSecretVersionsData struct {
-	Arn               types.String                                    `tfsdk:"arn"`
+type secretVersionsDataSourceModel struct {
+	framework.WithRegionModel
+	ARN               types.String                                    `tfsdk:"arn"`
 	Name              types.String                                    `tfsdk:"name"`
 	IncludeDeprecated types.Bool                                      `tfsdk:"include_deprecated"`
 	SecretID          types.String                                    `tfsdk:"secret_id"`

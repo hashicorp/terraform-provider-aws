@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func resourceTaskDefinitionMigrateState(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+func resourceTaskDefinitionMigrateState(v int, is *terraform.InstanceState, meta any) (*terraform.InstanceState, error) {
 	ctx := context.Background()
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 

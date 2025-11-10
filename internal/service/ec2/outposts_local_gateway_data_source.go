@@ -54,7 +54,7 @@ func dataSourceLocalGateway() *schema.Resource {
 	}
 }
 
-func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -72,7 +72,7 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 
 	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+			svcTags(tftags.New(ctx, tags.(map[string]any))),
 		)...)
 	}
 

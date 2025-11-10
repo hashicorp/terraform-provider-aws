@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) Name of the ACL. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `userNames` - (Optional) Set of MemoryDB user names to be included in this ACL.
@@ -83,4 +84,4 @@ Using `terraform import`, import an ACL using the `name`. For example:
 % terraform import aws_memorydb_acl.example my-acl
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-81b0aafca8273c497e315e23df245bdaa7eca67e9dec48c672755900e7eb97ca -->
+<!-- cache-key: cdktf-0.20.8 input-41fd55bfc22eb551d9a385c764c4d2b8793ef1c2d51f3508d97353827cfc662e -->

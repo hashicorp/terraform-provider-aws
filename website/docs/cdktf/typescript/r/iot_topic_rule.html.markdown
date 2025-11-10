@@ -98,6 +98,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the rule.
 * `description` - (Optional) The description of the rule.
 * `enabled` - (Required) Specifies whether the rule is enabled.
@@ -286,4 +289,4 @@ Using `terraform import`, import IoT Topic Rules using the `name`. For example:
 % terraform import aws_iot_topic_rule.rule <name>
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ee820e8d0c64a28bff215e3aea3a653758f560996e79bc2b74ed2938a5d291c8 -->
+<!-- cache-key: cdktf-0.20.8 input-8c47ffad2f9a4b9a8ecbefddfde63961fecc967d1991c264666a65d45aca693a -->

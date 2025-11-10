@@ -49,15 +49,16 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `aclName` - (Required) The name of the Access Control List to associate with the cluster.
-* `engine` - (Optional) The engine that will run on your nodes. Supported values are `redis` and `valkey`.
-* `engineVersion` - (Optional) Version number of the engine to be used for the cluster. Downgrades are not supported.
 * `nodeType` - (Required) The compute and memory capacity of the nodes in the cluster. See AWS documentation on [supported node types](https://docs.aws.amazon.com/memorydb/latest/devguide/nodes.supportedtypes.html) as well as [vertical scaling](https://docs.aws.amazon.com/memorydb/latest/devguide/cluster-vertical-scaling.html).
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoMinorVersionUpgrade` - (Optional, Forces new resource) When set to `true`, the cluster will automatically receive minor engine version upgrades after launch. Defaults to `true`.
 * `dataTiering` - (Optional, Forces new resource) Enables data tiering. This option is not supported by all instance types. For more information, see [Data tiering](https://docs.aws.amazon.com/memorydb/latest/devguide/data-tiering.html).
 * `description` - (Optional) Description for the cluster. Defaults to `"Managed by Terraform"`.
+* `engine` - (Optional) The engine that will run on your nodes. Supported values are `redis` and `valkey`.
+* `engineVersion` - (Optional) Version number of the engine to be used for the cluster. Downgrades are not supported.
 * `finalSnapshotName` - (Optional) Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
 * `kmsKeyArn` - (Optional, Forces new resource) ARN of the KMS key used to encrypt the cluster at rest.
 * `maintenanceWindow` - (Optional) Specifies the weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:23:00-mon:01:30`.
@@ -65,6 +66,7 @@ The following arguments are optional:
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `numReplicasPerShard` - (Optional) The number of replicas to apply to each shard, up to a maximum of 5. Defaults to `1` (i.e. 2 nodes per shard).
 * `numShards` - (Optional) The number of shards in the cluster. Defaults to `1`.
+* `multiRegionClusterName` - (Optional) The multi region cluster identifier specified on `aws_memorydb_multi_region_cluster`.
 * `parameterGroupName` - (Optional) The name of the parameter group associated with the cluster.
 * `port` - (Optional, Forces new resource) The port number on which each of the nodes accepts connections. Defaults to `6379`.
 * `securityGroupIds` - (Optional) Set of VPC Security Group ID-s to associate with this cluster.
@@ -136,4 +138,4 @@ Using `terraform import`, import a cluster using the `name`. For example:
 % terraform import aws_memorydb_cluster.example my-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bd7eba75b50da85dc3b9f8f15ceb631cc3be04863e150d5d499d34a64da7128e -->
+<!-- cache-key: cdktf-0.20.8 input-71331b8be8155eb6708dc73cb936cd42adeefbfe738a292e97844c77abede974 -->

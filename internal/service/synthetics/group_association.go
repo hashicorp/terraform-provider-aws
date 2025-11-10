@@ -55,7 +55,7 @@ func ResourceGroupAssociation() *schema.Resource {
 	}
 }
 
-func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
@@ -82,7 +82,7 @@ func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceGroupAssociationRead(ctx, d, meta)...)
 }
 
-func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
@@ -112,7 +112,7 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 

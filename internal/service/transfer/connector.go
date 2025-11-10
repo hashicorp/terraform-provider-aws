@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -142,12 +141,10 @@ func resourceConnector() *schema.Resource {
 				Required: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -158,7 +155,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("as2_config"); ok {
-		input.As2Config = expandAs2ConnectorConfig(v.([]interface{}))
+		input.As2Config = expandAs2ConnectorConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("logging_role"); ok {
@@ -170,7 +167,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("sftp_config"); ok {
-		input.SftpConfig = expandSftpConnectorConfig(v.([]interface{}))
+		input.SftpConfig = expandSftpConnectorConfig(v.([]any))
 	}
 
 	output, err := conn.CreateConnector(ctx, input)
@@ -184,7 +181,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceConnectorRead(ctx, d, meta)...)
 }
 
-func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -218,7 +215,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -232,7 +229,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("as2_config") {
-			input.As2Config = expandAs2ConnectorConfig(d.Get("as2_config").([]interface{}))
+			input.As2Config = expandAs2ConnectorConfig(d.Get("as2_config").([]any))
 		}
 
 		if d.HasChange("logging_role") {
@@ -244,7 +241,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("sftp_config") {
-			input.SftpConfig = expandSftpConnectorConfig(d.Get("sftp_config").([]interface{}))
+			input.SftpConfig = expandSftpConnectorConfig(d.Get("sftp_config").([]any))
 		}
 
 		if d.HasChange(names.AttrURL) {
@@ -261,14 +258,15 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceConnectorRead(ctx, d, meta)...)
 }
 
-func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Transfer Connector: %s", d.Id())
-	_, err := conn.DeleteConnector(ctx, &transfer.DeleteConnectorInput{
+	input := transfer.DeleteConnectorInput{
 		ConnectorId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteConnector(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -306,12 +304,12 @@ func findConnectorByID(ctx context.Context, conn *transfer.Client, id string) (*
 	return output.Connector, nil
 }
 
-func expandAs2ConnectorConfig(tfList []interface{}) *awstypes.As2ConnectorConfig {
+func expandAs2ConnectorConfig(tfList []any) *awstypes.As2ConnectorConfig {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &awstypes.As2ConnectorConfig{
 		Compression:         awstypes.CompressionEnum(tfMap["compression"].(string)),
@@ -327,12 +325,12 @@ func expandAs2ConnectorConfig(tfList []interface{}) *awstypes.As2ConnectorConfig
 	return apiObject
 }
 
-func expandSftpConnectorConfig(tfList []interface{}) *awstypes.SftpConnectorConfig {
+func expandSftpConnectorConfig(tfList []any) *awstypes.SftpConnectorConfig {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &awstypes.SftpConnectorConfig{
 		UserSecretId: aws.String(tfMap["user_secret_id"].(string)),
@@ -345,12 +343,12 @@ func expandSftpConnectorConfig(tfList []interface{}) *awstypes.SftpConnectorConf
 	return apiObject
 }
 
-func flattenAs2ConnectorConfig(apiObject *awstypes.As2ConnectorConfig) []interface{} {
+func flattenAs2ConnectorConfig(apiObject *awstypes.As2ConnectorConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"compression":           apiObject.Compression,
 		"encryption_algorithm":  apiObject.EncryptionAlgorithm,
 		"mdn_response":          apiObject.MdnResponse,
@@ -370,18 +368,18 @@ func flattenAs2ConnectorConfig(apiObject *awstypes.As2ConnectorConfig) []interfa
 		tfMap["partner_profile_id"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSftpConnectorConfig(apiObject *awstypes.SftpConnectorConfig) []interface{} {
+func flattenSftpConnectorConfig(apiObject *awstypes.SftpConnectorConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"trusted_host_keys": apiObject.TrustedHostKeys,
 		"user_secret_id":    aws.ToString(apiObject.UserSecretId),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

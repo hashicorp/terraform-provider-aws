@@ -34,19 +34,14 @@ resource "aws_subnet" "subnet" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-security group in the current region. The given filters must match exactly one
-security group whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
-
 * `id` - (Optional) Id of the specific security group to retrieve.
-
 * `name` - (Optional) Name that the desired security group must have.
-
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired security group.
-
 * `vpc_id` - (Optional) Id of the VPC that the desired security group belongs to.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
@@ -54,7 +49,6 @@ which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroups.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A Security Group will be selected if any one of the given values matches.
 

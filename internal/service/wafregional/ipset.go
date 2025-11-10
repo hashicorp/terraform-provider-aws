@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -64,13 +65,13 @@ func resourceIPSet() *schema.Resource {
 	}
 }
 
-func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &wafregional.CreateIPSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -88,7 +89,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceIPSetUpdate(ctx, d, meta)...)
 }
 
-func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 
@@ -120,7 +121,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region(ctx)
@@ -136,20 +137,20 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceIPSetRead(ctx, d, meta)...)
 }
 
-func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region(ctx)
 
 	if oldD := d.Get("ip_set_descriptor").(*schema.Set).List(); len(oldD) > 0 {
-		var newD []interface{}
+		var newD []any
 		if err := updateIPSet(ctx, conn, region, d.Id(), oldD, newD); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	log.Printf("[INFO] Deleting WAF Regional IPSet: %s", d.Id())
-	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &wafregional.DeleteIPSetInput{
 			ChangeToken: token,
 			IPSetId:     aws.String(d.Id()),
@@ -194,9 +195,9 @@ func findIPSetByID(ctx context.Context, conn *wafregional.Client, id string) (*a
 	return output.IPSet, nil
 }
 
-func updateIPSet(ctx context.Context, conn *wafregional.Client, region, ipSetID string, oldD, newD []interface{}) error {
+func updateIPSet(ctx context.Context, conn *wafregional.Client, region, ipSetID string, oldD, newD []any) error {
 	for _, ipSetUpdates := range diffIPSetDescriptors(oldD, newD) {
-		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (any, error) {
 			input := &wafregional.UpdateIPSetInput{
 				ChangeToken: token,
 				IPSetId:     aws.String(ipSetID),
@@ -214,11 +215,11 @@ func updateIPSet(ctx context.Context, conn *wafregional.Client, region, ipSetID 
 	return nil
 }
 
-func flattenIPSetDescriptors(in []awstypes.IPSetDescriptor) []interface{} {
-	descriptors := make([]interface{}, len(in))
+func flattenIPSetDescriptors(in []awstypes.IPSetDescriptor) []any {
+	descriptors := make([]any, len(in))
 
 	for i, descriptor := range in {
-		d := map[string]interface{}{
+		d := map[string]any{
 			names.AttrType:  descriptor.Type,
 			names.AttrValue: *descriptor.Value,
 		}
@@ -228,7 +229,7 @@ func flattenIPSetDescriptors(in []awstypes.IPSetDescriptor) []interface{} {
 	return descriptors
 }
 
-func diffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
+func diffIPSetDescriptors(oldD, newD []any) [][]awstypes.IPSetUpdate {
 	// WAF requires UpdateIPSet operations be split into batches of 1000 Updates
 	const (
 		ipSetUpdatesLimit = 1000
@@ -237,10 +238,10 @@ func diffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
 	updatesBatches := make([][]awstypes.IPSetUpdate, 0)
 
 	for _, od := range oldD {
-		descriptor := od.(map[string]interface{})
+		descriptor := od.(map[string]any)
 
 		if idx, contains := sliceContainsMap(newD, descriptor); contains {
-			newD = append(newD[:idx], newD[idx+1:]...)
+			newD = slices.Delete(newD, idx, idx+1)
 			continue
 		}
 
@@ -259,7 +260,7 @@ func diffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
 	}
 
 	for _, nd := range newD {
-		descriptor := nd.(map[string]interface{})
+		descriptor := nd.(map[string]any)
 
 		if len(updates) == ipSetUpdatesLimit {
 			updatesBatches = append(updatesBatches, updates)

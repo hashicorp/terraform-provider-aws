@@ -33,7 +33,7 @@ func TestAccNetworkManagerDevice_basic(t *testing.T) {
 				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "networkmanager", "device/{global_network_id}/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "aws_location.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "0"),
@@ -73,52 +73,6 @@ func TestAccNetworkManagerDevice_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceDevice(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccNetworkManagerDevice_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_device.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDeviceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDeviceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccDeviceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -276,43 +230,6 @@ resource "aws_networkmanager_device" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
 }
 `, rName)
-}
-
-func testAccDeviceConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_networkmanager_global_network" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_networkmanager_device" "test" {
-  global_network_id = aws_networkmanager_global_network.test.id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccDeviceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_networkmanager_global_network" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_networkmanager_device" "test" {
-  global_network_id = aws_networkmanager_global_network.test.id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccDeviceConfig_allAttributes(rName string) string {

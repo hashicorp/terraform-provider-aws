@@ -32,9 +32,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Host")
+// @FrameworkResource("aws_codeconnections_host", name="Host")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Host")
+// @Testing(preIdentityVersion="v5.100.0")
 func newHostResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hostResource{}
 
@@ -50,20 +52,16 @@ const (
 )
 
 type hostResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[hostResourceModel]
 	framework.WithTimeouts
-}
-
-func (r *hostResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_codeconnections_host"
+	framework.WithImportByIdentity
 }
 
 func (r *hostResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			names.AttrID:  framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -108,7 +106,7 @@ func (r *hostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 							ElementType: types.StringType,
 						},
 						"tls_certificate": schema.StringAttribute{
-							Required: true,
+							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 16384),
 							},
@@ -190,7 +188,13 @@ func (r *hostResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	out, err := findHostbyARN(ctx, conn, data.ID.ValueString())
+	vpcConfiguration, d := data.VPCConfiguration.ToPtr(ctx)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := findHostByARN(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -202,6 +206,10 @@ func (r *hostResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			err.Error(),
 		)
 		return
+	}
+
+	if vpcConfiguration != nil && out.VpcConfiguration != nil {
+		out.VpcConfiguration.TlsCertificate = fwflex.StringFromFramework(ctx, vpcConfiguration.TlsCertificate)
 	}
 
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
@@ -300,15 +308,6 @@ func (r *hostResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-func (r *hostResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
-func (r *hostResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
-}
-
 const (
 	hostStatusAvailable         = "AVAILABLE"
 	hostStatusPending           = "PENDING"
@@ -352,8 +351,8 @@ func waitHostDeleted(ctx context.Context, conn *codeconnections.Client, id strin
 }
 
 func statusHost(ctx context.Context, conn *codeconnections.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findHostbyARN(ctx, conn, id)
+	return func() (any, string, error) {
+		out, err := findHostByARN(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -366,7 +365,7 @@ func statusHost(ctx context.Context, conn *codeconnections.Client, id string) re
 	}
 }
 
-func findHostbyARN(ctx context.Context, conn *codeconnections.Client, arn string) (*awstypes.Host, error) {
+func findHostByARN(ctx context.Context, conn *codeconnections.Client, arn string) (*awstypes.Host, error) {
 	input := &codeconnections.GetHostInput{
 		HostArn: aws.String(arn),
 	}
@@ -401,6 +400,7 @@ func findHostbyARN(ctx context.Context, conn *codeconnections.Client, arn string
 }
 
 type hostResourceModel struct {
+	framework.WithRegionModel
 	HostArn          types.String                                                      `tfsdk:"arn"`
 	ID               types.String                                                      `tfsdk:"id"`
 	Name             types.String                                                      `tfsdk:"name"`

@@ -289,7 +289,7 @@ func testAccFeatureGroup_onlineConfigTTLDuration(t *testing.T) {
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup2),
 					func(*terraform.State) error {
 						if !aws.ToTime(featureGroup1.CreationTime).Equal(aws.ToTime(featureGroup1.CreationTime)) {
-							return errors.New("SageMaker Feature Group was recreated")
+							return errors.New("SageMaker AI Feature Group was recreated")
 						}
 						return nil
 					},
@@ -601,7 +601,7 @@ func testAccCheckFeatureGroupDestroy(ctx context.Context) resource.TestCheckFunc
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Feature Group %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Feature Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -616,7 +616,7 @@ func testAccCheckFeatureGroupExists(ctx context.Context, n string, v *sagemaker.
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Feature Group ID is set")
+			return fmt.Errorf("No SageMaker AI Feature Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -803,6 +803,7 @@ func testAccFeatureGroupConfig_onlineSecurity(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_feature_group" "test" {

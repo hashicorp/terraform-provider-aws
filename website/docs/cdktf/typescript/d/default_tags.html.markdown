@@ -92,7 +92,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-This data source has no arguments.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -100,4 +100,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `tags` - Key-value mapping of provider default tags.
 
-<!-- cache-key: cdktf-0.20.8 input-5379afa329280e66ecb9be70d287e86ad43906ae22d2b8976a3316d39a343709 -->
+<!-- cache-key: cdktf-0.20.8 input-b1b572a3e8968b3d0a54bd38910832923084d84179b30b4a5c74c9d4621d1c8b -->

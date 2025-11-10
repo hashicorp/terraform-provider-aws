@@ -55,11 +55,28 @@ resource "aws_route53_record" "dev-ns" {
 ~> **NOTE:** Private zones require at least one VPC association at all times.
 
 ```terraform
+resource "aws_vpc" "primary" {
+  cidr_block           = "10.6.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+}
+
+resource "aws_vpc" "secondary" {
+  cidr_block           = "10.7.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+}
+
 resource "aws_route53_zone" "private" {
   name = "example.com"
 
   vpc {
-    vpc_id = aws_vpc.example.id
+    vpc_id = aws_vpc.primary.id
+  }
+
+  # Add multiple `vpc` blocks to associate additional VPCs
+  vpc {
+    vpc_id = aws_vpc.secondary.id
   }
 }
 ```
@@ -90,6 +107,14 @@ This resource exports the following attributes in addition to the arguments abov
   Find more about delegation sets in [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/actions-on-reusable-delegation-sets.html).
 * `primary_name_server` - The Route 53 name server that created the SOA record.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

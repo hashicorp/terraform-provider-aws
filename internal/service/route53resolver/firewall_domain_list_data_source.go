@@ -64,7 +64,7 @@ func dataSourceFirewallDomainList() *schema.Resource {
 	}
 }
 
-func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 

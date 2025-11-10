@@ -5,15 +5,16 @@ package waf
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 )
 
-func listActivatedRulesInRuleGroupPages(ctx context.Context, conn *waf.Client, input *waf.ListActivatedRulesInRuleGroupInput, fn func(*waf.ListActivatedRulesInRuleGroupOutput, bool) bool) error {
+func listActivatedRulesInRuleGroupPages(ctx context.Context, conn *waf.Client, input *waf.ListActivatedRulesInRuleGroupInput, fn func(*waf.ListActivatedRulesInRuleGroupOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListActivatedRulesInRuleGroup(ctx, input)
+		output, err := conn.ListActivatedRulesInRuleGroup(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -25,11 +26,11 @@ func listActivatedRulesInRuleGroupPages(ctx context.Context, conn *waf.Client, i
 	}
 	return nil
 }
-func listByteMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListByteMatchSetsInput, fn func(*waf.ListByteMatchSetsOutput, bool) bool) error {
+func listByteMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListByteMatchSetsInput, fn func(*waf.ListByteMatchSetsOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListByteMatchSets(ctx, input)
+		output, err := conn.ListByteMatchSets(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -41,11 +42,11 @@ func listByteMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.Li
 	}
 	return nil
 }
-func listGeoMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListGeoMatchSetsInput, fn func(*waf.ListGeoMatchSetsOutput, bool) bool) error {
+func listGeoMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListGeoMatchSetsInput, fn func(*waf.ListGeoMatchSetsOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListGeoMatchSets(ctx, input)
+		output, err := conn.ListGeoMatchSets(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -57,11 +58,11 @@ func listGeoMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.Lis
 	}
 	return nil
 }
-func listIPSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListIPSetsInput, fn func(*waf.ListIPSetsOutput, bool) bool) error {
+func listIPSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListIPSetsInput, fn func(*waf.ListIPSetsOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListIPSets(ctx, input)
+		output, err := conn.ListIPSets(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -73,11 +74,11 @@ func listIPSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListIPSet
 	}
 	return nil
 }
-func listRateBasedRulesPages(ctx context.Context, conn *waf.Client, input *waf.ListRateBasedRulesInput, fn func(*waf.ListRateBasedRulesOutput, bool) bool) error {
+func listRateBasedRulesPages(ctx context.Context, conn *waf.Client, input *waf.ListRateBasedRulesInput, fn func(*waf.ListRateBasedRulesOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListRateBasedRules(ctx, input)
+		output, err := conn.ListRateBasedRules(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -89,11 +90,11 @@ func listRateBasedRulesPages(ctx context.Context, conn *waf.Client, input *waf.L
 	}
 	return nil
 }
-func listRegexMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListRegexMatchSetsInput, fn func(*waf.ListRegexMatchSetsOutput, bool) bool) error {
+func listRegexMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListRegexMatchSetsInput, fn func(*waf.ListRegexMatchSetsOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListRegexMatchSets(ctx, input)
+		output, err := conn.ListRegexMatchSets(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -105,11 +106,11 @@ func listRegexMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.L
 	}
 	return nil
 }
-func listRegexPatternSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListRegexPatternSetsInput, fn func(*waf.ListRegexPatternSetsOutput, bool) bool) error {
+func listRegexPatternSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListRegexPatternSetsInput, fn func(*waf.ListRegexPatternSetsOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListRegexPatternSets(ctx, input)
+		output, err := conn.ListRegexPatternSets(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -121,11 +122,11 @@ func listRegexPatternSetsPages(ctx context.Context, conn *waf.Client, input *waf
 	}
 	return nil
 }
-func listRuleGroupsPages(ctx context.Context, conn *waf.Client, input *waf.ListRuleGroupsInput, fn func(*waf.ListRuleGroupsOutput, bool) bool) error {
+func listRuleGroupsPages(ctx context.Context, conn *waf.Client, input *waf.ListRuleGroupsInput, fn func(*waf.ListRuleGroupsOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListRuleGroups(ctx, input)
+		output, err := conn.ListRuleGroups(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -137,11 +138,11 @@ func listRuleGroupsPages(ctx context.Context, conn *waf.Client, input *waf.ListR
 	}
 	return nil
 }
-func listRulesPages(ctx context.Context, conn *waf.Client, input *waf.ListRulesInput, fn func(*waf.ListRulesOutput, bool) bool) error {
+func listRulesPages(ctx context.Context, conn *waf.Client, input *waf.ListRulesInput, fn func(*waf.ListRulesOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListRules(ctx, input)
+		output, err := conn.ListRules(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -153,11 +154,11 @@ func listRulesPages(ctx context.Context, conn *waf.Client, input *waf.ListRulesI
 	}
 	return nil
 }
-func listSizeConstraintSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListSizeConstraintSetsInput, fn func(*waf.ListSizeConstraintSetsOutput, bool) bool) error {
+func listSizeConstraintSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListSizeConstraintSetsInput, fn func(*waf.ListSizeConstraintSetsOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListSizeConstraintSets(ctx, input)
+		output, err := conn.ListSizeConstraintSets(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -169,11 +170,11 @@ func listSizeConstraintSetsPages(ctx context.Context, conn *waf.Client, input *w
 	}
 	return nil
 }
-func listSQLInjectionMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListSqlInjectionMatchSetsInput, fn func(*waf.ListSqlInjectionMatchSetsOutput, bool) bool) error {
+func listSQLInjectionMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListSqlInjectionMatchSetsInput, fn func(*waf.ListSqlInjectionMatchSetsOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListSqlInjectionMatchSets(ctx, input)
+		output, err := conn.ListSqlInjectionMatchSets(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -185,11 +186,11 @@ func listSQLInjectionMatchSetsPages(ctx context.Context, conn *waf.Client, input
 	}
 	return nil
 }
-func listSubscribedRuleGroupsPages(ctx context.Context, conn *waf.Client, input *waf.ListSubscribedRuleGroupsInput, fn func(*waf.ListSubscribedRuleGroupsOutput, bool) bool) error {
+func listSubscribedRuleGroupsPages(ctx context.Context, conn *waf.Client, input *waf.ListSubscribedRuleGroupsInput, fn func(*waf.ListSubscribedRuleGroupsOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListSubscribedRuleGroups(ctx, input)
+		output, err := conn.ListSubscribedRuleGroups(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -201,11 +202,11 @@ func listSubscribedRuleGroupsPages(ctx context.Context, conn *waf.Client, input 
 	}
 	return nil
 }
-func listWebACLsPages(ctx context.Context, conn *waf.Client, input *waf.ListWebACLsInput, fn func(*waf.ListWebACLsOutput, bool) bool) error {
+func listWebACLsPages(ctx context.Context, conn *waf.Client, input *waf.ListWebACLsInput, fn func(*waf.ListWebACLsOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListWebACLs(ctx, input)
+		output, err := conn.ListWebACLs(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""
@@ -217,11 +218,11 @@ func listWebACLsPages(ctx context.Context, conn *waf.Client, input *waf.ListWebA
 	}
 	return nil
 }
-func listXSSMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListXssMatchSetsInput, fn func(*waf.ListXssMatchSetsOutput, bool) bool) error {
+func listXSSMatchSetsPages(ctx context.Context, conn *waf.Client, input *waf.ListXssMatchSetsInput, fn func(*waf.ListXssMatchSetsOutput, bool) bool, optFns ...func(*waf.Options)) error {
 	for {
-		output, err := conn.ListXssMatchSets(ctx, input)
+		output, err := conn.ListXssMatchSets(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""

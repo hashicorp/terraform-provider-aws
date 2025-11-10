@@ -40,7 +40,7 @@ func dataSourcePoliciesForTarget() *schema.Resource {
 	}
 }
 
-func dataSourcePoliciesForTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePoliciesForTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 

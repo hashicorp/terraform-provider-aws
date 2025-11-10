@@ -45,7 +45,7 @@ func dataSourceImageRecipes() *schema.Resource {
 	}
 }
 
-func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 

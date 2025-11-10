@@ -30,7 +30,7 @@ resource "aws_lakeformation_resource_lf_tag" "example" {
 
 The following arguments are required:
 
-* `lf_tag` – (Required) Set of LF-tags to attach to the resource. See [LF Tag](#lf-tag) for more details.
+* `lf_tag` - (Required) Set of LF-tags to attach to the resource. See [LF Tag](#lf-tag) for more details.
 
 Exactly one of the following is required:
 
@@ -40,13 +40,14 @@ Exactly one of the following is required:
 
 The following arguments are optional:
 
-* `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
 
 ### LF Tag
 
 The following arguments are required:
 
-* `key` – (Required) Key name for an existing LF-tag.
+* `key` - (Required) Key name for an existing LF-tag.
 * `value` - (Required) Value from the possible values for the LF-tag.
 
 The following argument is optional:
@@ -57,7 +58,7 @@ The following argument is optional:
 
 The following argument is required:
 
-* `name` – (Required) Name of the database resource. Unique to the Data Catalog.
+* `name` - (Required) Name of the database resource. Unique to the Data Catalog.
 
 The following argument is optional:
 
@@ -67,12 +68,13 @@ The following argument is optional:
 
 The following argument is required:
 
-* `database_name` – (Required) Name of the database for the table. Unique to a Data Catalog.
+* `database_name` - (Required) Name of the database for the table. Unique to a Data Catalog.
 * `name` - (Required, at least one of `name` or `wildcard`) Name of the table.
 * `wildcard` - (Required, at least one of `name` or `wildcard`) Whether to use a wildcard representing every table under a database. Defaults to `false`.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
 
 ### Table With Columns
@@ -80,11 +82,12 @@ The following arguments are optional:
 The following arguments are required:
 
 * `column_names` - (Required, at least one of `column_names` or `wildcard`) Set of column names for the table.
-* `database_name` – (Required) Name of the database for the table with columns resource. Unique to the Data Catalog.
-* `name` – (Required) Name of the table resource.
+* `database_name` - (Required) Name of the database for the table with columns resource. Unique to the Data Catalog.
+* `name` - (Required) Name of the table resource.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
 * `column_wildcard` - (Optional) Option to add column wildcard. See [Column Wildcard](#column-wildcard) for more details.
 

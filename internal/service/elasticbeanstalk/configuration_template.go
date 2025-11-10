@@ -66,7 +66,7 @@ func resourceConfigurationTemplate() *schema.Resource {
 	}
 }
 
-func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
@@ -103,7 +103,7 @@ func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceConfigurationTemplateRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
@@ -127,7 +127,7 @@ func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
@@ -191,7 +191,7 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceConfigurationTemplateRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 

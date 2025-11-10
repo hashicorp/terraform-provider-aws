@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,9 +36,10 @@ func TestAccKafkaVPCConnection_basic(t *testing.T) {
 				Config: testAccVPCConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`vpc-connection/\d{12}/`+rName+`/`+kafkaUUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "SASL_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "client_subnets.#", "3"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),

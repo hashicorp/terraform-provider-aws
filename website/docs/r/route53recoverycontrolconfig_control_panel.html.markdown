@@ -26,6 +26,10 @@ The following arguments are required:
 * `cluster_arn` - (Required) ARN of the cluster in which this control panel will reside.
 * `name` - (Required) Name describing the control panel.
 
+The following arguments are optional:
+
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -34,6 +38,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `default_control_panel` - Whether a control panel is default.
 * `routing_control_count` - Number routing controls in a control panel.
 * `status` - Status of control panel: `PENDING` when it is being created/updated, `PENDING_DELETION` when it is being deleted, and `DEPLOYED` otherwise.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

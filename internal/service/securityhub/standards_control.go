@@ -85,7 +85,7 @@ func resourceStandardsControl() *schema.Resource {
 	}
 }
 
-func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -109,7 +109,7 @@ func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceStandardsControlRead(ctx, d, meta)...)
 }
 
-func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 

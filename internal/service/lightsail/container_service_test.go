@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -45,8 +46,9 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "power", string(types.ContainerServicePowerNameNano)),
 					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "is_disabled", acctest.CtFalse),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`ContainerService/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "power_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "principal_arn"),

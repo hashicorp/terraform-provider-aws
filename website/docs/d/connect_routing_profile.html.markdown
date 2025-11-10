@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Routing Profile.
 
 By `name`
 
-```hcl
+```terraform
 data "aws_connect_routing_profile" "example" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Example"
@@ -23,7 +23,7 @@ data "aws_connect_routing_profile" "example" {
 
 By `routing_profile_id`
 
-```hcl
+```terraform
 data "aws_connect_routing_profile" "example" {
   instance_id        = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   routing_profile_id = "cccccccc-bbbb-cccc-dddd-111111111111"
@@ -32,13 +32,14 @@ data "aws_connect_routing_profile" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `routing_profile_id` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Routing Profile by name
 * `routing_profile_id` - (Optional) Returns information on a specific Routing Profile by Routing Profile id
+
+~> **NOTE:** `instance_id` and one of either `name` or `routing_profile_id` is required.
 
 ## Attribute Reference
 
@@ -56,6 +57,11 @@ A `media_concurrencies` block supports the following attributes:
 
 * `channel` - Channels that agents can handle in the Contact Control Panel (CCP). Valid values are `VOICE`, `CHAT`, `TASK`.
 * `concurrency` - Number of contacts an agent can have on a channel simultaneously. Valid Range for `VOICE`: Minimum value of 1. Maximum value of 1. Valid Range for `CHAT`: Minimum value of 1. Maximum value of 10. Valid Range for `TASK`: Minimum value of 1. Maximum value of 10.
+* `cross_channel_behavior` - Configuration block for cross-channel behavior. Documented below.
+
+A `cross_channel_behavior` block supports the following attributes:
+
+* `behavior_type` - Cross-channel behavior for routing contacts across multiple channels. Valid values are `ROUTE_CURRENT_CHANNEL_ONLY`, `ROUTE_ANY_CHANNEL`.
 
 A `queue_configs` block supports the following attributes:
 

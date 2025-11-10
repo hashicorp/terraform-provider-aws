@@ -5,8 +5,8 @@ package iam
 
 import (
 	"context"
-	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,26 +28,19 @@ func dataSourceAccountAlias() *schema.Resource {
 	}
 }
 
-func dataSourceAccountAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAccountAliasRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	log.Printf("[DEBUG] Reading IAM Account Aliases.")
+	var input iam.ListAccountAliasesInput
+	output, err := findAccountAlias(ctx, conn, &input)
 
-	req := &iam.ListAccountAliasesInput{}
-	resp, err := conn.ListAccountAliases(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Account Alias: %s", err)
 	}
 
-	// 'AccountAliases': [] if there is no alias.
-	if resp == nil || len(resp.AccountAliases) == 0 {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Account Alias: empty result")
-	}
-
-	alias := resp.AccountAliases[0]
-	d.SetId(alias)
-	d.Set("account_alias", alias)
+	d.SetId(aws.ToString(output))
+	d.Set("account_alias", output)
 
 	return diags
 }

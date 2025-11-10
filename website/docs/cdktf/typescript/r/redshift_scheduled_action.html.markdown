@@ -136,6 +136,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The scheduled action name.
 * `description` - (Optional) The description of the scheduled action.
 * `enable` - (Optional) Whether to enable the scheduled action. Default is `true` .
@@ -207,4 +208,4 @@ Using `terraform import`, import Redshift Scheduled Action using the `name`. For
 % terraform import aws_redshift_scheduled_action.example tf-redshift-scheduled-action
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bb46dc91c30f3bd0e92ef6f30fbb8c2c42b66b25bd27c78c262e5e212679b4d1 -->
+<!-- cache-key: cdktf-0.20.8 input-5868989e5d4bc90e70515445eb68d9601b047d10cb4ea884f0e474682e44c63d -->

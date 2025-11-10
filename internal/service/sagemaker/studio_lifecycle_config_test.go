@@ -140,7 +140,7 @@ func testAccCheckStudioLifecycleDestroyConfig(ctx context.Context) resource.Test
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Studio Lifecycle Config %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Studio Lifecycle Config %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -155,7 +155,7 @@ func testAccCheckStudioLifecycleExistsConfig(ctx context.Context, n string, conf
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Studio Lifecycle Config ID is set")
+			return fmt.Errorf("No SageMaker AI Studio Lifecycle Config ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ecrpublic_authorization_token")
+// @SDKDataSource("aws_ecrpublic_authorization_token", name="Authorization Token")
 func DataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
@@ -46,7 +46,7 @@ func DataSourceAuthorizationToken() *schema.Resource {
 	}
 }
 
-func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 	params := &ecrpublic.GetAuthorizationTokenInput{}
