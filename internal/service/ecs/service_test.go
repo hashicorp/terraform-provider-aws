@@ -4533,7 +4533,7 @@ resource "aws_ecs_service" "test" {
 
     linear_configuration {
       step_percent                = 100
-      step_bake_time_in_minutes   = "0"
+      step_bake_time_in_minutes   = 0
     }
   }
 
@@ -4627,7 +4627,7 @@ resource "aws_ecs_service" "test" {
 
     linear_configuration {
       step_percent                = 50
-      step_bake_time_in_minutes   = "1"
+      step_bake_time_in_minutes   = 1
     }
   }
 
@@ -4681,7 +4681,7 @@ resource "aws_ecs_service" "test" {
 
     canary_configuration {
       canary_percent                = 20
-      canary_bake_time_in_minutes   = "1"
+      canary_bake_time_in_minutes   = 1
     }
   }
 
@@ -4717,7 +4717,7 @@ resource "aws_ecs_service" "test" {
 
     canary_configuration {
       canary_percent                = 10
-      canary_bake_time_in_minutes   = "2"
+      canary_bake_time_in_minutes   = 2
     }
   }
 
@@ -4753,7 +4753,7 @@ resource "aws_ecs_service" "test" {
 
     canary_configuration {
       canary_percent                = 100
-      canary_bake_time_in_minutes   = "0"
+      canary_bake_time_in_minutes   = 0
     }
   }
 
@@ -4847,7 +4847,7 @@ resource "aws_ecs_service" "test" {
 
     canary_configuration {
       canary_percent                = 20
-      canary_bake_time_in_minutes   = "1"
+      canary_bake_time_in_minutes   = 1
     }
   }
 
