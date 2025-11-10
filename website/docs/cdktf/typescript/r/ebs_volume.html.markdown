@@ -55,6 +55,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `throughput` - (Optional) Throughput that the volume supports, in MiB/s. Only valid for `type` of `gp3`.
 * `type` - (Optional) Type of EBS volume. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `gp2`).
+* `volumeInitializationRate` - (Optional) EBS provisioned rate for volume initialization, in MiB/s, at which to download the snapshot blocks from Amazon S3 to the volume. This argument can only be set if `snapshotId` is specified.
 
 ~> **NOTE:** At least one of `size` or `snapshotId` is required.
 
@@ -105,4 +106,4 @@ Using `terraform import`, import EBS Volumes using the `id`. For example:
 % terraform import aws_ebs_volume.id vol-049df61146c4d7901
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ece75d32fca67138bdb27016f5e9b8f8284702cf9e5a563f2d4132e992229f52 -->
+<!-- cache-key: cdktf-0.20.8 input-a9ea1d78e382394d8a27b8c9cf535dddafb3feee92faa9feef5a99220ddf2398 -->

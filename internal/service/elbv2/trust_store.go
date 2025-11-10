@@ -220,7 +220,7 @@ func resourceTrustStoreDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting ELBv2 Trust Store: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.TrustStoreInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.TrustStoreInUseException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteTrustStore(ctx, &elasticloadbalancingv2.DeleteTrustStoreInput{
 			TrustStoreArn: aws.String(d.Id()),
 		})

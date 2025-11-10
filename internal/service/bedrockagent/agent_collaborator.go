@@ -147,8 +147,8 @@ func (r *agentCollaboratorResource) Create(ctx context.Context, request resource
 	}
 
 	timeout := r.CreateTimeout(ctx, data.Timeouts)
-	output, err := retryOpIfPreparing[*bedrockagent.AssociateAgentCollaboratorOutput](ctx, timeout,
-		func() (*bedrockagent.AssociateAgentCollaboratorOutput, error) {
+	output, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.AssociateAgentCollaboratorOutput, error) {
 			return conn.AssociateAgentCollaborator(ctx, &input)
 		},
 	)
@@ -246,8 +246,8 @@ func (r *agentCollaboratorResource) Update(ctx context.Context, request resource
 		}
 
 		timeout := r.UpdateTimeout(ctx, new.Timeouts)
-		_, err := retryOpIfPreparing[*bedrockagent.UpdateAgentCollaboratorOutput](ctx, timeout,
-			func() (*bedrockagent.UpdateAgentCollaboratorOutput, error) {
+		_, err := retryOpIfPreparing(ctx, timeout,
+			func(ctx context.Context) (*bedrockagent.UpdateAgentCollaboratorOutput, error) {
 				return conn.UpdateAgentCollaborator(ctx, &input)
 			},
 		)
@@ -284,8 +284,8 @@ func (r *agentCollaboratorResource) Delete(ctx context.Context, request resource
 	}
 
 	timeout := r.DeleteTimeout(ctx, data.Timeouts)
-	_, err := retryOpIfPreparing[*bedrockagent.DisassociateAgentCollaboratorOutput](ctx, timeout,
-		func() (*bedrockagent.DisassociateAgentCollaboratorOutput, error) {
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.DisassociateAgentCollaboratorOutput, error) {
 			return conn.DisassociateAgentCollaborator(ctx, &input)
 		},
 	)

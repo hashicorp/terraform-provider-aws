@@ -50,7 +50,7 @@ func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "ml.t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v2"),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v3"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
@@ -409,10 +409,10 @@ func TestAccSageMakerNotebookInstance_Platform_identifier(t *testing.T) {
 		CheckDestroy:             testAccCheckNotebookInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2-v1"),
+				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2-v3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v1"),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v3"),
 				),
 			},
 			{
@@ -421,17 +421,10 @@ func TestAccSageMakerNotebookInstance_Platform_identifier(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2-v2"),
+				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2023-v1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v2"),
-				),
-			},
-			{
-				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2-v3"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v3"),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2023-v1"),
 				),
 			},
 		},
@@ -461,7 +454,7 @@ func TestAccSageMakerNotebookInstance_DirectInternet_access(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Disabled"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile("eni-.*")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile(`^eni-[0-9a-f]+$`)),
 				),
 			},
 			{
@@ -476,7 +469,7 @@ func TestAccSageMakerNotebookInstance_DirectInternet_access(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile("eni-.*")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile(`^eni-[0-9a-f]+$`)),
 				),
 			},
 		},

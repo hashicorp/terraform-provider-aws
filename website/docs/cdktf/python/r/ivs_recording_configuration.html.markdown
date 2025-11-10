@@ -73,6 +73,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ivs_recording_configuration.example
+  identity = {
+    "arn" = "arn:aws:ivs:us-west-2:123456789012:recording-configuration/abcdABCDefgh"
+  }
+}
+
+resource "aws_ivs_recording_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the IVS recording configuration.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Recording Configuration using the ARN. For example:
 
 ```python
@@ -96,4 +117,4 @@ Using `terraform import`, import IVS (Interactive Video) Recording Configuration
 % terraform import aws_ivs_recording_configuration.example arn:aws:ivs:us-west-2:326937407773:recording-configuration/KAk1sHBl2L47
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-282057300a65c8fd110cce91afa243dab021840b520e85c3363c22d45c13a5c5 -->
+<!-- cache-key: cdktf-0.20.8 input-0276527de5437fa5122369910973d1339757a40d17fe1bd6cd7e2f5c8dd42a4a -->

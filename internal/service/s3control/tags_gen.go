@@ -36,8 +36,9 @@ func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceT
 
 // ListTags lists s3control service tags and set them in Context.
 // It is called from outside this package.
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).S3ControlClient(ctx), identifier, resourceType)
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	c := meta.(*conns.AWSClient)
+	tags, err := listTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx))
 
 	if err != nil {
 		return smarterr.NewError(err)
@@ -144,6 +145,7 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 
 // UpdateTags updates s3control service tags.
 // It is called from outside this package.
-func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).S3ControlClient(ctx), identifier, resourceType, oldTags, newTags)
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	c := meta.(*conns.AWSClient)
+	return updateTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx), oldTags, newTags)
 }

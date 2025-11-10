@@ -29,6 +29,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestDefaultIPv6CIDRBlockAssociation(t *testing.T) {
+	t.Parallel()
+
+	vpc := awstypes.Vpc{
+		Ipv6CidrBlockAssociationSet: []awstypes.VpcIpv6CidrBlockAssociation{
+			{AssociationId: aws.String("default_cidr"), Ipv6CidrBlock: aws.String("fd00:1::/64"), Ipv6CidrBlockState: &awstypes.VpcCidrBlockState{State: awstypes.VpcCidrBlockStateCodeAssociated}},
+			{AssociationId: aws.String("some_other_cidr"), Ipv6CidrBlock: aws.String("fd00:2::/64"), Ipv6CidrBlockState: &awstypes.VpcCidrBlockState{State: awstypes.VpcCidrBlockStateCodeAssociated}},
+		},
+	}
+	if v := tfec2.DefaultIPv6CIDRBlockAssociation(&vpc, ""); v == nil {
+		t.Errorf("defaultIPv6CIDRBlockAssociation() got nil")
+	} else if got, want := aws.ToString(v.AssociationId), "default_cidr"; got != want {
+		t.Errorf("defaultIPv6CIDRBlockAssociation() = %v, want = %v", got, want)
+	}
+}
+
 func TestAccVPC_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
@@ -94,6 +110,11 @@ func TestAccVPC_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

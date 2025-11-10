@@ -57,7 +57,7 @@ This resource supports the following arguments:
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) A friendly description of the regular expression pattern set.
 * `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
-* `regularExpression` - (Optional) One or more blocks of regular expression patterns that you want AWS WAF to search for, such as `B[a@]dB[o0]t`. See [Regular Expression](#regular-expression) below for details. A maximum of 10 `regularExpression` blocks may be specified.
+* `regularExpression` - (Optional) One or more blocks of regular expression patterns that you want AWS WAF to search for, such as `B[a@]dB[o0]t`. See [Regular Expression](#regular-expression) below for details.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Regular Expression
@@ -104,4 +104,4 @@ Using `terraform import`, import WAFv2 Regex Pattern Sets using `ID/name/scope`.
 % terraform import aws_wafv2_regex_pattern_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9c8f87f235605ca054706328dc004fa3baa71ba6fede48b315dcf6a5d625218d -->
+<!-- cache-key: cdktf-0.20.8 input-e28cf140ed9368c3f6afb505751769b05eacbd163f74e66ac99af0346fb2e515 -->

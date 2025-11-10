@@ -30,7 +30,7 @@ import (
 )
 
 // @FrameworkResource("aws_s3control_access_grants_location", name="Access Grants Location")
-// @Tags
+// @Tags(identifierAttribute="access_grants_location_arn")
 func newAccessGrantsLocationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantsLocationResource{}
 
@@ -71,13 +71,13 @@ func (r *accessGrantsLocationResource) Schema(ctx context.Context, request resou
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
+			names.AttrID: framework.IDAttribute(),
 			"location_scope": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -86,28 +86,27 @@ func (r *accessGrantsLocationResource) Schema(ctx context.Context, request resou
 
 func (r *accessGrantsLocationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data accessGrantsLocationResourceModel
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
+	}
+	if data.AccountID.IsUnknown() {
+		data.AccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
 
 	conn := r.Meta().S3ControlClient(ctx)
 
-	if data.AccountID.ValueString() == "" {
-		data.AccountID = types.StringValue(r.Meta().AccountID(ctx))
-	}
-	input := &s3control.CreateAccessGrantsLocationInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	var input s3control.CreateAccessGrantsLocationInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (any, error) {
-		return conn.CreateAccessGrantsLocation(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.CreateAccessGrantsLocation(ctx, &input)
 	}, errCodeInvalidIAMRole)
 
 	if err != nil {
@@ -118,29 +117,29 @@ func (r *accessGrantsLocationResource) Create(ctx context.Context, request resou
 
 	// Set values for unknowns.
 	output := outputRaw.(*s3control.CreateAccessGrantsLocationOutput)
-	data.AccessGrantsLocationARN = fwflex.StringToFramework(ctx, output.AccessGrantsLocationArn)
-	data.AccessGrantsLocationID = fwflex.StringToFramework(ctx, output.AccessGrantsLocationId)
-	id, err := data.setID()
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Access Grants Location (%s)", data.LocationScope.ValueString()), err.Error())
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	data.ID = types.StringValue(id)
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewCreatingResourceIDErrorDiagnostic(err))
+		return
+	}
+	data.ID = fwflex.StringValueToFramework(ctx, id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *accessGrantsLocationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data accessGrantsLocationResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 
 		return
 	}
@@ -168,30 +167,16 @@ func (r *accessGrantsLocationResource) Read(ctx context.Context, request resourc
 		return
 	}
 
-	tags, err := listTags(ctx, conn, data.AccessGrantsLocationARN.ValueString(), data.AccountID.ValueString())
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("listing tags for S3 Access Grants Location (%s)", data.ID.ValueString()), err.Error())
-
-		return
-	}
-
-	setTagsOut(ctx, svcTags(tags))
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *accessGrantsLocationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new accessGrantsLocationResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -199,26 +184,18 @@ func (r *accessGrantsLocationResource) Update(ctx context.Context, request resou
 	conn := r.Meta().S3ControlClient(ctx)
 
 	if !new.IAMRoleARN.Equal(old.IAMRoleARN) {
-		input := &s3control.UpdateAccessGrantsLocationInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		var input s3control.UpdateAccessGrantsLocationInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (any, error) {
-			return conn.UpdateAccessGrantsLocation(ctx, input)
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.UpdateAccessGrantsLocation(ctx, &input)
 		}, errCodeInvalidIAMRole)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating S3 Access Grants Location (%s)", new.ID.ValueString()), err.Error())
-
-			return
-		}
-	}
-
-	if oldTagsAll, newTagsAll := old.TagsAll, new.TagsAll; !newTagsAll.Equal(oldTagsAll) {
-		if err := updateTags(ctx, conn, new.AccessGrantsLocationARN.ValueString(), new.AccountID.ValueString(), oldTagsAll, newTagsAll); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating tags for S3 Access Grants Location (%s)", new.ID.ValueString()), err.Error())
 
 			return
 		}
@@ -229,23 +206,20 @@ func (r *accessGrantsLocationResource) Update(ctx context.Context, request resou
 
 func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data accessGrantsLocationResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().S3ControlClient(ctx)
 
-	input := &s3control.DeleteAccessGrantsLocationInput{
+	input := s3control.DeleteAccessGrantsLocationInput{
 		AccessGrantsLocationId: fwflex.StringFromFramework(ctx, data.AccessGrantsLocationID),
 		AccountId:              fwflex.StringFromFramework(ctx, data.AccountID),
 	}
-
 	// "AccessGrantsLocationNotEmptyError: Please delete access grants before deleting access grants location".
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func() (any, error) {
-		return conn.DeleteAccessGrantsLocation(ctx, input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3PropagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteAccessGrantsLocation(ctx, &input)
 	}, errCodeAccessGrantsLocationNotEmptyError)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
@@ -260,11 +234,15 @@ func (r *accessGrantsLocationResource) Delete(ctx context.Context, request resou
 }
 
 func findAccessGrantsLocationByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, locationID string) (*s3control.GetAccessGrantsLocationOutput, error) {
-	input := &s3control.GetAccessGrantsLocationInput{
+	input := s3control.GetAccessGrantsLocationInput{
 		AccessGrantsLocationId: aws.String(locationID),
 		AccountId:              aws.String(accountID),
 	}
 
+	return findAccessGrantsLocation(ctx, conn, &input)
+}
+
+func findAccessGrantsLocation(ctx context.Context, conn *s3control.Client, input *s3control.GetAccessGrantsLocationInput) (*s3control.GetAccessGrantsLocationOutput, error) {
 	output, err := conn.GetAccessGrantsLocation(ctx, input)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {

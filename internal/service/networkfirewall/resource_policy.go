@@ -111,7 +111,7 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidResourcePolicyException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidResourcePolicyException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteResourcePolicy(ctx, &networkfirewall.DeleteResourcePolicyInput{
 			ResourceArn: aws.String(d.Id()),
 		})

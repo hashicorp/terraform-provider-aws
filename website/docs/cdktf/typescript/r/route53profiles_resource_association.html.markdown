@@ -116,10 +116,10 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-Using `terraform import`, import Route 53 Profiles Resource Association using the `example_id_arg`. For example:
+Using `terraform import`, import Route 53 Profiles Resource Association using the `id`. For example:
 
 ```console
 % terraform import aws_route53profiles_resource_association.example rpa-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-32a7e921370e94f9fe03ebc82214bf1fce67f4f7bed5684a534fea531ef3585d -->
+<!-- cache-key: cdktf-0.20.8 input-0b46c01a3c3fadabea064a8b22b479536c164a954ec874b8f32dba0642f30cdb -->

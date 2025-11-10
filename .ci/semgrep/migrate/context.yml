@@ -4,8 +4,8 @@ rules:
     message: Should not use `context.TODO()`
     paths:
       include:
-        - internal/service/*
-        - internal/acctest/*
+        - "/internal/service"
+        - "/internal/acctest"
     pattern: context.TODO()
     severity: ERROR
   - id: schema-noop
@@ -13,8 +13,8 @@ rules:
     message: Should use `schema.NoopContext` instead of `schema.Noop`
     paths:
       include:
-        - internal/service/*
-        - internal/acctest/*
+        - "/internal/service"
+        - "/internal/acctest"
     pattern: schema.Noop
     severity: ERROR
   - id: direct-CRUD-calls
@@ -22,10 +22,10 @@ rules:
     message: Avoid direct calls to `schema.Resource` CRUD calls
     paths:
       include:
-        - internal/service/*
-        - internal/acctest/*
+        - "/internal/service"
+        - "/internal/acctest"
       exclude:
-        - internal/service/*/sweep.go
+        - "/internal/service/*/sweep.go"
     patterns:
       - pattern-either:
           - pattern: $D.Create($DATA, $META)

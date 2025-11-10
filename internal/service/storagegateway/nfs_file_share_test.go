@@ -731,7 +731,7 @@ func testAccCheckNFSFileShareExists(ctx context.Context, n string, v *awstypes.N
 }
 
 func testAccNFSFileShareConfig_baseS3(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 

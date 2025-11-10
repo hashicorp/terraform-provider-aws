@@ -145,6 +145,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudtrail_event_data_store.example
+  identity = {
+    "arn" = "arn:aws:cloudtrail:us-east-1:123456789012:eventdatastore/example-event-data-store-id"
+  }
+}
+
+resource "aws_cloudtrail_event_data_store" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CloudTrail event data store.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import event data stores using their `arn`. For example:
 
 ```typescript
@@ -175,4 +196,4 @@ Using `terraform import`, import event data stores using their `arn`. For exampl
 % terraform import aws_cloudtrail_event_data_store.example arn:aws:cloudtrail:us-east-1:123456789123:eventdatastore/22333815-4414-412c-b155-dd254033gfhf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7242b8fcc10d227d3c28295bbd27b082efb5b29052bab39f49543335ead22bfe -->
+<!-- cache-key: cdktf-0.20.8 input-1c2db5f90a17255d5ded712970949e110ac1ef7380ece917625e525051b7ad42 -->

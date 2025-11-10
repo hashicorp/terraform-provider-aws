@@ -5,10 +5,8 @@ package iam
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -55,17 +53,12 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	userName := d.Get(names.AttrUserName).(string)
-	req := &iam.GetUserInput{
-		UserName: aws.String(userName),
-	}
+	user, err := findUserByName(ctx, conn, userName)
 
-	log.Printf("[DEBUG] Reading IAM User: %v", req)
-	resp, err := conn.GetUser(ctx, req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting user: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): %s", userName, err)
 	}
 
-	user := resp.User
 	d.SetId(aws.ToString(user.UserId))
 	d.Set(names.AttrARN, user.Arn)
 	d.Set(names.AttrPath, user.Path)

@@ -15,8 +15,6 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -887,12 +885,9 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 }
 
 // ResolveDuplicatesFramework resolves differences between incoming tags, defaultTags, and ignoreConfig
-func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, resp *resource.ReadResponse, diags *fwdiag.Diagnostics) KeyValueTags {
+func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, tagsAll Map, diags *fwdiag.Diagnostics) KeyValueTags {
 	// remove default config.
 	t := tags.RemoveDefaultConfig(defaultConfig)
-
-	var tagsAll Map
-	diags.Append(resp.State.GetAttribute(ctx, path.Root("tags"), &tagsAll)...)
 
 	if diags.HasError() {
 		return KeyValueTags{}

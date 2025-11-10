@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -13,7 +12,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"iter"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -22,11 +21,9 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/dlclark/regexp2"
 	"github.com/hashicorp/go-version"
-	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
@@ -98,19 +95,12 @@ func main() {
 	}
 
 	for _, resource := range v.identityResources {
+		resource.service = &svc
+
 		sourceName := resource.FileName
 		ext := filepath.Ext(sourceName)
 		sourceName = strings.TrimSuffix(sourceName, ext)
 		sourceName = strings.TrimSuffix(sourceName, "_")
-
-		if name, err := svc.ProviderNameUpper(resource.TypeName); err != nil {
-			g.Fatalf("determining provider service name: %w", err)
-		} else {
-			resource.ResourceProviderNameUpper = name
-		}
-		resource.PackageProviderNameUpper = svc.PackageProviderNameUpper()
-		resource.ProviderPackage = servicePackage
-		resource.ARNNamespace = svc.ARNNamespace()
 
 		if svc.primary.IsGlobal() {
 			resource.IsGlobal = true
@@ -134,9 +124,17 @@ func main() {
 			"inc": func(i int) int {
 				return i + 1
 			},
-			"NewVersion": version.NewVersion,
+			"NewVersion":            version.NewVersion,
+			"VersionDecrementMinor": common.VersionDecrementMinor,
 		}
-		templates, err := template.New("identitytests").Funcs(templateFuncMap).Parse(resourceTestGoTmpl)
+		templates := template.New("identitytests").Funcs(templateFuncMap)
+
+		templates, err = tests.AddCommonResourceTestTemplates(templates)
+		if err != nil {
+			g.Fatalf(err.Error())
+		}
+
+		templates, err = templates.Parse(resourceTestGoTmpl)
 		if err != nil {
 			g.Fatalf("parsing base Go test template: %w", err)
 		}
@@ -184,7 +182,7 @@ func main() {
 		resource.GenerateConfig = true
 
 		if resource.GenerateConfig {
-			additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
+			additionalTfVars := tfmaps.Keys(resource.AdditionalTfVars_)
 			slices.Sort(additionalTfVars)
 			testDirPath := path.Join("testdata", resource.Name)
 
@@ -193,7 +191,7 @@ func main() {
 				g.Fatalf("parsing base Terraform config template: %s", err)
 			}
 
-			tfTemplates, err = tests.AddCommonTemplates(tfTemplates)
+			tfTemplates, err = tests.AddCommonTfTemplates(tfTemplates)
 			if err != nil {
 				g.Fatalf(err.Error())
 			}
@@ -208,60 +206,70 @@ func main() {
 				g.Fatalf("parsing config template: %s", err)
 			}
 
-			common := commonConfig{
+			commonConfig := commonConfig{
 				AdditionalTfVars: additionalTfVars,
 				RequiredEnvVars:  resource.RequiredEnvVars,
 				WithRName:        (resource.Generator != ""),
 			}
 
-			generateTestConfig(g, testDirPath, "basic", tfTemplates, common)
+			generateTestConfig(g, testDirPath, "basic", tfTemplates, commonConfig)
 
-			if resource.PreIdentityVersion.Equal(v5_100_0) {
-				tfTemplatesV5, err := tfTemplates.Clone()
+			var versions []*version.Version
+
+			if resource.PreIdentityVersion != nil {
+				if resource.PreIdentityVersion.Equal(v5_100_0) {
+					tfTemplatesV5, err := tfTemplates.Clone()
+					if err != nil {
+						g.Fatalf("cloning Terraform config template: %s", err)
+					}
+					ext := filepath.Ext(configTmplFile)
+					name := strings.TrimSuffix(configTmplFile, ext)
+					configTmplV5File := name + "_v5.100.0" + ext
+					configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
+					if _, err := os.Stat(configTmplV5Path); err == nil {
+						b, err := os.ReadFile(configTmplV5Path)
+						if err != nil {
+							g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
+						}
+						configTmplV5 := string(b)
+						_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
+						if err != nil {
+							g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
+						}
+					}
+					commonConfigV5 := commonConfig
+					commonConfigV5.ExternalProviders = map[string]requiredProvider{
+						"aws": {
+							Source:  "hashicorp/aws",
+							Version: "5.100.0",
+						},
+					}
+					generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonConfigV5)
+
+					versions = append(versions, version.Must(version.NewVersion("6.0.0")))
+				} else {
+					versions = append(versions, resource.PreIdentityVersion)
+				}
+			}
+
+			if len(resource.IdentityVersions) > 1 {
+				v := resource.IdentityVersions[1]
+				v, err := common.VersionDecrementMinor(v)
 				if err != nil {
-					g.Fatalf("cloning Terraform config template: %s", err)
+					g.Fatalf("generating versioned configurations: %s", err)
 				}
-				ext := filepath.Ext(configTmplFile)
-				name := strings.TrimSuffix(configTmplFile, ext)
-				configTmplV5File := name + "_v5.100.0" + ext
-				configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
-				if _, err := os.Stat(configTmplV5Path); err == nil {
-					b, err := os.ReadFile(configTmplV5Path)
-					if err != nil {
-						g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
-					}
-					configTmplV5 := string(b)
-					_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
-					if err != nil {
-						g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
-					}
-				}
-				commonV5 := common
-				commonV5.ExternalProviders = map[string]requiredProvider{
-					"aws": {
-						Source:  "hashicorp/aws",
-						Version: "5.100.0",
-					},
-				}
-				generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
+				versions = append(versions, v)
+			}
 
-				commonV6 := common
-				commonV6.ExternalProviders = map[string]requiredProvider{
+			for _, version := range versions {
+				common := commonConfig
+				common.ExternalProviders = map[string]requiredProvider{
 					"aws": {
 						Source:  "hashicorp/aws",
-						Version: "6.0.0",
+						Version: version.String(),
 					},
 				}
-				generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
-			} else {
-				commonPreIdentity := common
-				commonPreIdentity.ExternalProviders = map[string]requiredProvider{
-					"aws": {
-						Source:  "hashicorp/aws",
-						Version: resource.PreIdentityVersion.String(),
-					},
-				}
-				generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", resource.PreIdentityVersion.String()), tfTemplates, commonPreIdentity)
+				generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", version.String()), tfTemplates, common)
 			}
 
 			_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")
@@ -270,9 +278,9 @@ func main() {
 			}
 
 			if resource.GenerateRegionOverrideTest() {
-				common.WithRegion = true
+				commonConfig.WithRegion = true
 
-				generateTestConfig(g, testDirPath, "region_override", tfTemplates, common)
+				generateTestConfig(g, testDirPath, "region_override", tfTemplates, commonConfig)
 			}
 		}
 	}
@@ -289,6 +297,10 @@ var (
 type serviceRecords struct {
 	primary    data.ServiceRecord
 	additional []data.ServiceRecord
+}
+
+func (sr serviceRecords) ProviderPackage() string {
+	return sr.primary.ProviderPackage()
 }
 
 func (sr serviceRecords) ProviderNameUpper(typeName string) (string, error) {
@@ -352,37 +364,6 @@ func (sr serviceRecords) ARNNamespace() string {
 	return sr.primary.ARNNamespace()
 }
 
-type implementation string
-
-const (
-	implementationFramework implementation = "framework"
-	implementationSDK       implementation = "sdk"
-)
-
-type importAction int
-
-const (
-	importActionNoop importAction = iota
-	importActionUpdate
-	importActionReplace
-)
-
-func (i importAction) String() string {
-	switch i {
-	case importActionNoop:
-		return "NoOp"
-
-	case importActionUpdate:
-		return "Update"
-
-	case importActionReplace:
-		return "Replace"
-
-	default:
-		return ""
-	}
-}
-
 type triBoolean uint
 
 const (
@@ -392,62 +373,46 @@ const (
 )
 
 type ResourceDatum struct {
-	ProviderPackage             string
-	ResourceProviderNameUpper   string
-	PackageProviderNameUpper    string
-	Name                        string
-	TypeName                    string
-	DestroyTakesT               bool
-	HasExistsFunc               bool
-	ExistsTypeName              string
-	ExistsTakesT                bool
-	FileName                    string
-	Generator                   string
-	idAttrDuplicates            string // TODO: Remove. Still needed for Parameterized Identity
-	NoImport                    bool
-	ImportStateID               string
-	importStateIDAttribute      string
-	ImportStateIDFunc           string
-	ImportIgnore                []string
-	Implementation              implementation
-	Serialize                   bool
-	SerializeDelay              bool
-	SerializeParallelTests      bool
-	PreChecks                   []codeBlock
-	PreChecksWithRegion         []codeBlock
-	PreCheckRegions             []string
-	GoImports                   []goImport
-	GenerateConfig              bool
-	InitCodeBlocks              []codeBlock
-	additionalTfVars            map[string]string
-	CheckDestroyNoop            bool
-	overrideIdentifierAttribute string
-	OverrideResourceType        string
-	ARNNamespace                string
-	ARNFormat                   string
-	arnAttribute                string
-	isARNFormatGlobal           triBoolean
-	ArnIdentity                 bool
-	MutableIdentity             bool
-	IsGlobal                    bool
-	isSingleton                 bool
-	HasRegionOverrideTest       bool
-	UseAlternateAccount         bool
-	identityAttributes          []identityAttribute
-	plannableImportAction       importAction
-	identityAttribute           string
-	IdentityDuplicateAttrs      []string
-	IDAttrFormat                string
-	HasV6_0NullValuesError      bool
-	HasV6_0RefreshError         bool
-	RequiredEnvVars             []string
-	PreIdentityVersion          *version.Version
+	service                        *serviceRecords
+	FileName                       string
+	idAttrDuplicates               string // TODO: Remove. Still needed for Parameterized Identity
+	GenerateConfig                 bool
+	ARNFormat                      string
+	arnAttribute                   string
+	isARNFormatGlobal              triBoolean
+	ArnIdentity                    bool
+	MutableIdentity                bool
+	IsGlobal                       bool
+	isSingleton                    bool
+	HasRegionOverrideTest          bool
+	identityAttributes             []identityAttribute
+	identityAttribute              string
+	IdentityDuplicateAttrs         []string
+	IDAttrFormat                   string
+	HasV6_0NullValuesError         bool
+	HasV6_0RefreshError            bool
+	HasNoPreExistingResource       bool
+	PreIdentityVersion             *version.Version
+	IsCustomInherentRegionIdentity bool
+	customIdentityAttribute        string
+	IdentityVersions               map[int64]*version.Version
+	tests.CommonArgs
 }
 
-func (d ResourceDatum) AdditionalTfVars() map[string]string {
-	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
-		return acctestgen.ConstOrQuote(k)
-	})
+func (d ResourceDatum) ProviderPackage() string {
+	return d.service.ProviderPackage()
+}
+
+func (d ResourceDatum) ResourceProviderNameUpper() (string, error) {
+	return d.service.ProviderNameUpper(d.TypeName)
+}
+
+func (d ResourceDatum) PackageProviderNameUpper() string {
+	return d.service.PackageProviderNameUpper()
+}
+
+func (d ResourceDatum) ARNNamespace() string {
+	return d.service.ARNNamespace()
 }
 
 func (d ResourceDatum) HasIDAttrDuplicates() bool {
@@ -456,22 +421,6 @@ func (d ResourceDatum) HasIDAttrDuplicates() bool {
 
 func (d ResourceDatum) IDAttrDuplicates() string {
 	return namesgen.ConstOrQuote(d.idAttrDuplicates)
-}
-
-func (d ResourceDatum) HasImportStateIDAttribute() bool {
-	return d.importStateIDAttribute != ""
-}
-
-func (d ResourceDatum) ImportStateIDAttribute() string {
-	return namesgen.ConstOrQuote(d.importStateIDAttribute)
-}
-
-func (d ResourceDatum) OverrideIdentifier() bool {
-	return d.overrideIdentifierAttribute != ""
-}
-
-func (d ResourceDatum) OverrideIdentifierAttribute() string {
-	return namesgen.ConstOrQuote(d.overrideIdentifierAttribute)
 }
 
 func (d ResourceDatum) IsARNIdentity() bool {
@@ -499,15 +448,7 @@ func (d ResourceDatum) GenerateRegionOverrideTest() bool {
 }
 
 func (d ResourceDatum) HasInherentRegion() bool {
-	return d.IsARNIdentity() || d.IsRegionalSingleton()
-}
-
-func (d ResourceDatum) HasImportIgnore() bool {
-	return len(d.ImportIgnore) > 0
-}
-
-func (d ResourceDatum) PlannableResourceAction() string {
-	return d.plannableImportAction.String()
+	return d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity
 }
 
 func (d ResourceDatum) IdentityAttribute() string {
@@ -526,22 +467,25 @@ func (r ResourceDatum) IdentityAttributes() []identityAttribute {
 	return r.identityAttributes
 }
 
+func (r ResourceDatum) CustomIdentityAttribute() string {
+	return namesgen.ConstOrQuote(r.customIdentityAttribute)
+}
+
+func (r ResourceDatum) LatestIdentityVersion() int64 {
+	if len(r.IdentityVersions) == 0 {
+		return 0
+	}
+	return slices.Max(slices.Collect(maps.Keys(r.IdentityVersions)))
+}
+
 type identityAttribute struct {
-	name     string
-	Optional bool
+	name        string
+	Optional    bool
+	TestNotNull bool
 }
 
 func (i identityAttribute) Name() string {
 	return namesgen.ConstOrQuote(i.name)
-}
-
-type goImport struct {
-	Path  string
-	Alias string
-}
-
-type codeBlock struct {
-	Code string
 }
 
 type commonConfig struct {
@@ -628,12 +572,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	d := ResourceDatum{
 		FileName:              v.fileName,
-		additionalTfVars:      make(map[string]string),
+		CommonArgs:            tests.InitCommonArgs(),
 		IsGlobal:              false,
-		HasExistsFunc:         true,
 		HasRegionOverrideTest: true,
-		plannableImportAction: importActionNoop,
-		PreIdentityVersion:    version.Must(version.NewVersion("5.100.0")),
+		IdentityVersions:      make(map[int64]*version.Version, 0),
 	}
 	hasIdentity := false
 	skip := false
@@ -650,7 +592,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				break
 
 			case "FrameworkResource":
-				d.Implementation = implementationFramework
+				d.Implementation = tests.ImplementationFramework
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -667,7 +609,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				break
 
 			case "SDKResource":
-				d.Implementation = implementationSDK
+				d.Implementation = tests.ImplementationSDK
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -696,7 +638,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
 					attrs = strings.Split(attr, ";")
 				}
-				if d.Implementation == implementationSDK {
+				if d.Implementation == tests.ImplementationSDK {
 					attrs = append(attrs, "id")
 				}
 				slices.Sort(attrs)
@@ -726,6 +668,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
+				if attr, ok := args.Keyword["testNotNull"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						identityAttribute.TestNotNull = b
+					}
+				}
+
 				d.identityAttributes = append(d.identityAttributes, identityAttribute)
 
 			case "SingletonIdentity":
@@ -744,8 +695,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				if attr, ok := args.Keyword["global"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("global", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						if b {
@@ -781,265 +732,63 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			// TODO: allow underscore?
 			case "V60SDKv2Fix":
 				d.HasV6_0NullValuesError = true
+				d.PreIdentityVersion = v5_100_0
 
 				args := common.ParseArgs(m[3])
 				if attr, ok := args.Keyword["v60RefreshError"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid v60RefreshError value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					if b, err := tests.ParseBoolAttr("v60RefreshError", attr); err != nil {
+						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0RefreshError = b
 					}
 				}
 
+			case "CustomInherentRegionIdentity":
+				hasIdentity = true
+				d.IsCustomInherentRegionIdentity = true
+
+				args := common.ParseArgs(m[3])
+				d.customIdentityAttribute = args.Positional[0]
+				d.identityAttribute = args.Positional[0]
+
+				var attrs []string
+				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+					attrs = strings.Split(attr, ";")
+				}
+				if d.Implementation == tests.ImplementationSDK {
+					attrs = append(attrs, "id")
+				}
+				slices.Sort(attrs)
+				attrs = slices.Compact(attrs)
+				d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
+					return namesgen.ConstOrQuote(s)
+				})
+
 			case "Testing":
 				args := common.ParseArgs(m[3])
 
-				if attr, ok := args.Keyword["destroyTakesT"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid destroyTakesT value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.DestroyTakesT = b
-					}
+				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					continue
 				}
-				if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid checkDestroyNoop value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.CheckDestroyNoop = b
-						d.GoImports = append(d.GoImports,
-							goImport{
-								Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-							},
-						)
-					}
+
+				// This needs better handling
+				if _, ok := args.Keyword["generator"]; ok {
+					generatorSeen = true
 				}
-				if attr, ok := args.Keyword["emailAddress"]; ok {
-					varName := "address"
-					if len(attr) > 0 {
-						varName = attr
-					}
-					d.GoImports = append(d.GoImports,
-						goImport{
-							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-						},
-					)
-					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
-						Code: fmt.Sprintf(
-							`domain := acctest.RandomDomainName()
-%s := acctest.RandomEmailAddress(domain)`, varName),
-					})
-					d.additionalTfVars[varName] = varName
-				}
-				if attr, ok := args.Keyword["domainTfVar"]; ok {
-					varName := "domain"
-					if len(attr) > 0 {
-						varName = attr
-					}
-					d.GoImports = append(d.GoImports,
-						goImport{
-							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-						},
-					)
-					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
-						Code: fmt.Sprintf(`%s := acctest.RandomDomainName()`, varName),
-					})
-					d.additionalTfVars[varName] = varName
-				}
-				if attr, ok := args.Keyword["subdomainTfVar"]; ok {
-					parentName := "domain"
-					varName := "subdomain"
-					parts := strings.Split(attr, ";")
-					if len(parts) > 1 {
-						if len(parts[0]) > 0 {
-							parentName = parts[0]
-						}
-						if len(parts[1]) > 0 {
-							varName = parts[1]
-						}
-					}
-					d.GoImports = append(d.GoImports,
-						goImport{
-							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-						},
-					)
-					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
-						Code: fmt.Sprintf(`%s := acctest.RandomDomain()`, parentName),
-					})
-					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
-						Code: fmt.Sprintf(`%s := %s.RandomSubdomain()`, varName, parentName),
-					})
-					d.additionalTfVars[parentName] = fmt.Sprintf("%s.String()", parentName)
-					d.additionalTfVars[varName] = fmt.Sprintf("%s.String()", varName)
-				}
-				if attr, ok := args.Keyword["hasExistsFunction"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid existsFunction value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.HasExistsFunc = b
-					}
-				}
-				if attr, ok := args.Keyword["existsType"]; ok {
-					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-						continue
-					} else {
-						d.ExistsTypeName = typeName
-						if importSpec != nil {
-							d.GoImports = append(d.GoImports, *importSpec)
-						}
-					}
-				}
-				if attr, ok := args.Keyword["existsTakesT"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid existsTakesT value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.ExistsTakesT = b
-					}
-				}
-				if attr, ok := args.Keyword["generator"]; ok {
-					if attr == "false" {
-						generatorSeen = true
-					} else if funcName, importSpec, err := parseIdentifierSpec(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-						continue
-					} else {
-						d.Generator = funcName
-						if importSpec != nil {
-							d.GoImports = append(d.GoImports, *importSpec)
-						}
-						generatorSeen = true
-					}
-				}
+
 				if attr, ok := args.Keyword["idAttrDuplicates"]; ok {
 					d.idAttrDuplicates = attr
 					d.GoImports = append(d.GoImports,
-						goImport{
+						tests.GoImport{
 							Path: "github.com/hashicorp/terraform-plugin-testing/config",
 						},
-						goImport{
+						tests.GoImport{
 							Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
 						},
 					)
 				}
-				if attr, ok := args.Keyword["importIgnore"]; ok {
-					d.ImportIgnore = strings.Split(attr, ";")
-					for i, val := range d.ImportIgnore {
-						d.ImportIgnore[i] = namesgen.ConstOrQuote(val)
-					}
-					d.plannableImportAction = importActionUpdate
-				}
-				if attr, ok := args.Keyword["importStateId"]; ok {
-					d.ImportStateID = attr
-				}
-				if attr, ok := args.Keyword["importStateIdAttribute"]; ok {
-					d.importStateIDAttribute = attr
-				}
-				if attr, ok := args.Keyword["importStateIdFunc"]; ok {
-					d.ImportStateIDFunc = attr
-				}
-				if attr, ok := args.Keyword["name"]; ok {
-					d.Name = strings.ReplaceAll(attr, " ", "")
-				}
-				if attr, ok := args.Keyword["noImport"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid noImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.NoImport = b
-					}
-				}
-				if attr, ok := args.Keyword["plannableImportAction"]; ok {
-					switch attr {
-					case importActionNoop.String():
-						d.plannableImportAction = importActionNoop
 
-					case importActionUpdate.String():
-						d.plannableImportAction = importActionUpdate
-
-					case importActionReplace.String():
-						d.plannableImportAction = importActionReplace
-
-					default:
-						v.errs = append(v.errs, fmt.Errorf("invalid plannableImportAction value: %q at %s. Must be one of %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), []string{importActionNoop.String(), importActionUpdate.String(), importActionReplace.String()}))
-						continue
-					}
-				}
-				if attr, ok := args.Keyword["preCheck"]; ok {
-					if code, importSpec, err := parseIdentifierSpec(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-						continue
-					} else {
-						d.PreChecks = append(d.PreChecks, codeBlock{
-							Code: fmt.Sprintf("%s(ctx, t)", code),
-						})
-						if importSpec != nil {
-							d.GoImports = append(d.GoImports, *importSpec)
-						}
-					}
-				}
-				if attr, ok := args.Keyword["preCheckRegion"]; ok {
-					regions := strings.Split(attr, ";")
-					d.PreCheckRegions = tfslices.ApplyToAll(regions, func(s string) string {
-						return endpointsConstOrQuote(s)
-					})
-					d.GoImports = append(d.GoImports,
-						goImport{
-							Path: "github.com/hashicorp/aws-sdk-go-base/v2/endpoints",
-						},
-					)
-				}
-				if attr, ok := args.Keyword["preCheckWithRegion"]; ok {
-					if code, importSpec, err := parseIdentifierSpec(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-						continue
-					} else {
-						d.PreChecksWithRegion = append(d.PreChecks, codeBlock{
-							Code: code,
-						})
-						if importSpec != nil {
-							d.GoImports = append(d.GoImports, *importSpec)
-						}
-					}
-				}
-				if attr, ok := args.Keyword["useAlternateAccount"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid useAlternateAccount value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else if b {
-						d.UseAlternateAccount = true
-						d.PreChecks = append(d.PreChecks, codeBlock{
-							Code: "acctest.PreCheckAlternateAccount(t)",
-						})
-					}
-				}
-				if attr, ok := args.Keyword["serialize"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid serialize value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.Serialize = b
-					}
-				}
-				if attr, ok := args.Keyword["serializeParallelTests"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid serializeParallelTests value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.SerializeParallelTests = b
-					}
-				}
-				if attr, ok := args.Keyword["serializeDelay"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid serializeDelay value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.SerializeDelay = b
-					}
-				}
 				if attr, ok := args.Keyword["identityTest"]; ok {
 					switch attr {
 					case "true":
@@ -1055,25 +804,31 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["identityRegionOverrideTest"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid identityRegionOverrideTest value: %q at %s. Should be duration value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("identityRegionOverrideTest", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.HasRegionOverrideTest = b
 					}
 				}
 				if attr, ok := args.Keyword["v60NullValuesError"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid v60NullValuesError value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					if b, err := tests.ParseBoolAttr("v60NullValuesError", attr); err != nil {
+						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0NullValuesError = b
+						if b {
+							d.PreIdentityVersion = v5_100_0
+						}
 					}
 				}
 				if attr, ok := args.Keyword["v60RefreshError"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid v60RefreshError value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					if b, err := tests.ParseBoolAttr("v60RefreshError", attr); err != nil {
+						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0RefreshError = b
+						if b {
+							d.PreIdentityVersion = v5_100_0
+						}
 					}
 				}
 				if attr, ok := args.Keyword["preIdentityVersion"]; ok {
@@ -1084,9 +839,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 					d.PreIdentityVersion = version
 				}
+				if attr, ok := args.Keyword["hasNoPreExistingResource"]; ok {
+					if b, err := tests.ParseBoolAttr("hasNoPreExistingResource", attr); err != nil {
+						v.errs = append(v.errs, err)
+					} else {
+						d.HasNoPreExistingResource = b
+					}
+				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid tlsKey value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("tlsKey", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						tlsKey = b
@@ -1095,9 +857,25 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
 					tlsKeyCN = attr
 				}
-
-				if attr, ok := args.Keyword["requireEnvVar"]; ok {
-					d.RequiredEnvVars = append(d.RequiredEnvVars, attr)
+				if attr, ok := args.Keyword["identityVersion"]; ok {
+					parts := strings.Split(attr, ";")
+					if len(parts) != 2 {
+						v.errs = append(v.errs, fmt.Errorf("invalid identityVersion value: %q at %s. Should be in format <identity version>;<provider version>.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
+					var identityVersion int64
+					if i, err := strconv.ParseInt(parts[0], 10, 64); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid identity version value: %q at %s. Should be integer value.", parts[0], fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						identityVersion = i
+					}
+					providerVersion, err := version.NewVersion(parts[1])
+					if err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid provider version value: %q at %s. Should be version value.", parts[1], fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
+					d.IdentityVersions[identityVersion] = providerVersion
 				}
 			}
 		}
@@ -1107,17 +885,23 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if len(tlsKeyCN) == 0 {
 			tlsKeyCN = "acctest.RandomDomain().String()"
 			d.GoImports = append(d.GoImports,
-				goImport{
+				tests.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 				},
 			)
 		}
-		d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+		d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-		d.additionalTfVars["certificate_pem"] = "certificatePEM"
-		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
+		d.AdditionalTfVars_["certificate_pem"] = tests.TFVar{
+			GoVarName: "certificatePEM",
+			Type:      tests.TFVarTypeString,
+		}
+		d.AdditionalTfVars_["private_key_pem"] = tests.TFVar{
+			GoVarName: "privateKeyPEM",
+			Type:      tests.TFVarTypeString,
+		}
 	}
 
 	if d.IsRegionalSingleton() {
@@ -1136,10 +920,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if !skip {
 			if d.idAttrDuplicates != "" {
 				d.GoImports = append(d.GoImports,
-					goImport{
+					tests.GoImport{
 						Path: "github.com/hashicorp/terraform-plugin-testing/config",
 					},
-					goImport{
+					tests.GoImport{
 						Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
 					},
 				)
@@ -1148,14 +932,18 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
 			}
+			if !d.HasNoPreExistingResource && d.PreIdentityVersion == nil {
+				v.errs = append(v.errs, fmt.Errorf("preIdentityVersion is required when hasNoPreExistingResource is false: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				return
+			}
 			if !generatorSeen {
 				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
 				d.GoImports = append(d.GoImports,
-					goImport{
+					tests.GoImport{
 						Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
 						Alias: "sdkacctest",
 					},
-					goImport{
+					tests.GoImport{
 						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 					},
 				)
@@ -1205,68 +993,4 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 	if err := tf.Write(); err != nil {
 		g.Fatalf("generating file (%s): %s", mainPath, err)
 	}
-}
-
-func parseIdentifierSpec(s string) (string, *goImport, error) {
-	parts := strings.Split(s, ";")
-	switch len(parts) {
-	case 1:
-		return parts[0], nil, nil
-
-	case 2:
-		return parts[1], &goImport{
-			Path: parts[0],
-		}, nil
-
-	case 3:
-		return parts[2], &goImport{
-			Path:  parts[0],
-			Alias: parts[1],
-		}, nil
-
-	default:
-		return "", nil, fmt.Errorf("invalid generator value: %q", s)
-	}
-}
-
-func generateDurationStatement(d time.Duration) string {
-	var buf strings.Builder
-
-	d = d.Round(1 * time.Second)
-
-	if d >= time.Minute {
-		mins := d / time.Minute
-		fmt.Fprintf(&buf, "%d*time.Minute", mins)
-		d = d - mins*time.Minute
-		if d != 0 {
-			fmt.Fprint(&buf, "+")
-		}
-	}
-	if d != 0 {
-		secs := d / time.Second
-		fmt.Fprintf(&buf, "%d*time.Second", secs)
-	}
-
-	return buf.String()
-}
-
-func count[T any](s iter.Seq[T], f func(T) bool) (c int) {
-	for v := range s {
-		if f(v) {
-			c++
-		}
-	}
-	return c
-}
-
-func endpointsConstOrQuote(region string) string {
-	var buf strings.Builder
-	buf.WriteString("endpoints.")
-
-	for _, part := range strings.Split(region, "-") {
-		buf.WriteString(strings.Title(part))
-	}
-	buf.WriteString("RegionID")
-
-	return buf.String()
 }

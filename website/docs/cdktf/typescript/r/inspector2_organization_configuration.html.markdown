@@ -34,6 +34,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new Inspector2OrganizationConfiguration(this, "example", {
       autoEnable: {
+        codeRepository: false,
         ec2: true,
         ecr: false,
         lambda: true,
@@ -56,6 +57,7 @@ This resource supports the following arguments:
 
 * `ec2` - (Required) Whether Amazon EC2 scans are automatically enabled for new members of your Amazon Inspector organization.
 * `ecr` - (Required) Whether Amazon ECR scans are automatically enabled for new members of your Amazon Inspector organization.
+* `codeRepository` - (Optional) Whether code repository scans are automatically enabled for new members of your Amazon Inspector organization.
 * `lambda` - (Optional) Whether Lambda Function scans are automatically enabled for new members of your Amazon Inspector organization.
 * `lambdaCode` - (Optional) Whether AWS Lambda code scans are automatically enabled for new members of your Amazon Inspector organization. **Note:** Lambda code scanning requires Lambda standard scanning to be activated. Consequently, if you are setting this argument to `true`, you must also set the `lambda` argument to `true`. See [Scanning AWS Lambda functions with Amazon Inspector](https://docs.aws.amazon.com/inspector/latest/user/scanning-lambda.html#lambda-code-scans) for more information.
 
@@ -73,4 +75,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.20.8 input-2dba2da6be47cbdc415fb2f6a8b0824ad9055627df753ce8e6dec8d82c391849 -->
+<!-- cache-key: cdktf-0.20.8 input-36a60d1b38d11a4d97252ae5b567b1c781494367c5102a6f09820ab3479cb37b -->

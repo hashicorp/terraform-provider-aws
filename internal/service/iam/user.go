@@ -93,7 +93,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	name := d.Get(names.AttrName).(string)
 	path := d.Get(names.AttrPath).(string)
-	input := &iam.CreateUserInput{
+	input := iam.CreateUserInput{
 		Path:     aws.String(path),
 		Tags:     getTagsIn(ctx),
 		UserName: aws.String(name),
@@ -103,14 +103,14 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.PermissionsBoundary = aws.String(v.(string))
 	}
 
-	output, err := retryCreateUser(ctx, conn, input)
+	output, err := retryCreateUser(ctx, conn, &input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = retryCreateUser(ctx, conn, input)
+		output, err = retryCreateUser(ctx, conn, &input)
 	}
 
 	if err != nil {
@@ -175,13 +175,13 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if d.HasChanges(names.AttrName, names.AttrPath) {
 		o, n := d.GetChange(names.AttrName)
-		input := &iam.UpdateUserInput{
-			UserName:    aws.String(o.(string)),
+		input := iam.UpdateUserInput{
 			NewUserName: aws.String(n.(string)),
 			NewPath:     aws.String(d.Get(names.AttrPath).(string)),
+			UserName:    aws.String(o.(string)),
 		}
 
-		_, err := conn.UpdateUser(ctx, input)
+		_, err := conn.UpdateUser(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM User (%s): %s", d.Id(), err)
@@ -192,21 +192,21 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if d.HasChange("permissions_boundary") {
 		if v, ok := d.GetOk("permissions_boundary"); ok {
-			input := &iam.PutUserPermissionsBoundaryInput{
+			input := iam.PutUserPermissionsBoundaryInput{
 				PermissionsBoundary: aws.String(v.(string)),
 				UserName:            aws.String(d.Id()),
 			}
 
-			_, err := conn.PutUserPermissionsBoundary(ctx, input)
+			_, err := conn.PutUserPermissionsBoundary(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting IAM User (%s) permissions boundary: %s", d.Id(), err)
 			}
 		} else {
-			input := &iam.DeleteUserPermissionsBoundaryInput{
+			input := iam.DeleteUserPermissionsBoundaryInput{
 				UserName: aws.String(d.Id()),
 			}
-			_, err := conn.DeleteUserPermissionsBoundary(ctx, input)
+			_, err := conn.DeleteUserPermissionsBoundary(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting IAM User (%s) permissions boundary: %s", d.Id(), err)
@@ -253,9 +253,10 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	log.Println("[DEBUG] Deleting IAM User:", d.Id())
-	_, err := conn.DeleteUser(ctx, &iam.DeleteUserInput{
+	input := iam.DeleteUserInput{
 		UserName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteUser(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
@@ -269,10 +270,14 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 }
 
 func findUserByName(ctx context.Context, conn *iam.Client, name string) (*awstypes.User, error) {
-	input := &iam.GetUserInput{
+	input := iam.GetUserInput{
 		UserName: aws.String(name),
 	}
 
+	return findUser(ctx, conn, &input)
+}
+
+func findUser(ctx context.Context, conn *iam.Client, input *iam.GetUserInput) (*awstypes.User, error) {
 	output, err := conn.GetUser(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
@@ -281,6 +286,7 @@ func findUserByName(ctx context.Context, conn *iam.Client, name string) (*awstyp
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -293,12 +299,12 @@ func findUserByName(ctx context.Context, conn *iam.Client, name string) (*awstyp
 }
 
 func deleteUserGroupMemberships(ctx context.Context, conn *iam.Client, user string) error {
-	input := &iam.ListGroupsForUserInput{
+	input := iam.ListGroupsForUserInput{
 		UserName: aws.String(user),
 	}
 	var groupNames []string
 
-	pages := iam.NewListGroupsForUserPaginator(conn, input)
+	pages := iam.NewListGroupsForUserPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
@@ -321,118 +327,124 @@ func deleteUserGroupMemberships(ctx context.Context, conn *iam.Client, user stri
 	return nil
 }
 
-func deleteUserSSHKeys(ctx context.Context, conn *iam.Client, username string) error {
-	var publicKeys []string
-
-	listSSHPublicKeys := &iam.ListSSHPublicKeysInput{
-		UserName: aws.String(username),
+func deleteUserSSHKeys(ctx context.Context, conn *iam.Client, user string) error {
+	input := iam.ListSSHPublicKeysInput{
+		UserName: aws.String(user),
 	}
+	var ids []string
 
-	pages := iam.NewListSSHPublicKeysPaginator(conn, listSSHPublicKeys)
+	pages := iam.NewListSSHPublicKeysPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return fmt.Errorf("removing public SSH keys of user %s: %w", username, err)
+			return fmt.Errorf("listing IAM User (%s) SSH public keys: %w", user, err)
 		}
 
-		for _, k := range page.SSHPublicKeys {
-			publicKeys = append(publicKeys, *k.SSHPublicKeyId)
+		for _, v := range page.SSHPublicKeys {
+			ids = append(ids, aws.ToString(v.SSHPublicKeyId))
 		}
 	}
 
-	for _, k := range publicKeys {
-		_, err := conn.DeleteSSHPublicKey(ctx, &iam.DeleteSSHPublicKeyInput{
-			UserName:       aws.String(username),
-			SSHPublicKeyId: aws.String(k),
-		})
+	for _, v := range ids {
+		input := iam.DeleteSSHPublicKeyInput{
+			SSHPublicKeyId: aws.String(v),
+			UserName:       aws.String(user),
+		}
+		_, err := conn.DeleteSSHPublicKey(ctx, &input)
+
 		if err != nil {
-			return fmt.Errorf("deleting public SSH key %s: %w", k, err)
+			return fmt.Errorf("deleting IAM User (%s) SSH public key (%s): %w", user, v, err)
 		}
 	}
 
 	return nil
 }
 
-func deleteUserVirtualMFADevices(ctx context.Context, conn *iam.Client, username string) error {
-	var VirtualMFADevices []string
-
-	listVirtualMFADevices := &iam.ListVirtualMFADevicesInput{
-		AssignmentStatus: awstypes.AssignmentStatusType("Assigned"),
+func deleteUserVirtualMFADevices(ctx context.Context, conn *iam.Client, user string) error {
+	input := iam.ListVirtualMFADevicesInput{
+		AssignmentStatus: awstypes.AssignmentStatusTypeAssigned,
 	}
+	var virtualMFADevices []string
 
-	pages := iam.NewListVirtualMFADevicesPaginator(conn, listVirtualMFADevices)
+	pages := iam.NewListVirtualMFADevicesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return fmt.Errorf("removing Virtual MFA devices of user %s: %w", username, err)
+			return fmt.Errorf("listing IAM Virtual MFA Devices: %w", err)
 		}
 
-		for _, m := range page.VirtualMFADevices {
+		for _, v := range page.VirtualMFADevices {
 			// UserName is `nil` for the root user
-			if aws.ToString(m.User.UserName) == username {
-				VirtualMFADevices = append(VirtualMFADevices, *m.SerialNumber)
+			if aws.ToString(v.User.UserName) == user {
+				virtualMFADevices = append(virtualMFADevices, aws.ToString(v.SerialNumber))
 			}
 		}
 	}
 
-	for _, m := range VirtualMFADevices {
-		_, err := conn.DeactivateMFADevice(ctx, &iam.DeactivateMFADeviceInput{
-			UserName:     aws.String(username),
-			SerialNumber: aws.String(m),
-		})
-		if err != nil {
-			return fmt.Errorf("deactivating Virtual MFA device %s: %w", m, err)
+	for _, v := range virtualMFADevices {
+		inputDeactivate := iam.DeactivateMFADeviceInput{
+			SerialNumber: aws.String(v),
+			UserName:     aws.String(user),
 		}
-		_, err = conn.DeleteVirtualMFADevice(ctx, &iam.DeleteVirtualMFADeviceInput{
-			SerialNumber: aws.String(m),
-		})
+		_, err := conn.DeactivateMFADevice(ctx, &inputDeactivate)
+
 		if err != nil {
-			return fmt.Errorf("deleting Virtual MFA device %s: %w", m, err)
+			return fmt.Errorf("deactivating IAM User (%s) virtual MFA device (%s): %w", user, v, err)
+		}
+
+		inputDelete := iam.DeleteVirtualMFADeviceInput{
+			SerialNumber: aws.String(v),
+		}
+		_, err = conn.DeleteVirtualMFADevice(ctx, &inputDelete)
+
+		if err != nil {
+			return fmt.Errorf("deleting IAM Virtual MFA Device (%s): %w", v, err)
 		}
 	}
 
 	return nil
 }
 
-func deactivateUserMFADevices(ctx context.Context, conn *iam.Client, username string) error {
-	var MFADevices []string
-
-	listMFADevices := &iam.ListMFADevicesInput{
-		UserName: aws.String(username),
+func deactivateUserMFADevices(ctx context.Context, conn *iam.Client, user string) error {
+	input := iam.ListMFADevicesInput{
+		UserName: aws.String(user),
 	}
+	var mfaDevices []string
 
-	pages := iam.NewListMFADevicesPaginator(conn, listMFADevices)
+	pages := iam.NewListMFADevicesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return fmt.Errorf("removing MFA devices of user %s: %w", username, err)
+			return fmt.Errorf("listing IAM User (%s) MFA devices: %w", user, err)
 		}
 
 		for _, v := range page.MFADevices {
-			MFADevices = append(MFADevices, *v.SerialNumber)
+			mfaDevices = append(mfaDevices, aws.ToString(v.SerialNumber))
 		}
 	}
 
-	for _, m := range MFADevices {
-		_, err := conn.DeactivateMFADevice(ctx, &iam.DeactivateMFADeviceInput{
-			UserName:     aws.String(username),
-			SerialNumber: aws.String(m),
-		})
+	for _, v := range mfaDevices {
+		input := iam.DeactivateMFADeviceInput{
+			SerialNumber: aws.String(v),
+			UserName:     aws.String(user),
+		}
+		_, err := conn.DeactivateMFADevice(ctx, &input)
+
 		if err != nil {
-			return fmt.Errorf("deactivating MFA device %s: %w", m, err)
+			return fmt.Errorf("deactivating IAM User (%s) MFA device (%s): %w", user, v, err)
 		}
 	}
 
 	return nil
 }
 
-func deleteUserLoginProfile(ctx context.Context, conn *iam.Client, username string) error {
-	var err error
-	input := &iam.DeleteLoginProfileInput{
-		UserName: aws.String(username),
+func deleteUserLoginProfile(ctx context.Context, conn *iam.Client, user string) error {
+	input := iam.DeleteLoginProfileInput{
+		UserName: aws.String(user),
 	}
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		_, err = conn.DeleteLoginProfile(ctx, input)
+
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		_, err := conn.DeleteLoginProfile(ctx, &input)
 		if err != nil {
 			var errNoSuchEntityException *awstypes.NoSuchEntityException
 			if tfawserr.ErrCodeEquals(err, errNoSuchEntityException.ErrorCode()) {
@@ -441,154 +453,167 @@ func deleteUserLoginProfile(ctx context.Context, conn *iam.Client, username stri
 			// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
 			var etu *awstypes.EntityTemporarilyUnmodifiableException
 			if tfawserr.ErrCodeEquals(err, etu.ErrorCode()) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteLoginProfile(ctx, input)
-	}
+
 	if err != nil {
-		return fmt.Errorf("deleting Account Login Profile: %w", err)
+		return fmt.Errorf("deleting IAM User (%s) login profile: %w", user, err)
 	}
 
 	return nil
 }
 
-func deleteUserAccessKeys(ctx context.Context, conn *iam.Client, username string) error {
-	accessKeys, err := findAccessKeysByUser(ctx, conn, username)
+func deleteUserAccessKeys(ctx context.Context, conn *iam.Client, user string) error {
+	accessKeys, err := findAccessKeysByUser(ctx, conn, user)
 
 	if err != nil && !tfresource.NotFound(err) {
-		return fmt.Errorf("listing access keys for IAM User (%s): %w", username, err)
+		return fmt.Errorf("listing IAM User (%s) access keys: %w", user, err)
 	}
 
 	var errs []error
+	for _, v := range accessKeys {
+		accessKeyID := aws.ToString(v.AccessKeyId)
+		input := iam.DeleteAccessKeyInput{
+			AccessKeyId: aws.String(accessKeyID),
+			UserName:    aws.String(user),
+		}
+		_, err := conn.DeleteAccessKey(ctx, &input)
 
-	for _, k := range accessKeys {
-		_, err := conn.DeleteAccessKey(ctx, &iam.DeleteAccessKeyInput{
-			UserName:    aws.String(username),
-			AccessKeyId: k.AccessKeyId,
-		})
 		if err != nil {
-			errs = append(errs, fmt.Errorf("deleting Access Key (%s) from User (%s): %w", aws.ToString(k.AccessKeyId), username, err))
+			return fmt.Errorf("deleting IAM User (%s) access key (%s): %w", user, accessKeyID, err)
 		}
 	}
 
 	return errors.Join(errs...)
 }
 
-func deleteUserSigningCertificates(ctx context.Context, conn *iam.Client, userName string) error {
-	var certificateIDList []string
-
-	listInput := &iam.ListSigningCertificatesInput{
-		UserName: aws.String(userName),
+func deleteUserSigningCertificates(ctx context.Context, conn *iam.Client, user string) error {
+	input := iam.ListSigningCertificatesInput{
+		UserName: aws.String(user),
 	}
+	var ids []string
 
-	pages := iam.NewListSigningCertificatesPaginator(conn, listInput)
+	pages := iam.NewListSigningCertificatesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return fmt.Errorf("removing signing certificates of user %s: %w", userName, err)
+			return fmt.Errorf("listing IAM User (%s) signing certificates: %w", user, err)
 		}
 
-		for _, c := range page.Certificates {
-			certificateIDList = append(certificateIDList, aws.ToString(c.CertificateId))
+		for _, v := range page.Certificates {
+			ids = append(ids, aws.ToString(v.CertificateId))
 		}
 	}
 
-	for _, c := range certificateIDList {
-		_, err := conn.DeleteSigningCertificate(ctx, &iam.DeleteSigningCertificateInput{
-			CertificateId: aws.String(c),
-			UserName:      aws.String(userName),
-		})
+	for _, v := range ids {
+		input := iam.DeleteSigningCertificateInput{
+			CertificateId: aws.String(v),
+			UserName:      aws.String(user),
+		}
+		_, err := conn.DeleteSigningCertificate(ctx, &input)
+
 		if err != nil {
-			return fmt.Errorf("deleting signing certificate %s: %w", c, err)
+			return fmt.Errorf("deleting IAM User (%s) signing certificate (%s): %w", user, v, err)
 		}
 	}
 
 	return nil
 }
 
-func deleteServiceSpecificCredentials(ctx context.Context, conn *iam.Client, username string) error {
-	input := &iam.ListServiceSpecificCredentialsInput{
-		UserName: aws.String(username),
+func deleteServiceSpecificCredentials(ctx context.Context, conn *iam.Client, user string) error {
+	input := iam.ListServiceSpecificCredentialsInput{
+		UserName: aws.String(user),
+	}
+	var ids []string
+
+	err := listServiceSpecificCredentialsPages(ctx, conn, &input, func(page *iam.ListServiceSpecificCredentialsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ServiceSpecificCredentials {
+			ids = append(ids, aws.ToString(v.ServiceSpecificCredentialId))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return fmt.Errorf("listing IAM User (%s) service-specific credentials: %w", user, err)
 	}
 
-	output, err := conn.ListServiceSpecificCredentials(ctx, input)
-	if err != nil {
-		return fmt.Errorf("listing Service Specific Credentials of user %s: %w", username, err)
-	}
-	for _, m := range output.ServiceSpecificCredentials {
-		_, err := conn.DeleteServiceSpecificCredential(ctx, &iam.DeleteServiceSpecificCredentialInput{
-			UserName:                    aws.String(username),
-			ServiceSpecificCredentialId: m.ServiceSpecificCredentialId,
-		})
+	for _, v := range ids {
+		input := iam.DeleteServiceSpecificCredentialInput{
+			ServiceSpecificCredentialId: aws.String(v),
+			UserName:                    aws.String(user),
+		}
+		_, err := conn.DeleteServiceSpecificCredential(ctx, &input)
+
 		if err != nil {
-			return fmt.Errorf("deleting Service Specific Credentials %v: %w", m, err)
+			return fmt.Errorf("deleting IAM User (%s) service-specific credential (%s): %w", user, v, err)
 		}
 	}
 
 	return nil
 }
 
-func deleteUserPolicies(ctx context.Context, conn *iam.Client, username string) error {
-	input := &iam.ListUserPoliciesInput{
-		UserName: aws.String(username),
+func deleteUserPolicies(ctx context.Context, conn *iam.Client, user string) error {
+	input := iam.ListUserPoliciesInput{
+		UserName: aws.String(user),
 	}
+	var policies []string
 
-	output, err := conn.ListUserPolicies(ctx, input)
-	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		// user not found
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("listing/deleting IAM User (%s) inline policies: %s", username, err)
-	}
-
-	for _, name := range output.PolicyNames {
-		log.Printf("[DEBUG] Deleting IAM User (%s) inline policy %q", username, name)
-
-		input := &iam.DeleteUserPolicyInput{
-			PolicyName: aws.String(name),
-			UserName:   aws.String(username),
+	pages := iam.NewListUserPoliciesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return fmt.Errorf("listing IAM User (%s) policies: %w", user, err)
 		}
 
-		if _, err := conn.DeleteUserPolicy(ctx, input); err != nil {
-			if errs.IsA[*awstypes.NoSuchEntityException](err) {
-				continue
-			}
-			return fmt.Errorf("deleting IAM User (%s) inline policies: %s", username, err)
+		policies = append(policies, page.PolicyNames...)
+	}
+
+	for _, v := range policies {
+		input := iam.DeleteUserPolicyInput{
+			PolicyName: aws.String(v),
+			UserName:   aws.String(user),
+		}
+
+		_, err := conn.DeleteUserPolicy(ctx, &input)
+
+		if err != nil {
+			return fmt.Errorf("deleting IAM User (%s) policy (%s): %w", user, v, err)
 		}
 	}
 
 	return nil
 }
 
-func detachUserPolicies(ctx context.Context, conn *iam.Client, username string) error {
-	input := &iam.ListAttachedUserPoliciesInput{
-		UserName: aws.String(username),
+func detachUserPolicies(ctx context.Context, conn *iam.Client, user string) error {
+	input := iam.ListAttachedUserPoliciesInput{
+		UserName: aws.String(user),
+	}
+	var policies []string
+
+	pages := iam.NewListAttachedUserPoliciesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return fmt.Errorf("listing IAM User (%s) attached policies: %w", user, err)
+		}
+
+		for _, v := range page.AttachedPolicies {
+			policies = append(policies, aws.ToString(v.PolicyArn))
+		}
 	}
 
-	output, err := conn.ListAttachedUserPolicies(ctx, input)
-	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		// user was an entity 2 nanoseconds ago, but now it's not
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("listing/detaching IAM User (%s) attached policy: %s", username, err)
-	}
-
-	for _, policy := range output.AttachedPolicies {
-		policyARN := aws.ToString(policy.PolicyArn)
-
-		log.Printf("[DEBUG] Detaching IAM User (%s) attached policy: %s", username, policyARN)
-
-		if err := detachPolicyFromUser(ctx, conn, username, policyARN); err != nil {
-			return fmt.Errorf("detaching IAM User (%s) attached policy: %s", username, err)
+	for _, v := range policies {
+		if err := detachPolicyFromUser(ctx, conn, user, v); err != nil {
+			return err
 		}
 	}
 
@@ -617,7 +642,7 @@ func userTags(ctx context.Context, conn *iam.Client, identifier string, optFns .
 
 func retryCreateUser(ctx context.Context, conn *iam.Client, input *iam.CreateUserInput) (*iam.CreateUserOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateUser(ctx, input)
 		},
 		func(err error) (bool, error) {

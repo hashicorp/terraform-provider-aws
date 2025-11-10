@@ -51,8 +51,28 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the ECS Service
 * `desiredCount` - Number of tasks for the ECS Service
 * `launchType` - Launch type for the ECS Service
+* `loadBalancer` - Load balancers for the ECS Service. See [`loadBalancer` Block](#load_balancer-block) for details.
 * `schedulingStrategy` - Scheduling strategy for the ECS Service
 * `taskDefinition` - Family for the latest ACTIVE revision or full ARN of the task definition.
 * `tags` - Resource tags.
 
-<!-- cache-key: cdktf-0.20.8 input-5b8733268565a22b6ada6c1d07bd05eaf0a2dcf7c95ea724f2e08f688157367c -->
+### `loadBalancer` Block
+
+The `loadBalancer` block exports the following attributes:
+
+* `advancedConfiguration` - Settings for Blue/Green deployment. See [`advancedConfiguration` Block](#advanced_configuration-block) for details.
+* `containerName` - Name of the container to associate with the load balancer.
+* `containerPort` - Port on the container to associate with the load balancer.
+* `elbName` - Name of the load balancer.
+* `targetGroupArn` - ARN of the target group to associate with the load balancer.
+
+### `advancedConfiguration` Block
+
+The `advancedConfiguration` block exports the following attributes:
+
+* `alternateTargetGroupArn` - ARN of the alternate target group to use for Blue/Green deployments.
+* `productionListenerRule` - ARN of the listener rule that routes production traffic.
+* `roleArn` - ARN of the IAM role that allows ECS to manage the target groups.
+* `testListenerRule` - ARN of the listener rule that routes test traffic.
+
+<!-- cache-key: cdktf-0.20.8 input-a70bbb1a38c9b2974394dea73f8c9d75c00699f38008f9f5c14be54f730b4ec7 -->

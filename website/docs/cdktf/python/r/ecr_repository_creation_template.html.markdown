@@ -73,6 +73,7 @@ This resource supports the following arguments:
 * `description` - (Optional) The description for this template.
 * `encryption_configuration` - (Optional) Encryption configuration for any created repositories. See [below for schema](#encryption_configuration).
 * `image_tag_mutability` - (Optional) The tag mutability setting for any created repositories. Must be one of: `MUTABLE` or `IMMUTABLE`. Defaults to `MUTABLE`.
+* `image_tag_mutability_exclusion_filter` - (Optional) Configuration block that defines filters to specify which image tags can override the default tag mutability setting. Only applicable when `image_tag_mutability` is set to `IMMUTABLE_WITH_EXCLUSION` or `MUTABLE_WITH_EXCLUSION`. See [below for schema](#image_tag_mutability_exclusion_filter).
 * `lifecycle_policy` - (Optional) The lifecycle policy document to apply to any created repositories. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs. Consider using the [`aws_ecr_lifecycle_policy_document` data_source](/docs/providers/aws/d/ecr_lifecycle_policy_document.html) to generate/manage the JSON document used for the `lifecycle_policy` argument.
 * `repository_policy` - (Optional) The registry policy document to apply to any created repositories. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 * `resource_tags` - (Optional) A map of tags to assign to any created repositories.
@@ -81,6 +82,11 @@ This resource supports the following arguments:
 
 * `encryption_type` - (Optional) The encryption type to use for any created repositories. Valid values are `AES256` or `KMS`. Defaults to `AES256`.
 * `kms_key` - (Optional) The ARN of the KMS key to use when `encryption_type` is `KMS`. If not specified, uses the default AWS managed key for ECR.
+
+### image_tag_mutability_exclusion_filter
+
+* `filter` - (Required) The filter pattern to use for excluding image tags from the mutability setting. Must contain only letters, numbers, and special characters (._*-). Each filter can be up to 128 characters long and can contain a maximum of 2 wildcards (*).
+* `filter_type` - (Required) The type of filter to use. Must be `WILDCARD`.
 
 ## Attribute Reference
 
@@ -113,4 +119,4 @@ Using `terraform import`, import the ECR Repository Creating Templates using the
 % terraform import aws_ecr_repository_creation_template.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a5c53f5092ebf2a950d2764e7cde9ee0fe17ecd6a325aa37613b76596295e7d4 -->
+<!-- cache-key: cdktf-0.20.8 input-1adc641470a6eaf38c505b3c8562ee877a32390c2f67631e8a1bf7307454cd16 -->

@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	yaml "github.com/goccy/go-yaml"
 )
 
 // DecodeFromBytes decodes (unmarshals) the given byte slice, containing valid YAML, into `to`.

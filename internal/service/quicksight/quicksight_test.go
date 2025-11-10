@@ -32,6 +32,20 @@ func TestAccQuickSight_serial(t *testing.T) {
 			acctest.CtBasic:      testAccAccountSubscription_basic,
 			acctest.CtDisappears: testAccAccountSubscription_disappears,
 		},
+		"IPRestriction": {
+			acctest.CtBasic:      testAccIPRestriction_basic,
+			acctest.CtDisappears: testAccIPRestriction_disappears,
+			"update":             testAccIPRestriction_update,
+		},
+		"KeyRegistration": {
+			acctest.CtBasic:      testAccKeyRegistration_basic,
+			acctest.CtDisappears: testAccKeyRegistration_disappears,
+		},
+		"RoleCustomPermission": {
+			acctest.CtBasic:      testAccRoleCustomPermission_basic,
+			acctest.CtDisappears: testAccRoleCustomPermission_disappears,
+			"update":             testAccRoleCustomPermission_update,
+		},
 		"RoleMembership": {
 			acctest.CtBasic:      testAccRoleMembership_basic,
 			acctest.CtDisappears: testAccRoleMembership_disappears,

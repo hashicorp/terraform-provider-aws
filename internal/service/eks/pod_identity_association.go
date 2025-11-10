@@ -133,7 +133,7 @@ func (r *podIdentityAssociationResource) Create(ctx context.Context, request res
 	input.ClientRequestToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreatePodIdentityAssociation(ctx, &input)
 	}, "Role provided in the request does not exist")
 
@@ -213,7 +213,7 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, request res
 		// Set values for unknowns.
 		input.ClientRequestToken = aws.String(sdkid.UniqueId())
 
-		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdatePodIdentityAssociation(ctx, &input)
 		}, "Role provided in the request does not exist")
 
