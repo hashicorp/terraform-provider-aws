@@ -1269,7 +1269,7 @@ resource "aws_iam_role_policy" "sns_feedback_policy" {
 resource "aws_sns_topic" "test" {
   name = %[2]q
 
-  lambda_failure_feedback_role_arn  = aws_iam_role.sns_feedback_role.arn
+  lambda_failure_feedback_role_arn = aws_iam_role.sns_feedback_role.arn
 }
 
 # Grant PassRole permission to the execution role.
@@ -1280,8 +1280,7 @@ resource "aws_iam_policy" "terraform_passrole_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "ExplicitlyDenyPassRole"
-        # Effect = "Deny"
+        Sid    = "ExplicitlyAllowPassRole"
         Effect = "Allow"
         Action = [
           "iam:PassRole"
