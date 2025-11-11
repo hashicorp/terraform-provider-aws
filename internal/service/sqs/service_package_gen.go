@@ -54,8 +54,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrURL),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.VersionedIdentity(1, inttypes.RegionalCustomInherentRegionIdentity(names.AttrURL, parseQueueURL,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -65,7 +67,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_sqs_queue_policy",
 			Name:     "Queue Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity("queue_url"),
+			Identity: inttypes.VersionedIdentity(1, inttypes.RegionalCustomInherentRegionIdentity("queue_url", parseQueueURL,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -75,7 +79,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_sqs_queue_redrive_allow_policy",
 			Name:     "Queue Redrive Allow Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity("queue_url"),
+			Identity: inttypes.VersionedIdentity(1, inttypes.RegionalCustomInherentRegionIdentity("queue_url", parseQueueURL,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -85,7 +91,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_sqs_queue_redrive_policy",
 			Name:     "Queue Redrive Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity("queue_url"),
+			Identity: inttypes.VersionedIdentity(1, inttypes.RegionalCustomInherentRegionIdentity("queue_url", parseQueueURL,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},

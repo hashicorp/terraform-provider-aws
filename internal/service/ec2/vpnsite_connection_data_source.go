@@ -92,13 +92,13 @@ func (d *dataSourceVPNConnection) Schema(ctx context.Context, req datasource.Sch
 func (d *dataSourceVPNConnection) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().EC2Client(ctx)
 	var data dataSourceVPNConnectionModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := ec2.DescribeVpnConnectionsInput{}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, data, &input, flex.WithIgnoredFieldNamesAppend("VpnConnectionId")), smerr.ID)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, data, &input, flex.WithIgnoredFieldNamesAppend("VpnConnectionId")), smerr.ID)
 
 	if !data.VpnConnectionId.IsNull() && !data.VpnConnectionId.IsUnknown() {
 		input.VpnConnectionIds = []string{data.VpnConnectionId.ValueString()}
@@ -110,13 +110,13 @@ func (d *dataSourceVPNConnection) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data), smerr.ID, data.VpnConnectionId.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data), smerr.ID, data.VpnConnectionId.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	setTagsOut(ctx, out.Tags)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.VpnConnectionId.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.VpnConnectionId.String())
 }
 
 func (d *dataSourceVPNConnection) ConfigValidators(_ context.Context) []datasource.ConfigValidator {

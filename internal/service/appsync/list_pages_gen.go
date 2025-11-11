@@ -5,6 +5,7 @@ package appsync
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 )
@@ -13,7 +14,7 @@ func listAPIKeysPages(ctx context.Context, conn *appsync.Client, input *appsync.
 	for {
 		output, err := conn.ListApiKeys(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -29,7 +30,7 @@ func listAPIsPages(ctx context.Context, conn *appsync.Client, input *appsync.Lis
 	for {
 		output, err := conn.ListApis(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -45,7 +46,7 @@ func listDomainNamesPages(ctx context.Context, conn *appsync.Client, input *apps
 	for {
 		output, err := conn.ListDomainNames(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -61,7 +62,7 @@ func listGraphQLAPIsPages(ctx context.Context, conn *appsync.Client, input *apps
 	for {
 		output, err := conn.ListGraphqlApis(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
