@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationsignals/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -531,11 +532,6 @@ func statusServiceLevelObjective(ctx context.Context, conn *applicationsignals.C
 	}
 }
 
-// TIP: ==== FINDERS ====
-// The find function is not strictly necessary. You could do the API
-// request from the status function. However, we have found that find often
-// comes in handy in other places besides the status function. As a result, it
-// is good practice to define it separately.
 func findServiceLevelObjectiveByID(ctx context.Context, conn *applicationsignals.Client, id string) (*awstypes.ServiceLevelObjective, error) {
 	input := applicationsignals.GetServiceLevelObjectiveInput{
 		Id: aws.String(id),
@@ -553,11 +549,39 @@ func findServiceLevelObjectiveByID(ctx context.Context, conn *applicationsignals
 		return nil, smarterr.NewError(err)
 	}
 
-	if out == nil || out.ServiceLevelObjective == nil {
+	if out == nil || out.Slo == nil {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
 	}
 
-	return out.ServiceLevelObjective, nil
+	return out.Slo, nil
+}
+
+var _ flex.Flattener = &intervalModel{}
+
+func (m *intervalModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	m.CalendarInterval = fwtypes.NewObjectValueOfNull[calendarIntervalModel](ctx)
+	m.RollingInterval = fwtypes.NewObjectValueOfNull[rollingIntervalModel](ctx)
+
+	switch t := v.(type) {
+
+	case awstypes.IntervalMemberCalendarInterval:
+		var model calendarIntervalModel
+		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		if !diags.HasError() {
+			m.CalendarInterval = fwtypes.NewObjectValueOfMust(ctx, &model)
+		}
+
+	case awstypes.IntervalMemberRollingInterval:
+		var model rollingIntervalModel
+		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		if !diags.HasError() {
+			m.RollingInterval = fwtypes.NewObjectValueOfMust(ctx, &model)
+		}
+	}
+
+	return diags
 }
 
 type resourceServiceLevelObjectiveModel struct {
