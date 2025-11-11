@@ -114,51 +114,7 @@ func (d *dataSourceServiceLevelObjective) Schema(ctx context.Context, req dataso
 							"operation_name":    schema.StringAttribute{Computed: true},
 						},
 						Blocks: map[string]schema.Block{
-							"total_request_count_metric": schema.ListNestedBlock{
-								CustomType: fwtypes.NewListNestedObjectTypeOf[metricDataQueryModel](ctx),
-								NestedObject: schema.NestedBlockObject{
-									CustomType: fwtypes.NewObjectTypeOf[metricDataQueryModel](ctx),
-									Attributes: map[string]schema.Attribute{
-										"id":          schema.StringAttribute{Computed: true},
-										"account_id":  schema.StringAttribute{Computed: true},
-										"expression":  schema.StringAttribute{Computed: true},
-										"label":       schema.StringAttribute{Computed: true},
-										"period":      schema.Int32Attribute{Computed: true},
-										"return_data": schema.BoolAttribute{Computed: true},
-									},
-									Blocks: map[string]schema.Block{
-										"metric_stat": schema.SingleNestedBlock{
-											CustomType: fwtypes.NewObjectTypeOf[metricStatModel](ctx),
-											Attributes: map[string]schema.Attribute{
-												"period": schema.Int32Attribute{Computed: true},
-												"stat":   schema.StringAttribute{Computed: true},
-												"unit":   schema.StringAttribute{Computed: true},
-											},
-											Blocks: map[string]schema.Block{
-												"metric": schema.SingleNestedBlock{
-													CustomType: fwtypes.NewObjectTypeOf[metricModel](ctx),
-													Attributes: map[string]schema.Attribute{
-														"metric_name": schema.StringAttribute{Computed: true},
-														"namespace":   schema.StringAttribute{Computed: true},
-													},
-													Blocks: map[string]schema.Block{
-														"dimensions": schema.ListNestedBlock{
-															CustomType: fwtypes.NewListNestedObjectTypeOf[dimensionModel](ctx),
-															NestedObject: schema.NestedBlockObject{
-																CustomType: fwtypes.NewObjectTypeOf[dimensionModel](ctx),
-																Attributes: map[string]schema.Attribute{
-																	"name":  schema.StringAttribute{Computed: true},
-																	"value": schema.StringAttribute{Computed: true},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
+							"total_request_count_metric": metricDataQueriesBlock(ctx),
 						},
 					},
 				},
@@ -179,47 +135,51 @@ func (d *dataSourceServiceLevelObjective) Schema(ctx context.Context, req dataso
 							"operation_name":    schema.StringAttribute{Computed: true},
 						},
 						Blocks: map[string]schema.Block{
-							"metric_data_queries": schema.ListNestedBlock{
-								CustomType: fwtypes.NewListNestedObjectTypeOf[metricDataQueryModel](ctx),
-								NestedObject: schema.NestedBlockObject{
-									CustomType: fwtypes.NewObjectTypeOf[metricDataQueryModel](ctx),
-									Attributes: map[string]schema.Attribute{
-										"id":          schema.StringAttribute{Computed: true},
-										"account_id":  schema.StringAttribute{Computed: true},
-										"expression":  schema.StringAttribute{Computed: true},
-										"label":       schema.StringAttribute{Computed: true},
-										"period":      schema.Int32Attribute{Computed: true},
-										"return_data": schema.BoolAttribute{Computed: true},
-									},
-									Blocks: map[string]schema.Block{
-										"metric_stat": schema.SingleNestedBlock{
-											CustomType: fwtypes.NewObjectTypeOf[metricStatModel](ctx),
-											Attributes: map[string]schema.Attribute{
-												"period": schema.Int32Attribute{Computed: true},
-												"stat":   schema.StringAttribute{Computed: true},
-												"unit":   schema.StringAttribute{Computed: true},
-											},
-											Blocks: map[string]schema.Block{
-												"metric": schema.SingleNestedBlock{
-													CustomType: fwtypes.NewObjectTypeOf[metricModel](ctx),
-													Attributes: map[string]schema.Attribute{
-														"metric_name": schema.StringAttribute{Computed: true},
-														"namespace":   schema.StringAttribute{Computed: true},
-													},
-													Blocks: map[string]schema.Block{
-														"dimensions": schema.ListNestedBlock{
-															CustomType: fwtypes.NewListNestedObjectTypeOf[dimensionModel](ctx),
-															NestedObject: schema.NestedBlockObject{
-																CustomType: fwtypes.NewObjectTypeOf[dimensionModel](ctx),
-																Attributes: map[string]schema.Attribute{
-																	"name":  schema.StringAttribute{Computed: true},
-																	"value": schema.StringAttribute{Computed: true},
-																},
-															},
-														},
-													},
-												},
-											},
+							"metric_data_queries": metricDataQueriesBlock(ctx),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func metricDataQueriesBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[metricDataQueryModel](ctx),
+		NestedObject: schema.NestedBlockObject{
+			CustomType: fwtypes.NewObjectTypeOf[metricDataQueryModel](ctx),
+			Attributes: map[string]schema.Attribute{
+				"id":          schema.StringAttribute{Computed: true},
+				"account_id":  schema.StringAttribute{Computed: true},
+				"expression":  schema.StringAttribute{Computed: true},
+				"label":       schema.StringAttribute{Computed: true},
+				"period":      schema.Int32Attribute{Computed: true},
+				"return_data": schema.BoolAttribute{Computed: true},
+			},
+			Blocks: map[string]schema.Block{
+				"metric_stat": schema.SingleNestedBlock{
+					CustomType: fwtypes.NewObjectTypeOf[metricStatModel](ctx),
+					Attributes: map[string]schema.Attribute{
+						"period": schema.Int32Attribute{Computed: true},
+						"stat":   schema.StringAttribute{Computed: true},
+						"unit":   schema.StringAttribute{Computed: true},
+					},
+					Blocks: map[string]schema.Block{
+						"metric": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[metricModel](ctx),
+							Attributes: map[string]schema.Attribute{
+								"metric_name": schema.StringAttribute{Computed: true},
+								"namespace":   schema.StringAttribute{Computed: true},
+							},
+							Blocks: map[string]schema.Block{
+								"dimensions": schema.ListNestedBlock{
+									CustomType: fwtypes.NewListNestedObjectTypeOf[dimensionModel](ctx),
+									NestedObject: schema.NestedBlockObject{
+										CustomType: fwtypes.NewObjectTypeOf[dimensionModel](ctx),
+										Attributes: map[string]schema.Attribute{
+											"name":  schema.StringAttribute{Computed: true},
+											"value": schema.StringAttribute{Computed: true},
 										},
 									},
 								},
@@ -341,15 +301,15 @@ type rollingIntervalModel struct {
 }
 
 type sliModel struct {
-	MetricThreshold    types.Float64                         `tfsdk:"metric_threshold"`
 	ComparisonOperator types.String                          `tfsdk:"comparison_operator"`
+	MetricThreshold    types.Float64                         `tfsdk:"metric_threshold"`
 	SliMetric          fwtypes.ObjectValueOf[sliMetricModel] `tfsdk:"sli_metric"`
 }
 
 type requestBasedSliModel struct {
 	RequestBasedSliMetric fwtypes.ObjectValueOf[requestBasedSliMetricModel] `tfsdk:"request_based_sli_metric"`
-	MetricThreshold       types.Float64                                     `tfsdk:"metric_threshold"`
 	ComparisonOperator    types.String                                      `tfsdk:"comparison_operator"`
+	MetricThreshold       types.Float64                                     `tfsdk:"metric_threshold"`
 }
 
 type burnRateConfigurationModel struct {
