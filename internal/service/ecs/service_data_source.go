@@ -209,6 +209,28 @@ func dataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrNetworkConfiguration: {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"assign_public_ip": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						names.AttrSecurityGroups: {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						names.AttrSubnets: {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"load_balancer": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -257,9 +279,73 @@ func dataSourceService() *schema.Resource {
 					},
 				},
 			},
+			"ordered_placement_strategy": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrField: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrType: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"placement_constraints": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrExpression: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrType: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"platform_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrPropagateTags: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"scheduling_strategy": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"service_registries": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"container_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"container_port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						names.AttrPort: {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"registry_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			names.AttrServiceName: {
 				Type:     schema.TypeString,
@@ -311,7 +397,21 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
 		}
 	}
+	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
+	}
+	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ordered_placement_strategy: %s", err)
+	}
+	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
+	}
+	d.Set("platform_version", service.PlatformVersion)
+	d.Set(names.AttrPropagateTags, service.PropagateTags)
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
+	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
+	}
 	d.Set(names.AttrServiceName, service.ServiceName)
 	d.Set("task_definition", service.TaskDefinition)
 
