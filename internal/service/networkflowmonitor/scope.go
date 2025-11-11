@@ -14,6 +14,7 @@ import (
 	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -59,11 +60,11 @@ func (r *scopeResource) Schema(ctx context.Context, request resource.SchemaReque
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"target": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[targetResourceModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(1),
-					listvalidator.IsRequired(),
+			"target": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[targetResourceModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+					setvalidator.IsRequired(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -478,12 +479,12 @@ func waitScopeDeleted(ctx context.Context, conn *networkflowmonitor.Client, id s
 
 type scopeResourceModel struct {
 	framework.WithRegionModel
-	ScopeARN types.String                                         `tfsdk:"scope_arn"`
-	ScopeID  types.String                                         `tfsdk:"scope_id"`
-	Tags     tftags.Map                                           `tfsdk:"tags"`
-	TagsAll  tftags.Map                                           `tfsdk:"tags_all"`
-	Targets  fwtypes.ListNestedObjectValueOf[targetResourceModel] `tfsdk:"target"`
-	Timeouts timeouts.Value                                       `tfsdk:"timeouts"`
+	ScopeARN types.String                                        `tfsdk:"scope_arn"`
+	ScopeID  types.String                                        `tfsdk:"scope_id"`
+	Tags     tftags.Map                                          `tfsdk:"tags"`
+	TagsAll  tftags.Map                                          `tfsdk:"tags_all"`
+	Targets  fwtypes.SetNestedObjectValueOf[targetResourceModel] `tfsdk:"target"`
+	Timeouts timeouts.Value                                      `tfsdk:"timeouts"`
 }
 
 type targetResourceModel struct {
