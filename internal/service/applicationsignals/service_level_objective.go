@@ -13,10 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/applicationsignals"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationsignals/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -102,25 +104,25 @@ func (r *resourceServiceLevelObjective) Schema(ctx context.Context, req resource
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
-				Computed: true,
-			},
 			names.AttrCreatedTime: schema.StringAttribute{
 				Computed: true,
 			},
-			"last_updated_time": schema.StringAttribute{
-				Computed: true,
-			},
-			names.AttrName: schema.StringAttribute{
-				Computed: true,
-			},
-			"metric_source_type": schema.StringAttribute{
-				Computed: true,
+			names.AttrDescription: schema.StringAttribute{
+				Optional: true,
 			},
 			"evaluation_type": schema.StringAttribute{
 				Computed: true,
 			},
 			"id": schema.StringAttribute{
+				Computed: true,
+			},
+			"last_updated_time": schema.StringAttribute{
+				Computed: true,
+			},
+			"metric_source_type": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 		},
@@ -128,26 +130,44 @@ func (r *resourceServiceLevelObjective) Schema(ctx context.Context, req resource
 			"goal": schema.SingleNestedBlock{
 				CustomType: fwtypes.NewObjectTypeOf[goalModel](ctx),
 				Attributes: map[string]schema.Attribute{
-					"attainment_goal":   schema.Float64Attribute{Computed: true},
-					"warning_threshold": schema.Float64Attribute{Computed: true},
+					"attainment_goal":   schema.Float64Attribute{Required: true},
+					"warning_threshold": schema.Float64Attribute{Required: true},
+				},
+				Validators: []validator.Object{
+					objectvalidator.IsRequired(),
 				},
 				Blocks: map[string]schema.Block{
 					"interval": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[intervalModel](ctx),
+						Validators: []validator.Object{
+							objectvalidator.IsRequired(),
+						},
 						Blocks: map[string]schema.Block{
 							"calendar_interval": schema.SingleNestedBlock{
 								CustomType: fwtypes.NewObjectTypeOf[calendarIntervalModel](ctx),
+								Validators: []validator.Object{
+									objectvalidator.ExactlyOneOf(
+										path.Expressions{
+											path.MatchRelative().AtParent().AtName("rolling_interval"),
+										}...),
+								},
 								Attributes: map[string]schema.Attribute{
-									"duration":      schema.Int32Attribute{Computed: true},
-									"duration_unit": schema.StringAttribute{Computed: true},
-									"start_time":    schema.StringAttribute{Computed: true},
+									"duration":      schema.Int32Attribute{Optional: true},
+									"duration_unit": schema.StringAttribute{Optional: true},
+									"start_time":    schema.StringAttribute{Optional: true},
 								},
 							},
 							"rolling_interval": schema.SingleNestedBlock{
 								CustomType: fwtypes.NewObjectTypeOf[rollingIntervalModel](ctx),
+								Validators: []validator.Object{
+									objectvalidator.ExactlyOneOf(
+										path.Expressions{
+											path.MatchRelative().AtParent().AtName("calendar_interval"),
+										}...),
+								},
 								Attributes: map[string]schema.Attribute{
-									"duration":      schema.Int32Attribute{Computed: true},
-									"duration_unit": schema.StringAttribute{Computed: true},
+									"duration":      schema.Int32Attribute{Optional: true},
+									"duration_unit": schema.StringAttribute{Optional: true},
 								},
 							},
 						},
@@ -682,7 +702,6 @@ type resourceServiceLevelObjectiveModel struct {
 	Sli                    fwtypes.ObjectValueOf[sliModel]                             `tfsdk:"sli"`
 	RequestBasedSli        fwtypes.ObjectValueOf[requestBasedSliModel]                 `tfsdk:"request_based_sli"`
 	Timeouts               timeouts.Value                                              `tfsdk:"timeouts"`
-	Type                   types.String                                                `tfsdk:"type"`
 }
 
 type goalModel struct {
