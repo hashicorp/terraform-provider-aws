@@ -310,7 +310,7 @@ func (r *resourceServiceLevelObjective) Create(ctx context.Context, req resource
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
-	if out == nil || out.ServiceLevelObjective == nil {
+	if out == nil || out.Slo == nil {
 		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
@@ -431,7 +431,7 @@ func (r *resourceServiceLevelObjective) Update(ctx context.Context, req resource
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
-		if out == nil || out.ServiceLevelObjective == nil {
+		if out == nil || out.Slo == nil {
 			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
 			return
 		}
@@ -483,7 +483,7 @@ func (r *resourceServiceLevelObjective) Delete(ctx context.Context, req resource
 
 	// TIP: -- 3. Populate a delete input structure
 	input := applicationsignals.DeleteServiceLevelObjectiveInput{
-		ServiceLevelObjectiveId: state.ID.ValueStringPointer(),
+		Id: state.ID.ValueStringPointer(),
 	}
 
 	// TIP: -- 4. Call the AWS delete function
@@ -554,7 +554,7 @@ func waitServiceLevelObjectiveCreated(ctx context.Context, conn *applicationsign
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*applicationsignals.ServiceLevelObjective); ok {
+	if out, ok := outputRaw.(*awstypes.ServiceLevelObjective); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -576,7 +576,7 @@ func waitServiceLevelObjectiveUpdated(ctx context.Context, conn *applicationsign
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*applicationsignals.ServiceLevelObjective); ok {
+	if out, ok := outputRaw.(*awstypes.ServiceLevelObjective); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -594,7 +594,7 @@ func waitServiceLevelObjectiveDeleted(ctx context.Context, conn *applicationsign
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*applicationsignals.ServiceLevelObjective); ok {
+	if out, ok := outputRaw.(*awstypes.ServiceLevelObjective); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -619,7 +619,7 @@ func statusServiceLevelObjective(ctx context.Context, conn *applicationsignals.C
 			return nil, "", smarterr.NewError(err)
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, "", nil
 	}
 }
 
@@ -809,7 +809,7 @@ func sweepServiceLevelObjectives(ctx context.Context, client *conns.AWSClient) (
 			return nil, smarterr.NewError(err)
 		}
 
-		for _, v := range page.ServiceLevelObjectives {
+		for _, v := range page.Slos {
 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceServiceLevelObjective, client,
 				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.ServiceLevelObjectiveId))),
 			)
