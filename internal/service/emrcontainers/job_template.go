@@ -499,7 +499,7 @@ func expandCloudWatchMonitoringConfiguration(tfMap map[string]any) *awstypes.Par
 
 	apiObject := &awstypes.ParametricCloudWatchMonitoringConfiguration{}
 
-	if v, ok := tfMap["log_group_mame"].(string); ok && v != "" {
+	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
 
