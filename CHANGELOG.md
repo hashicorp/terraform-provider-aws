@@ -1,5 +1,31 @@
 ## 6.21.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.mcp_server` block ([#44991](https://github.com/hashicorp/terraform-provider-aws/issues/44991))
+* resource/aws_bedrockagentcore_gateway_target: Make `credential_provider_configuration` block optional ([#44991](https://github.com/hashicorp/terraform-provider-aws/issues/44991))
+* resource/aws_lambda_function: Add support for `java25` `runtime` value ([#45024](https://github.com/hashicorp/terraform-provider-aws/issues/45024))
+* resource/aws_lambda_function: Add support for `nodejs24.x` `runtime` value ([#45024](https://github.com/hashicorp/terraform-provider-aws/issues/45024))
+* resource/aws_lambda_function: Add support for `python3.14` `runtime` value ([#45024](https://github.com/hashicorp/terraform-provider-aws/issues/45024))
+* resource/aws_lambda_layer_version: Add support for `java25` `compatible_runtimes` value ([#45024](https://github.com/hashicorp/terraform-provider-aws/issues/45024))
+* resource/aws_lambda_layer_version: Add support for `nodejs24.x` `compatible_runtimes` value ([#45024](https://github.com/hashicorp/terraform-provider-aws/issues/45024))
+* resource/aws_lambda_layer_version: Add support for `python3.14` `compatible_runtimes` value ([#45024](https://github.com/hashicorp/terraform-provider-aws/issues/45024))
+* resource/aws_s3tables_table: Add tagging support ([#44996](https://github.com/hashicorp/terraform-provider-aws/issues/44996))
+* resource/aws_s3tables_table_bucket: Add tagging support ([#44996](https://github.com/hashicorp/terraform-provider-aws/issues/44996))
+* resource/aws_sagemaker_endpoint_configuration: Add `execution_role_arn` argument and make `model_name` optional in `production_variants` and `shadow_production_variants` blocks to support Inference Components ([#44977](https://github.com/hashicorp/terraform-provider-aws/issues/44977))
+* resource/aws_sns_topic: Fix `AuthorizationError ... is not authorized to perform: iam:PassRole on resource ...` IAM eventual consistency errors on Create and Update ([#45018](https://github.com/hashicorp/terraform-provider-aws/issues/45018))
+
+BUG FIXES:
+
+* provider: Fix situation where refreshes of removed infrastructure appear as errors rather than warnings ([#45022](https://github.com/hashicorp/terraform-provider-aws/issues/45022))
+* resource/aws_emrcontainers_job_template: Fix `ValidationException: Value null at 'jobTemplateData.configurationOverrides.monitoringConfiguration.cloudWatchMonitoringConfiguration.logGroupName' failed to satisfy constraint: Member must not be null` error ([#45029](https://github.com/hashicorp/terraform-provider-aws/issues/45029))
+* resource/aws_emrcontainers_job_template: Fix `setting job_template_data: job_template_data.0.configuration_overrides.0.application_configuration.0: '' expected a map, got 'slice'` error ([#45029](https://github.com/hashicorp/terraform-provider-aws/issues/45029))
+* resource/aws_emrcontainers_job_template: Mark `job_template_data.job_driver.configuration_overrides.monitoring_configuration.persistent_app_ui` argument as computed ([#45029](https://github.com/hashicorp/terraform-provider-aws/issues/45029))
+* resource/aws_invoicing_invoice_unit: Fix `Provider returned invalid result object after apply` error occurred when updating the resource ([#45030](https://github.com/hashicorp/terraform-provider-aws/issues/45030))
+* resource/aws_opensearch_authorize_vpc_endpoint_access: Fix reading the resource when more than one principal is authorized. The [import ID](https://developer.hashicorp.com/terraform/language/block/import#id) has changed from `domain_name` to `domain_name` and `account` separated by a comma ([#44982](https://github.com/hashicorp/terraform-provider-aws/issues/44982))
+* resource/aws_sagemaker_endpoint: Fix bug where `endpoint_config_name` was not correctly updated, causing the endpoint to retain the old configuration ([#42843](https://github.com/hashicorp/terraform-provider-aws/issues/42843))
+* resource/aws_wafv2_web_acl_logging_configuration: Fix the validation for `redacted_fields.single_header.name` ([#44987](https://github.com/hashicorp/terraform-provider-aws/issues/44987))
+
 ## 6.20.0 (November 6, 2025)
 
 FEATURES:
