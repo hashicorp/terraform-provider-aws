@@ -77,6 +77,7 @@ func (r *logicallyAirGappedVaultResource) Schema(ctx context.Context, request re
 			"encryption_key_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -133,10 +134,16 @@ func (r *logicallyAirGappedVaultResource) Create(ctx context.Context, request re
 	data.BackupVaultARN = fwflex.StringToFramework(ctx, output.BackupVaultArn)
 	data.ID = fwflex.StringToFramework(ctx, output.BackupVaultName)
 
-	if _, err := waitLogicallyAirGappedVaultCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	vault, err := waitLogicallyAirGappedVaultCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Backup Logically Air Gapped Vault (%s) create", data.ID.ValueString()), err.Error())
 
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, vault, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
