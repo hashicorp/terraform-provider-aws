@@ -196,7 +196,7 @@ func (d *dataSourceServiceLevelObjective) Read(ctx context.Context, req datasour
 	conn := d.Meta().ApplicationSignalsClient(ctx)
 
 	var data dataSourceServiceLevelObjectiveModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -211,13 +211,12 @@ func (d *dataSourceServiceLevelObjective) Read(ctx context.Context, req datasour
 	data.CreatedTime = types.StringValue(aws.ToTime(out.CreatedTime).Format(time.RFC3339))
 	data.LastUpdatedTime = types.StringValue(aws.ToTime(out.LastUpdatedTime).Format(time.RFC3339))
 
-	// First, let flex.Flatten handle everything it can
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data), smerr.ID, data.ID.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data), smerr.ID, data.ID.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.ID.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.ID.String())
 }
 
 func findServiceLevelObjectiveByID(ctx context.Context, conn *applicationsignals.Client, id string) (*awstypes.ServiceLevelObjective, error) {
