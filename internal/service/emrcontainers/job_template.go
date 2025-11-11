@@ -135,6 +135,7 @@ func resourceJobTemplate() *schema.Resource {
 													Type:             schema.TypeString,
 													Optional:         true,
 													ForceNew:         true,
+													Computed:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.PersistentAppUI](),
 												},
 												"s3_monitoring_configuration": {
