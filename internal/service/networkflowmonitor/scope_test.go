@@ -183,11 +183,13 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_networkflowmonitor_scope" "test" {
-  targets {
+  target {
     region = data.aws_region.current.name
     target_identifier {
-      target_id   = data.aws_caller_identity.current.account_id
       target_type = "ACCOUNT"
+      target_id {
+        account_id   = data.aws_caller_identity.current.account_id
+      }
     }
   }
 }
@@ -200,11 +202,13 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_networkflowmonitor_scope" "test" {
-  targets {
+  target {
     region = data.aws_region.current.name
     target_identifier {
-      target_id   = data.aws_caller_identity.current.account_id
       target_type = "ACCOUNT"
+      target_id {
+        account_id   = data.aws_caller_identity.current.account_id
+      }
     }
   }
 
@@ -221,11 +225,13 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_networkflowmonitor_scope" "test" {
-  targets {
+  target {
     region = data.aws_region.current.name
     target_identifier {
-      target_id   = data.aws_caller_identity.current.account_id
       target_type = "ACCOUNT"
+      target_id {
+        account_id   = data.aws_caller_identity.current.account_id
+      }
     }
   }
 

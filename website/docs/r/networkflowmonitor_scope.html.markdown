@@ -18,11 +18,13 @@ Manages a Network Flow Monitor Scope.
 data "aws_caller_identity" "current" {}
 
 resource "aws_networkflowmonitor_scope" "example" {
-  targets {
+  target {
     region = "us-east-1"
     target_identifier {
-      target_id   = data.aws_caller_identity.current.account_id
       target_type = "ACCOUNT"
+      target_id {
+        account_id = data.aws_caller_identity.current.account_id
+      }
     }
   }
 
@@ -36,7 +38,7 @@ resource "aws_networkflowmonitor_scope" "example" {
 
 The following arguments are required:
 
-* `targets` - (Required) The targets to define the scope to be monitored. A target is an array of target resources, which are currently Region-account pairs.
+* `target` - (Required) The targets to define the scope to be monitored. A target is an array of target resources, which are currently Region-account pairs.
 
 The following arguments are optional:
 
@@ -57,14 +59,18 @@ The `target_identifier` block supports the following:
 * `target_id` - (Required) The identifier for a target, which is currently always an account ID.
 * `target_type` - (Required) The type of a target. A target type is currently always `ACCOUNT`.
 
+### target_id
+
+The `target_id` block supports the following:
+
+* `account_id` - (Required) AWS account ID.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the scope.
-* `id` - The Amazon Resource Name (ARN) of the scope.
+* `scope_arn` - The Amazon Resource Name (ARN) of the scope.
 * `scope_id` - The identifier for the scope that includes the resources you want to get data results for.
-* `status` - The status for a scope. The status can be one of the following: `SUCCEEDED`, `IN_PROGRESS`, `FAILED`, `DEACTIVATING`, or `DEACTIVATED`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -77,17 +83,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Flow Monitor Scope using the scope ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Flow Monitor Scope using the scope ID. For example:
 
 ```terraform
 import {
   to = aws_networkflowmonitor_scope.example
-  id = "arn:aws:networkflowmonitor:us-east-1:123456789012:scope/example-scope-id"
+  id = "example-scope-id"
 }
 ```
 
-Using `terraform import`, import Network Flow Monitor Scope using the scope ARN. For example:
+Using `terraform import`, import Network Flow Monitor Scope using the scope ID. For example:
 
 ```console
-% terraform import aws_networkflowmonitor_scope.example arn:aws:networkflowmonitor:us-east-1:123456789012:scope/example-scope-id
+% terraform import aws_networkflowmonitor_scope.example example-scope-id
 ```
