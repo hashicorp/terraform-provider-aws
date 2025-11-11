@@ -144,12 +144,12 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
-						"destination": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						names.AttrDestination: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"destination_logs_configuration": knownvalue.ListSizeExact(0),
-							"region":                         knownvalue.StringExact(endpoints.EuWest1RegionID),
+							names.AttrRegion:                 knownvalue.StringExact(endpoints.EuWest1RegionID),
 						})}),
-						"source": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						names.AttrSource: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"regions": knownvalue.SetExact([]knownvalue.Check{
 								knownvalue.StringExact(endpoints.ApSoutheast1RegionID),
 							}),
@@ -171,12 +171,12 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
-						"destination": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						names.AttrDestination: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"destination_logs_configuration": knownvalue.ListSizeExact(0),
-							"region":                         knownvalue.StringExact(endpoints.EuWest1RegionID),
+							names.AttrRegion:                 knownvalue.StringExact(endpoints.EuWest1RegionID),
 						})}),
-						"source": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						names.AttrSource: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"regions": knownvalue.SetExact([]knownvalue.Check{
 								knownvalue.StringExact(endpoints.ApSoutheast1RegionID),
 								knownvalue.StringExact(endpoints.UsEast1RegionID),
@@ -199,19 +199,19 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
-						"destination": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						names.AttrDestination: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"destination_logs_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"backup_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
-									"region": knownvalue.StringExact(endpoints.UsWest1RegionID),
+									names.AttrRegion: knownvalue.StringExact(endpoints.UsWest1RegionID),
 								})}),
 								"logs_encryption_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"encryption_strategy": tfknownvalue.StringExact(awstypes.EncryptionStrategyAwsOwned),
 								})}),
 							})}),
-							"region": knownvalue.StringExact(endpoints.EuWest1RegionID),
+							names.AttrRegion: knownvalue.StringExact(endpoints.EuWest1RegionID),
 						})}),
-						"source": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						names.AttrSource: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"regions": knownvalue.SetExact([]knownvalue.Check{
 								knownvalue.StringExact(endpoints.ApSoutheast1RegionID),
 								knownvalue.StringExact(endpoints.UsEast1RegionID),
