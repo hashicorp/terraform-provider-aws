@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -92,7 +93,7 @@ func dataSourceService() *schema.Resource {
 							},
 						},
 						"bake_time_in_minutes": {
-							Type:     schema.TypeInt,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"canary_configuration": {
@@ -101,7 +102,7 @@ func dataSourceService() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"canary_bake_time_in_minutes": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeString,
 										Computed: true,
 									},
 									"canary_percent": {
@@ -133,7 +134,7 @@ func dataSourceService() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"step_bake_time_in_minutes": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeString,
 										Computed: true,
 									},
 									"step_percent": {
@@ -513,7 +514,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	d.Set("created_by", service.CreatedBy)
 	if service.DeploymentConfiguration != nil {
-		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(service.DeploymentConfiguration)); err != nil {
+		if err := d.Set("deployment_configuration", flattenDeploymentConfigurationForDataSource(service.DeploymentConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
 		}
 	}
@@ -565,6 +566,74 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	setTagsOut(ctx, service.Tags)
 
 	return diags
+}
+
+// flattenDeploymentConfigurationForDataSource flattens DeploymentConfiguration for the data source
+// which includes all fields from the API, unlike the resource which has some fields at the top level
+func flattenDeploymentConfigurationForDataSource(apiObject *awstypes.DeploymentConfiguration) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Alarms; v != nil {
+		tfMap["alarms"] = []map[string]any{flattenAlarmsForDataSource(v)}
+	}
+
+	if v := apiObject.BakeTimeInMinutes; v != nil {
+		tfMap["bake_time_in_minutes"] = flex.Int32ToStringValue(v)
+	}
+
+	if v := apiObject.CanaryConfiguration; v != nil {
+		tfMap["canary_configuration"] = flattenCanaryConfiguration(v)
+	}
+
+	if v := apiObject.DeploymentCircuitBreaker; v != nil {
+		tfMap["deployment_circuit_breaker"] = []map[string]any{flattenDeploymentCircuitBreakerForDataSource(v)}
+	}
+
+	if v := apiObject.LinearConfiguration; v != nil {
+		tfMap["linear_configuration"] = flattenLinearConfiguration(v)
+	}
+
+	if v := apiObject.LifecycleHooks; len(v) > 0 {
+		tfMap["lifecycle_hook"] = flattenLifecycleHooks(v)
+	}
+
+	if v := apiObject.MaximumPercent; v != nil {
+		tfMap["maximum_percent"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MinimumHealthyPercent; v != nil {
+		tfMap["minimum_healthy_percent"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.Strategy; v != "" {
+		tfMap["strategy"] = string(v)
+	}
+
+	return []map[string]any{tfMap}
+}
+
+func flattenAlarmsForDataSource(apiObject *awstypes.DeploymentAlarms) map[string]any {
+	tfMap := map[string]any{
+		"enable":   apiObject.Enable,
+		"rollback": apiObject.Rollback,
+	}
+
+	if v := apiObject.AlarmNames; len(v) > 0 {
+		tfMap["alarm_names"] = v
+	}
+
+	return tfMap
+}
+
+func flattenDeploymentCircuitBreakerForDataSource(apiObject *awstypes.DeploymentCircuitBreaker) map[string]any {
+	return map[string]any{
+		"enable":   apiObject.Enable,
+		"rollback": apiObject.Rollback,
+	}
 }
 
 func flattenDeployments(apiObjects []awstypes.Deployment) []map[string]any {
