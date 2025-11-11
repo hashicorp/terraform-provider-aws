@@ -189,27 +189,9 @@ resource "aws_iam_role" "test" {
 }
 
 func testAccJobTemplateConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = [
-          "eks.${data.aws_partition.current.dns_suffix}",
-          "eks-nodegroup.${data.aws_partition.current.dns_suffix}",
-        ]
-      }
-    }]
-    Version = "2012-10-17"
-  })
-}
-
+	return acctest.ConfigCompose(
+		testAccJobTemplateConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_emrcontainers_job_template" "test" {
   job_template_data {
     execution_role_arn = aws_iam_role.test.arn
@@ -224,31 +206,13 @@ resource "aws_emrcontainers_job_template" "test" {
 
   name = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccJobTemplateConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = [
-          "eks.${data.aws_partition.current.dns_suffix}",
-          "eks-nodegroup.${data.aws_partition.current.dns_suffix}",
-        ]
-      }
-    }]
-    Version = "2012-10-17"
-  })
-}
-
+	return acctest.ConfigCompose(
+		testAccJobTemplateConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_emrcontainers_job_template" "test" {
   job_template_data {
     execution_role_arn = aws_iam_role.test.arn
@@ -268,5 +232,5 @@ resource "aws_emrcontainers_job_template" "test" {
   }
 
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
