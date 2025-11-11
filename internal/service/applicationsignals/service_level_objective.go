@@ -111,60 +111,103 @@ func (r *resourceServiceLevelObjective) Schema(ctx context.Context, req resource
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+				Computed: true,
 			},
-			// TIP: ==== "ID" ATTRIBUTE ====
-			// When using the Terraform Plugin Framework, there is no required "id" attribute.
-			// This is different from the Terraform Plugin SDK.
-			//
-			// Only include an "id" attribute if the AWS API has an "Id" field, such as "ServiceLevelObjectiveId"
-			names.AttrID: framework.IDAttribute(),
+			names.AttrCreatedTime: schema.StringAttribute{
+				Computed: true,
+			},
+			"last_updated_time": schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrName: schema.StringAttribute{
-				Required: true,
-				// TIP: ==== PLAN MODIFIERS ====
-				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
-				// for adjusting planned changes prior to apply. The planmodifier subpackage
-				// provides built-in modifiers for many common use cases such as
-				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
-				// resources).
-				//
-				// See more:
-				// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Computed: true,
 			},
-			"type": schema.StringAttribute{
+			"metric_source_type": schema.StringAttribute{
+				Computed: true,
+			},
+			"evaluation_type": schema.StringAttribute{
+				Computed: true,
+			},
+			"id": schema.StringAttribute{
 				Required: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				// TIP: ==== CUSTOM TYPES ====
-				// Use a custom type to identify the model type of the tested object
-				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
-				// TIP: ==== LIST VALIDATORS ====
-				// List and set validators take the place of MaxItems and MinItems in
-				// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-				// make a nested object required. Similar to Plugin-SDK, complex objects
-				// can be represented as lists or sets with listvalidator.SizeAtMost(1).
-				//
-				// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
-				// see:
-				// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
+			"goal": schema.SingleNestedBlock{
+				CustomType: fwtypes.NewObjectTypeOf[goalModel](ctx),
+				Attributes: map[string]schema.Attribute{
+					"attainment_goal":   schema.Float64Attribute{Computed: true},
+					"warning_threshold": schema.Float64Attribute{Computed: true},
 				},
+				Blocks: map[string]schema.Block{
+					"interval": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[intervalModel](ctx),
+						Blocks: map[string]schema.Block{
+							"calendar_interval": schema.SingleNestedBlock{
+								CustomType: fwtypes.NewObjectTypeOf[calendarIntervalModel](ctx),
+								Attributes: map[string]schema.Attribute{
+									"duration":      schema.Int32Attribute{Computed: true},
+									"duration_unit": schema.StringAttribute{Computed: true},
+									"start_time":    schema.StringAttribute{Computed: true},
+								},
+							},
+							"rolling_interval": schema.SingleNestedBlock{
+								CustomType: fwtypes.NewObjectTypeOf[rollingIntervalModel](ctx),
+								Attributes: map[string]schema.Attribute{
+									"duration":      schema.Int32Attribute{Computed: true},
+									"duration_unit": schema.StringAttribute{Computed: true},
+								},
+							},
+						},
+					},
+				},
+			},
+			"burn_rate_configurations": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[burnRateConfigurationModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"nested_required": schema.StringAttribute{
-							Required: true,
+						"look_back_window_minutes": schema.Int32Attribute{Computed: true},
+					},
+				},
+			},
+			"request_based_sli": schema.SingleNestedBlock{
+				CustomType: fwtypes.NewObjectTypeOf[requestBasedSliModel](ctx),
+				Attributes: map[string]schema.Attribute{
+					"metric_threshold":    schema.Float64Attribute{Computed: true},
+					"comparison_operator": schema.StringAttribute{Computed: true},
+				},
+				Blocks: map[string]schema.Block{
+					"request_based_sli_metric": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[requestBasedSliMetricModel](ctx),
+						Attributes: map[string]schema.Attribute{
+							"dependency_config": schema.StringAttribute{Computed: true},
+							"key_attributes":    schema.MapAttribute{CustomType: fwtypes.MapOfStringType, ElementType: types.StringType, Computed: true},
+							"metric_type":       schema.StringAttribute{Computed: true},
+							"operation_name":    schema.StringAttribute{Computed: true},
 						},
-						"nested_computed": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
+						Blocks: map[string]schema.Block{
+							"total_request_count_metric": metricDataQueriesBlock(ctx),
+						},
+					},
+				},
+			},
+			"sli": schema.SingleNestedBlock{
+				CustomType: fwtypes.NewObjectTypeOf[sliModel](ctx),
+				Attributes: map[string]schema.Attribute{
+					"metric_threshold":    schema.Float64Attribute{Computed: true},
+					"comparison_operator": schema.StringAttribute{Computed: true},
+				},
+				Blocks: map[string]schema.Block{
+					"sli_metric": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[sliMetricModel](ctx),
+						Attributes: map[string]schema.Attribute{
+							"dependency_config": schema.StringAttribute{Computed: true},
+							"key_attributes":    schema.MapAttribute{CustomType: fwtypes.MapOfStringType, ElementType: types.StringType, Computed: true},
+							"metric_type":       schema.StringAttribute{Computed: true},
+							"operation_name":    schema.StringAttribute{Computed: true},
+						},
+						Blocks: map[string]schema.Block{
+							"metric_data_queries": metricDataQueriesBlock(ctx),
 						},
 					},
 				},
@@ -174,6 +217,54 @@ func (r *resourceServiceLevelObjective) Schema(ctx context.Context, req resource
 				Update: true,
 				Delete: true,
 			}),
+		},
+	}
+}
+
+func metricDataQueriesBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[metricDataQueryModel](ctx),
+		NestedObject: schema.NestedBlockObject{
+			CustomType: fwtypes.NewObjectTypeOf[metricDataQueryModel](ctx),
+			Attributes: map[string]schema.Attribute{
+				"id":          schema.StringAttribute{Computed: true},
+				"account_id":  schema.StringAttribute{Computed: true},
+				"expression":  schema.StringAttribute{Computed: true},
+				"label":       schema.StringAttribute{Computed: true},
+				"period":      schema.Int32Attribute{Computed: true},
+				"return_data": schema.BoolAttribute{Computed: true},
+			},
+			Blocks: map[string]schema.Block{
+				"metric_stat": schema.SingleNestedBlock{
+					CustomType: fwtypes.NewObjectTypeOf[metricStatModel](ctx),
+					Attributes: map[string]schema.Attribute{
+						"period": schema.Int32Attribute{Computed: true},
+						"stat":   schema.StringAttribute{Computed: true},
+						"unit":   schema.StringAttribute{Computed: true},
+					},
+					Blocks: map[string]schema.Block{
+						"metric": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[metricModel](ctx),
+							Attributes: map[string]schema.Attribute{
+								"metric_name": schema.StringAttribute{Computed: true},
+								"namespace":   schema.StringAttribute{Computed: true},
+							},
+							Blocks: map[string]schema.Block{
+								"dimensions": schema.ListNestedBlock{
+									CustomType: fwtypes.NewListNestedObjectTypeOf[dimensionModel](ctx),
+									NestedObject: schema.NestedBlockObject{
+										CustomType: fwtypes.NewObjectTypeOf[dimensionModel](ctx),
+										Attributes: map[string]schema.Attribute{
+											"name":  schema.StringAttribute{Computed: true},
+											"value": schema.StringAttribute{Computed: true},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
