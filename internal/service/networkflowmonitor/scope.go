@@ -6,11 +6,13 @@ package networkflowmonitor
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkflowmonitor/types"
+	set "github.com/hashicorp/go-set/v3"
 	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -206,147 +208,53 @@ func (r *scopeResource) Update(ctx context.Context, request resource.UpdateReque
 		return
 	}
 
-	//conn := r.Meta().NetworkFlowMonitorClient(ctx)
+	conn := r.Meta().NetworkFlowMonitorClient(ctx)
 
-	// Handle targets updates
-	// if !new.Targets.Equal(old.Targets) {
-	// 	// Calculate targets to add and remove
-	// 	resourcesToAdd, resourcesToDelete, diags := r.calculateTargetChanges(ctx, old.Targets, new.Targets)
-	// 	response.Diagnostics.Append(diags...)
-	// 	if response.Diagnostics.HasError() {
-	// 		return
-	// 	}
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	// 	// Update scope targets if there are changes
-	// 	if len(resourcesToAdd) > 0 || len(resourcesToDelete) > 0 {
-	// 		input := networkflowmonitor.UpdateScopeInput{
-	// 			ScopeId:           old.ScopeID.ValueStringPointer(),
-	// 			ResourcesToAdd:    resourcesToAdd,
-	// 			ResourcesToDelete: resourcesToDelete,
-	// 		}
+	if diff.HasChanges() {
+		var oldTargets, newTargets []awstypes.TargetResource
+		response.Diagnostics.Append(fwflex.Expand(ctx, old.Targets, &oldTargets)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new.Targets, &newTargets)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 
-	// 		_, err := conn.UpdateScope(ctx, &input)
-	// 		if err != nil {
-	// 			response.Diagnostics.AddError(fmt.Sprintf("updating Network Flow Monitor Scope (%s) targets", new.ID.ValueString()), err.Error())
-	// 			return
-	// 		}
+		hash := func(v awstypes.TargetResource) string {
+			accountID := any(v.TargetIdentifier.TargetId).(*awstypes.TargetIdMemberAccountId).Value
+			return strings.Join([]string{aws.ToString(v.Region), string(v.TargetIdentifier.TargetType), accountID}, ":")
+		}
+		os, ns := set.HashSetFromFunc(oldTargets, hash), set.HashSetFromFunc(newTargets, hash)
+		add, del := ns.Difference(os), os.Difference(ns)
 
-	// 		// Wait for scope to be updated
-	// 		_, err = waitScopeUpdated(ctx, conn, old.ScopeID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
-	// 		if err != nil {
-	// 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Flow Monitor Scope (%s) update", new.ID.ValueString()), err.Error())
-	// 			return
-	// 		}
-	// 	}
-	// }
+		scopeID := fwflex.StringValueFromFramework(ctx, new.ScopeID)
+		input := networkflowmonitor.UpdateScopeInput{
+			ScopeId:           aws.String(scopeID),
+			ResourcesToAdd:    add.Slice(),
+			ResourcesToDelete: del.Slice(),
+		}
+
+		_, err := conn.UpdateScope(ctx, &input)
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Network Flow Monitor Scope (%s) targets", scopeID), err.Error())
+			return
+		}
+
+		if _, err := waitScopeUpdated(ctx, conn, scopeID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Flow Monitor Scope (%s) update", scopeID), err.Error())
+			return
+		}
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
-
-/*
-func (r *scopeResource) calculateTargetChanges(ctx context.Context, oldTargets, newTargets fwtypes.ListNestedObjectValueOf[targetResourceModel]) ([]awstypes.TargetResource, []awstypes.TargetResource, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	var resourcesToAdd, resourcesToDelete []awstypes.TargetResource
-
-	// Convert old targets to map for easy lookup
-	oldTargetsMap := make(map[string]awstypes.TargetResource)
-	if !oldTargets.IsNull() && !oldTargets.IsUnknown() {
-		oldTargetsList, d := oldTargets.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, nil, diags
-		}
-
-		for _, target := range oldTargetsList {
-			awsTarget := awstypes.TargetResource{
-				Region: target.Region.ValueStringPointer(),
-			}
-
-			// Handle union type for TargetIdentifier
-			if !target.TargetIdentifier.IsNull() && !target.TargetIdentifier.IsUnknown() {
-				identifiers, d := target.TargetIdentifier.ToSlice(ctx)
-				diags.Append(d...)
-				if diags.HasError() {
-					return nil, nil, diags
-				}
-
-				if len(identifiers) > 0 {
-					identifier := identifiers[0]
-					awsTarget.TargetIdentifier = &awstypes.TargetIdentifier{
-						TargetId: &awstypes.TargetIdMemberAccountId{
-							Value: identifier.TargetId.ValueString(),
-						},
-						TargetType: awstypes.TargetType(identifier.TargetType.ValueString()),
-					}
-
-					// Create a key for the target (region + target_id + target_type)
-					key := fmt.Sprintf("%s:%s:%s",
-						target.Region.ValueString(),
-						identifier.TargetId.ValueString(),
-						identifier.TargetType.ValueString())
-					oldTargetsMap[key] = awsTarget
-				}
-			}
-		}
-	}
-
-	// Convert new targets to map and identify additions
-	newTargetsMap := make(map[string]awstypes.TargetResource)
-	if !newTargets.IsNull() && !newTargets.IsUnknown() {
-		newTargetsList, d := newTargets.ToSlice(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, nil, diags
-		}
-
-		for _, target := range newTargetsList {
-			awsTarget := awstypes.TargetResource{
-				Region: target.Region.ValueStringPointer(),
-			}
-
-			// Handle union type for TargetIdentifier
-			if !target.TargetIdentifier.IsNull() && !target.TargetIdentifier.IsUnknown() {
-				identifiers, d := target.TargetIdentifier.ToSlice(ctx)
-				diags.Append(d...)
-				if diags.HasError() {
-					return nil, nil, diags
-				}
-
-				if len(identifiers) > 0 {
-					identifier := identifiers[0]
-					awsTarget.TargetIdentifier = &awstypes.TargetIdentifier{
-						TargetId: &awstypes.TargetIdMemberAccountId{
-							Value: identifier.TargetId.ValueString(),
-						},
-						TargetType: awstypes.TargetType(identifier.TargetType.ValueString()),
-					}
-
-					// Create a key for the target
-					key := fmt.Sprintf("%s:%s:%s",
-						target.Region.ValueString(),
-						identifier.TargetId.ValueString(),
-						identifier.TargetType.ValueString())
-					newTargetsMap[key] = awsTarget
-
-					// If this target doesn't exist in old targets, it's an addition
-					if _, exists := oldTargetsMap[key]; !exists {
-						resourcesToAdd = append(resourcesToAdd, awsTarget)
-					}
-				}
-			}
-		}
-	}
-
-	// Identify deletions
-	for key, target := range oldTargetsMap {
-		if _, exists := newTargetsMap[key]; !exists {
-			resourcesToDelete = append(resourcesToDelete, target)
-		}
-	}
-
-	return resourcesToAdd, resourcesToDelete, diags
-}
-*/
 
 func (r *scopeResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data scopeResourceModel

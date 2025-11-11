@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -30,6 +31,7 @@ func testAccScope_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFlowMonitorServiceID),
@@ -37,7 +39,7 @@ func testAccScope_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScopeConfig_basic(),
+				Config: testAccScopeConfig_basic(acctest.Region()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScopeExists(ctx, resourceName),
 				),
@@ -49,6 +51,7 @@ func testAccScope_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scope_arn"), tfknownvalue.RegionalARNRegexp("networkflowmonitor", regexache.MustCompile(`scope/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scope_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target"), knownvalue.SetSizeExact(1)),
 				},
 			},
 			{
@@ -69,6 +72,7 @@ func testAccScope_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFlowMonitorServiceID),
@@ -76,7 +80,7 @@ func testAccScope_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScopeConfig_basic(),
+				Config: testAccScopeConfig_basic(endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkflowmonitor.ResourceScope, resourceName),
@@ -102,6 +106,7 @@ func testAccScope_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFlowMonitorServiceID),
@@ -209,23 +214,25 @@ func testAccCheckScopeDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccScopeConfig_basic() string {
-	return `
+func testAccScopeConfig_basic(regions ...string) string {
+	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
 
 resource "aws_networkflowmonitor_scope" "test" {
-  target {
-    region = data.aws_region.current.name
-    target_identifier {
-      target_type = "ACCOUNT"
-      target_id {
-        account_id = data.aws_caller_identity.current.account_id
+  dynamic "target" {
+    for_each = [%[1]s]
+    content {
+      region = target.value
+      target_identifier {
+        target_type = "ACCOUNT"
+        target_id {
+          account_id = data.aws_caller_identity.current.account_id
+        }
       }
     }
   }
 }
-`
+`, acctest.ListOfStrings(regions...))
 }
 
 func testAccScopeConfig_tags1(tagKey1, tagValue1 string) string {
