@@ -560,32 +560,109 @@ func findServiceLevelObjectiveByID(ctx context.Context, conn *applicationsignals
 	return out.ServiceLevelObjective, nil
 }
 
-// TIP: ==== DATA STRUCTURES ====
-// With Terraform Plugin-Framework configurations are deserialized into
-// Go types, providing type safety without the need for type assertions.
-// These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name.
-//
-// Nested objects are represented in their own data struct. These will
-// also have a corresponding attribute type mapping for use inside flex
-// functions.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceServiceLevelObjectiveModel struct {
 	framework.WithRegionModel
-	ARN             types.String                                          `tfsdk:"arn"`
-	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
-	Description     types.String                                          `tfsdk:"description"`
-	ID              types.String                                          `tfsdk:"id"`
-	Name            types.String                                          `tfsdk:"name"`
-	Timeouts        timeouts.Value                                        `tfsdk:"timeouts"`
-	Type            types.String                                          `tfsdk:"type"`
+	ID                     types.String                                                `tfsdk:"id"`
+	ARN                    types.String                                                `tfsdk:"arn"`
+	CreatedTime            types.String                                                `tfsdk:"created_time"`
+	BurnRateConfigurations fwtypes.ListNestedObjectValueOf[burnRateConfigurationModel] `tfsdk:"burn_rate_configurations"`
+	LastUpdatedTime        types.String                                                `tfsdk:"last_updated_time"`
+	Name                   types.String                                                `tfsdk:"name"`
+	Description            types.String                                                `tfsdk:"description"`
+	MetricSourceType       types.String                                                `tfsdk:"metric_source_type"`
+	EvaluationType         types.String                                                `tfsdk:"evaluation_type"`
+	Goal                   fwtypes.ObjectValueOf[goalModel]                            `tfsdk:"goal"`
+	Sli                    fwtypes.ObjectValueOf[sliModel]                             `tfsdk:"sli"`
+	RequestBasedSli        fwtypes.ObjectValueOf[requestBasedSliModel]                 `tfsdk:"request_based_sli"`
+	Timeouts               timeouts.Value                                              `tfsdk:"timeouts"`
+	Type                   types.String                                                `tfsdk:"type"`
 }
 
-type complexArgumentModel struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
+type goalModel struct {
+	AttainmentGoal   types.Float64                        `tfsdk:"attainment_goal"`
+	WarningThreshold types.Float64                        `tfsdk:"warning_threshold"`
+	Interval         fwtypes.ObjectValueOf[intervalModel] `tfsdk:"interval"`
+}
+
+type intervalModel struct {
+	CalendarInterval fwtypes.ObjectValueOf[calendarIntervalModel] `tfsdk:"calendar_interval"`
+	RollingInterval  fwtypes.ObjectValueOf[rollingIntervalModel]  `tfsdk:"rolling_interval"`
+}
+
+type calendarIntervalModel struct {
+	Duration     types.Int32  `tfsdk:"duration"`
+	DurationUnit types.String `tfsdk:"duration_unit"`
+	StartTime    types.String `tfsdk:"start_time"`
+}
+
+type rollingIntervalModel struct {
+	Duration     types.Int32  `tfsdk:"duration"`
+	DurationUnit types.String `tfsdk:"duration_unit"`
+}
+
+type sliModel struct {
+	ComparisonOperator types.String                          `tfsdk:"comparison_operator"`
+	MetricThreshold    types.Float64                         `tfsdk:"metric_threshold"`
+	SliMetric          fwtypes.ObjectValueOf[sliMetricModel] `tfsdk:"sli_metric"`
+}
+
+type requestBasedSliModel struct {
+	RequestBasedSliMetric fwtypes.ObjectValueOf[requestBasedSliMetricModel] `tfsdk:"request_based_sli_metric"`
+	ComparisonOperator    types.String                                      `tfsdk:"comparison_operator"`
+	MetricThreshold       types.Float64                                     `tfsdk:"metric_threshold"`
+}
+
+type burnRateConfigurationModel struct {
+	LookBackWindowMinutes types.Int32 `tfsdk:"look_back_window_minutes"`
+}
+
+type requestBasedSliMetricModel struct {
+	TotalRequestCountMetric fwtypes.ListNestedObjectValueOf[metricDataQueryModel] `tfsdk:"total_request_count_metric"`
+	DependencyConfig        fwtypes.ObjectValueOf[dependencyConfigModel]          `tfsdk:"dependency_config"`
+	KeyAttributes           fwtypes.MapOfString                                   `tfsdk:"key_attributes"`
+	MetricType              types.String                                          `tfsdk:"metric_type"`
+	OperationName           types.String                                          `tfsdk:"operation_name"`
+}
+
+type sliMetricModel struct {
+	MetricDataQueries fwtypes.ListNestedObjectValueOf[metricDataQueryModel] `tfsdk:"metric_data_queries"`
+	DependencyConfig  fwtypes.ObjectValueOf[dependencyConfigModel]          `tfsdk:"dependency_config"`
+	KeyAttributes     fwtypes.MapOfString                                   `tfsdk:"key_attributes"`
+	MetricType        types.String                                          `tfsdk:"metric_type"`
+	OperationName     types.String                                          `tfsdk:"operation_name"`
+}
+
+type metricDataQueryModel struct {
+	Id         types.String                           `tfsdk:"id"`
+	AccountId  types.String                           `tfsdk:"account_id"`
+	Expression types.String                           `tfsdk:"expression"`
+	Label      types.String                           `tfsdk:"label"`
+	MetricStat fwtypes.ObjectValueOf[metricStatModel] `tfsdk:"metric_stat"`
+	Period     types.Int32                            `tfsdk:"period"`
+	ReturnData types.Bool                             `tfsdk:"return_data"`
+}
+
+type metricStatModel struct {
+	Metric fwtypes.ObjectValueOf[metricModel] `tfsdk:"metric"`
+	Period types.Int32                        `tfsdk:"period"`
+	Stat   types.String                       `tfsdk:"stat"`
+	Unit   types.String                       `tfsdk:"unit"`
+}
+
+type metricModel struct {
+	Dimensions fwtypes.ListNestedObjectValueOf[dimensionModel] `tfsdk:"dimensions"`
+	MetricName types.String                                    `tfsdk:"metric_name"`
+	Namespace  types.String                                    `tfsdk:"namespace"`
+}
+
+type dimensionModel struct {
+	Name  types.String `tfsdk:"name"`
+	Value types.String `tfsdk:"value"`
+}
+
+type dependencyConfigModel struct {
+	DependencyKeyAttributes types.String `tfsdk:"dependency_key_attributes"`
+	DependencyOperationName types.String `tfsdk:"dependency_operation_name"`
 }
 
 // TIP: ==== SWEEPERS ====
