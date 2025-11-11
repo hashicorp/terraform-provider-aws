@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationsignals/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -257,37 +258,9 @@ func (d *dataSourceServiceLevelObjective) Read(ctx context.Context, req datasour
 	}
 
 	// Then manually fix the Goal.Interval union type that flex.Flatten couldn't handle
-	if out.Goal != nil && out.Goal.Interval != nil {
-		// Get the existing goal data that was flattened
-		goalData, diags := data.Goal.ToPtr(ctx)
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, diags)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		// Handle the Interval union type
-		var intervalData intervalModel
-		switch v := out.Goal.Interval.(type) {
-		case *awstypes.IntervalMemberCalendarInterval:
-			var calendarModel calendarIntervalModel
-			calendarModel.Duration = types.Int32Value(aws.ToInt32(v.Value.Duration))
-			calendarModel.DurationUnit = types.StringValue(string(v.Value.DurationUnit))
-			if v.Value.StartTime != nil {
-				calendarModel.StartTime = types.StringValue(aws.ToTime(v.Value.StartTime).Format(time.RFC3339))
-			}
-			intervalData.CalendarInterval = fwtypes.NewObjectValueOfMust(ctx, &calendarModel)
-			intervalData.RollingInterval = fwtypes.NewObjectValueOfNull[rollingIntervalModel](ctx)
-
-		case *awstypes.IntervalMemberRollingInterval:
-			var rollingModel rollingIntervalModel
-			rollingModel.Duration = types.Int32Value(aws.ToInt32(v.Value.Duration))
-			rollingModel.DurationUnit = types.StringValue(string(v.Value.DurationUnit))
-			intervalData.RollingInterval = fwtypes.NewObjectValueOfMust(ctx, &rollingModel)
-			intervalData.CalendarInterval = fwtypes.NewObjectValueOfNull[calendarIntervalModel](ctx)
-		}
-
-		goalData.Interval = fwtypes.NewObjectValueOfMust(ctx, &intervalData)
-		data.Goal = fwtypes.NewObjectValueOfMust(ctx, goalData)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flattenGoalInterval(ctx, out.Goal, &data), smerr.ID, data.ID.String())
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.ID.String())
@@ -305,6 +278,47 @@ func findServiceLevelObjectiveByID(ctx context.Context, conn *applicationsignals
 	}
 
 	return output.Slo, nil
+}
+
+// flattenGoalInterval handles the union type Interval within Goal.
+// The Interval type can be either CalendarInterval or RollingInterval.
+func flattenGoalInterval(ctx context.Context, apiObject *awstypes.Goal, data *dataSourceServiceLevelObjectiveModel) (diags diag.Diagnostics) {
+	if apiObject == nil || apiObject.Interval == nil {
+		return diags
+	}
+
+	// Get the existing goal data that was flattened by flex.Flatten
+	goalData, d := data.Goal.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Handle the Interval union type
+	var intervalData intervalModel
+	switch v := apiObject.Interval.(type) {
+	case *awstypes.IntervalMemberCalendarInterval:
+		var calendarModel calendarIntervalModel
+		calendarModel.Duration = types.Int32Value(aws.ToInt32(v.Value.Duration))
+		calendarModel.DurationUnit = types.StringValue(string(v.Value.DurationUnit))
+		if v.Value.StartTime != nil {
+			calendarModel.StartTime = types.StringValue(aws.ToTime(v.Value.StartTime).Format(time.RFC3339))
+		}
+		intervalData.CalendarInterval = fwtypes.NewObjectValueOfMust(ctx, &calendarModel)
+		intervalData.RollingInterval = fwtypes.NewObjectValueOfNull[rollingIntervalModel](ctx)
+
+	case *awstypes.IntervalMemberRollingInterval:
+		var rollingModel rollingIntervalModel
+		rollingModel.Duration = types.Int32Value(aws.ToInt32(v.Value.Duration))
+		rollingModel.DurationUnit = types.StringValue(string(v.Value.DurationUnit))
+		intervalData.RollingInterval = fwtypes.NewObjectValueOfMust(ctx, &rollingModel)
+		intervalData.CalendarInterval = fwtypes.NewObjectValueOfNull[calendarIntervalModel](ctx)
+	}
+
+	goalData.Interval = fwtypes.NewObjectValueOfMust(ctx, &intervalData)
+	data.Goal = fwtypes.NewObjectValueOfMust(ctx, goalData)
+
+	return diags
 }
 
 type dataSourceServiceLevelObjectiveModel struct {
