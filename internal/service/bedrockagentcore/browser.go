@@ -107,7 +107,7 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"vpc_config": schema.ListNestedBlock{
+						names.AttrVPCConfig: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),

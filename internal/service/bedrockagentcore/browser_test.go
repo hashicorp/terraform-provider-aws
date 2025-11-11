@@ -56,9 +56,9 @@ func TestAccBedrockAgentCoreBrowser_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("browser_arn"), tfknownvalue.RegionalARNRegexp("bedrock-agentcore", regexache.MustCompile(`browser-custom/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("browser_id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-						"network_mode": tfknownvalue.StringExact(awstypes.BrowserNetworkModePublic),
-						"vpc_config":   knownvalue.ListSizeExact(0),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNetworkConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"network_mode":      tfknownvalue.StringExact(awstypes.BrowserNetworkModePublic),
+						names.AttrVPCConfig: knownvalue.ListSizeExact(0),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
@@ -252,11 +252,11 @@ func TestAccBedrockAgentCoreBrowser_networkConfiguration_vpc(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNetworkConfiguration), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"network_mode": tfknownvalue.StringExact(awstypes.BrowserNetworkModeVpc),
-						"vpc_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"security_groups": knownvalue.SetSizeExact(1),
-							"subnets":         knownvalue.SetSizeExact(2),
+						names.AttrVPCConfig: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrSecurityGroups: knownvalue.SetSizeExact(1),
+							names.AttrSubnets:        knownvalue.SetSizeExact(2),
 						})}),
 					})})),
 				},
