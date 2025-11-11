@@ -88,6 +88,39 @@ func TestAccBackupLogicallyAirGappedVault_disappears(t *testing.T) {
 	})
 }
 
+func TestAccBackupLogicallyAirGappedVault_encryptionKeyArn(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v backup.DescribeBackupVaultOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_backup_logically_air_gapped_vault.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BackupEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogicallyAirGappedVaultDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLogicallyAirGappedVaultConfig_encryptionKeyArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogicallyAirGappedVaultExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_key_arn", kmsKeyResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBackupLogicallyAirGappedVault_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v backup.DescribeBackupVaultOutput
@@ -198,6 +231,22 @@ resource "aws_backup_logically_air_gapped_vault" "test" {
   name               = %[1]q
   max_retention_days = 10
   min_retention_days = 7
+}
+`, rName)
+}
+
+func testAccLogicallyAirGappedVaultConfig_encryptionKeyArn(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_backup_logically_air_gapped_vault" "test" {
+  name               = %[1]q
+  max_retention_days = 10
+  min_retention_days = 7
+  encryption_key_arn = aws_kms_key.test.arn
 }
 `, rName)
 }
