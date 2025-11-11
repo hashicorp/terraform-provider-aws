@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -136,72 +137,130 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.encrypted_log_group_strategy", "SKIP"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.log_group_selection_criteria", "*"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.#", "0"),
-					// Test tags
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"destination": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"destination_logs_configuration": knownvalue.ListSizeExact(0),
+							"region":                         knownvalue.StringExact(endpoints.EuWest1RegionID),
+						})}),
+						"source": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"regions": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact(endpoints.ApSoutheast1RegionID),
+							}),
+							"source_logs_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"log_group_selection_criteria": knownvalue.StringExact("*"),
+							})}),
+						})}),
+					})})),
+				},
 			},
 			{
-				Config: testAccCentralizationRuleForOrganizationConfig_updated(rName, endpoints.EuWest1RegionID, endpoints.UsWest1RegionID, endpoints.ApSoutheast1RegionID, endpoints.UsEast1RegionID),
+				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID, endpoints.UsEast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
-					// Test regions updated from 1 to 2
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.0", endpoints.ApSoutheast1RegionID),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.1", endpoints.UsEast1RegionID),
-					// Test source_logs_configuration updated from SKIP to ALLOW
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.encrypted_log_group_strategy", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.log_group_selection_criteria", "*"),
-					// Test destination_logs_configuration was added (went from non-existent to present)
-					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.logs_encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.logs_encryption_configuration.0.encryption_strategy", "AWS_OWNED"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.backup_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.backup_configuration.0.region", endpoints.UsWest1RegionID),
-					// Test updated tags
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Team", "observability"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"destination": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"destination_logs_configuration": knownvalue.ListSizeExact(0),
+							"region":                         knownvalue.StringExact(endpoints.EuWest1RegionID),
+						})}),
+						"source": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"regions": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact(endpoints.ApSoutheast1RegionID),
+								knownvalue.StringExact(endpoints.UsEast1RegionID),
+							}),
+							"source_logs_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"log_group_selection_criteria": knownvalue.StringExact("*"),
+							})}),
+						})}),
+					})})),
+				},
 			},
 			{
-				Config: testAccCentralizationRuleForOrganizationConfig_updatedLogFilter(rName, endpoints.EuWest1RegionID, endpoints.UsWest1RegionID, endpoints.ApSoutheast1RegionID, endpoints.UsEast1RegionID),
+				Config: testAccCentralizationRuleForOrganizationConfig_updated(rName, endpoints.EuWest1RegionID, endpoints.UsWest1RegionID, endpoints.ApSoutheast1RegionID, endpoints.UsEast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
-					// Test log_group_selection_criteria updated from "*" to OAM filter
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.log_group_selection_criteria", "LogGroupName LIKE '/aws/lambda%'"),
-					// Ensure other values remain the same
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.regions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.source.0.source_logs_configuration.0.encrypted_log_group_strategy", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.0.destination_logs_configuration.0.logs_encryption_configuration.0.encryption_strategy", "AWS_OWNED"),
-					// Test final tags with additional Filter tag
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "4"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Team", "observability"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Filter", "lambda-logs"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"destination": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"destination_logs_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"backup_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"region": knownvalue.StringExact(endpoints.UsWest1RegionID),
+								})}),
+								"logs_encryption_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"encryption_strategy": tfknownvalue.StringExact(awstypes.EncryptionStrategyAwsOwned),
+								})}),
+							})}),
+							"region": knownvalue.StringExact(endpoints.EuWest1RegionID),
+						})}),
+						"source": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"regions": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact(endpoints.ApSoutheast1RegionID),
+								knownvalue.StringExact(endpoints.UsEast1RegionID),
+							}),
+							"source_logs_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"log_group_selection_criteria": knownvalue.StringExact("LogGroupName LIKE '/aws/lambda%'"),
+							})}),
+						})}),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccObservabilityAdminCentralizationRuleForOrganization_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/observabilityadmin.amazonaws.com")
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "observabilityadmin.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/logs-centralization.observabilityadmin.amazonaws.com")
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCentralizationRuleForOrganizationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
 				},
 			},
 			{
@@ -210,6 +269,39 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
 				ImportStateVerifyIdentifierAttribute: "rule_name",
+			},
+			{
+				Config: testAccCentralizationRuleForOrganizationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccCentralizationRuleForOrganizationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -276,7 +368,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCentralizationRuleForOrganizationConfig_basic(rName, dstRegion, srcRegion string) string {
+func testAccCentralizationRuleForOrganizationConfig_basic(rName, dstRegion string, srcRegions ...string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_organizations_organization" "current" {}
@@ -291,7 +383,7 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
     }
 
     source {
-      regions = [%[3]q]
+      regions = [%[3]s]
       scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
 
       source_logs_configuration {
@@ -301,10 +393,10 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
     }
   }
 }
-`, rName, dstRegion, srcRegion)
+`, rName, dstRegion, acctest.ListOfStrings(srcRegions...))
 }
 
-func testAccCentralizationRuleForOrganizationConfig_updated(rName, dstRegion, backupRegion, srcRegion1, srcRegion2 string) string {
+func testAccCentralizationRuleForOrganizationConfig_updated(rName, dstRegion, bkupRegion string, srcRegions ...string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_organizations_organization" "current" {}
@@ -329,50 +421,7 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
     }
 
     source {
-      regions = [%[4]q, %[5]q]
-      scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
-
-      source_logs_configuration {
-        encrypted_log_group_strategy = "ALLOW"
-        log_group_selection_criteria = "*"
-      }
-    }
-  }
-
-  tags = {
-    Name        = %[1]q
-    Environment = "production"
-    Team        = "observability"
-  }
-}
-`, rName, dstRegion, backupRegion, srcRegion1, srcRegion2)
-}
-func testAccCentralizationRuleForOrganizationConfig_updatedLogFilter(rName, dstRegion, backupRegion, srcRegion1, srcRegion2 string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-data "aws_organizations_organization" "current" {}
-
-resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
-  rule_name = %[1]q
-
-  rule {
-    destination {
-      region  = %[2]q
-      account = data.aws_caller_identity.current.account_id
-
-      destination_logs_configuration {
-        logs_encryption_configuration {
-          encryption_strategy = "AWS_OWNED"
-        }
-
-        backup_configuration {
-          region = %[3]q
-        }
-      }
-    }
-
-    source {
-      regions = [%[4]q, %[5]q]
+      regions = [%[4]s]
       scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
 
       source_logs_configuration {
@@ -381,13 +430,71 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
       }
     }
   }
+}
+`, rName, dstRegion, bkupRegion, acctest.ListOfStrings(srcRegions...))
+}
+
+func testAccCentralizationRuleForOrganizationConfig_tags1(rName, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_organizations_organization" "current" {}
+
+resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
+  rule_name = %[1]q
+
+  rule {
+    destination {
+      region  = %[4]q
+      account = data.aws_caller_identity.current.account_id
+    }
+
+    source {
+      regions = [%[5]q]
+      scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
+
+      source_logs_configuration {
+        encrypted_log_group_strategy = "SKIP"
+        log_group_selection_criteria = "*"
+      }
+    }
+  }
 
   tags = {
-    Name        = %[1]q
-    Environment = "production"
-    Team        = "observability"
-    Filter      = "lambda-logs"
+    %[2]q = %[3]q
   }
 }
-`, rName, dstRegion, backupRegion, srcRegion1, srcRegion2)
+`, rName, tag1Key, tag1Value, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID)
+}
+
+func testAccCentralizationRuleForOrganizationConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_organizations_organization" "current" {}
+
+resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
+  rule_name = %[1]q
+
+  rule {
+    destination {
+      region  = %[6]q
+      account = data.aws_caller_identity.current.account_id
+    }
+
+    source {
+      regions = [%[7]q]
+      scope   = "OrganizationId = '${data.aws_organizations_organization.current.id}'"
+
+      source_logs_configuration {
+        encrypted_log_group_strategy = "SKIP"
+        log_group_selection_criteria = "*"
+      }
+    }
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID)
 }

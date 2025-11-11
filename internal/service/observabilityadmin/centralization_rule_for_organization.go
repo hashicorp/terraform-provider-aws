@@ -292,52 +292,46 @@ func (r *centralizationRuleForOrganizationResource) Read(ctx context.Context, re
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
-func (r *centralizationRuleForOrganizationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state centralizationRuleForOrganizationResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *centralizationRuleForOrganizationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old centralizationRuleForOrganizationResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
-	diff, d := fwflex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
-	if resp.Diagnostics.HasError() {
+	diff, d := fwflex.Diff(ctx, new, old)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
-		input := observabilityadmin.UpdateCentralizationRuleForOrganizationInput{
-			RuleIdentifier: state.RuleName.ValueStringPointer(),
-		}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
-		if resp.Diagnostics.HasError() {
+		ruleName := fwflex.StringValueFromFramework(ctx, new.RuleName)
+		var input observabilityadmin.UpdateCentralizationRuleForOrganizationInput
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateCentralizationRuleForOrganization(ctx, &input)
+		// Additional fields.
+		input.RuleIdentifier = aws.String(ruleName)
+
+		_, err := conn.UpdateCentralizationRuleForOrganization(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RuleName.String())
-			return
-		}
-		if out == nil || out.RuleArn == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.RuleName.String())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleName)
 			return
 		}
 
-		plan.RuleARN = fwflex.StringToFramework(ctx, out.RuleArn)
+		if _, err := waitCentralizationRuleForOrganizationHealthy(ctx, conn, ruleName, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ruleName)
+			return
+		}
 	}
 
-	// Check if the rule was updated successfully by reading it back
-	_, err := findCentralizationRuleForOrganizationByID(ctx, conn, plan.RuleName.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RuleName.String())
-		return
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *centralizationRuleForOrganizationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
