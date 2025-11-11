@@ -31,6 +31,26 @@ func dataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrCapacityProviderStrategy: {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"base": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"capacity_provider": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrWeight: {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"cluster_arn": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -153,8 +173,36 @@ func dataSourceService() *schema.Resource {
 					},
 				},
 			},
+			"deployment_controller": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrType: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"desired_count": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"enable_ecs_managed_tags": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_execute_command": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"health_check_grace_period_seconds": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"iam_role": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"launch_type": {
@@ -240,13 +288,23 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
 	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
+	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
+	}
 	d.Set("cluster_arn", service.ClusterArn)
 	if service.DeploymentConfiguration != nil {
 		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(service.DeploymentConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
 		}
 	}
+	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting deployment_controller: %s", err)
+	}
 	d.Set("desired_count", service.DesiredCount)
+	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
+	d.Set("enable_execute_command", service.EnableExecuteCommand)
+	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
+	d.Set("iam_role", service.RoleArn)
 	d.Set("launch_type", service.LaunchType)
 	if service.LoadBalancers != nil {
 		if err := d.Set("load_balancer", flattenServiceLoadBalancers(service.LoadBalancers)); err != nil {
