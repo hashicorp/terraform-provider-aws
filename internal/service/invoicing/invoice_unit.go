@@ -215,11 +215,14 @@ func (r *invoiceUnitResource) Update(ctx context.Context, request resource.Updat
 			return
 		}
 
-		_, err = waitInvoiceUnitUpdated(ctx, conn, new.ARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		var output *invoicing.GetInvoiceUnitOutput
+		output, err = waitInvoiceUnitUpdated(ctx, conn, new.ARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ARN.ValueString())
 			return
 		}
+		new.LastModified = fwflex.TimeToFramework(ctx, output.LastModified)
+		new.TaxInheritanceDisabled = fwflex.BoolToFramework(ctx, output.TaxInheritanceDisabled)
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, new))
