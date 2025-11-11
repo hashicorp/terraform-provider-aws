@@ -104,8 +104,19 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 		return diags
 	}
 
+	// Top-level struct to struct conversion.
+	if valFrom.IsValid() && valTo.IsValid() {
+		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct &&
+			!typTo.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
+			!typTo.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
+			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
+			diags.Append(flattenStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
+			return diags
+		}
+	}
+
 	// Special case: XML wrapper struct to NestedObjectCollectionType (Rule 2)
-	// Check this BEFORE struct-to-struct conversion
+	// Check this BEFORE calling convert()
 	if valFrom.IsValid() {
 		// Check if source is XML wrapper (handle pointer)
 		sourceType := valFrom.Type()
@@ -128,6 +139,31 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 			})
 			if attrVal, ok := to.(attr.Value); ok {
 				if nestedObjType, ok := attrVal.Type(ctx).(fwtypes.NestedObjectCollectionType); ok {
+					// Check if wrapper is in empty state (Enabled=false, Items empty/nil)
+					// If so, return null instead of creating a block
+					enabledField := sourceVal.FieldByName("Enabled")
+					itemsField := sourceVal.FieldByName("Items")
+					
+					if enabledField.IsValid() && itemsField.IsValid() {
+						// Check if Enabled is false and Items is empty
+						isEnabled := true
+						if enabledField.Kind() == reflect.Pointer && !enabledField.IsNil() {
+							isEnabled = enabledField.Elem().Bool()
+						}
+						
+						itemsEmpty := itemsField.IsNil() || (itemsField.Kind() == reflect.Slice && itemsField.Len() == 0)
+						
+						if !isEnabled && itemsEmpty {
+							tflog.SubsystemTrace(ctx, subsystemName, "XML wrapper is empty (Enabled=false, Items empty), returning null")
+							nullVal, d := nestedObjType.NullValue(ctx)
+							diags.Append(d...)
+							if !diags.HasError() {
+								valTo.Set(reflect.ValueOf(nullVal))
+							}
+							return diags
+						}
+					}
+					
 					tflog.SubsystemTrace(ctx, subsystemName, "Flattening XML wrapper to NestedObjectCollection via autoFlattenConvert")
 					
 					// Inline Rule 2 logic
@@ -168,17 +204,6 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 					return diags
 				}
 			}
-		}
-	}
-
-	// Top-level struct to struct conversion.
-	if valFrom.IsValid() && valTo.IsValid() {
-		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct &&
-			!typTo.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
-			!typTo.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
-			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
-			diags.Append(flattenStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
-			return diags
 		}
 	}
 
@@ -2025,6 +2050,32 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 				tflog.SubsystemTrace(ctx, subsystemName, "Target is NestedObjectCollectionType", map[string]any{
 					"target_type": nestedObjType.String(),
 				})
+				
+				// Check if wrapper is in empty state (Enabled=false, Items empty/nil)
+				// If so, return null instead of creating a block
+				enabledField := valFrom.FieldByName("Enabled")
+				itemsField := valFrom.FieldByName("Items")
+				
+				if enabledField.IsValid() && itemsField.IsValid() {
+					// Check if Enabled is false and Items is empty
+					isEnabled := true
+					if enabledField.Kind() == reflect.Pointer && !enabledField.IsNil() {
+						isEnabled = enabledField.Elem().Bool()
+					}
+					
+					itemsEmpty := itemsField.IsNil() || (itemsField.Kind() == reflect.Slice && itemsField.Len() == 0)
+					
+					if !isEnabled && itemsEmpty {
+						tflog.SubsystemTrace(ctx, subsystemName, "XML wrapper is empty (Enabled=false, Items empty), returning null for Rule 2")
+						nullVal, d := nestedObjType.NullValue(ctx)
+						diags.Append(d...)
+						if !diags.HasError() {
+							valTo.Set(reflect.ValueOf(nullVal))
+						}
+						return diags
+					}
+				}
+				
 				// Check if target model has Items field (Rule 2)
 				samplePtr, d := nestedObjType.NewObjectPtr(ctx)
 				diags.Append(d...)

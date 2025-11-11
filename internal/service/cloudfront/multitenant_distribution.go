@@ -855,8 +855,8 @@ type originModel struct {
 }
 
 type customHeaderModel struct {
-	HeaderName  types.String `tfsdk:"name"`
-	HeaderValue types.String `tfsdk:"value"`
+	HeaderName  types.String `tfsdk:"header_name"`
+	HeaderValue types.String `tfsdk:"header_value"`
 }
 
 type customOriginConfigModel struct {
