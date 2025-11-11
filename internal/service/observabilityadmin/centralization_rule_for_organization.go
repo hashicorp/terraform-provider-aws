@@ -407,7 +407,7 @@ func statusCentralizationRuleForOrganization(conn *observabilityadmin.Client, id
 	}
 }
 
-func waitCentralizationRuleForOrganizationHealthy(ctx context.Context, conn *observabilityadmin.Client, id string, timeout time.Duration) (*observabilityadmin.GetCentralizationRuleForOrganizationOutput, error) {
+func waitCentralizationRuleForOrganizationHealthy(ctx context.Context, conn *observabilityadmin.Client, id string, timeout time.Duration) (*observabilityadmin.GetCentralizationRuleForOrganizationOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.RuleHealthProvisioning),
 		Target:                    enum.Slice(awstypes.RuleHealthHealthy),
