@@ -184,15 +184,21 @@ func (r *resourceServiceLevelObjective) Schema(ctx context.Context, req resource
 			},
 			"request_based_sli": schema.SingleNestedBlock{
 				CustomType: fwtypes.NewObjectTypeOf[requestBasedSliModel](ctx),
+				Validators: []validator.Object{
+					objectvalidator.ExactlyOneOf(
+						path.Expressions{
+							path.MatchRelative().AtParent().AtName("sli"),
+						}...),
+				},
 				Attributes: map[string]schema.Attribute{
-					"metric_threshold":    schema.Float64Attribute{Computed: true},
-					"comparison_operator": schema.StringAttribute{Computed: true},
+					"metric_threshold":    schema.Float64Attribute{Optional: true},
+					"comparison_operator": schema.StringAttribute{Optional: true},
 				},
 				Blocks: map[string]schema.Block{
 					"request_based_sli_metric": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[requestBasedSliMetricModel](ctx),
 						Attributes: map[string]schema.Attribute{
-							"dependency_config": schema.StringAttribute{Computed: true},
+							"dependency_config": schema.StringAttribute{Optional: true},
 							"key_attributes":    schema.MapAttribute{CustomType: fwtypes.MapOfStringType, ElementType: types.StringType, Computed: true},
 							"metric_type":       schema.StringAttribute{Computed: true},
 							"operation_name":    schema.StringAttribute{Computed: true},
@@ -205,6 +211,12 @@ func (r *resourceServiceLevelObjective) Schema(ctx context.Context, req resource
 			},
 			"sli": schema.SingleNestedBlock{
 				CustomType: fwtypes.NewObjectTypeOf[sliModel](ctx),
+				Validators: []validator.Object{
+					objectvalidator.ExactlyOneOf(
+						path.Expressions{
+							path.MatchRelative().AtParent().AtName("request_based_sli"),
+						}...),
+				},
 				Attributes: map[string]schema.Attribute{
 					"metric_threshold":    schema.Float64Attribute{Computed: true},
 					"comparison_operator": schema.StringAttribute{Computed: true},
