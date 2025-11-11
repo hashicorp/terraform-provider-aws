@@ -68,6 +68,7 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/jmespath/go-jmespath"
@@ -2224,4 +2225,10 @@ func ExpectErrorAttrAtLeastOneOf(attrs ...string) *regexp.Regexp {
 
 func ExpectErrorAttrMinItems(attr string, expected, actual int) *regexp.Regexp {
 	return regexache.MustCompile(fmt.Sprintf(`Attribute %s requires %d\s+item minimum, but config has only %d declared`, attr, expected, actual))
+}
+
+func ListOfStrings[E ~string](s ...E) string {
+	return strings.Join(tfslices.ApplyToAll(s, func(e E) string {
+		return strconv.Quote(string(e))
+	}), ", ")
 }
