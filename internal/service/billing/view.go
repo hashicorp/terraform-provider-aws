@@ -6,6 +6,7 @@ package billing
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,10 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/internal/fwtype"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -40,6 +43,10 @@ import (
 func newResourceView(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceView{}
 
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
+
 	return r, nil
 }
 
@@ -49,46 +56,168 @@ const (
 
 type resourceView struct {
 	framework.ResourceWithModel[resourceViewModel]
+	framework.WithTimeouts
 }
 
 func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
-			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
-				Required: true,
+			"billing_view_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.BillingViewType](),
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"type": schema.StringAttribute{
-				Required: true,
+			names.AttrCreatedAt: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"derived_view_count": schema.Int32Attribute{
+				Computed: true,
+			},
+			names.AttrDescription: schema.StringAttribute{
+				Optional:   true,
+				Validators: []validator.String{stringvalidator.LengthBetween(0, 1024)},
+			},
+			names.AttrName: schema.StringAttribute{
+				Required:   true,
+				Validators: []validator.String{stringvalidator.LengthBetween(1, 128)},
+			},
+			"owner_account_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"source_account_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"source_view_count": schema.Int32Attribute{
+				Computed: true,
+			},
+			"source_views": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+				Validators: []validator.List{
+					listvalidator.SizeBetween(1, 10),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+			},
+			"updated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			"view_definition_last_updated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
+			"data_filter_expression": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[dataFilterExpressionModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"nested_required": schema.StringAttribute{
-							Required: true,
+					Blocks: map[string]schema.Block{
+						"dimensions": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dimensionsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrKey: schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.Dimension](),
+										Required:   true,
+									},
+									names.AttrValues: schema.ListAttribute{
+										CustomType:  fwtypes.ListOfStringType,
+										ElementType: types.StringType,
+										Required:    true,
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+										},
+									},
+								},
+							},
 						},
-						"nested_computed": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
+						"tags":       schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[tagValuesModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrKey: schema.StringAttribute{
+										Required:   true,
+									},
+									names.AttrValues: schema.ListAttribute{
+										CustomType:  fwtypes.ListOfStringType,
+										ElementType: types.StringType,
+										Required:    true,
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+										},
+									},
+								},
+							},
+						},
+						"time_range": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[timeRangeModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"begin_date_inclusive": schema.StringAttribute{
+										CustomType: timetypes.RFC3339Type{},
+										Required:   true,
+									},
+									"end_date_inclusive": schema.StringAttribute{
+										CustomType: timetypes.RFC3339Type{},
+										Required:   true,
+									},
+								},
 							},
 						},
 					},
 				},
 			},
+			"health_status": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[healthStatusModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrStatusCode: schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.BillingViewStatus](),
+							Computed:   true,
+						},
+						"status_reasons": schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringEnumType[awstypes.BillingViewStatusReason](),
+							ElementType: types.StringType,
+							Computed:    true,
+						},
+					},
+				},
+			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -363,8 +492,11 @@ type resourceViewModel struct {
 	HealthStatus                fwtypes.ListNestedObjectValueOf[healthStatusModel]         `tfsdk:"health_status"`
 	Name                        types.String                                               `tfsdk:"name"`
 	OwnerAccountId              types.String                                               `tfsdk:"owner_account_id"`
+	Tags                        tftags.Map                                                 `tfsdk:"tags"`
+	TagsAll                     tftags.Map                                                 `tfsdk:"tags_all"`
 	SourceAccountId             types.String                                               `tfsdk:"source_account_id"`
 	SourceViewCount             types.Int32                                                `tfsdk:"source_view_count"`
+	SourceViews                 fwtypes.ListOfString                                       `tfsdk:"source_views"`
 	Timeouts                    timeouts.Value                                             `tfsdk:"timeouts"`
 	UpdatedAt                   timetypes.RFC3339                                          `tfsdk:"updated_at"`
 	ViewDefinitionLastUpdatedAt timetypes.RFC3339                                          `tfsdk:"view_definition_last_updated_at"`
@@ -372,7 +504,7 @@ type resourceViewModel struct {
 
 type dataFilterExpressionModel struct {
 	Dimensions fwtypes.ListNestedObjectValueOf[dimensionsModel] `tfsdk:"dimensions"`
-	Tags       tftags.Map                                       `tfsdk:"tags"`
+	Tags       fwtypes.ListNestedObjectValueOf[tagValuesModel]  `tfsdk:"tags"`
 	TimeRange  fwtypes.ListNestedObjectValueOf[timeRangeModel]  `tfsdk:"time_range"`
 }
 
@@ -381,12 +513,17 @@ type dimensionsModel struct {
 	Values fwtypes.ListOfString                   `tfsdk:"values"`
 }
 
+type tagValuesModel struct {
+	Key    types.String         `tfsdk:"key"`
+	Values fwtypes.ListOfString `tfsdk:"values"`
+}
+
 type timeRangeModel struct {
 	BeginDateInclusive timetypes.RFC3339 `tfsdk:"begin_date_inclusive"`
 	EndDateInclusive   timetypes.RFC3339 `tfsdk:"end_date_inclusive"`
 }
 
 type healthStatusModel struct {
-	StatusCode    types.String                                               `tfsdk:"status_code"`
+	StatusCode    fwtypes.StringEnum[awstypes.BillingViewStatus]             `tfsdk:"status_code"`
 	StatusReasons fwtypes.ListOfStringEnum[awstypes.BillingViewStatusReason] `tfsdk:"status_reasons"`
 }
