@@ -251,6 +251,15 @@ func TestAccBedrockAgentCoreBrowser_networkConfiguration_vpc(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"network_mode": tfknownvalue.StringExact(awstypes.BrowserNetworkModeVpc),
+						"vpc_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"security_groups": knownvalue.SetSizeExact(1),
+							"subnets":         knownvalue.SetSizeExact(2),
+						})}),
+					})})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
