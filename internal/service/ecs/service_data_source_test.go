@@ -97,7 +97,7 @@ func TestAccECSServiceDataSource_deploymentConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "deployment_maximum_percent", dataSourceName, "deployment_configuration.0.maximum_percent"),
 					resource.TestCheckResourceAttrPair(resourceName, "deployment_minimum_healthy_percent", dataSourceName, "deployment_configuration.0.minimum_healthy_percent"),
 					resource.TestCheckResourceAttrPair(resourceName, "deployment_circuit_breaker.#", dataSourceName, "deployment_configuration.0.deployment_circuit_breaker.#"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(dataSourceName, "created_by"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "pending_count"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "running_count"),
