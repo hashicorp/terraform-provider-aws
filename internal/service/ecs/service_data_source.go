@@ -5,8 +5,10 @@ package ecs
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -54,6 +56,14 @@ func dataSourceService() *schema.Resource {
 			"cluster_arn": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			names.AttrCreatedAt: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_by": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"deployment_configuration": {
 				Type:     schema.TypeList,
@@ -185,6 +195,46 @@ func dataSourceService() *schema.Resource {
 					},
 				},
 			},
+			"deployments": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrCreatedAt: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"desired_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						names.AttrID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"pending_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"running_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"task_definition": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"updated_at": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"desired_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -196,6 +246,26 @@ func dataSourceService() *schema.Resource {
 			"enable_execute_command": {
 				Type:     schema.TypeBool,
 				Computed: true,
+			},
+			"events": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrCreatedAt: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrMessage: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"health_check_grace_period_seconds": {
 				Type:     schema.TypeInt,
@@ -315,8 +385,20 @@ func dataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"pending_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"platform_family": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrPropagateTags: {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"running_count": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"scheduling_strategy": {
@@ -347,6 +429,10 @@ func dataSourceService() *schema.Resource {
 					},
 				},
 			},
+			names.AttrStatus: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -354,6 +440,50 @@ func dataSourceService() *schema.Resource {
 			"task_definition": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"task_sets": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrARN: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrCreatedAt: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"pending_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"running_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"stability_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"task_definition": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"updated_at": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
@@ -378,6 +508,10 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
 	}
 	d.Set("cluster_arn", service.ClusterArn)
+	if service.CreatedAt != nil {
+		d.Set(names.AttrCreatedAt, service.CreatedAt.Format(time.RFC3339))
+	}
+	d.Set("created_by", service.CreatedBy)
 	if service.DeploymentConfiguration != nil {
 		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(service.DeploymentConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
@@ -386,9 +520,15 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting deployment_controller: %s", err)
 	}
+	if err := d.Set("deployments", flattenDeployments(service.Deployments)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting deployments: %s", err)
+	}
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
 	d.Set("enable_execute_command", service.EnableExecuteCommand)
+	if err := d.Set("events", flattenServiceEvents(service.Events)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting events: %s", err)
+	}
 	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
 	d.Set("iam_role", service.RoleArn)
 	d.Set("launch_type", service.LaunchType)
@@ -407,15 +547,94 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
 	}
 	d.Set("platform_version", service.PlatformVersion)
+	d.Set("pending_count", service.PendingCount)
+	d.Set("platform_family", service.PlatformFamily)
 	d.Set(names.AttrPropagateTags, service.PropagateTags)
+	d.Set("running_count", service.RunningCount)
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
 	}
+	d.Set(names.AttrStatus, service.Status)
 	d.Set(names.AttrServiceName, service.ServiceName)
 	d.Set("task_definition", service.TaskDefinition)
+	if err := d.Set("task_sets", flattenTaskSets(service.TaskSets)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting task_sets: %s", err)
+	}
 
 	setTagsOut(ctx, service.Tags)
 
 	return diags
+}
+
+func flattenDeployments(apiObjects []awstypes.Deployment) []map[string]any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []map[string]any
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"desired_count":   apiObject.DesiredCount,
+			names.AttrID:      aws.ToString(apiObject.Id),
+			"pending_count":   apiObject.PendingCount,
+			"running_count":   apiObject.RunningCount,
+			names.AttrStatus:  aws.ToString(apiObject.Status),
+			"task_definition": aws.ToString(apiObject.TaskDefinition),
+		}
+		if apiObject.CreatedAt != nil {
+			tfMap[names.AttrCreatedAt] = apiObject.CreatedAt.Format(time.RFC3339)
+		}
+		if apiObject.UpdatedAt != nil {
+			tfMap["updated_at"] = apiObject.UpdatedAt.Format(time.RFC3339)
+		}
+		tfList = append(tfList, tfMap)
+	}
+	return tfList
+}
+
+func flattenServiceEvents(apiObjects []awstypes.ServiceEvent) []map[string]any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []map[string]any
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrID:      aws.ToString(apiObject.Id),
+			names.AttrMessage: aws.ToString(apiObject.Message),
+		}
+		if apiObject.CreatedAt != nil {
+			tfMap[names.AttrCreatedAt] = apiObject.CreatedAt.Format(time.RFC3339)
+		}
+		tfList = append(tfList, tfMap)
+	}
+	return tfList
+}
+
+func flattenTaskSets(apiObjects []awstypes.TaskSet) []map[string]any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []map[string]any
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrARN:      aws.ToString(apiObject.TaskSetArn),
+			names.AttrID:       aws.ToString(apiObject.Id),
+			"pending_count":    apiObject.PendingCount,
+			"running_count":    apiObject.RunningCount,
+			"stability_status": string(apiObject.StabilityStatus),
+			names.AttrStatus:   aws.ToString(apiObject.Status),
+			"task_definition":  aws.ToString(apiObject.TaskDefinition),
+		}
+		if apiObject.CreatedAt != nil {
+			tfMap[names.AttrCreatedAt] = apiObject.CreatedAt.Format(time.RFC3339)
+		}
+		if apiObject.UpdatedAt != nil {
+			tfMap["updated_at"] = apiObject.UpdatedAt.Format(time.RFC3339)
+		}
+		tfList = append(tfList, tfMap)
+	}
+	return tfList
 }
