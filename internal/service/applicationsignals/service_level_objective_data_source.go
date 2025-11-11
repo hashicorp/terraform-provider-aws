@@ -207,7 +207,6 @@ func (d *dataSourceServiceLevelObjective) Read(ctx context.Context, req datasour
 		return
 	}
 
-	// Manual handling for time fields
 	data.CreatedTime = types.StringValue(aws.ToTime(out.CreatedTime).Format(time.RFC3339))
 	data.LastUpdatedTime = types.StringValue(aws.ToTime(out.LastUpdatedTime).Format(time.RFC3339))
 
