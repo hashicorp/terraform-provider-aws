@@ -583,3 +583,66 @@ func TestXMLWrapperRealCloudFrontTypes(t *testing.T) {
 		}
 	})
 }
+
+// Test Rule 1: XML wrapper with complex struct items (like Origins)
+func TestFlattenXMLWrapperRule1ComplexStructItems(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	// AWS types: Origins with Items/Quantity
+	type awsOrigin struct {
+		DomainName *string
+		Id         *string
+	}
+
+	type awsOrigins struct {
+		Items    []awsOrigin
+		Quantity *int32
+	}
+
+	type awsDistributionConfig struct {
+		Origins *awsOrigins
+		Comment *string
+	}
+
+	// Terraform models
+	type tfOriginModel struct {
+		DomainName types.String `tfsdk:"domain_name"`
+		Id         types.String `tfsdk:"id"`
+	}
+
+	type tfDistributionModel struct {
+		Origin  fwtypes.SetNestedObjectValueOf[tfOriginModel] `tfsdk:"origin"`
+		Comment types.String                                  `tfsdk:"comment"`
+	}
+
+	t.Run("flatten origins", func(t *testing.T) {
+		source := &awsDistributionConfig{
+			Origins: &awsOrigins{
+				Items: []awsOrigin{
+					{DomainName: aws.String("example.com"), Id: aws.String("origin1")},
+					{DomainName: aws.String("cdn.example.com"), Id: aws.String("origin2")},
+				},
+				Quantity: aws.Int32(2),
+			},
+			Comment: aws.String("test distribution"),
+		}
+
+		var target tfDistributionModel
+		diags := Flatten(ctx, source, &target)
+
+		if diags.HasError() {
+			t.Fatalf("Flatten failed: %v", diags)
+		}
+
+		if target.Origin.IsNull() {
+			t.Fatal("Expected non-null origin set")
+		}
+
+		elements := target.Origin.Elements()
+		if len(elements) != 2 {
+			t.Errorf("Expected 2 origins, got %d", len(elements))
+		}
+	})
+}

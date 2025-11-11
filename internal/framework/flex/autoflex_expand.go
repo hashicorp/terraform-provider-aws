@@ -1815,7 +1815,7 @@ func (expander autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedOb
 		}
 	}
 
-	// Handle additional fields (e.g., Enabled)
+	// Handle additional fields (e.g., Enabled, CachedMethods)
 	for i := 0; i < vTo.NumField(); i++ {
 		targetField := vTo.Field(i)
 		targetFieldType := vTo.Type().Field(i)
@@ -1828,7 +1828,7 @@ func (expander autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedOb
 
 		// Look for matching field in nested object
 		sourceField := nestedObj.FieldByName(fieldName)
-		if sourceField.IsValid() {
+		if sourceField.IsValid() && targetField.CanAddr() {
 			// Convert TF field to AWS field
 			if tfAttr, ok := sourceField.Interface().(attr.Value); ok {
 				diags.Append(autoExpandConvert(ctx, tfAttr, targetField.Addr().Interface(), expander)...)
@@ -2234,6 +2234,30 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 	hasMainSourceField := false
 	if mainSourceFieldName != "" {
 		sourceFieldVal := valFrom.FieldByName(mainSourceFieldName)
+
+		// Check if source is a NestedObjectCollectionValue (Rule 2 pattern)
+		if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
+			if !sourceValue.IsNull() && !sourceValue.IsUnknown() {
+				if nestedObjCollection, ok := sourceValue.(fwtypes.NestedObjectCollectionValue); ok {
+					// This is Rule 2: single nested object with items + additional fields
+					// Delegate to nestedObjectCollectionToXMLWrapper which handles Rule 2
+					tflog.SubsystemTrace(ctx, subsystemName, "Detected Rule 2 pattern - delegating to nestedObjectCollectionToXMLWrapper")
+					diags.Append(expander.nestedObjectCollectionToXMLWrapper(ctx, sourcePath.AtName(mainSourceFieldName), nestedObjCollection, targetPath, targetStructVal)...)
+					if diags.HasError() {
+						return diags
+					}
+					processedFields[mainSourceFieldName] = true
+
+					// Set the populated struct to the target field
+					if isPointer {
+						toFieldVal.Set(targetStruct)
+					} else {
+						toFieldVal.Set(targetStructVal)
+					}
+					return diags
+				}
+			}
+		}
 
 		// Get the Items and Quantity fields in the target
 		itemsField := targetStructVal.FieldByName("Items")

@@ -118,7 +118,7 @@ func testAccCheckMultiTenantDistributionExists(ctx context.Context, n string, v 
 func testAccMultiTenantDistributionConfig_basic() string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_multitenant_distribution" "test" {
-  enabled = true
+  enabled = false
   comment = "Test multi-tenant distribution"
 
   origin {
@@ -136,9 +136,12 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   default_cache_behavior {
     target_origin_id       = "example"
     viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
     cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"  # AWS Managed CachingDisabled policy
+    
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
   }
 
   viewer_certificate {
@@ -195,11 +198,14 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     }
   }
   default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "myCustomOrigin"
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.test.id
+    
+    allowed_methods {
+      items          = ["GET", "HEAD"]
+      cached_methods = ["GET", "HEAD"]
+    }
   }
   tenant_config {
     parameter_definition {
