@@ -76,7 +76,7 @@ func (r *logicallyAirGappedVaultResource) Schema(ctx context.Context, request re
 			},
 			"encryption_key_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
-				Required:   false,
+				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
