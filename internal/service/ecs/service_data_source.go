@@ -35,6 +35,124 @@ func dataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"deployment_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"alarms": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"alarm_names": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"enable": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"rollback": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"bake_time_in_minutes": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"canary_configuration": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"canary_bake_time_in_minutes": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"canary_percent": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"deployment_circuit_breaker": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enable": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"rollback": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"linear_configuration": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"step_bake_time_in_minutes": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"step_percent": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"lifecycle_hook": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hook_details": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"hook_target_arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"lifecycle_stages": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									names.AttrRoleARN: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"maximum_percent": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"minimum_healthy_percent": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"strategy": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"desired_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -123,6 +241,11 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrARN, arn)
 	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
 	d.Set("cluster_arn", service.ClusterArn)
+	if service.DeploymentConfiguration != nil {
+		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(service.DeploymentConfiguration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
+		}
+	}
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("launch_type", service.LaunchType)
 	if service.LoadBalancers != nil {
