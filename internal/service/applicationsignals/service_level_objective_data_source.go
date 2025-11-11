@@ -246,16 +246,48 @@ func (d *dataSourceServiceLevelObjective) Read(ctx context.Context, req datasour
 		return
 	}
 
-	// Handling
-
+	// Manual handling for time fields
 	data.CreatedTime = types.StringValue(aws.ToTime(out.CreatedTime).Format(time.RFC3339))
 	data.LastUpdatedTime = types.StringValue(aws.ToTime(out.LastUpdatedTime).Format(time.RFC3339))
 
-	// Handling over
-
+	// First, let flex.Flatten handle everything it can
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data), smerr.ID, data.ID.String())
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Then manually fix the Goal.Interval union type that flex.Flatten couldn't handle
+	if out.Goal != nil && out.Goal.Interval != nil {
+		// Get the existing goal data that was flattened
+		goalData, diags := data.Goal.ToPtr(ctx)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, diags)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Handle the Interval union type
+		var intervalData intervalModel
+		switch v := out.Goal.Interval.(type) {
+		case *awstypes.IntervalMemberCalendarInterval:
+			var calendarModel calendarIntervalModel
+			calendarModel.Duration = types.Int32Value(aws.ToInt32(v.Value.Duration))
+			calendarModel.DurationUnit = types.StringValue(string(v.Value.DurationUnit))
+			if v.Value.StartTime != nil {
+				calendarModel.StartTime = types.StringValue(aws.ToTime(v.Value.StartTime).Format(time.RFC3339))
+			}
+			intervalData.CalendarInterval = fwtypes.NewObjectValueOfMust(ctx, &calendarModel)
+			intervalData.RollingInterval = fwtypes.NewObjectValueOfNull[rollingIntervalModel](ctx)
+
+		case *awstypes.IntervalMemberRollingInterval:
+			var rollingModel rollingIntervalModel
+			rollingModel.Duration = types.Int32Value(aws.ToInt32(v.Value.Duration))
+			rollingModel.DurationUnit = types.StringValue(string(v.Value.DurationUnit))
+			intervalData.RollingInterval = fwtypes.NewObjectValueOfMust(ctx, &rollingModel)
+			intervalData.CalendarInterval = fwtypes.NewObjectValueOfNull[calendarIntervalModel](ctx)
+		}
+
+		goalData.Interval = fwtypes.NewObjectValueOfMust(ctx, &intervalData)
+		data.Goal = fwtypes.NewObjectValueOfMust(ctx, goalData)
 	}
 
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.ID.String())
