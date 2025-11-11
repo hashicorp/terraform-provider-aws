@@ -12,7 +12,6 @@ import (
 	"maps"
 	"os"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -250,18 +249,13 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Description: "The region where AWS STS operations will take place. Examples\n" +
 						"are us-east-1 and us-west-2.", // lintignore:AWSAT003,
 				},
-				"tag_policy_enforced": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Description: "Whether to enforce the organizations effective tagging policy on resources managed by " +
-						"this provider instance.",
-				},
-				"tag_policy_severity": {
+				"tag_policy_compliance": {
 					Type:     schema.TypeString,
 					Optional: true,
-					Description: `The severity of diagnostics related to violations of the organizations effective tagging ` +
-						`policy. Can only be set when tag_policy_enforced is true. Valid values are "warning" and "error". ` +
-						`Defaults to "error".`,
+					Description: "The severity with which to enforce the organizations effective tagging policy on resources managed by " +
+						`this provider instance. Valid values are "error", "warning", and "disabled". When unset or "disabled", the tag ` +
+						`policy will not be enforced by the provider. Enforcement may still occur for certain services on the server side.` +
+						"Can also be configured with the " + tftags.TagPolicyComplianceEnvVar + " environment variable.",
 				},
 				"token": {
 					Type:     schema.TypeString,
@@ -479,7 +473,7 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		config.IgnoreTagsConfig = expandIgnoreTags(ctx, nil)
 	}
 
-	tagCfg, dg := expandTagPolicyConfig(d.Get("tag_policy_enforced").(bool), d.Get("tag_policy_severity").(string))
+	tagCfg, dg := expandTagPolicyConfig(cty.GetAttrPath("tag_policy_compliance"), d.Get("tag_policy_compliance").(string))
 	diags = append(diags, dg...)
 	if dg.HasError() {
 		return nil, diags
@@ -1181,86 +1175,37 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]any) *tftags.IgnoreC
 	return ignoreConfig
 }
 
-func expandTagPolicyConfig(enforced bool, severity string) (*tftags.TagPolicyConfig, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	// Check for invalid combinations of provider arguments
-	if severity != "" {
-		path, otherPath := cty.GetAttrPath("tag_policy_severity"), cty.GetAttrPath("tag_policy_enforced")
-		if !enforced {
-			diags = append(diags, errs.NewAttributeConflictsWhenError(path, otherPath, "false"))
-		}
-		diags = append(diags, validateTagPolicySeverity(path, severity)...)
-	}
-	if diags.HasError() {
-		return nil, diags
+func expandTagPolicyConfig(path cty.Path, severity string) (*tftags.TagPolicyConfig, diag.Diagnostics) {
+	envSeverity := os.Getenv(tftags.TagPolicyComplianceEnvVar)
+	switch {
+	case severity != "":
+		return &tftags.TagPolicyConfig{Severity: severity}, validateTagPolicySeverity(path, severity)
+	case envSeverity != "":
+		return &tftags.TagPolicyConfig{Severity: envSeverity}, validateTagPolicySeverityEnvVar(envSeverity)
 	}
 
-	// Return early if everything is set via config
-	if enforced && severity != "" {
-		return &tftags.TagPolicyConfig{Severity: severity}, nil
-	}
-
-	// Check environment variables
-	if !enforced {
-		if v := os.Getenv(tftags.TagPolicyEnforcedEnvVar); v != "" {
-			diags = append(diags, validateTagPolicyEnforcedEnvVar(v)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			enforced, _ = strconv.ParseBool(v)
-		}
-	}
-
-	if !enforced {
-		return nil, diags
-	}
-
-	if severity == "" {
-		if v := os.Getenv(tftags.TagPolicySeverityEnvVar); v != "" {
-			diags = append(diags, validateTagPolicySeverityEnvVar(v)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			severity = v
-		} else {
-			severity = "error"
-		}
-	}
-
-	return &tftags.TagPolicyConfig{Severity: severity}, diags
+	return nil, nil
 }
 
 func validateTagPolicySeverity(path cty.Path, s string) diag.Diagnostics {
 	switch s {
-	case "error", "warning":
+	case "error", "warning", "disabled":
 		return nil
 	}
-	return diag.Diagnostics{errs.NewInvalidValueAttributeError(path, `Must be one of "error" or "warning"`)}
+	return diag.Diagnostics{errs.NewInvalidValueAttributeError(path, `Must be one of "error", "warning", or "disabled"`)}
 }
 
 const (
 	summaryInvalidEnvironmentVariableValue = "Invalid environment variable value"
 )
 
-func validateTagPolicyEnforcedEnvVar(s string) diag.Diagnostics {
-	switch s {
-	case "true", "false":
-		return nil
-	}
-	return diag.Diagnostics{errs.NewErrorDiagnostic(
-		summaryInvalidEnvironmentVariableValue,
-		fmt.Sprintf(`%s must be one of "true" or "false"`, tftags.TagPolicyEnforcedEnvVar),
-	)}
-}
-
 func validateTagPolicySeverityEnvVar(s string) diag.Diagnostics {
 	switch s {
-	case "error", "warning":
+	case "error", "warning", "disabled":
 		return nil
 	}
 	return diag.Diagnostics{errs.NewErrorDiagnostic(
 		summaryInvalidEnvironmentVariableValue,
-		fmt.Sprintf(`%s must be one of "error" or "warning"`, tftags.TagPolicySeverityEnvVar),
+		fmt.Sprintf(`%s must be one of "error", "warning", or "disabled"`, tftags.TagPolicyComplianceEnvVar),
 	)}
 }

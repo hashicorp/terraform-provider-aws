@@ -47,18 +47,12 @@ const (
 	// comma-separated.
 	IgnoreTagsKeyPrefixesEnvVar = "TF_AWS_IGNORE_TAGS_KEY_PREFIXES"
 
-	// Environment variable specifying whether organizational tag policies should be enforced
+	// Environment variable specifying whether organizational tag policies should be enforced and
+	// the severity of resulting diagnostics
 	//
-	// Valid values are "true" and "false". Any other value will trigger an error during
-	// provider initialization.
-	TagPolicyEnforcedEnvVar = "TF_AWS_TAG_POLICY_ENFORCED"
-
-	// Environment variable specifying the severity of tag policy violation diagnostics
-	//
-	// Valid values are "error" and "warning". Any other value will trigger an error during
-	// provider initialization. If this variable is omitted when TF_AWS_TAG_POLICY_ENFORCED
-	// is set to true, the diagnostic severity will default to "error".
-	TagPolicySeverityEnvVar = "TF_AWS_TAG_POLICY_SEVERITY"
+	// Valid values are "error", "warning", and "disabled". Any other value will trigger an error
+	// during provider initialization.
+	TagPolicyComplianceEnvVar = "TF_AWS_TAG_POLICY_COMPLIANCE"
 )
 
 // DefaultConfig contains tags to default across all resources.
@@ -78,7 +72,7 @@ type TagPolicyConfig struct {
 	//
 	// Must be one of "error" or "warning". This is a higher level abstraction on
 	// the diagnostic severity types exposed by the plugin libraries, as it must be
-	// shared across both Plugin SDK V2 and Plugin Framework based resources.
+	// shared across both Plugin SDK V and Plugin Framework based resources.
 	Severity string
 
 	// RequiredTags is a mapping of Terraform resource type names to the required
