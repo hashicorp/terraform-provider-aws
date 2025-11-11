@@ -19,21 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNetworkFlowMonitorScope_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]map[string]func(t *testing.T){
-		"Scope": {
-			acctest.CtBasic:      testAccNetworkFlowMonitorScope_basic,
-			acctest.CtDisappears: testAccNetworkFlowMonitorScope_disappears,
-			"tags":               testAccNetworkFlowMonitorScope_tags,
-		},
-	}
-
-	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
-func testAccNetworkFlowMonitorScope_basic(t *testing.T) {
+func testAccScope_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkflowmonitor_scope.test"
 
@@ -64,7 +50,7 @@ func testAccNetworkFlowMonitorScope_basic(t *testing.T) {
 	})
 }
 
-func testAccNetworkFlowMonitorScope_disappears(t *testing.T) {
+func testAccScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkflowmonitor_scope.test"
 
@@ -89,7 +75,7 @@ func testAccNetworkFlowMonitorScope_disappears(t *testing.T) {
 	})
 }
 
-func testAccNetworkFlowMonitorScope_tags(t *testing.T) {
+func testAccScope_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkflowmonitor_scope.test"
 

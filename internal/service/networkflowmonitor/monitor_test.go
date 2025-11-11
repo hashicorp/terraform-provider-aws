@@ -20,22 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNetworkFlowMonitorMonitor_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]map[string]func(t *testing.T){
-		"Monitor": {
-			acctest.CtBasic:      testAccNetworkFlowMonitorMonitor_basic,
-			acctest.CtDisappears: testAccNetworkFlowMonitorMonitor_disappears,
-			"tags":               testAccNetworkFlowMonitorMonitor_tags,
-			"update":             testAccNetworkFlowMonitorMonitor_update,
-		},
-	}
-
-	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
-func testAccNetworkFlowMonitorMonitor_basic(t *testing.T) {
+func testAccMonitor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkflowmonitor_monitor.test"
@@ -68,7 +53,7 @@ func testAccNetworkFlowMonitorMonitor_basic(t *testing.T) {
 	})
 }
 
-func testAccNetworkFlowMonitorMonitor_disappears(t *testing.T) {
+func testAccMonitor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkflowmonitor_monitor.test"
@@ -94,7 +79,7 @@ func testAccNetworkFlowMonitorMonitor_disappears(t *testing.T) {
 	})
 }
 
-func testAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
+func testAccMonitor_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkflowmonitor_monitor.test"
@@ -143,7 +128,7 @@ func testAccNetworkFlowMonitorMonitor_tags(t *testing.T) {
 	})
 }
 
-func testAccNetworkFlowMonitorMonitor_update(t *testing.T) {
+func testAccMonitor_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkflowmonitor_monitor.test"
