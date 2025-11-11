@@ -130,17 +130,20 @@ type ServicePackageSDKListResource struct {
 }
 
 type Identity struct {
-	IsGlobalResource       bool   // All
-	IsSingleton            bool   // Singleton
-	IsARN                  bool   // ARN
-	IsGlobalARNFormat      bool   // ARN
-	IdentityAttribute      string // ARN
-	IDAttrShadowsAttr      string
-	Attributes             []IdentityAttribute
-	IdentityDuplicateAttrs []string
-	IsSingleParameter      bool
-	IsMutable              bool
-	IsSetOnUpdate          bool
+	IsGlobalResource           bool   // All
+	IsSingleton                bool   // Singleton
+	IsARN                      bool   // ARN
+	IsGlobalARNFormat          bool   // ARN
+	IdentityAttribute          string // ARN
+	IDAttrShadowsAttr          string
+	Attributes                 []IdentityAttribute
+	IdentityDuplicateAttrs     []string
+	IsSingleParameter          bool
+	IsMutable                  bool
+	IsSetOnUpdate              bool
+	IsCustomInherentRegion     bool
+	customInherentRegionParser RegionalCustomInherentRegionIdentityFunc
+	version                    int64
 }
 
 func (i Identity) HasInherentRegion() bool {
@@ -153,7 +156,18 @@ func (i Identity) HasInherentRegion() bool {
 	if i.IsARN && !i.IsGlobalARNFormat {
 		return true
 	}
+	if i.IsCustomInherentRegion {
+		return true
+	}
 	return false
+}
+
+func (i Identity) Version() int64 {
+	return i.version
+}
+
+func (i Identity) CustomInherentRegionParser() RegionalCustomInherentRegionIdentityFunc {
+	return i.customInherentRegionParser
 }
 
 func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
@@ -245,6 +259,31 @@ func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Id
 
 	return identity
 }
+
+func RegionalCustomInherentRegionIdentity(name string, parser RegionalCustomInherentRegionIdentityFunc, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
+		IsGlobalResource:  false,
+		IdentityAttribute: name,
+		Attributes: []IdentityAttribute{
+			StringIdentityAttribute(name, true),
+		},
+		IsCustomInherentRegion:     true,
+		customInherentRegionParser: parser,
+	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
+}
+
+type BaseIdentity struct {
+	AccountID string
+	Region    string
+}
+
+type RegionalCustomInherentRegionIdentityFunc func(value string) (BaseIdentity, error)
 
 func RegionalResourceWithGlobalARNFormat(opts ...IdentityOptsFunc) Identity {
 	return RegionalResourceWithGlobalARNFormatNamed(names.AttrARN, opts...)
@@ -380,6 +419,11 @@ func RegionalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 	}
 
 	return identity
+}
+
+func VersionedIdentity(version int64, base Identity) Identity {
+	base.version = version
+	return base
 }
 
 type IdentityOptsFunc func(opts *Identity)

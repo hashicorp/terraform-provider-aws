@@ -791,6 +791,7 @@ service/ec2:
               - 'internal/service/ec2/**/ec2_*'
               - 'website/**/ami*'
               - 'website/**/availability_zone*'
+              - 'website/**/ec2_allowed_images_settings*'
               - 'website/**/ec2_availability_*'
               - 'website/**/ec2_capacity_*'
               - 'website/**/ec2_default_credit_specification*'
@@ -1621,6 +1622,12 @@ service/oam:
           - any-glob-to-any-file:
               - 'internal/service/oam/**/*'
               - 'website/**/oam_*'
+service/observabilityadmin:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/observabilityadmin/**/*'
+              - 'website/**/observabilityadmin_*'
 service/odb:
   - any:
       - changed-files:

@@ -26,6 +26,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_oauth2_credential_provider", sweepOAuth2CredentialProviders)
 	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target")
 	awsv2.Register("aws_bedrockagentcore_gateway_target", sweepGatewayTargets)
+	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories)
 }
 
 func sweepAgentRuntimes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -252,6 +253,28 @@ func sweepWorkloadIdentities(ctx context.Context, client *conns.AWSClient) ([]sw
 		for _, v := range page.WorkloadIdentities {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newWorkloadIdentityResource, client,
 				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepMemories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := bedrockagentcorecontrol.ListMemoriesInput{}
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := bedrockagentcorecontrol.NewListMemoriesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Memories {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newMemoryResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))),
 			)
 		}
 	}

@@ -8,4 +8,8 @@ var (
 	ResourceExperimentTemplate = resourceExperimentTemplate
 
 	FindExperimentTemplateByID = findExperimentTemplateByID
+
+	ResourceTargetAccountConfiguration = newResourceTargetAccountConfiguration
+
+	FindTargetAccountConfigurationByID = findTargetAccountConfigurationByID
 )
