@@ -164,6 +164,30 @@ func testAccCheckJobTemplateDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
+func testAccJobTemplateConfig_base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "eks.${data.aws_partition.current.dns_suffix}",
+          "eks-nodegroup.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+`, rName)
+}
+
 func testAccJobTemplateConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
