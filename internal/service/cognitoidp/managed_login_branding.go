@@ -281,15 +281,19 @@ func (r *managedLoginBrandingResource) Read(ctx context.Context, request resourc
 			}
 
 			if err != nil {
-				response.Diagnostics.AddError(fmt.Sprintf("reading Cognito Managed Login Branding by client (%s)", clientID), err.Error())
-
-				return
+				continue
 			}
 
 			if aws.ToString(mlb.ManagedLoginBrandingId) == managedLoginBrandingID {
 				data.ClientID = fwflex.StringValueToFramework(ctx, clientID)
+				break
 			}
 		}
+	}
+
+	if data.ClientID.IsNull() {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito Managed Login Branding (%s)", managedLoginBrandingID), "managed login branding not associated with any user pool client")
+		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
