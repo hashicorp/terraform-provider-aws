@@ -459,15 +459,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
-			case "IdentityVersion":
-				attr := args.Positional[0]
-				if i, err := strconv.ParseInt(attr, 10, 64); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("invalid IdentityVersion value: %q at %s. Should be integer value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				} else {
-					d.IdentityVersion = i
-				}
-
 			case "IdentityFix":
 				d.HasIdentityFix = true
 

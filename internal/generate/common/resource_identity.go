@@ -173,6 +173,14 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 
 		d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
 
+	case "IdentityVersion":
+		attr := args.Positional[0]
+		if i, err := strconv.ParseInt(attr, 10, 64); err != nil {
+			return fmt.Errorf("invalid IdentityVersion value: %q. Should be integer value.", attr)
+		} else {
+			d.IdentityVersion = i
+		}
+
 	case "MutableIdentity":
 		d.MutableIdentity = true
 
