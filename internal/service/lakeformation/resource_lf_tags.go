@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,10 +43,11 @@ func ResourceResourceLFTags() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				Computed: true,
-				ForceNew: true,
-				Optional: true,
+				Type:         schema.TypeString,
+				Computed:     true,
+				ForceNew:     true,
+				Optional:     true,
+				ValidateFunc: verify.ValidAccountID,
 			},
 			names.AttrDatabase: {
 				Type:     schema.TypeList,
@@ -61,10 +63,11 @@ func ResourceResourceLFTags() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Computed: true,
-							ForceNew: true,
-							Optional: true,
+							Type:         schema.TypeString,
+							Computed:     true,
+							ForceNew:     true,
+							Optional:     true,
+							ValidateFunc: verify.ValidCatalogID,
 						},
 						names.AttrName: {
 							Type:     schema.TypeString,
@@ -81,10 +84,11 @@ func ResourceResourceLFTags() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidCatalogID,
 						},
 						names.AttrKey: {
 							Type:         schema.TypeString,
@@ -116,10 +120,11 @@ func ResourceResourceLFTags() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Computed: true,
-							ForceNew: true,
-							Optional: true,
+							Type:         schema.TypeString,
+							Computed:     true,
+							ForceNew:     true,
+							Optional:     true,
+							ValidateFunc: verify.ValidCatalogID,
 						},
 						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
@@ -163,10 +168,11 @@ func ResourceResourceLFTags() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Computed: true,
-							ForceNew: true,
-							Optional: true,
+							Type:         schema.TypeString,
+							Computed:     true,
+							ForceNew:     true,
+							Optional:     true,
+							ValidateFunc: verify.ValidCatalogID,
 						},
 						"column_names": {
 							Type:     schema.TypeSet,
