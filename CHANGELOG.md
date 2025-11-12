@@ -1,9 +1,19 @@
 ## 6.21.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_bedrockagentcore_browser: Rename `network_configuration.network_mode_config` to `network_configuration.vpc_config` ([#44828](https://github.com/hashicorp/terraform-provider-aws/issues/44828))
+
+FEATURES:
+
+* **New Resource:** `aws_observabilityadmin_centralization_rule_for_organization` ([#44806](https://github.com/hashicorp/terraform-provider-aws/issues/44806))
+
 ENHANCEMENTS:
 
+* data-source/aws_ecs_service: Add `capacity_provider_strategy`, `created_at`, `created_by`, `deployment_configuration`, `deployment_controller`, `deployments`, `enable_ecs_managed_tags`, `enable_execute_command`, `events`, `health_check_grace_period_seconds`, `iam_role`, `network_configuration`, `ordered_placement_strategy`, `pending_count`, `placement_constraints`, `platform_family`, `platform_version`, `propagate_tags`, `running_count`, `service_connect_configuration`, `service_registries`, `status`, and `task_sets` attributes ([#44842](https://github.com/hashicorp/terraform-provider-aws/issues/44842))
 * resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.mcp_server` block ([#44991](https://github.com/hashicorp/terraform-provider-aws/issues/44991))
 * resource/aws_bedrockagentcore_gateway_target: Make `credential_provider_configuration` block optional ([#44991](https://github.com/hashicorp/terraform-provider-aws/issues/44991))
+* resource/aws_ecs_service: Add support for `LINEAR` and `CANARY` deployment strategies with `deployment_configuration.linear_configuration` and `deployment_configuration.canary_configuration` blocks ([#44842](https://github.com/hashicorp/terraform-provider-aws/issues/44842))
 * resource/aws_lambda_function: Add support for `java25` `runtime` value ([#45024](https://github.com/hashicorp/terraform-provider-aws/issues/45024))
 * resource/aws_lambda_function: Add support for `nodejs24.x` `runtime` value ([#45024](https://github.com/hashicorp/terraform-provider-aws/issues/45024))
 * resource/aws_lambda_function: Add support for `python3.14` `runtime` value ([#45024](https://github.com/hashicorp/terraform-provider-aws/issues/45024))
