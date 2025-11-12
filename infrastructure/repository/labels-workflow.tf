@@ -125,6 +125,10 @@ variable "workflow_labels" {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new function."
     },
+    "new-list-resource" = {
+      color       = "8040c9", # color:terraform (link on white)
+      description = "Introduces list resource support."
+    },
     "new-resource" = {
       color       = "8040c9", # color:terraform (link on white)
       description = "Introduces a new resource."

@@ -75,6 +75,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Security Group Rules",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newDataSourceVPNConnection,
+			TypeName: "aws_vpn_connection",
+			Name:     "VPN Connection",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
@@ -84,6 +91,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newEBSFastSnapshotRestoreResource,
 			TypeName: "aws_ebs_fast_snapshot_restore",
 			Name:     "EBS Fast Snapshot Restore",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newAllowedImagesSettingsResource,
+			TypeName: "aws_ec2_allowed_images_settings",
+			Name:     "Allowed Images Settings",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
@@ -1581,7 +1594,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceVPCDHCPOptions,
@@ -1818,6 +1835,26 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Factory:  instanceResourceAsListResource,
 			TypeName: "aws_instance",
 			Name:     "Instance",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
+			Factory:  subnetResourceAsListResource,
+			TypeName: "aws_subnet",
+			Name:     "Subnet",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
+			Factory:  vpcResourceAsListResource,
+			TypeName: "aws_vpc",
+			Name:     "VPC",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,

@@ -5,6 +5,7 @@ package sagemaker
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 )
@@ -13,7 +14,7 @@ func listHubsPages(ctx context.Context, conn *sagemaker.Client, input *sagemaker
 	for {
 		output, err := conn.ListHubs(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

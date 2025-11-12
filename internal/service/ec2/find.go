@@ -23,6 +23,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func findAllowedImagesSettings(ctx context.Context, conn *ec2.Client) (*ec2.GetAllowedImagesSettingsOutput, error) {
+	input := ec2.GetAllowedImagesSettingsInput{}
+	output, err := conn.GetAllowedImagesSettings(ctx, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	// Disabled => NotFound.
+	if state := aws.ToString(output.State); state == string(awstypes.AllowedImagesSettingsDisabledStateDisabled) {
+		return nil, &retry.NotFoundError{
+			Message: state,
+		}
+	}
+
+	return output, nil
+}
+
 func findAvailabilityZones(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) ([]awstypes.AvailabilityZone, error) {
 	output, err := conn.DescribeAvailabilityZones(ctx, input)
 

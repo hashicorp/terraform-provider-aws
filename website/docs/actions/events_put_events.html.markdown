@@ -132,7 +132,7 @@ action "aws_events_put_events" "deployment" {
 This action supports the following arguments:
 
 * `entry` - (Required) One or more `entry` blocks defining events to send. Multiple blocks may be specified. See [below](#entry-block).
-* `region` - (Optional) AWS region override. Defaults to the provider region if omitted.
+* `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `entry` Block
 

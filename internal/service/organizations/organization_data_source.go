@@ -37,15 +37,28 @@ func dataSourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -101,15 +114,28 @@ func dataSourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

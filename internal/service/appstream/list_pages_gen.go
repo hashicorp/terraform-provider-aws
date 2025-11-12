@@ -5,6 +5,7 @@ package appstream
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 )
@@ -13,7 +14,7 @@ func describeDirectoryConfigsPages(ctx context.Context, conn *appstream.Client, 
 	for {
 		output, err := conn.DescribeDirectoryConfigs(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -29,7 +30,7 @@ func describeFleetsPages(ctx context.Context, conn *appstream.Client, input *app
 	for {
 		output, err := conn.DescribeFleets(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -45,7 +46,7 @@ func describeImageBuildersPages(ctx context.Context, conn *appstream.Client, inp
 	for {
 		output, err := conn.DescribeImageBuilders(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -61,7 +62,7 @@ func describeStacksPages(ctx context.Context, conn *appstream.Client, input *app
 	for {
 		output, err := conn.DescribeStacks(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -77,7 +78,7 @@ func describeUserStackAssociationsPages(ctx context.Context, conn *appstream.Cli
 	for {
 		output, err := conn.DescribeUserStackAssociations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -93,7 +94,7 @@ func describeUsersPages(ctx context.Context, conn *appstream.Client, input *apps
 	for {
 		output, err := conn.DescribeUsers(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -109,7 +110,7 @@ func listAssociatedStacksPages(ctx context.Context, conn *appstream.Client, inpu
 	for {
 		output, err := conn.ListAssociatedStacks(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
