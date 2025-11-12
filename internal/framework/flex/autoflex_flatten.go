@@ -104,27 +104,11 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 		return diags
 	}
 
-	// Top-level struct to struct conversion.
-	if valFrom.IsValid() && valTo.IsValid() {
-		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct &&
-			!typTo.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
-			!typTo.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
-			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
-			diags.Append(flattenStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
-			return diags
-		}
-	}
-
 	// Special case: XML wrapper struct to NestedObjectCollectionType (Rule 2)
-	// Check this BEFORE calling convert()
+	// Check this BEFORE struct-to-struct conversion
 	if valFrom.IsValid() {
-		// Check if source is XML wrapper (handle pointer)
 		sourceType := valFrom.Type()
 		sourceVal := valFrom
-		if sourceType.Kind() == reflect.Pointer && !valFrom.IsNil() {
-			sourceType = sourceType.Elem()
-			sourceVal = valFrom.Elem()
-		}
 		
 		tflog.SubsystemDebug(ctx, subsystemName, "Checking XML wrapper special case", map[string]any{
 			"sourceType": sourceType.String(),
@@ -204,6 +188,17 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 					return diags
 				}
 			}
+		}
+	}
+
+	// Top-level struct to struct conversion.
+	if valFrom.IsValid() && valTo.IsValid() {
+		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct &&
+			!typTo.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
+			!typTo.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
+			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
+			diags.Append(flattenStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
+			return diags
 		}
 	}
 
@@ -2357,8 +2352,40 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 				// Check if target is a collection type (Set, List, or NestedObjectCollection)
 				if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
 					targetType := valTo.Type(ctx)
-					switch targetType.(type) {
+					switch tt := targetType.(type) {
 					case basetypes.SetTypable, basetypes.ListTypable, fwtypes.NestedObjectCollectionType:
+						// Check if wrapper is in empty state (Enabled=false, Items empty/nil)
+						// If so, set null and skip processing
+						wrapperVal := fromFieldVal.Elem()
+						enabledField := wrapperVal.FieldByName("Enabled")
+						itemsField := wrapperVal.FieldByName("Items")
+						
+						if enabledField.IsValid() && itemsField.IsValid() {
+							isEnabled := true
+							if enabledField.Kind() == reflect.Pointer && !enabledField.IsNil() {
+								isEnabled = enabledField.Elem().Bool()
+							}
+							
+							itemsEmpty := itemsField.IsNil() || (itemsField.Kind() == reflect.Slice && itemsField.Len() == 0)
+							
+							if !isEnabled && itemsEmpty {
+								tflog.SubsystemTrace(ctx, subsystemName, "XML wrapper is empty (Enabled=false, Items empty), setting null", map[string]any{
+									logAttrKeySourceFieldname: fromFieldName,
+									logAttrKeyTargetFieldname: toFieldName,
+								})
+								
+								// Call NullValue on NestedObjectCollectionType
+								if nestedObjType, ok := tt.(fwtypes.NestedObjectCollectionType); ok {
+									nullVal, d := nestedObjType.NullValue(ctx)
+									diags.Append(d...)
+									if !diags.HasError() {
+										toFieldVal.Set(reflect.ValueOf(nullVal))
+									}
+									continue
+								}
+							}
+						}
+						
 						// Determine wrapper field based on target type
 						// For NestedObjectCollection, the wrapper field doesn't matter as Rule 2 will be used
 						wrapperField := "Items"
@@ -2992,6 +3019,31 @@ func (flattener autoFlattener) xmlWrapperFlattenRule2(ctx context.Context, vFrom
 	if !isXMLWrapperStruct(vFrom.Type()) {
 		diags.Append(DiagFlatteningIncompatibleTypes(vFrom.Type(), reflect.TypeOf(vTo.Interface())))
 		return diags
+	}
+
+	// Check if wrapper is in empty state (Enabled=false, Items empty/nil)
+	// If so, return null instead of creating a block
+	enabledField := vFrom.FieldByName("Enabled")
+	itemsField := vFrom.FieldByName("Items")
+	
+	if enabledField.IsValid() && itemsField.IsValid() {
+		// Check if Enabled is false and Items is empty
+		isEnabled := true
+		if enabledField.Kind() == reflect.Pointer && !enabledField.IsNil() {
+			isEnabled = enabledField.Elem().Bool()
+		}
+		
+		itemsEmpty := itemsField.IsNil() || (itemsField.Kind() == reflect.Slice && itemsField.Len() == 0)
+		
+		if !isEnabled && itemsEmpty {
+			tflog.SubsystemTrace(ctx, subsystemName, "XML wrapper is empty (Enabled=false, Items empty), returning null for Rule 2")
+			nullVal, d := tTo.NullValue(ctx)
+			diags.Append(d...)
+			if !diags.HasError() {
+				vTo.Set(reflect.ValueOf(nullVal))
+			}
+			return diags
+		}
 	}
 
 	nestedObjPtr, d := tTo.NewObjectPtr(ctx)
