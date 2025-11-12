@@ -223,7 +223,6 @@ type ResourceDatum struct {
 	ImportIDHandler                   string
 	SetIDAttribute                    bool
 	HasIdentityFix                    bool
-	SDKv2IdentityUpgraders            []string
 	common.ResourceIdentity
 }
 
@@ -458,20 +457,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						d.SetIDAttribute = b
 					}
-				}
-
-			case "IdentityVersion":
-				attr := args.Positional[0]
-				if i, err := strconv.ParseInt(attr, 10, 64); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("invalid IdentityVersion value: %q at %s. Should be integer value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				} else {
-					d.IdentityVersion = i
-				}
-
-				if attr, ok := args.Keyword["sdkV2IdentityUpgraders"]; ok {
-					attrs := strings.Split(attr, ";")
-					d.SDKv2IdentityUpgraders = attrs
 				}
 
 			case "IdentityFix":
