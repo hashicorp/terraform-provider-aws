@@ -86,46 +86,44 @@ func dataSourceZone() *schema.Resource {
 
 func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var (
-		diags               diag.Diagnostics
-		zoneID, name, vpcID string
-		privateZone         bool
+		diags                        diag.Diagnostics
+		zoneID, name, vpcID          string
+		privateZone                  bool
+		zoneIDSet, nameSet, vpcIDSet bool
 	)
 
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	zoneIDArg, zoneIDSet := d.GetOk("zone_id")
-	if zoneIDSet {
-		zoneID = zoneIDArg.(string)
+	if v, ok := d.GetOk("zone_id"); ok {
+		zoneID, zoneIDSet = v.(string), ok
 	}
-
-	nameArg, nameSet := d.GetOk(names.AttrName)
-	if nameSet {
-		name = nameArg.(string)
+	if v, ok := d.GetOk(names.AttrName); ok {
+		name, nameSet = v.(string), ok
 	}
-
 	if zoneIDSet && nameSet {
-		return sdkdiag.AppendErrorf(diags, "only one of `zone_id` or `name` may be set")
+		// Warning for backwards compatibility.
+		return sdkdiag.AppendWarningf(diags, "only one of `zone_id` or `name` may be set")
 	}
 
-	vpcIDArg, vpcIDSet := d.GetOk(names.AttrVPCID)
-	if vpcIDSet {
-		vpcID = vpcIDArg.(string)
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
+		vpcID, vpcIDSet = v.(string), ok
 		privateZone = true
 	}
-
-	privateZoneArg, privateZoneSet := d.GetOk("private_zone")
-	if privateZoneSet {
-		privateZone = privateZoneArg.(bool)
+	if v, ok := d.GetOk("private_zone"); ok {
+		privateZone = v.(bool)
 	}
-
 	if vpcIDSet && !privateZone {
-		return sdkdiag.AppendErrorf(diags, "`vpc_id` can only be set for private zones")
+		// Warning for backwards compatibility.
+		return sdkdiag.AppendWarningf(diags, "`vpc_id` can only be set for private zones")
 	}
 
 	tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS()
 
-	var hostedZone *awstypes.HostedZone
+	var (
+		hostedZone *awstypes.HostedZone
+		zoneTags   tftags.KeyValueTags
+	)
 
 	if zoneIDSet {
 		// Perform direct lookup on unique zoneID
@@ -177,7 +175,8 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 				matchingTags := true
 				if len(tags) > 0 {
-					zoneTags, err := listTags(ctx, conn, zoneID, string(awstypes.TagResourceTypeHostedzone))
+					var err error
+					zoneTags, err = listTags(ctx, conn, zoneID, string(awstypes.TagResourceTypeHostedzone))
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "listing Route 53 Hosted Zone (%s) tags: %s", zoneID, err)
 					}
@@ -190,6 +189,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) d
 				}
 			}
 		}
+
 		var err error
 		hostedZone, err = tfresource.AssertSingleValueResult(hostedZones)
 		if err != nil {
@@ -214,7 +214,6 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("zone_id", hostedZoneID)
 
 	nameServers, err := findHostedZoneNameServers(ctx, conn, hostedZoneID, aws.ToString(hostedZone.Name))
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -222,13 +221,15 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("name_servers", nameServers)
 	d.Set("primary_name_server", nameServers[0])
 
-	tags, err = listTags(ctx, conn, hostedZoneID, string(awstypes.TagResourceTypeHostedzone))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Route 53 Hosted Zone (%s) tags: %s", hostedZoneID, err)
+	if zoneTags == nil {
+		tags, err := listTags(ctx, conn, hostedZoneID, string(awstypes.TagResourceTypeHostedzone))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing Route 53 Hosted Zone (%s) tags: %s", hostedZoneID, err)
+		}
+		zoneTags = tags
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, zoneTags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
