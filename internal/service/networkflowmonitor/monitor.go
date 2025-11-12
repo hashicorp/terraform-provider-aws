@@ -297,7 +297,7 @@ func (r *monitorResource) Delete(ctx context.Context, request resource.DeleteReq
 }
 
 func (r *monitorResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("monitor_name"), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root("monitor_name"), request, response)
 }
 
 func findMonitorByName(ctx context.Context, conn *networkflowmonitor.Client, name string) (*networkflowmonitor.GetMonitorOutput, error) {

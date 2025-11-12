@@ -288,7 +288,7 @@ func (r *scopeResource) Delete(ctx context.Context, request resource.DeleteReque
 }
 
 func (r *scopeResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("scope_id"), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root("scope_id"), request, response)
 }
 
 func findScopeByID(ctx context.Context, conn *networkflowmonitor.Client, id string) (*networkflowmonitor.GetScopeOutput, error) {
