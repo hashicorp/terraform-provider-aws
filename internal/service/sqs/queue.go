@@ -258,7 +258,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.SetId(aws.ToString(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
 
-	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, deadline.Remaining()); err != nil {
+	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, deadline.Remaining(), meta); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes create: %s", d.Id(), err)
 	}
 
@@ -344,7 +344,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			return sdkdiag.AppendErrorf(diags, "updating SQS Queue (%s) attributes: %s", d.Id(), err)
 		}
 
-		if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, d.Timeout(schema.TimeoutUpdate), meta); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
 		}
 	}
@@ -369,7 +369,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "deleting SQS Queue (%s): %s", d.Id(), err)
 	}
 
-	if err := waitQueueDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitQueueDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete), meta); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) delete: %s", d.Id(), err)
 	}
 
@@ -602,13 +602,18 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 	}
 }
 
-func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string, timeout time.Duration) error {
+func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string, timeout time.Duration, meta any) error {
+	continuousTargetOccurrence := 6
+	if awsClient, ok := meta.(*conns.AWSClient); ok && awsClient.SQSWaitTimes() != nil {
+		continuousTargetOccurrence = awsClient.SQSWaitTimes().CreateContinuousTargetOccurrence
+	}
+
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueAttributeStateNotEqual},
 		Target:                    []string{queueAttributeStateEqual},
 		Refresh:                   statusQueueAttributeState(ctx, conn, url, expected),
 		Timeout:                   timeout,
-		ContinuousTargetOccurence: 6,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
+		ContinuousTargetOccurence: continuousTargetOccurrence,
 		MinTimeout:                5 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		NotFoundChecks:            10,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 	}
@@ -618,13 +623,18 @@ func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url st
 	return err
 }
 
-func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout time.Duration) error {
+func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout time.Duration, meta any) error {
+	continuousTargetOccurrence := 15
+	if awsClient, ok := meta.(*conns.AWSClient); ok && awsClient.SQSWaitTimes() != nil {
+		continuousTargetOccurrence = awsClient.SQSWaitTimes().DeleteContinuousTargetOccurrence
+	}
+
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueStateExists},
 		Target:                    []string{},
 		Refresh:                   statusQueueState(ctx, conn, url),
 		Timeout:                   timeout,
-		ContinuousTargetOccurence: 15,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
+		ContinuousTargetOccurence: continuousTargetOccurrence,
 		MinTimeout:                3 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 		NotFoundChecks:            5,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 	}
