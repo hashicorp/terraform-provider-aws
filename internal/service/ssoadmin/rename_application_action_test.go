@@ -67,7 +67,7 @@ func testAccCheckRenameApplicationActionExecuted(ctx context.Context, resourceNa
 }
 
 func testAccRenameApplicationActionConfig_basic(rName, newName string) string {
-	return acctest.ConfigCompose(testAccApplicationConfig_basic(rName, "arn:aws:sso::aws:applicationProvider/custom"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccApplicationConfig_basic(rName, testAccApplicationProviderARN), fmt.Sprintf(`
 action "aws_ssoadmin_rename_application" "test" {
   config {
     application_arn = aws_ssoadmin_application.test.application_arn
