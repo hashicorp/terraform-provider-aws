@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_networkflowmonitor_monitor",
 			Name:     "Monitor",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "monitor_arn",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},

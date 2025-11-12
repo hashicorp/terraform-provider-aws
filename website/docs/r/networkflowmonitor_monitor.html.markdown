@@ -25,14 +25,14 @@ resource "aws_vpc" "example" {
 
 resource "aws_networkflowmonitor_monitor" "example" {
   monitor_name = "example-monitor"
-  scope_arn    = aws_networkflowmonitor_scope.example.arn
+  scope_arn    = aws_networkflowmonitor_scope.example.scope_arn
 
-  local_resources {
+  local_resource {
     type       = "AWS::EC2::VPC"
     identifier = aws_vpc.example.arn
   }
 
-  remote_resources {
+  remote_resource {
     type       = "AWS::EC2::VPC"
     identifier = aws_vpc.example.arn
   }
@@ -52,14 +52,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `local_resources` - (Optional) The local resources to monitor. A local resource in a workload is the location of the hosts where the Network Flow Monitor agent is installed.
+* `local_resource` - (Optional) The local resources to monitor. A local resource in a workload is the location of the hosts where the Network Flow Monitor agent is installed.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `remote_resources` - (Optional) The remote resources to monitor. A remote resource is the other endpoint specified for the network flow of a workload, with a local resource.
+* `remote_resource` - (Optional) The remote resources to monitor. A remote resource is the other endpoint specified for the network flow of a workload, with a local resource.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### local_resources and remote_resources
+### local_resource and remote_resource
 
-The `local_resources` and `remote_resources` blocks support the following:
+The `local_resource` and `remote_resource` blocks support the following:
 
 * `type` - (Required) The type of the resource. Valid values are `AWS::EC2::VPC`, `AWS::EC2::Subnet`, `AWS::EC2::AvailabilityZone`, `AWS::EC2::Region`.
 * `identifier` - (Required) The identifier of the resource. For VPC resources, this is the VPC ARN.
@@ -68,9 +68,7 @@ The `local_resources` and `remote_resources` blocks support the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the monitor.
-* `id` - The Amazon Resource Name (ARN) of the monitor.
-* `monitor_status` - The status of the monitor. Can be `PENDING`, `ACTIVE`, `INACTIVE`, `ERROR`, or `DELETING`.
+* `monitor_arn` - The Amazon Resource Name (ARN) of the monitor.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -83,17 +81,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Flow Monitor Monitor using the monitor ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Flow Monitor Monitor using the monitor name. For example:
 
 ```terraform
 import {
   to = aws_networkflowmonitor_monitor.example
-  id = "arn:aws:networkflowmonitor:us-west-2:123456789012:monitor/example-monitor"
+  id = "example-monitor"
 }
 ```
 
-Using `terraform import`, import Network Flow Monitor Monitor using the monitor ARN. For example:
+Using `terraform import`, import Network Flow Monitor Monitor using the monitor name. For example:
 
 ```console
-% terraform import aws_networkflowmonitor_monitor.example arn:aws:networkflowmonitor:us-west-2:123456789012:monitor/example-monitor
+% terraform import aws_networkflowmonitor_monitor.example example-monitor
 ```
