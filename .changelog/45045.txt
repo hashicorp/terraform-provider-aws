@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_managed_login_branding: Fix Read function failing during import/refresh when user pool has multiple clients and some have no managed login branding
+```
