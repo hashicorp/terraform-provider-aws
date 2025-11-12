@@ -2028,7 +2028,7 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client,
 		return fmt.Errorf("modifying EC2 Instance (%s) %s attribute: %w", id, attrName, err)
 	}
 
-	if strings.ToLower(state) != "stopped" && strings.ToLower(state) != "stopping" {
+	if !preservePowerstate || (strings.ToLower(state) != "stopped" && strings.ToLower(state) != "stopping") {
 		if err := startInstance(ctx, conn, id, true, instanceStartTimeout); err != nil {
 			return err
 		}
