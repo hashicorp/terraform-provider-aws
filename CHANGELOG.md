@@ -6,6 +6,7 @@ BREAKING CHANGES:
 
 FEATURES:
 
+* **New Action:** `aws_dynamodb_create_backup` ([#45001](https://github.com/hashicorp/terraform-provider-aws/issues/45001))
 * **New Resource:** `aws_observabilityadmin_centralization_rule_for_organization` ([#44806](https://github.com/hashicorp/terraform-provider-aws/issues/44806))
 
 ENHANCEMENTS:
