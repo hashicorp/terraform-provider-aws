@@ -16,7 +16,7 @@ inttypes.StringIdentityAttribute(
 {{- end }}
 
 {{ define "SDKv2CommonIdentityOpts" -}}
-{{- if .HasV6_0SDKv2Fix }}
+{{- if .HasV6_0NullValuesError }}
 	inttypes.WithV6_0SDKv2Fix(),
 {{- end }}
 {{- template "CommonIdentityOpts" . -}}

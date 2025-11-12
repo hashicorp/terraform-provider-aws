@@ -48,6 +48,8 @@ type ResourceIdentity struct {
 	MutableIdentity                bool
 	IdentityVersion                int64
 	CustomInherentRegionParser     string
+	HasV6_0NullValuesError         bool
+	HasV6_0RefreshError            bool
 }
 
 func (r ResourceIdentity) HasResourceIdentity() bool {
@@ -181,6 +183,18 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 		d.identityAttributeName = "region"
 
 		parseIdentityDuplicateAttrNames(args, implementation, d)
+
+	// TODO: allow underscore?
+	case "V60SDKv2Fix":
+		d.HasV6_0NullValuesError = true
+
+		if attr, ok := args.Keyword["v60RefreshError"]; ok {
+			if b, err := ParseBoolAttr("v60RefreshError", attr); err != nil {
+				return err
+			} else {
+				d.HasV6_0RefreshError = b
+			}
+		}
 	}
 
 	return nil
