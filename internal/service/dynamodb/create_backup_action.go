@@ -70,7 +70,7 @@ func (a *createBackupAction) Schema(ctx context.Context, req action.SchemaReques
 				},
 			},
 			names.AttrTimeout: schema.Int64Attribute{
-				Description: "Timeout in seconds for the backup operation",
+				Description: "Timeout in minutes for the backup operation. Defaults to 10 minutes",
 				Optional:    true,
 			},
 		},
@@ -89,7 +89,7 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 
 	timeout := 10 * time.Minute
 	if !config.Timeout.IsNull() {
-		timeout = time.Duration(config.Timeout.ValueInt64()) * time.Second
+		timeout = time.Duration(config.Timeout.ValueInt64()) * time.Minute
 	}
 
 	tableName := config.TableName.ValueString()
