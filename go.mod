@@ -120,7 +120,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.7
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.11
-	github.com/aws/aws-sdk-go-v2/service/evidently v1.28.9
+	github.com/aws/aws-sdk-go-v2/service/evidently v1.28.10
 	github.com/aws/aws-sdk-go-v2/service/evs v1.5.6
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.33.10
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.42.1
