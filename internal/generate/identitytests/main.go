@@ -370,8 +370,6 @@ type ResourceDatum struct {
 	IsGlobal                 bool
 	HasRegionOverrideTest    bool
 	IDAttrFormat             string
-	HasV6_0NullValuesError   bool
-	HasV6_0RefreshError      bool
 	HasNoPreExistingResource bool
 	PreIdentityVersion       *version.Version
 	IdentityVersions         map[int64]*version.Version
@@ -604,19 +602,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "NoImport":
 				d.NoImport = true
 
-			// TODO: allow underscore?
-			case "V60SDKv2Fix":
-				d.HasV6_0NullValuesError = true
-				d.PreIdentityVersion = v5_100_0
-
-				if attr, ok := args.Keyword["v60RefreshError"]; ok {
-					if b, err := common.ParseBoolAttr("v60RefreshError", attr); err != nil {
-						v.errs = append(v.errs, err)
-					} else {
-						d.HasV6_0RefreshError = b
-					}
-				}
-
 			case "Testing":
 				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -777,6 +762,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if d.Name == "" {
 				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
+			}
+			if d.HasV6_0NullValuesError {
+				d.PreIdentityVersion = v5_100_0
 			}
 			if !d.HasNoPreExistingResource && d.PreIdentityVersion == nil {
 				v.errs = append(v.errs, fmt.Errorf("preIdentityVersion is required when hasNoPreExistingResource is false: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

@@ -222,7 +222,6 @@ type ResourceDatum struct {
 	goImports                         []common.GoImport
 	ImportIDHandler                   string
 	SetIDAttribute                    bool
-	HasV6_0SDKv2Fix                   bool
 	HasIdentityFix                    bool
 	SDKv2IdentityUpgraders            []string
 	common.ResourceIdentity
@@ -475,10 +474,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.SDKv2IdentityUpgraders = attrs
 				}
 
-			// TODO: allow underscore?
-			case "V60SDKv2Fix":
-				d.HasV6_0SDKv2Fix = true
-
 			case "IdentityFix":
 				d.HasIdentityFix = true
 
@@ -559,7 +554,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.ephemeralResources[typeName] = d
 				}
 
-				if d.HasV6_0SDKv2Fix {
+				if d.HasV6_0NullValuesError {
 					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Ephemeral Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
@@ -587,7 +582,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.frameworkDataSources[typeName] = d
 				}
 
-				if d.HasV6_0SDKv2Fix {
+				if d.HasV6_0NullValuesError {
 					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
@@ -615,7 +610,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.frameworkResources[typeName] = d
 				}
 
-				if d.HasV6_0SDKv2Fix {
+				if d.HasV6_0NullValuesError {
 					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
@@ -647,7 +642,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkDataSources[typeName] = d
 				}
 
-				if d.HasV6_0SDKv2Fix {
+				if d.HasV6_0NullValuesError {
 					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
