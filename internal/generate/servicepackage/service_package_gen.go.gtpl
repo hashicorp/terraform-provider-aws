@@ -64,7 +64,6 @@ import (
 {{- if ne .ProviderPackage "meta" }}
 	"github.com/hashicorp/terraform-provider-aws/names"
 {{- end }}
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	{{ range .GoImports -}}
 	{{ if .Alias }}{{ .Alias }} {{ end }}"{{ .Path }}"
 	{{ end }}
