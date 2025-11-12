@@ -30,6 +30,8 @@ func testAccEC2ImageBlockPublicAccess_IdentitySerial(t *testing.T) {
 		"ExistingResource":          testAccEC2ImageBlockPublicAccess_Identity_ExistingResource,
 		"ExistingResourceNoRefresh": testAccEC2ImageBlockPublicAccess_Identity_ExistingResource_NoRefresh_NoChange,
 		"RegionOverride":            testAccEC2ImageBlockPublicAccess_Identity_RegionOverride,
+		"Upgrade":                   testAccEC2ImageBlockPublicAccess_Identity_Upgrade,
+		"UpgradeNoRefresh":          testAccEC2ImageBlockPublicAccess_Identity_Upgrade_NoRefresh,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
