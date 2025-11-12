@@ -426,12 +426,6 @@ func RegionalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 	return identity
 }
 
-func VersionedIdentity(version int64, identityUpgraders []schema.IdentityUpgrader, base Identity) Identity {
-	base.version = version
-	base.sdkv2IdentityUpgraders = identityUpgraders
-	return base
-}
-
 type IdentityOptsFunc func(opts *Identity)
 
 func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
@@ -460,6 +454,18 @@ func WithIdentityFix() IdentityOptsFunc {
 func WithV6_0SDKv2Fix() IdentityOptsFunc {
 	return func(opts *Identity) {
 		opts.IsMutable = true
+	}
+}
+
+func WithVersion(version int64) IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.version = version
+	}
+}
+
+func WithSDKv2IdentityUpgraders(identityUpgraders ...schema.IdentityUpgrader) IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.sdkv2IdentityUpgraders = identityUpgraders
 	}
 }
 

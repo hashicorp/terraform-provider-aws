@@ -29,18 +29,16 @@ inttypes.StringIdentityAttribute(
 {{- if .HasIdentityFix }}
 	inttypes.WithIdentityFix(),
 {{ end -}}
-{{- end }}
-
-{{ define "SDKv2IdentityUpgradersValue" -}}
-{{- if gt (len .SDKv2IdentityUpgraders) 0 -}}
-[]schema.IdentityUpgrader{
+{{- if .IdentityVersion }}
+    inttypes.WithVersion({{ .IdentityVersion }}),
+{{ end -}}
+{{- if gt (len .SDKv2IdentityUpgraders) 0 }}
+	inttypes.WithSDKv2IdentityUpgraders(
 	{{- range .SDKv2IdentityUpgraders -}}
 	{{.}},
 	{{- end -}}
-}
-{{- else -}}
-nil
-{{- end -}}
+	),
+{{ end -}}
 {{- end }}
 
 package {{ .ProviderPackage }}
@@ -465,9 +463,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 	{{- end }}
 			{{- if $value.HasResourceIdentity }}
 				Identity:
-				{{- if $value.IdentityVersion }}
-					inttypes.VersionedIdentity({{ $value.IdentityVersion }}, {{- template "SDKv2IdentityUpgradersValue" . -}},
-				{{- end -}}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
@@ -535,9 +530,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 						{{- template "SDKv2CommonIdentityOpts" . }}
 					),
 				{{- end -}}
-				{{- if $value.IdentityVersion -}}
-					),
-				{{- end }}
 			{{- end }}
 			{{- if $value.WrappedImport }}
 				Import: inttypes.SDKv2Import{
@@ -587,9 +579,6 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			{{- end }}
 			{{- if $value.HasResourceIdentity }}
 				Identity:
-				{{- if $value.IdentityVersion }}
-					inttypes.VersionedIdentity({{ $value.IdentityVersion }}, {{- template "SDKv2IdentityUpgradersValue" . -}},
-				{{- end -}}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
@@ -673,9 +662,6 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 						{{- template "SDKv2CommonIdentityOpts" . }}
 					),
 				{{- end -}}
-				{{- if $value.IdentityVersion }}
-					),
-				{{- end }}
 			{{- end }}
 		},
 {{- end }}
