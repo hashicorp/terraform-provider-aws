@@ -39,7 +39,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/athena v1.55.11
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.60.4
-	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.3
+	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/backup v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/batch v1.58.4
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.3
