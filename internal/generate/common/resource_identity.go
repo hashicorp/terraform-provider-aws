@@ -213,6 +213,14 @@ func ParseIdentifierSpec(s string) (string, *GoImport, error) {
 	}
 }
 
+func ParseBoolAttr(name, value string) (bool, error) {
+	if b, err := strconv.ParseBool(value); err != nil {
+		return b, fmt.Errorf("invalid %s value %q: Should be boolean value.", name, value)
+	} else {
+		return b, nil
+	}
+}
+
 func parseIdentityDuplicateAttrNames(args Args, implementation Implementation, d *ResourceIdentity) {
 	var attrs []string
 	if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {

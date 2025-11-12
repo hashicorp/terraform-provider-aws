@@ -610,7 +610,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				// TODO: should probably be a parameter on @Tags
 				if attr, ok := args.Keyword["tagsUpdateForceNew"]; ok {
-					if b, err := tests.ParseBoolAttr("tagsUpdateForceNew", attr); err != nil {
+					if b, err := common.ParseBoolAttr("tagsUpdateForceNew", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -618,7 +618,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["tagsUpdateGetTagsIn"]; ok {
-					if b, err := tests.ParseBoolAttr("tagsUpdateGetTagsIn", attr); err != nil {
+					if b, err := common.ParseBoolAttr("tagsUpdateGetTagsIn", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -626,7 +626,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["skipEmptyTags"]; ok {
-					if b, err := tests.ParseBoolAttr("skipEmptyTags", attr); err != nil {
+					if b, err := common.ParseBoolAttr("skipEmptyTags", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -634,7 +634,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["skipNullTags"]; ok {
-					if b, err := tests.ParseBoolAttr("skipNullTags", attr); err != nil {
+					if b, err := common.ParseBoolAttr("skipNullTags", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -642,7 +642,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["noRemoveTags"]; ok {
-					if b, err := tests.ParseBoolAttr("noRemoveTags", attr); err != nil {
+					if b, err := common.ParseBoolAttr("noRemoveTags", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -650,7 +650,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
-					if b, err := tests.ParseBoolAttr("tlsKey", attr); err != nil {
+					if b, err := common.ParseBoolAttr("tlsKey", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {

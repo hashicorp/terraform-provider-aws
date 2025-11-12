@@ -579,7 +579,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				if attr, ok := args.Keyword["global"]; ok {
-					if b, err := tests.ParseBoolAttr("global", attr); err != nil {
+					if b, err := common.ParseBoolAttr("global", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -610,7 +610,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.PreIdentityVersion = v5_100_0
 
 				if attr, ok := args.Keyword["v60RefreshError"]; ok {
-					if b, err := tests.ParseBoolAttr("v60RefreshError", attr); err != nil {
+					if b, err := common.ParseBoolAttr("v60RefreshError", attr); err != nil {
 						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0RefreshError = b
@@ -652,7 +652,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["identityRegionOverrideTest"]; ok {
-					if b, err := tests.ParseBoolAttr("identityRegionOverrideTest", attr); err != nil {
+					if b, err := common.ParseBoolAttr("identityRegionOverrideTest", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -660,7 +660,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["v60NullValuesError"]; ok {
-					if b, err := tests.ParseBoolAttr("v60NullValuesError", attr); err != nil {
+					if b, err := common.ParseBoolAttr("v60NullValuesError", attr); err != nil {
 						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0NullValuesError = b
@@ -670,7 +670,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["v60RefreshError"]; ok {
-					if b, err := tests.ParseBoolAttr("v60RefreshError", attr); err != nil {
+					if b, err := common.ParseBoolAttr("v60RefreshError", attr); err != nil {
 						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0RefreshError = b
@@ -688,14 +688,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.PreIdentityVersion = version
 				}
 				if attr, ok := args.Keyword["hasNoPreExistingResource"]; ok {
-					if b, err := tests.ParseBoolAttr("hasNoPreExistingResource", attr); err != nil {
+					if b, err := common.ParseBoolAttr("hasNoPreExistingResource", attr); err != nil {
 						v.errs = append(v.errs, err)
 					} else {
 						d.HasNoPreExistingResource = b
 					}
 				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
-					if b, err := tests.ParseBoolAttr("tlsKey", attr); err != nil {
+					if b, err := common.ParseBoolAttr("tlsKey", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {

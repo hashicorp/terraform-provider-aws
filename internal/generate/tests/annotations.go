@@ -5,7 +5,6 @@ package tests
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
@@ -145,7 +144,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 
 	// DestroyCheck
 	if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
-		if b, err := ParseBoolAttr("checkDestroyNoop", attr); err != nil {
+		if b, err := common.ParseBoolAttr("checkDestroyNoop", attr); err != nil {
 			return err
 		} else {
 			stuff.CheckDestroyNoop = b
@@ -158,7 +157,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 	}
 
 	if attr, ok := args.Keyword["destroyTakesT"]; ok {
-		if b, err := ParseBoolAttr("destroyTakesT", attr); err != nil {
+		if b, err := common.ParseBoolAttr("destroyTakesT", attr); err != nil {
 			return err
 		} else {
 			stuff.DestroyTakesT = b
@@ -167,7 +166,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 
 	// ExistsCheck
 	if attr, ok := args.Keyword["hasExistsFunction"]; ok {
-		if b, err := ParseBoolAttr("hasExistsFunction", attr); err != nil {
+		if b, err := common.ParseBoolAttr("hasExistsFunction", attr); err != nil {
 			return err
 		} else {
 			stuff.HasExistsFunc = b
@@ -186,7 +185,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 	}
 
 	if attr, ok := args.Keyword["existsTakesT"]; ok {
-		if b, err := ParseBoolAttr("existsTakesT", attr); err != nil {
+		if b, err := common.ParseBoolAttr("existsTakesT", attr); err != nil {
 			return err
 		} else {
 			stuff.ExistsTakesT = b
@@ -217,7 +216,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 	}
 
 	if attr, ok := args.Keyword["noImport"]; ok {
-		if b, err := ParseBoolAttr("noImport", attr); err != nil {
+		if b, err := common.ParseBoolAttr("noImport", attr); err != nil {
 			return err
 		} else {
 			stuff.NoImport = b
@@ -242,7 +241,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 
 	// Serialization
 	if attr, ok := args.Keyword["serialize"]; ok {
-		if b, err := ParseBoolAttr("serialize", attr); err != nil {
+		if b, err := common.ParseBoolAttr("serialize", attr); err != nil {
 			return err
 		} else {
 			stuff.Serialize = b
@@ -250,7 +249,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 	}
 
 	if attr, ok := args.Keyword["serializeParallelTests"]; ok {
-		if b, err := ParseBoolAttr("serializeParallelTests", attr); err != nil {
+		if b, err := common.ParseBoolAttr("serializeParallelTests", attr); err != nil {
 			return err
 		} else {
 			stuff.SerializeParallelTests = b
@@ -258,7 +257,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 	}
 
 	if attr, ok := args.Keyword["serializeDelay"]; ok {
-		if b, err := ParseBoolAttr("serializeDelay", attr); err != nil {
+		if b, err := common.ParseBoolAttr("serializeDelay", attr); err != nil {
 			return err
 		} else {
 			stuff.SerializeDelay = b
@@ -309,7 +308,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 	}
 
 	if attr, ok := args.Keyword["useAlternateAccount"]; ok {
-		if b, err := ParseBoolAttr("useAlternateAccount", attr); err != nil {
+		if b, err := common.ParseBoolAttr("useAlternateAccount", attr); err != nil {
 			return err
 		} else if b {
 			stuff.UseAlternateAccount = true
@@ -325,7 +324,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 	}
 
 	if attr, ok := args.Keyword["altRegionProvider"]; ok {
-		if b, err := ParseBoolAttr("altRegionProvider", attr); err != nil {
+		if b, err := common.ParseBoolAttr("altRegionProvider", attr); err != nil {
 			return err
 		} else {
 			stuff.AlternateRegionProvider = b
@@ -459,7 +458,7 @@ if err != nil {
 	}
 
 	if attr, ok := args.Keyword["tlsEcdsaPublicKeyPem"]; ok {
-		if _, err := ParseBoolAttr("tlsEcdsaPublicKeyPem", attr); err != nil {
+		if _, err := common.ParseBoolAttr("tlsEcdsaPublicKeyPem", attr); err != nil {
 			return err
 		} else {
 			varName := "rTlsEcdsaPublicKeyPem"
@@ -475,14 +474,6 @@ if err != nil {
 	}
 
 	return nil
-}
-
-func ParseBoolAttr(name, value string) (bool, error) {
-	if b, err := strconv.ParseBool(value); err != nil {
-		return b, fmt.Errorf("invalid %s value %q: Should be boolean value.", name, value)
-	} else {
-		return b, nil
-	}
 }
 
 func endpointsConstOrQuote(region string) string {
