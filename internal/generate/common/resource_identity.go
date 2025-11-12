@@ -152,8 +152,8 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 		}
 
 		if attr, ok := args.Keyword["optional"]; ok {
-			if b, err := strconv.ParseBool(attr); err != nil {
-				return fmt.Errorf("invalid optional value: %q. Should be boolean value.", attr)
+			if b, err := ParseBoolAttr("optional", attr); err != nil {
+				return err
 			} else {
 				identityAttribute.Optional = b
 			}
@@ -164,8 +164,8 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 		}
 
 		if attr, ok := args.Keyword["testNotNull"]; ok {
-			if b, err := strconv.ParseBool(attr); err != nil {
-				return fmt.Errorf("invalid optional value: %q. Should be boolean value.", attr)
+			if b, err := ParseBoolAttr("testNotNull", attr); err != nil {
+				return err
 			} else {
 				identityAttribute.TestNotNull = b
 			}
