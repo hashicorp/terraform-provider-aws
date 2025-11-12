@@ -75,10 +75,6 @@ This action supports the following arguments:
 * `new_name` - (Required) The new name for the SSO application. The name must be unique within the SSO instance and follow AWS naming conventions.
 * `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-## Attributes Reference
-
-This action does not return any attributes.
-
 ## Import
 
 This action cannot be imported as it is an imperative operation that modifies existing resources.
