@@ -52,7 +52,7 @@ func testAccScope_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scope_arn"), tfknownvalue.RegionalARNRegexp("networkflowmonitor", regexache.MustCompile(`scope/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scope_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("target"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTarget), knownvalue.SetSizeExact(1)),
 				},
 			},
 			{

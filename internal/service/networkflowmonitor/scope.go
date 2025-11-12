@@ -62,7 +62,7 @@ func (r *scopeResource) Schema(ctx context.Context, request resource.SchemaReque
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"target": schema.SetNestedBlock{
+			names.AttrTarget: schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[targetResourceModel](ctx),
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
@@ -102,7 +102,7 @@ func (r *scopeResource) Schema(ctx context.Context, request resource.SchemaReque
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"account_id": schema.StringAttribute{
+												names.AttrAccountID: schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
 														fwvalidators.AWSAccountID(),
