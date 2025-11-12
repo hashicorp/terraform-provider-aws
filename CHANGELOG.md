@@ -36,6 +36,7 @@ BUG FIXES:
 * resource/aws_opensearch_authorize_vpc_endpoint_access: Fix reading the resource when more than one principal is authorized. The [import ID](https://developer.hashicorp.com/terraform/language/block/import#id) has changed from `domain_name` to `domain_name` and `account` separated by a comma ([#44982](https://github.com/hashicorp/terraform-provider-aws/issues/44982))
 * resource/aws_sagemaker_endpoint: Fix bug where `endpoint_config_name` was not correctly updated, causing the endpoint to retain the old configuration ([#42843](https://github.com/hashicorp/terraform-provider-aws/issues/42843))
 * resource/aws_wafv2_web_acl_logging_configuration: Fix the validation for `redacted_fields.single_header.name` ([#44987](https://github.com/hashicorp/terraform-provider-aws/issues/44987))
+* resource/aws_ec2_placement_group: Remove hard limit count of of 7 for `partition_count` argument
 
 ## 6.20.0 (November 6, 2025)
 
@@ -74,7 +75,6 @@ BUG FIXES:
 * resource/aws_glue_job: Allow a zero (`0`) value for `timeout` for Apache Spark streaming ETL jobs. This allows the job to be configured with no timeout ([#44920](https://github.com/hashicorp/terraform-provider-aws/issues/44920))
 * resource/aws_lakeformation_lf_tags: Remove incorrect validation from `catalog_id`, `database.catalog_id`, `table.catalog_id`, and `table_with_columns.catalog_id` arguments ([#44890](https://github.com/hashicorp/terraform-provider-aws/issues/44890))
 * resource/aws_launch_template: Allow an empty (`""`) value for `block_device_mappings.ebs.kms_key_id`. This fixes a regression introduced in [v6.16.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6160-october-9-2025) ([#44708](https://github.com/hashicorp/terraform-provider-aws/issues/44708))
-* resource/aws_ec2_placement_group: Remove maximim placemenet group count of of 7 for `partition_count` argument.
 
 ## 6.19.0 (October 30, 2025)
 
