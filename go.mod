@@ -41,7 +41,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.60.4
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/backup v1.51.1
-	github.com/aws/aws-sdk-go-v2/service/batch v1.58.4
+	github.com/aws/aws-sdk-go-v2/service/batch v1.58.5
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.48.4
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.51.1
