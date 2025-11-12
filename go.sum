@@ -555,8 +555,8 @@ github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.1 h1:LRvHhRai6j6NwGCtuE5Ej
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.1/go.mod h1:fp9PvIVx7/jyef3CaWCemFPGK+ghu2Du2XJFGaqc4iE=
 github.com/aws/aws-sdk-go-v2/service/waf v1.30.10 h1:BTL9CRa2FAxrSAwhXjtSTDCYb+dGsf3m6VjdnC4TUcE=
 github.com/aws/aws-sdk-go-v2/service/waf v1.30.10/go.mod h1:/wwPzZRBcPxG/kAOAzei/UX/FKo2H+aZcx0x99xJPpA=
-github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.10 h1:wJ7JtFsctEc/A5XzBQnNPR6inkmc1JrOedkn6kQJjUM=
-github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.10/go.mod h1:eaFrizONYIw5QJPDxoBUr8NNM21ISTZDjFhkGVt4NZY=
+github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.11 h1:eS9IzPvZ2kGe30LHr58UdgU7pSiXjPx2REQYtAjZ3cw=
+github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.11/go.mod h1:eaFrizONYIw5QJPDxoBUr8NNM21ISTZDjFhkGVt4NZY=
 github.com/aws/aws-sdk-go-v2/service/wafv2 v1.69.0 h1:kMZyXre+NGaWByjRrSpPLSKhXkKH8NjE/zSUPnMb0Xg=
 github.com/aws/aws-sdk-go-v2/service/wafv2 v1.69.0/go.mod h1:RtLkquPOQfQASVPWLuXr4hJgaZ5ChNq7eWahkj/CoCQ=
 github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.10 h1:vybsh+OcmReX2OnJ5TJa6OixiEH8aCrUchqzAdiv9a8=
