@@ -28,7 +28,6 @@ func TriBool(b bool) TriBoolean {
 	} else {
 		return TriBooleanFalse
 	}
-
 }
 
 type Implementation string
@@ -57,32 +56,32 @@ func (r ResourceIdentity) HasResourceIdentity() bool {
 	return r.IsParameterizedIdentity() || r.isARNIdentity || r.isSingletonIdentity || r.isCustomInherentRegionIdentity
 }
 
-func (d ResourceIdentity) HasInherentRegionIdentity() bool {
-	return d.isARNIdentity || d.isCustomInherentRegionIdentity
+func (r ResourceIdentity) HasInherentRegionIdentity() bool {
+	return r.isARNIdentity || r.isCustomInherentRegionIdentity
 }
 
-func (d ResourceIdentity) IsARNIdentity() bool {
-	return d.isARNIdentity
+func (r ResourceIdentity) IsARNIdentity() bool {
+	return r.isARNIdentity
 }
 
-func (d ResourceIdentity) IsCustomInherentRegionIdentity() bool {
-	return d.isCustomInherentRegionIdentity
+func (r ResourceIdentity) IsCustomInherentRegionIdentity() bool {
+	return r.isCustomInherentRegionIdentity
 }
 
 func (r ResourceIdentity) IsParameterizedIdentity() bool {
 	return len(r.IdentityAttributes) > 0
 }
 
-func (d ResourceIdentity) IsSingletonIdentity() bool {
-	return d.isSingletonIdentity
+func (r ResourceIdentity) IsSingletonIdentity() bool {
+	return r.isSingletonIdentity
 }
 
-func (d ResourceIdentity) IdentityAttribute() string {
-	return namesgen.ConstOrQuote(d.IdentityAttributeName())
+func (r ResourceIdentity) IdentityAttribute() string {
+	return namesgen.ConstOrQuote(r.IdentityAttributeName())
 }
 
-func (d ResourceIdentity) IdentityAttributeName() string {
-	return d.identityAttributeName
+func (r ResourceIdentity) IdentityAttributeName() string {
+	return r.identityAttributeName
 }
 
 func (r ResourceIdentity) HasIdentityDuplicateAttrs() bool {
@@ -269,5 +268,4 @@ func parseIdentityDuplicateAttrNames(args Args, implementation Implementation, d
 		}
 	})
 	d.IdentityDuplicateAttrNames = slices.Compact(attrs)
-
 }
