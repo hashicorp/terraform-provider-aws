@@ -2275,7 +2275,10 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 					break
 				}
 
-				if f, ok := flexer.(*autoFlattener); ok {
+				// Try both value and pointer type assertions
+				if f, ok := flexer.(autoFlattener); ok {
+					diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal.Elem(), valTo.Type(ctx), toFieldVal, wrapperField)...)
+				} else if f, ok := flexer.(*autoFlattener); ok {
 					diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal.Elem(), valTo.Type(ctx), toFieldVal, wrapperField)...)
 				} else {
 					diags.Append(DiagFlatteningIncompatibleTypes(fromFieldVal.Type(), reflect.TypeOf(toFieldVal.Interface())))
@@ -2396,15 +2399,15 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 							"wrapper_field":           wrapperField,
 						})
 
-						if f, ok := flexer.(*autoFlattener); ok {
-							tflog.SubsystemTrace(ctx, subsystemName, "Calling xmlWrapperFlatten", map[string]any{
-								"source_type": fromFieldVal.Elem().Type().String(),
-								"target_type": targetType.String(),
-							})
+						// Try both value and pointer type assertions
+						if f, ok := flexer.(autoFlattener); ok {
 							diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal.Elem(), targetType, toFieldVal, wrapperField)...)
-							tflog.SubsystemTrace(ctx, subsystemName, "Returned from xmlWrapperFlatten", map[string]any{
-								"has_error": diags.HasError(),
-							})
+							if diags.HasError() {
+								break
+							}
+							continue // Successfully handled, skip normal processing
+						} else if f, ok := flexer.(*autoFlattener); ok {
+							diags.Append(f.xmlWrapperFlatten(ctx, fromFieldVal.Elem(), targetType, toFieldVal, wrapperField)...)
 							if diags.HasError() {
 								break
 							}

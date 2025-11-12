@@ -843,7 +843,7 @@ type multiTenantDistributionResourceModel struct {
 type originModel struct {
 	ConnectionAttempts        types.Int32                                              `tfsdk:"connection_attempts"`
 	ConnectionTimeout         types.Int32                                              `tfsdk:"connection_timeout"`
-	CustomHeader              fwtypes.SetNestedObjectValueOf[customHeaderModel]        `tfsdk:"custom_header"`
+	CustomHeader              fwtypes.SetNestedObjectValueOf[customHeaderModel]        `tfsdk:"custom_header" autoflex:",wrapper=Items"`
 	CustomOriginConfig        fwtypes.ListNestedObjectValueOf[customOriginConfigModel] `tfsdk:"custom_origin_config"`
 	DomainName                types.String                                             `tfsdk:"domain_name"`
 	ID                        types.String                                             `tfsdk:"id"`
@@ -880,7 +880,7 @@ type s3OriginConfigModel struct {
 
 type originGroupModel struct {
 	FailoverCriteria fwtypes.ListNestedObjectValueOf[failoverCriteriaModel] `tfsdk:"failover_criteria"`
-	Member           fwtypes.ListNestedObjectValueOf[memberModel]           `tfsdk:"member"`
+	Member           fwtypes.ListNestedObjectValueOf[memberModel]           `tfsdk:"member" autoflex:",wrapper=Items"`
 	OriginID         types.String                                           `tfsdk:"origin_id"`
 }
 
@@ -897,8 +897,8 @@ type defaultCacheBehaviorModel struct {
 	CachePolicyID             types.String                                                   `tfsdk:"cache_policy_id"`
 	Compress                  types.Bool                                                     `tfsdk:"compress"`
 	FieldLevelEncryptionID    types.String                                                   `tfsdk:"field_level_encryption_id" autoflex:",omitempty"`
-	FunctionAssociation       fwtypes.SetNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association"`
-	LambdaFunctionAssociation fwtypes.SetNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association"`
+	FunctionAssociation       fwtypes.SetNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",wrapper=Items"`
+	LambdaFunctionAssociation fwtypes.SetNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",wrapper=Items"`
 	OriginRequestPolicyID     types.String                                                   `tfsdk:"origin_request_policy_id"`
 	RealtimeLogConfigARN      types.String                                                   `tfsdk:"realtime_log_config_arn"`
 	ResponseHeadersPolicyID   types.String                                                   `tfsdk:"response_headers_policy_id"`
@@ -918,8 +918,8 @@ type cacheBehaviorModel struct {
 	CachePolicyID             types.String                                                   `tfsdk:"cache_policy_id"`
 	Compress                  types.Bool                                                     `tfsdk:"compress"`
 	FieldLevelEncryptionID    types.String                                                   `tfsdk:"field_level_encryption_id" autoflex:",omitempty"`
-	FunctionAssociation       fwtypes.SetNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association"`
-	LambdaFunctionAssociation fwtypes.SetNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association"`
+	FunctionAssociation       fwtypes.SetNestedObjectValueOf[functionAssociationModel]       `tfsdk:"function_association" autoflex:",wrapper=Items"`
+	LambdaFunctionAssociation fwtypes.SetNestedObjectValueOf[lambdaFunctionAssociationModel] `tfsdk:"lambda_function_association" autoflex:",wrapper=Items"`
 	OriginRequestPolicyID     types.String                                                   `tfsdk:"origin_request_policy_id"`
 	PathPattern               types.String                                                   `tfsdk:"path_pattern"`
 	RealtimeLogConfigARN      types.String                                                   `tfsdk:"realtime_log_config_arn"`
@@ -995,7 +995,7 @@ type activeTrustedKeyGroupsModel struct {
 
 type kgKeyPairIDsModel struct {
 	KeyGroupID types.String                      `tfsdk:"key_group_id"`
-	KeyPairIDs fwtypes.ListValueOf[types.String] `tfsdk:"key_pair_ids" autoflex:",wrapper=items"`
+	KeyPairIDs fwtypes.ListValueOf[types.String] `tfsdk:"key_pair_ids" autoflex:",wrapper=Items"`
 }
 
 type activeTrustedSignersModel struct {
@@ -1005,7 +1005,7 @@ type activeTrustedSignersModel struct {
 
 type signerModel struct {
 	AWSAccountNumber types.String                      `tfsdk:"aws_account_number"`
-	KeyPairIDs       fwtypes.ListValueOf[types.String] `tfsdk:"key_pair_ids" autoflex:",wrapper=items"`
+	KeyPairIDs       fwtypes.ListValueOf[types.String] `tfsdk:"key_pair_ids" autoflex:",wrapper=Items"`
 }
 
 type aliasICPRecordalModel struct {
