@@ -285,7 +285,8 @@ func testAccEC2ImageBlockPublicAccess_Identity_Upgrade_NoRefresh(t *testing.T) {
 				ConfigVariables:          config.Variables{},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						// New "region" attribute.
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
