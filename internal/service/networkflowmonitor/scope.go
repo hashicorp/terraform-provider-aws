@@ -234,13 +234,12 @@ func (r *scopeResource) Update(ctx context.Context, request resource.UpdateReque
 			return strings.Join([]string{aws.ToString(v.Region), string(v.TargetIdentifier.TargetType), accountID}, ":")
 		}
 		os, ns := set.HashSetFromFunc(oldTargets, hash), set.HashSetFromFunc(newTargets, hash)
-		add, del := ns.Difference(os), os.Difference(ns)
 
 		scopeID := fwflex.StringValueFromFramework(ctx, new.ScopeID)
 		input := networkflowmonitor.UpdateScopeInput{
+			ResourcesToAdd:    ns.Difference(os).Slice(),
+			ResourcesToDelete: os.Difference(ns).Slice(),
 			ScopeId:           aws.String(scopeID),
-			ResourcesToAdd:    add.Slice(),
-			ResourcesToDelete: del.Slice(),
 		}
 
 		_, err := conn.UpdateScope(ctx, &input)

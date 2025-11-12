@@ -6,12 +6,14 @@ package networkflowmonitor
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkflowmonitor/types"
+	set "github.com/hashicorp/go-set/v3"
 	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -210,9 +212,43 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 	}
 
 	if diff.HasChanges() {
+		var oldLocalResources, newLocalResources []awstypes.MonitorLocalResource
+		response.Diagnostics.Append(fwflex.Expand(ctx, old.LocalResources, &oldLocalResources)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new.LocalResources, &newLocalResources)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		hashLocalResource := func(v awstypes.MonitorLocalResource) string {
+			return strings.Join([]string{string(v.Type), aws.ToString(v.Identifier)}, ":")
+		}
+		osLocalResource, nsLocalResource := set.HashSetFromFunc(oldLocalResources, hashLocalResource), set.HashSetFromFunc(newLocalResources, hashLocalResource)
+
+		var oldRemoteResources, newRemoteResources []awstypes.MonitorRemoteResource
+		response.Diagnostics.Append(fwflex.Expand(ctx, old.RemoteResources, &oldRemoteResources)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new.RemoteResources, &newRemoteResources)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		hashRemoteResource := func(v awstypes.MonitorRemoteResource) string {
+			return strings.Join([]string{string(v.Type), aws.ToString(v.Identifier)}, ":")
+		}
+		osRemoteResource, nsRemoteResource := set.HashSetFromFunc(oldRemoteResources, hashRemoteResource), set.HashSetFromFunc(newRemoteResources, hashRemoteResource)
+
 		monitorName := fwflex.StringValueFromFramework(ctx, new.MonitorName)
 		input := networkflowmonitor.UpdateMonitorInput{
-			MonitorName: aws.String(monitorName),
+			LocalResourcesToAdd:     nsLocalResource.Difference(osLocalResource).Slice(),
+			LocalResourcesToRemove:  osLocalResource.Difference(nsLocalResource).Slice(),
+			MonitorName:             aws.String(monitorName),
+			RemoteResourcesToAdd:    nsRemoteResource.Difference(osRemoteResource).Slice(),
+			RemoteResourcesToRemove: osRemoteResource.Difference(nsRemoteResource).Slice(),
 		}
 
 		_, err := conn.UpdateMonitor(ctx, &input)
@@ -226,155 +262,6 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 			return
 		}
 	}
-
-	// Check if local_resources or remote_resources have changed
-	// if !new.LocalResources.Equal(old.LocalResources) || !new.RemoteResources.Equal(old.RemoteResources) {
-	// 	input := networkflowmonitor.UpdateMonitorInput{
-	// 		MonitorName: new.MonitorName.ValueStringPointer(),
-	// 	}
-
-	// 	// Calculate local resources diff
-	// 	oldLocalResources := make(map[string]awstypes.MonitorLocalResource)
-	// 	newLocalResources := make(map[string]awstypes.MonitorLocalResource)
-
-	// 	// Build map of old local resources
-	// 	if !old.LocalResources.IsNull() && !old.LocalResources.IsUnknown() {
-	// 		oldLocalSlice, diags := old.LocalResources.ToSlice(ctx)
-	// 		response.Diagnostics.Append(diags...)
-	// 		if response.Diagnostics.HasError() {
-	// 			return
-	// 		}
-	// 		for _, resource := range oldLocalSlice {
-	// 			key := resource.Type.ValueString() + "|" + resource.Identifier.ValueString()
-	// 			oldLocalResources[key] = awstypes.MonitorLocalResource{
-	// 				Type:       awstypes.MonitorLocalResourceType(resource.Type.ValueString()),
-	// 				Identifier: resource.Identifier.ValueStringPointer(),
-	// 			}
-	// 		}
-	// 	}
-
-	// 	// Build map of new local resources
-	// 	if !new.LocalResources.IsNull() && !new.LocalResources.IsUnknown() {
-	// 		newLocalSlice, diags := new.LocalResources.ToSlice(ctx)
-	// 		response.Diagnostics.Append(diags...)
-	// 		if response.Diagnostics.HasError() {
-	// 			return
-	// 		}
-	// 		for _, resource := range newLocalSlice {
-	// 			key := resource.Type.ValueString() + "|" + resource.Identifier.ValueString()
-	// 			newLocalResources[key] = awstypes.MonitorLocalResource{
-	// 				Type:       awstypes.MonitorLocalResourceType(resource.Type.ValueString()),
-	// 				Identifier: resource.Identifier.ValueStringPointer(),
-	// 			}
-	// 		}
-	// 	}
-
-	// 	// Find resources to add (in new but not in old)
-	// 	var localResourcesToAdd []awstypes.MonitorLocalResource
-	// 	for key, resource := range newLocalResources {
-	// 		if _, exists := oldLocalResources[key]; !exists {
-	// 			localResourcesToAdd = append(localResourcesToAdd, resource)
-	// 		}
-	// 	}
-
-	// 	// Find resources to remove (in old but not in new)
-	// 	var localResourcesToRemove []awstypes.MonitorLocalResource
-	// 	for key, resource := range oldLocalResources {
-	// 		if _, exists := newLocalResources[key]; !exists {
-	// 			localResourcesToRemove = append(localResourcesToRemove, resource)
-	// 		}
-	// 	}
-
-	// 	// Calculate remote resources diff
-	// 	oldRemoteResources := make(map[string]awstypes.MonitorRemoteResource)
-	// 	newRemoteResources := make(map[string]awstypes.MonitorRemoteResource)
-
-	// 	// Build map of old remote resources
-	// 	if !old.RemoteResources.IsNull() && !old.RemoteResources.IsUnknown() {
-	// 		oldRemoteSlice, diags := old.RemoteResources.ToSlice(ctx)
-	// 		response.Diagnostics.Append(diags...)
-	// 		if response.Diagnostics.HasError() {
-	// 			return
-	// 		}
-	// 		for _, resource := range oldRemoteSlice {
-	// 			key := resource.Type.ValueString() + "|" + resource.Identifier.ValueString()
-	// 			oldRemoteResources[key] = awstypes.MonitorRemoteResource{
-	// 				Type:       awstypes.MonitorRemoteResourceType(resource.Type.ValueString()),
-	// 				Identifier: resource.Identifier.ValueStringPointer(),
-	// 			}
-	// 		}
-	// 	}
-
-	// 	// Build map of new remote resources
-	// 	if !new.RemoteResources.IsNull() && !new.RemoteResources.IsUnknown() {
-	// 		newRemoteSlice, diags := new.RemoteResources.ToSlice(ctx)
-	// 		response.Diagnostics.Append(diags...)
-	// 		if response.Diagnostics.HasError() {
-	// 			return
-	// 		}
-	// 		for _, resource := range newRemoteSlice {
-	// 			key := resource.Type.ValueString() + "|" + resource.Identifier.ValueString()
-	// 			newRemoteResources[key] = awstypes.MonitorRemoteResource{
-	// 				Type:       awstypes.MonitorRemoteResourceType(resource.Type.ValueString()),
-	// 				Identifier: resource.Identifier.ValueStringPointer(),
-	// 			}
-	// 		}
-	// 	}
-
-	// 	// Find resources to add (in new but not in old)
-	// 	var remoteResourcesToAdd []awstypes.MonitorRemoteResource
-	// 	for key, resource := range newRemoteResources {
-	// 		if _, exists := oldRemoteResources[key]; !exists {
-	// 			remoteResourcesToAdd = append(remoteResourcesToAdd, resource)
-	// 		}
-	// 	}
-
-	// 	// Find resources to remove (in old but not in new)
-	// 	var remoteResourcesToRemove []awstypes.MonitorRemoteResource
-	// 	for key, resource := range oldRemoteResources {
-	// 		if _, exists := newRemoteResources[key]; !exists {
-	// 			remoteResourcesToRemove = append(remoteResourcesToRemove, resource)
-	// 		}
-	// 	}
-
-	// 	// Set the calculated diffs in the input
-	// 	if len(localResourcesToAdd) > 0 {
-	// 		input.LocalResourcesToAdd = localResourcesToAdd
-	// 	}
-	// 	if len(localResourcesToRemove) > 0 {
-	// 		input.LocalResourcesToRemove = localResourcesToRemove
-	// 	}
-	// 	if len(remoteResourcesToAdd) > 0 {
-	// 		input.RemoteResourcesToAdd = remoteResourcesToAdd
-	// 	}
-	// 	if len(remoteResourcesToRemove) > 0 {
-	// 		input.RemoteResourcesToRemove = remoteResourcesToRemove
-	// 	}
-
-	// 	_, err := conn.UpdateMonitor(ctx, &input)
-	// 	if err != nil {
-	// 		response.Diagnostics.AddError(fmt.Sprintf("updating Network Flow Monitor Monitor (%s)", new.ID.ValueString()), err.Error())
-	// 		return
-	// 	}
-
-	// 	// Wait for the update to complete
-	// 	monitor, err := waitMonitorUpdated(ctx, conn, new.MonitorName.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
-	// 	if err != nil {
-	// 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Flow Monitor Monitor (%s) update", new.ID.ValueString()), err.Error())
-	// 		return
-	// 	}
-
-	// 	// Update only the computed attributes, preserve the order of resources from configuration
-	// 	new.MonitorStatus = types.StringValue(string(monitor.MonitorStatus))
-
-	// 	// Ensure ID and ARN are set properly
-	// 	if new.ID.IsNull() || new.ID.IsUnknown() {
-	// 		new.ID = types.StringValue(aws.ToString(monitor.MonitorArn))
-	// 	}
-	// 	if new.ARN.IsNull() || new.ARN.IsUnknown() {
-	// 		new.ARN = types.StringValue(aws.ToString(monitor.MonitorArn))
-	// 	}
-	// }
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }

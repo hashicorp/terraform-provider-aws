@@ -51,7 +51,7 @@ func testAccMonitor_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scope_arn"), tfknownvalue.RegionalARNExact("networkflowmonitor", `monitor/`+rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitor_arn"), tfknownvalue.RegionalARNExact("networkflowmonitor", `monitor/`+rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
@@ -61,6 +61,7 @@ func testAccMonitor_basic(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "monitor_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "monitor_name",
+				ImportStateVerifyIgnore:              []string{"scope_arn"},
 			},
 		},
 	})
@@ -137,6 +138,7 @@ func testAccMonitor_tags(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "monitor_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "monitor_name",
+				ImportStateVerifyIgnore:              []string{"scope_arn"},
 			},
 			{
 				Config: testAccMonitorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -193,51 +195,61 @@ func testAccMonitor_update(t *testing.T) {
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "local_resource.0.type", "AWS::EC2::VPC"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("local_resource"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("remote_resource"), knownvalue.SetSizeExact(0)),
+				},
 			},
-			//adding one more local resource to monitor
 			{
 				Config: testAccMonitorConfig_updated1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "local_resource.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "remote_resource.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("local_resource"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("remote_resource"), knownvalue.SetSizeExact(1)),
+				},
 			},
-			//reverting local resources to single resource.
 			{
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "local_resource.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "remote_resource.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "local_resource.0.type", "AWS::EC2::VPC"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("local_resource"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("remote_resource"), knownvalue.SetSizeExact(0)),
+				},
 			},
-			//adding 2 local resources and 2 remote resources
 			{
 				Config: testAccMonitorConfig_updated2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "local_resource.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "remote_resource.#", "2"),
 				),
-			},
-			//reverting local resources to single resource.
-			{
-				Config: testAccMonitorConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "local_resource.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "remote_resource.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "local_resource.0.type", "AWS::EC2::VPC"),
-				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("local_resource"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("remote_resource"), knownvalue.SetSizeExact(2)),
+				},
 			},
 		},
 	})
