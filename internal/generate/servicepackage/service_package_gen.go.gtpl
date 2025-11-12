@@ -16,7 +16,7 @@ inttypes.StringIdentityAttribute(
 {{- end }}
 
 {{ define "SDKv2CommonIdentityOpts" -}}
-{{- if .HasV6_0SDKv2Fix }}
+{{- if .HasV6_0NullValuesError }}
 	inttypes.WithV6_0SDKv2Fix(),
 {{- end }}
 {{- template "CommonIdentityOpts" . -}}
@@ -208,23 +208,23 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
-				{{- else if $value.ARNIdentity }}
+				{{- else if $value.IsARNIdentity }}
 					{{- if $.IsGlobal }}
-						{{- if $value.HasARNAttribute }}
-							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.HasAlternateARNAttribute }}
+							inttypes.GlobalARNIdentityNamed({{ $value.IdentityAttribute }},
 						{{- else }}
 							inttypes.GlobalARNIdentity(
 						{{- end }}
 					{{- else }}
 						{{- if $value.IsARNFormatGlobal }}
-							{{- if $value.HasARNAttribute }}
-								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							{{- if $value.HasAlternateARNAttribute }}
+								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.IdentityAttribute }},
 							{{- else }}
 								inttypes.RegionalResourceWithGlobalARNFormat(
 							{{- end }}
 						{{- else }}
-							{{- if $value.HasARNAttribute }}
-								inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+							{{- if $value.HasAlternateARNAttribute }}
+								inttypes.RegionalARNIdentityNamed({{ $value.IdentityAttribute }},
 							{{- else }}
 								inttypes.RegionalARNIdentity(
 							{{- end }}
@@ -235,7 +235,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
-				{{- else if $value.SingletonIdentity }}
+				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
@@ -338,23 +338,23 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
-				{{- else if $value.ARNIdentity }}
+				{{- else if $value.IsARNIdentity }}
 					{{- if $.IsGlobal }}
-						{{- if $value.HasARNAttribute }}
-							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.HasAlternateARNAttribute }}
+							inttypes.GlobalARNIdentityNamed({{ $value.IdentityAttribute }},
 						{{- else }}
 							inttypes.GlobalARNIdentity(
 						{{- end }}
 					{{- else }}
 						{{- if $value.IsARNFormatGlobal }}
-							{{- if $value.HasARNAttribute }}
-								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							{{- if $value.HasAlternateARNAttribute }}
+								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.IdentityAttribute }},
 							{{- else }}
 								inttypes.RegionalResourceWithGlobalARNFormat(
 							{{- end }}
 						{{- else }}
-							{{- if $value.HasARNAttribute }}
-								inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+							{{- if $value.HasAlternateARNAttribute }}
+								inttypes.RegionalARNIdentityNamed({{ $value.IdentityAttribute }},
 							{{- else }}
 								inttypes.RegionalARNIdentity(
 							{{- end }}
@@ -365,7 +365,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
-				{{- else if $value.SingletonIdentity }}
+				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
@@ -489,16 +489,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 							{{- template "SDKv2CommonIdentityOpts" . }}
 						),
 					{{- end }}
-				{{- else if $value.ARNIdentity }}
+				{{- else if $value.IsARNIdentity }}
 					{{- if $.IsGlobal }}
-						{{- if $value.HasARNAttribute }}
-							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.HasAlternateARNAttribute }}
+							inttypes.GlobalARNIdentityNamed({{ $value.IdentityAttribute }},
 						{{- else }}
 							inttypes.GlobalARNIdentity(
 						{{- end }}
 					{{- else -}}
-						{{- if $value.HasARNAttribute }}
-							inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.HasAlternateARNAttribute }}
+							inttypes.RegionalARNIdentityNamed({{ $value.IdentityAttribute }},
 						{{- else }}
 							inttypes.RegionalARNIdentity(
 						{{- end }}
@@ -506,7 +506,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 						inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 						{{- template "SDKv2CommonIdentityOpts" . }}
 					),
-				{{- else if $value.SingletonIdentity }}
+				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
 							{{- template "SDKv2CommonIdentityOpts" . }}
@@ -516,8 +516,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 							{{- template "SDKv2CommonIdentityOpts" . }}
 						),
 					{{- end }}
-				{{- else if $value.CustomInherentRegionIdentity -}}
-					inttypes.RegionalCustomInherentRegionIdentity({{ .CustomIdentityAttribute }}, {{ .CustomInherentRegionParser }},
+				{{- else if $value.IsCustomInherentRegionIdentity -}}
+					inttypes.RegionalCustomInherentRegionIdentity({{ .IdentityAttribute }}, {{ .CustomInherentRegionParser }},
 						inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 						{{- template "SDKv2CommonIdentityOpts" . }}
 					),
@@ -611,23 +611,23 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
-				{{- else if $value.ARNIdentity }}
+				{{- else if $value.IsARNIdentity }}
 					{{- if $.IsGlobal }}
-						{{- if $value.HasARNAttribute }}
-							inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.HasAlternateARNAttribute }}
+							inttypes.GlobalARNIdentityNamed({{ $value.IdentityAttribute }},
 						{{- else }}
 							inttypes.GlobalARNIdentity(
 						{{- end }}
 					{{- else }}
 						{{- if $value.IsARNFormatGlobal }}
-							{{- if $value.HasARNAttribute }}
-								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							{{- if $value.HasAlternateARNAttribute }}
+								inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.IdentityAttribute }},
 							{{- else }}
 								inttypes.RegionalResourceWithGlobalARNFormat(
 							{{- end }}
 						{{- else -}}
-							{{- if $value.HasARNAttribute }}
-								inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+							{{- if $value.HasAlternateARNAttribute }}
+								inttypes.RegionalARNIdentityNamed({{ $value.IdentityAttribute }},
 							{{- else }}
 								inttypes.RegionalARNIdentity(
 							{{- end }}
@@ -638,7 +638,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 						{{- end -}}
 						{{- template "CommonIdentityOpts" . -}}
 					),
-				{{- else if $value.SingletonIdentity }}
+				{{- else if $value.IsSingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						inttypes.GlobalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
@@ -654,8 +654,8 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 							{{- template "CommonIdentityOpts" . -}}
 						),
 					{{- end }}
-				{{- else if $value.CustomInherentRegionIdentity }}
-					inttypes.RegionalCustomInherentRegionIdentity({{ .CustomIdentityAttribute }},
+				{{- else if $value.IsCustomInherentRegionIdentity }}
+					inttypes.RegionalCustomInherentRegionIdentity({{ .IdentityAttribute }},
 						inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 						{{- template "SDKv2CommonIdentityOpts" . }}
 					),
