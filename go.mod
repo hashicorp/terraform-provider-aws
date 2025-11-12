@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.48.2
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.59.3
 	github.com/aws/aws-sdk-go-v2/service/connect v1.144.1
-	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.1
+	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.59.2
