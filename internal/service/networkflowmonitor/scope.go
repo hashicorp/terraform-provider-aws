@@ -6,7 +6,6 @@ package networkflowmonitor
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -231,7 +230,7 @@ func (r *scopeResource) Update(ctx context.Context, request resource.UpdateReque
 
 		hash := func(v awstypes.TargetResource) string {
 			accountID := any(v.TargetIdentifier.TargetId).(*awstypes.TargetIdMemberAccountId).Value
-			return strings.Join([]string{aws.ToString(v.Region), string(v.TargetIdentifier.TargetType), accountID}, ":")
+			return aws.ToString(v.Region) + ":" + string(v.TargetIdentifier.TargetType) + ":" + accountID
 		}
 		os, ns := set.HashSetFromFunc(oldTargets, hash), set.HashSetFromFunc(newTargets, hash)
 

@@ -6,7 +6,6 @@ package networkflowmonitor
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -223,7 +222,7 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 
 		hashLocalResource := func(v awstypes.MonitorLocalResource) string {
-			return strings.Join([]string{string(v.Type), aws.ToString(v.Identifier)}, ":")
+			return string(v.Type) + ":" + aws.ToString(v.Identifier)
 		}
 		osLocalResource, nsLocalResource := set.HashSetFromFunc(oldLocalResources, hashLocalResource), set.HashSetFromFunc(newLocalResources, hashLocalResource)
 
@@ -238,7 +237,7 @@ func (r *monitorResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 
 		hashRemoteResource := func(v awstypes.MonitorRemoteResource) string {
-			return strings.Join([]string{string(v.Type), aws.ToString(v.Identifier)}, ":")
+			return string(v.Type) + ":" + aws.ToString(v.Identifier)
 		}
 		osRemoteResource, nsRemoteResource := set.HashSetFromFunc(oldRemoteResources, hashRemoteResource), set.HashSetFromFunc(newRemoteResources, hashRemoteResource)
 
