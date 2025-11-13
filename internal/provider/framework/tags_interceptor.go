@@ -6,6 +6,7 @@ package framework
 import (
 	"context"
 	"fmt"
+	"slices"
 	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -305,6 +306,8 @@ func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context,
 				if reqTags, ok := policy.RequiredTags[typeName]; ok {
 					if !allPlanTags.ContainsAllKeys(reqTags) {
 						missing := reqTags.Removed(allPlanTags).Keys()
+						slices.Sort(missing)
+
 						summary := "Missing Required Tags"
 						detail := fmt.Sprintf("An organizational tag policy requires the following tags for %s: %s", typeName, missing)
 
