@@ -56,8 +56,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
       kms_master_key_id = aws_kms_key.mykey.arn
       sse_algorithm     = "aws:kms"
     }
-    bucket_key_enabled            = true
-    blocked_encryption_types_list = ["SSE-C"]
+    bucket_key_enabled       = true
+    blocked_encryption_types = ["SSE-C"]
   }
 }
 ```
@@ -76,7 +76,7 @@ This resource supports the following arguments:
 The `rule` configuration block supports the following arguments:
 
 * `apply_server_side_encryption_by_default` - (Optional) Single object for setting server-side encryption by default. [See below](#apply_server_side_encryption_by_default).
-* `blocked_encryption_types_list` - (Optional) List of server-side encryption types to block for object uploads. Valid values are `SSE-C` (blocks uploads using server-side encryption with customer-provided keys) and `NONE` (unblocks all encryption types). Starting in March 2026, Amazon S3 will automatically block SSE-C uploads for all new buckets.
+* `blocked_encryption_types` - (Optional) List of server-side encryption types to block for object uploads. Valid values are `SSE-C` (blocks uploads using server-side encryption with customer-provided keys) and `NONE` (unblocks all encryption types). Starting in March 2026, Amazon S3 will automatically block SSE-C uploads for all new buckets.
 * `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 
 ### apply_server_side_encryption_by_default

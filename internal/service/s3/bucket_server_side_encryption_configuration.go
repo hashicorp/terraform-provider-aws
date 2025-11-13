@@ -74,7 +74,7 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"blocked_encryption_types_list": {
+						"blocked_encryption_types": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Schema{
@@ -302,7 +302,7 @@ func expandServerSideEncryptionRules(l []any) []types.ServerSideEncryptionRule {
 			rule.ApplyServerSideEncryptionByDefault = expandServerSideEncryptionByDefault(v)
 		}
 
-		if v, ok := tfMap["blocked_encryption_types_list"].([]any); ok && len(v) > 0 {
+		if v, ok := tfMap["blocked_encryption_types"].([]any); ok && len(v) > 0 {
 			rule.BlockedEncryptionTypes = expandBlockedEncryptionTypes(v)
 		}
 
@@ -327,7 +327,7 @@ func flattenServerSideEncryptionRules(rules []types.ServerSideEncryptionRule) []
 		}
 
 		if rule.BlockedEncryptionTypes != nil {
-			m["blocked_encryption_types_list"] = flattenBlockedEncryptionTypes(rule.BlockedEncryptionTypes)
+			m["blocked_encryption_types"] = flattenBlockedEncryptionTypes(rule.BlockedEncryptionTypes)
 		}
 
 		if rule.BucketKeyEnabled != nil {
