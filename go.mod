@@ -6,6 +6,10 @@ go 1.24.10
 // This causes errors with AWS Network Firewall
 godebug tlsmlkem=0
 
+replace github.com/aws/aws-sdk-go-v2 => /Volumes/develop/go/src/github.com/aws/aws-sdk-go-v2
+
+replace github.com/aws/aws-sdk-go-v2/service/s3 => /Volumes/develop/go/src/github.com/aws/aws-sdk-go-v2/service/s3
+
 require (
 	github.com/ProtonMail/go-crypto v1.3.0
 	github.com/YakDriver/go-version v0.1.0
