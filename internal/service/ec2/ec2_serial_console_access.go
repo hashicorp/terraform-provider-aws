@@ -18,7 +18,6 @@ import (
 
 // @SDKResource("aws_ec2_serial_console_access", name="Serial Console Access")
 // @SingletonIdentity
-// @WrappedImport(false)
 // @IdentityVersion(1, sdkV2IdentityUpgraders="serialConsoleAccessIdentityUpgradeV0")
 // @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
@@ -32,10 +31,6 @@ func resourceSerialConsoleAccess() *schema.Resource {
 		ReadWithoutTimeout:   resourceSerialConsoleAccessRead,
 		UpdateWithoutTimeout: resourceSerialConsoleAccessUpdate,
 		DeleteWithoutTimeout: resourceSerialConsoleAccessDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrEnabled: {
@@ -56,7 +51,7 @@ func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "setting EC2 Serial Console Access (%t): %s", enabled, err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	return append(diags, resourceSerialConsoleAccessRead(ctx, d, meta)...)
 }
