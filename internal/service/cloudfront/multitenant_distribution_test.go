@@ -148,6 +148,12 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     cloudfront_default_certificate = true
   }
 
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
   tenant_config {
     parameter_definition {
       name = "origin_domain"
