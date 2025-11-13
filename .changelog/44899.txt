@@ -5,3 +5,7 @@ resource/aws_timestreaminfluxdb_db_cluster: Make `allocated_storage`, `bucket`, 
 ```release-note:enhancement
 resource/aws_timestreaminfluxdb_db_cluster: Add `engine_type` attribute
 ```
+
+```release-note:enhancement
+resource/aws_timestreaminfluxdb_db_cluster: Remove Terraform default for `deployment_type`
+```
