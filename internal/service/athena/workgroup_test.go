@@ -48,6 +48,7 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.identity_center_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -321,6 +322,73 @@ func TestAccAthenaWorkGroup_publishCloudWatchMetricsEnabled(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAthenaWorkGroup_managedQueryResultsConfigurationEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1, workGroup2 types.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_managedQueryResultsConfigurationEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccWorkGroupConfig_managedQueryResultsConfigurationEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workGroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_managedQueryResultsConfiguration_kms(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1 types.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_managedQueryResultsConfigurationKMS(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.0.kms_key_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+
 }
 
 func TestAccAthenaWorkGroup_ResultEncryption_sseS3(t *testing.T) {
@@ -970,6 +1038,43 @@ resource "aws_athena_workgroup" "test" {
   }
 }
 `, rName, encryptionOption)
+}
+
+func testAccWorkGroupConfig_managedQueryResultsConfigurationEnabled(rName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    managed_query_results_configuration {
+      enabled = %[2]t
+    }
+  }
+}
+`, rName, enabled)
+}
+
+func testAccWorkGroupConfig_managedQueryResultsConfigurationKMS(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
+}
+
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    managed_query_results_configuration {
+	  enabled     = true
+	  encryption_configuration {
+	  	kms_key_arn = aws_kms_key.test.arn
+	  }
+	}
+  }
+}
+`, rName)
 }
 
 func testAccWorkGroupConfig_state(rName, state string) string {
