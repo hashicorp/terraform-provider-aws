@@ -72,6 +72,41 @@ func TestAccBedrockAgentCoreGateway_basic(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGateway_xrayDelivery(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+	deliveryResourceName := "aws_cloudwatch_log_delivery.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_xrayDelivery(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					resource.TestCheckResourceAttrSet(deliveryResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(deliveryResourceName, "delivery_source_name", rName+"-source"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(deliveryResourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
@@ -488,6 +523,41 @@ resource "aws_bedrockagentcore_gateway" "test" {
   }
 
   protocol_type = "MCP"
+}
+`, rName))
+}
+
+func testAccGatewayConfig_xrayDelivery(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_audience = ["test1", "test2"]
+    }
+  }
+
+  protocol_type = "MCP"
+}
+
+resource "aws_cloudwatch_log_delivery_source" "test" {
+  name         = "%[1]s-source"
+  log_type     = "TRACES"
+  resource_arn = aws_bedrockagentcore_gateway.test.gateway_arn
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name                      = "%[1]s-destination"
+  delivery_destination_type = "XRAY"
+}
+
+resource "aws_cloudwatch_log_delivery" "test" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.test.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
 }
 `, rName))
 }
