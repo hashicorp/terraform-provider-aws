@@ -248,6 +248,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Timestream for InfluxDB cluster.
+* `engine_type` - Database engine type of the DB cluster.
 * `endpoint` - Endpoint used to connect to InfluxDB. The default InfluxDB port is 8086.
 * `id` - ID of the Timestream for InfluxDB cluster.
 * `influx_auth_parameters_secret_arn` - ARN of the AWS Secrets Manager secret containing the initial InfluxDB authorization parameters. The secret value is a JSON formatted key-value pair holding InfluxDB authorization values: organization, bucket, username, and password.
