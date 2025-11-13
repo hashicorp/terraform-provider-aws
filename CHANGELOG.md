@@ -1,4 +1,4 @@
-## 6.21.0 (Unreleased)
+## 6.21.0 (November 13, 2025)
 
 BREAKING CHANGES:
 
