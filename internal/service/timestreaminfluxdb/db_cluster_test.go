@@ -857,10 +857,10 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 func testAccDBClusterConfig_dbParameterGroupV3(rName string) string {
 	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
-  name                        = %[1]q
-  vpc_subnet_ids              = aws_subnet.test[*].id
-  vpc_security_group_ids      = [aws_security_group.test.id]
-  db_instance_type            = "db.influx.large"
+  name                         = %[1]q
+  vpc_subnet_ids               = aws_subnet.test[*].id
+  vpc_security_group_ids       = [aws_security_group.test.id]
+  db_instance_type             = "db.influx.large"
   db_parameter_group_identifier = "InfluxDBV3Core"
 }
 `, rName))

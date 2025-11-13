@@ -194,11 +194,11 @@ For InfluxDB V3 clusters, you can create a cluster without providing `allocated_
 
 ```terraform
 resource "aws_timestreaminfluxdb_db_cluster" "example" {
-  name                        = "example-v3-cluster"
-  db_instance_type            = "db.influx.large"
+  name                          = "example-v3-cluster"
+  db_instance_type              = "db.influx.large"
   db_parameter_group_identifier = "InfluxDBV3Core"
-  vpc_subnet_ids              = [aws_subnet.example_1.id, aws_subnet.example_2.id]
-  vpc_security_group_ids      = [aws_security_group.example.id]
+  vpc_subnet_ids                = [aws_subnet.example_1.id, aws_subnet.example_2.id]
+  vpc_security_group_ids        = [aws_security_group.example.id]
 }
 ```
 
