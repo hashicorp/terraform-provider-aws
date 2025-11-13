@@ -627,6 +627,17 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 		}
 	}
 
+	// For legacy-mode reasons, we normalize empty `prefix` is nil when making requests to S3 and storing internal state.
+	// Some S3 compatible services might return empty string as an equivalent representation. To maintain a consistent state we should normalize that back to nil.
+	for i := range output.Rules {
+		rule := &output.Rules[i]
+		//nolint:staticcheck // Yes the attribute Prefix is deprecated, but the following functionality is required for compatibility with non AWS systems
+		if aws.ToString((*rule).Prefix) == "" {
+			//nolint:staticcheck // Yes the attribute Prefix is deprecated, but the following functionality is required for compatibility with non AWS systems
+			(*rule).Prefix = nil
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
