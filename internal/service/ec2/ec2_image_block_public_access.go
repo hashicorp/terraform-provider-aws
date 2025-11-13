@@ -31,7 +31,7 @@ import (
 // @Testing(generator=false)
 // @Testing(identityTest=false)
 // @Testing(identityVersion="0;v6.0.0")
-// @Testing(identityVersion="1;v6.20.0")
+// @Testing(identityVersion="1;v6.21.0")
 func resourceImageBlockPublicAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageBlockPublicAccessPut,
