@@ -154,6 +154,13 @@ func resourceVPNConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tunnel_bandwidth": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.VpnTunnelBandwidth](),
+			},
 			"tunnel_inside_ip_version": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -787,6 +794,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("remote_ipv6_network_cidr", v.RemoteIpv6NetworkCidr)
 		d.Set("static_routes_only", v.StaticRoutesOnly)
 		d.Set("transport_transit_gateway_attachment_id", v.TransportTransitGatewayAttachmentId)
+		d.Set("tunnel_bandwidth", v.TunnelBandwidth)
 		d.Set("tunnel_inside_ip_version", v.TunnelInsideIpVersion)
 
 		for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
@@ -806,6 +814,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("static_routes_only", nil)
 		d.Set("transport_transit_gateway_attachment_id", nil)
 		d.Set("tunnel_inside_ip_version", nil)
+		d.Set("tunnel_bandwidth", nil)
 	}
 
 	d.Set("customer_gateway_configuration", vpnConnection.CustomerGatewayConfiguration)
@@ -993,6 +1002,10 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *awstypes.V
 
 	if v, ok := d.GetOk("outside_ip_address_type"); ok {
 		apiObject.OutsideIpAddressType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tunnel_bandwidth"); ok {
+		apiObject.TunnelBandwidth = awstypes.VpnTunnelBandwidth(v.(string))
 	}
 
 	if v := d.Get("tunnel_inside_ip_version").(string); v == string(awstypes.TunnelInsideIpVersionIpv6) {

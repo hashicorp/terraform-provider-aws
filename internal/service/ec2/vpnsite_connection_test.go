@@ -432,6 +432,36 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 	})
 }
 
+func TestAccSiteVPNConnection_tunnelBandwidth(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpn awstypes.VpnConnection
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteVPNConnectionConfig_tunnelBandwidth(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "tunnel_bandwidth", "large"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
+			},
+		},
+	})
+}
+
 func TestAccSiteVPNConnection_tunnel1InsideCIDR(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2779,6 +2809,35 @@ resource "aws_vpn_connection" "test" {
   preshared_key_storage = %[3]q
 }
 `, rName, rBgpAsn, preSharedKeyStorage)
+}
+
+func testAccSiteVPNConnectionConfig_tunnelBandwidth(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  description = %[1]q
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id = aws_customer_gateway.test.id
+  transit_gateway_id  = aws_ec2_transit_gateway.test.id
+  type                = aws_customer_gateway.test.type
+  tunnel_bandwidth    = "large"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, rBgpAsn)
 }
 
 // Test our VPN tunnel config XML parsing
