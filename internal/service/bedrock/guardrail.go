@@ -152,6 +152,26 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[guardrailContentFilterConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"input_modalities": schema.ListAttribute{
+										Optional:    true,
+										Computed:    true,
+										ElementType: fwtypes.StringEnumType[awstypes.GuardrailModality](),
+										Validators: []validator.List{
+											listvalidator.ValueStringsAre(
+												stringvalidator.OneOf("TEXT", "IMAGE"),
+											),
+										},
+									},
+									"output_modalities": schema.ListAttribute{
+										Optional:    true,
+										Computed:    true,
+										ElementType: fwtypes.StringEnumType[awstypes.GuardrailModality](),
+										Validators: []validator.List{
+											listvalidator.ValueStringsAre(
+												stringvalidator.OneOf("TEXT", "IMAGE"),
+											),
+										},
+									},
 									"input_strength": schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailFilterStrength](),
@@ -799,9 +819,11 @@ type guardrailContentPolicyConfigModel struct {
 }
 
 type guardrailContentFilterConfigModel struct {
-	InputStrength  fwtypes.StringEnum[awstypes.GuardrailFilterStrength]    `tfsdk:"input_strength"`
-	OutputStrength fwtypes.StringEnum[awstypes.GuardrailFilterStrength]    `tfsdk:"output_strength"`
-	Type           fwtypes.StringEnum[awstypes.GuardrailContentFilterType] `tfsdk:"type"`
+	InputModalities  fwtypes.ListOfStringEnum[awstypes.GuardrailModality]    `tfsdk:"input_modalities"`
+	OutputModalities fwtypes.ListOfStringEnum[awstypes.GuardrailModality]    `tfsdk:"output_modalities"`
+	InputStrength    fwtypes.StringEnum[awstypes.GuardrailFilterStrength]    `tfsdk:"input_strength"`
+	OutputStrength   fwtypes.StringEnum[awstypes.GuardrailFilterStrength]    `tfsdk:"output_strength"`
+	Type             fwtypes.StringEnum[awstypes.GuardrailContentFilterType] `tfsdk:"type"`
 }
 
 type guardrailContentFiltersTierConfigModel struct {
