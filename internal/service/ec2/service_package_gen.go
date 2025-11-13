@@ -1105,6 +1105,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingletonIdentity(
 				inttypes.WithV6_0SDKv2Fix(),
+				inttypes.WithVersion(1),
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
