@@ -520,6 +520,22 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"rebalancing": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrStatus: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.RebalancingStatus](),
+						},
+					},
+				},
+			},
 			"storage_mode": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -588,6 +604,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if v, ok := d.GetOk("storage_mode"); ok {
 		input.StorageMode = types.StorageMode(v.(string))
+	}
+
+	if v, ok := d.GetOk("rebalancing"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Rebalancing = expandRebalancing(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateCluster(ctx, input)
@@ -717,6 +737,13 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		d.Set("open_monitoring", nil)
 	}
 	d.Set("storage_mode", cluster.StorageMode)
+	if cluster.Rebalancing != nil {
+		if err := d.Set("rebalancing", []any{flattenRebalancing(cluster.Rebalancing)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting rebalancing: %s", err)
+		}
+	} else {
+		d.Set("rebalancing", nil)
+	}
 	d.Set("zookeeper_connect_string", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectString)))
 	d.Set("zookeeper_connect_string_tls", sortEndpointsString(aws.ToString(cluster.ZookeeperConnectStringTls)))
 
@@ -987,6 +1014,34 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) storage: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("rebalancing") {
+		input := kafka.UpdateRebalancingInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+		}
+
+		if v, ok := d.GetOk("rebalancing"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Rebalancing = expandRebalancing(v.([]any)[0].(map[string]any))
+		}
+
+		output, err := conn.UpdateRebalancing(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) rebalancing: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
@@ -1696,6 +1751,20 @@ func expandNodeExporterInfo(tfMap map[string]any) *types.NodeExporterInfo {
 	return apiObject
 }
 
+func expandRebalancing(tfMap map[string]any) *types.Rebalancing {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.Rebalancing{}
+
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
+		apiObject.Status = types.RebalancingStatus(v)
+	}
+
+	return apiObject
+}
+
 func flattenBrokerNodeGroupInfo(apiObject *types.BrokerNodeGroupInfo) map[string]any {
 	if apiObject == nil {
 		return nil
@@ -2128,6 +2197,18 @@ func flattenNodeExporter(apiObject *types.NodeExporter) map[string]any {
 
 	if v := apiObject.EnabledInBroker; v != nil {
 		tfMap["enabled_in_broker"] = aws.ToBool(v)
+	}
+
+	return tfMap
+}
+
+func flattenRebalancing(apiObject *types.Rebalancing) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap

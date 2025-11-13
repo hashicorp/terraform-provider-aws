@@ -6,6 +6,7 @@ package kafka_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -2422,4 +2423,84 @@ resource "aws_msk_cluster" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func TestAccKafkaCluster_rebalancing(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// Skip this test by default as it requires MSK Express brokers which:
+	// - Are only available in specific regions
+	// - Require specific instance types
+	// - May not be available in all test accounts
+	// To run this test, set the environment variable: TF_ACC_MSK_EXPRESS_BROKER_ENABLED=1
+	if os.Getenv("TF_ACC_MSK_EXPRESS_BROKER_ENABLED") == "" {
+		t.Skip("Skipping test - requires MSK Express broker support. Set TF_ACC_MSK_EXPRESS_BROKER_ENABLED=1 to run.")
+	}
+
+	var cluster types.ClusterInfo
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_rebalancing(rName, "ACTIVE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "rebalancing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rebalancing.0.status", "ACTIVE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_rebalancing(rName, "PAUSED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "rebalancing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rebalancing.0.status", "PAUSED"),
+				),
+			},
+		},
+	})
+}
+
+func testAccClusterConfig_rebalancing(rName, status string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "3.6.0"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    instance_type   = "express.m7g.large"
+    client_subnets  = aws_subnet.test[*].id
+    security_groups = [aws_security_group.test.id]
+  }
+
+  rebalancing {
+    status = %[2]q
+  }
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS"
+      in_cluster    = true
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, status))
 }
