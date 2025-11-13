@@ -18,6 +18,7 @@ import (
 
 // @SDKResource("aws_ec2_serial_console_access", name="Serial Console Access")
 // @SingletonIdentity
+// @WrappedImport(false)
 // @IdentityVersion(1, sdkV2IdentityUpgraders="serialConsoleAccessIdentityUpgradeV0")
 // @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
@@ -31,6 +32,10 @@ func resourceSerialConsoleAccess() *schema.Resource {
 		ReadWithoutTimeout:   resourceSerialConsoleAccessRead,
 		UpdateWithoutTimeout: resourceSerialConsoleAccessUpdate,
 		DeleteWithoutTimeout: resourceSerialConsoleAccessDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrEnabled: {
