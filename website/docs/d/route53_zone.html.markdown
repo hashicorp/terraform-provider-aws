@@ -56,9 +56,11 @@ This data source supports the following arguments:
 * `vpc_id` - (Optional, string) Filter to private Hosted Zones associated with the specified `vpc_id`.
 * `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired Hosted Zone.
 
-The arguments of this data source act as filters for querying the available
-Hosted Zone. `zone_id` and `name` are mutually exclusive. The given filter must match exactly one
-Hosted Zone. If you use `name` field for private Hosted Zone, you need to add `private_zone` field to `true`.
+The arguments of this data source act as filters for querying the available Hosted Zone.
+
+- The given filter must match exactly one Hosted Zone.
+- `zone_id` and `name` are mutually exclusive.
+- If you use the `name` argument for a private Hosted Zone, you need to set the `private_zone` argument to `true`.
 
 ## Attribute Reference
 

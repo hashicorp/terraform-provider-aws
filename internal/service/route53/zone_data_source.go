@@ -73,7 +73,6 @@ func dataSourceZone() *schema.Resource {
 			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"zone_id": {
 				Type:     schema.TypeString,
