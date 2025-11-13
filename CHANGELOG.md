@@ -33,6 +33,7 @@ BUG FIXES:
 
 * provider: Fix situation where refreshes of removed infrastructure appear as errors rather than warnings ([#45022](https://github.com/hashicorp/terraform-provider-aws/issues/45022))
 * resource/aws_ec2_image_block_public_access: Add `region` argument ([#45023](https://github.com/hashicorp/terraform-provider-aws/issues/45023))
+* resource/aws_ec2_serial_console_access: Add `region` argument ([#45064](https://github.com/hashicorp/terraform-provider-aws/issues/45064))
 * resource/aws_emrcontainers_job_template: Fix `ValidationException: Value null at 'jobTemplateData.configurationOverrides.monitoringConfiguration.cloudWatchMonitoringConfiguration.logGroupName' failed to satisfy constraint: Member must not be null` error ([#45029](https://github.com/hashicorp/terraform-provider-aws/issues/45029))
 * resource/aws_emrcontainers_job_template: Fix `setting job_template_data: job_template_data.0.configuration_overrides.0.application_configuration.0: '' expected a map, got 'slice'` error ([#45029](https://github.com/hashicorp/terraform-provider-aws/issues/45029))
 * resource/aws_emrcontainers_job_template: Mark `job_template_data.job_driver.configuration_overrides.monitoring_configuration.persistent_app_ui` argument as computed ([#45029](https://github.com/hashicorp/terraform-provider-aws/issues/45029))
