@@ -74,7 +74,3 @@ This action supports the following arguments:
 * `application_arn` - (Required) The ARN of the SSO application to rename. This uniquely identifies the application within your AWS account.
 * `new_name` - (Required) The new name for the SSO application. The name must be unique within the SSO instance and follow AWS naming conventions.
 * `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-
-## Import
-
-This action cannot be imported as it is an imperative operation that modifies existing resources.
