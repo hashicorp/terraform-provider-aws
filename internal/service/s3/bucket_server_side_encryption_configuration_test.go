@@ -53,7 +53,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketServerSideEncryptionConfiguration_blockedEncryptionTypesList(t *testing.T) {
+func TestAccS3BucketServerSideEncryptionConfiguration_blockedEncryptionTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
@@ -65,7 +65,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_blockedEncryptionTypesList
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_blockedEncryptionTypesList(rName, `["SSE-C"]`),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_blockedEncryptionTypes(rName, `["SSE-C"]`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
@@ -82,7 +82,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_blockedEncryptionTypesList
 				},
 			},
 			{
-				Config: testAccBucketServerSideEncryptionConfigurationConfig_blockedEncryptionTypesList(rName, `["NONE"]`),
+				Config: testAccBucketServerSideEncryptionConfigurationConfig_blockedEncryptionTypes(rName, `["NONE"]`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
@@ -675,7 +675,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
 `, rName, enabled)
 }
 
-func testAccBucketServerSideEncryptionConfigurationConfig_blockedEncryptionTypesList(rName, blockedTypes string) string {
+func testAccBucketServerSideEncryptionConfigurationConfig_blockedEncryptionTypes(rName, blockedTypes string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket %[1]s"
