@@ -18,7 +18,7 @@ import (
 
 // @SDKResource("aws_ec2_serial_console_access", name="Serial Console Access")
 // @SingletonIdentity
-// @IdentityVersion(1, identityUpgraders="serialConsoleAccessAccessIdentityUpgradeV0")
+// @IdentityVersion(1, sdkV2IdentityUpgraders="serialConsoleAccessAccessIdentityUpgradeV0")
 // @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
