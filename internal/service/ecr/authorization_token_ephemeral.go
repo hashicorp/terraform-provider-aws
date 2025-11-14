@@ -5,6 +5,7 @@ package ecr
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -13,14 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	ERNameAuthorizationToken = "Ephemeral ECR Authorization Token"
 )
 
 // @EphemeralResource(aws_ecr_authorization_token, name="AuthorizationToken")
@@ -69,18 +66,12 @@ func (e *authorizationTokenEphemeralResource) Open(ctx context.Context, request 
 
 	out, err := conn.GetAuthorizationToken(ctx, &input)
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ECR, create.ErrActionReading, ERNameAuthorizationToken, "", err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
 	}
 
 	if len(out.AuthorizationData) == 0 {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ECR, create.ErrActionReading, ERNameAuthorizationToken, "", nil),
-			"no authorization data returned",
-		)
+		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("no authorization data returned"))
 		return
 	}
 
@@ -90,19 +81,13 @@ func (e *authorizationTokenEphemeralResource) Open(ctx context.Context, request 
 	proxyEndpoint := aws.ToString(authorizationData.ProxyEndpoint)
 	authBytes, err := itypes.Base64Decode(authorizationToken)
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ECR, create.ErrActionReading, ERNameAuthorizationToken, "", err),
-			"decoding ECR authorization token: "+err.Error(),
-		)
+		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("decoding ECR authorization token: %w", err))
 		return
 	}
 
 	basicAuthorization := strings.Split(string(authBytes), ":")
 	if len(basicAuthorization) != 2 {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ECR, create.ErrActionReading, ERNameAuthorizationToken, "", nil),
-			"unknown ECR authorization token format",
-		)
+		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("unknown ECR authorization token format"))
 		return
 	}
 
