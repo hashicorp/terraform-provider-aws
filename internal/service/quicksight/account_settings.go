@@ -28,8 +28,6 @@ import (
 )
 
 // @FrameworkResource("aws_quicksight_account_settings", name="Account Settings")
-// @Testing(identityVersion="0;v6.0.0")
-// @Testing(identityVersion="1;v6.22.0")
 func newAccountSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accountSettingsResource{}
 
