@@ -52,7 +52,7 @@ func (r *domainVerificationResource) Schema(ctx context.Context, request resourc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"domain_name": schema.StringAttribute{
+			names.AttrDomainName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
