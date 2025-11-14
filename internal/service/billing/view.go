@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -269,6 +270,13 @@ func (r *resourceView) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
+	sourceViews, err := findSourceViewsByArn(ctx, conn, state.ARN.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
+		return
+	}
+	state.SourceViews = flex.FlattenFrameworkStringValueListOfString(ctx, sourceViews)
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -382,6 +390,29 @@ func findViewByARN(ctx context.Context, conn *billing.Client, arn string) (*awst
 	}
 
 	return out.BillingView, nil
+}
+
+func findSourceViewsByArn(ctx context.Context, conn *billing.Client, arn string) ([]string, error) {
+	sourceViews := make([]string, 0)
+
+	sourceViewsPag := billing.NewListSourceViewsForBillingViewPaginator(conn, &billing.ListSourceViewsForBillingViewInput{
+		Arn: aws.String(arn),
+	})
+
+	for sourceViewsPag.HasMorePages() {
+		sourceView, err := sourceViewsPag.NextPage(ctx)
+		if err != nil {
+			tflog.Error(ctx, "Error listing source views for billing view", map[string]any{
+				names.AttrARN: arn,
+				"error":       err.Error(),
+			})
+			return nil, err
+		}
+
+		sourceViews = append(sourceViews, sourceView.SourceViews...)
+	}
+
+	return sourceViews, nil
 }
 
 func statusBillingView(conn *billing.Client, arn string) retry.StateRefreshFunc {
