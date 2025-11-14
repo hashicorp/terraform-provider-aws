@@ -108,6 +108,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"codeEditorAppSettings":                    testAccSpace_codeEditorAppSettings,
 			"storageSettings":                          testAccSpace_storageSettings,
 			"customFileSystem":                         testAccSpace_customFileSystem,
+			"remoteAccess":                             testAccSpace_remoteAccess,
 		},
 		"UserProfile": {
 			acctest.CtBasic:                            testAccUserProfile_basic,
