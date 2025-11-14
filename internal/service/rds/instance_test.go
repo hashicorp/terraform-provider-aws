@@ -14132,6 +14132,14 @@ func testAccInstanceConfig_BlueGreenDeployment_engineVersion(rName string, updat
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
 		fmt.Sprintf(`
+provider "aws" {
+  default_tags {
+    tags = {
+      Terraform = "True"
+    }
+  }
+}
+
 resource "aws_db_instance" "test" {
   identifier              = %[1]q
   allocated_storage       = 10
