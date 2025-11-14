@@ -12,6 +12,8 @@ Retrieve an authentication token to communicate with an ECR repository.
 
 ~> **NOTE:** Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral).
 
+~> **NOTE:** The returned authorization token can be used to access any Amazon ECR registry that the IAM principal has access to. The token's permissions scope is determined by the IAM principal's permissions, not by any specific registry.
+
 ## Example Usage
 
 ```terraform
@@ -31,7 +33,6 @@ provider "docker" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `registry_id` - (Optional) AWS account ID of the ECR Repository. If not specified the default account is assumed.
 
 ## Attribute Reference
 

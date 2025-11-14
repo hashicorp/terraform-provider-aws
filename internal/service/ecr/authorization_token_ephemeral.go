@@ -42,9 +42,6 @@ func (e *authorizationTokenEphemeralResource) Schema(ctx context.Context, _ ephe
 			"expires_at": schema.StringAttribute{
 				Computed: true,
 			},
-			"registry_id": schema.StringAttribute{
-				Optional: true,
-			},
 			names.AttrPassword: schema.StringAttribute{
 				Computed:  true,
 				Sensitive: true,
@@ -68,12 +65,9 @@ func (e *authorizationTokenEphemeralResource) Open(ctx context.Context, request 
 		return
 	}
 
-	input := &ecr.GetAuthorizationTokenInput{}
-	if !data.RegistryID.IsNull() {
-		input.RegistryIds = []string{data.RegistryID.ValueString()}
-	}
+	input := ecr.GetAuthorizationTokenInput{}
 
-	out, err := conn.GetAuthorizationToken(ctx, input)
+	out, err := conn.GetAuthorizationToken(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ECR, create.ErrActionReading, ERNameAuthorizationToken, "", err),
@@ -130,6 +124,5 @@ type authorizationTokenEphemeralResourceModel struct {
 	ExpiresAt          types.String `tfsdk:"expires_at"`
 	Password           types.String `tfsdk:"password"`
 	ProxyEndpoint      types.String `tfsdk:"proxy_endpoint"`
-	RegistryID         types.String `tfsdk:"registry_id"`
 	UserName           types.String `tfsdk:"user_name"`
 }
