@@ -73,6 +73,32 @@ func TestParseRecordID(t *testing.T) {
 	}
 }
 
+func TestInvocationResourceIDCreation(t *testing.T) {
+	t.Parallel()
+
+	functionName := "my_test_function"
+	qualifier := "$LATEST"
+	resultHash := "b326b5062b2f0e69046810717534cb09"
+
+	expectedID := "my_test_function,$LATEST,b326b5062b2f0e69046810717534cb09"
+
+	// Test parsing the expected ID format
+	parsedFunctionName, parsedQualifier, parsedResultHash, err := tflambda.InvocationParseResourceID(expectedID)
+	if err != nil {
+		t.Fatalf("unexpected error parsing resource ID: %v", err)
+	}
+
+	if parsedFunctionName != functionName {
+		t.Fatalf("expected function name: %s, got: %s", functionName, parsedFunctionName)
+	}
+	if parsedQualifier != qualifier {
+		t.Fatalf("expected qualifier: %s, got: %s", qualifier, parsedQualifier)
+	}
+	if parsedResultHash != resultHash {
+		t.Fatalf("expected result hash: %s, got: %s", resultHash, parsedResultHash)
+	}
+}
+
 func TestAccLambdaInvocation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
@@ -754,30 +780,4 @@ resource "aws_ssm_parameter" "result_key1" {
   value = try(jsondecode(%[2]s.result).key1, "")
 }
 `, rName, resourceName)
-}
-
-func TestInvocationResourceIDCreation(t *testing.T) {
-	t.Parallel()
-
-	functionName := "my_test_function"
-	qualifier := "$LATEST"
-	resultHash := "b326b5062b2f0e69046810717534cb09"
-
-	expectedID := "my_test_function,$LATEST,b326b5062b2f0e69046810717534cb09"
-
-	// Test parsing the expected ID format
-	parsedFunctionName, parsedQualifier, parsedResultHash, err := tflambda.InvocationParseResourceID(expectedID)
-	if err != nil {
-		t.Fatalf("unexpected error parsing resource ID: %v", err)
-	}
-
-	if parsedFunctionName != functionName {
-		t.Fatalf("expected function name: %s, got: %s", functionName, parsedFunctionName)
-	}
-	if parsedQualifier != qualifier {
-		t.Fatalf("expected qualifier: %s, got: %s", qualifier, parsedQualifier)
-	}
-	if parsedResultHash != resultHash {
-		t.Fatalf("expected result hash: %s, got: %s", resultHash, parsedResultHash)
-	}
 }
