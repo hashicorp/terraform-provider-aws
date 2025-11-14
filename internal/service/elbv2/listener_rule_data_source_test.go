@@ -373,6 +373,98 @@ func TestAccELBV2ListenerRuleDataSource_actionAuthenticateOIDC(t *testing.T) {
 	})
 }
 
+func TestAccELBV2ListenerRuleDataSource_actionAuthenticateJWTValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	dataSourceName := "data.aws_lb_listener_rule.test"
+	resourceName := "aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_actionAuthenticateJWTValidation(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"authenticate_cognito": knownvalue.ListExact([]knownvalue.Check{}),
+							"authenticate_oidc":    knownvalue.NotNull(),
+							"fixed_response":       knownvalue.ListExact([]knownvalue.Check{}),
+							"forward":              knownvalue.ListExact([]knownvalue.Check{}),
+							"jwt_validation":       knownvalue.NotNull(),
+							"order":                knownvalue.NotNull(),
+							"redirect":             knownvalue.ListExact([]knownvalue.Check{}),
+							names.AttrType:         knownvalue.NotNull(),
+						}),
+						knownvalue.NotNull(),
+					})),
+
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("order"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("order"),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey(names.AttrType),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey(names.AttrType),
+						compare.ValuesSame(),
+					),
+
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("jwt_validation").AtSliceIndex(0), knownvalue.NotNull()),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("jwt_validation").AtSliceIndex(0).AtMapKey(names.AttrIssuer),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("jwt_validation").AtSliceIndex(0).AtMapKey(names.AttrIssuer),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("jwt_validation").AtSliceIndex(0).AtMapKey("jwks_endpoint"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("jwt_validation").AtSliceIndex(0).AtMapKey("jwks_endpoint"),
+						compare.ValuesSame(),
+					),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("jwt_validation").AtSliceIndex(0).AtMapKey("additional_claim"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(
+						dataSourceName,
+						tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("jwt_validation").AtSliceIndex(0).AtMapKey("additional_claim"),
+						knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"format": knownvalue.StringExact("string-array"),
+								"name":   knownvalue.StringExact("claim_name1"),
+								"values": knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact(acctest.CtValue1),
+									knownvalue.StringExact(acctest.CtValue2),
+								}),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"format": knownvalue.StringExact("single-string"),
+								"name":   knownvalue.StringExact("claim_name2"),
+								"values": knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.StringExact(acctest.CtValue1),
+								}),
+							}),
+						}),
+					),
+				},
+			},
+		},
+	})
+}
+
 func TestAccELBV2ListenerRuleDataSource_actionFixedResponse(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1160,6 +1252,55 @@ resource "aws_cognito_user_pool_client" "test" {
 resource "aws_cognito_user_pool_domain" "test" {
   domain       = %[1]q
   user_pool_id = aws_cognito_user_pool.test.id
+}
+`, rName))
+}
+
+func testAccListenerRuleDataSourceConfig_actionAuthenticateJWTValidation(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerRuleConfig_baseWithHTTPSListener(rName, key, certificate),
+		fmt.Sprintf(`
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type = "jwt-validation"
+
+    jwt_validation {
+	  issuer        = "https://example.com"
+	  jwks_endpoint = "https://example.com/.well-known/jwks.json"
+      additional_claim {
+        format = "string-array"
+        name   = "claim_name1"
+        values = ["value1", "value2"]
+      }
+      additional_claim {
+        format = "single-string"
+        name   =  "claim_name2"
+        values = ["value1"]
+      }
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
