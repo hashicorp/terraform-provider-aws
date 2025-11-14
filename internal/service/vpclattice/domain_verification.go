@@ -235,8 +235,3 @@ type domainVerificationResourceModel struct {
 	TxtRecordName    types.String                                    `tfsdk:"txt_record_name"`
 	TxtRecordValue   types.String                                    `tfsdk:"txt_record_value"`
 }
-
-type txtMethodConfigModel struct {
-	Name  types.String `tfsdk:"name"`
-	Value types.String `tfsdk:"value"`
-}
