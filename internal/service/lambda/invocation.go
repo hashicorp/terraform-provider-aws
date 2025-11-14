@@ -10,9 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
@@ -48,7 +48,7 @@ func resourceInvocation() *schema.Resource {
 			},
 		},
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				functionName, qualifier, _, err := invocationParseResourceID(d.Id())
 				if err != nil {
 					return nil, err
@@ -285,12 +285,12 @@ func invocationParseResourceID(id string) (string, string, string, error) {
 	resultHash := parts[2]
 
 	// Validate qualifier format
-	if qualifier != "$LATEST" && !regexp.MustCompile(`^[0-9]+$`).MatchString(qualifier) {
+	if qualifier != "$LATEST" && !regexache.MustCompile(`^[0-9]+$`).MatchString(qualifier) {
 		return "", "", "", fmt.Errorf("invalid qualifier format: %s, expected $LATEST or numeric version", qualifier)
 	}
 
 	// Validate hash format (should be MD5 - 32 hex chars)
-	if !regexp.MustCompile(`^[a-f0-9]{32}$`).MatchString(resultHash) {
+	if !regexache.MustCompile(`^[a-f0-9]{32}$`).MatchString(resultHash) {
 		return "", "", "", fmt.Errorf("invalid result hash format: %s, expected 32-character MD5 hash", resultHash)
 	}
 
