@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_redshift_event_subscription", name="Event Subscription")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.EventSubscription")
 func resourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSubscriptionCreate,

@@ -94,6 +94,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newAllowedImagesSettingsResource,
+			TypeName: "aws_ec2_allowed_images_settings",
+			Name:     "Allowed Images Settings",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newCapacityBlockReservationResource,
 			TypeName: "aws_ec2_capacity_block_reservation",
 			Name:     "Capacity Block Reservation",
@@ -1031,9 +1037,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceImageBlockPublicAccess,
 			TypeName: "aws_ec2_image_block_public_access",
 			Name:     "Image Block Public Access",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalSingletonIdentity(
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(
 				inttypes.WithV6_0SDKv2Fix(),
+				inttypes.WithVersion(1),
+				inttypes.WithSDKv2IdentityUpgraders(imageBlockPublicAccessIdentityUpgradeV0),
 			),
 		},
 		{
@@ -1094,9 +1102,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceSerialConsoleAccess,
 			TypeName: "aws_ec2_serial_console_access",
 			Name:     "Serial Console Access",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalSingletonIdentity(
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(
 				inttypes.WithV6_0SDKv2Fix(),
+				inttypes.WithVersion(1),
+				inttypes.WithSDKv2IdentityUpgraders(serialConsoleAccessIdentityUpgradeV0),
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
