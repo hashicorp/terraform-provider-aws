@@ -129,7 +129,7 @@ func resourceTargetGroup() *schema.Resource {
 							StateFunc: func(v any) string {
 								return strings.ToUpper(v.(string))
 							},
-							ValidateFunc:     validation.StringInSlice(healthCheckProtocolEnumValues(), true),
+							ValidateFunc:     validation.StringInSlice(enum.Slice(healthCheckProtocolEnumValues()...), true),
 							DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
 						},
 						names.AttrTimeout: {
