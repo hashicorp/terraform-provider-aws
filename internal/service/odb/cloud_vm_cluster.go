@@ -485,8 +485,7 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 		)
 		return
 	}
-	hostnamePrefix := strings.Split(*input.Hostname, "-")[0]
-	plan.HostnamePrefix = flex.StringValueToFramework(ctx, hostnamePrefix)
+	plan.HostnamePrefix = flex.StringToFramework(ctx, input.Hostname)
 	plan.HostnamePrefixComputed = flex.StringToFramework(ctx, createdVmCluster.Hostname)
 	//scan listener port not returned by API directly
 	plan.ScanListenerPortTcp = flex.Int32ToFramework(ctx, createdVmCluster.ListenerPort)
@@ -528,8 +527,8 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 		)
 		return
 	}
-	hostnamePrefix := strings.Split(*out.Hostname, "-")[0]
-	state.HostnamePrefix = types.StringValue(hostnamePrefix)
+	hostnamePrefix := computeHostnamePrefix(out.Hostname)
+	state.HostnamePrefix = flex.StringToFramework(ctx, hostnamePrefix)
 	state.HostnamePrefixComputed = types.StringValue(*out.Hostname)
 	//scan listener port not returned by API directly
 	state.ScanListenerPortTcp = flex.Int32ToFramework(ctx, out.ListenerPort)
@@ -584,6 +583,16 @@ func (r *resourceCloudVmCluster) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
+// computes hostname prefix from hostname prefix computed value.
+func computeHostnamePrefix(hostnamePrefixComputed *string) *string {
+	suffixIndex := strings.LastIndex(*hostnamePrefixComputed, "-")
+	if suffixIndex != -1 {
+		actualHostnamePrefix := (*hostnamePrefixComputed)[:suffixIndex]
+		return &actualHostnamePrefix
+	} else {
+		return hostnamePrefixComputed
+	}
+}
 func waitCloudVmClusterCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudVmCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(odbtypes.ResourceStatusProvisioning),
