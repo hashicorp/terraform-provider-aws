@@ -535,7 +535,6 @@ func TestAccTimestreamInfluxDBDBCluster_dbParameterGroupV3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "db_parameter_group_identifier", "InfluxDBV3Core"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_type"),
-					// Verify cluster was created successfully without requiring allocated_storage, bucket, organization, username, or password
 				),
 			},
 			{
@@ -638,6 +637,7 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
   port                   = 8086
   bucket                 = "initial"
   organization           = "organization"
+  deployment_type        = "MULTI_NODE_READ_REPLICAS"
 }
 `, rName))
 }
@@ -857,15 +857,59 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 `, rName, failoverMode))
 }
 
-// Configuration for InfluxDB V3 cluster without optional fields.
 func testAccDBClusterConfig_dbParameterGroupV3(rName string) string {
 	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
+  security_group_id = aws_security_group.test.id
+}
+
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                          = %[1]q
   vpc_subnet_ids                = aws_subnet.test[*].id
   vpc_security_group_ids        = [aws_security_group.test.id]
-  db_instance_type              = "db.influx.large"
+  db_instance_type              = "db.influx.medium"
   db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
 }
 `, rName))
 }
