@@ -23,7 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	invocationResourceIDPartCount = 3
 )
 
 // @SDKResource("aws_lambda_invocation", name="Invocation")
@@ -44,13 +49,13 @@ func resourceInvocation() *schema.Resource {
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				parts := invocationParseResourceID(d.Id())
-				if parts[0] == "" || parts[1] == "" || parts[2] == "" {
-					return nil, fmt.Errorf("unexpected format of ID (%q), expected FUNCTION_NAME_QUALIFIER_RESULTHASH (e.g. function_name_test_$LATEST_md5HASH)", d.Id())
+				functionName, qualifier, _, err := invocationParseResourceID(d.Id())
+				if err != nil {
+					return nil, err
 				}
 
-				d.Set("function_name", parts[0])
-				d.Set("qualifier", parts[1])
+				d.Set("function_name", functionName)
+				d.Set("qualifier", qualifier)
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -219,7 +224,13 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, string(output.Payload))
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(payload)))
+	resultHash := fmt.Sprintf("%x", md5.Sum(payload))
+	id, err := flex.FlattenResourceId([]string{functionName, qualifier, resultHash}, invocationResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.SetId(id)
 	d.Set("result", string(output.Payload))
 
 	return diags
@@ -263,15 +274,25 @@ func customizeDiffInputChangeWithCRUDScope(_ context.Context, diff *schema.Resou
 	return nil
 }
 
-func invocationParseResourceID(id string) [3]string {
-	r, err := regexp.Compile(`(?P<functionName>.*)_(?P<qualifier>[0-9]*|\$LATEST)_(?P<result>.*)`)
+func invocationParseResourceID(id string) (string, string, string, error) {
+	parts, err := flex.ExpandResourceId(id, invocationResourceIDPartCount, false)
 	if err != nil {
-		return [3]string{"", "", ""}
+		return "", "", "", err
 	}
-	if !r.MatchString(id) {
-		return [3]string{"", "", ""}
-	}
-	parts := r.FindStringSubmatch(id)
 
-	return [3]string{parts[1], parts[2], parts[3]}
+	functionName := parts[0]
+	qualifier := parts[1]
+	resultHash := parts[2]
+
+	// Validate qualifier format
+	if qualifier != "$LATEST" && !regexp.MustCompile(`^[0-9]+$`).MatchString(qualifier) {
+		return "", "", "", fmt.Errorf("invalid qualifier format: %s, expected $LATEST or numeric version", qualifier)
+	}
+
+	// Validate hash format (should be MD5 - 32 hex chars)
+	if !regexp.MustCompile(`^[a-f0-9]{32}$`).MatchString(resultHash) {
+		return "", "", "", fmt.Errorf("invalid result hash format: %s, expected 32-character MD5 hash", resultHash)
+	}
+
+	return functionName, qualifier, resultHash, nil
 }
