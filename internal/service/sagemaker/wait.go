@@ -213,11 +213,11 @@ func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) 
 	return err
 }
 
-func waitImageVersionCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageVersionOutput, error) {
+func waitImageVersionCreatedByVersion(ctx context.Context, conn *sagemaker.Client, name string, version int32) (*sagemaker.DescribeImageVersionOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageVersionStatusCreating),
 		Target:  enum.Slice(awstypes.ImageVersionStatusCreated),
-		Refresh: statusImageVersionByName(ctx, conn, name),
+		Refresh: statusImageVersionByTwoPartKey(ctx, conn, name, version),
 		Timeout: imageVersionCreatedTimeout,
 	}
 
