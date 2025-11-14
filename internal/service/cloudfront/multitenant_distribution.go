@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -420,10 +421,16 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"connection_attempts": schema.Int32Attribute{
 							Optional: true,
 							Computed: true,
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.UseStateForUnknown(),
+							},
 						},
 						"connection_timeout": schema.Int32Attribute{
 							Optional: true,
 							Computed: true,
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.UseStateForUnknown(),
+							},
 						},
 						names.AttrDomainName: schema.StringAttribute{
 							Required: true,
@@ -440,6 +447,9 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"response_completion_timeout": schema.Int32Attribute{
 							Optional: true,
 							Computed: true,
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.UseStateForUnknown(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
