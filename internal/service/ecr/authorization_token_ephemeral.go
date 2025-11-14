@@ -57,7 +57,7 @@ func (e *authorizationTokenEphemeralResource) Open(ctx context.Context, request 
 	conn := e.Meta().ECRClient(ctx)
 	data := authorizationTokenEphemeralResourceModel{}
 
-	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -100,7 +100,7 @@ func (e *authorizationTokenEphemeralResource) Open(ctx context.Context, request 
 	data.UserName = types.StringValue(userName)
 	data.Password = types.StringValue(password)
 
-	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.Result.Set(ctx, &data))
 }
 
 type authorizationTokenEphemeralResourceModel struct {
