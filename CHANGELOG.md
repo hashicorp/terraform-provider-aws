@@ -1,5 +1,14 @@
 ## 6.22.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_route53_zone: Support filtering by `tags` only or by `vpc_id` only ([#39671](https://github.com/hashicorp/terraform-provider-aws/issues/39671))
+* resource/aws_vpn_connection: Add `tunnel_bandwidth` argument to support higher bandwidth tunnels ([#45070](https://github.com/hashicorp/terraform-provider-aws/issues/45070))
+
+BUG FIXES:
+
+* resource/aws_elastic_beanstalk_configuration_template: Fix updates not applying by including `ResourceName` for option settings and preventing duplicate add/remove operations ([#45077](https://github.com/hashicorp/terraform-provider-aws/issues/45077))
+
 ## 6.21.0 (November 13, 2025)
 
 BREAKING CHANGES:
