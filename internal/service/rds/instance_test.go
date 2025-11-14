@@ -14135,7 +14135,7 @@ func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string, excl
 	}
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		instanceConfig,,
+		instanceConfig,
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier              = %[1]q
