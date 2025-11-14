@@ -14,7 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -70,13 +72,6 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"domains": schema.SetAttribute{
-				ElementType: types.StringType,
-				Required:    true,
-				Validators: []validator.Set{
-					setvalidator.SizeAtLeast(1),
-				},
-			},
 			names.AttrEnabled: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -118,7 +113,7 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"geo_restriction": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[geoRestrictionModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[geoRestrictionCustomizationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -151,7 +146,7 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 							},
 						},
 						"web_acl": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[webAclModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[webAclCustomizationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -192,6 +187,16 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 					},
 				},
 			},
+			"domains": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[domainItemModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"domain": schema.StringAttribute{
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrParameters: schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[parameterModel](ctx),
 				NestedObject: schema.NestedBlockObject{
@@ -214,7 +219,7 @@ type distributionTenantResourceModel struct {
 	ConnectionGroupID         types.String                                                    `tfsdk:"connection_group_id"`
 	Customizations            fwtypes.ListNestedObjectValueOf[customizationsModel]            `tfsdk:"customizations"`
 	DistributionID            types.String                                                    `tfsdk:"distribution_id"`
-	Domains                   fwtypes.SetValueOf[types.String]                                `tfsdk:"domains"`
+	Domains                   fwtypes.SetNestedObjectValueOf[domainItemModel]                 `tfsdk:"domains"`
 	Enabled                   types.Bool                                                      `tfsdk:"enabled"`
 	ETag                      types.String                                                    `tfsdk:"etag"`
 	ID                        types.String                                                    `tfsdk:"id"`
@@ -230,13 +235,26 @@ type distributionTenantResourceModel struct {
 }
 
 type customizationsModel struct {
-	GeoRestriction fwtypes.ListNestedObjectValueOf[geoRestrictionModel] `tfsdk:"geo_restriction"`
-	Certificate    fwtypes.ListNestedObjectValueOf[certificateModel]    `tfsdk:"certificate"`
-	WebAcl         fwtypes.ListNestedObjectValueOf[webAclModel]         `tfsdk:"web_acl"`
+	GeoRestriction fwtypes.ListNestedObjectValueOf[geoRestrictionCustomizationModel] `tfsdk:"geo_restriction"`
+	Certificate    fwtypes.ListNestedObjectValueOf[certificateModel]                 `tfsdk:"certificate"`
+	WebAcl         fwtypes.ListNestedObjectValueOf[webAclCustomizationModel]         `tfsdk:"web_acl"`
 }
 
-type geoRestrictionModel struct {
-	Locations       fwtypes.SetValueOf[types.String]                `tfsdk:"locations"`
+// Implement fwflex.Flattener interface
+var (
+	_ fwflex.Flattener = &customizationsModel{}
+	_ fwflex.Flattener = &geoRestrictionCustomizationModel{}
+	_ fwflex.Flattener = &certificateModel{}
+	_ fwflex.Flattener = &webAclCustomizationModel{}
+	_ fwflex.Flattener = &managedCertificateRequestModel{}
+)
+
+type domainItemModel struct {
+	Domain types.String `tfsdk:"domain"`
+}
+
+type geoRestrictionCustomizationModel struct {
+	Locations       fwtypes.SetOfString                             `tfsdk:"locations"`
 	RestrictionType fwtypes.StringEnum[awstypes.GeoRestrictionType] `tfsdk:"restriction_type"`
 }
 
@@ -244,7 +262,7 @@ type certificateModel struct {
 	ARN fwtypes.ARN `tfsdk:"arn"`
 }
 
-type webAclModel struct {
+type webAclCustomizationModel struct {
 	Action fwtypes.StringEnum[awstypes.CustomizationActionType] `tfsdk:"action"`
 	ARN    fwtypes.ARN                                          `tfsdk:"arn"`
 }
@@ -296,6 +314,15 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	// Manually flatten domains and parameters
+	var d diag.Diagnostics
+	data.Domains, d = flattenDomains(ctx, output.DistributionTenant.Domains)
+	resp.Diagnostics.Append(d...)
+	data.Parameters, d = flattenParameters(ctx, output.DistributionTenant.Parameters)
+	resp.Diagnostics.Append(d...)
+	data.Customizations, d = flattenCustomizations(ctx, output.DistributionTenant.Customizations)
+	resp.Diagnostics.Append(d...)
+
 	// Set fields that fwflex.Flatten might not handle correctly
 	data.ID = fwflex.StringToFramework(ctx, output.DistributionTenant.Id)
 	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.DistributionTenant.LastModifiedTime)
@@ -343,6 +370,14 @@ func (r *distributionTenantResource) Create(ctx context.Context, req resource.Cr
 				return
 			}
 
+			// Manually flatten domains and parameters
+			data.Domains, d = flattenDomains(ctx, refreshedOutput.DistributionTenant.Domains)
+			resp.Diagnostics.Append(d...)
+			data.Parameters, d = flattenParameters(ctx, refreshedOutput.DistributionTenant.Parameters)
+			resp.Diagnostics.Append(d...)
+			data.Customizations, d = flattenCustomizations(ctx, refreshedOutput.DistributionTenant.Customizations)
+			resp.Diagnostics.Append(d...)
+
 			data.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
 			data.LastModifiedTime = fwflex.TimeToFramework(ctx, refreshedOutput.DistributionTenant.LastModifiedTime)
 		}
@@ -380,6 +415,15 @@ func (r *distributionTenantResource) Read(ctx context.Context, req resource.Read
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Manually flatten domains and parameters
+	var d diag.Diagnostics
+	data.Domains, d = flattenDomains(ctx, tenant.Domains)
+	resp.Diagnostics.Append(d...)
+	data.Parameters, d = flattenParameters(ctx, tenant.Parameters)
+	resp.Diagnostics.Append(d...)
+	data.Customizations, d = flattenCustomizations(ctx, tenant.Customizations)
+	resp.Diagnostics.Append(d...)
 
 	// Set computed fields that need special handling
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
@@ -487,6 +531,15 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 					return
 				}
 
+				// Manually flatten domains and parameters
+				var d diag.Diagnostics
+				new.Domains, d = flattenDomains(ctx, refreshedOutput.DistributionTenant.Domains)
+				resp.Diagnostics.Append(d...)
+				new.Parameters, d = flattenParameters(ctx, refreshedOutput.DistributionTenant.Parameters)
+				resp.Diagnostics.Append(d...)
+				new.Customizations, d = flattenCustomizations(ctx, refreshedOutput.DistributionTenant.Customizations)
+				resp.Diagnostics.Append(d...)
+
 				new.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
 				new.LastModifiedTime = fwflex.TimeToFramework(ctx, refreshedOutput.DistributionTenant.LastModifiedTime)
 			}
@@ -503,6 +556,15 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		// Manually flatten domains and parameters
+		var d diag.Diagnostics
+		new.Domains, d = flattenDomains(ctx, output.DistributionTenant.Domains)
+		resp.Diagnostics.Append(d...)
+		new.Parameters, d = flattenParameters(ctx, output.DistributionTenant.Parameters)
+		resp.Diagnostics.Append(d...)
+		new.Customizations, d = flattenCustomizations(ctx, output.DistributionTenant.Customizations)
+		resp.Diagnostics.Append(d...)
 
 		new.ETag = fwflex.StringToFramework(ctx, output.ETag)
 	} else {
@@ -523,6 +585,15 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		// Manually flatten domains and parameters
+		var d diag.Diagnostics
+		new.Domains, d = flattenDomains(ctx, getOutput.DistributionTenant.Domains)
+		resp.Diagnostics.Append(d...)
+		new.Parameters, d = flattenParameters(ctx, getOutput.DistributionTenant.Parameters)
+		resp.Diagnostics.Append(d...)
+		new.Customizations, d = flattenCustomizations(ctx, getOutput.DistributionTenant.Customizations)
+		resp.Diagnostics.Append(d...)
 
 		new.ETag = fwflex.StringToFramework(ctx, getOutput.ETag)
 	}
@@ -959,4 +1030,205 @@ func convertDomainResultsToDomainItems(domainResults []awstypes.DomainResult) []
 	}
 
 	return domainItems
+}
+
+// Implement fwflex.Flattener interface methods
+func (m *customizationsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.Customizations); ok {
+		if t.GeoRestrictions != nil {
+			var geoModel geoRestrictionCustomizationModel
+			diags.Append(geoModel.Flatten(ctx, t.GeoRestrictions)...)
+			if diags.HasError() {
+				return diags
+			}
+			geoList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &geoModel)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			m.GeoRestriction = geoList
+		} else {
+			m.GeoRestriction = fwtypes.NewListNestedObjectValueOfNull[geoRestrictionCustomizationModel](ctx)
+		}
+
+		if t.Certificate != nil {
+			var certModel certificateModel
+			diags.Append(certModel.Flatten(ctx, t.Certificate)...)
+			if diags.HasError() {
+				return diags
+			}
+			certList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &certModel)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			m.Certificate = certList
+		} else {
+			m.Certificate = fwtypes.NewListNestedObjectValueOfNull[certificateModel](ctx)
+		}
+
+		if t.WebAcl != nil {
+			var webAclModel webAclCustomizationModel
+			diags.Append(webAclModel.Flatten(ctx, t.WebAcl)...)
+			if diags.HasError() {
+				return diags
+			}
+			webAclList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &webAclModel)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			m.WebAcl = webAclList
+		} else {
+			m.WebAcl = fwtypes.NewListNestedObjectValueOfNull[webAclCustomizationModel](ctx)
+		}
+	}
+
+	return diags
+}
+
+func (m *geoRestrictionCustomizationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.GeoRestrictionCustomization); ok {
+		m.RestrictionType = fwtypes.StringEnumValue(t.RestrictionType)
+
+		// Convert locations slice to SetOfString
+		if len(t.Locations) > 0 {
+			// Filter out empty strings
+			filteredLocations := make([]string, 0, len(t.Locations))
+			for _, location := range t.Locations {
+				if location != "" {
+					filteredLocations = append(filteredLocations, location)
+				}
+			}
+
+			if len(filteredLocations) > 0 {
+				// Convert strings to attr.Value slice
+				elements := make([]attr.Value, len(filteredLocations))
+				for i, location := range filteredLocations {
+					elements[i] = basetypes.NewStringValue(location)
+				}
+				setVal, d := fwtypes.NewSetValueOf[basetypes.StringValue](ctx, elements)
+				diags.Append(d...)
+				m.Locations = setVal
+			} else {
+				m.Locations = fwtypes.NewSetValueOfNull[basetypes.StringValue](ctx)
+			}
+		} else {
+			m.Locations = fwtypes.NewSetValueOfNull[basetypes.StringValue](ctx)
+		}
+	}
+
+	return diags
+}
+
+func (m *certificateModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.Certificate); ok {
+		m.ARN = fwtypes.ARNValue(aws.ToString(t.Arn))
+	}
+
+	return diags
+}
+
+func (m *webAclCustomizationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.WebAclCustomization); ok {
+		m.Action = fwtypes.StringEnumValue(t.Action)
+		m.ARN = fwtypes.ARNValue(aws.ToString(t.Arn))
+	}
+
+	return diags
+}
+
+func (m *managedCertificateRequestModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.ManagedCertificateRequest); ok {
+		m.CertificateTransparencyLoggingPreference = fwtypes.StringEnumValue(t.CertificateTransparencyLoggingPreference)
+		m.PrimaryDomainName = fwflex.StringToFramework(ctx, t.PrimaryDomainName)
+		m.ValidationTokenHost = fwtypes.StringEnumValue(t.ValidationTokenHost)
+	}
+
+	return diags
+}
+
+// flattenDomains converts AWS SDK DomainResult slice to framework ListNestedObjectValueOf
+func flattenDomains(ctx context.Context, domains []awstypes.DomainResult) (fwtypes.SetNestedObjectValueOf[domainItemModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	domainModels := make([]*domainItemModel, 0, len(domains))
+	for _, domainResult := range domains {
+		domainModels = append(domainModels, &domainItemModel{
+			Domain: fwflex.StringToFramework(ctx, domainResult.Domain),
+		})
+	}
+
+	domainsSet, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, domainModels, nil)
+	diags.Append(d...)
+
+	return domainsSet, diags
+}
+
+// flattenParameters converts AWS SDK Parameter slice to framework ListNestedObjectValueOf
+func flattenParameters(ctx context.Context, parameters []awstypes.Parameter) (fwtypes.SetNestedObjectValueOf[parameterModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	parameterModels := make([]*parameterModel, 0, len(parameters))
+	for _, param := range parameters {
+		parameterModels = append(parameterModels, &parameterModel{
+			Name:  fwflex.StringToFramework(ctx, param.Name),
+			Value: fwflex.StringToFramework(ctx, param.Value),
+		})
+	}
+
+	parametersSet, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, parameterModels, nil)
+	diags.Append(d...)
+
+	return parametersSet, diags
+}
+
+// flattenCustomizations converts AWS SDK Customizations to framework ListNestedObjectValueOf
+func flattenCustomizations(ctx context.Context, customizations *awstypes.Customizations) (fwtypes.ListNestedObjectValueOf[customizationsModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if customizations == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[customizationsModel](ctx), diags
+	}
+
+	var customModel customizationsModel
+	diags.Append(customModel.Flatten(ctx, customizations)...)
+	if diags.HasError() {
+		return fwtypes.NewListNestedObjectValueOfNull[customizationsModel](ctx), diags
+	}
+
+	customList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &customModel)
+	diags.Append(d...)
+
+	return customList, diags
 }

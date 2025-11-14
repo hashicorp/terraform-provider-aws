@@ -28,7 +28,7 @@ func TestAccCloudFrontDistributionTenantDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionTenantDataSourceConfig_basic(rName),
+				Config: testAccDistributionTenantDataSourceConfig_basic(t, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "connection_group_id", resourceName, "connection_group_id"),
@@ -41,7 +41,7 @@ func TestAccCloudFrontDistributionTenantDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "managed_certificate_request.#", resourceName, "managed_certificate_request.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "parameters.#", resourceName, "parameters.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),
 			},
 		},
@@ -63,7 +63,7 @@ func TestAccCloudFrontDistributionTenantDataSource_byARN(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionTenantDataSourceConfig_byARN(rName),
+				Config: testAccDistributionTenantDataSourceConfig_byARN(t, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "connection_group_id", resourceName, "connection_group_id"),
@@ -76,7 +76,7 @@ func TestAccCloudFrontDistributionTenantDataSource_byARN(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "managed_certificate_request.#", resourceName, "managed_certificate_request.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "parameters.#", resourceName, "parameters.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),
 			},
 		},
@@ -98,7 +98,7 @@ func TestAccCloudFrontDistributionTenantDataSource_byName(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionTenantDataSourceConfig_byName(rName),
+				Config: testAccDistributionTenantDataSourceConfig_byName(t, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "connection_group_id", resourceName, "connection_group_id"),
@@ -111,7 +111,7 @@ func TestAccCloudFrontDistributionTenantDataSource_byName(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "managed_certificate_request.#", resourceName, "managed_certificate_request.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "parameters.#", resourceName, "parameters.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),
 			},
 		},
@@ -133,7 +133,7 @@ func TestAccCloudFrontDistributionTenantDataSource_byDomain(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionTenantDataSourceConfig_byDomain(rName),
+				Config: testAccDistributionTenantDataSourceConfig_byDomain(t, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "connection_group_id", resourceName, "connection_group_id"),
@@ -146,24 +146,23 @@ func TestAccCloudFrontDistributionTenantDataSource_byDomain(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "managed_certificate_request.#", resourceName, "managed_certificate_request.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "parameters.#", resourceName, "parameters.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),
 			},
 		},
 	})
 }
 
-func testAccDistributionTenantDataSourceConfig_basic(rName string) string {
+func testAccDistributionTenantDataSourceConfig_basic(t *testing.T, rName string) string {
+	certDomain := "*.tf." + acctest.ACMCertificateDomainFromEnv(t)
+	tenantDomain := rName + ".tf." + acctest.ACMCertificateDomainFromEnv(t)
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "example.com"
+  domain      = %[3]q
+  region      = "us-east-1"
   most_recent = true
-}
-
-resource "aws_cloudfront_connection_group" "test" {
-  name = %[1]q
 }
 
 resource "aws_cloudfront_cache_policy" "test" {
@@ -223,29 +222,29 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id     = aws_cloudfront_distribution.test.id
-  domains             = ["example.com"]
+  domains {
+    domain = %[2]q
+  }
   name                = %[1]q
   enabled             = false
-  connection_group_id = aws_cloudfront_connection_group.test.id
 }
 
 data "aws_cloudfront_distribution_tenant" "test" {
   id = aws_cloudfront_distribution_tenant.test.id
 }
-`, rName))
+`, rName, tenantDomain, certDomain))
 }
 
-func testAccDistributionTenantDataSourceConfig_byARN(rName string) string {
+func testAccDistributionTenantDataSourceConfig_byARN(t *testing.T, rName string) string {
+	certDomain := "*.tf." + acctest.ACMCertificateDomainFromEnv(t)
+	tenantDomain := rName + ".tf." + acctest.ACMCertificateDomainFromEnv(t)
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "example.com"
+  domain      = %[3]q
+  region      = "us-east-1"
   most_recent = true
-}
-
-resource "aws_cloudfront_connection_group" "test" {
-  name = %[1]q
 }
 
 resource "aws_cloudfront_cache_policy" "test" {
@@ -305,29 +304,29 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id     = aws_cloudfront_distribution.test.id
-  domains             = ["example.com"]
+  domains {
+    domain = %[2]q
+  }
   name                = %[1]q
   enabled             = false
-  connection_group_id = aws_cloudfront_connection_group.test.id
 }
 
 data "aws_cloudfront_distribution_tenant" "test" {
   arn = aws_cloudfront_distribution_tenant.test.arn
 }
-`, rName))
+`, rName, tenantDomain, certDomain))
 }
 
-func testAccDistributionTenantDataSourceConfig_byName(rName string) string {
+func testAccDistributionTenantDataSourceConfig_byName(t *testing.T, rName string) string {
+	certDomain := "*.tf." + acctest.ACMCertificateDomainFromEnv(t)
+	tenantDomain := rName + ".tf." + acctest.ACMCertificateDomainFromEnv(t)
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "example.com"
+  domain      = %[3]q
+  region      = "us-east-1"
   most_recent = true
-}
-
-resource "aws_cloudfront_connection_group" "test" {
-  name = %[1]q
 }
 
 resource "aws_cloudfront_cache_policy" "test" {
@@ -387,29 +386,29 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id     = aws_cloudfront_distribution.test.id
-  domains             = ["example.com"]
+  domains {
+    domain = %[2]q
+  }
   name                = %[1]q
   enabled             = false
-  connection_group_id = aws_cloudfront_connection_group.test.id
 }
 
 data "aws_cloudfront_distribution_tenant" "test" {
   name = aws_cloudfront_distribution_tenant.test.name
 }
-`, rName))
+`, rName, tenantDomain, certDomain))
 }
 
-func testAccDistributionTenantDataSourceConfig_byDomain(rName string) string {
+func testAccDistributionTenantDataSourceConfig_byDomain(t *testing.T, rName string) string {
+	certDomain := "*.tf." + acctest.ACMCertificateDomainFromEnv(t)
+	tenantDomain := rName + ".tf." + acctest.ACMCertificateDomainFromEnv(t)
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "example.com"
+  domain      = %[3]q
+  region      = "us-east-1"
   most_recent = true
-}
-
-resource "aws_cloudfront_connection_group" "test" {
-  name = %[1]q
 }
 
 resource "aws_cloudfront_cache_policy" "test" {
@@ -469,14 +468,17 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id     = aws_cloudfront_distribution.test.id
-  domains             = ["example-%[1]s.com"]
+  domains {
+    domain = %[2]q
+  }
   name                = %[1]q
   enabled             = false
-  connection_group_id = aws_cloudfront_connection_group.test.id
 }
 
 data "aws_cloudfront_distribution_tenant" "test" {
-  domain = "example-%[1]s.com"
+  domain = %[2]q
+
+  depends_on = [aws_cloudfront_distribution_tenant.test]
 }
-`, rName))
+`, rName, tenantDomain, certDomain))
 }

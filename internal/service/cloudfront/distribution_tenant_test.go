@@ -36,7 +36,7 @@ func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionTenantConfig_basic(rName),
+				Config: testAccDistributionTenantConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_group_id"),
@@ -79,7 +79,7 @@ func TestAccCloudFrontDistributionTenant_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionTenantConfig_basic(rName),
+				Config: testAccDistributionTenantConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceDistributionTenant, resourceName),
@@ -106,7 +106,7 @@ func TestAccCloudFrontDistributionTenant_customCertificate(t *testing.T) {
 		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionTenantConfig_customCertificate(rName),
+				Config: testAccDistributionTenantConfig_customCertificate(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
 					resource.TestCheckResourceAttr(resourceName, "customizations.#", "1"),
@@ -116,6 +116,16 @@ func TestAccCloudFrontDistributionTenant_customCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "customizations.0.certificate.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "customizations.0.certificate.0.arn", "data.aws_acm_certificate.test", names.AttrARN),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_deployment",
+					"status",
+				},
 			},
 		},
 	})
@@ -137,7 +147,7 @@ func TestAccCloudFrontDistributionTenant_customCertificateWithWebACL(t *testing.
 		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionTenantConfig_customCertificateWithWebACL(rName),
+				Config: testAccDistributionTenantConfig_customCertificateWithWebACL(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
 					resource.TestCheckResourceAttr(resourceName, "customizations.#", "1"),
@@ -166,7 +176,7 @@ func TestAccCloudFrontDistributionTenant_parameters(t *testing.T) {
 		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionTenantConfig_parameters(rName),
+				Config: testAccDistributionTenantConfig_parameters(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
@@ -183,37 +193,8 @@ func TestAccCloudFrontDistributionTenant_parameters(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_deployment",
+					"status",
 				},
-			},
-		},
-	})
-}
-
-func TestAccCloudFrontDistributionTenant_managedCertificateRequest(t *testing.T) {
-	ctx := acctest.Context(t)
-	var tenant awstypes.DistributionTenant
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudfront_distribution_tenant.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDistributionTenantConfig_managedCertificateRequest(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
-					resource.TestCheckResourceAttrSet(resourceName, "connection_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "managed_certificate_request.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "managed_certificate_request.0.primary_domain_name"),
-					resource.TestCheckResourceAttr(resourceName, "managed_certificate_request.0.validation_token_host", "cloudfront"),
-					resource.TestCheckResourceAttr(resourceName, "managed_certificate_request.0.certificate_transparency_logging_preference", "disabled"),
-				),
 			},
 		},
 	})
@@ -235,7 +216,7 @@ func TestAccCloudFrontDistributionTenant_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionTenantConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccDistributionTenantConfig_tags1(t, rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -243,7 +224,7 @@ func TestAccCloudFrontDistributionTenant_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDistributionTenantConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDistributionTenantConfig_tags2(t, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -252,12 +233,22 @@ func TestAccCloudFrontDistributionTenant_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDistributionTenantConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDistributionTenantConfig_tags1(t, rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionTenantExists(ctx, resourceName, &tenant),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_deployment",
+					"status",
+				},
 			},
 		},
 	})
@@ -310,12 +301,13 @@ func testAccCheckDistributionTenantExists(ctx context.Context, n string, v *awst
 	}
 }
 
-func testAccDistributionTenantConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+func testAccDistributionTenantConfig_basic(t *testing.T, rName string) string {
+	certDomain := "*.tf." + acctest.ACMCertificateDomainFromEnv(t)
+	tenantDomain := rName + ".tf." + acctest.ACMCertificateDomainFromEnv(t)
+	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = %[1]q
+  domain      = %[3]q
+  region      = "us-east-1"
   most_recent = true
 }
 
@@ -376,18 +368,22 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
-  domains         = ["example.com"]
-  name            = %[1]q
-  enabled         = false
+  domains {
+    domain = %[2]q
+  }
+  name    = %[1]q
+  enabled = false
 }
-`, rName))
+`, rName, tenantDomain, certDomain)
 }
-func testAccDistributionTenantConfig_customCertificate(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+func testAccDistributionTenantConfig_customCertificate(t *testing.T, rName string) string {
+	certDomain := "*.tf." + acctest.ACMCertificateDomainFromEnv(t)
+	tenantDomain := rName + ".tf." + acctest.ACMCertificateDomainFromEnv(t)
+	return fmt.Sprintf(`
+
 data "aws_acm_certificate" "test" {
-  domain      = "example.com"
+  domain      = %[3]q
+  region      = "us-east-1"
   most_recent = true
 }
 
@@ -447,9 +443,11 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
-  domains         = ["example.com"]
-  name            = %[1]q
-  enabled         = false
+  domains {
+    domain = %[2]q
+  }
+  name    = %[1]q
+  enabled = false
 
   customizations {
     geo_restriction {
@@ -462,22 +460,24 @@ resource "aws_cloudfront_distribution_tenant" "test" {
     }
   }
 }
-`, rName))
+`, rName, tenantDomain, certDomain)
 }
 
-func testAccDistributionTenantConfig_customCertificateWithWebACL(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+func testAccDistributionTenantConfig_customCertificateWithWebACL(t *testing.T, rName string) string {
+	certDomain := "*.tf." + acctest.ACMCertificateDomainFromEnv(t)
+	tenantDomain := rName + ".tf." + acctest.ACMCertificateDomainFromEnv(t)
+	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "example.com"
+  domain      = %[3]q
+  region      = "us-east-1"
   most_recent = true
 }
 
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
-  description = "test web acl"
+  description = "tftest"
   scope       = "CLOUDFRONT"
+  region      = "us-east-1"
 
   default_action {
     allow {
@@ -553,9 +553,11 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
-  domains         = ["example.com"]
-  name            = %[1]q
-  enabled         = false
+  domains {
+    domain = %[2]q
+  }
+  name    = %[1]q
+  enabled = false
 
   customizations {
     geo_restriction {
@@ -573,15 +575,16 @@ resource "aws_cloudfront_distribution_tenant" "test" {
     }
   }
 }
-`, rName))
+`, rName, tenantDomain, certDomain)
 }
 
-func testAccDistributionTenantConfig_parameters(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+func testAccDistributionTenantConfig_parameters(t *testing.T, rName string) string {
+	certDomain := "*.tf." + acctest.ACMCertificateDomainFromEnv(t)
+	tenantDomain := rName + ".tf." + acctest.ACMCertificateDomainFromEnv(t)
+	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "example.com"
+  domain      = %[3]q
+  region      = "us-east-1"
   most_recent = true
 }
 
@@ -642,9 +645,11 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
-  domains         = ["example.com"]
-  name            = %[1]q
-  enabled         = false
+  domains {
+    domain = %[2]q
+  }
+  name    = %[1]q
+  enabled = false
 
   parameters {
     name  = "tenantid"
@@ -656,15 +661,16 @@ resource "aws_cloudfront_distribution_tenant" "test" {
     value = "na"
   }
 }
-`, rName))
+`, rName, tenantDomain, certDomain)
 }
 
-func testAccDistributionTenantConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+func testAccDistributionTenantConfig_tags1(t *testing.T, rName, tagKey1, tagValue1 string) string {
+	certDomain := "*.tf." + acctest.ACMCertificateDomainFromEnv(t)
+	tenantDomain := rName + ".tf." + acctest.ACMCertificateDomainFromEnv(t)
+	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "example.com"
+  domain      = %[5]q
+  region      = "us-east-1"
   most_recent = true
 }
 
@@ -725,23 +731,26 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
-  domains         = ["example.com"]
-  name            = %[1]q
-  enabled         = false
+  domains {
+    domain = %[4]q
+  }
+  name    = %[1]q
+  enabled = false
 
   tags = {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1))
+`, rName, tagKey1, tagValue1, tenantDomain, certDomain)
 }
 
-func testAccDistributionTenantConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+func testAccDistributionTenantConfig_tags2(t *testing.T, rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	certDomain := "*.tf." + acctest.ACMCertificateDomainFromEnv(t)
+	tenantDomain := rName + ".tf." + acctest.ACMCertificateDomainFromEnv(t)
+	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "example.com"
+  domain      = %[7]q
+  region      = "us-east-1"
   most_recent = true
 }
 
@@ -802,107 +811,16 @@ resource "aws_cloudfront_distribution" "test" {
 
 resource "aws_cloudfront_distribution_tenant" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
-  domains         = ["example.com"]
-  name            = %[1]q
-  enabled         = false
+  domains {
+    domain = %[6]q
+  }
+  name    = %[1]q
+  enabled = false
 
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccDistributionTenantConfig_managedCertificateRequest(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-data "aws_route53_zone" "test" {
-  name         = "example.com"
-  private_zone = false
-}
-
-resource "aws_cloudfront_connection_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_route53_record" "test" {
-  zone_id = data.aws_route53_zone.test.id
-  type    = "CNAME"
-  ttl     = 300
-  name    = "tf.example.com"
-  records = [aws_cloudfront_connection_group.test.routing_endpoint]
-}
-
-resource "aws_cloudfront_cache_policy" "test" {
-  name        = %[1]q
-  comment     = "test tenant cache policy"
-  default_ttl = 50
-  max_ttl     = 100
-  min_ttl     = 1
-  parameters_in_cache_key_and_forwarded_to_origin {
-    cookies_config {
-      cookie_behavior = "none"
-    }
-    headers_config {
-      header_behavior = "none"
-    }
-    query_strings_config {
-      query_string_behavior = "none"
-    }
-  }
-}
-
-resource "aws_cloudfront_distribution" "test" {
-  connection_mode = "tenant-only"
-  enabled         = true
-
-  origin {
-    domain_name = "www.example.com"
-    origin_id   = "test"
-
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
-  }
-
-  default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "test"
-    viewer_protocol_policy = "allow-all"
-    cache_policy_id        = aws_cloudfront_cache_policy.test.id
-  }
-
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
-  }
-
-  viewer_certificate {
-    cloudfront_default_certificate = true
-  }
-
-  depends_on = [aws_route53_record.test]
-}
-
-resource "aws_cloudfront_distribution_tenant" "test" {
-  distribution_id     = aws_cloudfront_distribution.test.id
-  domains             = ["tf.example.com"]
-  name                = %[1]q
-  enabled             = false
-  connection_group_id = aws_cloudfront_connection_group.test.id
-
-  managed_certificate_request {
-    primary_domain_name                         = "tf.example.com"
-    validation_token_host                       = "cloudfront"
-    certificate_transparency_logging_preference = "disabled"
-  }
-}
-`, rName))
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2, tenantDomain, certDomain)
 }

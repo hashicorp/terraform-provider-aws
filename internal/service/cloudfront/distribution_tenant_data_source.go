@@ -6,14 +6,18 @@ package cloudfront
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -53,10 +57,6 @@ func (d *distributionTenantDataSource) Schema(ctx context.Context, _ datasource.
 			},
 			names.AttrDomain: schema.StringAttribute{
 				Optional: true,
-			},
-			"domains": schema.SetAttribute{
-				ElementType: types.StringType,
-				Computed:    true,
 			},
 			names.AttrEnabled: schema.BoolAttribute{
 				Computed: true,
@@ -148,6 +148,16 @@ func (d *distributionTenantDataSource) Schema(ctx context.Context, _ datasource.
 					},
 				},
 			},
+			"domains": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[domainItemDataSourceModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"domain": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrParameters: schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[parameterDataSourceModel](ctx),
 				NestedObject: schema.NestedBlockObject{
@@ -174,7 +184,7 @@ func (d *distributionTenantDataSource) Read(ctx context.Context, request datasou
 
 	conn := d.Meta().CloudFrontClient(ctx)
 
-	// Define lookup strategies in order of preference
+	// Define lookup strategies using config values
 	lookupStrategies := []struct {
 		value types.String
 		fn    func(context.Context, *cloudfront.Client, string) (interface{}, error)
@@ -230,6 +240,15 @@ func (d *distributionTenantDataSource) Read(ctx context.Context, request datasou
 		return
 	}
 
+	// Manually flatten domains and parameters using helper functions from resource file
+	var diags diag.Diagnostics
+	data.Domains, diags = flattenDomainsDataSource(ctx, tenant.Domains)
+	response.Diagnostics.Append(diags...)
+	data.Parameters, diags = flattenParametersDataSource(ctx, tenant.Parameters)
+	response.Diagnostics.Append(diags...)
+	data.Customizations, diags = flattenCustomizationsDataSource(ctx, tenant.Customizations)
+	response.Diagnostics.Append(diags...)
+
 	// Set computed fields that need special handling
 	data.ID = fwflex.StringToFramework(ctx, tenant.Id)
 	data.ETag = fwflex.StringToFramework(ctx, etag)
@@ -246,7 +265,7 @@ type distributionTenantDataSourceModel struct {
 	Customizations            fwtypes.ListNestedObjectValueOf[customizationsDataSourceModel]            `tfsdk:"customizations"`
 	DistributionID            types.String                                                              `tfsdk:"distribution_id"`
 	Domain                    types.String                                                              `tfsdk:"domain"`
-	Domains                   fwtypes.SetValueOf[types.String]                                          `tfsdk:"domains"`
+	Domains                   fwtypes.SetNestedObjectValueOf[domainItemDataSourceModel]                 `tfsdk:"domains"`
 	Enabled                   types.Bool                                                                `tfsdk:"enabled"`
 	ETag                      types.String                                                              `tfsdk:"etag"`
 	ID                        types.String                                                              `tfsdk:"id"`
@@ -264,8 +283,23 @@ type customizationsDataSourceModel struct {
 	WebAcl         fwtypes.ListNestedObjectValueOf[webAclDataSourceModel]         `tfsdk:"web_acl"`
 }
 
+// Implement fwflex.Flattener interface
+var (
+	_ fwflex.Flattener = &customizationsDataSourceModel{}
+	_ fwflex.Flattener = &geoRestrictionDataSourceModel{}
+	_ fwflex.Flattener = &certificateDataSourceModel{}
+	_ fwflex.Flattener = &webAclDataSourceModel{}
+	_ fwflex.Flattener = &managedCertificateRequestDataSourceModel{}
+	_ fwflex.Flattener = &parameterDataSourceModel{}
+	_ fwflex.Flattener = &domainItemDataSourceModel{}
+)
+
+type domainItemDataSourceModel struct {
+	Domain types.String `tfsdk:"domain"`
+}
+
 type geoRestrictionDataSourceModel struct {
-	Locations       fwtypes.SetValueOf[types.String]                `tfsdk:"locations"`
+	Locations       fwtypes.SetOfString                             `tfsdk:"locations"`
 	RestrictionType fwtypes.StringEnum[awstypes.GeoRestrictionType] `tfsdk:"restriction_type"`
 }
 
@@ -314,4 +348,234 @@ func findDistributionTenantByDomain(ctx context.Context, conn *cloudfront.Client
 	}
 
 	return output, nil
+}
+
+// Implement fwflex.Flattener interface methods
+func (m *customizationsDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.Customizations); ok {
+		if t.GeoRestrictions != nil {
+			var geoModel geoRestrictionDataSourceModel
+			diags.Append(geoModel.Flatten(ctx, t.GeoRestrictions)...)
+			if diags.HasError() {
+				return diags
+			}
+			geoList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &geoModel)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			m.GeoRestriction = geoList
+		} else {
+			m.GeoRestriction = fwtypes.NewListNestedObjectValueOfNull[geoRestrictionDataSourceModel](ctx)
+		}
+
+		if t.Certificate != nil {
+			var certModel certificateDataSourceModel
+			diags.Append(certModel.Flatten(ctx, t.Certificate)...)
+			if diags.HasError() {
+				return diags
+			}
+			certList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &certModel)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			m.Certificate = certList
+		} else {
+			m.Certificate = fwtypes.NewListNestedObjectValueOfNull[certificateDataSourceModel](ctx)
+		}
+
+		if t.WebAcl != nil {
+			var webAclModel webAclDataSourceModel
+			diags.Append(webAclModel.Flatten(ctx, t.WebAcl)...)
+			if diags.HasError() {
+				return diags
+			}
+			webAclList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &webAclModel)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			m.WebAcl = webAclList
+		} else {
+			m.WebAcl = fwtypes.NewListNestedObjectValueOfNull[webAclDataSourceModel](ctx)
+		}
+	}
+
+	return diags
+}
+
+func (m *geoRestrictionDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.GeoRestrictionCustomization); ok {
+		m.RestrictionType = fwtypes.StringEnumValue(t.RestrictionType)
+
+		// Convert locations slice to SetOfString
+		if len(t.Locations) > 0 {
+			// Filter out empty strings
+			filteredLocations := make([]string, 0, len(t.Locations))
+			for _, location := range t.Locations {
+				if location != "" {
+					filteredLocations = append(filteredLocations, location)
+				}
+			}
+
+			if len(filteredLocations) > 0 {
+				// Convert strings to attr.Value slice
+				elements := make([]attr.Value, len(filteredLocations))
+				for i, location := range filteredLocations {
+					elements[i] = basetypes.NewStringValue(location)
+				}
+				setVal, d := fwtypes.NewSetValueOf[basetypes.StringValue](ctx, elements)
+				diags.Append(d...)
+				m.Locations = setVal
+			} else {
+				m.Locations = fwtypes.NewSetValueOfNull[basetypes.StringValue](ctx)
+			}
+		} else {
+			m.Locations = fwtypes.NewSetValueOfNull[basetypes.StringValue](ctx)
+		}
+	}
+
+	return diags
+}
+
+func (m *certificateDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.Certificate); ok {
+		m.ARN = fwtypes.ARNValue(aws.ToString(t.Arn))
+	}
+
+	return diags
+}
+
+func (m *webAclDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.WebAclCustomization); ok {
+		m.Action = fwtypes.StringEnumValue(t.Action)
+		m.ARN = fwtypes.ARNValue(aws.ToString(t.Arn))
+	}
+
+	return diags
+}
+
+func (m *managedCertificateRequestDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.ManagedCertificateRequest); ok {
+		m.CertificateTransparencyLoggingPreference = fwtypes.StringEnumValue(t.CertificateTransparencyLoggingPreference)
+		m.PrimaryDomainName = fwflex.StringToFramework(ctx, t.PrimaryDomainName)
+		m.ValidationTokenHost = fwtypes.StringEnumValue(t.ValidationTokenHost)
+	}
+
+	return diags
+}
+
+func (m *parameterDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.Parameter); ok {
+		m.Name = fwflex.StringToFramework(ctx, t.Name)
+		m.Value = fwflex.StringToFramework(ctx, t.Value)
+	}
+
+	return diags
+}
+
+func (m *domainItemDataSourceModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.DomainResult); ok {
+		m.Domain = fwflex.StringToFramework(ctx, t.Domain)
+	}
+
+	return diags
+}
+
+// flattenDomainsDataSource converts AWS SDK DomainResult slice to framework ListNestedObjectValueOf for data source
+func flattenDomainsDataSource(ctx context.Context, domains []awstypes.DomainResult) (fwtypes.SetNestedObjectValueOf[domainItemDataSourceModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	domainModels := make([]*domainItemDataSourceModel, 0, len(domains))
+	for _, domainResult := range domains {
+		domainModels = append(domainModels, &domainItemDataSourceModel{
+			Domain: fwflex.StringToFramework(ctx, domainResult.Domain),
+		})
+	}
+
+	domainsSet, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, domainModels, nil)
+	diags.Append(d...)
+
+	return domainsSet, diags
+}
+
+// flattenParametersDataSource converts AWS SDK Parameter slice to framework ListNestedObjectValueOf for data source
+func flattenParametersDataSource(ctx context.Context, parameters []awstypes.Parameter) (fwtypes.SetNestedObjectValueOf[parameterDataSourceModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	parameterModels := make([]*parameterDataSourceModel, 0, len(parameters))
+	for _, param := range parameters {
+		parameterModels = append(parameterModels, &parameterDataSourceModel{
+			Name:  fwflex.StringToFramework(ctx, param.Name),
+			Value: fwflex.StringToFramework(ctx, param.Value),
+		})
+	}
+
+	parametersSet, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, parameterModels, nil)
+	diags.Append(d...)
+
+	return parametersSet, diags
+}
+
+// flattenCustomizationsDataSource converts AWS SDK Customizations to framework ListNestedObjectValueOf for data source
+func flattenCustomizationsDataSource(ctx context.Context, customizations *awstypes.Customizations) (fwtypes.ListNestedObjectValueOf[customizationsDataSourceModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if customizations == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[customizationsDataSourceModel](ctx), diags
+	}
+
+	var customModel customizationsDataSourceModel
+	diags.Append(customModel.Flatten(ctx, customizations)...)
+	if diags.HasError() {
+		return fwtypes.NewListNestedObjectValueOfNull[customizationsDataSourceModel](ctx), diags
+	}
+
+	customList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &customModel)
+	diags.Append(d...)
+
+	return customList, diags
 }
