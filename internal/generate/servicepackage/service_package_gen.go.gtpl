@@ -32,12 +32,8 @@ inttypes.StringIdentityAttribute(
 {{- if .IdentityVersion }}
     inttypes.WithVersion({{ .IdentityVersion }}),
 {{ end -}}
-{{- if gt (len .SDKv2IdentityUpgraders) 0 }}
-	inttypes.WithSDKv2IdentityUpgraders(
-	{{- range .SDKv2IdentityUpgraders -}}
-	{{.}},
-	{{- end -}}
-	),
+{{- if gt (len .SDKv2IdentityUpgraders) 0 -}}
+	inttypes.WithSDKv2IdentityUpgraders({{- range .SDKv2IdentityUpgraders -}}{{.}},{{- end -}}),
 {{ end -}}
 {{- end }}
 
