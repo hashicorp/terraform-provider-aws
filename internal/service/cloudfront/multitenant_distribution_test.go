@@ -20,6 +20,8 @@ import (
 )
 
 func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
+	t.Parallel()
+
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
