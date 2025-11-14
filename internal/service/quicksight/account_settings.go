@@ -28,7 +28,8 @@ import (
 )
 
 // @FrameworkResource("aws_quicksight_account_settings", name="Account Settings")
-// @Region(global=true)
+// @Testing(identityVersion="0;v6.0.0")
+// @Testing(identityVersion="1;v6.22.0")
 func newAccountSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accountSettingsResource{}
 
@@ -37,10 +38,6 @@ func newAccountSettingsResource(_ context.Context) (resource.ResourceWithConfigu
 
 	return r, nil
 }
-
-const (
-	ResNameAccountSettings = "Account Settings"
-)
 
 type accountSettingsResource struct {
 	framework.ResourceWithModel[accountSettingsResourceModel]
@@ -224,6 +221,7 @@ func findAccountSettingsByID(ctx context.Context, conn *quicksight.Client, id st
 }
 
 type accountSettingsResourceModel struct {
+	framework.WithRegionModel
 	AWSAccountID                 types.String   `tfsdk:"aws_account_id"`
 	DefaultNamespace             types.String   `tfsdk:"default_namespace"`
 	TerminationProtectionEnabled types.Bool     `tfsdk:"termination_protection_enabled"`
