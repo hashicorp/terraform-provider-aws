@@ -2359,16 +2359,6 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		// Automatic XML wrapper detection (without explicit wrapper tags)
 		fromFieldVal := valFrom.FieldByIndex(fromField.Index)
 
-		// Debug: Log field being processed
-		fmt.Printf("DEBUG flatten: Processing field %s, type=%T, kind=%v\n", fromFieldName, fromFieldVal.Interface(), fromFieldVal.Kind())
-		if fromFieldName == "ActiveTrustedKeyGroups" || fromFieldName == "ActiveTrustedSigners" {
-			fmt.Printf("DEBUG flatten:   SPECIAL FIELD %s detected, toOpts=%+v\n", fromFieldName, toOpts)
-		}
-		if fromFieldVal.Kind() == reflect.Pointer && !fromFieldVal.IsNil() {
-			fmt.Printf("DEBUG flatten:   Pointer elem type: %v, isXMLWrapper=%v\n",
-				fromFieldVal.Type().Elem(), isXMLWrapperStruct(fromFieldVal.Type().Elem()))
-		}
-
 		// Handle pointer to XML wrapper struct
 		if fromFieldVal.Kind() == reflect.Pointer {
 			if !fromFieldVal.IsNil() && isXMLWrapperStruct(fromFieldVal.Type().Elem()) {
