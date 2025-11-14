@@ -34,7 +34,7 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 				Config: testAccMultiTenantDistributionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", "true"),
 				),

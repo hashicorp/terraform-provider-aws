@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -78,6 +79,48 @@ func (*multiTenantDistributionResource) Metadata(_ context.Context, request reso
 }
 
 func (r *multiTenantDistributionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	// Semantic equality for origin set - compares by ID only to avoid empty vs null issues
+	originSemanticEquals := func(ctx context.Context, a, b fwtypes.NestedCollectionValue[originModel]) (bool, diag.Diagnostics) {
+		var diags diag.Diagnostics
+
+		if a.Equal(b) {
+			return true, diags
+		}
+
+		aSlice, d := a.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return false, diags
+		}
+
+		bSlice, d := b.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return false, diags
+		}
+
+		// Treat null as equal to empty
+		if a.IsNull() && len(bSlice) == 0 {
+			return true, diags
+		}
+		if b.IsNull() && len(aSlice) == 0 {
+			return true, diags
+		}
+
+		// Compare by ID and domain_name only - ignore nested block empty vs null differences
+		if len(aSlice) != len(bSlice) {
+			return false, diags
+		}
+
+		for i := range aSlice {
+			if !aSlice[i].ID.Equal(bSlice[i].ID) || !aSlice[i].DomainName.Equal(bSlice[i].DomainName) {
+				return false, diags
+			}
+		}
+
+		return true, diags
+	}
+
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN:                      framework.ARNAttributeComputedOnly(),
@@ -415,7 +458,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 				},
 			},
 			"origin": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[originModel](ctx),
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[originModel](ctx, fwtypes.WithSemanticEqualityFunc(originSemanticEquals)),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"connection_attempts": schema.Int32Attribute{
