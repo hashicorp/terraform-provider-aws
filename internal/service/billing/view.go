@@ -154,12 +154,12 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 								},
 							},
 						},
-						"tags":       schema.ListNestedBlock{
+						"tags": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[tagValuesModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrKey: schema.StringAttribute{
-										Required:   true,
+										Required: true,
 									},
 									names.AttrValues: schema.ListAttribute{
 										CustomType:  fwtypes.ListOfStringType,
@@ -189,25 +189,6 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 									},
 								},
 							},
-						},
-					},
-				},
-			},
-			"health_status": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[healthStatusModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrStatusCode: schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.BillingViewStatus](),
-							Computed:   true,
-						},
-						"status_reasons": schema.ListAttribute{
-							CustomType:  fwtypes.ListOfStringEnumType[awstypes.BillingViewStatusReason](),
-							ElementType: types.StringType,
-							Computed:    true,
 						},
 					},
 				},
@@ -254,9 +235,13 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitBillingViewCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
+	view, err := waitBillingViewCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		return
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, view, &plan))
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -332,12 +317,12 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitBillingViewUpdated(ctx, conn, plan.Name.ValueString(), updateTimeout)
+	view, err := waitBillingViewUpdated(ctx, conn, plan.ARN.ValueString(), updateTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
-
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, view, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
@@ -385,7 +370,7 @@ func findViewByARN(ctx context.Context, conn *billing.Client, arn string) (*awst
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
+				LastError: err,
 			})
 		}
 
@@ -415,51 +400,51 @@ func statusBillingView(conn *billing.Client, arn string) retry.StateRefreshFunc 
 	}
 }
 
-func waitBillingViewCreated(ctx context.Context, conn *billing.Client, arn string, timeout time.Duration) (*billing.GetBillingViewOutput, error) {
+func waitBillingViewCreated(ctx context.Context, conn *billing.Client, arn string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BillingViewStatusCreating),
-		Target: enum.Slice(awstypes.BillingViewStatusHealthy),
+		Target:  enum.Slice(awstypes.BillingViewStatusHealthy),
 		Refresh: statusBillingView(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*billing.GetBillingViewOutput); ok {
+	if output, ok := outputRaw.(*awstypes.BillingViewElement); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitBillingViewUpdated(ctx context.Context, conn *billing.Client, arn string, timeout time.Duration) (*billing.GetBillingViewOutput, error) {
+func waitBillingViewUpdated(ctx context.Context, conn *billing.Client, arn string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BillingViewStatusUpdating),
-		Target: enum.Slice(awstypes.BillingViewStatusHealthy),
+		Target:  enum.Slice(awstypes.BillingViewStatusHealthy),
 		Refresh: statusBillingView(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*billing.GetBillingViewOutput); ok {
+	if output, ok := outputRaw.(*awstypes.BillingViewElement); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitBillingViewDeleted(ctx context.Context, conn *billing.Client, arn string, timeout time.Duration) (*billing.GetBillingViewOutput, error) {
+func waitBillingViewDeleted(ctx context.Context, conn *billing.Client, arn string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BillingViewStatusHealthy),
-		Target: []string{},
+		Target:  []string{},
 		Refresh: statusBillingView(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*billing.GetBillingViewOutput); ok {
+	if output, ok := outputRaw.(*awstypes.BillingViewElement); ok {
 		return output, err
 	}
 
@@ -467,24 +452,23 @@ func waitBillingViewDeleted(ctx context.Context, conn *billing.Client, arn strin
 }
 
 type resourceViewModel struct {
-	framework.WithRegionModel
-	ARN                         fwtypes.ARN                                                `tfsdk:"arn"`
-	BillingViewType             fwtypes.StringEnum[awstypes.BillingViewType]               `tfsdk:"billing_view_type"`
-	CreatedAt                   timetypes.RFC3339                                          `tfsdk:"created_at"`
-	DataFilterExpression        fwtypes.ListNestedObjectValueOf[dataFilterExpressionModel] `tfsdk:"data_filter_expression"`
-	DerivedViewCount            types.Int32                                                `tfsdk:"derived_view_count"`
-	Description                 types.String                                               `tfsdk:"description"`
-	HealthStatus                fwtypes.ListNestedObjectValueOf[healthStatusModel]         `tfsdk:"health_status"`
-	Name                        types.String                                               `tfsdk:"name"`
-	OwnerAccountId              types.String                                               `tfsdk:"owner_account_id"`
-	Tags                        tftags.Map                                                 `tfsdk:"tags"`
-	TagsAll                     tftags.Map                                                 `tfsdk:"tags_all"`
-	SourceAccountId             types.String                                               `tfsdk:"source_account_id"`
-	SourceViewCount             types.Int32                                                `tfsdk:"source_view_count"`
-	SourceViews                 fwtypes.ListOfString                                       `tfsdk:"source_views"`
-	Timeouts                    timeouts.Value                                             `tfsdk:"timeouts"`
-	UpdatedAt                   timetypes.RFC3339                                          `tfsdk:"updated_at"`
-	ViewDefinitionLastUpdatedAt timetypes.RFC3339                                          `tfsdk:"view_definition_last_updated_at"`
+	ARN                  types.String                                               `tfsdk:"arn"`
+	BillingViewType      fwtypes.StringEnum[awstypes.BillingViewType]               `tfsdk:"billing_view_type"`
+	CreatedAt            timetypes.RFC3339                                          `tfsdk:"created_at"`
+	DataFilterExpression fwtypes.ListNestedObjectValueOf[dataFilterExpressionModel] `tfsdk:"data_filter_expression"`
+	DerivedViewCount     types.Int32                                                `tfsdk:"derived_view_count"`
+	Description          types.String                                               `tfsdk:"description"`
+
+	Name                        types.String         `tfsdk:"name"`
+	OwnerAccountId              types.String         `tfsdk:"owner_account_id"`
+	Tags                        tftags.Map           `tfsdk:"tags"`
+	TagsAll                     tftags.Map           `tfsdk:"tags_all"`
+	SourceAccountId             types.String         `tfsdk:"source_account_id"`
+	SourceViewCount             types.Int32          `tfsdk:"source_view_count"`
+	SourceViews                 fwtypes.ListOfString `tfsdk:"source_views"`
+	Timeouts                    timeouts.Value       `tfsdk:"timeouts"`
+	UpdatedAt                   timetypes.RFC3339    `tfsdk:"updated_at"`
+	ViewDefinitionLastUpdatedAt timetypes.RFC3339    `tfsdk:"view_definition_last_updated_at"`
 }
 
 type dataFilterExpressionModel struct {
@@ -506,9 +490,4 @@ type tagValuesModel struct {
 type timeRangeModel struct {
 	BeginDateInclusive timetypes.RFC3339 `tfsdk:"begin_date_inclusive"`
 	EndDateInclusive   timetypes.RFC3339 `tfsdk:"end_date_inclusive"`
-}
-
-type healthStatusModel struct {
-	StatusCode    fwtypes.StringEnum[awstypes.BillingViewStatus]             `tfsdk:"status_code"`
-	StatusReasons fwtypes.ListOfStringEnum[awstypes.BillingViewStatusReason] `tfsdk:"status_reasons"`
 }
