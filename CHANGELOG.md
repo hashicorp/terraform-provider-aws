@@ -1,5 +1,9 @@
 ## 6.22.0 (Unreleased)
 
+FEATURES:
+
+* **New Ephemeral Resource:** `aws_ecr_authorization_token` ([#44949](https://github.com/hashicorp/terraform-provider-aws/issues/44949))
+
 ENHANCEMENTS:
 
 * data-source/aws_route53_zone: Support filtering by `tags` only or by `vpc_id` only ([#39671](https://github.com/hashicorp/terraform-provider-aws/issues/39671))
