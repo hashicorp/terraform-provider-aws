@@ -11,6 +11,7 @@ const (
 	errCodeThrottlingException       = "ThrottlingException"
 	errCodeUnknownOperationException = "UnknownOperationException"
 	errCodeValidationException       = "ValidationException"
+	errCodeResourceNotFoundException = "ResourceNotFoundException"
 )
 
 var (

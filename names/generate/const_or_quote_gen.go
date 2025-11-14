@@ -108,6 +108,7 @@ func ConstOrQuote(constant string) string {
 		"ip_address_type":               "AttrIPAddressType",
 		"ip_addresses":                  "AttrIPAddresses",
 		"identifier":                    "AttrIdentifier",
+		"index_arn":                     "AttrIndexARN",
 		"instance_count":                "AttrInstanceCount",
 		"instance_id":                   "AttrInstanceID",
 		"instance_type":                 "AttrInstanceType",

@@ -1711,6 +1711,24 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-index_arn-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrIndexARN` for the string literal "index_arn"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"index_arn"'
+      - pattern-not-regex: '"index_arn":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrIndexARN"
+    options:
+      constant_propagation: false
+
   - id: literal-instance_count-string-constant
     languages: [go]
     message: Use the constant `names.AttrInstanceCount` for the string literal "instance_count"

@@ -64,7 +64,7 @@ func ResourcePlaceIndex() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
-			"index_arn": {
+			names.AttrIndexARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -157,7 +157,7 @@ func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	d.Set(names.AttrDescription, output.Description)
-	d.Set("index_arn", output.IndexArn)
+	d.Set(names.AttrIndexARN, output.IndexArn)
 	d.Set("index_name", output.IndexName)
 
 	setTagsOut(ctx, output.Tags)

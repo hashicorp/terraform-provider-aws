@@ -100,6 +100,7 @@ const (
 	AttrIPAddressType              = "ip_address_type"
 	AttrIPAddresses                = "ip_addresses"
 	AttrIdentifier                 = "identifier"
+	AttrIndexARN                   = "index_arn"
 	AttrInstanceCount              = "instance_count"
 	AttrInstanceID                 = "instance_id"
 	AttrInstanceType               = "instance_type"

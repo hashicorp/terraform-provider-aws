@@ -47,7 +47,7 @@ func DataSourcePlaceIndex() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"index_arn": {
+			names.AttrIndexARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,7 +96,7 @@ func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set(names.AttrDescription, output.Description)
-	d.Set("index_arn", output.IndexArn)
+	d.Set(names.AttrIndexARN, output.IndexArn)
 	d.Set("index_name", output.IndexName)
 	d.Set(names.AttrTags, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)).Map())
 	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
