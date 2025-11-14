@@ -2817,6 +2817,40 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 				expectedTimeout: "10",
 			},
 		},
+		awstypes.ProtocolEnumQuic: {
+			awstypes.ProtocolEnumHttp: {
+				expectedMatcher: "200-399",
+				expectedPath:    "/",
+				expectedTimeout: "6",
+			},
+			awstypes.ProtocolEnumHttps: {
+				expectedMatcher: "200-399",
+				expectedPath:    "/",
+				expectedTimeout: "10",
+			},
+			awstypes.ProtocolEnumTcp: {
+				expectedMatcher: "",
+				expectedPath:    "",
+				expectedTimeout: "10",
+			},
+		},
+		awstypes.ProtocolEnumTcpQuic: {
+			awstypes.ProtocolEnumHttp: {
+				expectedMatcher: "200-399",
+				expectedPath:    "/",
+				expectedTimeout: "6",
+			},
+			awstypes.ProtocolEnumHttps: {
+				expectedMatcher: "200-399",
+				expectedPath:    "/",
+				expectedTimeout: "10",
+			},
+			awstypes.ProtocolEnumTcp: {
+				expectedMatcher: "",
+				expectedPath:    "",
+				expectedTimeout: "10",
+			},
+		},
 	}
 
 	for _, protocol := range enum.EnumValues[awstypes.ProtocolEnum]() {
@@ -2950,6 +2984,30 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 			},
 		},
 		awstypes.ProtocolEnumTcpUdp: {
+			awstypes.ProtocolEnumHttp: {
+				matcher: "200",
+			},
+			awstypes.ProtocolEnumHttps: {
+				matcher: "200",
+			},
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				matcher:       "200",
+			},
+		},
+		awstypes.ProtocolEnumQuic: {
+			awstypes.ProtocolEnumHttp: {
+				matcher: "200",
+			},
+			awstypes.ProtocolEnumHttps: {
+				matcher: "200",
+			},
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				matcher:       "200",
+			},
+		},
+		awstypes.ProtocolEnumTcpQuic: {
 			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
@@ -3100,6 +3158,30 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 				path:          "/path",
 			},
 		},
+		awstypes.ProtocolEnumQuic: {
+			awstypes.ProtocolEnumHttp: {
+				path: "/path",
+			},
+			awstypes.ProtocolEnumHttps: {
+				path: "/path",
+			},
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				path:          "/path",
+			},
+		},
+		awstypes.ProtocolEnumTcpQuic: {
+			awstypes.ProtocolEnumHttp: {
+				path: "/path",
+			},
+			awstypes.ProtocolEnumHttps: {
+				path: "/path",
+			},
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				path:          "/path",
+			},
+		},
 	}
 
 	for _, protocol := range enum.EnumValues[awstypes.ProtocolEnum]() {
@@ -3237,6 +3319,34 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T
 			},
 		},
 		awstypes.ProtocolEnumTcpUdp: {
+			awstypes.ProtocolEnumHttp: {
+				matcher:    "600",
+				validRange: "200-599",
+			},
+			awstypes.ProtocolEnumHttps: {
+				matcher:    "600",
+				validRange: "200-599",
+			},
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				matcher:       "600",
+			},
+		},
+		awstypes.ProtocolEnumQuic: {
+			awstypes.ProtocolEnumHttp: {
+				matcher:    "600",
+				validRange: "200-599",
+			},
+			awstypes.ProtocolEnumHttps: {
+				matcher:    "600",
+				validRange: "200-599",
+			},
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				matcher:       "600",
+			},
+		},
+		awstypes.ProtocolEnumTcpQuic: {
 			awstypes.ProtocolEnumHttp: {
 				matcher:    "600",
 				validRange: "200-599",
@@ -3590,6 +3700,12 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion(t *testing.T) {
 		awstypes.ProtocolEnumTcpUdp: {
 			validConfig: false,
 		},
+		awstypes.ProtocolEnumQuic: {
+			validConfig: false,
+		},
+		awstypes.ProtocolEnumTcpQuic: {
+			validConfig: false,
+		},
 	}
 
 	for _, protocol := range enum.EnumValues[awstypes.ProtocolEnum]() { //nolint:paralleltest // false positive
@@ -3660,6 +3776,12 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 			validConfig: false,
 		},
 		awstypes.ProtocolEnumTcpUdp: {
+			validConfig: false,
+		},
+		awstypes.ProtocolEnumQuic: {
+			validConfig: false,
+		},
+		awstypes.ProtocolEnumTcpQuic: {
 			validConfig: false,
 		},
 	}
