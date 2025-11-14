@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `deliveryDestinationName` - (Required) The name of the delivery destination to assign this policy to.
 * `deliveryDestinationPolicy` - (Required) The contents of the policy.
 
@@ -84,4 +85,4 @@ Using `terraform import`, import CloudWatch Logs Delivery Destination Policy usi
 % terraform import aws_cloudwatch_log_delivery_destination_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b553486ca0d0ad23f7f09cfa92a235bf3de63bbc3667a3f10e2ced01e41a609d -->
+<!-- cache-key: cdktf-0.20.8 input-b0322b6fbd8a6e1dc359748dc15ce131547bd8292e883bf9b42c0cd138a4c8ea -->

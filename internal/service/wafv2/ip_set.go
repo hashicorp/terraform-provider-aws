@@ -249,7 +249,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.WAFAssociatedItemException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.WAFAssociatedItemException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteIPSet(ctx, input)
 	})
 

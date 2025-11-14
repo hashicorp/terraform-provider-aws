@@ -122,7 +122,7 @@ func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeDBClustersInput{}
@@ -181,7 +181,7 @@ func sweepClusterSnapshots(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeDBClusterSnapshotsInput{}
@@ -222,7 +222,7 @@ func sweepClusterParameterGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeDBClusterParameterGroupsInput{}
@@ -270,7 +270,7 @@ func sweepClusterInstances(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeDBInstancesInput{}
@@ -290,7 +290,7 @@ func sweepClusterInstances(region string) error {
 		}
 
 		for _, v := range page.DBInstances {
-			if aws.ToString(v.Engine) != engineNeptune {
+			if aws.ToString(v.Engine) != defaultEngine {
 				continue
 			}
 
@@ -365,7 +365,7 @@ func sweepParameterGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeDBParameterGroupsInput{}
@@ -413,7 +413,7 @@ func sweepSubnetGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NeptuneClient(ctx)
 	input := &neptune.DescribeDBSubnetGroupsInput{}

@@ -22,6 +22,8 @@ data "aws_cloudfront_origin_access_identity" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` (Required) -  The identifier for the origin access identity. For example: `E1ZAKK699EOLAL`.
 
 ## Attribute Reference

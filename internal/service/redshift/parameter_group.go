@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_redshift_parameter_group", name="Parameter Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.ClusterParameterGroup")
 func resourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
@@ -263,9 +264,9 @@ func findParameterGroupByName(ctx context.Context, conn *redshift.Client, name s
 func resourceParameterHash(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrName].(string))
 	// Store the value as a lower case string, to match how we store them in FlattenParameters
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m[names.AttrValue].(string))))
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(m[names.AttrValue].(string)))
 
 	return create.StringHashcode(buf.String())
 }

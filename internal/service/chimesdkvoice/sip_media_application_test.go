@@ -276,7 +276,7 @@ func testAccSipMediaApplicationConfig_basic(rName string) string {
 		fmt.Sprintf(`
 resource "aws_chimesdkvoice_sip_media_application" "test" {
   name       = %[1]q
-  aws_region = data.aws_region.current.name
+  aws_region = data.aws_region.current.region
   endpoints {
     lambda_arn = aws_lambda_function.test.arn
   }
@@ -290,7 +290,7 @@ func testAccSipMediaApplicationConfig_tags1(rName, tagKey1, tagValue1 string) st
 		fmt.Sprintf(`
 resource "aws_chimesdkvoice_sip_media_application" "test" {
   name       = %[1]q
-  aws_region = data.aws_region.current.name
+  aws_region = data.aws_region.current.region
   endpoints {
     lambda_arn = aws_lambda_function.test.arn
   }
@@ -308,7 +308,7 @@ func testAccSipMediaApplicationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, 
 		fmt.Sprintf(`
 resource "aws_chimesdkvoice_sip_media_application" "test" {
   name       = %[1]q
-  aws_region = data.aws_region.current.name
+  aws_region = data.aws_region.current.region
   endpoints {
     lambda_arn = aws_lambda_function.test.arn
   }

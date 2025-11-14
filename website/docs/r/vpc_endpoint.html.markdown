@@ -157,6 +157,7 @@ resource "aws_route53_record" "ptfe_service" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_id` - (Required) The ID of the VPC in which the endpoint will be used.
 * `auto_accept` - (Optional) Accept the VPC endpoint (the VPC endpoint and service need to be in the same AWS account).
 * `policy` - (Optional) A policy to attach to the endpoint that controls access to the service. This is a JSON formatted string. Defaults to full access. All `Gateway` and some `Interface` endpoints support policies - see the [relevant AWS documentation](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints-access.html) for more details. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
@@ -185,7 +186,7 @@ If no security groups are specified, the VPC's [default security group](https://
 
 * `ipv4` - (Optional) The IPv4 address to assign to the endpoint network interface in the subnet. You must provide an IPv4 address if the VPC endpoint supports IPv4.
 * `ipv6` - (Optional) The IPv6 address to assign to the endpoint network interface in the subnet. You must provide an IPv6 address if the VPC endpoint supports IPv6.
-* `subnet` - (Optional) The ID of the subnet. Must have a corresponding subnet in the `subnet_ids` argument.
+* `subnet_id` - (Optional) The ID of the subnet. Must have a corresponding subnet in the `subnet_ids` argument.
 
 ## Timeouts
 
@@ -217,11 +218,37 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_vpc_endpoint.example
+  identity = {
+    id = "vpce-3ecf2a57"
+  }
+}
+
+resource "aws_vpc_endpoint" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the VPC endpoint.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoints using the VPC endpoint `id`. For example:
 
 ```terraform
 import {
-  to = aws_vpc_endpoint.endpoint1
+  to = aws_vpc_endpoint.example
   id = "vpce-3ecf2a57"
 }
 ```
@@ -229,5 +256,5 @@ import {
 Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For example:
 
 ```console
-% terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
+% terraform import aws_vpc_endpoint.example vpce-3ecf2a57
 ```

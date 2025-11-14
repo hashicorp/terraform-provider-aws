@@ -46,12 +46,16 @@ import (
 )
 
 // @EphemeralResource("aws_something_example", name="Example")
-func newEphemeralExample(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeralExample{}, nil
+func newExampleEphemeralResource(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &exampleEphemeralResource{}, nil
 }
 
-type ephemeralExample struct {
-	framework.EphemeralResourceWithConfigure
+type exampleEphemeralResource struct {
+	framework.EphemeralResourceWithModel[exampleEphemeralResourceModel]
+}
+
+type exampleEphemeralResourceModel {
+	// Fields corresponding to attributes in the Schema.
 }
 ```
 

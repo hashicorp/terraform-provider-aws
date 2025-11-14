@@ -23,7 +23,7 @@ phase because a modification has not yet taken place. You can use the
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
--> **Note:** Write-Only argument `masterPasswordWo` is available to use in place of `masterPassword`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+-> **Note:** Write-Only argument `masterPasswordWo` is available to use in place of `masterPassword`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
 
 ## Example Usage
 
@@ -55,17 +55,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allowMajorVersionUpgrade` - (Optional) A value that indicates whether major version upgrades are allowed. Constraints: You must allow major version upgrades when specifying a value for the EngineVersion parameter that is a different major version than the DB cluster's current version.
 * `applyImmediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is
      `false`.
-* `availabilityZones` - (Optional) A list of EC2 Availability Zones that
-  instances in the DB cluster can be created in.
+* `availabilityZones` - (Optional) A list of EC2 Availability Zones that instances in the DB cluster can be created in.
+  DocumentDB automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply.
+  We recommend specifying 3 AZs or using [the `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) if necessary.
 * `backupRetentionPeriod` - (Optional) The days to retain backups for. Default `1`
 * `clusterIdentifierPrefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `clusterIdentifier`.
 * `clusterIdentifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
@@ -81,10 +80,11 @@ This resource supports the following arguments:
     made.
 * `globalClusterIdentifier` - (Optional) The global cluster identifier specified on [`aws_docdb_global_cluster`](/docs/providers/aws/r/docdb_global_cluster.html).
 * `kmsKeyId` - (Optional) The ARN for the KMS encryption key. When specifying `kmsKeyId`, `storageEncrypted` needs to be set to true.
+* `manageMasterUserPassword` - (Optional) Set to `true` to allow Amazon DocumentDB to manage the master user password in AWS Secrets Manager. Cannot be set if `masterPassword` or `masterPasswordWo` is provided.
 * `masterPassword` - (Optional, required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
-    show up in logs, and it will be stored in the state file. Please refer to the DocumentDB Naming Constraints. Conflicts with `masterPasswordWo`.
+    show up in logs, and it will be stored in the state file. Please refer to the DocumentDB Naming Constraints. Conflicts with `masterPasswordWo` and `manageMasterUserPassword`.
 * `masterPasswordWo` - (Optional, Write-Only, required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
-  show up in logs. Please refer to the DocumentDB Naming Constraints. Conflicts with `masterPassword`.
+  show up in logs. Please refer to the DocumentDB Naming Constraints. Conflicts with `masterPassword` and `manageMasterUserPassword`.
 * `masterPasswordWoVersion` - (Optional) Used together with `masterPasswordWo` to trigger an update. Increment this value when an update to the `masterPasswordWo` is required.
 * `masterUsername` - (Required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user.
 * `port` - (Optional) The port on which the DB accepts connections
@@ -92,6 +92,7 @@ This resource supports the following arguments:
 Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
 * `preferredMaintenanceWindow` - (Optional) The weekly time range during which system maintenance can occur, in (UTC) e.g., wed:04:00-wed:04:30
 * `restoreToPointInTime` - (Optional, Forces new resource) A configuration block for restoring a DB instance to an arbitrary point in time. Requires the `identifier` argument to be set with the name of the new DB instance to be created. See [Restore To Point In Time](#restore-to-point-in-time) below for details.
+* `serverlessV2ScalingConfiguration` - (Optional) Scaling configuration of an Amazon DocumentDB Serverless cluster. See [Serverless V2 Scaling Configuration](#serverless-v2-scaling-configuration) below for details.
 * `skipFinalSnapshot` - (Optional) Determines whether a final DB snapshot is created before the DB cluster is deleted. If true is specified, no DB snapshot is created. If false is specified, a DB snapshot is created before the DB cluster is deleted, using the value from `finalSnapshotIdentifier`. Default is `false`.
 * `snapshotIdentifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot. Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
 * `storageEncrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false`.
@@ -99,6 +100,9 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcSecurityGroupIds` - (Optional) List of VPC security groups to associate
   with the Cluster
+
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
 
 ### Restore To Point In Time
 
@@ -109,16 +113,24 @@ The `restoreToPointInTime` block supports the following arguments:
 * `sourceClusterIdentifier` - (Required) The identifier of the source DB cluster from which to restore. Must match the identifier of an existing DB cluster.
 * `useLatestRestorableTime` - (Optional) A boolean value that indicates whether the DB cluster is restored from the latest backup time. Defaults to `false`. Cannot be specified with `restoreToTime`.
 
+### Serverless V2 Scaling Configuration
+
+The `serverlessV2ScalingConfiguration` block supports the following arguments.
+Adding this block (i.e. switching to serverless) or removing it (i.e. switching from serverless) will trigger cluster replacement.
+
+* `maxCapacity` - (Required) Maximum number of Amazon DocumentDB capacity units (DCUs) for an instance in an Amazon DocumentDB Serverless cluster. Valid values are multiples of 0.5 between 1 and 256.
+* `minCapacity` - (Required) Minimum number of Amazon DocumentDB capacity units (DCUs) for an instance in an Amazon DocumentDB Serverless cluster. Valid values are multiples of 0.5 between 0.5 and 256.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of cluster
-* `clusterMembers` – List of DocumentDB Instances that are a part of this cluster
+* `clusterMembers` - List of DocumentDB Instances that are a part of this cluster
 * `clusterResourceId` - The DocumentDB Cluster Resource ID
 * `endpoint` - The DNS address of the DocumentDB instance
 * `hostedZoneId` - The Route53 Hosted Zone ID of the endpoint
-* `id` - The DocumentDB Cluster Identifier
+* `id` - (**Deprecated**) Amazon Resource Name (ARN) of cluster
 * `readerEndpoint` - A read-only endpoint for the DocumentDB cluster, automatically load-balanced across replicas
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -163,4 +175,4 @@ Using `terraform import`, import DocumentDB Clusters using the `clusterIdentifie
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-94dc28f4c731c3fea3b96e91a9c30b57b0b547714f0aa8f8d174f9d492b570e2 -->
+<!-- cache-key: cdktf-0.20.8 input-d4d855f6f5ea076c1e73f4ac383a4dc9a426c91b66c5bb3b193cc62d30d7986b -->

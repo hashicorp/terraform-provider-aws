@@ -42,11 +42,12 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dbInstanceClass` - (Required) DB instance class for the reserved DB instance.
 * `duration` - (Required) Duration of the reservation in years or seconds. Valid values are `1`, `3`, `31536000`, `94608000`
 * `multiAz` - (Required) Whether the reservation applies to Multi-AZ deployments.
 * `offeringType` - (Required) Offering type of this reserved DB instance. Valid values are `No Upfront`, `Partial Upfront`, `All Upfront`.
-* `productDescription` - (Required) Description of the reserved DB instance.
+* `productDescription` - (Required) Description of the reserved DB instance. Example values are `postgresql`, `aurora-postgresql`, `mysql`, `aurora-mysql`, `mariadb`.
 
 ## Attribute Reference
 
@@ -57,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 * `fixedPrice` - Fixed price charged for this reserved DB instance.
 * `offeringId` - Unique identifier for the reservation.
 
-<!-- cache-key: cdktf-0.20.8 input-a71cd524be029d3d53583d22786d99a97f23ac7fc0880861778d7b20d3ece4a7 -->
+<!-- cache-key: cdktf-0.20.8 input-b098be33c593e1c19c7ae5efc8dafd498f157287e5276a8b2dec8f7afd9b07ba -->

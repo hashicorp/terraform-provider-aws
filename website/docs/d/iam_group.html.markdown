@@ -22,6 +22,8 @@ data "aws_iam_group" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `group_name` - (Required) Friendly IAM group name to match.
 
 ## Attribute Reference

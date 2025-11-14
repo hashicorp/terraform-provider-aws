@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Hours of Operation.
 
 By `name`
 
-```hcl
+```terraform
 data "aws_connect_hours_of_operation" "test" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Test"
@@ -23,7 +23,7 @@ data "aws_connect_hours_of_operation" "test" {
 
 By `hours_of_operation_id`
 
-```hcl
+```terraform
 data "aws_connect_hours_of_operation" "test" {
   instance_id           = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   hours_of_operation_id = "cccccccc-bbbb-cccc-dddd-111111111111"
@@ -32,13 +32,14 @@ data "aws_connect_hours_of_operation" "test" {
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `hours_of_operation_id` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `hours_of_operation_id` - (Optional) Returns information on a specific Hours of Operation by hours of operation id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Hours of Operation by name
+
+~> **NOTE:** `instance_id` and one of either `name` or `hours_of_operation_id` is required.
 
 ## Attribute Reference
 

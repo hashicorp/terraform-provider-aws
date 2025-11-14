@@ -365,12 +365,13 @@ func flattenCertificates(apiObject *types.Cluster) []map[string]any {
 	tfMap := map[string]any{}
 
 	if apiObject, clusterState := apiObject.Certificates, apiObject.State; apiObject != nil {
-		if clusterState == types.ClusterStateUninitialized {
+		switch clusterState {
+		case types.ClusterStateUninitialized:
 			tfMap["cluster_csr"] = aws.ToString(apiObject.ClusterCsr)
 			tfMap["aws_hardware_certificate"] = aws.ToString(apiObject.AwsHardwareCertificate)
 			tfMap["hsm_certificate"] = aws.ToString(apiObject.HsmCertificate)
 			tfMap["manufacturer_hardware_certificate"] = aws.ToString(apiObject.ManufacturerHardwareCertificate)
-		} else if clusterState == types.ClusterStateActive {
+		case types.ClusterStateActive:
 			tfMap["cluster_certificate"] = aws.ToString(apiObject.ClusterCertificate)
 		}
 	}

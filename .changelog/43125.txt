@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dms_endpoint: Add `oracle_settings` configuration block for authentication method
+```
+
+```release-note:enhancement
+resource/aws_dms_replication_instance: Add `dns_name_servers` attribute and `kerberos_authentication_settings` configuration block for Kerberos authentication settings
+```

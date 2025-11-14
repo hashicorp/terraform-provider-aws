@@ -34,13 +34,17 @@ import (
 
 // @FrameworkResource("aws_securityhub_automation_rule", name="Automation Rule")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.AutomationRulesConfig")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newAutomationRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &automationRuleResource{}, nil
 }
 
 type automationRuleResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[automationRuleResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *automationRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -542,6 +546,7 @@ func findAutomationRules(ctx context.Context, conn *securityhub.Client, input *s
 }
 
 type automationRuleResourceModel struct {
+	framework.WithRegionModel
 	Actions     fwtypes.SetNestedObjectValueOf[automationRulesActionModel]          `tfsdk:"actions"`
 	Criteria    fwtypes.ListNestedObjectValueOf[automationRulesFindingFiltersModel] `tfsdk:"criteria"`
 	Description types.String                                                        `tfsdk:"description"`

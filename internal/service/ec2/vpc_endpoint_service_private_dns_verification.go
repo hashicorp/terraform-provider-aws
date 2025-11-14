@@ -23,13 +23,14 @@ import (
 // @FrameworkResource("aws_vpc_endpoint_service_private_dns_verification", name="VPC Endpoint Service Private DNS Verification")
 func newVPCEndpointServicePrivateDNSVerificationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcEndpointServicePrivateDNSVerificationResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 
 	return r, nil
 }
 
 type vpcEndpointServicePrivateDNSVerificationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcEndpointServicePrivateDNSVerificationResourceModel]
 	framework.WithNoOpRead
 	framework.WithNoUpdate
 	framework.WithNoOpDelete
@@ -90,6 +91,7 @@ func (r *vpcEndpointServicePrivateDNSVerificationResource) Create(ctx context.Co
 }
 
 type vpcEndpointServicePrivateDNSVerificationResourceModel struct {
+	framework.WithRegionModel
 	ServiceID           types.String   `tfsdk:"service_id"`
 	Timeouts            timeouts.Value `tfsdk:"timeouts"`
 	WaitForVerification types.Bool     `tfsdk:"wait_for_verification"`

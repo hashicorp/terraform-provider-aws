@@ -35,7 +35,7 @@ func newWorkspaceServiceAccountResource(_ context.Context) (resource.ResourceWit
 }
 
 type workspaceServiceAccountResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[workspaceServiceAccountResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 }
@@ -235,6 +235,7 @@ func findWorkspaceServiceAccountByTwoPartKey(ctx context.Context, conn *grafana.
 }
 
 type workspaceServiceAccountResourceModel struct {
+	framework.WithRegionModel
 	GrafanaRole      fwtypes.StringEnum[awstypes.Role] `tfsdk:"grafana_role"`
 	ID               types.String                      `tfsdk:"id"`
 	Name             types.String                      `tfsdk:"name"`

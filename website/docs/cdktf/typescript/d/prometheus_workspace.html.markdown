@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `workspaceId` - (Required) Prometheus workspace ID.
 
 ## Attribute Reference
@@ -54,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the Prometheus workspace.
 * `tags` - Tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-0c78b2184575da6a4ef65a1385b9ae96d6e113933b9d4a6da9019f9ab1d32c5e -->
+<!-- cache-key: cdktf-0.20.8 input-95c8c62c9560c5b093fa62ba597605516fc1bd934993ec08985a6261054611b9 -->

@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_resiliencehub_resiliency_policy: `policy`, `policy.az`, `policy.hardware`, `policy.software`, and `policy.region` are now list nested blocks instead of single nested blocks
+```

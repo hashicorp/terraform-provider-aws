@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -42,6 +43,10 @@ func resourceServerlessCluster() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_sasl_iam": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,6 +187,17 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("cluster_uuid", clusterUUID)
 	if err := d.Set(names.AttrVPCConfig, flattenVpcConfigs(cluster.Serverless.VpcConfigs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
+	}
+
+	output, err := findBootstrapBrokersByARN(ctx, conn, d.Id())
+
+	switch {
+	case errs.IsA[*types.ForbiddenException](err):
+		d.Set("bootstrap_brokers_sasl_iam", nil)
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", clusterARN, err)
+	default:
+		d.Set("bootstrap_brokers_sasl_iam", sortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslIam)))
 	}
 
 	setTagsOut(ctx, cluster.Tags)

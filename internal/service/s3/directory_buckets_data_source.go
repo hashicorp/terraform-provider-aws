@@ -5,7 +5,6 @@ package s3
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -13,7 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,17 +26,19 @@ func newDirectoryBucketsDataSource(context.Context) (datasource.DataSourceWithCo
 }
 
 type directoryBucketsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[directoryBucketsDataSourceModel]
 }
 
 func (d *directoryBucketsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARNs: schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
 			"buckets": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -71,17 +73,18 @@ func (d *directoryBucketsDataSource) Read(ctx context.Context, request datasourc
 		}
 	}
 
-	data.ARNs = flex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(buckets, func(v string) string {
-		return d.Meta().RegionalARN(ctx, "s3express", fmt.Sprintf("bucket/%s", v))
+	data.ARNs = fwflex.FlattenFrameworkStringValueListOfString(ctx, tfslices.ApplyToAll(buckets, func(v string) string {
+		return d.Meta().RegionalARN(ctx, "s3express", "bucket/"+v)
 	}))
-	data.Buckets = flex.FlattenFrameworkStringValueList(ctx, buckets)
+	data.Buckets = fwflex.FlattenFrameworkStringValueListOfString(ctx, buckets)
 	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type directoryBucketsDataSourceModel struct {
-	ARNs    types.List   `tfsdk:"arns"`
-	Buckets types.List   `tfsdk:"buckets"`
-	ID      types.String `tfsdk:"id"`
+	framework.WithRegionModel
+	ARNs    fwtypes.ListOfString `tfsdk:"arns"`
+	Buckets fwtypes.ListOfString `tfsdk:"buckets"`
+	ID      types.String         `tfsdk:"id"`
 }

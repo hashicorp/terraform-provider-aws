@@ -16,7 +16,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -92,6 +91,16 @@ func resourceVPNConnection() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(outsideIPAddressType_Values(), false),
 			},
+			"preshared_key_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"preshared_key_storage": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(preSharedKeyStorageType_Values(), false),
+			},
 			"remote_ipv4_network_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -144,6 +153,15 @@ func resourceVPNConnection() *schema.Resource {
 			"transport_transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"tunnel_bandwidth": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.VpnTunnelBandwidth](),
+				// Not supported on VGW
+				ConflictsWith: []string{"vpn_gateway_id"},
 			},
 			"tunnel_inside_ip_version": {
 				Type:             schema.TypeString,
@@ -684,6 +702,10 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		Type:              aws.String(d.Get(names.AttrType).(string)),
 	}
 
+	if v, ok := d.GetOk("preshared_key_storage"); ok {
+		input.PreSharedKeyStorage = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrTransitGatewayID); ok {
 		input.TransitGatewayId = aws.String(v.(string))
 	}
@@ -710,7 +732,8 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	vpnConnection, err := findVPNConnectionByID(ctx, conn, d.Id())
 
@@ -724,17 +747,11 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("vpn-connection/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, vpnConnectionARN(ctx, c, d.Id()))
 	d.Set("core_network_arn", vpnConnection.CoreNetworkArn)
 	d.Set("core_network_attachment_arn", vpnConnection.CoreNetworkAttachmentArn)
 	d.Set("customer_gateway_id", vpnConnection.CustomerGatewayId)
+	d.Set("preshared_key_arn", vpnConnection.PreSharedKeyArn)
 	d.Set(names.AttrType, vpnConnection.Type)
 	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
 
@@ -779,6 +796,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("remote_ipv6_network_cidr", v.RemoteIpv6NetworkCidr)
 		d.Set("static_routes_only", v.StaticRoutesOnly)
 		d.Set("transport_transit_gateway_attachment_id", v.TransportTransitGatewayAttachmentId)
+		d.Set("tunnel_bandwidth", v.TunnelBandwidth)
 		d.Set("tunnel_inside_ip_version", v.TunnelInsideIpVersion)
 
 		for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
@@ -840,6 +858,12 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("tunnel2_cgw_inside_address", nil)
 		d.Set("tunnel2_preshared_key", nil)
 		d.Set("tunnel2_vgw_inside_address", nil)
+	}
+
+	if tunnelInfo != nil && regexache.MustCompile("REDACTED").MatchString(tunnelInfo.Tunnel1PreSharedKey) {
+		d.Set("preshared_key_storage", preSharedKeyStorageTypeSecretsManager)
+	} else {
+		d.Set("preshared_key_storage", preSharedKeyStorageTypeStandard)
 	}
 
 	return diags
@@ -910,11 +934,20 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
-		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+names.AttrAddress).(string); options != nil && address != "" {
+		if options, address, pskStorageChanged := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+names.AttrAddress).(string), d.HasChange("preshared_key_storage"); (options != nil || pskStorageChanged) && address != "" {
 			input := ec2.ModifyVpnTunnelOptionsInput{
-				TunnelOptions:             options,
 				VpnConnectionId:           aws.String(d.Id()),
 				VpnTunnelOutsideIpAddress: aws.String(address),
+			}
+
+			if pskStorageChanged {
+				input.PreSharedKeyStorage = aws.String(d.Get("preshared_key_storage").(string))
+			}
+
+			if options != nil {
+				input.TunnelOptions = options
+			} else {
+				input.TunnelOptions = &awstypes.ModifyVpnTunnelOptionsSpecification{}
 			}
 
 			_, err := conn.ModifyVpnTunnelOptions(ctx, &input)
@@ -957,6 +990,10 @@ func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
+func vpnConnectionARN(ctx context.Context, c *conns.AWSClient, vpnConnectionID string) string {
+	return c.RegionalARN(ctx, names.EC2, "vpn-connection/"+vpnConnectionID)
+}
+
 func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *awstypes.VpnConnectionOptionsSpecification {
 	apiObject := &awstypes.VpnConnectionOptionsSpecification{}
 
@@ -990,6 +1027,10 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *awstypes.V
 
 	if v, ok := d.GetOk("static_routes_only"); ok {
 		apiObject.StaticRoutesOnly = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.Get("tunnel_bandwidth").(string); ok {
+		apiObject.TunnelBandwidth = awstypes.VpnTunnelBandwidth(v)
 	}
 
 	if v, ok := d.GetOk("transport_transit_gateway_attachment_id"); ok {

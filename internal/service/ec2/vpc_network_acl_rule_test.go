@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -296,10 +297,22 @@ func TestAccVPCNetworkACLRule_allProtocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_number", "150"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "22"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccVPCNetworkACLRuleConfig_allProtocolNoRealUpdate(rName),
-				PlanOnly: true,
+				Config: testAccVPCNetworkACLRuleConfig_allProtocolNoRealUpdate(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -329,10 +342,22 @@ func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_number", "150"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "22"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccVPCNetworkACLRuleConfig_tcpProtocolNoRealUpdate(rName),
-				PlanOnly: true,
+				Config: testAccVPCNetworkACLRuleConfig_tcpProtocolNoRealUpdate(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})

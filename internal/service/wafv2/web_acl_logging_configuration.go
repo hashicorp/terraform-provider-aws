@@ -148,10 +148,10 @@ func resourceWebACLLoggingConfiguration() *schema.Resource {
 											Type:     schema.TypeString,
 											Required: true,
 											ValidateFunc: validation.All(
-												validation.StringLenBetween(1, 40),
+												validation.StringLenBetween(1, 64),
 												// The value is returned in lower case by the API.
 												// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-												validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+												validation.StringMatch(regexache.MustCompile(`^.*\S.*$`), "Must be any string that contains at least one non-whitespace character"),
 											),
 										},
 									},
@@ -579,7 +579,7 @@ func redactedFieldsHash(v any) int {
 		sh, ok := v[0].(map[string]any)
 		if ok {
 			if name, ok := sh[names.AttrName].(string); ok {
-				buf.WriteString(fmt.Sprintf("%s-", name))
+				fmt.Fprintf(&buf, "%s-", name)
 			}
 		}
 	}

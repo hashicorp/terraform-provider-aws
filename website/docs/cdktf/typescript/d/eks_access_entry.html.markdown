@@ -40,8 +40,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `clusterName` – (Required) Name of the EKS Cluster.
-* `principalArn` – (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `clusterName` - (Required) Name of the EKS Cluster.
+* `principalArn` - (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
 
 ## Attribute Reference
 
@@ -49,10 +52,10 @@ This data source exports the following attributes in addition to the arguments a
 
 * `accessEntryArn` - Amazon Resource Name (ARN) of the Access Entry.
 * `createdAt` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
-* `kubernetesGroups` – List of string which can optionally specify the Kubernetes groups the user would belong to when creating an access entry.
+* `kubernetesGroups` - List of string which can optionally specify the Kubernetes groups the user would belong to when creating an access entry.
 * `modifiedAt` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
 * `userName` - Defaults to principal ARN if user is principal else defaults to assume-role/session-name is role is used.
 * `type` - Defaults to STANDARD which provides the standard workflow. EC2_LINUX, EC2_WINDOWS, FARGATE_LINUX types disallow users to input a username or groups, and prevent associations.
 * `tagsAll` - (Optional) Key-value map of resource tags, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-9bbb26118237e89b1ec4a4af4451e3c4f5378f139ebdd69cc542649692e1985d -->
+<!-- cache-key: cdktf-0.20.8 input-438079fb251c5377a358eab6cd2e1803f62a912fa392536d95770ed31cf0b6d0 -->

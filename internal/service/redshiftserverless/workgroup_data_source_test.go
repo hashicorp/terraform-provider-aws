@@ -47,6 +47,7 @@ func TestAccRedshiftServerlessWorkgroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPubliclyAccessible, resourceName, names.AttrPubliclyAccessible),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "track_name", resourceName, "track_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workgroup_id", resourceName, "workgroup_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workgroup_name", resourceName, "workgroup_name"),
 				),

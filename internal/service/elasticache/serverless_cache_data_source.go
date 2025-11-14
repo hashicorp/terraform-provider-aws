@@ -19,15 +19,15 @@ import (
 )
 
 // @FrameworkDataSource("aws_elasticache_serverless_cache", name="Serverless Cache")
-func newDataSourceServerlessCache(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceServerlessCache{}, nil
+func newServerlessCacheDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &serverlessCacheDataSource{}, nil
 }
 
-type dataSourceServerlessCache struct {
-	framework.DataSourceWithConfigure
+type serverlessCacheDataSource struct {
+	framework.DataSourceWithModel[serverlessCacheDataSourceModel]
 }
 
-func (d *dataSourceServerlessCache) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *serverlessCacheDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -92,8 +92,8 @@ func (d *dataSourceServerlessCache) Schema(ctx context.Context, request datasour
 	}
 }
 
-func (d *dataSourceServerlessCache) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data dsServerlessCache
+func (d *serverlessCacheDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data serverlessCacheDataSourceModel
 	conn := d.Meta().ElastiCacheClient(ctx)
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
@@ -119,7 +119,8 @@ func (d *dataSourceServerlessCache) Read(ctx context.Context, request datasource
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dsServerlessCache struct {
+type serverlessCacheDataSourceModel struct {
+	framework.WithRegionModel
 	ARN                    fwtypes.ARN                               `tfsdk:"arn"`
 	CacheUsageLimits       fwtypes.ObjectValueOf[dsCacheUsageLimits] `tfsdk:"cache_usage_limits"`
 	CreateTime             timetypes.RFC3339                         `tfsdk:"create_time"`

@@ -30,16 +30,18 @@ import (
 
 // @SDKResource("aws_codebuild_project", name="Project")
 // @Tags
+// @ArnIdentity
+// @V60SDKv2Fix
+// @ArnFormat("project/{name}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.Project")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccPreCheckSourceCredentialsForServerTypeGithub")
 func resourceProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProjectCreate,
 		ReadWithoutTimeout:   resourceProjectRead,
 		UpdateWithoutTimeout: resourceProjectUpdate,
 		DeleteWithoutTimeout: resourceProjectDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -122,6 +124,12 @@ func resourceProject() *schema.Resource {
 						},
 					},
 				},
+			},
+			"auto_retry_limit": {
+				Description: "Maximum number of additional automatic retries after a failed build. The default value is 0.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
 			},
 			"badge_enabled": {
 				Type:     schema.TypeBool,
@@ -250,6 +258,26 @@ func resourceProject() *schema.Resource {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ComputeType](),
+						},
+						"docker_server": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"compute_type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.ComputeType](),
+									},
+									names.AttrSecurityGroupIDs: {
+										Type:     schema.TypeList,
+										MaxItems: 5,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
 						},
 						"fleet": {
 							Type:     schema.TypeList,
@@ -794,6 +822,10 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.Artifacts = expandProjectArtifacts(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("auto_retry_limit"); ok {
+		input.AutoRetryLimit = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("badge_enabled"); ok {
 		input.BadgeEnabled = aws.Bool(v.(bool))
 	}
@@ -860,7 +892,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	// InvalidInputException: CodeBuild is not authorized to perform
 	// InvalidInputException: Not authorized to perform DescribeSecurityGroups
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateProject(ctx, input)
 	}, "ot authorized to perform")
 
@@ -916,6 +948,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	} else {
 		d.Set("artifacts", nil)
 	}
+	d.Set("auto_retry_limit", project.AutoRetryLimit)
 	if project.Badge != nil {
 		d.Set("badge_enabled", project.Badge.BadgeEnabled)
 		d.Set("badge_url", project.Badge.BadgeRequestUrl)
@@ -1008,6 +1041,10 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			if v, ok := d.GetOk("artifacts"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.Artifacts = expandProjectArtifacts(v.([]any)[0].(map[string]any))
 			}
+		}
+
+		if d.HasChange("auto_retry_limit") {
+			input.AutoRetryLimit = aws.Int32(int32(d.Get("auto_retry_limit").(int)))
 		}
 
 		if d.HasChange("badge_enabled") {
@@ -1124,7 +1161,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		// But its a slice of pointers so if not set for every update, they get removed.
 		input.Tags = getTagsIn(ctx)
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateProject(ctx, input)
 		}, "ot authorized to perform")
 
@@ -1390,6 +1427,21 @@ func expandProjectEnvironment(tfMap map[string]any) *types.ProjectEnvironment {
 
 	if v, ok := tfMap["compute_type"].(string); ok && v != "" {
 		apiObject.ComputeType = types.ComputeType(v)
+	}
+
+	if v, ok := tfMap["docker_server"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+
+		dockerServer := &types.DockerServer{}
+
+		if v, ok := tfMap["compute_type"]; ok && v.(string) != "" {
+			dockerServer.ComputeType = types.ComputeType(v.(string))
+		}
+		if v, ok := tfMap[names.AttrSecurityGroupIDs].([]any); ok && len(v) > 0 {
+			dockerServer.SecurityGroupIds = flex.ExpandStringyValueList[string](v)
+		}
+
+		apiObject.DockerServer = dockerServer
 	}
 
 	if v, ok := tfMap["fleet"].([]any); ok && len(v) > 0 && v[0] != nil {
@@ -1827,39 +1879,39 @@ func resourceProjectArtifactsHash(v any) int {
 	tfMap := v.(map[string]any)
 
 	if v, ok := tfMap["artifact_identifier"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap["bucket_owner_access"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap["encryption_disabled"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+		fmt.Fprintf(&buf, "%t-", v.(bool))
 	}
 
 	if v, ok := tfMap[names.AttrLocation]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap["namespace_type"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap["override_artifact_name"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+		fmt.Fprintf(&buf, "%t-", v.(bool))
 	}
 
 	if v, ok := tfMap["packaging"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap[names.AttrPath]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap[names.AttrType]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	return create.StringHashcode(buf.String())
@@ -1886,6 +1938,7 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []any {
 		names.AttrType:                apiObject.Type,
 	}
 
+	tfMap["docker_server"] = flattenDockerServer(apiObject.DockerServer)
 	tfMap["fleet"] = flattenFleet(apiObject.Fleet)
 	tfMap["image"] = aws.ToString(apiObject.Image)
 	tfMap[names.AttrCertificate] = aws.ToString(apiObject.Certificate)
@@ -1894,6 +1947,22 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []any {
 
 	if apiObject.EnvironmentVariables != nil {
 		tfMap["environment_variable"] = flattenEnvironmentVariables(apiObject.EnvironmentVariables)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenDockerServer(apiObject *types.DockerServer) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"compute_type": apiObject.ComputeType,
+	}
+
+	if apiObject.SecurityGroupIds != nil {
+		tfMap[names.AttrSecurityGroupIDs] = apiObject.SecurityGroupIds
 	}
 
 	return []any{tfMap}

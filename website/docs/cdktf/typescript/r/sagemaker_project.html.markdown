@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `projectName` - (Required) The name of the Project.
 * `projectDescription` - (Optional) A description for the project.
 * `serviceCatalogProvisioningDetails` - (Required) The product ID and provisioning artifact ID to provision a service catalog. See [Service Catalog Provisioning Details](#service-catalog-provisioning-details) below.
@@ -97,4 +98,4 @@ Using `terraform import`, import SageMaker AI Projects using the `projectName`. 
 % terraform import aws_sagemaker_project.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e337c3ee506eba3a6cace19d404209baa5681994d4a31b7d2c41b896c1e7e612 -->
+<!-- cache-key: cdktf-0.20.8 input-92de3397c765e8f4767880e01b5821fa0d06e8f9ef5c2a2057fb7baea4759f04 -->

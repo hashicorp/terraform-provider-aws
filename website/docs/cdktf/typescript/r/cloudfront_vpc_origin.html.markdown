@@ -57,8 +57,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-### Top Level Arguments
-
 The following arguments are required:
 
 * `vpcOriginEndpointConfig` (Required) - The VPC origin endpoint configuration.
@@ -117,4 +115,4 @@ Using `terraform import`, import Cloudfront VPC origins using the `id`. For exam
 % terraform import aws_cloudfront_vpc_origin vo_JQEa410sssUFoY6wMkx69j
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6016cdb864e6c3ddc6c09e96a8ebce64ab5bee836f037a632ebedb340cb4b5b9 -->
+<!-- cache-key: cdktf-0.20.8 input-b8121373dd1c9ac36c67d8002c268d824cce157f17c6df285e9572fae241b4ec -->

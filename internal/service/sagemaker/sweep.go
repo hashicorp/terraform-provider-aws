@@ -482,9 +482,11 @@ func sweepStudioLifecyclesConfig(ctx context.Context, client *conns.AWSClient) (
 
 func sweepUserProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.SageMakerClient(ctx)
-	var input sagemaker.ListUserProfilesInput
-	sweepResources := make([]sweep.Sweepable, 0)
 
+	var sweepResources []sweep.Sweepable
+	r := resourceUserProfile()
+
+	var input sagemaker.ListUserProfilesInput
 	pages := sagemaker.NewListUserProfilesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
@@ -494,11 +496,19 @@ func sweepUserProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 		}
 
 		for _, v := range page.UserProfiles {
-			r := resourceUserProfile()
+			describeInput := sagemaker.DescribeUserProfileInput{
+				DomainId:        v.DomainId,
+				UserProfileName: v.UserProfileName,
+			}
+			userProfile, err := conn.DescribeUserProfile(ctx, &describeInput)
+			if err != nil {
+				return nil, err
+			}
+
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.UserProfileName))
-			d.Set("user_profile_name", v.UserProfileName)
-			d.Set("domain_id", v.DomainId)
+			d.SetId(aws.ToString(userProfile.UserProfileArn))
+			d.Set("user_profile_name", userProfile.UserProfileName)
+			d.Set("domain_id", userProfile.DomainId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

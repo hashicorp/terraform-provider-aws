@@ -43,7 +43,7 @@ class MyConvertedCode(TerraformStack):
         example_agent_permissions = DataAwsIamPolicyDocument(self, "example_agent_permissions",
             statement=[DataAwsIamPolicyDocumentStatement(
                 actions=["bedrock:InvokeModel"],
-                resources=["arn:${" + data_aws_partition_current.partition + "}:bedrock:${" + data_aws_region_current.name + "}::foundation-model/anthropic.claude-v2"
+                resources=["arn:${" + data_aws_partition_current.partition + "}:bedrock:${" + data_aws_region_current.region + "}::foundation-model/anthropic.claude-v2"
                 ]
             )
             ]
@@ -57,7 +57,7 @@ class MyConvertedCode(TerraformStack):
                     variable="aws:SourceAccount"
                 ), DataAwsIamPolicyDocumentStatementCondition(
                     test="ArnLike",
-                    values=["arn:${" + data_aws_partition_current.partition + "}:bedrock:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:agent/*"
+                    values=["arn:${" + data_aws_partition_current.partition + "}:bedrock:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:agent/*"
                     ],
                     variable="AWS:SourceArn"
                 )
@@ -100,12 +100,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agent_collaboration` - (Optional) Agents collaboration role. Valid values: `SUPERVISOR`, `SUPERVISOR_ROUTER`, `DISABLED`.
 * `customer_encryption_key_arn` - (Optional) ARN of the AWS KMS key that encrypts the agent.
 * `description` - (Optional) Description of the agent.
 * `guardrail_configuration` - (Optional) Details about the guardrail associated with the agent. See [`guardrail_configuration` Block](#guardrail_configuration-block) for details.
 * `idle_session_ttl_in_seconds` - (Optional) Number of seconds for which Amazon Bedrock keeps information about a user's conversation with the agent. A user interaction remains active for the amount of time specified. If no conversation occurs during this time, the session expires and Amazon Bedrock deletes any data provided before the timeout.
-* `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users. The valid range is 40 - 8000 characters.
+* `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users. The valid range is 40 - 20000 characters.
 * `memory_configuration` (Optional) Configurations for the agent's ability to retain the conversational context.
 * `prepare_agent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
 * `prompt_override_configuration` (Optional) Configurations to override prompt templates in different parts of an agent sequence. For more information, see [Advanced prompts](https://docs.aws.amazon.com/bedrock/latest/userguide/advanced-prompts.html). See [`prompt_override_configuration` Block](#prompt_override_configuration-block) for details.
@@ -162,6 +163,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `agent_id` - Unique identifier of the agent.
 * `agent_version` - Version of the agent.
 * `id` - Unique identifier of the agent.
+* `prepared_at` - Timestamp of when the agent was last prepared.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -197,4 +199,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent using the agent
 % terraform import aws_bedrockagent_agent.example GGRRAED6JP
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-74bfbe758e52c4d916b5181cc494b11841cf02d99c62e86e248858a9a754488f -->
+<!-- cache-key: cdktf-0.20.8 input-a99e781ec67fef057a9939938900924b660de8f6022d71e748011e2b654898a7 -->

@@ -38,17 +38,17 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `awsAccountId` - (Optional) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `dataSetId` - (Required) Identifier for the data set.
-
-The following arguments are optional:
-
-* `awsAccountId` - (Optional) AWS account ID.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 See the [Data Set Resource](/docs/providers/aws/r/quicksight_data_set.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.8 input-8492869a248e84e19ddd16f07980df52ef0e93e1c422dbbba08a0d3de40e4ec1 -->
+<!-- cache-key: cdktf-0.20.8 input-3bf8781b75f8c6b7cb58981945bb86d73f66921df1e82efd8ebc01d732f7ba6b -->

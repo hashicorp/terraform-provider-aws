@@ -1,10 +1,6 @@
-# IMPORTANT: Only add linters whose names start with letters A-E here.
-issues:
-  max-issues-per-linter: 10
-  max-same-issues: 3
-
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
     # !! only add a-e linters here
     - asasalint
@@ -17,20 +13,25 @@ linters:
     - errcheck
     - errname
     - errorlint
-
-linters-settings:
-  copyloopvar:
-    check-alias: true
-  dogsled:
-    max-blank-identifiers: 3
-  errcheck:
-    exclude-functions:
-      - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceData).Set
-      - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceDiff).SetNewComputed
-      - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceDiff).ForceNew
-      - io:Close
-  errorlint:
-    errorf: false
+  settings:
+    copyloopvar:
+      check-alias: true
+    dogsled:
+      max-blank-identifiers: 3
+    errcheck:
+      exclude-functions:
+        - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceData).Set
+        - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceDiff).SetNewComputed
+        - (*github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.ResourceDiff).ForceNew
+        - (io.ReadCloser).Close
+        - (io.WriteCloser).Close
+        - (*os.File).Close
+        - os.Remove
+        - os.Setenv
+        - os.Unsetenv
+issues:
+  max-issues-per-linter: 10
+  max-same-issues: 3
 
 run:
   timeout: 75m

@@ -43,7 +43,7 @@ func newRecommendationPreferencesResource(context.Context) (resource.ResourceWit
 }
 
 type recommendationPreferencesResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[recommendationPreferencesResourceModel]
 	framework.WithImportByID
 }
 
@@ -71,7 +71,7 @@ func (r *recommendationPreferencesResource) Schema(ctx context.Context, request 
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.OneOf(enum.Slice(awstypes.ResourceTypeAutoScalingGroup, awstypes.ResourceTypeEc2Instance, awstypes.ResourceTypeRdsDbInstance)...),
+					stringvalidator.OneOf(enum.Slice(awstypes.ResourceTypeAutoScalingGroup, awstypes.ResourceTypeEc2Instance, awstypes.ResourceTypeRdsDbInstance, awstypes.ResourceTypeAuroraDbClusterStorage)...),
 				},
 			},
 			"savings_estimation_mode": schema.StringAttribute{
@@ -408,6 +408,7 @@ func findRecommendationPreferenceses(ctx context.Context, conn *computeoptimizer
 }
 
 type recommendationPreferencesResourceModel struct {
+	framework.WithRegionModel
 	EnhancedInfrastructureMetrics fwtypes.StringEnum[awstypes.EnhancedInfrastructureMetrics]      `tfsdk:"enhanced_infrastructure_metrics"`
 	ExternalMetricsPreference     fwtypes.ListNestedObjectValueOf[externalMetricsPreferenceModel] `tfsdk:"external_metrics_preference"`
 	ID                            types.String                                                    `tfsdk:"id"`

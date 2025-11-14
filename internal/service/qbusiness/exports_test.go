@@ -4,7 +4,7 @@
 package qbusiness
 
 var (
-	ResourceApplication = newResourceApplication
+	ResourceApplication = newApplicationResource
 
 	FindApplicationByID = findApplicationByID
 )

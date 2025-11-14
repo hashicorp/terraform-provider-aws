@@ -22,6 +22,7 @@ import (
 )
 
 // @SDKResource("aws_vpc_ipam_organization_admin_account", name="IPAM Organization Admin Account")
+// @Region(global=true)
 func resourceIPAMOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMOrganizationAdminAccountCreate,

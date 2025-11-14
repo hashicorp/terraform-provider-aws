@@ -47,8 +47,8 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
-
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired transit gateway route table.
 
@@ -57,7 +57,6 @@ which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayRouteTables.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A Transit Gateway Route Table will be selected if any one of the given values matches.
 
@@ -74,4 +73,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-dd6ce3b8d03c97c0be1c62a1eb6f7e48e7f33a7530f057628e07baf248805ae7 -->
+<!-- cache-key: cdktf-0.20.8 input-4ffdf5dec2a933ce36ef2c845a3b4345f13e90b08b93622ca8d406fc548b4eb7 -->

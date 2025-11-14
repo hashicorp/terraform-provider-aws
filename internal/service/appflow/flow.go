@@ -7,12 +7,10 @@ import (
 	"context"
 	"log"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -33,26 +31,17 @@ import (
 
 // @SDKResource("aws_appflow_flow", name="Flow")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @ArnFormat("flow/{name}", attribute="arn")
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow;appflow.DescribeFlowOutput")
+// @Testing(idAttrDuplicates="name")
 func resourceFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowCreate,
 		ReadWithoutTimeout:   resourceFlowRead,
 		UpdateWithoutTimeout: resourceFlowUpdate,
 		DeleteWithoutTimeout: resourceFlowDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				p, err := arn.Parse(d.Id())
-				if err != nil {
-					return nil, err
-				}
-				name := strings.TrimPrefix(p.Resource, "flow/")
-				d.Set(names.AttrName, name)
-
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -434,6 +423,11 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"data_transfer_api": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.SalesforceDataTransferApi](),
+												},
 												"error_handling_config": {
 													Type:     schema.TypeList,
 													Optional: true,
@@ -935,6 +929,11 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"data_transfer_api": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.SalesforceDataTransferApi](),
+												},
 												"enable_dynamic_field_update": {
 													Type:     schema.TypeBool,
 													Optional: true,
@@ -947,11 +946,6 @@ func resourceFlow() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
-												},
-												"data_transfer_api": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.SalesforceDataTransferApi](),
 												},
 											},
 										},
@@ -1373,13 +1367,12 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.KmsArn = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateFlow(ctx, input)
-
+	_, err := conn.CreateFlow(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AppFlow Flow (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.FlowArn))
+	d.SetId(name)
 
 	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }
@@ -1936,6 +1929,10 @@ func expandSalesforceDestinationProperties(tfMap map[string]any) *types.Salesfor
 
 	a := &types.SalesforceDestinationProperties{}
 
+	if v, ok := tfMap["data_transfer_api"].(string); ok && v != "" {
+		a.DataTransferApi = types.SalesforceDataTransferApi(v)
+	}
+
 	if v, ok := tfMap["error_handling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
 		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]any))
 	}
@@ -2362,6 +2359,10 @@ func expandSalesforceSourceProperties(tfMap map[string]any) *types.SalesforceSou
 
 	a := &types.SalesforceSourceProperties{}
 
+	if v, ok := tfMap["data_transfer_api"].(string); ok && v != "" {
+		a.DataTransferApi = types.SalesforceDataTransferApi(v)
+	}
+
 	if v, ok := tfMap["enable_dynamic_field_update"].(bool); ok {
 		a.EnableDynamicFieldUpdate = v
 	}
@@ -2372,10 +2373,6 @@ func expandSalesforceSourceProperties(tfMap map[string]any) *types.SalesforceSou
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
 		a.Object = aws.String(v)
-	}
-
-	if v, ok := tfMap["data_transfer_api"].(string); ok && v != "" {
-		a.DataTransferApi = types.SalesforceDataTransferApi(v)
 	}
 
 	return a
@@ -3130,6 +3127,8 @@ func flattenSalesforceDestinationProperties(salesforceDestinationProperties *typ
 
 	m := map[string]any{}
 
+	m["data_transfer_api"] = salesforceDestinationProperties.DataTransferApi
+
 	if v := salesforceDestinationProperties.ErrorHandlingConfig; v != nil {
 		m["error_handling_config"] = []any{flattenErrorHandlingConfig(v)}
 	}
@@ -3544,9 +3543,9 @@ func flattenSalesforceSourceProperties(salesforceSourceProperties *types.Salesfo
 
 	m := map[string]any{}
 
+	m["data_transfer_api"] = salesforceSourceProperties.DataTransferApi
 	m["enable_dynamic_field_update"] = salesforceSourceProperties.EnableDynamicFieldUpdate
 	m["include_deleted_records"] = salesforceSourceProperties.IncludeDeletedRecords
-	m["data_transfer_api"] = salesforceSourceProperties.DataTransferApi
 
 	if v := salesforceSourceProperties.Object; v != nil {
 		m["object"] = aws.ToString(v)

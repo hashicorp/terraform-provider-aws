@@ -405,7 +405,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 	input := &s3control.PutStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
-		Tags:      storageLensTags(keyValueTagsS3(ctx, getTagsInS3(ctx))),
+		Tags:      storageLensTags(keyValueTagsFromS3Tags(ctx, getS3TagsIn(ctx))),
 	}
 
 	if v, ok := d.GetOk("storage_lens_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -458,7 +458,7 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Storage Lens Configuration (%s): %s", d.Id(), err)
 	}
 
-	setTagsOutS3(ctx, tagsS3(tags))
+	setS3TagsOut(ctx, svcS3Tags(tags))
 
 	return diags
 }
@@ -620,7 +620,7 @@ func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Cli
 	allTags, err := storageLensConfigurationListTags(ctx, conn, accountID, configID)
 
 	if err != nil {
-		return fmt.Errorf("listing tags: %s", err)
+		return fmt.Errorf("listing tags: %w", err)
 	}
 
 	ignoredTags := allTags.Ignore(oldTags).Ignore(newTags)
@@ -635,7 +635,7 @@ func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Cli
 		_, err := conn.PutStorageLensConfigurationTagging(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("setting tags: %s", err)
+			return fmt.Errorf("setting tags: %w", err)
 		}
 	} else if len(oldTags) > 0 && len(ignoredTags) == 0 {
 		input := &s3control.DeleteStorageLensConfigurationTaggingInput{
@@ -646,7 +646,7 @@ func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Cli
 		_, err := conn.DeleteStorageLensConfigurationTagging(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("deleting tags: %s", err)
+			return fmt.Errorf("deleting tags: %w", err)
 		}
 	}
 

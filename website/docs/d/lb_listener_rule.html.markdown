@@ -45,6 +45,7 @@ data "aws_lb_listener_rule" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the Listener Rule.
   Either `arn` or `listener_arn` must be set.
 * `listener_arn` - (Optional) ARN of the associated Listener.
@@ -61,6 +62,7 @@ This data source exports the following attributes in addition to the arguments a
 * `condition` - Set of conditions associated with the rule.
   [Detailed below](#condition).
 * `tags` - Tags assigned to the Listener Rule.
+* `transform` - Block for transform to apply to requests that match this rule. [Detailed below](#transform).
 
 ### `action`
 
@@ -142,20 +144,52 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `condition`
 
-* `host_header` - Contains a single attribute `values`, which contains a set of host names.
+* `host_header` - Host header patterns to match.
+  [Detailed below](#host_header).
 * `http_header` - HTTP header and values to match.
   [Detailed below](#http_header).
 * `http_request_method` - Contains a single attribute `values`, which contains a set of HTTP request methods.
-* `path_pattern` - Contains a single attribute `values`, which contains a set of path patterns to compare against the request URL.
+* `path_pattern` - Path patterns to compare against the request URL.
+  [Detailed below](#path_pattern).
 * `query_string` - Query string parameters to match.
   [Detailed below](#query_string).
 * `source_ip` - Contains a single attribute `values`, which contains a set of source IPs in CIDR notation.
 
+#### `host_header`
+
+* `regex_values` - Set of regular expressions to compare against the host header.
+* `values` - Set of host header value patterns to match.
+
 #### `http_header`
 
 * `http_header_name` - Name of the HTTP header to match.
+* `regex_values` - Set of regular expression to compare against the HTTP header.
 * `values` - Set of values to compare against the value of the HTTP header.
+
+#### `path_pattern`
+
+* `regex_values` - Set of regular expressions to compare against the request URL.
+* `values` - Set of path patterns to compare against the request URL.
 
 #### `query_string`
 
 * `values` - Set of `key`-`value` pairs indicating the query string parameters to match.
+
+### `transform`
+
+* `type` - Type of transform.
+* `host_header_rewrite_config` - Block for host header rewrite. [Detailed below](#host_header_rewrite_config).
+* `url_rewrite_config` - Block for URL rewrite. [Detailed below](#url_rewrite_config).
+
+#### `host_header_rewrite_config`
+
+* `rewrite` - Block for host header rewrite configuration. [Detailed below](#rewrite).
+
+#### `url_rewrite_config`
+
+* `rewrite` - Block for URL rewrite configuration. [Detailed below](#rewrite).
+
+#### `rewrite`
+
+* `regex` - Regular expression to match in the input string.
+* `replace` - Replacement string to use when rewriting the matched input.

@@ -6,10 +6,10 @@ package bedrock
 // Exports for use in tests only.
 var (
 	ResourceCustomModel                         = newCustomModelResource
-	ResourceGuardrail                           = newResourceGuardrail
+	ResourceGuardrail                           = newGuardrailResource
 	ResourceGuardrailVersion                    = newGuardrailVersionResource
 	ResourceModelInvocationLoggingConfiguration = newModelInvocationLoggingConfigurationResource
-	ResourceInferenceProfile                    = newResourceInferenceProfile
+	ResourceInferenceProfile                    = newInferenceProfileResource
 
 	FindCustomModelByID                     = findCustomModelByID
 	FindGuardrailByTwoPartKey               = findGuardrailByTwoPartKey

@@ -51,7 +51,7 @@ func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, err
 }
 
 type pipelineResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[pipelineResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -226,7 +226,7 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	input.Tags = getTagsIn(ctx)
 
 	// Retry for IAM eventual consistency.
-	_, err := tfresource.RetryWhenIsA[*awstypes.ValidationException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreatePipeline(ctx, &input)
 	})
 
@@ -479,6 +479,7 @@ func waitPipelineDeleted(ctx context.Context, conn *osis.Client, name string, ti
 }
 
 type pipelineResourceModel struct {
+	framework.WithRegionModel
 	BufferOptions             fwtypes.ListNestedObjectValueOf[bufferOptionsModel]           `tfsdk:"buffer_options"`
 	EncryptionAtRestOptions   fwtypes.ListNestedObjectValueOf[encryptionAtRestOptionsModel] `tfsdk:"encryption_at_rest_options"`
 	ID                        types.String                                                  `tfsdk:"id"`

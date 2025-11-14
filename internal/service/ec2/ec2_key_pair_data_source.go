@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -72,7 +71,8 @@ func dataSourceKeyPair() *schema.Resource {
 
 func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := ec2.DescribeKeyPairsInput{}
 
@@ -100,14 +100,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId(aws.ToString(keyPair.KeyPairId))
 	keyName := aws.ToString(keyPair.KeyName)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "key-pair/" + keyName,
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, keyPairARN(ctx, c, keyName))
 	d.Set(names.AttrCreateTime, aws.ToTime(keyPair.CreateTime).Format(time.RFC3339))
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("include_public_key", input.IncludePublicKey)

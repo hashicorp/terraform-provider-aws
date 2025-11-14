@@ -11,13 +11,19 @@ var (
 	ResourceWebACL                     = resourceWebACL
 	ResourceWebACLAssociation          = resourceWebACLAssociation
 	ResourceWebACLLoggingConfiguration = resourceWebACLLoggingConfiguration
+	ResourceAPIKey                     = newAPIKeyResource
+	ResourceWebACLRuleGroupAssociation = newResourceWebACLRuleGroupAssociation
 
+	CloudFrontDistributionIDFromARN   = cloudFrontDistributionIDFromARN
+	FindAPIKeyByTwoPartKey            = findAPIKeyByTwoPartKey
 	FindIPSetByThreePartKey           = findIPSetByThreePartKey
 	FindLoggingConfigurationByARN     = findLoggingConfigurationByARN
 	FindRegexPatternSetByThreePartKey = findRegexPatternSetByThreePartKey
 	FindRuleGroupByThreePartKey       = findRuleGroupByThreePartKey
 	FindWebACLByResourceARN           = findWebACLByResourceARN
 	FindWebACLByThreePartKey          = findWebACLByThreePartKey
+	IsCloudFrontDistributionARN       = isCloudFrontDistributionARN
 	ListRuleGroupsPages               = listRuleGroupsPages
 	ListWebACLsPages                  = listWebACLsPages
+	ParseWebACLARN                    = parseWebACLARN
 )

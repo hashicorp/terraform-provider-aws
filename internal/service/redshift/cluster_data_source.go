@@ -22,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_redshift_cluster", name="Cluster")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,

@@ -14,8 +14,6 @@ Provides a DMS (Data Migration Service) endpoint resource. DMS endpoints can be 
 
 ~> **Note:** All arguments including the password will be stored in the raw state as plain-text. [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-~> **Note:** The `s3Settings` argument is deprecated, may not be maintained, and will be removed in a future version. Use the [`aws_dms_s3_endpoint`](/docs/providers/aws/r/dms_s3_endpoint.html) resource instead.
-
 ## Example Usage
 
 ```typescript
@@ -56,15 +54,17 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpointId` - (Required) Database endpoint identifier. Identifiers must contain from 1 to 255 alphanumeric characters or hyphens, begin with a letter, contain only ASCII letters, digits, and hyphens, not end with a hyphen, and not contain two consecutive hyphens.
 * `endpointType` - (Required) Type of endpoint. Valid values are `source`, `target`.
 * `engineName` - (Required) Type of engine for the endpoint. Valid values are `aurora`, `aurora-postgresql`, `aurora-serverless`, `aurora-postgresql-serverless`,`azuredb`, `azure-sql-managed-instance`, `babelfish`, `db2`, `db2-zos`, `docdb`, `dynamodb`, `elasticsearch`, `kafka`, `kinesis`, `mariadb`, `mongodb`, `mysql`, `opensearch`, `oracle`, `postgres`, `redshift`,`redshift-serverless`, `s3`, `sqlserver`, `neptune` ,`sybase`. Please note that some of engine names are available only for `target` endpoint type (e.g. `redshift`).
-* `kmsKeyArn` - (Required when `engineName` is `mongodb`, cannot be set when `engineName` is `s3`, optional otherwise) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kmsKeyArn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region. To encrypt an S3 target with a KMS Key, use the parameter `s3_settings.server_side_encryption_kms_key_id`. When `engineName` is `redshift`, `kmsKeyArn` is the KMS Key for the Redshift target and the parameter `redshift_settings.server_side_encryption_kms_key_id` encrypts the S3 intermediate storage.
+* `kmsKeyArn` - (Required when `engineName` is `mongodb`, optional otherwise) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kmsKeyArn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region. When `engineName` is `redshift`, `kmsKeyArn` is the KMS Key for the Redshift target and the parameter `redshift_settings.server_side_encryption_kms_key_id` encrypts the S3 intermediate storage.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificateArn` - (Optional, Default: empty string) ARN for the certificate.
 * `databaseName` - (Optional) Name of the endpoint database.
 * `elasticsearchSettings` - (Optional) Configuration block for OpenSearch settings. See below.
@@ -72,12 +72,12 @@ The following arguments are optional:
 * `kafkaSettings` - (Optional) Configuration block for Kafka settings. See below.
 * `kinesisSettings` - (Optional) Configuration block for Kinesis settings. See below.
 * `mongodbSettings` - (Optional) Configuration block for MongoDB settings. See below.
+* `oracleSettings` - (Optional) Configuration block for Oracle settings. See below.
 * `password` - (Optional) Password to be used to login to the endpoint database.
 * `postgresSettings` - (Optional) Configuration block for Postgres settings. See below.
 * `pauseReplicationTasks` - (Optional) Whether to pause associated running replication tasks, regardless if they are managed by Terraform, prior to modifying the endpoint. Only tasks paused by the resource will be restarted after the modification completes. Default is `false`.
 * `port` - (Optional) Port used by the endpoint database.
 * `redshiftSettings` - (Optional) Configuration block for Redshift settings. See below.
-* `s3Settings` - (Optional) (**Deprecated**, use the [`aws_dms_s3_endpoint`](/docs/providers/aws/r/dms_s3_endpoint.html) resource instead) Configuration block for S3 settings. See below.
 * `secretsManagerAccessRoleArn` - (Optional) ARN of the IAM role that specifies AWS DMS as the trusted entity and has the required permissions to access the value in the Secrets Manager secret referred to by `secretsManagerArn`. The role must allow the `iam:PassRole` action.
 
    ~> **Note:** You can specify one of two sets of values for these permissions. You can specify the values for this setting and `secretsManagerArn`. Or you can specify clear-text values for `username`, `password` , `serverName`, and `port`. You can't specify both.
@@ -113,7 +113,7 @@ The following arguments are optional:
 * `messageMaxBytes` - (Optional) Maximum size in bytes for records created on the endpoint Default is `1,000,000`.
 * `noHexPrefix` - (Optional) Set this optional parameter to true to avoid adding a '0x' prefix to raw data in hexadecimal format. For example, by default, AWS DMS adds a '0x' prefix to the LOB column type in hexadecimal format moving from an Oracle source to a Kafka target. Use the `noHexPrefix` endpoint setting to enable migration of RAW data type columns without adding the `'0x'` prefix.
 * `partitionIncludeSchemaTable` - (Optional) Prefixes schema and table names to partition values, when the partition type is `primary-key-type`. Doing this increases data distribution among Kafka partitions. For example, suppose that a SysBench schema has thousands of tables and each table has only limited range for a primary key. In this case, the same primary key is sent from thousands of tables to the same partition, which causes throttling. Default is `false`.
-* `sasl_mechanism` - (Optional) For SASL/SSL authentication, AWS DMS supports the `scram-sha-512` mechanism by default. AWS DMS versions 3.5.0 and later also support the PLAIN mechanism. To use the PLAIN mechanism, set this parameter to `plain`.
+* `saslMechanism` - (Optional) For SASL/SSL authentication, AWS DMS supports the `scram-sha-512` mechanism by default. AWS DMS versions 3.5.0 and later also support the PLAIN mechanism. To use the PLAIN mechanism, set this parameter to `plain`.
 * `saslPassword` - (Optional) Secure password you created when you first set up your MSK cluster to validate a client identity and make an encrypted connection between server and client using SASL-SSL authentication.
 * `saslUsername` - (Optional) Secure user name you created when you first set up your MSK cluster to validate a client identity and make an encrypted connection between server and client using SASL-SSL authentication.
 * `securityProtocol` - (Optional) Set secure connection to a Kafka target endpoint using Transport Layer Security (TLS). Options include `ssl-encryption`, `ssl-authentication`, and `sasl-ssl`. `sasl-ssl` requires `saslUsername` and `saslPassword`.
@@ -136,6 +136,7 @@ The following arguments are optional:
 * `partitionIncludeSchemaTable` - (Optional) Prefixes schema and table names to partition values, when the partition type is primary-key-type. Default is `false`.
 * `serviceAccessRoleArn` - (Optional) ARN of the IAM Role with permissions to write to the Kinesis data stream.
 * `streamArn` - (Optional) ARN of the Kinesis data stream.
+* `useLargeIntegerValue` - (Optional) Use up to 18 digit int instead of casting ints as doubles, available from AWS DMS version 3.5.4. Default is `false`.
 
 ### mongodb_settings
 
@@ -148,11 +149,18 @@ The following arguments are optional:
 * `extractDocId` - (Optional) Document ID. Use this setting when `nestingLevel` is set to `none`. Default is `false`.
 * `nestingLevel` - (Optional) Specifies either document or table mode. Default is `none`. Valid values are `one` (table mode) and `none` (document mode).
 
+### oracle_settings
+
+-> Additional information can be found in the [Using Oracle as a Source for AWS DMS documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.Oracle.html).
+
+* `authenticationMethod` - (Optional) Authentication mechanism to access the Oracle source endpoint. Default is `password`. Valid values are `password` and `kerberos`.
+
 ### postgres_settings
 
 -> Additional information can be found in the [Using PostgreSQL as a Source for AWS DMS documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html).
 
 * `afterConnectScript` - (Optional) For use with change data capture (CDC) only, this attribute has AWS DMS bypass foreign keys and user triggers to reduce the time it takes to bulk load data.
+* `authenticationMethod` - (Optional) Specifies the authentication method. Valid values: `password`, `iam`.
 * `babelfishDatabaseName` - (Optional) The Babelfish for Aurora PostgreSQL database name for the endpoint.
 * `captureDdls` - (Optional) To capture DDL events, AWS DMS creates various artifacts in the PostgreSQL database when the task starts.
 * `databaseMode` - (Optional) Specifies the default behavior of the replication's handling of PostgreSQL- compatible endpoints that require some additional configuration, such as Babelfish endpoints.
@@ -166,7 +174,8 @@ The following arguments are optional:
 * `mapJsonbAsClob` - Optional When true, DMS migrates JSONB values as CLOB.
 * `mapLongVarcharAs` - Optional When true, DMS migrates LONG values as VARCHAR.
 * `maxFileSize` - (Optional) Specifies the maximum size (in KB) of any .csv file used to transfer data to PostgreSQL. Default is `32,768 KB`.
-* `pluginName` - (Optional) Specifies the plugin to use to create a replication slot. Valid values: `pglogical`, `test_decoding`.
+* `pluginName` - (Optional) Specifies the plugin to use to create a replication slot. Valid values: `pglogical`, `test-decoding`.
+* `serviceAccessRoleArn` - (Optional) Specifies the IAM role to use to authenticate the connection.
 * `slotName` - (Optional) Sets the name of a previously created logical replication slot for a CDC load of the PostgreSQL source instance.
 
 ### redis_settings
@@ -190,51 +199,6 @@ The following arguments are optional:
 * `encryptionMode` - (Optional) The server-side encryption mode that you want to encrypt your intermediate .csv object files copied to S3. Defaults to `SSE_S3`. Valid values are `SSE_S3` and `SSE_KMS`.
 * `serverSideEncryptionKmsKeyId` - (Required when `encryptionMode` is  `SSE_KMS`, must not be set otherwise) ARN or Id of KMS Key to use when `encryptionMode` is `SSE_KMS`.
 * `serviceAccessRoleArn` - (Optional) Amazon Resource Name (ARN) of the IAM Role with permissions to read from or write to the S3 Bucket for intermediate storage.
-
-### s3_settings
-
-~> **Deprecated:** This argument is deprecated, may not be maintained, and will be removed in a future version. Use the [`aws_dms_s3_endpoint`](/docs/providers/aws/r/dms_s3_endpoint.html) resource instead.
-
--> Additional information can be found in the [Using Amazon S3 as a Source for AWS Database Migration Service documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.S3.html) and [Using Amazon S3 as a Target for AWS Database Migration Service documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html).
-
-* `addColumnName` - (Optional) Whether to add column name information to the .csv output file. Default is `false`.
-* `bucketFolder` - (Optional) S3 object prefix.
-* `bucketName` - (Optional) S3 bucket name.
-* `cannedAclForObjects` - (Optional) Predefined (canned) access control list for objects created in an S3 bucket. Valid values include `none`, `private`, `public-read`, `public-read-write`, `authenticated-read`, `aws-exec-read`, `bucket-owner-read`, and `bucket-owner-full-control`. Default is `none`.
-* `cdcInsertsAndUpdates` - (Optional) Whether to write insert and update operations to .csv or .parquet output files. Default is `false`.
-* `cdcInsertsOnly` - (Optional) Whether to write insert operations to .csv or .parquet output files. Default is `false`.
-* `cdcMaxBatchInterval` - (Optional) Maximum length of the interval, defined in seconds, after which to output a file to Amazon S3. Default is `60`.
-* `cdcMinFileSize` - (Optional) Minimum file size condition as defined in kilobytes to output a file to Amazon S3. Default is `32000`. **NOTE:** Previously, this setting was measured in megabytes but now represents kilobytes. Update configurations accordingly.
-* `cdcPath` - (Optional) Folder path of CDC files. For an S3 source, this setting is required if a task captures change data; otherwise, it's optional. If `cdcPath` is set, AWS DMS reads CDC files from this path and replicates the data changes to the target endpoint. Supported in AWS DMS versions 3.4.2 and later.
-* `compressionType` - (Optional) Set to compress target files. Default is `NONE`. Valid values are `GZIP` and `NONE`.
-* `csvDelimiter` - (Optional) Delimiter used to separate columns in the source files. Default is `,`.
-* `csvNoSupValue` - (Optional) String to use for all columns not included in the supplemental log.
-* `csvNullValue` - (Optional) String to as null when writing to the target.
-* `csvRowDelimiter` - (Optional) Delimiter used to separate rows in the source files. Default is `\n`.
-* `dataFormat` - (Optional) Output format for the files that AWS DMS uses to create S3 objects. Valid values are `csv` and `parquet`. Default is `csv`.
-* `dataPageSize` - (Optional) Size of one data page in bytes. Default is `1048576` (1 MiB).
-* `datePartitionDelimiter` - (Optional) Date separating delimiter to use during folder partitioning. Valid values are `SLASH`, `UNDERSCORE`, `DASH`, and `NONE`. Default is `SLASH`.
-* `datePartitionEnabled` - (Optional) Partition S3 bucket folders based on transaction commit dates. Default is `false`.
-* `datePartitionSequence` - (Optional) Date format to use during folder partitioning. Use this parameter when `datePartitionEnabled` is set to true. Valid values are `YYYYMMDD`, `YYYYMMDDHH`, `YYYYMM`, `MMYYYYDD`, and `DDMMYYYY`. Default is `YYYYMMDD`.
-* `dictPageSizeLimit` - (Optional) Maximum size in bytes of an encoded dictionary page of a column. Default is `1048576` (1 MiB).
-* `enableStatistics` - (Optional) Whether to enable statistics for Parquet pages and row groups. Default is `true`.
-* `encodingType` - (Optional) Type of encoding to use. Value values are `rle_dictionary`, `plain`, and `plain_dictionary`. Default is `rle_dictionary`.
-* `encryptionMode` - (Optional) Server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Valid values are `SSE_S3` and `SSE_KMS`. Default is `SSE_S3`.
-* `externalTableDefinition` - (Optional) JSON document that describes how AWS DMS should interpret the data.
-* `glueCatalogGeneration` - (Optional) Whether to integrate AWS Glue Data Catalog with an Amazon S3 target. See [Using AWS Glue Data Catalog with an Amazon S3 target for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.GlueCatalog) for more information. Default is `false`.
-* `ignoreHeaderRows` - (Optional) When this value is set to `1`, DMS ignores the first row header in a .csv file. Default is `0`.
-* `includeOpForFullLoad` - (Optional) Whether to enable a full load to write INSERT operations to the .csv output files only to indicate how the rows were added to the source database. Default is `false`.
-* `maxFileSize` - (Optional) Maximum size (in KB) of any .csv file to be created while migrating to an S3 target during full load. Valid values are from `1` to `1048576`. Default is `1048576` (1 GB).
-* `parquetTimestampInMillisecond` - (Optional) - Specifies the precision of any TIMESTAMP column values written to an S3 object file in .parquet format. Default is `false`.
-* `parquetVersion` - (Optional) Version of the .parquet file format. Default is `parquet-1-0`. Valid values are `parquet-1-0` and `parquet-2-0`.
-* `preserveTransactions` - (Optional) Whether DMS saves the transaction order for a CDC load on the S3 target specified by `cdcPath`. Default is `false`.
-* `rfc4180` - (Optional) For an S3 source, whether each leading double quotation mark has to be followed by an ending double quotation mark. Default is `true`.
-* `rowGroupLength` - (Optional) Number of rows in a row group. Default is `10000`.
-* `serverSideEncryptionKmsKeyId` - (Required when `encryptionMode` is  `SSE_KMS`, must not be set otherwise) ARN or Id of KMS Key to use when `encryptionMode` is `SSE_KMS`.
-* `serviceAccessRoleArn` - (Optional) ARN of the IAM Role with permissions to read from or write to the S3 Bucket.
-* `timestampColumnName` - (Optional) Column to add with timestamp information to the endpoint data for an Amazon S3 target.
-* `useCsvNoSupValue` - (Optional) Whether to use `csvNoSupValue` for columns not included in the supplemental log.
-* `useTaskStartTimeForFullLoadTimestamp` - (Optional) When set to true, uses the task start time as the timestamp column value instead of the time data is written to target. For full load, when set to true, each row of the timestamp column contains the task start time. For CDC loads, each row of the timestamp column contains the transaction commit time. When set to false, the full load timestamp in the timestamp column increments with the time data arrives at the target. Default is `false`.
 
 ## Attribute Reference
 
@@ -278,4 +242,4 @@ Using `terraform import`, import endpoints using the `endpointId`. For example:
 % terraform import aws_dms_endpoint.test test-dms-endpoint-tf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2231023b97eb6caf4c806b4fb2990e9ea71ca372cfa47732e9535d8308b0db03 -->
+<!-- cache-key: cdktf-0.20.8 input-a92c9b8dd2aba960a9ab1c98c4438bb09a19a020b60c7118efaae3b263db048c -->

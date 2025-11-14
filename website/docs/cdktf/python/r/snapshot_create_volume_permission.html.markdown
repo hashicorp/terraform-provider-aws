@@ -45,6 +45,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `snapshot_id` - (Required) A snapshot ID
 * `account_id` - (Required) An AWS Account ID to add create volume permissions. The AWS Account cannot be the snapshot's owner
 
@@ -54,4 +55,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - A combination of "`snapshot_id`-`account_id`".
 
-<!-- cache-key: cdktf-0.20.8 input-1dcd90ebf6e64f894d48700c8915b1ac0302acfb0e05cf97d2a2a97312bf066c -->
+<!-- cache-key: cdktf-0.20.8 input-7b61c68a2484c2bff48e04793683508b3df87e7a22d63c03903df4b4c8114d92 -->

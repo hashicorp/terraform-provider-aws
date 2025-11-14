@@ -89,6 +89,7 @@ const (
 	topicAttributeNameDeliveryPolicy                       = "DeliveryPolicy"
 	topicAttributeNameDisplayName                          = "DisplayName"
 	topicAttributeNameFIFOTopic                            = "FifoTopic"
+	topicAttributeNameFIFOThroughputScope                  = "FifoThroughputScope"
 	topicAttributeNameFirehoseFailureFeedbackRoleARN       = "FirehoseFailureFeedbackRoleArn"
 	topicAttributeNameFirehoseSuccessFeedbackRoleARN       = "FirehoseSuccessFeedbackRoleArn"
 	topicAttributeNameFirehoseSuccessFeedbackSampleRate    = "FirehoseSuccessFeedbackSampleRate"
@@ -134,5 +135,17 @@ func topicTracingConfig_Values() []string {
 	return []string{
 		topicTracingConfigActive,
 		topicTracingConfigPassThrough,
+	}
+}
+
+const (
+	topicFIFOThroughputScopeTopic        = "Topic"
+	topicFIFOThroughputScopeMessageGroup = "MessageGroup"
+)
+
+func topicFIFOThroughputScope_Values() []string {
+	return []string{
+		topicFIFOThroughputScopeTopic,
+		topicFIFOThroughputScopeMessageGroup,
 	}
 }

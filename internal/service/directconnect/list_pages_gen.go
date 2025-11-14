@@ -5,15 +5,16 @@ package directconnect
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 )
 
-func describeDirectConnectGatewayAssociationProposalsPages(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, fn func(*directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, bool) bool) error {
+func describeDirectConnectGatewayAssociationProposalsPages(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, fn func(*directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, bool) bool, optFns ...func(*directconnect.Options)) error {
 	for {
-		output, err := conn.DescribeDirectConnectGatewayAssociationProposals(ctx, input)
+		output, err := conn.DescribeDirectConnectGatewayAssociationProposals(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -25,11 +26,11 @@ func describeDirectConnectGatewayAssociationProposalsPages(ctx context.Context, 
 	}
 	return nil
 }
-func describeDirectConnectGatewayAssociationsPages(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationsInput, fn func(*directconnect.DescribeDirectConnectGatewayAssociationsOutput, bool) bool) error {
+func describeDirectConnectGatewayAssociationsPages(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationsInput, fn func(*directconnect.DescribeDirectConnectGatewayAssociationsOutput, bool) bool, optFns ...func(*directconnect.Options)) error {
 	for {
-		output, err := conn.DescribeDirectConnectGatewayAssociations(ctx, input)
+		output, err := conn.DescribeDirectConnectGatewayAssociations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -41,11 +42,11 @@ func describeDirectConnectGatewayAssociationsPages(ctx context.Context, conn *di
 	}
 	return nil
 }
-func describeDirectConnectGatewaysPages(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewaysInput, fn func(*directconnect.DescribeDirectConnectGatewaysOutput, bool) bool) error {
+func describeDirectConnectGatewaysPages(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewaysInput, fn func(*directconnect.DescribeDirectConnectGatewaysOutput, bool) bool, optFns ...func(*directconnect.Options)) error {
 	for {
-		output, err := conn.DescribeDirectConnectGateways(ctx, input)
+		output, err := conn.DescribeDirectConnectGateways(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

@@ -44,6 +44,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `environment_name` - (Required) Name for the backend environment.
 * `deployment_artifacts` - (Optional) Name of deployment artifacts.
@@ -81,4 +82,4 @@ Using `terraform import`, import Amplify backend environment using `app_id` and 
 % terraform import aws_amplify_backend_environment.example d2ypk4k47z8u6/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c0149c5f68fd1dca66f72427d6f00bb2e21d8385c7bdf9671e71789ce006dd4d -->
+<!-- cache-key: cdktf-0.20.8 input-00c37a959a0b3f84213370df091534eb49f28d715bc0da828f1d7109a9f9bb49 -->

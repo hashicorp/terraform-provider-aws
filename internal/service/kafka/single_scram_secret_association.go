@@ -33,7 +33,7 @@ func newSingleSCRAMSecretAssociationResource(context.Context) (resource.Resource
 }
 
 type singleSCRAMSecretAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[singleSCRAMSecretAssociationResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 }
@@ -148,6 +148,7 @@ func (r *singleSCRAMSecretAssociationResource) Delete(ctx context.Context, reque
 }
 
 type singleSCRAMSecretAssociationResourceModel struct {
+	framework.WithRegionModel
 	ClusterARN fwtypes.ARN  `tfsdk:"cluster_arn"`
 	ID         types.String `tfsdk:"id"`
 	SecretARN  fwtypes.ARN  `tfsdk:"secret_arn"`

@@ -1,4 +1,5 @@
 resource "aws_apprunner_service" "test" {
+{{- template "region" }}
   service_name = var.rName
   source_configuration {
     auto_deployments_enabled = false
