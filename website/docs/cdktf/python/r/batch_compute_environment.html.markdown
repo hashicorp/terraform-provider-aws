@@ -243,6 +243,7 @@ This resource supports the following arguments:
 `ec2_configuration` supports the following:
 
 * `image_id_override` - (Optional) The AMI ID used for instances launched in the compute environment that match the image type. This setting overrides the `image_id` argument in the [`compute_resources`](#compute_resources) block.
+* `image_kubernetes_version` - (Optional) The Kubernetes version for the compute environment. If you don't specify a value, the latest version that AWS Batch supports is used. See [Supported Kubernetes versions](https://docs.aws.amazon.com/batch/latest/userguide/supported_kubernetes_version.html) for the list of Kubernetes versions supported by AWS Batch on Amazon EKS.
 * `image_type` - (Optional) The image type to match with the instance type to select an AMI. If the `image_id_override` parameter isn't specified, then a recent [Amazon ECS-optimized Amazon Linux 2 AMI](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#al2ami) (`ECS_AL2`) is used.
 
 ### launch_template
@@ -265,7 +266,7 @@ This resource supports the following arguments:
 `update_policy` supports the following:
 
 * `job_execution_timeout_minutes` - (Required) Specifies the job timeout (in minutes) when the compute environment infrastructure is updated.
-* `terminate_jobs_on_update` - (Required) Specifies whether jobs are automatically terminated when the computer environment infrastructure is updated.
+* `terminate_jobs_on_update` - (Required) Specifies whether jobs are automatically terminated when the compute environment infrastructure is updated.
 
 ## Attribute Reference
 
@@ -278,6 +279,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_batch_compute_environment.example
+  identity = {
+    "arn" = "arn:aws:batch:us-east-1:123456789012:compute-environment/sample"
+  }
+}
+
+resource "aws_batch_compute_environment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the compute environment.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Batch compute using the `name`. For example:
 
@@ -306,4 +328,4 @@ Using `terraform import`, import AWS Batch compute using the `name`. For example
 [2]: http://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html
 [3]: http://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html
 
-<!-- cache-key: cdktf-0.20.8 input-1d5023b61625922d464dcb80baa6d7bf6d863b9fb30eabb905988bff197dbdbb -->
+<!-- cache-key: cdktf-0.20.8 input-ec7057984e3deb58eea6a2d016e6da5041110cc020ee29ca0acc3cbf03ebeda1 -->

@@ -64,6 +64,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_group.example
+  identity = {
+    name = "yada"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the CloudWatch log group.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudwatch Log Groups using the `name`. For example:
 
 ```typescript
@@ -78,7 +104,7 @@ import { CloudwatchLogGroup } from "./.gen/providers/aws/cloudwatch-log-group";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    CloudwatchLogGroup.generateConfigForImport(this, "testGroup", "yada");
+    CloudwatchLogGroup.generateConfigForImport(this, "example", "yada");
   }
 }
 
@@ -87,7 +113,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import Cloudwatch Log Groups using the `name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_log_group.test_group yada
+% terraform import aws_cloudwatch_log_group.example yada
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-04f19ef86e60651ec6a077feefb3858e19351a67349374b4326895e74bc37107 -->
+<!-- cache-key: cdktf-0.20.8 input-bceeb6e63e41d161ce074e1eb696478add00fddba64e6b1ca9806847f52e307b -->

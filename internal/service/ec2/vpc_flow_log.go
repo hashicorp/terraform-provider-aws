@@ -152,6 +152,15 @@ func resourceFlowLog() *schema.Resource {
 				ExactlyOneOf: []string{"eni_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    flowLogSchemaV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: flowLogStateUpgradeV0,
+				Version: 0,
+			},
+		},
 	}
 }
 
@@ -231,7 +240,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.MaxAggregationInterval = aws.Int32(int32(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFlowLogs(ctx, input)
 	}, errCodeInvalidParameter, "Unable to assume given IAM role")
 

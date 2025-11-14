@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -126,7 +127,7 @@ func gatewayAssociationStateUpgradeV1(ctx context.Context, rawState map[string]a
 	// transit_gateway_attachment_id was introduced in v6.5.0, handle the case where it's not yet present.
 	if rawState["associated_gateway_type"].(string) == string(awstypes.GatewayTypeTransitGateway) {
 		if v, ok := rawState[names.AttrTransitGatewayAttachmentID]; !ok || v == nil {
-			output, err := findTransitGatewayAttachmentForGateway(ctx, conn, rawState["associated_gateway_id"].(string), rawState["dx_gateway_id"].(string))
+			output, err := tfec2.FindTransitGatewayAttachmentByTransitGatewayIDAndDirectConnectGatewayID(ctx, conn, rawState["associated_gateway_id"].(string), rawState["dx_gateway_id"].(string))
 
 			switch {
 			case tfawserr.ErrCodeEquals(err, "UnauthorizedOperation"):

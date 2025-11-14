@@ -112,7 +112,7 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*types.ConflictException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ConflictException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.PutMethodResponse(ctx, &input)
 	})
 

@@ -14,8 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -207,7 +205,7 @@ func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("dx_gateway_id", dxGatewayID)
 	d.Set("dx_gateway_owner_account_id", output.DirectConnectGatewayOwnerAccount)
 	if output.AssociatedGateway.Type == awstypes.GatewayTypeTransitGateway {
-		transitGatewayAttachment, err := findTransitGatewayAttachmentForGateway(ctx, c.EC2Client(ctx), associatedGatewayID, dxGatewayID)
+		transitGatewayAttachment, err := tfec2.FindTransitGatewayAttachmentByTransitGatewayIDAndDirectConnectGatewayID(ctx, c.EC2Client(ctx), associatedGatewayID, dxGatewayID)
 
 		switch {
 		case tfawserr.ErrCodeEquals(err, "UnauthorizedOperation"):
@@ -388,27 +386,6 @@ func findGatewayAssociations(ctx context.Context, conn *directconnect.Client, in
 	}
 
 	return output, nil
-}
-
-func findTransitGatewayAttachmentForGateway(ctx context.Context, conn *ec2.Client, tgwID, dxGatewayID string) (*ec2types.TransitGatewayAttachment, error) {
-	input := ec2.DescribeTransitGatewayAttachmentsInput{
-		Filters: []ec2types.Filter{
-			{
-				Name:   aws.String("resource-type"),
-				Values: enum.Slice(ec2types.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
-			},
-			{
-				Name:   aws.String("resource-id"),
-				Values: []string{dxGatewayID},
-			},
-			{
-				Name:   aws.String("transit-gateway-id"),
-				Values: []string{tgwID},
-			},
-		},
-	}
-
-	return tfec2.FindTransitGatewayAttachment(ctx, conn, &input)
 }
 
 func statusGatewayAssociation(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {

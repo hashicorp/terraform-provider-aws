@@ -29,7 +29,7 @@ func TestAccCEAnomalySubscription_Identity_Basic(t *testing.T) {
 	domain := acctest.RandomDomainName()
 	email_address := acctest.RandomEmailAddress(domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -50,6 +50,9 @@ func TestAccCEAnomalySubscription_Identity_Basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
@@ -115,7 +118,7 @@ func TestAccCEAnomalySubscription_Identity_ExistingResource(t *testing.T) {
 	domain := acctest.RandomDomainName()
 	email_address := acctest.RandomEmailAddress(domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -185,6 +188,59 @@ func TestAccCEAnomalySubscription_Identity_ExistingResource(t *testing.T) {
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
+			},
+		},
+	})
+}
+
+func TestAccCEAnomalySubscription_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.AnomalySubscription
+	resourceName := "aws_ce_anomaly_subscription.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+	email_address := acctest.RandomEmailAddress(domain)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.CEServiceID),
+		CheckDestroy: testAccCheckAnomalySubscriptionDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalySubscription/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"email_address": config.StringVariable(email_address),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalySubscription/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"email_address": config.StringVariable(email_address),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &v),
+				),
 			},
 		},
 	})

@@ -27,15 +27,14 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_organizations_account", name="Account")
 // @Tags(identifierAttribute="id")
 // @IdentityAttribute("id")
-// @WrappedImport(false)
-// @Testing(identityTest=false)
+// @CustomImport
+// @Testing(tagsTest=false, identityTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.Account")
 // @Testing(serialize=true)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsEnabled")
@@ -116,6 +115,11 @@ func resourceAccount() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
 			},
 			names.AttrStatus: {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "status is deprecated. Use state instead.",
+			},
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -147,8 +151,8 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.RoleName = aws.String(v.(string))
 		}
 
-		outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout,
-			func() (any, error) {
+		outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout,
+			func(ctx context.Context) (any, error) {
 				return conn.CreateGovCloudAccount(ctx, input)
 			})
 
@@ -172,8 +176,8 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.RoleName = aws.String(v.(string))
 		}
 
-		outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout,
-			func() (any, error) {
+		outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout,
+			func(ctx context.Context) (any, error) {
 				return conn.CreateAccount(ctx, input)
 			})
 
@@ -247,6 +251,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrName, account.Name)
 	d.Set("parent_id", parentAccountID)
 	d.Set(names.AttrStatus, account.Status)
+	d.Set(names.AttrState, account.State)
 
 	return diags
 }
@@ -352,7 +357,9 @@ func resourceAccountImportState(ctx context.Context, d *schema.ResourceData, met
 			d.SetId(d.Id())
 		}
 	} else {
-		if err := importer.GlobalSingleParameterized(ctx, d, inttypes.StringIdentityAttribute(names.AttrID, true), meta.(importer.AWSClient)); err != nil {
+		identitySpec := importer.IdentitySpec(ctx)
+
+		if err := importer.GlobalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
 			return nil, err
 		}
 	}
@@ -382,9 +389,9 @@ func findAccountByID(ctx context.Context, conn *organizations.Client, id string)
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if status := output.Account.Status; status == awstypes.AccountStatusSuspended {
+	if state := output.Account.State; state == awstypes.AccountStateClosed {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
+			Message:     string(state),
 			LastRequest: input,
 		}
 	}
@@ -498,7 +505,7 @@ func waitAccountCreated(ctx context.Context, conn *organizations.Client, id stri
 	return nil, err
 }
 
-func statusAccountStatus(ctx context.Context, conn *organizations.Client, id string) retry.StateRefreshFunc {
+func statusAccountState(ctx context.Context, conn *organizations.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAccountByID(ctx, conn, id)
 
@@ -510,15 +517,15 @@ func statusAccountStatus(ctx context.Context, conn *organizations.Client, id str
 			return nil, "", err
 		}
 
-		return output, string(output.Status), nil
+		return output, string(output.State), nil
 	}
 }
 
 func waitAccountDeleted(ctx context.Context, conn *organizations.Client, id string, timeout time.Duration) (*awstypes.Account, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:      enum.Slice(awstypes.AccountStatusPendingClosure, awstypes.AccountStatusActive),
+		Pending:      enum.Slice(awstypes.AccountStatePendingClosure, awstypes.AccountStateActive),
 		Target:       []string{},
-		Refresh:      statusAccountStatus(ctx, conn, id),
+		Refresh:      statusAccountState(ctx, conn, id),
 		PollInterval: 10 * time.Second,
 		Timeout:      timeout,
 	}

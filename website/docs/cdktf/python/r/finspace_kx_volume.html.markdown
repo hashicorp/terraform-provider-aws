@@ -29,7 +29,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         FinspaceKxVolume(self, "example",
-            availability_zones=Token.as_list("use1-az2"),
+            availability_zones=["use1-az2"],
             az_mode="SINGLE",
             environment_id=Token.as_string(aws_finspace_kx_environment_example.id),
             name="my-tf-kx-volume",
@@ -119,4 +119,4 @@ Using `terraform import`, import an AWS FinSpace Kx Volume using the `id` (envir
 % terraform import aws_finspace_kx_volume.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-volume
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b9de9e03f632391df26df4a47349018ebc66049ffcf59eb9631018501744c857 -->
+<!-- cache-key: cdktf-0.20.8 input-03d78e0a49b4f304834b1f272f954b51b31b5ea72f8d0ddafeb63e7d45625a6d -->

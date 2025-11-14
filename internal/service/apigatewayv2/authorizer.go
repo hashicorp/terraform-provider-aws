@@ -263,7 +263,7 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Authorizer: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteAuthorizer(ctx, &apigatewayv2.DeleteAuthorizerInput{
 			ApiId:        aws.String(d.Get("api_id").(string)),
 			AuthorizerId: aws.String(d.Id()),

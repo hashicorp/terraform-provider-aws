@@ -712,9 +712,17 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					r.ResourceBehavior.MutableIdentity = true
 				}
 
-				interceptors = append(interceptors, newIdentityInterceptor(resource.Identity.Attributes))
+				interceptors = append(interceptors, newIdentityInterceptor(&resource.Identity))
 			}
 
+			if resource.Import.CustomImport {
+				if r.Importer == nil || r.Importer.StateContext == nil {
+					errs = append(errs, fmt.Errorf("resource type %s: uses CustomImport but does not define an import function", typeName))
+					continue
+				}
+
+				customResourceImporter(r, &resource.Identity, &resource.Import)
+			}
 			if resource.Import.WrappedImport {
 				if r.Importer != nil && r.Importer.StateContext != nil {
 					errs = append(errs, fmt.Errorf("resource type %s: uses WrappedImport but defines an import function", typeName))
@@ -725,6 +733,8 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					r.Importer = arnIdentityResourceImporter(resource.Identity)
 				} else if resource.Identity.IsSingleton {
 					r.Importer = singletonIdentityResourceImporter(resource.Identity)
+				} else if resource.Identity.IsCustomInherentRegion {
+					r.Importer = customInherentRegionResourceImporter(resource.Identity)
 				} else {
 					r.Importer = newParameterizedIdentityImporter(resource.Identity, &resource.Import)
 				}
@@ -736,7 +746,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					var overrideRegion string
 
 					if isRegionOverrideEnabled && getAttribute != nil {
-						if region, ok := getAttribute(names.AttrRegion); ok {
+						if region, ok := getAttribute(names.AttrRegion); ok && region != nil {
 							overrideRegion = region.(string)
 						}
 					}
@@ -792,19 +802,19 @@ func (p *sdkProvider) validateResourceSchemas(ctx context.Context) error {
 			}
 		}
 
-		for _, v := range sp.SDKResources(ctx) {
-			typeName := v.TypeName
-			r := v.Factory()
+		for _, resource := range sp.SDKResources(ctx) {
+			typeName := resource.TypeName
+			r := resource.Factory()
 			s := r.SchemaMap()
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			if v := resource.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := s[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue
 				}
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
+			if !tfunique.IsHandleNil(resource.Tags) {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := s[names.AttrTags]; ok {
@@ -823,6 +833,13 @@ func (p *sdkProvider) validateResourceSchemas(ctx context.Context) error {
 					}
 				} else {
 					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
+					continue
+				}
+			}
+
+			if resource.Identity.IsCustomInherentRegion {
+				if resource.Identity.IsGlobalResource {
+					errs = append(errs, fmt.Errorf("`IsCustomInherentRegion` is not supported for Global resources: %s resource", typeName))
 					continue
 				}
 			}

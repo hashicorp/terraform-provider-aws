@@ -12,6 +12,8 @@ description: |-
 
 Provides a resource to create a VPC NAT Gateway.
 
+!> **WARNING:** You should not use the `aws_nat_gateway` resource that has `secondaryAllocationIds` in conjunction with an [`aws_nat_gateway_eip_association`](nat_gateway_eip_association.html) resource. Doing so may cause perpetual differences, and result in associations being overwritten.
+
 ## Example Usage
 
 ### Public NAT
@@ -117,14 +119,14 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allocationId` - (Optional) The Allocation ID of the Elastic IP address for the NAT Gateway. Required for `connectivityType` of `public`.
 * `connectivityType` - (Optional) Connectivity type for the NAT Gateway. Valid values are `private` and `public`. Defaults to `public`.
 * `privateIp` - (Optional) The private IPv4 address to assign to the NAT Gateway. If you don't provide an address, a private IPv4 address will be automatically assigned.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subnetId` - (Required) The Subnet ID of the subnet in which to place the NAT Gateway.
-* `secondaryAllocationIds` - (Optional) A list of secondary allocation EIP IDs for this NAT Gateway.
+* `secondaryAllocationIds` - (Optional) A list of secondary allocation EIP IDs for this NAT Gateway. To remove all secondary allocations an empty list should be specified.
 * `secondaryPrivateIpAddressCount` - (Optional) [Private NAT Gateway only] The number of secondary private IPv4 addresses you want to assign to the NAT Gateway.
-* `secondaryPrivateIpAddresses` - (Optional) A list of secondary private IPv4 addresses to assign to the NAT Gateway.
+* `secondaryPrivateIpAddresses` - (Optional) A list of secondary private IPv4 addresses to assign to the NAT Gateway. To remove all secondary private addresses an empty list should be specified.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -177,4 +179,4 @@ Using `terraform import`, import NAT Gateways using the `id`. For example:
 % terraform import aws_nat_gateway.private_gw nat-05dba92075d71c408
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e391fd81df03faee14fb7de1e8d58e80342f86ed01eafedd93aa02eea1c2f4c8 -->
+<!-- cache-key: cdktf-0.20.8 input-684318b90065d6b0158a7a90514e79167993b7abe86500e585533d0c98ecee64 -->

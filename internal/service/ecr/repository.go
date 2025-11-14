@@ -5,15 +5,20 @@ package ecr
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -26,6 +31,10 @@ import (
 
 // @SDKResource("aws_ecr_repository", name="Repository")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecr/types;types.Repository")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(idAttrDuplicates="name")
 func resourceRepository() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryCreate,
@@ -33,13 +42,11 @@ func resourceRepository() *schema.Resource {
 		UpdateWithoutTimeout: resourceRepositoryUpdate,
 		DeleteWithoutTimeout: resourceRepositoryDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
+
+		CustomizeDiff: validateImageTagMutabilityExclusionFilterUsage,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -93,6 +100,32 @@ func resourceRepository() *schema.Resource {
 				Default:          types.ImageTagMutabilityMutable,
 				ValidateDiagFunc: enum.Validate[types.ImageTagMutability](),
 			},
+			"image_tag_mutability_exclusion_filter": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrFilter: {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateDiagFunc: validation.AllDiag(
+								validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
+								validation.ToDiagFunc(validation.StringMatch(
+									regexache.MustCompile(`^[a-zA-Z0-9._*-]+$`),
+									"must contain only letters, numbers, and special characters (._*-)",
+								)),
+								validateImageTagMutabilityExclusionFilter(),
+							),
+						},
+						"filter_type": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.ImageTagMutabilityExclusionFilterType](),
+						},
+					},
+				},
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -129,6 +162,10 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ImageScanningConfiguration = &types.ImageScanningConfiguration{
 			ScanOnPush: tfMap["scan_on_push"].(bool),
 		}
+	}
+
+	if v, ok := d.GetOk("image_tag_mutability_exclusion_filter"); ok && len(v.([]any)) > 0 {
+		input.ImageTagMutabilityExclusionFilters = expandImageTagMutabilityExclusionFilters(v.([]any))
 	}
 
 	output, err := conn.CreateRepository(ctx, input)
@@ -189,6 +226,9 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
 	}
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
+	if err := d.Set("image_tag_mutability_exclusion_filter", flattenImageTagMutabilityExclusionFilters(repository.ImageTagMutabilityExclusionFilters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting image_tag_mutability_exclusion_filter: %s", err)
+	}
 	d.Set(names.AttrName, repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
@@ -200,11 +240,15 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	if d.HasChange("image_tag_mutability") {
+	if d.HasChanges("image_tag_mutability", "image_tag_mutability_exclusion_filter") {
 		input := &ecr.PutImageTagMutabilityInput{
 			ImageTagMutability: types.ImageTagMutability((d.Get("image_tag_mutability").(string))),
 			RegistryId:         aws.String(d.Get("registry_id").(string)),
 			RepositoryName:     aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("image_tag_mutability_exclusion_filter"); ok && len(v.([]any)) > 0 {
+			input.ImageTagMutabilityExclusionFilters = expandImageTagMutabilityExclusionFilters(v.([]any))
 		}
 
 		_, err := conn.PutImageTagMutability(ctx, input)
@@ -342,4 +386,68 @@ func flattenRepositoryEncryptionConfiguration(ec *types.EncryptionConfiguration)
 	return []map[string]any{
 		config,
 	}
+}
+
+func expandImageTagMutabilityExclusionFilters(data []any) []types.ImageTagMutabilityExclusionFilter {
+	if len(data) == 0 {
+		return nil
+	}
+
+	var filters []types.ImageTagMutabilityExclusionFilter
+	for _, v := range data {
+		tfMap := v.(map[string]any)
+		filter := types.ImageTagMutabilityExclusionFilter{
+			Filter:     aws.String(tfMap[names.AttrFilter].(string)),
+			FilterType: types.ImageTagMutabilityExclusionFilterType(tfMap["filter_type"].(string)),
+		}
+		filters = append(filters, filter)
+	}
+
+	return filters
+}
+
+func flattenImageTagMutabilityExclusionFilters(filters []types.ImageTagMutabilityExclusionFilter) []any {
+	if len(filters) == 0 {
+		return nil
+	}
+
+	var tfList []any
+	for _, filter := range filters {
+		tfMap := map[string]any{
+			names.AttrFilter: aws.ToString(filter.Filter),
+			"filter_type":    string(filter.FilterType),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func validateImageTagMutabilityExclusionFilter() schema.SchemaValidateDiagFunc {
+	return func(v any, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		value := v.(string)
+
+		wildcardCount := strings.Count(value, "*")
+		if wildcardCount > 2 {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Invalid filter pattern",
+				Detail:   "Image tag mutability exclusion filter can contain a maximum of 2 wildcards (*)",
+			})
+		}
+
+		return diags
+	}
+}
+
+func validateImageTagMutabilityExclusionFilterUsage(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	mutability := d.Get("image_tag_mutability").(string)
+	filters := d.Get("image_tag_mutability_exclusion_filter").([]any)
+
+	if len(filters) > 0 && mutability != string(types.ImageTagMutabilityImmutableWithExclusion) && mutability != string(types.ImageTagMutabilityMutableWithExclusion) {
+		return fmt.Errorf("image_tag_mutability_exclusion_filter can only be used when image_tag_mutability is set to IMMUTABLE_WITH_EXCLUSION or MUTABLE_WITH_EXCLUSION")
+	}
+
+	return nil
 }

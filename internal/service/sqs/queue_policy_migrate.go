@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func QueuePolicyMigrateState(
+func queuePolicyMigrateState(
 	v int, is *terraform.InstanceState, meta any) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:

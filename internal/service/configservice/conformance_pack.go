@@ -187,7 +187,7 @@ func resourceConformancePackDelete(ctx context.Context, d *schema.ResourceData, 
 		timeout = 5 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Conformance Pack: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteConformancePack(ctx, &configservice.DeleteConformancePackInput{
 			ConformancePackName: aws.String(d.Id()),
 		})

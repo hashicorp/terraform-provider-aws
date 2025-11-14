@@ -4,7 +4,7 @@ rules:
     message: Don't use AWS SDK for Go v2 waiters
     paths:
       exclude:
-        - "sweep.go"
+        - "**/sweep.go"
     patterns:
       - pattern: |
           $PKG.$FUNC($CONN)

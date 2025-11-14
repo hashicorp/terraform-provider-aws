@@ -24,16 +24,18 @@ import (
 )
 
 // @SDKResource("aws_s3_bucket_cors_configuration", name="Bucket CORS Configuration")
+// @IdentityAttribute("bucket")
+// @IdentityAttribute("expected_bucket_owner", optional="true")
+// @ImportIDHandler("resourceImportID")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(importIgnore="cors_rule.0.max_age_seconds")
+// @Testing(plannableImportAction="NoOp")
 func resourceBucketCorsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCorsConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketCorsConfigurationRead,
 		UpdateWithoutTimeout: resourceBucketCorsConfigurationUpdate,
 		DeleteWithoutTimeout: resourceBucketCorsConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrBucket: {
@@ -109,7 +111,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketCors(ctx, input)
 	}, errCodeNoSuchBucket)
 

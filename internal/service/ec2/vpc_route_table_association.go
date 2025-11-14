@@ -78,7 +78,7 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 	}
 
 	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.AssociateRouteTable(ctx, input)
 		},
 		errCodeInvalidRouteTableIDNotFound,

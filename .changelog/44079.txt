@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_efs_mount_target: Add `ip_address_type` and `ipv6_address` arguments to support IPv6 connectivity
+```
+
+```release-note:enhancement
+data-source/aws_efs_mount_target: Add `ip_address_type` and `ipv6_address` attributes
+```

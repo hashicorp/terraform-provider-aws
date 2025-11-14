@@ -38,7 +38,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -52,7 +51,7 @@ const (
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
 // @IdentityAttribute("bucket")
-// @WrappedImport(false)
+// @CustomImport
 // @V60SDKv2Fix
 // @Testing(idAttrDuplicates="bucket")
 func resourceBucket() *schema.Resource {
@@ -64,7 +63,9 @@ func resourceBucket() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalSingleParameterized(ctx, rd, inttypes.StringIdentityAttribute(names.AttrBucket, true), meta.(importer.AWSClient)); err != nil {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 
@@ -767,7 +768,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.ObjectLockEnabledForBucket = aws.Bool(true)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateBucket(ctx, input)
 	}, errCodeOperationAborted)
 
@@ -1172,7 +1173,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		if policy == "" {
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketPolicy(ctx, &s3.DeleteBucketPolicyInput{
 					Bucket: aws.String(d.Id()),
 				})
@@ -1187,7 +1188,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 				Policy: aws.String(policy),
 			}
 
-			_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.PutBucketPolicy(ctx, input)
 			}, errCodeMalformedPolicy, errCodeNoSuchBucket)
 
@@ -1202,7 +1203,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	if d.HasChange("cors_rule") {
 		if v, ok := d.GetOk("cors_rule"); !ok || len(v.([]any)) == 0 {
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketCors(ctx, &s3.DeleteBucketCorsInput{
 					Bucket: aws.String(d.Id()),
 				})
@@ -1219,7 +1220,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 				},
 			}
 
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.PutBucketCors(ctx, input)
 			}, errCodeNoSuchBucket)
 
@@ -1234,7 +1235,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	if d.HasChange("website") {
 		if v, ok := d.GetOk("website"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketWebsite(ctx, &s3.DeleteBucketWebsiteInput{
 					Bucket: aws.String(d.Id()),
 				})
@@ -1254,7 +1255,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 				WebsiteConfiguration: websiteConfig,
 			}
 
-			_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.PutBucketWebsite(ctx, input)
 			}, errCodeNoSuchBucket)
 
@@ -1283,7 +1284,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 				VersioningConfiguration: versioningConfig,
 			}
 
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.PutBucketVersioning(ctx, input)
 			}, errCodeNoSuchBucket)
 
@@ -1307,7 +1308,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			Bucket: aws.String(d.Id()),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.PutBucketAcl(ctx, input)
 		}, errCodeNoSuchBucket)
 
@@ -1333,7 +1334,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			Bucket: aws.String(d.Id()),
 		}
 
-		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.PutBucketAcl(ctx, input)
 		}, errCodeNoSuchBucket)
 
@@ -1365,7 +1366,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.PutBucketLogging(ctx, input)
 		}, errCodeNoSuchBucket)
 
@@ -1379,7 +1380,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	if d.HasChange("lifecycle_rule") {
 		if v, ok := d.GetOk("lifecycle_rule"); !ok || len(v.([]any)) == 0 {
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketLifecycle(ctx, &s3.DeleteBucketLifecycleInput{
 					Bucket: aws.String(d.Id()),
 				})
@@ -1396,7 +1397,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 				},
 			}
 
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.PutBucketLifecycleConfiguration(ctx, input)
 			}, errCodeNoSuchBucket)
 
@@ -1417,7 +1418,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			Bucket: aws.String(d.Id()),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.PutBucketAccelerateConfiguration(ctx, input)
 		}, errCodeNoSuchBucket)
 
@@ -1437,7 +1438,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			},
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.PutBucketRequestPayment(ctx, input)
 		}, errCodeNoSuchBucket)
 
@@ -1451,7 +1452,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	if d.HasChange("replication_configuration") {
 		if v, ok := d.GetOk("replication_configuration"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketReplication(ctx, &s3.DeleteBucketReplicationInput{
 					Bucket: aws.String(d.Id()),
 				})
@@ -1482,7 +1483,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 
 			_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.PutBucketReplication(ctx, input)
 				},
 				func(err error) (bool, error) {
@@ -1505,7 +1506,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	if d.HasChange("server_side_encryption_configuration") {
 		if v, ok := d.GetOk("server_side_encryption_configuration"); !ok || len(v.([]any)) == 0 {
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.DeleteBucketEncryption(ctx, &s3.DeleteBucketEncryptionInput{
 					Bucket: aws.String(d.Id()),
 				})
@@ -1522,7 +1523,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 				},
 			}
 
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.PutBucketEncryption(ctx, input)
 			}, errCodeNoSuchBucket, errCodeOperationAborted)
 
@@ -1542,7 +1543,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			ObjectLockConfiguration: expandBucketObjectLockConfiguration(d.Get("object_lock_configuration").([]any)),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.PutObjectLockConfiguration(ctx, input)
 		}, errCodeNoSuchBucket)
 
@@ -1659,7 +1660,7 @@ func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, op
 }
 
 func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
 		return f()
 	}, errCodeNoSuchBucket)
 

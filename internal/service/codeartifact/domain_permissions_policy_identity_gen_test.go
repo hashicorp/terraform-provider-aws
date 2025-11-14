@@ -23,9 +23,10 @@ func testAccCodeArtifactDomainPermissionsPolicy_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccCodeArtifactDomainPermissionsPolicy_Identity_Basic,
-		"ExistingResource": testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource,
-		"RegionOverride":   testAccCodeArtifactDomainPermissionsPolicy_Identity_RegionOverride,
+		acctest.CtBasic:             testAccCodeArtifactDomainPermissionsPolicy_Identity_Basic,
+		"ExistingResource":          testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccCodeArtifactDomainPermissionsPolicy_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -33,10 +34,11 @@ func testAccCodeArtifactDomainPermissionsPolicy_IdentitySerial(t *testing.T) {
 
 func testAccCodeArtifactDomainPermissionsPolicy_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -57,6 +59,9 @@ func testAccCodeArtifactDomainPermissionsPolicy_Identity_Basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrResourceARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrResourceARN: knownvalue.NotNull(),
+					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrResourceARN)),
 				},
 			},
@@ -118,7 +123,7 @@ func testAccCodeArtifactDomainPermissionsPolicy_Identity_RegionOverride(t *testi
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -137,6 +142,9 @@ func testAccCodeArtifactDomainPermissionsPolicy_Identity_RegionOverride(t *testi
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrResourceARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrResourceARN: knownvalue.NotNull(),
+					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrResourceARN)),
 				},
 			},
@@ -231,10 +239,11 @@ func testAccCodeArtifactDomainPermissionsPolicy_Identity_RegionOverride(t *testi
 
 func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -301,6 +310,54 @@ func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource(t *tes
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrResourceARN)),
 				},
+			},
+		},
+	})
+}
+
+func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_codeartifact_domain_permissions_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.CodeArtifactServiceID),
+		CheckDestroy: testAccCheckDomainPermissionsPolicyDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/DomainPermissionsPolicy/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainPermissionsPolicyExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/DomainPermissionsPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainPermissionsPolicyExists(ctx, resourceName),
+				),
 			},
 		},
 	})

@@ -7,7 +7,6 @@ import (
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,6 +16,17 @@ import (
 )
 
 type servicePackage struct{}
+
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newCreateBackupAction,
+			TypeName: "aws_dynamodb_create_backup",
+			Name:     "Create Backup",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
+}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
@@ -153,7 +163,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *dynamodb.Options) {
 			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
-				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), vcr.InteractionNotFoundRetryableFunc)
 			}
 		},
 		withExtraOptions(ctx, p, config),

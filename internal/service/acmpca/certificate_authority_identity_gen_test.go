@@ -26,7 +26,7 @@ func TestAccACMPCACertificateAuthority_Identity_Basic(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -47,6 +47,9 @@ func TestAccACMPCACertificateAuthority_Identity_Basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
@@ -115,7 +118,7 @@ func TestAccACMPCACertificateAuthority_Identity_RegionOverride(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -134,6 +137,9 @@ func TestAccACMPCACertificateAuthority_Identity_RegionOverride(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
@@ -245,7 +251,7 @@ func TestAccACMPCACertificateAuthority_Identity_ExistingResource(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -312,6 +318,55 @@ func TestAccACMPCACertificateAuthority_Identity_ExistingResource(t *testing.T) {
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
+			},
+		},
+	})
+}
+
+func TestAccACMPCACertificateAuthority_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v types.CertificateAuthority
+	resourceName := "aws_acmpca_certificate_authority.test"
+	rName := acctest.RandomDomainName()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
+				),
 			},
 		},
 	})

@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,7 +29,7 @@ import (
 // @SDKResource("aws_organizations_policy", name="Policy")
 // @Tags(identifierAttribute="id")
 // @IdentityAttribute("id")
-// @WrappedImport(false)
+// @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.Policy")
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="6.4.0")
@@ -96,7 +95,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		Tags:        getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreatePolicy(ctx, input)
 	})
 
@@ -202,7 +201,9 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 }
 
 func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	if err := importer.GlobalSingleParameterized(ctx, d, inttypes.StringIdentityAttribute(names.AttrID, true), meta.(importer.AWSClient)); err != nil {
+	identitySpec := importer.IdentitySpec(ctx)
+
+	if err := importer.GlobalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
 		return nil, err
 	}
 

@@ -77,7 +77,7 @@ func (e expectFullTagsCheck) CheckState(ctx context.Context, req statecheck.Chec
 		err = fmt.Errorf("no ListTags method found for service %s", sp.ServicePackageName())
 	}
 	if err != nil {
-		resp.Error = fmt.Errorf("listing tags for %s: %s", e.base.ResourceAddress(), err)
+		resp.Error = fmt.Errorf("listing tags for %s: %w", e.base.ResourceAddress(), err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func (e expectFullTagsCheck) CheckState(ctx context.Context, req statecheck.Chec
 	})
 
 	if err := e.knownValue.CheckValue(tagsMap); err != nil {
-		resp.Error = fmt.Errorf("error checking remote tags for %s: %s", e.base.ResourceAddress(), err) // nosemgrep:ci.semgrep.errors.no-fmt.Errorf-leading-error
+		resp.Error = fmt.Errorf("error checking remote tags for %s: %w", e.base.ResourceAddress(), err) // nosemgrep:ci.semgrep.errors.no-fmt.Errorf-leading-error
 		return
 	}
 }

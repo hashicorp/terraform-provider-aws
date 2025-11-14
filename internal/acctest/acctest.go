@@ -68,6 +68,7 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/jmespath/go-jmespath"
@@ -526,7 +527,7 @@ func MatchResourceAttrRegionalARNNoAccount(resourceName, attributeName, arnServi
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -678,7 +679,7 @@ func MatchResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -1925,7 +1926,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 		}
 
 		// Wait for certificate status to become ISSUED.
-		outputRaw, err := tfresource.RetryWhenIsA[*acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func() (any, error) {
+		getCertOutput, err := tfresource.RetryWhenIsA[*acmpca.GetCertificateOutput, *acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func(ctx context.Context) (*acmpca.GetCertificateOutput, error) {
 			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, arn, aws.ToString(issueCertOutput.CertificateArn))
 		})
 
@@ -1933,7 +1934,6 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate to become ISSUED: %w", arn, err)
 		}
 
-		getCertOutput := outputRaw.(*acmpca.GetCertificateOutput)
 		importCACertificateInput := acmpca.ImportCertificateAuthorityCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			Certificate:             []byte(aws.ToString(getCertOutput.Certificate)),
@@ -1986,7 +1986,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		}
 
 		// Wait for certificate status to become ISSUED.
-		outputRaw, err := tfresource.RetryWhenIsA[*acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func() (any, error) {
+		getCertOutput, err := tfresource.RetryWhenIsA[*acmpca.GetCertificateOutput, *acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func(ctx context.Context) (*acmpca.GetCertificateOutput, error) {
 			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, rootCertificateAuthorityArn, aws.ToString(issueCertOutput.CertificateArn))
 		})
 
@@ -1994,7 +1994,6 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate (%s) to become ISSUED: %w", arn, aws.ToString(issueCertOutput.CertificateArn), err)
 		}
 
-		getCertOutput := outputRaw.(*acmpca.GetCertificateOutput)
 		importCACertificateInput := acmpca.ImportCertificateAuthorityCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			Certificate:             []byte(aws.ToString(getCertOutput.Certificate)),
@@ -2226,4 +2225,10 @@ func ExpectErrorAttrAtLeastOneOf(attrs ...string) *regexp.Regexp {
 
 func ExpectErrorAttrMinItems(attr string, expected, actual int) *regexp.Regexp {
 	return regexache.MustCompile(fmt.Sprintf(`Attribute %s requires %d\s+item minimum, but config has only %d declared`, attr, expected, actual))
+}
+
+func ListOfStrings[E ~string](s ...E) string {
+	return strings.Join(tfslices.ApplyToAll(s, func(e E) string {
+		return strconv.Quote(string(e))
+	}), ", ")
 }

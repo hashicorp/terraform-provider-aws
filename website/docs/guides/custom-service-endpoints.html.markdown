@@ -102,6 +102,7 @@ provider "aws" {
 |App Runner|`apprunner`|`AWS_ENDPOINT_URL_APPRUNNER`|`apprunner`|
 |AppStream 2.0|`appstream`|`AWS_ENDPOINT_URL_APPSTREAM`|`appstream`|
 |AppSync|`appsync`|`AWS_ENDPOINT_URL_APPSYNC`|`appsync`|
+|Application Resilience Controller Region Switch|`arcregionswitch`|`AWS_ENDPOINT_URL_ARC_REGION_SWITCH`|`arc_region_switch`|
 |Athena|`athena`|`AWS_ENDPOINT_URL_ATHENA`|`athena`|
 |Audit Manager|`auditmanager`|`AWS_ENDPOINT_URL_AUDITMANAGER`|`auditmanager`|
 |Auto Scaling|`autoscaling`|`AWS_ENDPOINT_URL_AUTO_SCALING`|`auto_scaling`|
@@ -111,6 +112,7 @@ provider "aws" {
 |BCM Data Exports|`bcmdataexports`|`AWS_ENDPOINT_URL_BCM_DATA_EXPORTS`|`bcm_data_exports`|
 |Bedrock|`bedrock`|`AWS_ENDPOINT_URL_BEDROCK`|`bedrock`|
 |Bedrock Agents|`bedrockagent`|`AWS_ENDPOINT_URL_BEDROCK_AGENT`|`bedrock_agent`|
+|Bedrock AgentCore|`bedrockagentcore`|`AWS_ENDPOINT_URL_BEDROCK_AGENTCORE_CONTROL`|`bedrock_agentcore_control`|
 |Billing|`billing`|`AWS_ENDPOINT_URL_BILLING`|`billing`|
 |Web Services Budgets|`budgets`|`AWS_ENDPOINT_URL_BUDGETS`|`budgets`|
 |CE (Cost Explorer)|`ce`(or `costexplorer`)|`AWS_ENDPOINT_URL_COST_EXPLORER`|`cost_explorer`|
@@ -245,11 +247,14 @@ provider "aws" {
 |Neptune|`neptune`|`AWS_ENDPOINT_URL_NEPTUNE`|`neptune`|
 |Neptune Analytics|`neptunegraph`|`AWS_ENDPOINT_URL_NEPTUNE_GRAPH`|`neptune_graph`|
 |Network Firewall|`networkfirewall`|`AWS_ENDPOINT_URL_NETWORK_FIREWALL`|`network_firewall`|
+|CloudWatch NetworkFlow Monitor|`networkflowmonitor`|`AWS_ENDPOINT_URL_NETWORKFLOWMONITOR`|`networkflowmonitor`|
 |Network Manager|`networkmanager`|`AWS_ENDPOINT_URL_NETWORKMANAGER`|`networkmanager`|
 |CloudWatch Network Monitor|`networkmonitor`|`AWS_ENDPOINT_URL_NETWORKMONITOR`|`networkmonitor`|
 |User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|
 |User Notifications Contacts|`notificationscontacts`|`AWS_ENDPOINT_URL_NOTIFICATIONSCONTACTS`|`notificationscontacts`|
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|
+|CloudWatch Observability Admin|`observabilityadmin`|`AWS_ENDPOINT_URL_OBSERVABILITYADMIN`|`observabilityadmin`|
+|Oracle Database@AWS|`odb`|`AWS_ENDPOINT_URL_ODB`|`odb`|
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|
 |Organizations|`organizations`|`AWS_ENDPOINT_URL_ORGANIZATIONS`|`organizations`|
@@ -289,6 +294,7 @@ provider "aws" {
 |S3 Control|`s3control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
 |S3 on Outposts|`s3outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3outposts`|
 |S3 Tables|`s3tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3tables`|
+|S3 Vectors|`s3vectors`|`AWS_ENDPOINT_URL_S3VECTORS`|`s3vectors`|
 |SageMaker AI|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
@@ -330,6 +336,7 @@ provider "aws" {
 |WAF Classic Regional|`wafregional`|`AWS_ENDPOINT_URL_WAF_REGIONAL`|`waf_regional`|
 |WAF|`wafv2`|`AWS_ENDPOINT_URL_WAFV2`|`wafv2`|
 |Well-Architected Tool|`wellarchitected`|`AWS_ENDPOINT_URL_WELLARCHITECTED`|`wellarchitected`|
+|WorkMail|`workmail`|`AWS_ENDPOINT_URL_WORKMAIL`|`workmail`|
 |WorkSpaces|`workspaces`|`AWS_ENDPOINT_URL_WORKSPACES`|`workspaces`|
 |WorkSpaces Web|`workspacesweb`|`AWS_ENDPOINT_URL_WORKSPACES_WEB`|`workspaces_web`|
 |X-Ray|`xray`|`AWS_ENDPOINT_URL_XRAY`|`xray`|

@@ -1,4 +1,4 @@
-# Roadmap:  Nov 2024 - Jan 2025
+# Roadmap:  October 2025 - December 2025
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
@@ -8,67 +8,76 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning Nov to Jan 2025 the AWS Provider added support for the following (among many others):
+In the period spanning July to September 2025 the AWS Provider added support for the following (among many others):
 
-- AWS Chatbot
-- Amazon Bedrock
-- Amazon Route 53 Profiles & Zones
-- Amazon Bedrock Agents
-- Completed the migration to Amazon GO SDK v2
+- Oracle Database on AWS
+- DynamoDB Warm Throughput
+- Amazon Workspaces Web
 
-From Nov - Jan 2025, we will be prioritizing the following areas of work:
+From October - December 2025, we will be prioritizing the following areas of work (and more):
 
-## New Services
+## New Services / Features
 
-### Amazon S3 Tables
+### Amazon Bedrock AgentCore
 
-Issue: [#40407](https://github.com/hashicorp/terraform-provider-aws/issues/40407)
+Issue: [#43424](https://github.com/hashicorp/terraform-provider-aws/issues/43424)
 
-[Amazon S3 Tables](https://aws.amazon.com/about-aws/whats-new/2024/12/amazon-s3-tables-apache-iceberg-tables-analytics-workloads/) Amazon S3 Tables deliver the first cloud object store with built-in Apache Iceberg support and the easiest way to store tabular data at scale. S3 Tables are specifically optimized for analytics workloads, resulting in up to 3x faster query throughput and up to 10x higher transactions per second than self-managed tables.
+[Amazon Bedrock AgentCore](https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-bedrock-agentcore-available/) Amazon Bedrock AgentCore is an agentic platform to build, deploy and operate highly capable agents securely at scale using any framework, model, or protocol. AgentCore lets you build agents faster, enable agents to take actions across tools and data, run agents securely with low-latency and extended runtimes, and monitor agents in production - all without any infrastructure management.
 
-Support for additional S3 resources may include:
+Support for Amazon Bedrock AgentCore includes the following new resources:
 
 New Resource(s):
 
-- `aws_s3tables_table_bucket`
-- `aws_s3tables_table_bucket_policy`
-- `aws_s3tables_table`
-- `aws_s3tables_table_policy`
-- `aws_s3tables_namespace`
+- `aws_bedrockagentcore_agent_runtime`
+- `aws_bedrockagentcore_runtime_endpoint`
+- `aws_bedrockagentcore_gateway`
+- `aws_bedrockagentcore_browser`
+- `aws_bedrockagentcore_code_interpreter`
+- `aws_bedrockagentcore_gateway_target`
+- `aws_bedrockagentcore_memory`
+- `aws_bedrockagentcore_oauth2_credential_provider`
+- `aws_bedrockagentcore_workload_provider`
+- `aws_bedrockagentcore_apikey_credential_provider`
 
-### Amazon S3 Express Bucket Lifecycle Configuration
+### AWS Transfer Family Web Apps
 
-Issue: [#40261](https://github.com/hashicorp/terraform-provider-aws/issues/40261)
+Issue: [#40996](https://github.com/hashicorp/terraform-provider-aws/issues/40996)
 
-[Amazon S3 Express Bucket Lifecycle Configuration](https://aws.amazon.com/about-aws/whats-new/2024/11/amazon-s3-express-one-zone-s3-lifecycle-expirations/) Amazon S3 Express One Zone, a high-performance S3 storage class for latency-sensitive applications, now supports object expiration using S3 Lifecycle. S3 Lifecycle can expire objects based on age to help you automatically optimize storage costs.
+[AWS Transfer Family Web Apps](https://aws.amazon.com/aws-transfer-family/web-apps/) Transfer Family web apps offer a no-code, fully managed browser-based experience that enables secure file transfers to and from Amazon S3. Transfer Family web apps enable your authenticated users to perform essential file operations—including listing, uploading, downloading, and deleting—while maintaining security, reliability, and compliance.
 
-Support for Amazon S3 Express resources may include:
+Support for AWS Transfer Family Web Apps includes:
 
-Affected Resource(s):
+New Resource(s):
 
-- `aws_s3_bucket_lifecycle_configuration`
+- `aws_transfer_web_app`
+- `aws_transfer_web_app_customization`
 
-### Amazon EKS: Auto Mode
+### Amazon SaaS Manager for Amazon CloudFront
 
-Issue: [#40373](https://github.com/hashicorp/terraform-provider-aws/issues/40373)
+Issue: [#42409](https://github.com/hashicorp/terraform-provider-aws/issues/42409)
 
-[Amazon EKS: Auto Mode](https://aws.amazon.com/about-aws/whats-new/2024/12/amazon-eks-auto-mode/) a new feature that fully automates compute, storage, and networking management for Kubernetes clusters. Amazon EKS Auto Mode simplifies running Kubernetes by offloading cluster operations to AWS, improves the performance and security of your applications, and helps optimize compute costs.
+[Amazon SaaS Manager for Amazon CloudFront](https://aws.amazon.com/about-aws/whats-new/2025/04/saas-manager-amazon-cloudfront/) Amazon SaaS Manager for Amazon CloudFront is a new Amazon CloudFront feature designed to efficiently manage content delivery across multiple websites for Software-as-a-Service (SaaS) providers, web development platforms, and companies with multiple brands/websites. CloudFront SaaS Manager provides a unified experience, alleviating the operational burden of managing multiple websites at scale, including TLS certificate management, DDoS protection, and observability.
 
-### Amazon ECS: Availability Zone Rebalancing
+New Resource(s):
 
-Issue: [#40221](https://github.com/hashicorp/terraform-provider-aws/issues/40221)
+- `aws_cloudfront_distribution_tenant`
+- `aws_cloudfront_connection_group`
 
-[ECS: Availability Zone Rebalancing](https://aws.amazon.com/about-aws/whats-new/2024/11/amazon-ecs-az-rebalancing-speeds-mean-time-recovery-event/) a new feature that automatically redistributes containerized workloads across AZs. This capability helps reduce the mean time to recovery after infrastructure events, enabling applications to maintain high availability without requiring manual intervention.
+Affected Resource:
+
+- `aws_cloudfront_distribution`
 
 ## Enhancements to Existing Services
 
 This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-- [Enable Deletion Protection for DynamoDB Table Replicas](https://github.com/hashicorp/terraform-provider-aws/issues/30213)
-- [WAFv2 update rules shared with Firewall Manager](https://github.com/hashicorp/terraform-provider-aws/issues/36941)
-- [Add support for enabling primary ipv6 address on EC2 instance](https://github.com/hashicorp/terraform-provider-aws/pull/36425)
-- [Timestream Scheduled Query](https://github.com/hashicorp/terraform-provider-aws/issues/22507)
-- [Log Anomaly Detector](https://github.com/hashicorp/terraform-provider-aws/issues/22507)
+- [Allow to set preferred_cache_cluster_azs for ElastiCache Redis Сluster](https://github.com/hashicorp/terraform-provider-aws/issues/37497)
+- [AWS_Route53_zone: support attribute-only search](https://github.com/hashicorp/terraform-provider-aws/pull/39671)
+- [Add support for concurrency cross channel behaviour to aws_connect_routing_profile](https://github.com/hashicorp/terraform-provider-aws/issues/35018)
+- [Parameter to enable Certificate-based-authentication in the directory configuration of Appstream](https://github.com/hashicorp/terraform-provider-aws/issues/31766)
+- [Resources for Custom Billing View](https://github.com/hashicorp/terraform-provider-aws/issues/40677)
+- [Support CHALLENGE WAF actions and overrides on individual WAF Rule Group Rules](https://github.com/hashicorp/terraform-provider-aws/issues/27862)
+- [Add required suffix when specifying log group ARN](https://github.com/hashicorp/terraform-provider-aws/pull/35941)
 
 ## Disclosures
 

@@ -50,6 +50,7 @@ func (r *deliveryDestinationResource) Schema(ctx context.Context, request resour
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"delivery_destination_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.DeliveryDestinationType](),
+				Optional:   true,
 				Computed:   true,
 			},
 			names.AttrName: schema.StringAttribute{
@@ -75,15 +76,13 @@ func (r *deliveryDestinationResource) Schema(ctx context.Context, request resour
 			"delivery_destination_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[deliveryDestinationConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"destination_resource_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
-							Required:   true,
+							Optional:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplaceIf(requiresReplaceIfARNServiceChanges, "", ""),
 							},
@@ -92,6 +91,34 @@ func (r *deliveryDestinationResource) Schema(ctx context.Context, request resour
 				},
 			},
 		},
+	}
+}
+
+func (r *deliveryDestinationResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data deliveryDestinationResourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	isXray := !data.DeliveryDestinationType.IsNull() && !data.DeliveryDestinationType.IsUnknown() &&
+		data.DeliveryDestinationType.ValueString() == string(awstypes.DeliveryDestinationTypeXray)
+	hasConfig := !data.DeliveryDestinationConfiguration.IsNull() && !data.DeliveryDestinationConfiguration.IsUnknown()
+
+	if isXray && hasConfig {
+		response.Diagnostics.AddAttributeError(
+			path.Root("delivery_destination_configuration"),
+			"Invalid Configuration",
+			"delivery_destination_configuration must not be set when delivery_destination_type is XRAY",
+		)
+	}
+
+	if !isXray && !hasConfig && !data.DeliveryDestinationType.IsUnknown() && !data.DeliveryDestinationConfiguration.IsUnknown() {
+		response.Diagnostics.AddAttributeError(
+			path.Root("delivery_destination_configuration"),
+			"Missing Configuration",
+			"delivery_destination_configuration is required when delivery_destination_type is not XRAY",
+		)
 	}
 }
 
@@ -152,6 +179,13 @@ func (r *deliveryDestinationResource) Read(ctx context.Context, request resource
 		return
 	}
 
+	// Handle empty destination_resource_arn for XRAY type destinations
+	// Clear it before flattening to avoid ARN validation error
+	if output.DeliveryDestinationConfiguration != nil &&
+		aws.ToString(output.DeliveryDestinationConfiguration.DestinationResourceArn) == "" {
+		output.DeliveryDestinationConfiguration = nil
+	}
+
 	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
@@ -184,9 +218,6 @@ func (r *deliveryDestinationResource) Update(ctx context.Context, request resour
 		if response.Diagnostics.HasError() {
 			return
 		}
-
-		// Additional fields.
-		input.Tags = getTagsIn(ctx)
 
 		output, err := conn.PutDeliveryDestination(ctx, &input)
 
