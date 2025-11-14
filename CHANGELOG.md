@@ -1,5 +1,19 @@
 ## 6.22.0 (Unreleased)
 
+FEATURES:
+
+* **New Ephemeral Resource:** `aws_ecr_authorization_token` ([#44949](https://github.com/hashicorp/terraform-provider-aws/issues/44949))
+
+ENHANCEMENTS:
+
+* data-source/aws_route53_zone: Support filtering by `tags` only or by `vpc_id` only ([#39671](https://github.com/hashicorp/terraform-provider-aws/issues/39671))
+* resource/aws_vpn_connection: Add `tunnel_bandwidth` argument to support higher bandwidth tunnels ([#45070](https://github.com/hashicorp/terraform-provider-aws/issues/45070))
+
+BUG FIXES:
+
+* resource/aws_elastic_beanstalk_configuration_template: Fix updates not applying by including `ResourceName` for option settings and preventing duplicate add/remove operations ([#45077](https://github.com/hashicorp/terraform-provider-aws/issues/45077))
+* resource/aws_quicksight_account_settings: Add `region` argument ([#45083](https://github.com/hashicorp/terraform-provider-aws/issues/45083))
+
 ## 6.21.0 (November 13, 2025)
 
 BREAKING CHANGES:
@@ -34,7 +48,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * provider: Fix situation where refreshes of removed infrastructure appear as errors rather than warnings ([#45022](https://github.com/hashicorp/terraform-provider-aws/issues/45022))
-* resource/aws_apprunner_service: Prevents error when upgrading from provider pre-v6.0 without refreshing ([#45050](https://github.com/hashicorp/terraform-provider-aws/issues/45050))
+* resource/aws_acmpca_certificate_authority: Prevents error when upgrading from provider pre-v6.0 without refreshing ([#45050](https://github.com/hashicorp/terraform-provider-aws/issues/45050))
 * resource/aws_apprunner_service: Prevents error when upgrading from provider pre-v6.0 without refreshing ([#45051](https://github.com/hashicorp/terraform-provider-aws/issues/45051))
 * resource/aws_ec2_image_block_public_access: Add `region` argument ([#45023](https://github.com/hashicorp/terraform-provider-aws/issues/45023))
 * resource/aws_ec2_serial_console_access: Add `region` argument ([#45064](https://github.com/hashicorp/terraform-provider-aws/issues/45064))
