@@ -154,6 +154,15 @@ func resourceVPNConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tunnel_bandwidth": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.VpnTunnelBandwidth](),
+				// Not supported on VGW
+				ConflictsWith: []string{"vpn_gateway_id"},
+			},
 			"tunnel_inside_ip_version": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -787,6 +796,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("remote_ipv6_network_cidr", v.RemoteIpv6NetworkCidr)
 		d.Set("static_routes_only", v.StaticRoutesOnly)
 		d.Set("transport_transit_gateway_attachment_id", v.TransportTransitGatewayAttachmentId)
+		d.Set("tunnel_bandwidth", v.TunnelBandwidth)
 		d.Set("tunnel_inside_ip_version", v.TunnelInsideIpVersion)
 
 		for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
@@ -1017,6 +1027,10 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *awstypes.V
 
 	if v, ok := d.GetOk("static_routes_only"); ok {
 		apiObject.StaticRoutesOnly = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.Get("tunnel_bandwidth").(string); ok {
+		apiObject.TunnelBandwidth = awstypes.VpnTunnelBandwidth(v)
 	}
 
 	if v, ok := d.GetOk("transport_transit_gateway_attachment_id"); ok {
