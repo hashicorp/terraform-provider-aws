@@ -83,11 +83,18 @@ func (c CommonArgs) ImportStateIDAttribute() string {
 	return namesgen.ConstOrQuote(c.importStateIDAttribute)
 }
 
+func (c *CommonArgs) SetImportStateIDAttribute(attrName string) {
+	c.importStateIDAttribute = attrName
+}
+
 func (c CommonArgs) HasImportIgnore() bool {
 	return len(c.ImportIgnore) > 0
 }
 
 func (c CommonArgs) PlannableResourceAction() string {
+	if c.plannableImportAction == importActionUnset {
+		return importActionNoop.String()
+	}
 	return c.plannableImportAction.String()
 }
 
@@ -100,7 +107,8 @@ func (c CommonArgs) AdditionalTfVars() map[string]TFVar {
 type importAction int
 
 const (
-	importActionNoop importAction = iota
+	importActionUnset importAction = iota
+	importActionNoop
 	importActionUpdate
 	importActionReplace
 )
@@ -203,7 +211,9 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		for i, val := range stuff.ImportIgnore {
 			stuff.ImportIgnore[i] = namesgen.ConstOrQuote(val)
 		}
-		stuff.plannableImportAction = importActionUpdate
+		if stuff.plannableImportAction == importActionUnset {
+			stuff.plannableImportAction = importActionUpdate
+		}
 	}
 
 	if attr, ok := args.Keyword["importStateId"]; ok {

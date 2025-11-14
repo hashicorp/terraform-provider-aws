@@ -67,6 +67,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codeconnections_host.example
+  identity = {
+    "arn" = "arn:aws:codeconnections:us-west-2:123456789012:host/example-host-id"
+  }
+}
+
+resource "aws_codeconnections_host" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeConnections host.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeConnections Host using the ARN. For example:
 
 ```typescript
@@ -97,4 +118,4 @@ Using `terraform import`, import CodeConnections Host using the ARN. For example
 % terraform import aws_codeconnections_host.example-host arn:aws:codeconnections:us-west-1:0123456789:host/79d4d357-a2ee-41e4-b350-2fe39ae59448
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e1ce5ff32f8b44ad7a18916ea0fd1e702b08a31cf4ff2c2fd56de820dae5ae43 -->
+<!-- cache-key: cdktf-0.20.8 input-914b90087872fa97e0d01a3f4d6b7ea35809faaff7ca607a8c9ae0908b63c8b4 -->

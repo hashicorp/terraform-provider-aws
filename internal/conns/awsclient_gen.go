@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
+	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -167,11 +168,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
+	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
@@ -254,6 +257,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/aws/aws-sdk-go-v2/service/wellarchitected"
+	"github.com/aws/aws-sdk-go-v2/service/workmail"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	"github.com/aws/aws-sdk-go-v2/service/xray"
@@ -279,6 +283,10 @@ func (c *AWSClient) APIGatewayClient(ctx context.Context) *apigateway.Client {
 
 func (c *AWSClient) APIGatewayV2Client(ctx context.Context) *apigatewayv2.Client {
 	return errs.Must(client[*apigatewayv2.Client](ctx, c, names.APIGatewayV2, make(map[string]any)))
+}
+
+func (c *AWSClient) ARCRegionSwitchClient(ctx context.Context) *arcregionswitch.Client {
+	return errs.Must(client[*arcregionswitch.Client](ctx, c, names.ARCRegionSwitch, make(map[string]any)))
 }
 
 func (c *AWSClient) AccessAnalyzerClient(ctx context.Context) *accessanalyzer.Client {
@@ -913,6 +921,10 @@ func (c *AWSClient) NetworkFirewallClient(ctx context.Context) *networkfirewall.
 	return errs.Must(client[*networkfirewall.Client](ctx, c, names.NetworkFirewall, make(map[string]any)))
 }
 
+func (c *AWSClient) NetworkFlowMonitorClient(ctx context.Context) *networkflowmonitor.Client {
+	return errs.Must(client[*networkflowmonitor.Client](ctx, c, names.NetworkFlowMonitor, make(map[string]any)))
+}
+
 func (c *AWSClient) NetworkManagerClient(ctx context.Context) *networkmanager.Client {
 	return errs.Must(client[*networkmanager.Client](ctx, c, names.NetworkManager, make(map[string]any)))
 }
@@ -935,6 +947,10 @@ func (c *AWSClient) ODBClient(ctx context.Context) *odb.Client {
 
 func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam.Client {
 	return errs.Must(client[*oam.Client](ctx, c, names.ObservabilityAccessManager, make(map[string]any)))
+}
+
+func (c *AWSClient) ObservabilityAdminClient(ctx context.Context) *observabilityadmin.Client {
+	return errs.Must(client[*observabilityadmin.Client](ctx, c, names.ObservabilityAdmin, make(map[string]any)))
 }
 
 func (c *AWSClient) OpenSearchClient(ctx context.Context) *opensearch.Client {
@@ -1259,6 +1275,10 @@ func (c *AWSClient) WAFV2Client(ctx context.Context) *wafv2.Client {
 
 func (c *AWSClient) WellArchitectedClient(ctx context.Context) *wellarchitected.Client {
 	return errs.Must(client[*wellarchitected.Client](ctx, c, names.WellArchitected, make(map[string]any)))
+}
+
+func (c *AWSClient) WorkMailClient(ctx context.Context) *workmail.Client {
+	return errs.Must(client[*workmail.Client](ctx, c, names.WorkMail, make(map[string]any)))
 }
 
 func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces.Client {

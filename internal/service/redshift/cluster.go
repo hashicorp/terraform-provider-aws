@@ -38,6 +38,8 @@ import (
 
 // @SDKResource("aws_redshift_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.Cluster")
+// @Testing(importIgnore="final_snapshot_identifier;master_password;skip_final_snapshot;apply_immediately")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -858,8 +860,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				ClusterIdentifier: aws.String(d.Id()),
 			}
 
-			_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-				func() (any, error) {
+			_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
+				func(ctx context.Context) (any, error) {
 					return conn.RebootCluster(ctx, input)
 				})
 
@@ -954,8 +956,8 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteCluster(ctx, input)
 		})
 

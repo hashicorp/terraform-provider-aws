@@ -224,10 +224,14 @@ func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.Resource
 }
 
 func findOpenIDConnectProviderByARN(ctx context.Context, conn *iam.Client, arn string) (*iam.GetOpenIDConnectProviderOutput, error) {
-	input := &iam.GetOpenIDConnectProviderInput{
+	input := iam.GetOpenIDConnectProviderInput{
 		OpenIDConnectProviderArn: aws.String(arn),
 	}
 
+	return findOpenIDConnectProvider(ctx, conn, &input)
+}
+
+func findOpenIDConnectProvider(ctx context.Context, conn *iam.Client, input *iam.GetOpenIDConnectProviderInput) (*iam.GetOpenIDConnectProviderOutput, error) {
 	output, err := conn.GetOpenIDConnectProvider(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
@@ -236,6 +240,7 @@ func findOpenIDConnectProviderByARN(ctx context.Context, conn *iam.Client, arn s
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}

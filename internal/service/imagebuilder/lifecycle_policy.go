@@ -170,6 +170,10 @@ func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.S
 											Attributes: map[string]schema.Attribute{
 												"is_public": schema.BoolAttribute{
 													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Bool{
+														boolplanmodifier.UseStateForUnknown(),
+													},
 												},
 												"regions": schema.ListAttribute{
 													CustomType:  fwtypes.ListOfStringType,

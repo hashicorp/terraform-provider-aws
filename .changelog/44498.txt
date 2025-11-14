@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_odb_cloud_vm_cluster : Fixed planmodifier for data_storage_size_in_tbs. Marked it mandatory. Fixed gi-version issue during creation
+```

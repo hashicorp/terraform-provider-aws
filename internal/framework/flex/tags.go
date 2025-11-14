@@ -49,3 +49,18 @@ func (o tagOptions) OmitEmpty() bool {
 func (o tagOptions) NoFlatten() bool {
 	return o.Contains("noflatten")
 }
+
+func (o tagOptions) XMLWrapperField() string {
+	if len(o) == 0 {
+		return ""
+	}
+	s := string(o)
+	for s != "" {
+		var option string
+		option, s, _ = strings.Cut(s, ",")
+		if name, value, found := strings.Cut(option, "="); found && name == "xmlwrapper" {
+			return value
+		}
+	}
+	return ""
+}

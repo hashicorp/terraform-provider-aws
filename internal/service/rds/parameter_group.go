@@ -308,7 +308,7 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	input := rds.DeleteDBParameterGroupInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsA[*types.InvalidDBParameterGroupStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidDBParameterGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteDBParameterGroup(ctx, &input)
 	})
 

@@ -271,7 +271,7 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			_, err := conn.CreateStackSet(ctx, input)
 
 			if err != nil {

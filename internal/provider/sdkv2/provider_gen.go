@@ -195,6 +195,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// arcregionswitch
+
+				"arcregionswitch": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// athena
 
 				"athena": {
@@ -1527,6 +1535,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// networkflowmonitor
+
+				"networkflowmonitor": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// networkmanager
 
 				"networkmanager": {
@@ -1568,6 +1584,14 @@ func endpointsSchema() *schema.Schema {
 				},
 
 				"cloudwatchobservabilityaccessmanager": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// observabilityadmin
+
+				"observabilityadmin": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
@@ -2296,6 +2320,14 @@ func endpointsSchema() *schema.Schema {
 				// wellarchitected
 
 				"wellarchitected": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// workmail
+
+				"workmail": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

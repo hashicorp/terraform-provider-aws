@@ -169,7 +169,19 @@ The following arguments are optional:
 
 ### node_repair_config Configuration Block
 
-* `enabled` - (Required) Specifies whether to enable node auto repair for the node group. Node auto repair is disabled by default.
+* `enabled` - (Optional) Specifies whether to enable node auto repair for the node group. Node auto repair is disabled by default. Defaults to `false`.
+* `max_parallel_nodes_repaired_count` - (Optional) Maximum number of nodes that can be repaired concurrently or in parallel, expressed as a count of unhealthy nodes. Conflicts with `max_parallel_nodes_repaired_percentage`.
+* `max_parallel_nodes_repaired_percentage` - (Optional) Maximum number of nodes that can be repaired concurrently or in parallel, expressed as a percentage of unhealthy nodes. Conflicts with `max_parallel_nodes_repaired_count`.
+* `max_unhealthy_node_threshold_count` - (Optional) Count threshold of unhealthy nodes, above which node auto repair actions will stop. Conflicts with `max_unhealthy_node_threshold_percentage`.
+* `max_unhealthy_node_threshold_percentage` - (Optional) Percentage threshold of unhealthy nodes, above which node auto repair actions will stop. Conflicts with `max_unhealthy_node_threshold_count`.
+* `node_repair_config_overrides` - (Optional) Granular overrides for specific repair actions. See [`node_repair_config_overrides`](#node_repair_config_overrides-configuration-block) below for details.
+
+### node_repair_config_overrides Configuration Block
+
+* `min_repair_wait_time_mins` - (Required) Minimum time in minutes to wait before attempting to repair a node with the specified `node_monitoring_condition` and `node_unhealthy_reason`.
+* `node_monitoring_condition` - (Required) Unhealthy condition reported by the node monitoring agent that this override applies to.
+* `node_unhealthy_reason` - (Required) Reason reported by the node monitoring agent that this override applies to.
+* `repair_action` - (Required) Repair action to take for nodes when all of the specified conditions are met. Valid values are defined by the EKS API.
 
 ### remote_access Configuration Block
 

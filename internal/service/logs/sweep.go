@@ -224,7 +224,7 @@ func sweepGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &cloudwatchlogs.DescribeLogGroupsInput{}
 	conn := client.LogsClient(ctx)
@@ -265,7 +265,7 @@ func sweepQueryDefinitions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
 	conn := client.LogsClient(ctx)
@@ -309,7 +309,7 @@ func sweepResourcePolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
 	conn := client.LogsClient(ctx)

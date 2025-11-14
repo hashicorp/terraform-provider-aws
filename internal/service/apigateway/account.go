@@ -96,8 +96,8 @@ func (r *accountResource) Create(ctx context.Context, request resource.CreateReq
 		}
 	}
 
-	output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
-		func() (*apigateway.UpdateAccountOutput, error) {
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func(ctx context.Context) (*apigateway.UpdateAccountOutput, error) {
 			return conn.UpdateAccount(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -187,8 +187,8 @@ func (r *accountResource) Update(ctx context.Context, request resource.UpdateReq
 			}
 		}
 
-		output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
-			func() (*apigateway.UpdateAccountOutput, error) {
+		output, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func(ctx context.Context) (*apigateway.UpdateAccountOutput, error) {
 				return conn.UpdateAccount(ctx, &input)
 			},
 			func(err error) (bool, error) {
