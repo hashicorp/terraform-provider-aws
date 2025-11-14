@@ -49,7 +49,8 @@ func newDistributionTenantResource(context.Context) (resource.ResourceWithConfig
 }
 
 const (
-	ResNameDistributionTenant = "Distribution Tenant"
+	ResNameDistributionTenant      = "Distribution Tenant"
+	distributionTenantPollInterval = 30 * time.Second
 )
 
 type distributionTenantResource struct {
@@ -641,15 +642,13 @@ func (r *distributionTenantResource) Delete(ctx context.Context, req resource.De
 			return
 		}
 
-		const timeout = 30 * time.Second
-		_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceNotDisabled](ctx, timeout, func(ctx context.Context) (any, error) {
+		_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceNotDisabled](ctx, distributionTenantPollInterval, func(ctx context.Context) (any, error) {
 			return nil, deleteDistributionTenant(ctx, conn, id)
 		})
 	}
 
 	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
-		const timeout = 30 * time.Second
-		_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, timeout, func(ctx context.Context) (any, error) {
+		_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, distributionTenantPollInterval, func(ctx context.Context) (any, error) {
 			return nil, deleteDistributionTenant(ctx, conn, id)
 		})
 	}
