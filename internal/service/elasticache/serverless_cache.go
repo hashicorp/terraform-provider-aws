@@ -120,7 +120,19 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIf(
+						func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+							// Not replacing if upgrading from 7 to 8
+							if req.StateValue.Equal(types.StringValue("7")) && req.PlanValue.Equal(types.StringValue("8")) {
+								return
+							}
+
+							// Any other change will force a replacement
+							resp.RequiresReplace = true
+						},
+						"major_engine_version change other than 7 to 8 needs replacement",
+						"major_engine_version change other than 7 to 8 needs replacement",
+					),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
