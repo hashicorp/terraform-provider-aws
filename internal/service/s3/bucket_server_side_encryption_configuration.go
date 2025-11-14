@@ -327,7 +327,9 @@ func flattenServerSideEncryptionRules(rules []types.ServerSideEncryptionRule) []
 		}
 
 		if rule.BlockedEncryptionTypes != nil {
-			m["blocked_encryption_types"] = flattenBlockedEncryptionTypes(rule.BlockedEncryptionTypes)
+			if flattened := flattenBlockedEncryptionTypes(rule.BlockedEncryptionTypes); flattened != nil {
+				m["blocked_encryption_types"] = flattened
+			}
 		}
 
 		if rule.BucketKeyEnabled != nil {
