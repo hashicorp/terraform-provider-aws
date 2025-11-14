@@ -1,0 +1,1873 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+        <link rel="prev" href="../data-handling-and-conversion/">
+      
+      
+        <link rel="next" href="../dependency-updates/">
+      
+      <link rel="icon" href="../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Debugging - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#debugging" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Debugging
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-resource/" class="md-nav__link">
+        Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-service/" class="md-nav__link">
+        Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-datasource/" class="md-nav__link">
+        Data source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Ephemeral Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-function/" class="md-nav__link">
+        Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-region/" class="md-nav__link">
+        AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-import-support/" class="md-nav__link">
+        Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="true">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agents/" class="md-nav__link">
+        AI Agents
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3_3" type="checkbox" id="__nav_3_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3" tabindex="0" aria-expanded="false">
+          AI Agent Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="AI Agent Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          AI Agent Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/arn-based-resource-identity/" class="md-nav__link">
+        ARN-Based Resource Identity
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/parameterized-resource-identity/" class="md-nav__link">
+        Parameterized Resource Identity
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/smarterr/" class="md-nav__link">
+        Smarterr
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Debugging
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Debugging
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-reproduce" class="md-nav__link">
+    1. Reproduce
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Reproduce">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-a-bug" class="md-nav__link">
+    What is a bug?
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-is-it-important-to-reproduce-bugs" class="md-nav__link">
+    Why is it important to reproduce bugs?
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-create-a-minimal-reproduction" class="md-nav__link">
+    2. Create a minimal reproduction
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Create a minimal reproduction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-to-create-a-minimal-reproduction-of-a-bug" class="md-nav__link">
+    How to create a minimal reproduction of a bug
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-create-a-new-acceptance-test" class="md-nav__link">
+    3. Create A New Acceptance Test
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Create A New Acceptance Test">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-the-minimal-configuration-as-the-basis-for-the-test" class="md-nav__link">
+    Use the Minimal Configuration as the Basis for the Test
+  </a>
+  
+    <nav class="md-nav" aria-label="Use the Minimal Configuration as the Basis for the Test">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#erroring-tests-example" class="md-nav__link">
+    Erroring tests example
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrong-results-example" class="md-nav__link">
+    Wrong results example
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#take-stock" class="md-nav__link">
+    Take Stock
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contributing-a-failing-test" class="md-nav__link">
+    Contributing a Failing Test
+  </a>
+  
+    <nav class="md-nav" aria-label="Contributing a Failing Test">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#failing-test-contribution-example-errors" class="md-nav__link">
+    Failing Test Contribution Example: Errors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#failing-test-contribution-example-wrong-results" class="md-nav__link">
+    Failing Test Contribution Example: Wrong Results
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-find-out-why-a-bug-happens" class="md-nav__link">
+    4. Find Out Why a Bug Happens
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Find Out Why a Bug Happens">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-fmtprintf" class="md-nav__link">
+    Use fmt.Printf()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-visual-studio-code-debugging" class="md-nav__link">
+    Use Visual Studio Code Debugging
+  </a>
+  
+    <nav class="md-nav" aria-label="Use Visual Studio Code Debugging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#set-up-launchjson" class="md-nav__link">
+    Set up launch.json
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#viewing-run-and-debug" class="md-nav__link">
+    Viewing Run and Debug
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-and-debug" class="md-nav__link">
+    Run and Debug
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#breakpoints" class="md-nav__link">
+    Breakpoints
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stepping-out" class="md-nav__link">
+    Stepping Out
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-delve" class="md-nav__link">
+    Use Delve
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-verify-the-fix-with-a-test" class="md-nav__link">
+    5. Verify the Fix with a Test
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../enhanced-region-support/" class="md-nav__link">
+        Enhanced Region Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../go-vcr/" class="md-nav__link">
+        Go-VCR
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-reproduce" class="md-nav__link">
+    1. Reproduce
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Reproduce">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-a-bug" class="md-nav__link">
+    What is a bug?
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-is-it-important-to-reproduce-bugs" class="md-nav__link">
+    Why is it important to reproduce bugs?
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-create-a-minimal-reproduction" class="md-nav__link">
+    2. Create a minimal reproduction
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Create a minimal reproduction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-to-create-a-minimal-reproduction-of-a-bug" class="md-nav__link">
+    How to create a minimal reproduction of a bug
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-create-a-new-acceptance-test" class="md-nav__link">
+    3. Create A New Acceptance Test
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Create A New Acceptance Test">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-the-minimal-configuration-as-the-basis-for-the-test" class="md-nav__link">
+    Use the Minimal Configuration as the Basis for the Test
+  </a>
+  
+    <nav class="md-nav" aria-label="Use the Minimal Configuration as the Basis for the Test">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#erroring-tests-example" class="md-nav__link">
+    Erroring tests example
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrong-results-example" class="md-nav__link">
+    Wrong results example
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#take-stock" class="md-nav__link">
+    Take Stock
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#contributing-a-failing-test" class="md-nav__link">
+    Contributing a Failing Test
+  </a>
+  
+    <nav class="md-nav" aria-label="Contributing a Failing Test">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#failing-test-contribution-example-errors" class="md-nav__link">
+    Failing Test Contribution Example: Errors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#failing-test-contribution-example-wrong-results" class="md-nav__link">
+    Failing Test Contribution Example: Wrong Results
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-find-out-why-a-bug-happens" class="md-nav__link">
+    4. Find Out Why a Bug Happens
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Find Out Why a Bug Happens">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-fmtprintf" class="md-nav__link">
+    Use fmt.Printf()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-visual-studio-code-debugging" class="md-nav__link">
+    Use Visual Studio Code Debugging
+  </a>
+  
+    <nav class="md-nav" aria-label="Use Visual Studio Code Debugging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#set-up-launchjson" class="md-nav__link">
+    Set up launch.json
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#viewing-run-and-debug" class="md-nav__link">
+    Viewing Run and Debug
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-and-debug" class="md-nav__link">
+    Run and Debug
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#breakpoints" class="md-nav__link">
+    Breakpoints
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stepping-out" class="md-nav__link">
+    Stepping Out
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-delve" class="md-nav__link">
+    Use Delve
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-verify-the-fix-with-a-test" class="md-nav__link">
+    5. Verify the Fix with a Test
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<h1 id="debugging">Debugging<a class="headerlink" href="#debugging" title="Permanent link">#</a></h1>
+<p>This guide covers strategies we have found useful in finding runtime and logic errors in the AWS Provider. We do not cover syntax or compiler errors as these are well addressed by <a href="https://go.dev/ref/spec">Go documentation</a> and IDEs, such as Visual Studio Code ("VS Code").</p>
+<p>If you have your own debugging tricks for the provider, open a pull request to add them here!</p>
+<h2 id="1-reproduce">1. Reproduce<a class="headerlink" href="#1-reproduce" title="Permanent link">#</a></h2>
+<p>One of the most crucial steps in the process of bug fixing is to reproduce the bug and create a minimal reproduction of it. In this section, we will discuss why it is so important to reproduce bugs.</p>
+<p><strong>TL;DR:</strong> for Repro</p>
+<p>Perhaps the most important step in debugging is reproducing the bug.</p>
+<h3 id="what-is-a-bug">What is a bug?<a class="headerlink" href="#what-is-a-bug" title="Permanent link">#</a></h3>
+<p>Before we dive into the details, let's first define what a bug is. A bug is an error or flaw that produces an incorrect or unexpected result, or causes the AWS Provider to behave in an unintended manner. For the Provider, "bugs" generally refer to errors that happen at runtime due to logic problems or unexpected interactions with AWS.</p>
+<h3 id="why-is-it-important-to-reproduce-bugs">Why is it important to reproduce bugs?<a class="headerlink" href="#why-is-it-important-to-reproduce-bugs" title="Permanent link">#</a></h3>
+<p>Reproducing a bug is the process of intentionally triggering the error or unexpected behavior that occurs when the bug is present. It is important to reproduce bugs because it allows us to:</p>
+<ol>
+<li><strong>Verify that the bug exists</strong>: By reproducing the bug, we can confirm that the error or unexpected behavior is real and either <em>always</em> happens or happens <em>intermittently</em> and not just a one-time occurrence. This is important because if we can't reproduce the bug, we may end up wasting time trying to fix a non-existent issue.</li>
+<li><strong>Understand the cause of the bug</strong>: Reproducing the bug can help us understand what is causing the error or unexpected behavior. This is important because without understanding the root cause of the bug, we may end up fixing <em>the symptoms</em> of the bug rather than the underlying problem.</li>
+<li><strong>Test the fix:</strong> If we know how to reproduce the bug, we also know how to verify we've fixed it.</li>
+</ol>
+<h2 id="2-create-a-minimal-reproduction">2. Create a <em>minimal</em> reproduction<a class="headerlink" href="#2-create-a-minimal-reproduction" title="Permanent link">#</a></h2>
+<p><strong>TL;DR:</strong> A complete 10-line configuration that reproduces a bug is <em>far more</em> (perhaps 100× more) useful than a 1000-line configuration that reproduces the same bug.</p>
+<p>Creating a minimal reproduction of a bug is the process of isolating the bug to its simplest form. It is <em>very important</em> to create a minimal reproduction of bugs, especially with Terraform configurations, because it allows us to:</p>
+<ol>
+<li><strong>Focus on the root cause of the bug</strong>: By eliminating any extraneous configuration or dependencies, we can focus on the specific configuration that is causing the bug. This makes it easier to understand and fix the root cause of the bug.</li>
+<li><strong>Save time</strong>: By creating a minimal reproduction of the bug, we can reduce the amount of time it takes to reproduce the bug and test the fix. This is because we don't have to navigate through a large configuration or deal with unnecessary dependencies. <em>The minimal configuration becomes the basis of a <a href="#3-create-a-new-acceptance-test">new acceptance test</a> that verifies the bug is fixed (and stays fixed in the future).</em></li>
+<li><strong>Make it easier for others to reproduce the bug</strong>: If we are working on a team, creating a minimal reproduction of the bug makes it easier for other team members to reproduce the bug and understand the root cause.</li>
+</ol>
+<h3 id="how-to-create-a-minimal-reproduction-of-a-bug">How to create a minimal reproduction of a bug<a class="headerlink" href="#how-to-create-a-minimal-reproduction-of-a-bug" title="Permanent link">#</a></h3>
+<p>Creating a minimal reproduction of a bug can be a time-consuming process, but it is well worth the effort. Here are some tips for creating a minimal reproduction of a bug:</p>
+<ol>
+<li><strong>Start with a simple test case</strong>: Start with a simple configuration that causes the bug.</li>
+<li><strong>Remove any extraneous configuration</strong>: Remove as many resources, dependencies, and arguments as possible to simplify, while still maintaining <a href="../running-and-writing-acceptance-tests/#test-configuration-independence">test independence</a>.</li>
+<li><strong>Verify that the configuration still reproduces the bug</strong>: After removing the configuration, make sure that the configuration still causes the bug. If the bug no longer occurs, you may have removed too much. In this case, add back configuration until the bug reappears.</li>
+</ol>
+<p><em>A minimal configuration is worth its weight in gold.</em> If you're only able to make it this far in the debugging process, create a new issue with your minimal configuration or add it to an existing issue. A minimal configuration is a great way to give someone else a jump start in looking at the problem.</p>
+<h2 id="3-create-a-new-acceptance-test">3. Create A New Acceptance Test<a class="headerlink" href="#3-create-a-new-acceptance-test" title="Permanent link">#</a></h2>
+<p>Sometimes, we tend to immediately jump into the code without creating a test. However, <a href="../running-and-writing-acceptance-tests/#writing-an-acceptance-test">creating an acceptance test</a> is something we'll need to do eventually anyway but doing it <em>first</em> has the added benefit of allowing us to easily trigger the bug. That makes debugging easier and allows us to use debugging tools.</p>
+<h3 id="use-the-minimal-configuration-as-the-basis-for-the-test">Use the Minimal Configuration as the Basis for the Test<a class="headerlink" href="#use-the-minimal-configuration-as-the-basis-for-the-test" title="Permanent link">#</a></h3>
+<p>Adding a problematic minimal configuration test is just like <a href="../running-and-writing-acceptance-tests/#writing-an-acceptance-test">creating an acceptance test</a> except that when we run it, it has a problem. Starting with the end in mind focuses our efforts and gives great satisfaction when the code is fixed!</p>
+<h4 id="erroring-tests-example">Erroring tests example<a class="headerlink" href="#erroring-tests-example" title="Permanent link">#</a></h4>
+<p>For example, if we're looking at an error in the VPC flow log resource, this is how we might add a test with a minimal configuration to trigger the error.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">TestAccVPCFlowLog_destinationError</span><span class="p">(</span><span class="nx">t</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">ctx</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">Context</span><span class="p">(</span><span class="nx">t</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">rName</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">sdkacctest</span><span class="p">.</span><span class="nx">RandomWithPrefix</span><span class="p">(</span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ResourcePrefix</span><span class="p">)</span>
+
+<span class="w">    </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ParallelTest</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCase</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">PreCheck</span><span class="p">:</span><span class="w">                 </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">PreCheck</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">t</span><span class="p">)</span><span class="w"> </span><span class="p">},</span>
+<span class="w">        </span><span class="nx">ErrorCheck</span><span class="p">:</span><span class="w">               </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ErrorCheck</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">EC2ServiceID</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">ProtoV5ProviderFactories</span><span class="p">:</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ProtoV5ProviderFactories</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">CheckDestroy</span><span class="p">:</span><span class="w">             </span><span class="nx">testAccCheckFlowLogDestroy</span><span class="p">(</span><span class="nx">ctx</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">Steps</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestStep</span><span class="p">{</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">Config</span><span class="p">:</span><span class="w">      </span><span class="nx">testAccVPCFlowLogConfig_destinationError</span><span class="p">(</span><span class="nx">rName</span><span class="p">),</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// ...</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">testAccVPCFlowLogConfig_destinationError</span><span class="p">(</span><span class="nx">rName</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">`</span>
+<span class="s">resource &quot;aws_flow_log&quot; &quot;test&quot; {</span>
+<span class="s">  # minimal configuration causing a bug</span>
+<span class="s">}</span>
+<span class="s">`</span><span class="p">,</span><span class="w"> </span><span class="nx">rName</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>If we were to <a href="../running-and-writing-acceptance-tests/#running-an-acceptance-test">run the test</a> on the command line, this is how the erroring output might look:</p>
+<div class="highlight"><pre><span></span><code><span class="go">make testacc TESTS=TestAccVPCFlowLog_destinationError PKG=vpc</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>==&gt; Checking that code complies with gofmt requirements...
+TF_ACC=1 go test ./internal/service/ec2/... -v -count 1 -parallel 20 -run=&#39;TestAccVPCFlowLog_destinationError&#39;  -timeout 180m
+=== RUN   TestAccVPCFlowLog_destinationError
+=== PAUSE TestAccVPCFlowLog_destinationError
+=== CONT  TestAccVPCFlowLog_destinationError
+    vpc_flow_log_test.go:297: Step 1/1 error: Error running apply: exit status 1
+
+        Error: creating Flow Log (vpc-0c2635533cef2be79): 1 error occurred:
+            * vpc-0c2635533cef2be79: 400: Access Denied for LogDestination: does-not-exist. Please check LogDestination permission
+
+          with aws_flow_log.test,
+          on terraform_plugin_test.tf line 34, in resource &quot;aws_flow_log&quot; &quot;test&quot;:
+          34: resource &quot;aws_flow_log&quot; &quot;test&quot; {
+
+--- FAIL: TestAccVPCFlowLog_destinationError (13.79s)
+FAIL
+FAIL    github.com/hashicorp/terraform-provider-aws/internal/service/ec2    15.373s
+FAIL
+make: *** [testacc] Error 1
+</code></pre></div>
+<h4 id="wrong-results-example">Wrong results example<a class="headerlink" href="#wrong-results-example" title="Permanent link">#</a></h4>
+<p>Of course, not all bugs throw errors. For example, perhaps the bug you are looking at involves a wrong value in the <code>log_group_name</code> attribute. This is an example of adding a test that will error because the value is wrong.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">TestAccVPCFlowLog_destinationError</span><span class="p">(</span><span class="nx">t</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">ctx</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">Context</span><span class="p">(</span><span class="nx">t</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">rName</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">sdkacctest</span><span class="p">.</span><span class="nx">RandomWithPrefix</span><span class="p">(</span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ResourcePrefix</span><span class="p">)</span>
+
+<span class="w">    </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ParallelTest</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCase</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">PreCheck</span><span class="p">:</span><span class="w">                 </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">PreCheck</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">t</span><span class="p">)</span><span class="w"> </span><span class="p">},</span>
+<span class="w">        </span><span class="nx">ErrorCheck</span><span class="p">:</span><span class="w">               </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ErrorCheck</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">EC2ServiceID</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">ProtoV5ProviderFactories</span><span class="p">:</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ProtoV5ProviderFactories</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">CheckDestroy</span><span class="p">:</span><span class="w">             </span><span class="nx">testAccCheckFlowLogDestroy</span><span class="p">(</span><span class="nx">ctx</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">Steps</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestStep</span><span class="p">{</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">Config</span><span class="p">:</span><span class="w">      </span><span class="nx">testAccVPCFlowLogConfig_destinationError</span><span class="p">(</span><span class="nx">rName</span><span class="p">),</span>
+<span class="w">                </span><span class="nx">Check</span><span class="p">:</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ComposeTestCheckFunc</span><span class="p">(</span>
+<span class="w">                    </span><span class="nx">testAccCheckFlowLogExists</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">flowLog</span><span class="p">),</span>
+<span class="w">                    </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCheckResourceAttr</span><span class="p">(</span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;log_group_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">),</span><span class="w"> </span><span class="c1">// this should not be empty</span>
+<span class="w">                </span><span class="p">),</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// ...</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">testAccVPCFlowLogConfig_destinationError</span><span class="p">(</span><span class="nx">rName</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">`</span>
+<span class="s">resource &quot;aws_flow_log&quot; &quot;test&quot; {</span>
+<span class="s">  # minimal configuration causing a bug</span>
+<span class="s">}</span>
+<span class="s">`</span><span class="p">,</span><span class="w"> </span><span class="nx">rName</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>If we were to <a href="../running-and-writing-acceptance-tests/#running-an-acceptance-test">run the test</a> on the command line, this is how the erroring output might look:</p>
+<div class="highlight"><pre><span></span><code><span class="go">make testacc TESTS=TestAccVPCFlowLog_LogDestinationType_s3 PKG=vpc</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>==&gt; Checking that code complies with gofmt requirements...
+TF_ACC=1 go test ./internal/service/ec2/... -v -count 1 -parallel 20 -run=&#39;TestAccVPCFlowLog_LogDestinationType_s3&#39;  -timeout 180m
+=== RUN   TestAccVPCFlowLog_LogDestinationType_s3
+=== PAUSE TestAccVPCFlowLog_LogDestinationType_s3
+=== CONT  TestAccVPCFlowLog_LogDestinationType_s3
+    vpc_flow_log_test.go:269: Step 1/2 error: Check failed: Check 3/4 error: aws_flow_log.test: Attribute &#39;log_group_name&#39; expected &quot;abc-123&quot;, got &quot;&quot;
+--- FAIL: TestAccVPCFlowLog_LogDestinationType_s3 (15.49s)
+FAIL
+FAIL    github.com/hashicorp/terraform-provider-aws/internal/service/ec2    17.358s
+FAIL
+make: *** [testacc] Error 1
+</code></pre></div>
+<h3 id="take-stock">Take Stock<a class="headerlink" href="#take-stock" title="Permanent link">#</a></h3>
+<p>It may seem like we haven't accomplished much of anything at this point. However, we have! We've:</p>
+<ol>
+<li>Reproduced the error</li>
+<li>Created a minimal reproduction</li>
+<li>Created a test to trigger the error</li>
+</ol>
+<p>This will make the rest of debugging a lot more straightforward.</p>
+<h3 id="contributing-a-failing-test">Contributing a Failing Test<a class="headerlink" href="#contributing-a-failing-test" title="Permanent link">#</a></h3>
+<p>If you aren't able to figure out a bug or delving into code is not your thing, open a pull request to <a href="../running-and-writing-acceptance-tests/#writing-an-acceptance-test">contribute just the test</a> that highlights the bug. This is a valuable starting point for future work!</p>
+<p>We ask that you make the test "PASS," but use code comments and a GitHub issue to explain what is wrong. With nearly 7,000 acceptance tests, there is always a certain percentage that inexplicably fails. Since we know that the new test we're adding highlights a known bug, we don't want the failure to be lost in the tally of inexplicable failures.</p>
+<h4 id="failing-test-contribution-example-errors">Failing Test Contribution Example: Errors<a class="headerlink" href="#failing-test-contribution-example-errors" title="Permanent link">#</a></h4>
+<p>For example, if you want to contribute just a failing test, the example below shows how to use <code>ExpectError</code> and a code comment to reference an open GitHub issue addressing the bug. Here we're using <code>ExpectError</code> to allow the test to "pass," even though it should not. When the next person comes along to debug, they can simply remove <code>ExpectError</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">TestAccVPCFlowLog_destinationError</span><span class="p">(</span><span class="nx">t</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">ctx</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">Context</span><span class="p">(</span><span class="nx">t</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">rName</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">sdkacctest</span><span class="p">.</span><span class="nx">RandomWithPrefix</span><span class="p">(</span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ResourcePrefix</span><span class="p">)</span>
+
+<span class="w">    </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ParallelTest</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCase</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">PreCheck</span><span class="p">:</span><span class="w">                 </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">PreCheck</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">t</span><span class="p">)</span><span class="w"> </span><span class="p">},</span>
+<span class="w">        </span><span class="nx">ErrorCheck</span><span class="p">:</span><span class="w">               </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ErrorCheck</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">EC2ServiceID</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">ProtoV5ProviderFactories</span><span class="p">:</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ProtoV5ProviderFactories</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">CheckDestroy</span><span class="p">:</span><span class="w">             </span><span class="nx">testAccCheckFlowLogDestroy</span><span class="p">(</span><span class="nx">ctx</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">Steps</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestStep</span><span class="p">{</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">Config</span><span class="p">:</span><span class="w">      </span><span class="nx">testAccVPCFlowLogConfig_destinationError</span><span class="p">(</span><span class="nx">rName</span><span class="p">),</span>
+<span class="w">                </span><span class="c1">// This error should not happen!</span>
+<span class="w">                </span><span class="c1">// See https://github.com/hashicorp/terraform-provider-aws/issues/45912</span>
+<span class="w">                </span><span class="nx">ExpectError</span><span class="p">:</span><span class="w"> </span><span class="nx">regexache</span><span class="p">.</span><span class="nx">MustCompile</span><span class="p">(</span><span class="s">`invalid destination`</span><span class="p">),</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// ...</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">testAccVPCFlowLogConfig_destinationError</span><span class="p">(</span><span class="nx">rName</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">`</span>
+<span class="s">resource &quot;aws_flow_log&quot; &quot;test&quot; {</span>
+<span class="s">  # minimal configuration causing a bug</span>
+<span class="s">}</span>
+<span class="s">`</span><span class="p">,</span><span class="w"> </span><span class="nx">rName</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="failing-test-contribution-example-wrong-results">Failing Test Contribution Example: Wrong Results<a class="headerlink" href="#failing-test-contribution-example-wrong-results" title="Permanent link">#</a></h4>
+<p>There are other types of bugs besides the error thrown in the previous example. For example, with a wrong results test, you would have <code>resource.TestCheckResourceAttr()</code> highlighting what is wrong, along with a link to the GitHub issue to explain why the attribute value is wrong.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">TestAccVPCFlowLog_destinationError</span><span class="p">(</span><span class="nx">t</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">ctx</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">Context</span><span class="p">(</span><span class="nx">t</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">rName</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">sdkacctest</span><span class="p">.</span><span class="nx">RandomWithPrefix</span><span class="p">(</span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ResourcePrefix</span><span class="p">)</span>
+
+<span class="w">    </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ParallelTest</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCase</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">PreCheck</span><span class="p">:</span><span class="w">                 </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">PreCheck</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">t</span><span class="p">)</span><span class="w"> </span><span class="p">},</span>
+<span class="w">        </span><span class="nx">ErrorCheck</span><span class="p">:</span><span class="w">               </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ErrorCheck</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">EC2ServiceID</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">ProtoV5ProviderFactories</span><span class="p">:</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ProtoV5ProviderFactories</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">CheckDestroy</span><span class="p">:</span><span class="w">             </span><span class="nx">testAccCheckFlowLogDestroy</span><span class="p">(</span><span class="nx">ctx</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">Steps</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestStep</span><span class="p">{</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">Config</span><span class="p">:</span><span class="w">      </span><span class="nx">testAccVPCFlowLogConfig_destinationError</span><span class="p">(</span><span class="nx">rName</span><span class="p">),</span>
+<span class="w">                </span><span class="nx">Check</span><span class="p">:</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ComposeTestCheckFunc</span><span class="p">(</span>
+<span class="w">                    </span><span class="nx">testAccCheckFlowLogExists</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">flowLog</span><span class="p">),</span>
+<span class="w">                     </span><span class="c1">// log_group_name should be &quot;xyz-123&quot;</span>
+<span class="w">                     </span><span class="c1">// See https://github.com/hashicorp/terraform-provider-aws/issues/45912</span>
+<span class="w">                    </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCheckResourceAttr</span><span class="p">(</span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;log_group_name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">),</span>
+<span class="w">                </span><span class="p">),</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="c1">// ...</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">testAccVPCFlowLogConfig_destinationError</span><span class="p">(</span><span class="nx">rName</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">`</span>
+<span class="s">resource &quot;aws_flow_log&quot; &quot;test&quot; {</span>
+<span class="s">  # minimal configuration causing a bug</span>
+<span class="s">}</span>
+<span class="s">`</span><span class="p">,</span><span class="w"> </span><span class="nx">rName</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="4-find-out-why-a-bug-happens">4. Find Out Why a Bug Happens<a class="headerlink" href="#4-find-out-why-a-bug-happens" title="Permanent link">#</a></h2>
+<p>Now that we can easily reproduce a bug with a test and we have a minimal configuration, we can look more closely at why the bug is happening.</p>
+<p>There are several approaches to looking at what is happening in the AWS provider. You might find that some bugs lend themselves to one approach while others are more easily evaluated with another. Also, you might start with one approach and then find you need to move to another, <em>e.g.</em>, starting by adding a few <code>fmt.Printf()</code> statements and then move to an IDE debugger.</p>
+<h3 id="use-fmtprintf">Use <code>fmt.Printf()</code><a class="headerlink" href="#use-fmtprintf" title="Permanent link">#</a></h3>
+<p>One quick and dirty approach that works for simple bugs is to have Go output information to the console (<em>i.e.</em>, terminal). This approach is especially helpful if you've reviewed the code, found an error, and have a strong suspicion about what is going on. You can use <code>fmt.Printf()</code> to confirm what you think is happening.</p>
+<p>The approach is also helpful to see if the code reaches a certain point or for seeing the value of a variable or two.</p>
+<p>This approach does not work well for complex logic, examining many lines of code, or for looking at many different variables. Use more advanced debugging, as described below, for these situations.</p>
+<p>This example shows using <code>fmt.Printf()</code> to output information to the console:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">resourceLogFlowCreate</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">ResourceData</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="w"> </span><span class="kd">interface</span><span class="p">{})</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// other code ...</span>
+
+<span class="w">    </span><span class="nx">outputRaw</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">tfresource</span><span class="p">.</span><span class="nx">RetryWhenAWSErrMessageContains</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">propagationTimeout</span><span class="p">,</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">(</span><span class="kd">interface</span><span class="p">{},</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">CreateFlowLogsWithContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">input</span><span class="p">)</span>
+<span class="w">    </span><span class="p">},</span><span class="w"> </span><span class="nx">errCodeInvalidParameter</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Unable to assume given IAM role&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;reached point %d, with input: %+v\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nx">input</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">outputRaw</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;reached point %d, with output: %+v\n&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="nx">outputRaw</span><span class="p">)</span>
+<span class="w">        </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">UnsuccessfulItemsError</span><span class="p">(</span><span class="nx">outputRaw</span><span class="p">.(</span><span class="o">*</span><span class="nx">ec2</span><span class="p">.</span><span class="nx">CreateFlowLogsOutput</span><span class="p">).</span><span class="nx">Unsuccessful</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// other code ...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><a href="../running-and-writing-acceptance-tests/#running-an-acceptance-test">Running the test</a> from the command line, we might see the following output:</p>
+<div class="highlight"><pre><span></span><code><span class="go">make testacc TESTS=TestAccVPCFlowLog_LogDestinationType_s3 PKG=vpc</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>==&gt; Checking that code complies with gofmt requirements...
+TF_ACC=1 go test ./internal/service/ec2/... -v -count 1 -parallel 20 -run=&#39;TestAccVPCFlowLog_LogDestinationType_s3&#39;  -timeout 180m
+=== RUN   TestAccVPCFlowLog_LogDestinationType_s3
+=== PAUSE TestAccVPCFlowLog_LogDestinationType_s3
+=== CONT  TestAccVPCFlowLog_LogDestinationType_s3
+reached point 3, with input: {
+  ClientToken: &quot;terraform-20230403170214312900000001&quot;,
+  LogDestination: &quot;arn:aws:s3:::tf-acc-test-4802362269206133111&quot;,
+  LogDestinationType: &quot;s3&quot;,
+  MaxAggregationInterval: 600,
+  ResourceIds: [&quot;vpc-093265898e824c24e&quot;],
+  ResourceType: &quot;VPC&quot;,
+  TagSpecifications: [{
+      ResourceType: &quot;vpc-flow-log&quot;,
+      Tags: [{
+          Key: &quot;Name&quot;,
+          Value: &quot;tf-acc-test-4802362269206133111&quot;
+        }]
+    }],
+  TrafficType: &quot;ALL&quot;
+}
+reached point 4, with output: {
+  ClientToken: &quot;terraform-20230403170214312900000001&quot;,
+  FlowLogIds: [&quot;fl-09861862b9f8bb3a3&quot;]
+}
+--- PASS: TestAccVPCFlowLog_LogDestinationType_s3 (26.45s)
+</code></pre></div>
+<h3 id="use-visual-studio-code-debugging">Use Visual Studio Code Debugging<a class="headerlink" href="#use-visual-studio-code-debugging" title="Permanent link">#</a></h3>
+<p>Using debugging from within VS Code provides extra benefits but also an extra challenge. The extra benefits include the ability to set breakpoints, step over and into code, and see the values of variables. The extra challenge is getting your debug environment properly set up to include access to your AWS credentials and environment variables used for testing.</p>
+<p>Special thanks to Drew Mullen for <a href="https://dev.to/drewmullen/vscode-terraform-provider-development-setup-debugging-6bn">his work on debugging the AWS provider in VS Code</a>.</p>
+<h4 id="set-up-launchjson">Set up <code>launch.json</code><a class="headerlink" href="#set-up-launchjson" title="Permanent link">#</a></h4>
+<p>VS Code uses a hidden directory called <code>.vscode</code> in the root of your project for configuration files. This directory and the files it contains are ignored by Git using the <code>.gitignore</code> file included with the AWS provider. This allows you to have your own local configuration without concerns that it will be uploaded to or overwritten by the AWS provider repository.</p>
+<p>As shown below, use VS Code to create two files in the <code>.vscode</code> directory: <code>launch.json</code> and <code>private.env</code>.</p>
+<p><img alt="Using launch.json in VS Code" src="../images/launch-json.png" title="Using launch.json in VS Code" /></p>
+<p>In <code>launch.json</code>, add this configuration:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.2.0&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;configurations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Debug Selected Test&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;request&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;launch&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;go&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="s2">&quot;-test.v&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s2">&quot;-test.run&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s2">&quot;^${selectedText}$&quot;</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;program&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;${fileDirname}&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;env&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;PKG_NAME&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;${relativeFileDirname}&quot;</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;envFile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;${workspaceFolder}/.vscode/private.env&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;showLog&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>In <code>private.env</code>, add environment variables to represent your AWS provider testing configuration, including replacing <code>aws_provider_profile</code> and <code>aws_alternate_profile</code> below with the names of profiles defined in your <code>~/.aws/config</code> file:</p>
+<div class="highlight"><pre><span></span><code>TF_ACC=1
+TF_LOG=info
+GOFLAGS=&#39;-mod=readonly&#39;
+AWS_PROFILE=aws_provider_profile
+AWS_DEFAULT_REGION=us-west-2
+AWS_ALTERNATE_PROFILE=aws_alternate_profile
+AWS_ALTERNATE_REGION=us-east-1
+AWS_THIRD_REGION=us-east-2
+ACM_CERTIFICATE_ROOT_DOMAIN=terraform-provider-aws-acctest-acm.com
+</code></pre></div>
+<p>Note that you <em>can</em> set <code>TF_LOG</code> to <code>debug</code> but, if you do, you can receive thousands of lines of additional information that can make it difficult to find useful information.</p>
+<h4 id="viewing-run-and-debug">Viewing Run and Debug<a class="headerlink" href="#viewing-run-and-debug" title="Permanent link">#</a></h4>
+<p>Open the Run and Debug panel in VS Code by pressing <code>Shift-⌘-D</code> or by clicking on the debug button icon:</p>
+<p><img alt="Debug Button" src="../images/debug-button.png" title="Debug Button" /></p>
+<p>To debug, you'll also want to open the debug console by pressing <code>Shift-⌘-Y</code> or selecting "Debug Console" from the View top menu.</p>
+<h4 id="run-and-debug">Run and Debug<a class="headerlink" href="#run-and-debug" title="Permanent link">#</a></h4>
+<p>With the environment and VS Code GUI set up, you are ready to run and debug.</p>
+<ol>
+<li>As shown below, select the name of a test function from a <code>*_test.go</code> file by double-clicking on the name or click-dragging over the name to highlight the entire name. (Do not include the <code>func</code> at the beginning or <code>(t *testing.T) {</code> at the end.)</li>
+<li>Make sure that "Debug Selected Test" is shown next to the debug play button.</li>
+<li>Click on the play button in the Run and Debug panel. Depending on your configuration, there may also be a "Debug Selected Test" option at the bottom of the VS Code window. Clicking on that is equivalent to clicking the play button in the Run and Debug panel.</li>
+</ol>
+<p><img alt="Debug GUI" src="../images/debug-gui.png" title="Debug GUI" /></p>
+<h4 id="breakpoints">Breakpoints<a class="headerlink" href="#breakpoints" title="Permanent link">#</a></h4>
+<p>Depending on where you suspect the problems are occurring, you can set breakpoints on the resource's Create, Read, Update, Delete, or other functions. The debugger will stop at the first breakpoint it encounters.</p>
+<p>Setting breakpoints is built into VS Code and is easy. Hover to the left of a line number and you'll see a faded red dot. Click on the faded red dot to turn it into a breakpoint, as shown below.</p>
+<p>You can see a list of breakpoints throughout the codebase at the bottom of the Run and Debug panel, as shown below.</p>
+<p><img alt="Breakpoints" src="../images/breakpoints.png" title="Breakpoints" /></p>
+<h4 id="stepping-out">Stepping Out<a class="headerlink" href="#stepping-out" title="Permanent link">#</a></h4>
+<p>Once the debugger has stopped at a breakpoint, you can control how it continues from there. VS Code will display the debugger controls, which you can reposition using the grip (<em>i.e.</em>, six dots), at the left of the controls.</p>
+<p><img alt="Debug Controls" src="../images/debug-controls.png" title="Debug Controls" /></p>
+<p>From left to right, the controls are as follows:</p>
+<ol>
+<li>Pause (<em>i.e.</em>, two vertical lines) pauses execution wherever it happens to be when you click pause</li>
+<li>Step over (<em>i.e.</em>, dot with a curved arrow above it) goes to the next statement but will not follow execution inside functions</li>
+<li>Step into (<em>i.e.</em>, dot with an arrow pointing down) goes to the next statement, following execution inside functions</li>
+<li>Step out (<em>i.e.</em>, dot with an arrow pointing up) goes to the next statement in the calling function skipping the rest of the execution in the current function</li>
+<li>Restart (<em>i.e.</em>, the circular arrow) stops the current run and starts at the beginning again</li>
+<li>Stop (<em>i.e.</em>, the square) stops the current run</li>
+</ol>
+<h3 id="use-delve">Use Delve<a class="headerlink" href="#use-delve" title="Permanent link">#</a></h3>
+<p>Behind the scenes, VS Code and other IDEs use Delve to debug. You can also use Delve without an IDE if you prefer to work on the command line.</p>
+<p>Here are some resources to get you started using Delve:</p>
+<ul>
+<li><a href="https://github.com/go-delve/delve">Delve on GitHub</a></li>
+<li><a href="https://golang.cafe/blog/golang-debugging-with-delve.html">Golang Debugging With Delve (Step-by-Step)</a></li>
+<li><a href="https://www.jamessturtevant.com/posts/Using-the-Go-Delve-Debugger-from-the-command-line/">Using the Go Delve Debugger from the command line</a></li>
+<li><a href="https://opensource.com/article/20/6/debug-go-delve">Stop debugging Go with Println and use Delve instead</a></li>
+</ul>
+<h2 id="5-verify-the-fix-with-a-test">5. Verify the Fix with a Test<a class="headerlink" href="#5-verify-the-fix-with-a-test" title="Permanent link">#</a></h2>
+<p>Verify that bugs are fixed with one or more tests. The tests used to help debug, described above, verify that the bug is fixed after debugging. In addition, the tests ensure that future changes don't undo the fix.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      HashiCorp
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
