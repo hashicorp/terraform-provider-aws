@@ -952,7 +952,7 @@ type defaultCacheBehaviorModel struct {
 	RealtimeLogConfigARN      types.String                                                   `tfsdk:"realtime_log_config_arn"`
 	ResponseHeadersPolicyID   types.String                                                   `tfsdk:"response_headers_policy_id"`
 	TargetOriginID            types.String                                                   `tfsdk:"target_origin_id"`
-	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]         `tfsdk:"trusted_key_groups"`
+	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]         `tfsdk:"trusted_key_groups" autoflex:",wrapper=Items"`
 	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]              `tfsdk:"viewer_protocol_policy"`
 	// Note: SmoothStreaming and TrustedSigners removed - not supported for multi-tenant distributions
 }
@@ -974,7 +974,7 @@ type cacheBehaviorModel struct {
 	RealtimeLogConfigARN      types.String                                                   `tfsdk:"realtime_log_config_arn"`
 	ResponseHeadersPolicyID   types.String                                                   `tfsdk:"response_headers_policy_id"`
 	TargetOriginID            types.String                                                   `tfsdk:"target_origin_id"`
-	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]         `tfsdk:"trusted_key_groups"`
+	TrustedKeyGroups          fwtypes.ListNestedObjectValueOf[trustedKeyGroupsModel]         `tfsdk:"trusted_key_groups" autoflex:",wrapper=Items"`
 	ViewerProtocolPolicy      fwtypes.StringEnum[awstypes.ViewerProtocolPolicy]              `tfsdk:"viewer_protocol_policy"`
 	// Note: SmoothStreaming and TrustedSigners removed - not supported for multi-tenant distributions
 }
