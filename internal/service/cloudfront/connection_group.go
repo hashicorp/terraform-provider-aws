@@ -37,7 +37,8 @@ func newConnectionGroupResource(context.Context) (resource.ResourceWithConfigure
 }
 
 const (
-	ResNameConnectionGroup = "Connection Group"
+	ResNameConnectionGroup      = "Connection Group"
+	connectionGroupPollInterval = 30 * time.Second
 )
 
 type connectionGroupResource struct {
@@ -274,34 +275,12 @@ func (r *connectionGroupResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	// Flatten the connection group data into the model
-	if updateOutput != nil {
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, updateOutput.ConnectionGroup, &new)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		new.ETag = fwflex.StringToFramework(ctx, updateOutput.ETag)
-	} else {
-		// If no update was performed (e.g., tag-only changes), we still need to refresh the connection group data
-		// to ensure all computed fields are properly set
-		getOutput, err := conn.GetConnectionGroup(ctx, &cloudfront.GetConnectionGroupInput{
-			Identifier: fwflex.StringFromFramework(ctx, new.ID),
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, ResNameConnectionGroup, new.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, getOutput.ConnectionGroup, &new)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		new.ETag = fwflex.StringToFramework(ctx, getOutput.ETag)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, updateOutput.ConnectionGroup, &new)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
+
+	new.ETag = fwflex.StringToFramework(ctx, updateOutput.ETag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
@@ -346,15 +325,13 @@ func (r *connectionGroupResource) Delete(ctx context.Context, req resource.Delet
 			return
 		}
 
-		const timeout = 30 * time.Second
-		_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceNotDisabled](ctx, timeout, func(ctx context.Context) (any, error) {
+		_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceNotDisabled](ctx, connectionGroupPollInterval, func(ctx context.Context) (any, error) {
 			return nil, deleteConnectionGroup(ctx, conn, id)
 		})
 	}
 
 	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
-		const timeout = 30 * time.Second
-		_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, timeout, func(ctx context.Context) (any, error) {
+		_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, connectionGroupPollInterval, func(ctx context.Context) (any, error) {
 			return nil, deleteConnectionGroup(ctx, conn, id)
 		})
 	}
