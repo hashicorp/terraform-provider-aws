@@ -2012,6 +2012,15 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 					string(actionType),
 				))
 			}
+
+		case awstypes.ActionTypeEnumJwtValidation:
+			if jv := action.GetAttr("jwt_validation"); jv.IsNull() || jv.LengthInt() == 0 {
+				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
+					actionPath.GetAttr("jwt_validation"),
+					actionPath.GetAttr(names.AttrType),
+					string(actionType),
+				))
+			}
 		}
 	}
 }
@@ -2063,6 +2072,16 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		if actionType != awstypes.ActionTypeEnumFixedResponse {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("fixed_response"),
+				actionPath.GetAttr(names.AttrType),
+				string(actionType),
+			))
+		}
+	}
+
+	if v, ok := action["jwt_validation"].([]any); ok && len(v) > 0 {
+		if actionType != awstypes.ActionTypeEnumJwtValidation {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
+				actionPath.GetAttr("jwt_validation"),
 				actionPath.GetAttr(names.AttrType),
 				string(actionType),
 			))
