@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -71,6 +72,14 @@ func (r *logicallyAirGappedVaultResource) Schema(ctx context.Context, request re
 				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
+				},
+			},
+			"encryption_key_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
@@ -125,10 +134,16 @@ func (r *logicallyAirGappedVaultResource) Create(ctx context.Context, request re
 	data.BackupVaultARN = fwflex.StringToFramework(ctx, output.BackupVaultArn)
 	data.ID = fwflex.StringToFramework(ctx, output.BackupVaultName)
 
-	if _, err := waitLogicallyAirGappedVaultCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	vault, err := waitLogicallyAirGappedVaultCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Backup Logically Air Gapped Vault (%s) create", data.ID.ValueString()), err.Error())
 
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, vault, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -200,6 +215,7 @@ type logicallyAirGappedVaultResourceModel struct {
 	ID               types.String   `tfsdk:"id"`
 	MaxRetentionDays types.Int64    `tfsdk:"max_retention_days"`
 	MinRetentionDays types.Int64    `tfsdk:"min_retention_days"`
+	EncryptionKeyArn fwtypes.ARN    `tfsdk:"encryption_key_arn"`
 	Tags             tftags.Map     `tfsdk:"tags"`
 	TagsAll          tftags.Map     `tfsdk:"tags_all"`
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
