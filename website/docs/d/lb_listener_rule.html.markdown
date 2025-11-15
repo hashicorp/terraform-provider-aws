@@ -76,6 +76,8 @@ This data source exports the following attributes in addition to the arguments a
   [Detailed below](#fixed_response).
 * `forward` - An action to forward the request.
   [Detailed below](#forward).
+* `jwt_validation` - An action to validate using JWT.
+  [Detailed below](#jwt_validation).
 * `redirect` - An action to redirect the request.
   [Detailed below](#redirect).
 
@@ -132,6 +134,18 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the target group.
 * `weight` - Weight of the target group.
+
+#### `jwt_validation`
+
+* `issuer` - Issuer of the JWT.
+* `jwks_endpoint` - JSON Web Key Set (JWKS) endpoint.
+* `additional_claim` - Additional claims to validate.
+
+#### `additional_claim`
+
+* `format` - Format of the claim value.
+* `name` - Name of the claim to validate.
+* `values` - List of expected values of the claim.
 
 #### `redirect`
 
