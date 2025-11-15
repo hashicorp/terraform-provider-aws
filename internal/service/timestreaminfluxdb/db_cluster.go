@@ -674,7 +674,7 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 				resp.Diagnostics.AddAttributeError(
 					path.Root(names.AttrAllocatedStorage),
 					"Missing Required Configuration for InfluxDB V2",
-					"allocated_storage is required for InfluxDB V2 clusters (when not using db_parameter_group_identifier)",
+					"allocated_storage is required for InfluxDB V2 clusters",
 				)
 			}
 
@@ -682,7 +682,7 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 				resp.Diagnostics.AddAttributeError(
 					path.Root(names.AttrBucket),
 					"Missing Required Configuration for InfluxDB V2",
-					"bucket is required for InfluxDB V2 clusters (when not using db_parameter_group_identifier)",
+					"bucket is required for InfluxDB V2 clusters",
 				)
 			}
 
@@ -690,7 +690,7 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 				resp.Diagnostics.AddAttributeError(
 					path.Root("deployment_type"),
 					"Missing Required Configuration for InfluxDB V2",
-					"deployment_type is required for InfluxDB V2 clusters (when not using db_parameter_group_identifier)",
+					"deployment_type is required for InfluxDB V2 clusters",
 				)
 			}
 
@@ -698,7 +698,7 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 				resp.Diagnostics.AddAttributeError(
 					path.Root("organization"),
 					"Missing Required Configuration for InfluxDB V2",
-					"organization is required for InfluxDB V2 clusters (when not using db_parameter_group_identifier)",
+					"organization is required for InfluxDB V2 clusters",
 				)
 			}
 
@@ -706,7 +706,7 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 				resp.Diagnostics.AddAttributeError(
 					path.Root(names.AttrPassword),
 					"Missing Required Configuration for InfluxDB V2",
-					"password is required for InfluxDB V2 clusters (when not using db_parameter_group_identifier)",
+					"password is required for InfluxDB V2 clusters",
 				)
 			}
 
@@ -714,7 +714,7 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 				resp.Diagnostics.AddAttributeError(
 					path.Root(names.AttrUsername),
 					"Missing Required Configuration for InfluxDB V2",
-					"username is required for InfluxDB V2 clusters (when not using db_parameter_group_identifier)",
+					"username is required for InfluxDB V2 clusters",
 				)
 			}
 		} else {
