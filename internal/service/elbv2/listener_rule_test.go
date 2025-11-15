@@ -1309,13 +1309,13 @@ func TestAccELBV2ListenerRule_jwtValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.0.jwks_endpoint", "https://example.com/.well-known/jwks.json"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.jwt_validation.0.additional_claim.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action.0.jwt_validation.0.additional_claim.*", map[string]string{
-						"format":   "string-array",
-						"name":     "claim_name1",
+						names.AttrFormat:   "string-array",
+						names.AttrName:     "claim_name1",
 						"values.#": "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action.0.jwt_validation.0.additional_claim.*", map[string]string{
-						"format":   "single-string",
-						"name":     "claim_name2",
+						names.AttrFormat:   "single-string",
+						names.AttrName:     "claim_name2",
 						"values.#": "1",
 						"values.0": acctest.CtValue1,
 					}),

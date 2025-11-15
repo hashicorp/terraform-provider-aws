@@ -192,7 +192,7 @@ func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.Sche
 							CustomType: fwtypes.NewListNestedObjectTypeOf[jwtValidationConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"issuer": schema.StringAttribute{
+									names.AttrIssuer: schema.StringAttribute{
 										Computed: true,
 									},
 									"jwks_endpoint": schema.StringAttribute{

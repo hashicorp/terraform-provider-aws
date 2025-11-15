@@ -447,17 +447,17 @@ func TestAccELBV2ListenerRuleDataSource_actionAuthenticateJWTValidation(t *testi
 						tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("jwt_validation").AtSliceIndex(0).AtMapKey("additional_claim"),
 						knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"format": knownvalue.StringExact("string-array"),
-								"name":   knownvalue.StringExact("claim_name1"),
-								"values": knownvalue.SetExact([]knownvalue.Check{
+								names.AttrFormat: knownvalue.StringExact("string-array"),
+								names.AttrName:   knownvalue.StringExact("claim_name1"),
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
 									knownvalue.StringExact(acctest.CtValue1),
 									knownvalue.StringExact(acctest.CtValue2),
 								}),
 							}),
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"format": knownvalue.StringExact("single-string"),
-								"name":   knownvalue.StringExact("claim_name2"),
-								"values": knownvalue.SetExact([]knownvalue.Check{
+								names.AttrFormat: knownvalue.StringExact("single-string"),
+								names.AttrName:   knownvalue.StringExact("claim_name2"),
+								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
 									knownvalue.StringExact(acctest.CtValue1),
 								}),
 							}),
