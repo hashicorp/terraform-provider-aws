@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dynamodb_table: Adds `global_table_witness_region_name` argument in support of [multi-Region strong consistency](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/V2globaltables_HowItWorks.html#V2globaltables_HowItWorks.choosing-consistency-mode) for Amazon DynamoDB global tables
+```
