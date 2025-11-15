@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 const (
@@ -1222,6 +1223,71 @@ func statusIPAMScope(ctx context.Context, conn *ec2.Client, id string) retry.Sta
 		}
 
 		return output, string(output.State), nil
+	}
+}
+
+func statusIPAMResourceCIDR(ctx context.Context, conn *ec2.Client, scopeID, resourceID string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		input := ec2.GetIpamResourceCidrsInput{
+			IpamScopeId: aws.String(scopeID),
+			Filters: []awstypes.Filter{
+				{
+					Name:   aws.String("resource-id"),
+					Values: []string{resourceID},
+				},
+			},
+		}
+
+		resources, err := findIPAMResourceCIDRs(ctx, conn, &input)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// Filter for the specific resource (API returns list)
+		if len(resources) == 0 {
+			return nil, "", nil
+		}
+
+		// Return the management state from AWS
+		return resources[0], string(resources[0].ManagementState), nil
+	}
+}
+
+const (
+	ipamPoolCIDRAllocationsExist    = "ipam-cidr-allocations-exist"
+	ipamPoolCIDRAllocationsReleased = "ipam-cidr-allocations-released"
+)
+
+func statusIPAMPoolCIDRAllocationsReleased(ctx context.Context, conn *ec2.Client, poolID, cidrBlock string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		input := ec2.GetIpamPoolAllocationsInput{
+			IpamPoolId: aws.String(poolID),
+		}
+
+		allocations, err := findIPAMPoolAllocations(ctx, conn, &input)
+
+		if tfresource.NotFound(err) {
+			return poolID, ipamPoolCIDRAllocationsReleased, nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		for _, allocation := range allocations {
+			allocationCIDR := aws.ToString(allocation.Cidr)
+
+			if types.CIDRBlocksOverlap(cidrBlock, allocationCIDR) {
+				return allocation, ipamPoolCIDRAllocationsExist, nil
+			}
+		}
+
+		return poolID, ipamPoolCIDRAllocationsReleased, nil
 	}
 }
 
