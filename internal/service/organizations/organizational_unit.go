@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	intOrg "github.com/hashicorp/terraform-provider-aws/internal/organizations"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -76,6 +77,10 @@ func resourceOrganizationalUnit() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreateOrganizationalUnit.html#organizations-CreateOrganizationalUnit-request-ParentId"),
+			},
+			"principal_org_path": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -141,6 +146,12 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrARN, ou.Arn)
 	d.Set(names.AttrName, ou.Name)
 	d.Set("parent_id", parentAccountID)
+
+	principalOrgPath, err := intOrg.BuildPrincipalOrgPath(ctx, conn, d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "building PrincipalOrgPath: %s", err)
+	}
+	d.Set("principal_org_path", principalOrgPath)
 
 	return diags
 }
