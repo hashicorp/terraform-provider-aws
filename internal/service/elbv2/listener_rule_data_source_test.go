@@ -1279,8 +1279,8 @@ resource "aws_lb_listener_rule" "test" {
     type = "jwt-validation"
 
     jwt_validation {
-	  issuer        = "https://example.com"
-	  jwks_endpoint = "https://example.com/.well-known/jwks.json"
+      issuer        = "https://example.com"
+      jwks_endpoint = "https://example.com/.well-known/jwks.json"
       additional_claim {
         format = "string-array"
         name   = "claim_name1"
@@ -1288,7 +1288,7 @@ resource "aws_lb_listener_rule" "test" {
       }
       additional_claim {
         format = "single-string"
-        name   =  "claim_name2"
+        name   = "claim_name2"
         values = ["value1"]
       }
     }
