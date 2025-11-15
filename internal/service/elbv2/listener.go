@@ -1549,7 +1549,6 @@ func flattenListenerActions(d *schema.ResourceData, attrName string, apiObjects 
 
 		case awstypes.ActionTypeEnumJwtValidation:
 			tfMap["jwt_validation"] = flattenListenerActionJWTValidationConfig(apiObject.JwtValidationConfig)
-
 		}
 
 		tfList = append(tfList, tfMap)
