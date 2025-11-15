@@ -547,6 +547,82 @@ func TestAccTimestreamInfluxDBDBCluster_dbParameterGroupV3(t *testing.T) {
 	})
 }
 
+func TestAccTimestreamInfluxDBDBCluster_validateConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDBClusterConfig_v2MissingAllocatedStorage(rName),
+				ExpectError: regexache.MustCompile("allocated_storage is required for InfluxDB V2 clusters"),
+			},
+			{
+				Config:      testAccDBClusterConfig_v2MissingBucket(rName),
+				ExpectError: regexache.MustCompile("bucket is required for InfluxDB V2 clusters"),
+			},
+			{
+				Config:      testAccDBClusterConfig_v2MissingDeploymentType(rName),
+				ExpectError: regexache.MustCompile("deployment_type is required for InfluxDB V2 clusters"),
+			},
+			{
+				Config:      testAccDBClusterConfig_v2MissingOrganization(rName),
+				ExpectError: regexache.MustCompile("organization is required for InfluxDB V2 clusters"),
+			},
+			{
+				Config:      testAccDBClusterConfig_v2MissingPassword(rName),
+				ExpectError: regexache.MustCompile("password is required for InfluxDB V2 clusters"),
+			},
+			{
+				Config:      testAccDBClusterConfig_v2MissingUsername(rName),
+				ExpectError: regexache.MustCompile("username is required for InfluxDB V2 clusters"),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithV2Fields(rName),
+				ExpectError: regexache.MustCompile(`(?s)allocated_storage must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v2WithV3ParameterGroup(rName),
+				ExpectError: regexache.MustCompile(`(?s)allocated_storage must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithAllocatedStorage(rName),
+				ExpectError: regexache.MustCompile(`(?s)allocated_storage must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithBucket(rName),
+				ExpectError: regexache.MustCompile(`(?s)bucket must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithDeploymentType(rName),
+				ExpectError: regexache.MustCompile(`(?s)deployment_type must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithOrganization(rName),
+				ExpectError: regexache.MustCompile(`(?s)organization must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithPassword(rName),
+				ExpectError: regexache.MustCompile(`(?s)password must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+			{
+				Config:      testAccDBClusterConfig_v3WithUsername(rName),
+				ExpectError: regexache.MustCompile(`(?s)username must not be set when using an InfluxDB V3 db parameter.*group`),
+			},
+		},
+	})
+}
+
 func testAccCheckDBClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).TimestreamInfluxDBClient(ctx)
@@ -901,6 +977,576 @@ resource "aws_security_group_rule" "test" {
 
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                          = %[1]q
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v2MissingAllocatedStorage(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+  deployment_type        = "MULTI_NODE_READ_REPLICAS"
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v2MissingBucket(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  organization           = "organization"
+  deployment_type        = "MULTI_NODE_READ_REPLICAS"
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v2MissingDeploymentType(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v2MissingOrganization(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  deployment_type        = "MULTI_NODE_READ_REPLICAS"
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v2MissingPassword(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+  deployment_type        = "MULTI_NODE_READ_REPLICAS"
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v2MissingUsername(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+  deployment_type        = "MULTI_NODE_READ_REPLICAS"
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v2WithV3ParameterGroup(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  allocated_storage             = 20
+  username                      = "admin"
+  password                      = "testpassword"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+  bucket                        = "initial"
+  organization                  = "organization"
+  deployment_type               = "MULTI_NODE_READ_REPLICAS"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithV2Fields(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  allocated_storage             = 20
+  username                      = "admin"
+  password                      = "testpassword"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+  bucket                        = "initial"
+  organization                  = "organization"
+  deployment_type               = "MULTI_NODE_READ_REPLICAS"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithAllocatedStorage(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  allocated_storage             = 20
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithBucket(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  bucket                        = "initial"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithDeploymentType(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  deployment_type               = "MULTI_NODE_READ_REPLICAS"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithOrganization(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  organization                  = "organization"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithPassword(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  password                      = "testpassword"
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithUsername(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  username                      = "admin"
   vpc_subnet_ids                = aws_subnet.test[*].id
   vpc_security_group_ids        = [aws_security_group.test.id]
   db_instance_type              = "db.influx.medium"

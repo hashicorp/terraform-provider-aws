@@ -9,3 +9,7 @@ resource/aws_timestreaminfluxdb_db_cluster: Add `engine_type` attribute
 ```release-note:enhancement
 resource/aws_timestreaminfluxdb_db_cluster: Remove Terraform default for `deployment_type`
 ```
+
+```release-note:enhancement
+resource/aws_timestreaminfluxdb_db_cluster: Add validation to ensure InfluxDB V2 clusters have required fields and InfluxDB V3 clusters (when using V3 parameter groups) do not have forbidden V2 fields
+```
