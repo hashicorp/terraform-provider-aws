@@ -458,7 +458,7 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentCoreAgentRuntime_artifact(t *testing.T) {
+func TestAccBedrockAgentCoreAgentRuntime_artifactContainer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
@@ -490,6 +490,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifact(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_artifact"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"code_configuration": knownvalue.ListExact([]knownvalue.Check{}),
 							"container_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"container_uri": knownvalue.StringExact(rImageUriV1),
@@ -519,6 +520,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifact(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_artifact"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"code_configuration": knownvalue.ListExact([]knownvalue.Check{}),
 							"container_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"container_uri": knownvalue.StringExact(rImageUriV2),
