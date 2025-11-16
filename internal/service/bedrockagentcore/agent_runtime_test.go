@@ -641,6 +641,118 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 		},
 	})
 }
+
+// Ensure that changing the artifact type forces a new resource.
+func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	rImageUriV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rCodeS3BucketV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_CODE_V1_S3_BUCKET")
+	rCodeS3KeyV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_CODE_V1_S3_KEY")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_basic(rName, rImageUriV1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					resource.TestCheckResourceAttr(resourceName, "agent_runtime_artifact.0.container_configuration.0.container_uri", rImageUriV1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_artifact"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"code_configuration": knownvalue.ListExact([]knownvalue.Check{}),
+							"container_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"container_uri": knownvalue.StringExact(rImageUriV1),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				// Switch to code artifact, expect destroy/create
+				Config: testAccAgentRuntimeConfig_codeConfiguration(rName, rCodeS3BucketV1, rCodeS3KeyV1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_artifact"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"code_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"entry_point": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.StringExact("main.py"),
+									}),
+									"runtime": knownvalue.StringExact(string(awstypes.AgentManagedRuntimeTypePython313)),
+									"code": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"s3": knownvalue.ListExact([]knownvalue.Check{
+												knownvalue.ObjectExact(map[string]knownvalue.Check{
+													"bucket":     knownvalue.StringExact(rCodeS3BucketV1),
+													"prefix":     knownvalue.StringExact(rCodeS3KeyV1),
+													"version_id": knownvalue.Null(),
+												}),
+											}),
+										}),
+									}),
+								}),
+							}),
+							"container_configuration": knownvalue.ListExact([]knownvalue.Check{}),
+						}),
+					})),
+				},
+			},
+			{
+				// Switch back to container artifact, expect destroy/create
+				Config: testAccAgentRuntimeConfig_basic(rName, rImageUriV1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					resource.TestCheckResourceAttr(resourceName, "agent_runtime_artifact.0.container_configuration.0.container_uri", rImageUriV1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_runtime_artifact"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"code_configuration": knownvalue.ListExact([]knownvalue.Check{}),
+							"container_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"container_uri": knownvalue.StringExact(rImageUriV1),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckAgentRuntimeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
