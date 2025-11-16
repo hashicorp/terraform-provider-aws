@@ -130,7 +130,30 @@ The following arguments are optional:
 
 The `agent_runtime_artifact` block supports the following:
 
-* `container_configuration` - (Required) Container configuration block. See [`container_configuration`](#container_configuration) below.
+* `code_configuration` - (Optional) Code configuration block for the agent runtime artifact, including the source code location and execution settings. Exactly one of `code_configuration` or `container_configuration` must be specified. See [`code_configuration`](#code_configuration) below.
+* `container_configuration` - (Optional) Container configuration block for the agent artifact. Exactly one of `code_configuration` or `container_configuration` must be specified. See [`container_configuration`](#container_configuration) below.
+
+### `code_configuration`
+
+The `code_configuration` block supports the following:
+
+* `code` - (Required) Configuration block for the source code location and configuration details. See [`code`](#code) below.
+* `entry_point` - (Required) Array specifying the entry point for code execution, indicating the function or method to invoke when the code runs. The array must contain 1 or 2 elements. Examples: `["main.py"]`, `["opentelemetry-instrument", "main.py"]`.
+* `runtime` - (Required) Runtime environment used to execute the code. Valid values: `PYTHON_3_10`, `PYTHON_3_11`, `PYTHON_3_12`, `PYTHON_3_13`.
+
+### `code`
+
+The `code` block supports the following:
+
+* `s3` - (Required) Configuration block for the Amazon S3 object that contains the source code for the agent runtime. See [`s3`](#s3) below.
+
+### `s3`
+
+The `s3` block supports the following:
+
+* `bucket` - (Required) Name of the Amazon S3 bucket.
+* `prefix` - (Required) Key of the object containing the ZIP file of the source code for the agent runtime in the Amazon S3 bucket.
+* `version_id` - (Optional) Version ID of the Amazon S3 object. If not specified, the latest version of the object is used.
 
 ### `container_configuration`
 
