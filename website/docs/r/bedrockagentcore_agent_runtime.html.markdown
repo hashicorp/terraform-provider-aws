@@ -106,6 +106,32 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 }
 ```
 
+### Agent runtime artifact from S3 with Code Configuration
+
+```terraform
+resource "aws_bedrockagentcore_agent_runtime" "example" {
+  agent_runtime_name = "example_agent_runtime"
+  role_arn           = aws_iam_role.example.arn
+
+  agent_runtime_artifact {
+    code_configuration {
+      entry_point = ["main.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = "example-bucket"
+          prefix = "example-agent-runtime-code.zip"
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
