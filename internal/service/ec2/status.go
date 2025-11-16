@@ -547,6 +547,22 @@ func statusVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, ins
 	}
 }
 
+func statusDatafyVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, instanceID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDatafyVolumeAttachment(ctx, conn, volumeID, instanceID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusVolumeModification(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVolumeModificationByID(ctx, conn, id)

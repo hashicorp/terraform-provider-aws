@@ -191,6 +191,74 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.VolumeType = awstypes.VolumeType(value.(string))
 	}
 
+	if snapshotId := aws.ToString(input.SnapshotId); strings.HasPrefix(snapshotId, "dsnap-") {
+		dc := meta.(*conns.AWSClient).DatafyClient(ctx)
+		restoredVolume, err := dc.CreateVolumeFromSnapshot(snapshotId,
+			aws.ToString(input.AvailabilityZone), aws.ToInt32(input.Iops), aws.ToInt32(input.Throughput),
+			func() map[string]string {
+				tags := make(map[string]string)
+				for _, ts := range input.TagSpecifications {
+					if ts.ResourceType != awstypes.ResourceTypeVolume {
+						continue
+					}
+					for _, t := range ts.Tags {
+						tags[aws.ToString(t.Key)] = aws.ToString(t.Value)
+					}
+				}
+				return tags
+			}(),
+		)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating EBS Volume from datafy snapshot (%s): %s", snapshotId, err)
+		}
+		d.SetId(restoredVolume.VolumeId)
+
+		dvo, err := conn.DescribeVolumes(ctx, datafy.DescribeDatafiedVolumesInput(d.Id()))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "can't find datafy volumes of EBS volume (%s): %s", d.Id(), err)
+		} else if len(dvo.Volumes) == 0 {
+			return sdkdiag.AppendErrorf(diags, "can't find datafy volumes of EBS volume (%s)", d.Id())
+		}
+
+		for _, volume := range dvo.Volumes {
+			datafyVolumeId := aws.ToString(volume.VolumeId)
+			if _, err := waitVolumeCreated(ctx, conn, datafyVolumeId, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for datafy volume (%s) of EBS Volume (%s) create: %s", datafyVolumeId, d.Id(), err)
+			}
+		}
+
+		volume := dvo.Volumes[0]
+		arn := arn.ARN{
+			Partition: meta.(*conns.AWSClient).Partition,
+			Service:   names.EC2,
+			Region:    meta.(*conns.AWSClient).Region,
+			AccountID: meta.(*conns.AWSClient).AccountID,
+			Resource:  fmt.Sprintf("volume/%s", d.Id()),
+		}
+		d.Set(names.AttrARN, arn.String())
+		d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
+		d.Set(names.AttrEncrypted, volume.Encrypted)
+		d.Set(names.AttrIOPS, volume.Iops)
+		d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
+		d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
+		d.Set("outpost_arn", func() *string {
+			if volume.OutpostArn == nil {
+				return nil
+			}
+
+			outputArn := strings.ReplaceAll(*volume.OutpostArn, *volume.VolumeId, d.Id())
+			return &outputArn
+		}())
+		d.Set(names.AttrSize, restoredVolume.VolumeSizeGB)
+		d.Set(names.AttrSnapshotID, snapshotId)
+		d.Set(names.AttrThroughput, volume.Throughput)
+		d.Set(names.AttrType, volume.VolumeType)
+
+		setTagsOut(ctx, volume.Tags)
+
+		return diags
+	}
+
 	output, err := conn.CreateVolume(ctx, input)
 
 	if err != nil {
