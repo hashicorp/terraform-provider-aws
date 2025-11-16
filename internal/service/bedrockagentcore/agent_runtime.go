@@ -104,6 +104,26 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplaceIf(
+						func(ctx context.Context, request planmodifier.ListRequest, response *listplanmodifier.RequiresReplaceIfFuncResponse) {
+							// If code_configuration was set in the previous configuration and container_configuration is set in the planned configuration, a replacement is required — and vice versa.
+							var prev, plan agentRuntimeArtifactModel
+							smerr.AddEnrich(ctx, &response.Diagnostics, request.State.GetAttribute(ctx, path.Root("agent_runtime_artifact").AtListIndex(0), &prev))
+							smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.GetAttribute(ctx, path.Root("agent_runtime_artifact").AtListIndex(0), &plan))
+							if response.Diagnostics.HasError() {
+								return
+							}
+							if (!prev.ContainerConfiguration.IsNull() && !plan.CodeConfiguration.IsNull()) ||
+								(!prev.CodeConfiguration.IsNull() && !plan.ContainerConfiguration.IsNull()) {
+								response.RequiresReplace = true
+							}
+							return
+						},
+						"Artifact type change between code_configuration and container_configuration requires replacement",
+						"",
+					),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"code_configuration": schema.ListNestedBlock{
