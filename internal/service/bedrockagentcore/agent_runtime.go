@@ -118,7 +118,6 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 								(!prev.CodeConfiguration.IsNull() && !plan.ContainerConfiguration.IsNull()) {
 								response.RequiresReplace = true
 							}
-							return
 						},
 						"Artifact type change between code_configuration and container_configuration requires replacement",
 						"",
@@ -171,13 +170,13 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"bucket": schema.StringAttribute{
+															names.AttrBucket: schema.StringAttribute{
 																Required: true,
 																Validators: []validator.String{
 																	stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`), "must be a valid S3 bucket name"),
 																},
 															},
-															"prefix": schema.StringAttribute{
+															names.AttrPrefix: schema.StringAttribute{
 																Required: true,
 																Validators: []validator.String{
 																	stringvalidator.LengthBetween(1, 1024),

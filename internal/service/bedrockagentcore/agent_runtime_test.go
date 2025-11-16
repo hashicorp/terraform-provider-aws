@@ -580,9 +580,9 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											"s3": knownvalue.ListExact([]knownvalue.Check{
 												knownvalue.ObjectExact(map[string]knownvalue.Check{
-													"bucket":     knownvalue.StringExact(rCodeS3BucketV1),
-													"prefix":     knownvalue.StringExact(rCodeS3KeyV1),
-													"version_id": knownvalue.Null(),
+													names.AttrBucket: knownvalue.StringExact(rCodeS3BucketV1),
+													names.AttrPrefix: knownvalue.StringExact(rCodeS3KeyV1),
+													"version_id":     knownvalue.Null(),
 												}),
 											}),
 										}),
@@ -624,9 +624,9 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											"s3": knownvalue.ListExact([]knownvalue.Check{
 												knownvalue.ObjectExact(map[string]knownvalue.Check{
-													"bucket":     knownvalue.StringExact(rCodeS3BucketV2),
-													"prefix":     knownvalue.StringExact(rCodeS3KeyV2),
-													"version_id": knownvalue.Null(),
+													names.AttrBucket: knownvalue.StringExact(rCodeS3BucketV2),
+													names.AttrPrefix: knownvalue.StringExact(rCodeS3KeyV2),
+													"version_id":     knownvalue.Null(),
 												}),
 											}),
 										}),
@@ -710,9 +710,9 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											"s3": knownvalue.ListExact([]knownvalue.Check{
 												knownvalue.ObjectExact(map[string]knownvalue.Check{
-													"bucket":     knownvalue.StringExact(rCodeS3BucketV1),
-													"prefix":     knownvalue.StringExact(rCodeS3KeyV1),
-													"version_id": knownvalue.Null(),
+													names.AttrBucket: knownvalue.StringExact(rCodeS3BucketV1),
+													names.AttrPrefix: knownvalue.StringExact(rCodeS3KeyV1),
+													"version_id":     knownvalue.Null(),
 												}),
 											}),
 										}),
