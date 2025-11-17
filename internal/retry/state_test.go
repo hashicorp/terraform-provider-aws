@@ -18,6 +18,10 @@ import (
 // Based on https://github.com/hashicorp/terraform-plugin-sdk/helper/retry/state_test.go.
 //
 
+type value struct {
+	val string
+}
+
 func FailedStateRefreshFunc() StateRefreshFunc {
 	return func(context.Context) (any, string, error) {
 		return nil, "", errors.New("failed")
@@ -31,13 +35,13 @@ func TimeoutStateRefreshFunc() StateRefreshFunc {
 			return nil, "", &aws.RequestCanceledError{Err: ctx.Err()}
 		case <-time.After(5 * time.Second):
 		}
-		return struct{}{}, "pending", nil
+		return &value{val: "value"}, "pending", nil
 	}
 }
 
 func SuccessfulStateRefreshFunc() StateRefreshFunc {
 	return func(context.Context) (any, string, error) {
-		return struct{}{}, "running", nil
+		return &value{val: "value"}, "running", nil
 	}
 }
 
