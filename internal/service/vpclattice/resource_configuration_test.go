@@ -516,18 +516,22 @@ resource "aws_vpclattice_resource_configuration" "test" {
   }
 }
 
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = "aurora-postgresql"
+  engine_latest_version      = true
+  preferred_instance_classes = ["db.serverless"]
+}
+
 resource "aws_rds_cluster" "test" {
-  cluster_identifier          = %[1]q
-  engine                      = "aurora-postgresql"
-  engine_mode                 = "provisioned"
-  engine_version              = "15.4"
-  database_name               = "test"
-  master_username             = "test"
-  manage_master_user_password = true
-  enable_http_endpoint        = true
-  vpc_security_group_ids      = [aws_security_group.test.id]
-  skip_final_snapshot         = true
-  db_subnet_group_name        = aws_db_subnet_group.test.name
+  cluster_identifier     = %[1]q
+  master_password        = "avoid-plaintext-passwords"
+  master_username        = "tfacctest"
+  skip_final_snapshot    = true
+  engine                 = data.aws_rds_orderable_db_instance.test.engine
+  engine_version         = data.aws_rds_orderable_db_instance.test.engine_version
+  enable_http_endpoint   = true
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_subnet_group_name   = aws_db_subnet_group.test.name
 
   serverlessv2_scaling_configuration {
     max_capacity = 1.0
