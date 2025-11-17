@@ -47,6 +47,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainName` - (Required) Name of the domain.
 * `accessPolicies` - (Optional) IAM policy document specifying the access policies for the domain
 
@@ -54,4 +55,4 @@ This resource supports the following arguments:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-74932bbb0d0c5abd0e5dc3aa9416bb7bfcf5a404e91d4a90ec6ae56e5f33bb53 -->
+<!-- cache-key: cdktf-0.20.8 input-610e9056a06ff5ac1cb05f6091e0ee0ef75daf665b1f76d723fe98c505b8e313 -->

@@ -22,15 +22,17 @@ data "aws_network_interface" "bar" {
 
 This data source supports the following arguments:
 
-* `id` – (Optional) Identifier for the network interface.
-* `filter` – (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-network-interfaces](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html) in the AWS CLI reference.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `id` - (Optional) Identifier for the network interface.
+* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-network-interfaces](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html) in the AWS CLI reference.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the network interface.
-* `association` - Association information for an Elastic IP address (IPv4) associated with the network interface. See supported fields below.
+* `association` - Association information for an Elastic IP address (IPv4) associated with the network interface. See [association](#association) below.
+* `attachment` - Attachment of the ENI. See [attachment](#attachment) below.
 * `availability_zone` - Availability Zone.
 * `description` - Description of the network interface.
 * `interface_type` - Type of interface.
@@ -56,6 +58,14 @@ This data source exports the following attributes in addition to the arguments a
 * `ip_owner_id` - ID of the Elastic IP address owner.
 * `public_dns_name` - Public DNS name.
 * `public_ip` - Address of the Elastic IP address bound to the network interface.
+
+### `attachment`
+
+* `attachment_id` - ID of the network interface attachment.
+* `device_index` - Device index of the network interface attachment on the instance.
+* `instance_id` - ID of the instance.
+* `instance_owner_id` - AWS account ID of the owner of the instance.
+* `network_card_index` - Index of the network card.
 
 ## Timeouts
 

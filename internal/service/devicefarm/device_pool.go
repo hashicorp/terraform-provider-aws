@@ -29,16 +29,17 @@ import (
 
 // @SDKResource("aws_devicefarm_device_pool", name="Device Pool")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.DevicePool")
+// @Testing(preCheckRegion="us-west-2")
+// @Testing(identityRegionOverrideTest=false)
 func resourceDevicePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevicePoolCreate,
 		ReadWithoutTimeout:   resourceDevicePoolRead,
 		UpdateWithoutTimeout: resourceDevicePoolUpdate,
 		DeleteWithoutTimeout: resourceDevicePoolDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

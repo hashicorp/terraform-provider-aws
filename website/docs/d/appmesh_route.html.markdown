@@ -24,6 +24,7 @@ data "aws_appmesh_route" "test" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the route.
 * `mesh_name` - (Required) Name of the service mesh in which the virtual router exists.
 * `virtual_router_name` - (Required) Name of the virtual router in which the route exists.

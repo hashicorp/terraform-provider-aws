@@ -3,8 +3,8 @@ package transfer
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -31,7 +31,7 @@ func updateTagsNoIgnoreSystem(ctx context.Context, conn *transfer.Client, identi
 		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -45,7 +45,7 @@ func updateTagsNoIgnoreSystem(ctx context.Context, conn *transfer.Client, identi
 		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

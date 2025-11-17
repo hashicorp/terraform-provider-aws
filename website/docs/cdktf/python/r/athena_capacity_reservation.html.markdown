@@ -44,6 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -88,4 +89,4 @@ Using `terraform import`, import Athena Capacity Reservation using the `name`. F
 % terraform import aws_athena_capacity_reservation.example example-reservation
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-afefdc06facbfbafb464401e80bf4bda23f7a26db5dfaa6bc478a403e5fa0947 -->
+<!-- cache-key: cdktf-0.20.8 input-d267e6f84631fd1f60c2d963bdce4a9371892e0b20faa83ac1539866dff5d4e3 -->

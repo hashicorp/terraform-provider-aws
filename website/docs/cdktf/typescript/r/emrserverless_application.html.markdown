@@ -104,19 +104,20 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `architecture` – (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
-* `autoStartConfiguration` – (Optional) The configuration for an application to automatically start on job submission.
-* `autoStopConfiguration` – (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
-* `imageConfiguration` – (Optional) The image configuration applied to all worker types.
-* `initialCapacity` – (Optional) The capacity to initialize when the application is created.
-* `interactiveConfiguration` – (Optional) Enables the interactive use cases to use when running an application.
-* `maximumCapacity` – (Optional) The maximum capacity to allocate when the application is created. This is cumulative across all workers at any given point in time, not just when an application is created. No new resources will be created once any one of the defined limits is hit.
-* `name` – (Required) The name of the application.
-* `networkConfiguration` – (Optional) The network configuration for customer VPC connectivity.
-* `releaseLabel` – (Required) The EMR release version associated with the application.
-* `type` – (Required) The type of application you want to start, such as `spark` or `hive`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `architecture` - (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
+* `autoStartConfiguration` - (Optional) The configuration for an application to automatically start on job submission.
+* `autoStopConfiguration` - (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
+* `imageConfiguration` - (Optional) The image configuration applied to all worker types.
+* `initialCapacity` - (Optional) The capacity to initialize when the application is created.
+* `interactiveConfiguration` - (Optional) Enables the interactive use cases to use when running an application.
+* `maximumCapacity` - (Optional) The maximum capacity to allocate when the application is created. This is cumulative across all workers at any given point in time, not just when an application is created. No new resources will be created once any one of the defined limits is hit.
+* `name` - (Required) The name of the application.
+* `networkConfiguration` - (Optional) The network configuration for customer VPC connectivity.
+* `releaseLabel` - (Required) The EMR release version associated with the application.
+* `type` - (Required) The type of application you want to start, such as `spark` or `hive`.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### auto_start_configuration Arguments
@@ -200,4 +201,4 @@ Using `terraform import`, import EMR Severless applications using the `id`. For 
 % terraform import aws_emrserverless_application.example id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b6a431ae1995c9cbc99268cbdcdd9e88abb7812960696ed78cdf441865883f23 -->
+<!-- cache-key: cdktf-0.20.8 input-b929d2e4e0c3aac016e2c1aeb5dca4460962441797f39c9fc0153c0d5ab33fce -->

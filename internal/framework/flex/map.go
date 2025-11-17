@@ -27,22 +27,6 @@ func ExpandFrameworkStringValueMap(ctx context.Context, v basetypes.MapValuable)
 	return output
 }
 
-// FlattenFrameworkStringMap converts a map of string pointers to a framework Map value.
-//
-// A nil map is converted to a null Map.
-// An empty map is converted to a null Map.
-func FlattenFrameworkStringMap(ctx context.Context, v map[string]*string) types.Map {
-	if len(v) == 0 {
-		return types.MapNull(types.StringType)
-	}
-
-	var output types.Map
-
-	must(Flatten(ctx, v, &output))
-
-	return output
-}
-
 // FlattenFrameworkStringValueMap converts a map of strings to a framework Map value.
 //
 // A nil map is converted to a null Map.

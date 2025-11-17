@@ -36,8 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `serviceArn` - (Required) The Amazon Resource Name (ARN) of the App Runner service to start the deployment for.
 
 ## Attribute Reference
@@ -48,4 +49,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `operationId` - The unique ID of the operation associated with deployment.
 * `status` - The current status of the App Runner service deployment.
 
-<!-- cache-key: cdktf-0.20.8 input-174062645567df0484bd1555e61467931d5bd1e9d2d2ce98910c2f2f8399d118 -->
+<!-- cache-key: cdktf-0.20.8 input-fcfcb8c199313c9b7bda02684ebc1478b1a90d029a0d10e7dbf8264e2af0254c -->

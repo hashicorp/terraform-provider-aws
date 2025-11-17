@@ -34,6 +34,7 @@ resource "aws_ebs_snapshot_import" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_data` - (Optional) The client-specific data. Detailed below.
 * `description` - (Optional) The description string for the import snapshot task.
 * `disk_container` - (Required) Information about the disk container. Detailed below.

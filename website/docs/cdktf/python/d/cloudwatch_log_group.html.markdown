@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Cloudwatch log group
 
 ## Attribute Reference
@@ -48,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `retention_in_days` - Number of days log events retained in the specified log group.
 * `tags` - Map of tags to assign to the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-8a8ab510e997c869183a1e56bb94690ada516904b6b672569dc99353f2274fae -->
+<!-- cache-key: cdktf-0.20.8 input-e7879d304d8048d76879cb64c54f5caedf62bf105ce50e567093881cc0304391 -->

@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_lb_listener: Support `jwt-validation` as a valid `default_action.type` and add `default_action.jwt_validation` configuration block
+```
+
+```release-note:enhancement
+resource/aws_lb_listener_rule: Support `jwt-validation` as a valid `action.type` and add `action.jwt_validation` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_lb_listener: Add `default_action.jwt_validation` attribute
+```
+
+```release-note:enhancement
+data-source/aws_lb_listener_rule: Add `action.jwt_validation` attribute
+```

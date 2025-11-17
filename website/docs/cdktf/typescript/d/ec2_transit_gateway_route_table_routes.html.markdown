@@ -355,8 +355,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Required) Custom filter block as described below.
 * `transitGatewayRouteTableId` - (Required) Identifier of EC2 Transit Gateway Route Table.
 
@@ -367,9 +368,9 @@ which take the following arguments:
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SearchTransitGatewayRoutes.html).
 * `values` - (Required) Set of values that are accepted for the given field.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - The transit gateway route table id suffixed by `-routes`
 * `routes` - List of Transit Gateway Routes.
@@ -382,4 +383,4 @@ In addition to all arguments above, the following attributes are exported:
 * `transit_gateway_route_table_announcement_id` - The id of the transit gateway route table announcement, most of the time it is an empty string.
 * `type` - The type of the route, can be `propagated` or `static`.
 
-<!-- cache-key: cdktf-0.20.8 input-696ba7f42bc4c749cdbe89cddfd24a5aa116e802c8e675cd5c391818b6e6f371 -->
+<!-- cache-key: cdktf-0.20.8 input-bb7bbc37086a3e69fc612f4a8f7a8af47f0cb65b7df116a0330bca92e77b1214 -->

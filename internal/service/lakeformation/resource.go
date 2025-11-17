@@ -64,6 +64,12 @@ func ResourceResource() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"with_privileged_access": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -93,6 +99,10 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	if v, ok := d.GetOk("with_federation"); ok {
 		input.WithFederation = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("with_privileged_access"); ok {
+		input.WithPrivilegedAccess = v.(bool)
 	}
 
 	_, err := conn.RegisterResource(ctx, input)
@@ -131,6 +141,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	d.Set(names.AttrRoleARN, resource.RoleArn)
 	d.Set("with_federation", resource.WithFederation)
+	d.Set("with_privileged_access", resource.WithPrivilegedAccess)
 
 	return diags
 }

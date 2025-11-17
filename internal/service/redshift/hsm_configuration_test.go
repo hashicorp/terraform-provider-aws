@@ -49,51 +49,6 @@ func TestAccRedshiftHSMConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftHSMConfiguration_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_redshift_hsm_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHSMConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccHSMConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"hsm_partition_password", "hsm_server_public_certificate"},
-			},
-			{
-				Config: testAccHSMConfigurationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			}, {
-				Config: testAccHSMConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccRedshiftHSMConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_hsm_configuration.test"
@@ -173,39 +128,4 @@ resource "aws_redshift_hsm_configuration" "test" {
   hsm_server_public_certificate = %[1]q
 }
 `, rName)
-}
-
-func testAccHSMConfigurationConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_redshift_hsm_configuration" "test" {
-  description                   = %[1]q
-  hsm_configuration_identifier  = %[1]q
-  hsm_ip_address                = "10.0.0.1"
-  hsm_partition_name            = "aws"
-  hsm_partition_password        = %[1]q
-  hsm_server_public_certificate = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccHSMConfigurationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_redshift_hsm_configuration" "test" {
-  description                   = %[1]q
-  hsm_configuration_identifier  = %[1]q
-  hsm_ip_address                = "10.0.0.1"
-  hsm_partition_name            = "aws"
-  hsm_partition_password        = %[1]q
-  hsm_server_public_certificate = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

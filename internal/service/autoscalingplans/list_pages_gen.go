@@ -5,15 +5,16 @@ package autoscalingplans
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
 )
 
-func describeScalingPlansPages(ctx context.Context, conn *autoscalingplans.Client, input *autoscalingplans.DescribeScalingPlansInput, fn func(*autoscalingplans.DescribeScalingPlansOutput, bool) bool) error {
+func describeScalingPlansPages(ctx context.Context, conn *autoscalingplans.Client, input *autoscalingplans.DescribeScalingPlansInput, fn func(*autoscalingplans.DescribeScalingPlansOutput, bool) bool, optFns ...func(*autoscalingplans.Options)) error {
 	for {
-		output, err := conn.DescribeScalingPlans(ctx, input)
+		output, err := conn.DescribeScalingPlans(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

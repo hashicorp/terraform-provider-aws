@@ -51,10 +51,13 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fileSystemId` - (Required) The ID of the file system for which the mount target is intended.
 * `subnetId` - (Required) The ID of the subnet to add the mount target in.
 * `ipAddress` - (Optional) The address (within the address range of the specified subnet) at
 which the file system may be mounted via the mount target.
+* `ipAddressType` - (Optional) IP address type for the mount target. Valid values are `IPV4_ONLY` (only IPv4 addresses), `IPV6_ONLY` (only IPv6 addresses), and `DUAL_STACK` (dual-stack, both IPv4 and IPv6 addresses). Defaults to `IPV4_ONLY`.
+* `ipv6Address` - (Optional) IPv6 address to use. Valid only when `ipAddressType` is set to `IPV6_ONLY` or `DUAL_STACK`.
 * `securityGroups` - (Optional) A list of up to 5 VPC security group IDs (that must
 be for the same VPC as subnet specified) in effect for the mount target.
 
@@ -110,4 +113,4 @@ Using `terraform import`, import the EFS mount targets using the `id`. For examp
 % terraform import aws_efs_mount_target.alpha fsmt-52a643fb
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7dcbc13dbededd010d6caa93608126170e98da8f59ca6aabaeeb59e86082c8d2 -->
+<!-- cache-key: cdktf-0.20.8 input-5715e887a0b57e70fd411f2c182808af50844584a6ab52ea2a5207d49580ec01 -->

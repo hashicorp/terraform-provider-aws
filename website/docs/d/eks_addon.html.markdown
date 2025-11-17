@@ -27,9 +27,10 @@ output "eks_addon_outputs" {
 
 This data source supports the following arguments:
 
-* `addon_name` – (Required) Name of the EKS add-on. The name must match one of
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `addon_name` - (Required) Name of the EKS add-on. The name must match one of
   the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
-* `cluster_name` – (Required) Name of the EKS Cluster.
+* `cluster_name` - (Required) Name of the EKS Cluster.
 
 ## Attribute Reference
 

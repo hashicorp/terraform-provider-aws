@@ -22,7 +22,7 @@ func newDefaultScraperConfigurationDataSource(context.Context) (datasource.DataS
 }
 
 type defaultScraperConfigurationDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[defaultScraperConfigurationDataSourceModel]
 }
 
 func (d *defaultScraperConfigurationDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -73,5 +73,6 @@ func findDefaultScraperConfiguration(ctx context.Context, conn *amp.Client) ([]b
 }
 
 type defaultScraperConfigurationDataSourceModel struct {
+	framework.WithRegionModel
 	Configuration types.String `tfsdk:"configuration"`
 }

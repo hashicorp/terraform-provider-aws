@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/osis/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -314,11 +315,23 @@ func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccPipelineConfig_basic(rName),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -409,7 +422,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_osis_pipeline" "test" {
   pipeline_name               = %[1]q
-  pipeline_configuration_body = <<-EOT
+  pipeline_configuration_body = <<EOS
             version: "2"
             test-pipeline:
               source:
@@ -419,13 +432,13 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
                     codec:
                       ndjson:
-        EOT
+EOS
   max_units                   = 1
   min_units                   = 1
 }
@@ -466,7 +479,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -517,7 +530,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -569,7 +582,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -620,7 +633,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -638,6 +651,7 @@ resource "aws_osis_pipeline" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName)
 }
@@ -680,7 +694,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -749,7 +763,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"

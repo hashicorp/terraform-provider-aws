@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -67,17 +68,7 @@ var (
 			Optional: true,
 			Default:  false,
 		},
-		"filter_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v any) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
+		"filter_policy": sdkv2.JSONDocumentSchemaOptional(),
 		"filter_policy_scope": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -103,28 +94,8 @@ var (
 			Optional: true,
 			Default:  false,
 		},
-		"redrive_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v any) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
-		"replay_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v any) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
+		"redrive_policy": sdkv2.JSONDocumentSchemaOptional(),
+		"replay_policy":  sdkv2.JSONDocumentSchemaOptional(),
 		"subscription_role_arn": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -157,16 +128,16 @@ var (
 )
 
 // @SDKResource("aws_sns_topic_subscription", name="Topic Subscription")
+// @ArnIdentity
+// @Testing(existsType="map[string]string")
+// @Testing(preIdentityVersion="v6.8.0")
+// @Testing(importIgnore="confirmation_timeout_in_minutes;endpoint_auto_confirms")
 func resourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicSubscriptionCreate,
 		ReadWithoutTimeout:   resourceTopicSubscriptionRead,
 		UpdateWithoutTimeout: resourceTopicSubscriptionUpdate,
 		DeleteWithoutTimeout: resourceTopicSubscriptionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: resourceTopicSubscriptionCustomizeDiff,
 
@@ -252,7 +223,7 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (any, error) {
+	attributes, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func(ctx context.Context) (map[string]string, error) {
 		return findSubscriptionAttributesByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -265,8 +236,6 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
-
-	attributes := outputRaw.(map[string]string)
 
 	return sdkdiag.AppendFromErr(diags, subscriptionAttributeMap.APIAttributesToResourceData(attributes, d))
 }
@@ -593,18 +562,18 @@ func normalizeTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
 	var deliveryPolicy TopicSubscriptionDeliveryPolicy
 
 	if err := json.Unmarshal([]byte(policy), &deliveryPolicy); err != nil {
-		return nil, fmt.Errorf("[WARN] Unable to unmarshal SNS Topic Subscription delivery policy JSON: %s", err)
+		return nil, fmt.Errorf("[WARN] Unable to unmarshal SNS Topic Subscription delivery policy JSON: %w", err)
 	}
 
 	normalizedDeliveryPolicy, err := json.Marshal(deliveryPolicy)
 
 	if err != nil {
-		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %s", err)
+		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %w", err)
 	}
 
 	b := bytes.NewBufferString("")
 	if err := json.Compact(b, normalizedDeliveryPolicy); err != nil {
-		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %s", err)
+		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %w", err)
 	}
 
 	return b.Bytes(), nil

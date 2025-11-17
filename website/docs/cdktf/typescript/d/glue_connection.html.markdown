@@ -36,6 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Concatenation of the catalog ID and connection name. For example, if your account ID is
 `123456789123` and the connection name is `conn` then the ID is `123456789123:conn`.
 
@@ -48,10 +51,10 @@ This data source exports the following attributes in addition to the arguments a
 * `athenaProperties` - A map of connection properties specific to the Athena compute environment.
 * `connectionProperties` - A map of connection properties.
 * `connectionType` - Type of Glue Connection.
-* `description` – Description of the connection.
-* `matchCriteria` – A list of criteria that can be used in selecting this connection.
+* `description` - Description of the connection.
+* `matchCriteria` - A list of criteria that can be used in selecting this connection.
 * `name` - Name of the Glue Connection.
 * `physicalConnectionRequirements` - A map of physical connection requirements, such as VPC and SecurityGroup.
 * `tags` - Tags assigned to the resource
 
-<!-- cache-key: cdktf-0.20.8 input-a6eb1794558192738dcc44efa8f0407d2e444e8bca872cff8ad1588b9239c752 -->
+<!-- cache-key: cdktf-0.20.8 input-484ae7bb977974c3e250f0cee5a9f7da276812263c14dc2591304690bb7e70b2 -->

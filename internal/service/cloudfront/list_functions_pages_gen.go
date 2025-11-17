@@ -5,15 +5,16 @@ package cloudfront
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 )
 
-func listFunctionsPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListFunctionsInput, fn func(*cloudfront.ListFunctionsOutput, bool) bool) error {
+func listFunctionsPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListFunctionsInput, fn func(*cloudfront.ListFunctionsOutput, bool) bool, optFns ...func(*cloudfront.Options)) error {
 	for {
-		output, err := conn.ListFunctions(ctx, input)
+		output, err := conn.ListFunctions(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.FunctionList.NextMarker) == ""

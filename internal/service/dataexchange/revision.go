@@ -25,12 +25,14 @@ import (
 
 // @SDKResource("aws_dataexchange_revision", name="Revision")
 // @Tags(identifierAttribute="arn")
-func ResourceRevision() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceRevision() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRevisionCreate,
 		ReadWithoutTimeout:   resourceRevisionRead,
 		UpdateWithoutTimeout: resourceRevisionUpdate,
 		DeleteWithoutTimeout: resourceRevisionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -43,7 +45,7 @@ func ResourceRevision() *schema.Resource {
 			names.AttrComment: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 16348),
+				ValidateFunc: validation.StringLenBetween(0, 16_348),
 			},
 			"data_set_id": {
 				Type:     schema.TypeString,
@@ -89,7 +91,7 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading DataExchange Revision (%s): %s", d.Id(), err)
 	}
 
-	revision, err := FindRevisionById(ctx, conn, dataSetId, revisionId)
+	revision, err := findRevisionByID(ctx, conn, dataSetId, revisionId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataExchange Revision (%s) not found, removing from state", d.Id())

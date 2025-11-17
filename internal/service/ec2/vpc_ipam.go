@@ -72,6 +72,12 @@ func resourceIPAM() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"metered_account": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IpamMeteredAccount](),
+			},
 			"operating_regions": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -145,6 +151,10 @@ func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.EnablePrivateGua = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("metered_account"); ok {
+		input.MeteredAccount = awstypes.IpamMeteredAccount(v.(string))
+	}
+
 	if v, ok := d.GetOk("tier"); ok {
 		input.Tier = awstypes.IpamTier(v.(string))
 	}
@@ -185,6 +195,7 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set("default_resource_discovery_id", ipam.DefaultResourceDiscoveryId)
 	d.Set(names.AttrDescription, ipam.Description)
 	d.Set("enable_private_gua", ipam.EnablePrivateGua)
+	d.Set("metered_account", ipam.MeteredAccount)
 	if err := d.Set("operating_regions", flattenIPAMOperatingRegions(ipam.OperatingRegions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting operating_regions: %s", err)
 	}
@@ -213,6 +224,10 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		if d.HasChange("enable_private_gua") {
 			input.EnablePrivateGua = aws.Bool(d.Get("enable_private_gua").(bool))
+		}
+
+		if d.HasChange("metered_account") {
+			input.MeteredAccount = awstypes.IpamMeteredAccount(d.Get("metered_account").(string))
 		}
 
 		if d.HasChange("operating_regions") {

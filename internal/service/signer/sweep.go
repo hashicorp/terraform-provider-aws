@@ -4,62 +4,40 @@
 package signer
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/signer"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_signer_signing_profile", &resource.Sweeper{
-		Name: "aws_signer_signing_profile",
-		F:    sweepSigningProfiles,
-	})
+	awsv2.Register("aws_signer_signing_profile", sweepSigningProfiles)
 }
 
-func sweepSigningProfiles(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-
+func sweepSigningProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.SignerClient(ctx)
+	var input signer.ListSigningProfilesInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	input := &signer.ListSigningProfilesInput{}
 
-	pages := signer.NewListSigningProfilesPaginator(conn, input)
-
+	pages := signer.NewListSigningProfilesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Signer Signing Profiles sweep for %s: %s", region, err)
-			return nil
-		}
+
 		if err != nil {
-			return fmt.Errorf("error retrieving Signer Signing Profiles: %w", err)
+			return nil, err
 		}
 
-		for _, profile := range page.Profiles {
-			name := aws.ToString(profile.ProfileName)
-
-			r := ResourceSigningProfile()
+		for _, v := range page.Profiles {
+			r := resourceSigningProfile()
 			d := r.Data(nil)
-			d.SetId(name)
+			d.SetId(aws.ToString(v.ProfileName))
 
-			log.Printf("[INFO] Deleting Signer Signing Profile: %s", name)
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("error sweeping Signer Signing Profiles for %s: %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

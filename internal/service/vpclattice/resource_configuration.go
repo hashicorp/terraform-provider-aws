@@ -55,7 +55,7 @@ func newResourceConfigurationResource(_ context.Context) (resource.ResourceWithC
 }
 
 type resourceConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourceConfigurationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -372,7 +372,7 @@ func (r *resourceConfigurationResource) Delete(ctx context.Context, request reso
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteResourceConfiguration(ctx, &vpclattice.DeleteResourceConfigurationInput{
 			ResourceConfigurationIdentifier: fwflex.StringFromFramework(ctx, data.ID),
 		})
@@ -492,6 +492,7 @@ func waitResourceConfigurationDeleted(ctx context.Context, conn *vpclattice.Clie
 }
 
 type resourceConfigurationResourceModel struct {
+	framework.WithRegionModel
 	AllowAssociationToShareableServiceNetwork types.Bool                                                            `tfsdk:"allow_association_to_shareable_service_network"`
 	ARN                                       types.String                                                          `tfsdk:"arn"`
 	ID                                        types.String                                                          `tfsdk:"id"`

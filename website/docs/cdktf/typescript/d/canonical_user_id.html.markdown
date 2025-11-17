@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `displayName` - Human-friendly name linked to the canonical user ID. The bucket owner's display name. **NOTE:** [This value](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTServiceGET.html) is only included in the response in the US East (N. Virginia), US West (N. California), US West (Oregon), Asia Pacific (Singapore), Asia Pacific (Sydney), Asia Pacific (Tokyo), EU (Ireland), and South America (São Paulo) regions.
 
-<!-- cache-key: cdktf-0.20.8 input-db8220f51071b9966f2634f970bb7fc28053743696bb94d88dcc12f05f864080 -->
+<!-- cache-key: cdktf-0.20.8 input-16866788015a8feb348979bfe27337aca7b8da158fb498c6a1a0eb78ac4759b0 -->

@@ -98,14 +98,17 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-Elastic IPs in the current region. The given filters must match exactly one
-Elastic IP whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are several valid keys, for a full reference, check out the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAddresses.html).
 * `id` - (Optional) Allocation ID of the specific VPC EIP to retrieve. If a classic EIP is required, do NOT set `id`, only set `public_ip`
 * `public_ip` - (Optional) Public IP of the specific EIP to retrieve.
-* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Elastic IP
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Elastic IP.
+
+The arguments of this data source act as filters for querying the available
+Elastic IPs in the current region. The given filters must match exactly one
+Elastic IP whose data will be exported as attributes.
 
 ## Attribute Reference
 
@@ -137,4 +140,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-810d54952b16edb6a00a1e820d96cd091fdeae96e5ecaac2a1a277bae9c73440 -->
+<!-- cache-key: cdktf-0.20.8 input-a217cb9ee7887eae8156d27d984ee0879f21d8974441b5ca3c22063e4d63488d -->

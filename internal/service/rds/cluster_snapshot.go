@@ -140,7 +140,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*types.InvalidDBClusterStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidDBClusterStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateDBClusterSnapshot(ctx, input)
 	})
 

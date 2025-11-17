@@ -36,6 +36,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the REST API to look up. If no REST API is found with this name, an error will be returned. If multiple REST APIs are found with this name, an error will be returned.
 
 ## Attribute Reference
@@ -57,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `root_resource_id` - Set to the ID of the API Gateway Resource on the found REST API where the route matches '/'.
 * `tags` - Key-value map of resource tags.
 
-<!-- cache-key: cdktf-0.20.8 input-1fb7e7c22930afe6ef3eb4d5be88e9ce15d83fdd5cd7ce9d36df178bcd68b264 -->
+<!-- cache-key: cdktf-0.20.8 input-48ef44c560b2fc4b0a1cb01280ffb448387fdd7cdc8d08427884164587b9575a -->

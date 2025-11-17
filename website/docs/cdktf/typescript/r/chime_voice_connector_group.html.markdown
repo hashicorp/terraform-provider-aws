@@ -61,6 +61,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Amazon Chime Voice Connector group.
 * `connector` - (Optional) The Amazon Chime Voice Connectors to route inbound calls to.
 
@@ -109,4 +110,4 @@ Using `terraform import`, import Configuration Recorder using the name. For exam
 % terraform import aws_chime_voice_connector_group.default example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2647c34ddcecc5abad23c5553fbf101209a26f858db52f9c3b06b4b66669a7c9 -->
+<!-- cache-key: cdktf-0.20.8 input-b2c84ce396eed0b3e7b57ce00f558da82fc44cb4aacfa8b4cc2aca87e77470df -->

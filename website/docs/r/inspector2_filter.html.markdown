@@ -5,14 +5,6 @@ page_title: "AWS: aws_inspector2_filter"
 description: |-
   Terraform resource for managing an AWS Inspector Filter.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
 
 # Resource: aws_inspector2_filter
 
@@ -33,7 +25,6 @@ resource "aws_inspector2_filter" "example" {
     }
   }
 }
-
 ```
 
 ## Argument Reference
@@ -46,6 +37,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description
 * `reason` - (Optional) Reason for creating the filter
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -62,6 +54,8 @@ This resource exports the following attributes in addition to the arguments abov
 The `filter_criteria` configuration block supports the following attributes:
 
 * `aws_account_id` - (Optional) The AWS account ID in which the finding was generated. [Documented below](#string-filter).
+* `code_repository_project_name` - (Optional) The project name in a code repository. [Documented below](#string-filter).
+* `code_repository_provider_type` - (Optional) The repository provider type (such as GitHub, GitLab, etc.) [Documented below](#string-filter).
 * `code_vulnerability_detector_name` - (Optional) The ID of the component. [Documented below](#string-filter).
 * `code_vulnerability_detector_tags` - (Optional) The ID of the component. [Documented below](#string-filter).
 * `code_vulnerability_file_path` - (Optional) The ID of the component. [Documented below](#string-filter).
@@ -71,6 +65,8 @@ The `filter_criteria` configuration block supports the following attributes:
 * `ec2_instance_subnet_id` - (Optional) The ID of the subnet. [Documented below](#string-filter).
 * `ec2_instance_vpc_id` - (Optional) The ID of the VPC. [Documented below](#string-filter).
 * `ecr_image_architecture` - (Optional) The architecture of the ECR image. [Documented below](#string-filter).
+* `ecr_image_in_use_count` - (Optional)  The number of the ECR images in use. [Documented below](#number-filter).
+* `ecr_image_last_in_use_at` - (Optional) The date range when an ECR image was last used in an ECS cluster task or EKS cluster pod. [Documented below](#date-filter).
 * `ecr_image_hash` - (Optional) The SHA256 hash of the ECR image. [Documented below](#string-filter).
 * `ecr_image_pushed_at` - (Optional) The date range when the image was pushed. [Documented below](#date-filter).
 * `ecr_image_registry` - (Optional) The registry of the ECR image. [Documented below](#string-filter).
@@ -159,12 +155,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to  = aws_inspector2_filter.example
-  arn = "arn:aws:inspector2:us-east-1:111222333444:owner/111222333444/filter/abcdefgh12345678"
+  to = aws_inspector2_filter.example
+  id = "arn:aws:inspector2:us-east-1:111222333444:owner/111222333444/filter/abcdefgh12345678"
 }
 ```
 
-Using `terraform import`, import Inspector Filter using the `example_id_arg`. For example:
+Using `terraform import`, import Inspector Filter using the `arn`. For example:
 
 ```console
 % terraform import aws_inspector2_filter.example "arn:aws:inspector2:us-east-1:111222333444:owner/111222333444/filter/abcdefgh12345678"

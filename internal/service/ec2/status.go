@@ -15,6 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+const (
+	launchTemplateFoundStatus = "Found"
+)
+
 func statusAvailabilityZoneGroupOptInStatus(ctx context.Context, conn *ec2.Client, name string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAvailabilityZoneGroupByName(ctx, conn, name)
@@ -221,6 +225,28 @@ func statusInstanceRootBlockDeviceDeleteOnTermination(ctx context.Context, conn 
 	}
 }
 
+func statusLaunchTemplate(ctx context.Context, conn *ec2.Client, id string, idIsName bool) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		var output *awstypes.LaunchTemplate
+		var err error
+		if idIsName {
+			output, err = findLaunchTemplateByName(ctx, conn, id)
+		} else {
+			output, err = findLaunchTemplateByID(ctx, conn, id)
+		}
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, launchTemplateFoundStatus, nil
+	}
+}
+
 func statusLocalGatewayRoute(ctx context.Context, conn *ec2.Client, localGatewayRouteTableID, destinationCIDRBlock string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findLocalGatewayRouteByTwoPartKey(ctx, conn, localGatewayRouteTableID, destinationCIDRBlock)
@@ -302,6 +328,22 @@ func statusSecurityGroup(ctx context.Context, conn *ec2.Client, id string) retry
 		}
 
 		return output, securityGroupStatusCreated, nil
+	}
+}
+
+func statusSecurityGroupVPCAssociation(ctx context.Context, conn *ec2.Client, groupID, vpcID string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, groupID, vpcID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
 	}
 }
 
@@ -545,6 +587,25 @@ func statusVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, ins
 		}
 
 		return output, string(output.State), nil
+	}
+}
+
+func statusVolumeAttachmentInstanceState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		// Don't call FindInstanceByID as it maps useful status codes to NotFoundError.
+		output, err := findInstance(ctx, conn, &ec2.DescribeInstancesInput{
+			InstanceIds: []string{id},
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State.Name), nil
 	}
 }
 
@@ -1212,6 +1273,22 @@ func statusTransitGateway(ctx context.Context, conn *ec2.Client, id string) retr
 	}
 }
 
+func statusTransitGatewayAttachment(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findTransitGatewayAttachmentByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusTransitGatewayConnect(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTransitGatewayConnectByID(ctx, conn, id)
@@ -1446,6 +1523,22 @@ func statusEIPDomainNameAttribute(ctx context.Context, conn *ec2.Client, allocat
 	}
 }
 
+func statusSnapshot(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findSnapshotByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusSnapshotStorageTier(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSnapshotTierStatusBySnapshotID(ctx, conn, id)
@@ -1510,7 +1603,7 @@ func statusFastSnapshotRestore(ctx context.Context, conn *ec2.Client, availabili
 	}
 }
 
-func statusEBSSnapshotImport(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusSnapshotImport(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findImportSnapshotTaskByID(ctx, conn, id)
 
@@ -1609,6 +1702,86 @@ func statusVPCBlockPublicAccessOptions(ctx context.Context, conn *ec2.Client) re
 func statusVPCBlockPublicAccessExclusion(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCBlockPublicAccessExclusionByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServer(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServerAssociation(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerAssociationByTwoPartKey(ctx, conn, routeServerID, vpcID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServerEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServerPeer(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerPeerByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServerPropagation(ctx context.Context, conn *ec2.Client, routeServerID, routeTableID string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerPropagationByTwoPartKey(ctx, conn, routeServerID, routeTableID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

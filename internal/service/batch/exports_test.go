@@ -22,4 +22,6 @@ var (
 	FindSchedulingPolicyByARN               = findSchedulingPolicyByARN
 
 	ListTags = listTags
+
+	ComputeEnvironmentStateUpgradeV0 = computeEnvironmentStateUpgradeV0
 )

@@ -113,7 +113,7 @@ func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateBuild(ctx, input)
 		},
 		func(err error) (bool, error) {

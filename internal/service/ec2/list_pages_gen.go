@@ -5,15 +5,16 @@ package ec2
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
 
-func describeSpotFleetInstancesPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotFleetInstancesInput, fn func(*ec2.DescribeSpotFleetInstancesOutput, bool) bool) error {
+func describeSpotFleetInstancesPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotFleetInstancesInput, fn func(*ec2.DescribeSpotFleetInstancesOutput, bool) bool, optFns ...func(*ec2.Options)) error {
 	for {
-		output, err := conn.DescribeSpotFleetInstances(ctx, input)
+		output, err := conn.DescribeSpotFleetInstances(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -25,11 +26,11 @@ func describeSpotFleetInstancesPages(ctx context.Context, conn *ec2.Client, inpu
 	}
 	return nil
 }
-func describeSpotFleetRequestHistoryPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotFleetRequestHistoryInput, fn func(*ec2.DescribeSpotFleetRequestHistoryOutput, bool) bool) error {
+func describeSpotFleetRequestHistoryPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotFleetRequestHistoryInput, fn func(*ec2.DescribeSpotFleetRequestHistoryOutput, bool) bool, optFns ...func(*ec2.Options)) error {
 	for {
-		output, err := conn.DescribeSpotFleetRequestHistory(ctx, input)
+		output, err := conn.DescribeSpotFleetRequestHistory(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -41,11 +42,11 @@ func describeSpotFleetRequestHistoryPages(ctx context.Context, conn *ec2.Client,
 	}
 	return nil
 }
-func describeVPCBlockPublicAccessExclusionsPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcBlockPublicAccessExclusionsInput, fn func(*ec2.DescribeVpcBlockPublicAccessExclusionsOutput, bool) bool) error {
+func describeVPCBlockPublicAccessExclusionsPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcBlockPublicAccessExclusionsInput, fn func(*ec2.DescribeVpcBlockPublicAccessExclusionsOutput, bool) bool, optFns ...func(*ec2.Options)) error {
 	for {
-		output, err := conn.DescribeVpcBlockPublicAccessExclusions(ctx, input)
+		output, err := conn.DescribeVpcBlockPublicAccessExclusions(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -57,11 +58,11 @@ func describeVPCBlockPublicAccessExclusionsPages(ctx context.Context, conn *ec2.
 	}
 	return nil
 }
-func describeVPCEndpointAssociationsPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointAssociationsInput, fn func(*ec2.DescribeVpcEndpointAssociationsOutput, bool) bool) error {
+func describeVPCEndpointAssociationsPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointAssociationsInput, fn func(*ec2.DescribeVpcEndpointAssociationsOutput, bool) bool, optFns ...func(*ec2.Options)) error {
 	for {
-		output, err := conn.DescribeVpcEndpointAssociations(ctx, input)
+		output, err := conn.DescribeVpcEndpointAssociations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -73,11 +74,11 @@ func describeVPCEndpointAssociationsPages(ctx context.Context, conn *ec2.Client,
 	}
 	return nil
 }
-func describeVPCEndpointServicesPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServicesInput, fn func(*ec2.DescribeVpcEndpointServicesOutput, bool) bool) error {
+func describeVPCEndpointServicesPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServicesInput, fn func(*ec2.DescribeVpcEndpointServicesOutput, bool) bool, optFns ...func(*ec2.Options)) error {
 	for {
-		output, err := conn.DescribeVpcEndpointServices(ctx, input)
+		output, err := conn.DescribeVpcEndpointServices(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

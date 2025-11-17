@@ -26,16 +26,19 @@ import (
 
 // @SDKResource("aws_organizations_resource_policy", name="Resource Policy")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.ResourcePolicy")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="6.4.0")
+// @Testing(useAlternateAccount=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
+// @Testing(generator=false)
 func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyCreate,
 		ReadWithoutTimeout:   resourceResourcePolicyRead,
 		UpdateWithoutTimeout: resourceResourcePolicyUpdate,
 		DeleteWithoutTimeout: resourceResourcePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -73,7 +76,7 @@ func resourceResourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:    getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutResourcePolicy(ctx, input)
 	})
 
@@ -155,14 +158,13 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findResourcePolicy(ctx context.Context, conn *organizations.Client) (*awstypes.ResourcePolicy, error) {
-	input := &organizations.DescribeResourcePolicyInput{}
+	input := organizations.DescribeResourcePolicyInput{}
 
-	output, err := conn.DescribeResourcePolicy(ctx, input)
+	output, err := conn.DescribeResourcePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) || errs.IsA[*awstypes.ResourcePolicyNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -171,7 +173,7 @@ func findResourcePolicy(ctx context.Context, conn *organizations.Client) (*awsty
 	}
 
 	if output == nil || output.ResourcePolicy == nil || output.ResourcePolicy.ResourcePolicySummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError(nil)
 	}
 
 	return output.ResourcePolicy, nil

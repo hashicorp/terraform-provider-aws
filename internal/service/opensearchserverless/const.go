@@ -3,4 +3,4 @@
 
 package opensearchserverless
 
-const idSeparator = "/"
+const resourceIDSeparator = "/"

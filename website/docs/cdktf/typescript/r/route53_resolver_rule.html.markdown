@@ -107,6 +107,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainName` - (Required) DNS queries for this domain name are forwarded to the IP addresses that are specified using `targetIp`.
 * `ruleType` - (Required) Rule type. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
 * `name` - (Optional) Friendly name that lets you easily find a rule in the Resolver dashboard in the Route 53 console.
@@ -136,6 +137,32 @@ Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route53_resolver_rule.example
+  identity = {
+    id = "rslvr-rr-0123456789abcdef0"
+  }
+}
+
+resource "aws_route53_resolver_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the Route53 Resolver rule.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Resolver rules using the `id`. For example:
 
 ```typescript
@@ -152,7 +179,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     Route53ResolverRule.generateConfigForImport(
       this,
-      "sys",
+      "example",
       "rslvr-rr-0123456789abcdef0"
     );
   }
@@ -163,7 +190,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import Route53 Resolver rules using the `id`. For example:
 
 ```console
-% terraform import aws_route53_resolver_rule.sys rslvr-rr-0123456789abcdef0
+% terraform import aws_route53_resolver_rule.example rslvr-rr-0123456789abcdef0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-79091621c64342aeaff7496a9f799a77800a9caa122354ec0245ce3d9a4ae88f -->
+<!-- cache-key: cdktf-0.20.8 input-bcabb57c8da16ab09ce1a56dee2b588ac41a3e1934657f3ae3200e0c60fca0fb -->

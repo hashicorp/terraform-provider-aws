@@ -25,6 +25,7 @@ data "aws_kinesis_stream" "stream" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Kinesis Stream.
 
 ## Attribute Reference
@@ -37,6 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 * `creation_timestamp` - Approximate UNIX timestamp that the stream was created.
 * `encryption_type` - Encryption type used.
 * `kms_key_id` - GUID for the customer-managed AWS KMS key to use for encryption.
+* `max_record_size_in_kib` - The maximum size for a single data record in KiB.
 * `name` - Name of the Kinesis Stream.
 * `open_shards` - List of shard ids in the OPEN state. See [Shard State][2] for more.
 * `retention_period` - Length of time (in hours) data records are accessible after they are added to the stream.

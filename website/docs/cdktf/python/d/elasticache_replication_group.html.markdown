@@ -35,7 +35,8 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-* `replication_group_id` – (Required) Identifier for the replication group.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `replication_group_id` - (Required) Identifier for the replication group.
 
 ## Attribute Reference
 
@@ -46,8 +47,8 @@ This data source exports the following attributes in addition to the arguments a
 * `auth_token_enabled` - Whether an AuthToken (password) is enabled.
 * `automatic_failover_enabled` - A flag whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails.
 * `cluster_mode` - Whether cluster mode is enabled or disabled.
-* `node_type` – The cluster node type.
-* `num_cache_clusters` – The number of cache clusters that the replication group has.
+* `node_type` - The cluster node type.
+* `num_cache_clusters` - The number of cache clusters that the replication group has.
 * `num_node_groups` - Number of node groups (shards) for the replication group.
 * `member_clusters` - Identifiers of all the nodes that are part of this replication group.
 * `multi_az_enabled` - Whether Multi-AZ Support is enabled for the replication group.
@@ -55,9 +56,9 @@ This data source exports the following attributes in addition to the arguments a
 * `log_delivery_configuration` - Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) delivery settings.
 * `snapshot_window` - Daily time range (in UTC) during which ElastiCache begins taking a daily snapshot of your node group (shard).
 * `snapshot_retention_limit` - The number of days for which ElastiCache retains automatic cache cluster snapshots before deleting them.
-* `port` – The port number on which the configuration endpoint will accept connections.
+* `port` - The port number on which the configuration endpoint will accept connections.
 * `configuration_endpoint_address` - The configuration endpoint address to allow host discovery.
 * `primary_endpoint_address` - The endpoint of the primary node in this node group (shard).
 * `reader_endpoint_address` - The endpoint of the reader node in this node group (shard).
 
-<!-- cache-key: cdktf-0.20.8 input-0a09a165e844244961e767fdfba1cd3d4e4518e4b3958f1415c491847d1b687a -->
+<!-- cache-key: cdktf-0.20.8 input-b4f081d3c43b032d2e7ad77cc2c7fa7fcfe397e4398f0872234310e0f299d65b -->

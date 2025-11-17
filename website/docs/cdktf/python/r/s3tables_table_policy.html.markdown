@@ -66,8 +66,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_policy` - (Required) Amazon Web Services resource-based policy document in JSON format.
 * `name` - (Required, Forces new resource) Name of the table.
   Must be between 1 and 255 characters in length.
@@ -106,4 +107,4 @@ Using `terraform import`, import S3 Tables Table Policy using the `table_bucket_
 % terraform import aws_s3tables_table_policy.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace;example-table'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9064db639219bd282501d3f58248ca0e5376035d2d8525aa2646cefa8ee340e5 -->
+<!-- cache-key: cdktf-0.20.8 input-57209cbb00783ab621008d434b328fd17aa265167d029bcc888f884fa4dbd5f8 -->

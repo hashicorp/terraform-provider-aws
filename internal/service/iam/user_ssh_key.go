@@ -94,7 +94,7 @@ func resourceUserSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(output.SSHPublicKey.SSHPublicKeyId))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findSSHPublicKeyByThreePartKey(ctx, conn, d.Id(), d.Get("encoding").(string), username)
 	})
 

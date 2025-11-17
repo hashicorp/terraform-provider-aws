@@ -41,8 +41,8 @@ import (
 )
 
 // @FrameworkResource("aws_lakeformation_opt_in", name="Opt In")
-func newResourceOptIn(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceOptIn{}
+func newOptInResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &optInResource{}
 
 	return r, nil
 }
@@ -51,13 +51,12 @@ const (
 	ResNameOptIn = "Opt In"
 )
 
-type resourceOptIn struct {
-	framework.ResourceWithConfigure
+type optInResource struct {
+	framework.ResourceWithModel[optInResourceModel]
 	framework.WithTimeouts
-	framework.WithNoOpUpdate[resourceOptIn]
 }
 
-func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *optInResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	catalogLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[catalogOptIn](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -361,10 +360,10 @@ func (r *resourceOptIn) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 }
 
-func (r *resourceOptIn) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *optInResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var plan resourceOptInData
+	var plan optInResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -384,21 +383,17 @@ func (r *resourceOptIn) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	var output *lakeformation.CreateLakeFormationOptInOutput
-	err := retry.RetryContext(ctx, 2*IAMPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 2*IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		output, err = conn.CreateLakeFormationOptIn(ctx, &in)
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Insufficient Lake Formation permission(s) on Catalog") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateLakeFormationOptIn(ctx, &in)
-	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -436,10 +431,10 @@ func (r *resourceOptIn) Create(ctx context.Context, req resource.CreateRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceOptIn) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *optInResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var state resourceOptInData
+	var state optInResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -492,10 +487,10 @@ func (r *resourceOptIn) Read(ctx context.Context, req resource.ReadRequest, resp
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceOptIn) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *optInResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var state resourceOptInData
+	var state optInResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -548,7 +543,7 @@ func (r *resourceOptIn) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 }
 
-func (r *resourceOptIn) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+func (r *optInResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
 			path.MatchRoot("resource_data").AtListIndex(0).AtName("catalog"),
@@ -843,7 +838,8 @@ func (d *tbcResource) expandOptInResource(ctx context.Context, diags *diag.Diagn
 	return &r
 }
 
-type resourceOptInData struct {
+type optInResourceModel struct {
+	framework.WithRegionModel
 	Principal     fwtypes.ListNestedObjectValueOf[dataLakePrincipal] `tfsdk:"principal"`
 	Resource      fwtypes.ListNestedObjectValueOf[resourceData]      `tfsdk:"resource_data"`
 	Condition     fwtypes.ListNestedObjectValueOf[conditionOptIn]    `tfsdk:"condition"`

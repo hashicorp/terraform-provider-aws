@@ -32,7 +32,7 @@ func sweepScraper(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		}
 
 		for _, application := range page.Applications {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceApplication, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(application.Id)),
 			))
 		}

@@ -27,6 +27,7 @@ resource "aws_route53_resolver_query_log_config" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destination_arn` - (Required) The ARN of the resource that you want Route 53 Resolver to send query logs.
 You can send query logs to an [S3 bucket](s3_bucket.html), a [CloudWatch Logs log group](cloudwatch_log_group.html), or a [Kinesis Data Firehose delivery stream](kinesis_firehose_delivery_stream.html).
 * `name` - (Required) The name of the Route 53 Resolver query logging configuration.

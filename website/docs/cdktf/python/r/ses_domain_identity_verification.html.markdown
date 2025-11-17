@@ -54,6 +54,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) The domain name of the SES domain identity to verify.
 
 ## Attribute Reference
@@ -69,4 +70,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `create` - (Default `45m`)
 
-<!-- cache-key: cdktf-0.20.8 input-021644f49c4d599dab4357fc67e76ebf4062a899a265f2381049f02cbe7e5f20 -->
+<!-- cache-key: cdktf-0.20.8 input-9fe3a20174811c0235d4b6d0722d8038b96343aa88ae77e6aa91b911e986abcb -->

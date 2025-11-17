@@ -70,11 +70,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available EC2 Hosts in the current region.
-The given filters must match exactly one host whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block. Detailed below.
 * `hostId` - (Optional) ID of the Dedicated Host.
+
+The arguments of this data source act as filters for querying the available EC2 Hosts in the current region.
+The given filters must match exactly one host whose data will be exported as attributes.
 
 ### filter
 
@@ -109,4 +112,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-2c0dd059868ed5217fac4aec77aa468bafc9f69b8de0b12d682d6625c1850767 -->
+<!-- cache-key: cdktf-0.20.8 input-6d7df5ebbf577a01e15095acde09d8a04160cbd2cc523d47d87837d66041ef76 -->

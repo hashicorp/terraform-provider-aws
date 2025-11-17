@@ -77,6 +77,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `members` - List of bot members in a network to be created. See [`bot_members`](#bot-members).
 * `tags` - List of tags to add to the bot. You can only add tags when you create a bot.
 * `type` - Type of a bot to create. Possible values are `"Bot"` and `"BotNetwork"`.
@@ -134,4 +135,4 @@ Using `terraform import`, import Lex V2 Models Bot using the `id`. For example:
 % terraform import aws_lexv2models_bot.example bot-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2d5c17d5b236548880764f250ad235cee892b9d3db7b5cf759003e8a5990aa67 -->
+<!-- cache-key: cdktf-0.20.8 input-c5bdaf469481c5ff54e192168c1f568be10936293114614e9b100dc991489bdc -->

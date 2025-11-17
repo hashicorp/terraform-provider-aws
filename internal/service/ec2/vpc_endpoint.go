@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -40,16 +40,15 @@ const (
 // @SDKResource("aws_vpc_endpoint", name="VPC Endpoint")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.VpcEndpoint")
+// @Testing(preIdentityVersion="v6.12.0")
 func resourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointRead,
 		UpdateWithoutTimeout: resourceVPCEndpointUpdate,
 		DeleteWithoutTimeout: resourceVPCEndpointDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -117,18 +116,7 @@ func resourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 			"prefix_list_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -480,6 +468,20 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		privateDNSEnabled := d.Get("private_dns_enabled").(bool)
 		if d.HasChange("private_dns_enabled") {
 			input.PrivateDnsEnabled = aws.Bool(privateDNSEnabled)
+
+			// when private_dns_enabled is set to true, always set dns_options
+			if privateDNSEnabled {
+				if v, ok := d.GetOk("dns_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+					tfMap := v.([]any)[0].(map[string]any)
+					// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
+					// that support both gateway and interface endpoints, i.e. S3.
+					if isAmazonS3VPCEndpoint(d.Get(names.AttrServiceName).(string)) {
+						input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap)
+					} else {
+						input.DnsOptions = expandDNSOptionsSpecification(tfMap)
+					}
+				}
+			}
 		}
 
 		input.AddRouteTableIds, input.RemoveRouteTableIds = flattenAddAndRemoveStringValueLists(d, "route_table_ids")

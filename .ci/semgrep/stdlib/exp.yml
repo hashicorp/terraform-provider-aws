@@ -4,7 +4,7 @@ rules:
     message: Use Go standard library maps and slices packages instead of the golang.org/x/exp packages
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern: |
           import ("$X")

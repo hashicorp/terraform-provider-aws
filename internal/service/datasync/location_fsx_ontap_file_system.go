@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,7 +30,11 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_fsx_ontap_file_system", name="Location FSx for NetApp ONTAP File System")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @WrappedImport(false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationFsxOntapOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(importStateIdFunc="testAccLocationFSxONTAPImportStateID")
 func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxONTAPFileSystemCreate,
@@ -44,11 +49,13 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected DataSyncLocationArn#FsxSVMArn", d.Id())
 				}
 
-				DSArn := idParts[0]
+				locationARN := idParts[0]
 				FSxArn := idParts[1]
 
+				if err := importer.RegionalARNValue(ctx, d, names.AttrARN, locationARN); err != nil {
+					return nil, err
+				}
 				d.Set("fsx_filesystem_arn", FSxArn)
-				d.SetId(DSArn)
 
 				return []*schema.ResourceData{d}, nil
 			},

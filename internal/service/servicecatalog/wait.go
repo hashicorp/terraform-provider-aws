@@ -5,10 +5,8 @@ package servicecatalog
 
 import (
 	"context"
-	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -42,10 +40,6 @@ const (
 	ProductReadTimeout                        = 10 * time.Minute
 	ProductReadyTimeout                       = 5 * time.Minute
 	ProductUpdateTimeout                      = 5 * time.Minute
-	ProvisionedProductDeleteTimeout           = 30 * time.Minute
-	ProvisionedProductReadTimeout             = 10 * time.Minute
-	ProvisionedProductReadyTimeout            = 30 * time.Minute
-	ProvisionedProductUpdateTimeout           = 30 * time.Minute
 	ProvisioningArtifactDeleteTimeout         = 3 * time.Minute
 	ProvisioningArtifactReadTimeout           = 10 * time.Minute
 	ProvisioningArtifactReadyTimeout          = 3 * time.Minute
@@ -173,10 +167,10 @@ func waitPortfolioShareReady(ctx context.Context, conn *servicecatalog.Client, p
 	return nil, err
 }
 
-func waitPortfolioShareCreatedWithToken(ctx context.Context, conn *servicecatalog.Client, token string, acceptRequired bool, timeout time.Duration) (*servicecatalog.DescribePortfolioShareStatusOutput, error) {
+func waitPortfolioShareCreatedWithToken(ctx context.Context, conn *servicecatalog.Client, token string, waitForAcceptance bool, timeout time.Duration) (*servicecatalog.DescribePortfolioShareStatusOutput, error) {
 	targets := enum.Slice(awstypes.ShareStatusCompleted)
 
-	if !acceptRequired {
+	if !waitForAcceptance {
 		targets = append(targets, string(awstypes.ShareStatusInProgress))
 	}
 
@@ -462,50 +456,6 @@ func waitLaunchPathsReady(ctx context.Context, conn *servicecatalog.Client, acce
 	}
 
 	return nil, err
-}
-
-func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.ProvisionedProductStatusUnderChange, awstypes.ProvisionedProductStatusPlanInProgress),
-		Target:                    enum.Slice(awstypes.ProvisionedProductStatusAvailable),
-		Refresh:                   statusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: continuousTargetOccurrence,
-		NotFoundChecks:            notFoundChecks,
-		MinTimeout:                minTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
-		if detail := output.ProvisionedProductDetail; detail != nil {
-			var foo *retry.UnexpectedStateError
-			if errors.As(err, &foo) {
-				// The statuses `ERROR` and `TAINTED` are equivalent: the application of the requested change has failed.
-				// The difference is that, in the case of `TAINTED`, there is a previous version to roll back to.
-				status := string(detail.Status)
-				if status == string(awstypes.ProvisionedProductStatusError) || status == string(awstypes.ProvisionedProductStatusTainted) {
-					return output, errors.New(aws.ToString(detail.StatusMessage))
-				}
-			}
-		}
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ProvisionedProductStatusAvailable, awstypes.ProvisionedProductStatusUnderChange),
-		Target:  []string{},
-		Refresh: statusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
-		Timeout: timeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
 }
 
 func waitPortfolioConstraintsReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string, timeout time.Duration) ([]awstypes.ConstraintDetail, error) {

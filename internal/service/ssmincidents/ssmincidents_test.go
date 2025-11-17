@@ -18,9 +18,9 @@ func TestAccSSMIncidents_serial(t *testing.T) {
 			acctest.CtBasic:      testAccReplicationSet_basic,
 			"updateDefaultKey":   testAccReplicationSet_updateRegionsWithoutCMK,
 			"updateCMK":          testAccReplicationSet_updateRegionsWithCMK,
-			"updateTags":         testAccReplicationSet_updateTags,
-			"updateEmptyTags":    testAccReplicationSet_updateEmptyTags,
+			"tags":               testAccReplicationSet_tags,
 			acctest.CtDisappears: testAccReplicationSet_disappears,
+			"deprecatedRegion":   testAccReplicationSet_deprecatedRegion,
 		},
 		"ReplicationSetDataSource": {
 			acctest.CtBasic: testAccReplicationSetDataSource_basic,

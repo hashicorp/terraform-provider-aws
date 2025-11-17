@@ -25,6 +25,7 @@ resource "aws_sagemaker_image" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `image_name` - (Required) The name of the image. Must be unique to your account.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker AI to perform tasks on your behalf.
 * `display_name` - (Optional) The display name of the image. When the image is added to a domain (must be unique to the domain).
