@@ -188,9 +188,9 @@ func testAccCheckViewExists(ctx context.Context, name string, view *awstypes.Bil
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BillingClient(ctx)
 
-	input := &billing.ListBillingViewsInput{}
+	input := billing.ListBillingViewsInput{}
 
-	_, err := conn.ListBillingViews(ctx, input)
+	_, err := conn.ListBillingViews(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

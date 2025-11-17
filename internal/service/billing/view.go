@@ -88,7 +88,7 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required:   true,
 				Validators: []validator.String{stringvalidator.LengthBetween(1, 128)},
 			},
-			"owner_account_id": schema.StringAttribute{
+			names.AttrOwnerAccountID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -155,7 +155,7 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 								},
 							},
 						},
-						"tags": schema.ListNestedBlock{
+						names.AttrTags: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[tagValuesModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -236,7 +236,7 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	view, err := waitBillingViewCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
+	view, err := waitViewCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
@@ -270,7 +270,7 @@ func (r *resourceView) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	sourceViews, err := findSourceViewsByArn(ctx, conn, state.ARN.ValueString())
+	sourceViews, err := findSourceViewsByARN(ctx, conn, state.ARN.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		return
@@ -332,7 +332,7 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	view, err := waitBillingViewUpdated(ctx, conn, plan.ARN.ValueString(), updateTimeout)
+	view, err := waitViewUpdated(ctx, conn, plan.ARN.ValueString(), updateTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
@@ -365,7 +365,7 @@ func (r *resourceView) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitBillingViewDeleted(ctx, conn, state.ARN.ValueString(), deleteTimeout)
+	_, err = waitViewDeleted(ctx, conn, state.ARN.ValueString(), deleteTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		return
@@ -399,7 +399,7 @@ func findViewByARN(ctx context.Context, conn *billing.Client, arn string) (*awst
 	return out.BillingView, nil
 }
 
-func findSourceViewsByArn(ctx context.Context, conn *billing.Client, arn string) ([]string, error) {
+func findSourceViewsByARN(ctx context.Context, conn *billing.Client, arn string) ([]string, error) {
 	sourceViews := make([]string, 0)
 
 	sourceViewsPag := billing.NewListSourceViewsForBillingViewPaginator(conn, &billing.ListSourceViewsForBillingViewInput{
@@ -423,9 +423,10 @@ func findSourceViewsByArn(ctx context.Context, conn *billing.Client, arn string)
 }
 
 func findResourceTagsByARN(ctx context.Context, conn *billing.Client, arn string) ([]awstypes.ResourceTag, error) {
-	out, err := conn.ListTagsForResource(ctx, &billing.ListTagsForResourceInput{
+	input := billing.ListTagsForResourceInput{
 		ResourceArn: aws.String(arn),
-	})
+	}
+	out, err := conn.ListTagsForResource(ctx, &input)
 	if err != nil {
 		tflog.Error(ctx, "Error listing resource tags for billing view", map[string]any{
 			names.AttrARN: arn,
@@ -437,7 +438,7 @@ func findResourceTagsByARN(ctx context.Context, conn *billing.Client, arn string
 	return out.ResourceTags, nil
 }
 
-func statusBillingView(conn *billing.Client, arn string) retry.StateRefreshFunc {
+func statusView(conn *billing.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findViewByARN(ctx, conn, arn)
 
@@ -453,11 +454,11 @@ func statusBillingView(conn *billing.Client, arn string) retry.StateRefreshFunc 
 	}
 }
 
-func waitBillingViewCreated(ctx context.Context, conn *billing.Client, arn string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
+func waitViewCreated(ctx context.Context, conn *billing.Client, arn string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BillingViewStatusCreating),
 		Target:  enum.Slice(awstypes.BillingViewStatusHealthy),
-		Refresh: statusBillingView(conn, arn),
+		Refresh: statusView(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -470,11 +471,11 @@ func waitBillingViewCreated(ctx context.Context, conn *billing.Client, arn strin
 	return nil, err
 }
 
-func waitBillingViewUpdated(ctx context.Context, conn *billing.Client, arn string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
+func waitViewUpdated(ctx context.Context, conn *billing.Client, arn string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BillingViewStatusUpdating),
 		Target:  enum.Slice(awstypes.BillingViewStatusHealthy),
-		Refresh: statusBillingView(conn, arn),
+		Refresh: statusView(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -487,11 +488,11 @@ func waitBillingViewUpdated(ctx context.Context, conn *billing.Client, arn strin
 	return nil, err
 }
 
-func waitBillingViewDeleted(ctx context.Context, conn *billing.Client, arn string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
+func waitViewDeleted(ctx context.Context, conn *billing.Client, arn string, timeout time.Duration) (*awstypes.BillingViewElement, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BillingViewStatusHealthy),
 		Target:  []string{},
-		Refresh: statusBillingView(conn, arn),
+		Refresh: statusView(conn, arn),
 		Timeout: timeout,
 	}
 

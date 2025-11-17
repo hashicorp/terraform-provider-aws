@@ -79,7 +79,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `updated_at` - Time when the billing view was last updated.
 * `view_definition_last_updated_at` - Timestamp of when the billing view definition was last updated.
 
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
