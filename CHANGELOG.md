@@ -1874,6 +1874,7 @@ ENHANCEMENTS:
 * resource/aws_timestreaminfluxdb_db_cluster: Add validation to ensure InfluxDB V2 clusters have required fields and InfluxDB V3 clusters (when using V3 parameter groups) do not have forbidden V2 fields. This functionality requires the `timestream-influxdb:GetDbParameterGroup` IAM permission ([#44899](https://github.com/hashicorp/terraform-provider-aws/issues/44899))
 * resource/aws_vpclattice_resource_configuration: Add `custom_domain_name` and `domain_verification_id` arguments and `domain_verification_arn` and `domain_verification_status` attributes to support custom domain names for resource configurations ([#45085](https://github.com/hashicorp/terraform-provider-aws/issues/45085))
 * resource/aws_vpn_connection: Add `tunnel_bandwidth` argument to support higher bandwidth tunnels ([#45070](https://github.com/hashicorp/terraform-provider-aws/issues/45070))
+* resource/dlm_lifecycle_policy: Add `exclude_data_volume_tags` argument to support more possibilities in custom policies ([#45031](https://github.com/hashicorp/terraform-provider-aws/issues/45031))
 
 BUG FIXES:
 
