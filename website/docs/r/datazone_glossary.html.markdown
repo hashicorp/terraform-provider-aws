@@ -103,6 +103,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the glossary. Must have a length between 0 and 4096.
 * `status` - (Optional) Status of business glossary. Valid values are DISABLED and ENABLED.
 
@@ -114,7 +115,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Glossary using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Glossary using a comma-delimited string combining the domain id, glossary id, and the id of the project it's under. For example:
 
 ```terraform
 import {

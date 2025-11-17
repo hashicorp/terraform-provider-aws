@@ -64,6 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dataQualityAppSpecification` - (Required) Specifies the container that runs the monitoring job. Fields are documented below.
 * `dataQualityBaselineConfig` - (Optional) Configures the constraints and baselines for the monitoring job. Fields are documented below.
 * `dataQualityJobInput` - (Required) A list of inputs for the monitoring job. Fields are documented below.
@@ -209,4 +210,4 @@ Using `terraform import`, import data quality job definitions using the `name`. 
 % terraform import aws_sagemaker_data_quality_job_definition.test_data_quality_job_definition data-quality-job-definition-foo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4060f792107ff952bc7fd82c51f993ec66b4e8751f55a9a11856f2cf73c02ef8 -->
+<!-- cache-key: cdktf-0.20.8 input-852e87176ff07e6c2cb667cfd45621910fa7cc55814288d4828e108c00e04b28 -->

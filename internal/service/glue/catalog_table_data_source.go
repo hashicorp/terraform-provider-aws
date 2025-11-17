@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKDataSource("aws_glue_catalog_table", name="Catalog Table")
-func DataSourceCatalogTable() *schema.Resource {
+func dataSourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCatalogTableRead,
 
@@ -95,6 +95,11 @@ func DataSourceCatalogTable() *schema.Resource {
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+						names.AttrParameters: {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						names.AttrType: {
 							Type:     schema.TypeString,

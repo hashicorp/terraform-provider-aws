@@ -19,10 +19,84 @@ resource "aws_ec2_transit_gateway_route_table_association" "example" {
 }
 ```
 
+### Direct Connect Gateway Association
+
+When associating a Direct Connect Gateway attachment, reference the `transit_gateway_attachment_id` attribute directly from the `aws_dx_gateway_association` resource (available in v6.5.0+):
+
+```terraform
+resource "aws_dx_gateway" "example" {
+  name            = "example"
+  amazon_side_asn = 64512
+}
+
+resource "aws_ec2_transit_gateway" "example" {
+  description = "example"
+}
+
+resource "aws_dx_gateway_association" "example" {
+  dx_gateway_id         = aws_dx_gateway.example.id
+  associated_gateway_id = aws_ec2_transit_gateway.example.id
+
+  allowed_prefixes = [
+    "10.0.0.0/16",
+  ]
+}
+
+resource "aws_ec2_transit_gateway_route_table" "example" {
+  transit_gateway_id = aws_ec2_transit_gateway.example.id
+}
+
+# Correct: Reference the attachment ID directly from the association resource
+resource "aws_ec2_transit_gateway_route_table_association" "example" {
+  transit_gateway_attachment_id  = aws_dx_gateway_association.example.transit_gateway_attachment_id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.example.id
+}
+```
+
+~> **NOTE:** Avoid using the `aws_ec2_transit_gateway_dx_gateway_attachment` data source to retrieve the attachment ID, as this can cause unnecessary resource recreation when unrelated attributes of the Direct Connect Gateway association change (such as `allowed_prefixes`). Always reference the `transit_gateway_attachment_id` attribute directly from the `aws_dx_gateway_association` resource when available.
+
+### VPC Attachment Association
+
+For VPC attachments, always reference the attachment resource's `id` attribute directly. Avoid using data sources or lifecycle rules that might cause the attachment ID to become unknown during planning:
+
+```terraform
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "example" {
+  vpc_id     = aws_vpc.example.id
+  cidr_block = "10.0.1.0/24"
+}
+
+resource "aws_ec2_transit_gateway" "example" {
+  description = "example"
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "example" {
+  subnet_ids         = [aws_subnet.example.id]
+  transit_gateway_id = aws_ec2_transit_gateway.example.id
+  vpc_id             = aws_vpc.example.id
+}
+
+resource "aws_ec2_transit_gateway_route_table" "example" {
+  transit_gateway_id = aws_ec2_transit_gateway.example.id
+}
+
+# Correct: Reference the VPC attachment ID directly
+resource "aws_ec2_transit_gateway_route_table_association" "example" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.example.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.example.id
+}
+```
+
+~> **NOTE:** When the `transit_gateway_attachment_id` changes (for example, when a VPC attachment is replaced), this resource will be recreated. This is the correct behavior to maintain consistency between the attachment and its route table association.
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transit_gateway_attachment_id` - (Required) Identifier of EC2 Transit Gateway Attachment.
 * `transit_gateway_route_table_id` - (Required) Identifier of EC2 Transit Gateway Route Table.
 * `replace_existing_association` - (Optional) Boolean whether the Gateway Attachment should remove any current Route Table association before associating with the specified Route Table. Default value: `false`. This argument is intended for use with EC2 Transit Gateways shared into the current account, otherwise the `transit_gateway_default_route_table_association` argument of the `aws_ec2_transit_gateway_vpc_attachment` resource should be used.

@@ -80,7 +80,7 @@ func dataSourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
 	d.Set("position_filtering", output.PositionFiltering)
-	d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)).Map())
+	d.Set(names.AttrTags, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)).Map())
 	d.Set("tracker_arn", output.TrackerArn)
 	d.Set("tracker_name", output.TrackerName)
 	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))

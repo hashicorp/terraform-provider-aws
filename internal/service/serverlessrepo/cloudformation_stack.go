@@ -169,7 +169,7 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), cloudFormationStackTagSemanticVersion)
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	if err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "to set outputs: %s", err)

@@ -25,7 +25,7 @@ func newCapacityBlockOfferingDataSource(_ context.Context) (datasource.DataSourc
 }
 
 type capacityBlockOfferingDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[capacityBlockOfferingDataSourceModel]
 }
 
 func (d *capacityBlockOfferingDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -99,6 +99,7 @@ func (d *capacityBlockOfferingDataSource) Read(ctx context.Context, request data
 }
 
 type capacityBlockOfferingDataSourceModel struct {
+	framework.WithRegionModel
 	AvailabilityZone        types.String      `tfsdk:"availability_zone"`
 	CapacityDurationHours   types.Int64       `tfsdk:"capacity_duration_hours"`
 	CurrencyCode            types.String      `tfsdk:"currency_code"`

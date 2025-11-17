@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the job queue.
 
 ## Attribute Reference
@@ -61,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
     * `job_state_time_limit_action.#.reason` - The reason to log for the action being taken.
     * `job_state_time_limit_action.#.state` - The state of the job needed to trigger the action.
 
-<!-- cache-key: cdktf-0.20.8 input-85a401d3fca6d618df41fba2a48a956f0183ce5f38d10dbdb2b4e7a58e2777e6 -->
+<!-- cache-key: cdktf-0.20.8 input-12e079087b5576735b0a9b3068dfc509174e28649d0d33778306bee7cbba3981 -->

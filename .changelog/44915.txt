@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_kinesis_stream: Add `max_record_size_in_kib` argument to support for Kinesis 10MiB payloads. This functionality requires the `kinesis:UpdateMaxRecordSize` IAM permission
+```
+
+```release-note:enhancement
+data-source/aws_kinesis_stream: Add `max_record_size_in_kib` attribute
+```

@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dataDeletionPolicy` - (Optional) Data deletion policy for a data source. Valid values: `RETAIN`, `DELETE`.
 * `description` - (Optional) Description of the data source.
 * `serverSideEncryptionConfiguration` - (Optional) Details about the configuration of the server-side encryption. See [`serverSideEncryptionConfiguration` block](#server_side_encryption_configuration-block) for details.
@@ -66,7 +67,7 @@ The following arguments are optional:
 
 The `dataSourceConfiguration` configuration block supports the following arguments:
 
-* `type` - (Required) Type of storage for the data source. Valid values: `S3`.
+* `type` - (Required) Type of storage for the data source. Valid values: `S3`, `WEB`, `CONFLUENCE`, `SALESFORCE`, `SHAREPOINT`, `CUSTOM`, `REDSHIFT_METADATA`.
 * `confluenceConfiguration` - (Optional) Details about the configuration of the Confluence data source. See [`confluence_data_source_configuration` block](#confluence_data_source_configuration-block) for details.
 * `s3Configuration` - (Optional) Details about the configuration of the S3 object containing the data source. See [`s3_data_source_configuration` block](#s3_data_source_configuration-block) for details.
 * `salesforceConfiguration` - (Optional) Details about the configuration of the Salesforce data source. See [`salesforce_data_source_configuration` block](#salesforce_data_source_configuration-block) for details.
@@ -363,4 +364,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 [3]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SharePointDataSourceConfiguration.html
 [4]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_WebDataSourceConfiguration.html
 
-<!-- cache-key: cdktf-0.20.8 input-231507951f3810de3e9c5685f04c58ec310bccbb6d72fd1fef8a483853e7fa38 -->
+<!-- cache-key: cdktf-0.20.8 input-6c5d65619f26f4664cb0988d2b1b6935663c952fb48ce89395b8908c00666e96 -->

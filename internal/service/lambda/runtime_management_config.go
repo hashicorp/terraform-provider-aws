@@ -29,8 +29,8 @@ import (
 )
 
 // @FrameworkResource("aws_lambda_runtime_management_config", name="Runtime Management Config")
-func newResourceRuntimeManagementConfig(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceRuntimeManagementConfig{}, nil
+func newRuntimeManagementConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &runtimeManagementConfigResource{}, nil
 }
 
 const (
@@ -38,12 +38,12 @@ const (
 	runtimeManagementConfigIDParts = 2
 )
 
-type resourceRuntimeManagementConfig struct {
-	framework.ResourceWithConfigure
+type runtimeManagementConfigResource struct {
+	framework.ResourceWithModel[runtimeManagementConfigResourceModel]
 	framework.WithNoOpDelete
 }
 
-func (r *resourceRuntimeManagementConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *runtimeManagementConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrFunctionARN: framework.ARNAttributeComputedOnly(),
@@ -71,10 +71,10 @@ func (r *resourceRuntimeManagementConfig) Schema(ctx context.Context, req resour
 	}
 }
 
-func (r *resourceRuntimeManagementConfig) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *runtimeManagementConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
-	var plan resourceRuntimeManagementConfigData
+	var plan runtimeManagementConfigResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -103,10 +103,10 @@ func (r *resourceRuntimeManagementConfig) Create(ctx context.Context, req resour
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceRuntimeManagementConfig) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *runtimeManagementConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
-	var state resourceRuntimeManagementConfigData
+	var state runtimeManagementConfigResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,10 +129,10 @@ func (r *resourceRuntimeManagementConfig) Read(ctx context.Context, req resource
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRuntimeManagementConfig) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *runtimeManagementConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
-	var plan, state resourceRuntimeManagementConfigData
+	var plan, state runtimeManagementConfigResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -166,10 +166,10 @@ func (r *resourceRuntimeManagementConfig) Update(ctx context.Context, req resour
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceRuntimeManagementConfig) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *runtimeManagementConfigResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
-	var state resourceRuntimeManagementConfigData
+	var state runtimeManagementConfigResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -196,7 +196,7 @@ func (r *resourceRuntimeManagementConfig) Delete(ctx context.Context, req resour
 	}
 }
 
-func (r *resourceRuntimeManagementConfig) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *runtimeManagementConfigResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts, err := intflex.ExpandResourceId(req.ID, runtimeManagementConfigIDParts, true)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -237,7 +237,8 @@ func findRuntimeManagementConfigByTwoPartKey(ctx context.Context, conn *lambda.C
 	return out, nil
 }
 
-type resourceRuntimeManagementConfigData struct {
+type runtimeManagementConfigResourceModel struct {
+	framework.WithRegionModel
 	FunctionARN       types.String                                 `tfsdk:"function_arn"`
 	FunctionName      types.String                                 `tfsdk:"function_name"`
 	Qualifier         types.String                                 `tfsdk:"qualifier"`

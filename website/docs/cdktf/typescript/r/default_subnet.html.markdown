@@ -46,6 +46,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 The arguments of an `aws_default_subnet` differ slightly from those of [`aws_subnet`](subnet.html):
 
 * `availabilityZone` is required
@@ -96,4 +98,4 @@ Using `terraform import`, import subnets using the subnet `id`. For example:
 % terraform import aws_default_subnet.public_subnet subnet-9d4a7b6c
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-946ded19323b4288f4f2e72461cc5948a23ea35404090c8cf1614d4381c9ce49 -->
+<!-- cache-key: cdktf-0.20.8 input-a8a80ba84e31c521c4454f03246d4a72af2c6c2798753ddc5465f1cb873f14f1 -->

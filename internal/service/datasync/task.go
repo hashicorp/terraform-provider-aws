@@ -28,16 +28,18 @@ import (
 )
 
 // @SDKResource("aws_datasync_task", name="Task")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeTaskOutput")
+// @Testing(preCheck="testAccPreCheck")
 func resourceTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTaskCreate,
 		ReadWithoutTimeout:   resourceTaskRead,
 		UpdateWithoutTimeout: resourceTaskUpdate,
 		DeleteWithoutTimeout: resourceTaskDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 		},
@@ -224,6 +226,13 @@ func resourceTask() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"task_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.TaskMode](),
+			},
 			"task_report_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -339,6 +348,10 @@ func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.Schedule = expandTaskSchedule(v.([]any))
 	}
 
+	if v, ok := d.GetOk("task_mode"); ok {
+		input.TaskMode = awstypes.TaskMode(v.(string))
+	}
+
 	output, err := conn.CreateTask(ctx, input)
 
 	if err != nil {
@@ -386,6 +399,7 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if err := d.Set(names.AttrSchedule, flattenTaskSchedule(output.Schedule)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
 	}
+	d.Set("task_mode", output.TaskMode)
 	if err := d.Set("task_report_config", flattenTaskReportConfig(output.TaskReportConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting task_report_config: %s", err)
 	}

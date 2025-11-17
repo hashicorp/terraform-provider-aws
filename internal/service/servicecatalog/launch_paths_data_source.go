@@ -109,7 +109,7 @@ func flattenLaunchPathSummary(ctx context.Context, apiObject awstypes.LaunchPath
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
 
-	tags := KeyValueTags(ctx, apiObject.Tags)
+	tags := keyValueTags(ctx, apiObject.Tags)
 
 	tfMap[names.AttrTags] = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 

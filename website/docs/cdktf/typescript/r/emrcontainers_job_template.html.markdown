@@ -47,11 +47,12 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `jobTemplateData` - (Required) The job template data which holds values of StartJobRun API request.
 * `kmsKeyArn` - (Optional) The KMS key ARN used to encrypt the job template.
-* `name` – (Required) The specified name of the job template.
+* `name` - (Required) The specified name of the job template.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### job_template_data Arguments
@@ -144,4 +145,4 @@ Using `terraform import`, import EKS job templates using the `id`. For example:
 % terraform import aws_emrcontainers_job_template.example a1b2c3d4e5f6g7h8i9j10k11l
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-40a45aaa72930deebb9754da5bddf771139ffc5f6fcddde32b7b2b44ae90f112 -->
+<!-- cache-key: cdktf-0.20.8 input-45a7ef3b9ddf57f51849d8a371d5ad08647cecef2d72832e2b31133976dd760e -->

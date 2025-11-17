@@ -146,6 +146,7 @@ func TestAccEventsConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "invocation_connectivity_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", ""),
 				),
 			},
 			{
@@ -177,6 +178,7 @@ func TestAccEventsConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_connectivity_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", ""),
 				),
 			},
 		},
@@ -617,6 +619,56 @@ func TestAccEventsConnection_invocationConnectivityParameters(t *testing.T) {
 	})
 }
 
+func TestAccEventsConnection_kmsKeyIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridge.DescribeConnectionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionConfig_kmsKeyIdentifier(rName, "${aws_kms_key.test_1.id}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_1", names.AttrID),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"auth_parameters.0.basic.0.password"},
+			},
+			{
+				Config: testAccConnectionConfig_kmsKeyIdentifier(rName, "${aws_kms_key.test_2.arn}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_2", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccConnectionConfig_kmsKeyIdentifier(rName, "${aws_kms_alias.test_1.name}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_alias.test_1", names.AttrName),
+				),
+			},
+			{
+				Config: testAccConnectionConfig_kmsKeyIdentifier(rName, "${aws_kms_alias.test_1.arn}"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_alias.test_1", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
@@ -952,4 +1004,115 @@ resource "aws_cloudwatch_event_connection" "test" {
   }
 }
 `, rName))
+}
+
+func testAccConnectionConfig_kmsKeyIdentifier(name, kmsKeyIdentifier string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "test_1" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-policy-example"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action = [
+          "kms:DescribeKey",
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ],
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "kms:ViaService" = "secretsmanager.*.amazonaws.com"
+            "kms:EncryptionContext:SecretARN" = [
+              "arn:${data.aws_partition.current.partition}:secretsmanager:*:*:secret:events!connection/*"
+            ]
+          }
+        }
+      }
+    ]
+  })
+  tags = {
+    EventBridgeApiDestinations = "true"
+  }
+}
+
+resource "aws_kms_alias" "test_1" {
+  name          = "alias/test-1"
+  target_key_id = aws_kms_key.test_1.key_id
+}
+
+resource "aws_kms_key" "test_2" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-policy-example"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action = [
+          "kms:DescribeKey",
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ],
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "kms:ViaService" = "secretsmanager.*.amazonaws.com"
+            "kms:EncryptionContext:SecretARN" = [
+              "arn:${data.aws_partition.current.partition}:secretsmanager:*:*:secret:events!connection/*"
+            ]
+          }
+        }
+      }
+    ]
+  })
+  tags = {
+    EventBridgeApiDestinations = "true"
+  }
+}
+
+resource "aws_cloudwatch_event_connection" "test" {
+  name               = %[1]q
+  authorization_type = "BASIC"
+  auth_parameters {
+    basic {
+      username = "tfacctest"
+      password = "avoid-plaintext-passwords"
+    }
+  }
+  kms_key_identifier = %[2]q
+}
+`, name, kmsKeyIdentifier)
 }

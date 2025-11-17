@@ -67,6 +67,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_endpoint_service_id` - (Optional) The ID of the VPC Endpoint Service to receive notifications for.
 * `vpc_endpoint_id` - (Optional) The ID of the VPC Endpoint to receive notifications for.
 * `connection_notification_arn` - (Required) The ARN of the SNS topic for the notifications.
@@ -107,4 +108,4 @@ Using `terraform import`, import VPC Endpoint connection notifications using the
 % terraform import aws_vpc_endpoint_connection_notification.foo vpce-nfn-09e6ed3b4efba2263
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0a73ca44fb468e8731df240f6476acb6d3f8563d6140121d0844ddbde55b7aff -->
+<!-- cache-key: cdktf-0.20.8 input-e2a15235784ca0bbd69d357e8260dee4fe436a9ce8c84645bcfd799e0523b16a -->

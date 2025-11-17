@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -56,6 +56,7 @@ func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphor
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_ids.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "verified_access_group_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -72,7 +73,7 @@ func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphor
 
 func testAccVerifiedAccessEndpoint_networkInterface(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -119,7 +120,7 @@ func testAccVerifiedAccessEndpoint_networkInterface(t *testing.T, semaphore tfsy
 
 func testAccVerifiedAccessEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -174,7 +175,7 @@ func testAccVerifiedAccessEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore
 
 func testAccVerifiedAccessEndpoint_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -204,7 +205,7 @@ func testAccVerifiedAccessEndpoint_disappears(t *testing.T, semaphore tfsync.Sem
 
 func testAccVerifiedAccessEndpoint_policyDocument(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -256,7 +257,7 @@ func testAccVerifiedAccessEndpoint_policyDocument(t *testing.T, semaphore tfsync
 // Ref: https://github.com/hashicorp/terraform-provider-aws/issues/39186
 func testAccVerifiedAccessEndpoint_subnetIDs(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
+	var v awstypes.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -300,6 +301,253 @@ func testAccVerifiedAccessEndpoint_subnetIDs(t *testing.T, semaphore tfsync.Sema
 	})
 }
 
+func testAccVerifiedAccessEndpoint_cidr(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v awstypes.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_cidr(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "cidr_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_options.0.port_range.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"endpoint_domain_prefix",
+				},
+			},
+			{
+				Config: testAccVerifiedAccessEndpointConfig_cidrUpdate(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "cidr_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_options.0.port_range.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccVerifiedAccessEndpoint_rds(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v awstypes.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_rds(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rds_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rds_options.0.port", "3306"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"endpoint_domain_prefix",
+				},
+			},
+			{
+				Config: testAccVerifiedAccessEndpointConfig_rdsUpdate(rName, acctest.TLSPEMEscapeNewlines(key), acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rds_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rds_options.0.port", "6033"),
+				),
+			},
+		},
+	})
+}
+
+func testAccVerifiedAccessEndpoint_portRangeTCP(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v awstypes.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_portRangeTCP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.from_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.to_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "tcp"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
+			},
+		},
+	})
+}
+
+func testAccVerifiedAccessEndpoint_portTCP(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v awstypes.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_portTCP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.from_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.to_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "tcp"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
+			},
+		},
+	})
+}
+
+func testAccVerifiedAccessEndpoint_portHTTP(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v awstypes.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	cert := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_portHTTP(
+					rName,
+					acctest.TLSPEMEscapeNewlines(key),
+					acctest.TLSPEMEscapeNewlines(cert),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "http"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
+			},
+		},
+	})
+}
+
+func testAccVerifiedAccessEndpoint_portHTTPS(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v awstypes.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	cert := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_portHTTPS(
+					rName,
+					acctest.TLSPEMEscapeNewlines(key),
+					acctest.TLSPEMEscapeNewlines(cert),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -325,7 +573,7 @@ func testAccCheckVerifiedAccessEndpointDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, n string, v *types.VerifiedAccessEndpoint) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessEndpointExists(ctx context.Context, n string, v *awstypes.VerifiedAccessEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -401,6 +649,7 @@ resource "aws_lb_listener" "test" {
     target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
+
   tags = {
     Name = %[1]q
   }
@@ -447,10 +696,74 @@ resource "aws_verifiedaccess_group" "test" {
 `, rName, key, certificate))
 }
 
+func testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate string, subnetCount int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, subnetCount),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_acm_certificate" "test" {
+  private_key      = "%[2]s"
+  certificate_body = "%[3]s"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_verifiedaccess_instance" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_verifiedaccess_trust_provider" "test" {
+  policy_reference_name    = "test"
+  trust_provider_type      = "user"
+  user_trust_provider_type = "oidc"
+
+  native_application_oidc_options {
+    authorization_endpoint      = "https://example.com/authorization_endpoint"
+    client_id                   = "s6BhdRkqt3"
+    client_secret               = "7Fjfp0ZBr1KtDRbnfVdmIw"
+    issuer                      = "https://example.com"
+    public_signing_key_endpoint = "https://example.com/signing_endpoint"
+    scope                       = "test"
+    token_endpoint              = "https://example.com/token_endpoint"
+    user_info_endpoint          = "https://example.com/user_info_endpoint"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
+  verifiedaccess_instance_id       = aws_verifiedaccess_instance.test.id
+  verifiedaccess_trust_provider_id = aws_verifiedaccess_trust_provider.test.id
+}
+
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, key, certificate))
+}
+
 func testAccVerifiedAccessEndpointConfig_basic(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccVerifiedAccessEndpointConfig_base(rName, key, certificate, 1),
-		fmt.Sprintf(`
+		`
 resource "aws_verifiedaccess_endpoint" "test" {
   application_domain     = "example.com"
   attachment_type        = "vpc"
@@ -469,12 +782,8 @@ resource "aws_verifiedaccess_endpoint" "test" {
   }
   security_group_ids       = [aws_security_group.test.id]
   verified_access_group_id = aws_verifiedaccess_group.test.id
-
-  tags = {
-    Name = %[1]q
-  }
 }
-`, rName, key, certificate))
+`)
 }
 
 func testAccVerifiedAccessEndpointConfig_networkInterface(rName, key, certificate string) string {
@@ -500,9 +809,7 @@ resource "aws_verifiedaccess_endpoint" "test" {
     Name = %[1]q
   }
 }
-
-
-`, rName, key, certificate))
+`, rName))
 }
 
 func testAccVerifiedAccessEndpointConfig_tags1(rName, key, certificate, tagKey1, tagValue1 string) string {
@@ -525,12 +832,12 @@ resource "aws_verifiedaccess_endpoint" "test" {
   verified_access_group_id = aws_verifiedaccess_group.test.id
 
   tags = {
-    %[4]q = %[5]q
+    %[1]q = %[2]q
   }
 }
 
 
-`, rName, key, certificate, tagKey1, tagValue1))
+`, tagKey1, tagValue1))
 }
 
 func testAccVerifiedAccessEndpointConfig_tags2(rName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -552,12 +859,12 @@ resource "aws_verifiedaccess_endpoint" "test" {
   security_group_ids       = [aws_security_group.test.id]
   verified_access_group_id = aws_verifiedaccess_group.test.id
   tags = {
-    %[4]q = %[5]q
-    %[6]q = %[7]q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
 
-`, rName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2))
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccVerifiedAccessEndpointConfig_policyBase(rName, key, certificate string) string {
@@ -598,11 +905,11 @@ resource "aws_verifiedaccess_endpoint" "test" {
     port                 = 443
     protocol             = "https"
   }
-  policy_document          = %[4]q
+  policy_document          = %[1]q
   security_group_ids       = [aws_security_group.test.id]
   verified_access_group_id = aws_verifiedaccess_group.test.id
 }
-`, rName, key, certificate, policyDocument))
+`, policyDocument))
 }
 
 func testAccVerifiedAccessEndpointConfig_subnetIDs(rName, key, certificate string) string {
@@ -632,7 +939,7 @@ resource "aws_verifiedaccess_endpoint" "test" {
     Name = %[1]q
   }
 }
-`, rName, key, certificate))
+`, rName))
 }
 
 func testAccVerifiedAccessEndpointConfig_subnetIDsUpdate(rName, key, certificate string) string {
@@ -659,6 +966,609 @@ resource "aws_verifiedaccess_endpoint" "test" {
   tags = {
     Name = %[1]q
   }
+}
+`, rName))
+}
+
+func testAccVerifiedAccessEndpointConfig_cidr(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate, 2),
+		fmt.Sprintf(`
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type = "vpc"
+  description     = "example"
+  endpoint_type   = "cidr"
+  sse_specification {
+    customer_managed_key_enabled = false
+  }
+  cidr_options {
+    cidr = aws_subnet.test[0].cidr_block
+    port_range {
+      from_port = 443
+      to_port   = 443
+    }
+    protocol   = "tcp"
+    subnet_ids = [for subnet in aws_subnet.test : subnet.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVerifiedAccessEndpointConfig_cidrUpdate(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate, 2),
+		fmt.Sprintf(`
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type = "vpc"
+  description     = "example"
+  endpoint_type   = "cidr"
+  sse_specification {
+    customer_managed_key_enabled = false
+  }
+  cidr_options {
+    cidr = aws_subnet.test[0].cidr_block
+    port_range {
+      from_port = 443
+      to_port   = 443
+    }
+    port_range {
+      from_port = 9443
+      to_port   = 9446
+    }
+    protocol   = "tcp"
+    subnet_ids = [for subnet in aws_subnet.test : subnet.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVerifiedAccessEndpointConfig_rds(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_baseTCP(rName, key, certificate, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "testrds" {
+  name        = "%[1]s-rds"
+  description = "Grant rds access from VPC"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = [for subnet in aws_subnet.test : subnet.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage    = 10
+  engine               = "mysql"
+  engine_version       = "8.0"
+  instance_class       = "db.t4g.micro"
+  identifier           = %[1]q
+  username             = "tfaccrds"
+  password             = "SuperSecure123!"
+  parameter_group_name = "default.mysql8.0"
+  publicly_accessible  = false
+  skip_final_snapshot  = true
+  storage_encrypted    = false
+  multi_az             = false
+
+  vpc_security_group_ids = [aws_security_group.testrds.id]
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type = "vpc"
+  description     = "example"
+  endpoint_type   = "rds"
+
+  rds_options {
+    port                = aws_db_instance.test.port
+    rds_db_instance_arn = aws_db_instance.test.arn
+    rds_endpoint        = regex("^(.*):[0-9]+$", aws_db_instance.test.endpoint)[0]
+    protocol            = "tcp"
+    subnet_ids          = [for subnet in aws_subnet.test : subnet.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVerifiedAccessEndpointConfig_rdsUpdate(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccVerifiedAccessEndpointConfig_base(rName, key, certificate, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "testrds" {
+  name        = "%[1]s-rds"
+  description = "Grant rds access from VPC"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = 6033
+    to_port     = 6033
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = [for subnet in aws_subnet.test : subnet.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage    = 10
+  engine               = "mysql"
+  engine_version       = "8.0"
+  instance_class       = "db.t4g.micro"
+  identifier           = %[1]q
+  username             = "tfaccrds"
+  password             = "SuperSecure123!"
+  parameter_group_name = "default.mysql8.0"
+  publicly_accessible  = false
+  skip_final_snapshot  = true
+  storage_encrypted    = false
+  multi_az             = false
+
+  vpc_security_group_ids = [aws_security_group.testrds.id]
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+  port                   = 6033
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type = "vpc"
+  description     = "example"
+  endpoint_type   = "rds"
+
+  rds_options {
+    port                = aws_db_instance.test.port
+    rds_db_instance_arn = aws_db_instance.test.arn
+    rds_endpoint        = regex("^(.*):[0-9]+$", aws_db_instance.test.endpoint)[0]
+    protocol            = "tcp"
+    subnet_ids          = [for subnet in aws_subnet.test : subnet.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVerifiedAccessEndpointConfig_portRangeTCP(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_lb" "test_nlb" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "network"
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_target_group" "test_nlb" {
+  name     = %[1]q
+  port     = 22
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+}
+
+resource "aws_lb_listener" "test_nlb" {
+  load_balancer_arn = aws_lb.test_nlb.arn
+  port              = 22
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test_nlb.arn
+  }
+}
+
+resource "aws_verifiedaccess_instance" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_verifiedaccess_trust_provider" "test" {
+  policy_reference_name    = "native"
+  trust_provider_type      = "user"
+  user_trust_provider_type = "oidc"
+
+  native_application_oidc_options {
+    authorization_endpoint      = "https://example.com/authorize"
+    client_id                   = "cid"
+    client_secret               = "secret"
+    issuer                      = "https://example.com"
+    public_signing_key_endpoint = "https://example.com/jwks.json"
+    scope                       = "openid"
+    token_endpoint              = "https://example.com/token"
+    user_info_endpoint          = "https://example.com/userinfo"
+  }
+}
+
+resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
+  verifiedaccess_instance_id       = aws_verifiedaccess_instance.test.id
+  verifiedaccess_trust_provider_id = aws_verifiedaccess_trust_provider.test.id
+}
+
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type = "vpc"
+  endpoint_type   = "load-balancer"
+
+  load_balancer_options {
+    load_balancer_arn = aws_lb.test_nlb.arn
+
+    port_range {
+      from_port = 22
+      to_port   = 22
+    }
+
+    protocol   = "tcp"
+    subnet_ids = [for s in aws_subnet.test : s.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+}
+`, rName))
+}
+
+func testAccVerifiedAccessEndpointConfig_portTCP(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb" "test_nlb" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "network"
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_target_group" "test_nlb" {
+  name     = %[1]q
+  port     = 22
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+}
+
+resource "aws_lb_listener" "test_nlb" {
+  load_balancer_arn = aws_lb.test_nlb.arn
+  port              = 22
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test_nlb.arn
+  }
+}
+
+resource "aws_verifiedaccess_instance" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_verifiedaccess_trust_provider" "test" {
+  policy_reference_name    = "native"
+  trust_provider_type      = "user"
+  user_trust_provider_type = "oidc"
+
+  native_application_oidc_options {
+    authorization_endpoint      = "https://example.com/authorize"
+    client_id                   = "cid"
+    client_secret               = "secret"
+    issuer                      = "https://example.com"
+    public_signing_key_endpoint = "https://example.com/jwks.json"
+    scope                       = "openid"
+    token_endpoint              = "https://example.com/token"
+    user_info_endpoint          = "https://example.com/userinfo"
+  }
+}
+
+resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
+  verifiedaccess_instance_id       = aws_verifiedaccess_instance.test.id
+  verifiedaccess_trust_provider_id = aws_verifiedaccess_trust_provider.test.id
+}
+
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  attachment_type = "vpc"
+  endpoint_type   = "load-balancer"
+
+  load_balancer_options {
+    load_balancer_arn = aws_lb.test_nlb.arn
+
+    port_range {
+      from_port = 22
+      to_port   = 22
+    }
+
+    protocol   = "tcp"
+    subnet_ids = [for s in aws_subnet.test : s.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+}
+`, rName))
+}
+
+func testAccVerifiedAccessEndpointConfig_portHTTPS(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_acm_certificate" "test" {
+  private_key      = "%[2]s"
+  certificate_body = "%[3]s"
+}
+
+resource "aws_lb" "test_alb" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "application"
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_target_group" "test_alb" {
+  name     = %[1]q
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    protocol = "HTTPS"
+    port     = "443"
+  }
+}
+
+resource "aws_lb_listener" "test_alb" {
+  load_balancer_arn = aws_lb.test_alb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_acm_certificate.test.arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test_alb.arn
+  }
+}
+
+resource "aws_verifiedaccess_instance" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_verifiedaccess_trust_provider" "test" {
+  policy_reference_name    = "web"
+  trust_provider_type      = "user"
+  user_trust_provider_type = "oidc"
+
+  oidc_options {
+    authorization_endpoint = "https://example.com/authorize"
+    client_id              = "cid"
+    client_secret          = "secret"
+    issuer                 = "https://example.com"
+    scope                  = "openid"
+    token_endpoint         = "https://example.com/token"
+    user_info_endpoint     = "https://example.com/userinfo"
+  }
+}
+
+resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
+  verifiedaccess_instance_id       = aws_verifiedaccess_instance.test.id
+  verifiedaccess_trust_provider_id = aws_verifiedaccess_trust_provider.test.id
+}
+
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  application_domain     = "example.com"
+  domain_certificate_arn = aws_acm_certificate.test.arn
+  endpoint_domain_prefix = "example"
+  attachment_type        = "vpc"
+  endpoint_type          = "load-balancer"
+
+  load_balancer_options {
+    load_balancer_arn = aws_lb.test_alb.arn
+    port              = 443
+    protocol          = "https"
+    subnet_ids        = [for s in aws_subnet.test : s.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+}
+`, rName, key, certificate))
+}
+
+func testAccVerifiedAccessEndpointConfig_portHTTP(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_acm_certificate" "test" {
+  private_key      = "%[2]s"
+  certificate_body = "%[3]s"
+}
+
+resource "aws_lb" "test_alb" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "application"
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_target_group" "test_alb" {
+  name     = %[1]q
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    protocol = "HTTP"
+    port     = "80"
+  }
+}
+
+resource "aws_lb_listener" "test_alb" {
+  load_balancer_arn = aws_lb.test_alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test_alb.arn
+  }
+}
+
+resource "aws_verifiedaccess_instance" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_verifiedaccess_trust_provider" "test" {
+  policy_reference_name    = "web"
+  trust_provider_type      = "user"
+  user_trust_provider_type = "oidc"
+
+  oidc_options {
+    authorization_endpoint = "https://example.com/authorize"
+    client_id              = "cid"
+    client_secret          = "secret"
+    issuer                 = "https://example.com"
+    scope                  = "openid"
+    token_endpoint         = "https://example.com/token"
+    user_info_endpoint     = "https://example.com/userinfo"
+  }
+}
+
+resource "aws_verifiedaccess_instance_trust_provider_attachment" "test" {
+  verifiedaccess_instance_id       = aws_verifiedaccess_instance.test.id
+  verifiedaccess_trust_provider_id = aws_verifiedaccess_trust_provider.test.id
+}
+
+resource "aws_verifiedaccess_group" "test" {
+  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+}
+
+resource "aws_verifiedaccess_endpoint" "test" {
+  application_domain     = "example.com"
+  domain_certificate_arn = aws_acm_certificate.test.arn
+  endpoint_domain_prefix = "example"
+  attachment_type        = "vpc"
+  endpoint_type          = "load-balancer"
+
+  load_balancer_options {
+    load_balancer_arn = aws_lb.test_alb.arn
+    port              = 80
+    protocol          = "http"
+    subnet_ids        = [for s in aws_subnet.test : s.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
 }
 `, rName, key, certificate))
 }

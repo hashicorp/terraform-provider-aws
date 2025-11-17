@@ -1253,12 +1253,12 @@ func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta a
 	ruleName := d.Get(names.AttrName).(string)
 	input := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
-		Tags:             aws.String(KeyValueTags(ctx, getTagsIn(ctx)).URLQueryString()),
+		Tags:             aws.String(keyValueTags(ctx, getTagsIn(ctx)).URLQueryString()),
 		TopicRulePayload: expandTopicRulePayload(d),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.CreateTopicRule(ctx, input)
 		})
 
@@ -1387,8 +1387,8 @@ func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			TopicRulePayload: expandTopicRulePayload(d),
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-			func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout,
+			func(ctx context.Context) (any, error) {
 				return conn.ReplaceTopicRule(ctx, input)
 			})
 

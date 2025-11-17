@@ -173,6 +173,10 @@ func (sr ServiceRecord) Exclude() bool {
 	return sr.service.Exclude
 }
 
+func (sr ServiceRecord) IsGlobal() bool {
+	return sr.service.IsGlobal
+}
+
 func (sr ServiceRecord) NotImplemented() bool {
 	return sr.service.NotImplemented
 }
@@ -205,6 +209,13 @@ func (sr ServiceRecord) TFAWSEnvVar() string {
 func (sr ServiceRecord) SDKID() string {
 	if sr.service.ServiceSDK != nil {
 		return sr.service.ServiceSDK.ID
+	}
+	return ""
+}
+
+func (sr ServiceRecord) ARNNamespace() string {
+	if sr.service.ServiceSDK != nil {
+		return sr.service.ServiceSDK.ARNNamespace
 	}
 	return ""
 }
@@ -290,8 +301,9 @@ type ResourcePrefix struct {
 }
 
 type SDK struct {
-	ID      string `hcl:"id,optional"`
-	Version int    `hcl:"client_version,optional"`
+	ID           string `hcl:"id,optional"`
+	Version      int    `hcl:"client_version,optional"`
+	ARNNamespace string `hcl:"arn_namespace,optional"`
 }
 
 type Names struct {
@@ -344,6 +356,7 @@ type Service struct {
 	NotImplemented                bool     `hcl:"not_implemented,optional"`
 	AllowedSubcategory            bool     `hcl:"allowed_subcategory,optional"`
 	Note                          string   `hcl:"note,optional"`
+	IsGlobal                      bool     `hcl:"is_global,optional"`
 }
 
 type Services struct {

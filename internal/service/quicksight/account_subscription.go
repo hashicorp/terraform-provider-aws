@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,6 +30,10 @@ func resourceAccountSubscription() *schema.Resource {
 		CreateWithoutTimeout: resourceAccountSubscriptionCreate,
 		ReadWithoutTimeout:   resourceAccountSubscriptionRead,
 		DeleteWithoutTimeout: resourceAccountSubscriptionDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -60,6 +64,13 @@ func resourceAccountSubscription() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					ForceNew: true,
 				},
+				"admin_pro_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					ForceNew: true,
+				},
 				"authentication_method": {
 					Type:             schema.TypeString,
 					Required:         true,
@@ -73,13 +84,14 @@ func resourceAccountSubscription() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					ForceNew: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ForceNew:     true,
-					ValidateFunc: verify.ValidAccountID,
+				"author_pro_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					ForceNew: true,
 				},
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
 				"contact_number": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -128,6 +140,13 @@ func resourceAccountSubscription() *schema.Resource {
 					MinItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
+				"reader_pro_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 				"realm": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -163,12 +182,24 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		input.AdminGroup = flex.ExpandStringValueList(v.([]any))
 	}
 
+	if v, ok := d.GetOk("admin_pro_group"); ok && len(v.([]any)) > 0 {
+		input.AdminProGroup = flex.ExpandStringValueList(v.([]any))
+	}
+
 	if v, ok := d.GetOk("author_group"); ok && len(v.([]any)) > 0 {
 		input.AuthorGroup = flex.ExpandStringValueList(v.([]any))
 	}
 
+	if v, ok := d.GetOk("author_pro_group"); ok && len(v.([]any)) > 0 {
+		input.AuthorProGroup = flex.ExpandStringValueList(v.([]any))
+	}
+
 	if v, ok := d.GetOk("reader_group"); ok && len(v.([]any)) > 0 {
 		input.ReaderGroup = flex.ExpandStringValueList(v.([]any))
+	}
+
+	if v, ok := d.GetOk("reader_pro_group"); ok && len(v.([]any)) > 0 {
+		input.ReaderProGroup = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("contact_number"); ok {

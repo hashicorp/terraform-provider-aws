@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -28,16 +29,14 @@ import (
 
 // @SDKResource("aws_imagebuilder_infrastructure_configuration", name="Infrastructure Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInfrastructureConfigurationCreate,
 		ReadWithoutTimeout:   resourceInfrastructureConfigurationRead,
 		UpdateWithoutTimeout: resourceInfrastructureConfigurationUpdate,
 		DeleteWithoutTimeout: resourceInfrastructureConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -126,6 +125,40 @@ func resourceInfrastructureConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"placement": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrAvailabilityZone: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1024),
+						},
+						"host_id": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ValidateFunc:  validation.StringLenBetween(1, 1024),
+							ConflictsWith: []string{"placement.0.host_resource_group_arn"},
+						},
+						"host_resource_group_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.All(
+								verify.ValidARN,
+								validation.StringLenBetween(1, 1024),
+							),
+							ConflictsWith: []string{"placement.0.host_id"},
+						},
+						"tenancy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TenancyType](),
+						},
+					},
+				},
+			},
 			names.AttrResourceTags: tftags.TagsSchema(),
 			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
@@ -192,8 +225,12 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.Logging = expandLogging(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("placement"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Placement = expandPlacement(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
-		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]any)))
+		input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]any)))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
@@ -209,7 +246,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateInfrastructureConfiguration(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -268,7 +305,14 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 		d.Set("logging", nil)
 	}
 	d.Set(names.AttrName, infrastructureConfiguration.Name)
-	d.Set(names.AttrResourceTags, KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
+	if infrastructureConfiguration.Placement != nil {
+		if err := d.Set("placement", []any{flattenPlacement(infrastructureConfiguration.Placement)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting placement: %s", err)
+		}
+	} else {
+		d.Set("placement", nil)
+	}
+	d.Set(names.AttrResourceTags, keyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
 	d.Set(names.AttrSecurityGroupIDs, infrastructureConfiguration.SecurityGroupIds)
 	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
 	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
@@ -290,6 +334,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 		"instance_types",
 		"key_pair",
 		"logging",
+		"placement",
 		names.AttrResourceTags,
 		names.AttrSecurityGroupIDs,
 		names.AttrSNSTopicARN,
@@ -325,8 +370,12 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			input.Logging = expandLogging(v.([]any)[0].(map[string]any))
 		}
 
+		if v, ok := d.GetOk("placement"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Placement = expandPlacement(v.([]any)[0].(map[string]any))
+		}
+
 		if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
-			input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]any)))
+			input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]any)))
 		}
 
 		if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
@@ -342,7 +391,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateInfrastructureConfiguration(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -457,6 +506,32 @@ func expandS3Logs(tfMap map[string]any) *awstypes.S3Logs {
 	return apiObject
 }
 
+func expandPlacement(tfMap map[string]any) *awstypes.Placement {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.Placement{}
+
+	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
+		apiObject.AvailabilityZone = aws.String(v)
+	}
+
+	if v, ok := tfMap["host_id"].(string); ok && v != "" {
+		apiObject.HostId = aws.String(v)
+	}
+
+	if v, ok := tfMap["host_resource_group_arn"].(string); ok && v != "" {
+		apiObject.HostResourceGroupArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["tenancy"].(string); ok && v != "" {
+		apiObject.Tenancy = awstypes.TenancyType(v)
+	}
+
+	return apiObject
+}
+
 func flattenInstanceMetadataOptions(apiObject *awstypes.InstanceMetadataOptions) map[string]any {
 	if apiObject == nil {
 		return nil
@@ -502,6 +577,32 @@ func flattenS3Logs(apiObject *awstypes.S3Logs) map[string]any {
 
 	if v := apiObject.S3KeyPrefix; v != nil {
 		tfMap[names.AttrS3KeyPrefix] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenPlacement(apiObject *awstypes.Placement) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.AvailabilityZone; v != nil {
+		tfMap[names.AttrAvailabilityZone] = aws.ToString(v)
+	}
+
+	if v := apiObject.HostId; v != nil {
+		tfMap["host_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.HostResourceGroupArn; v != nil {
+		tfMap["host_resource_group_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Tenancy; v != "" {
+		tfMap["tenancy"] = v
 	}
 
 	return tfMap

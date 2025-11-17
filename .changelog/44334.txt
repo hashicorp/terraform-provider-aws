@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_eks_cluster: Change `compute_config`, `kubernetes_network_config.elastic_load_balancing`, and `storage_config.` to Optional and Computed, allowing EKS Auto Mode settings to be enabled, disabled, and removed from configuration
+```

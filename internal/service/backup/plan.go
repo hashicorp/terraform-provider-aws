@@ -287,7 +287,7 @@ func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteBackupPlan(ctx, &backup.DeleteBackupPlanInput{
 			BackupPlanId: aws.String(d.Id()),
 		})
@@ -353,7 +353,7 @@ func expandBackupRuleInputs(ctx context.Context, tfList []any) []awstypes.Backup
 			apiObject.Lifecycle = expandLifecycle(v[0].(map[string]any))
 		}
 		if v, ok := tfMap["recovery_point_tags"].(map[string]any); ok && len(v) > 0 {
-			apiObject.RecoveryPointTags = Tags(tftags.New(ctx, v).IgnoreAWS())
+			apiObject.RecoveryPointTags = svcTags(tftags.New(ctx, v).IgnoreAWS())
 		}
 		if v, ok := tfMap["rule_name"].(string); ok && v != "" {
 			apiObject.RuleName = aws.String(v)
@@ -472,7 +472,7 @@ func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) [
 			tfMap["lifecycle"] = flattenLifecycle(v)
 		}
 
-		if v := KeyValueTags(ctx, apiObject.RecoveryPointTags).IgnoreAWS().Map(); len(v) > 0 {
+		if v := keyValueTags(ctx, apiObject.RecoveryPointTags).IgnoreAWS().Map(); len(v) > 0 {
 			tfMap["recovery_point_tags"] = v
 		}
 

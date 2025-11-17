@@ -84,19 +84,6 @@ func StringToFrameworkValuable[T basetypes.StringValuable](ctx context.Context, 
 	return sv.(T)
 }
 
-func StringFromFrameworkLegacy(_ context.Context, v types.String) *string {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
-
-	s := v.ValueString()
-	if s == "" {
-		return nil
-	}
-
-	return aws.String(s)
-}
-
 func EmptyStringAsNull(v types.String) types.String {
 	if v.IsNull() || v.IsUnknown() {
 		return v

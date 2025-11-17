@@ -3,8 +3,8 @@ package swf
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/swf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/swf/types"
@@ -27,10 +27,10 @@ func listTags(ctx context.Context, conn *swf.Client, identifier string, optFns .
 	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 // ListTags lists swf service tags and set them in Context.
@@ -39,7 +39,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).SWFClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -51,8 +51,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns swf service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.ResourceTag {
+// svcTags returns swf service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.ResourceTag {
 	result := make([]awstypes.ResourceTag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -67,8 +67,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.ResourceTag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from swf service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.ResourceTag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from swf service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.ResourceTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -82,7 +82,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.ResourceTag) tftags.KeyVa
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.ResourceTag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -93,7 +93,7 @@ func getTagsIn(ctx context.Context) []awstypes.ResourceTag {
 // setTagsOut sets swf service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.ResourceTag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -117,7 +117,7 @@ func updateTags(ctx context.Context, conn *swf.Client, identifier string, oldTag
 		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -126,13 +126,13 @@ func updateTags(ctx context.Context, conn *swf.Client, identifier string, oldTag
 	if len(updatedTags) > 0 {
 		input := swf.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

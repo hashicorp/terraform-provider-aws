@@ -28,12 +28,13 @@ import (
 )
 
 // @SDKResource("aws_glue_catalog_table", name="Catalog Table")
-func ResourceCatalogTable() *schema.Resource {
+func resourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCatalogTableCreate,
 		ReadWithoutTimeout:   resourceCatalogTableRead,
 		UpdateWithoutTimeout: resourceCatalogTableUpdate,
 		DeleteWithoutTimeout: resourceCatalogTableDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -91,6 +92,11 @@ func ResourceCatalogTable() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
+						},
+						names.AttrParameters: {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						names.AttrType: {
 							Type:         schema.TypeString,
@@ -438,7 +444,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	table, err := FindTableByName(ctx, conn, catalogID, dbName, name)
+	table, err := findTableByName(ctx, conn, catalogID, dbName, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Catalog Table (%s) not found, removing from state", d.Id())
@@ -526,7 +532,7 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Add back any managed parameters. See flattenNonManagedParameters.
-	table, err := FindTableByName(ctx, conn, catalogID, dbName, name)
+	table, err := findTableByName(ctx, conn, catalogID, dbName, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
@@ -579,7 +585,7 @@ func resourceCatalogTableDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func FindTableByName(ctx context.Context, conn *glue.Client, catalogID, dbName, name string) (*awstypes.Table, error) {
+func findTableByName(ctx context.Context, conn *glue.Client, catalogID, dbName, name string) (*awstypes.Table, error) {
 	input := &glue.GetTableInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
@@ -777,12 +783,12 @@ func expandColumns(columns []any) []awstypes.Column {
 			column.Comment = aws.String(v.(string))
 		}
 
-		if v, ok := elementMap[names.AttrType]; ok {
-			column.Type = aws.String(v.(string))
-		}
-
 		if v, ok := elementMap[names.AttrParameters]; ok {
 			column.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
+		}
+
+		if v, ok := elementMap[names.AttrType]; ok {
+			column.Type = aws.String(v.(string))
 		}
 
 		columnSlice = append(columnSlice, column)
@@ -950,20 +956,20 @@ func flattenColumns(cs []awstypes.Column) []map[string]any {
 func flattenColumn(c awstypes.Column) map[string]any {
 	column := make(map[string]any)
 
-	if v := aws.ToString(c.Name); v != "" {
-		column[names.AttrName] = v
-	}
-
-	if v := aws.ToString(c.Type); v != "" {
-		column[names.AttrType] = v
-	}
-
 	if v := aws.ToString(c.Comment); v != "" {
 		column[names.AttrComment] = v
 	}
 
+	if v := aws.ToString(c.Name); v != "" {
+		column[names.AttrName] = v
+	}
+
 	if v := c.Parameters; v != nil {
 		column[names.AttrParameters] = v
+	}
+
+	if v := aws.ToString(c.Type); v != "" {
+		column[names.AttrType] = v
 	}
 
 	return column

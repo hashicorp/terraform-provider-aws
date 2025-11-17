@@ -37,6 +37,7 @@ func TestAccKafkaServerlessCluster_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessClusterExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`cluster/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "bootstrap_brokers_sasl_iam"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam.#", "1"),

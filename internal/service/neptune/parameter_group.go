@@ -205,7 +205,7 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Neptune Parameter Group: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidDBParameterGroupStateFault](ctx, dbParameterGroupDeleteRetryTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidDBParameterGroupStateFault](ctx, dbParameterGroupDeleteRetryTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteDBParameterGroup(ctx, &neptune.DeleteDBParameterGroupInput{
 			DBParameterGroupName: aws.String(d.Id()),
 		})
@@ -246,7 +246,7 @@ func delDBParameterGroupParameters(ctx context.Context, conn *neptune.Client, na
 			Parameters:           chunk,
 		}
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidDBParameterGroupStateFault](ctx, dbParameterGroupParametersDeleteRetryTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidDBParameterGroupStateFault](ctx, dbParameterGroupParametersDeleteRetryTimeout, func(ctx context.Context) (any, error) {
 			return conn.ResetDBParameterGroup(ctx, input)
 		}, "has pending changes")
 

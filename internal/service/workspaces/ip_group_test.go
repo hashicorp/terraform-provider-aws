@@ -298,7 +298,7 @@ resource "aws_workspaces_ip_group" "test" {
 
 func testAccIPGroupConfig_multipleDirectories(name, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(name, domain),
+		testAccDirectoryConfig_base(name, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
   name = %[1]q

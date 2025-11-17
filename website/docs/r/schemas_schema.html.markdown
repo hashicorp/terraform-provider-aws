@@ -52,6 +52,7 @@ resource "aws_schemas_schema" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the schema. Maximum of 385 characters consisting of lower case letters, upper case letters, ., -, _, @.
 * `content` - (Required) The schema specification. Must be a valid Open API 3.0 spec.
 * `registry_name` - (Required) The name of the registry in which this schema belongs.

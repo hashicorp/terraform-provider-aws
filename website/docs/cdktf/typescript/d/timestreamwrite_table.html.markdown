@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `databaseName` - (Required) Name of the Timestream database.
 * `name` - (Required) Name of the Timestream table.
 
@@ -70,4 +71,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the table.
 * `tableStatus` - Current state of table.
 
-<!-- cache-key: cdktf-0.20.8 input-64cce03e034d1817777cb7a66a12bd88fb6b9a77007d581d6d9dc6359893b48a -->
+<!-- cache-key: cdktf-0.20.8 input-b0937170355b75a46b1d7a1819d28a5088d7690e859dcbec324ce944e5b08438 -->

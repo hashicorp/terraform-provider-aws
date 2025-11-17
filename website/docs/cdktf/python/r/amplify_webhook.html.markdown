@@ -48,6 +48,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `branch_name` - (Required) Name for a branch that is part of the Amplify app.
 * `description` - (Optional) Description for a webhook.
@@ -84,4 +85,4 @@ Using `terraform import`, import Amplify webhook using a webhook ID. For example
 % terraform import aws_amplify_webhook.master a26b22a0-748b-4b57-b9a0-ae7e601fe4b1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3bb11fa5debeb312ce5961222720872aa6f83d12dbd79b3d00fffa77e117baba -->
+<!-- cache-key: cdktf-0.20.8 input-daf62bf601c09cb76889281421ab04c98cec6b9b9be7b374c045dd23d4f86731 -->

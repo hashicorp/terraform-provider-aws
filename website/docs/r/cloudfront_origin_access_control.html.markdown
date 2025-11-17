@@ -28,7 +28,7 @@ resource "aws_cloudfront_origin_access_control" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) A name that identifies the Origin Access Control.
 * `description` - (Optional) The description of the Origin Access Control. Defaults to "Managed by Terraform" if omitted.

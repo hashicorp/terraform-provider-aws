@@ -64,13 +64,13 @@ class MyConvertedCode extends TerraformStack {
       configuration: [
         {
           enabled: true,
-          retention_configuration: [
+          retentionConfiguration: [
             {
-              iceberg_configuration: [
+              icebergConfiguration: [
                 {
-                  clean_expired_files: true,
-                  number_of_snapshots_to_retain: 3,
-                  snapshot_retention_period_in_days: 7,
+                  cleanExpiredFiles: true,
+                  numberOfSnapshotsToRetain: 3,
+                  snapshotRetentionPeriodInDays: 7,
                 },
               ],
             },
@@ -106,12 +106,12 @@ class MyConvertedCode extends TerraformStack {
       configuration: [
         {
           enabled: true,
-          orphan_file_deletion_configuration: [
+          orphanFileDeletionConfiguration: [
             {
-              iceberg_configuration: [
+              icebergConfiguration: [
                 {
                   location: "s3://example-bucket/example_table/",
-                  orphan_file_retention_period_in_days: 7,
+                  orphanFileRetentionPeriodInDays: 7,
                 },
               ],
             },
@@ -130,8 +130,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalogId` - (Required) The Catalog ID of the table.
 * `configuration` - (Required) A configuration block that defines the table optimizer settings. See [Configuration](#configuration) for additional details.
 * `databaseName` - (Required) The name of the database in the catalog in which the table resides.
@@ -141,22 +142,24 @@ The following arguments are required:
 ### Configuration
 
 * `enabled` - (Required) Indicates whether the table optimizer is enabled.
-* `orphan_file_deletion_configuration` (Optional) - The configuration block for an orphan file deletion optimizer. See [Orphan File Deletion Configuration](#orphan-file-deletion-configuration) for additional details.
-* `retention_configuration` (Optional) - The configuration block for a snapshot retention optimizer. See [Retention Configuration](#retention-configuration) for additional details.
+* `orphanFileDeletionConfiguration` (Optional) - The configuration block for an orphan file deletion optimizer. See [Orphan File Deletion Configuration](#orphan-file-deletion-configuration) for additional details.
+* `retentionConfiguration` (Optional) - The configuration block for a snapshot retention optimizer. See [Retention Configuration](#retention-configuration) for additional details.
 * `roleArn` - (Required) The ARN of the IAM role to use for the table optimizer.
 
 ### Orphan File Deletion Configuration
 
 * `icebergConfiguration` (Optional) - The configuration for an Iceberg orphan file deletion optimizer.
-    * `orphan_file_retention_period_in_days` (Optional) - The number of days that orphan files should be retained before file deletion. Defaults to `3`.
     * `location` (Optional) - Specifies a directory in which to look for files. You may choose a sub-directory rather than the top-level table location. Defaults to the table's location.
-  
+    * `orphanFileRetentionPeriodInDays` (Optional) - The number of days that orphan files should be retained before file deletion. Defaults to `3`.
+    * `runRateInHours` (Optional) - interval in hours between orphan file deletion job runs. Defaults to `24`.
+
 ### Retention Configuration
 
 * `icebergConfiguration` (Optional) - The configuration for an Iceberg snapshot retention optimizer.
-    * `snapshot_retention_period_in_days` (Optional) - The number of days to retain the Iceberg snapshots. Defaults to `5`, or the corresponding Iceberg table configuration field if it exists.
-    * `number_of_snapshots_to_retain` (Optional) - The number of Iceberg snapshots to retain within the retention period. Defaults to `1` or the corresponding Iceberg table configuration field if it exists.
-    * `clean_expired_files` (Optional) - If set to `false`, snapshots are only deleted from table metadata, and the underlying data and metadata files are not deleted. Defaults to `false`.
+    * `cleanExpiredFiles` (Optional) - If set to `false`, snapshots are only deleted from table metadata, and the underlying data and metadata files are not deleted. Defaults to `false`.
+    * `numberOfSnapshotsToRetain` (Optional) - The number of Iceberg snapshots to retain within the retention period. Defaults to `1` or the corresponding Iceberg table configuration field if it exists.
+    * `runRateInHours` (Optional) - Interval in hours between retention job runs. Defaults to `24`.
+    * `snapshotRetentionPeriodInDays` (Optional) - The number of days to retain the Iceberg snapshots. Defaults to `5`, or the corresponding Iceberg table configuration field if it exists.
 
 ## Attribute Reference
 
@@ -194,4 +197,4 @@ Using `terraform import`, import Glue Catalog Table Optimizer using the `catalog
 % terraform import aws_glue_catalog_table_optimizer.example 123456789012,example_database,example_table,compaction
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-66d7bc6bd6620ab4de741d3c7340652d5a1bea26f1da8ed953c0435628f6e242 -->
+<!-- cache-key: cdktf-0.20.8 input-4093538788a13c4436d28b9fd2ec866009dba984014d529e95610d1de54a0568 -->

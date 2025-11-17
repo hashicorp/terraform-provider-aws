@@ -46,6 +46,7 @@ func TestAccAPIGatewayV2API_basicWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "execution_arn", "execute-api", regexache.MustCompile(`.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeWebsocket)),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.action"),
@@ -85,6 +86,7 @@ func TestAccAPIGatewayV2API_basicHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "execution_arn", "execute-api", regexache.MustCompile(`.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeHttp)),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
@@ -149,6 +151,7 @@ func TestAccAPIGatewayV2API_allAttributesWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "execution_arn", "execute-api", regexache.MustCompile(`.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeWebsocket)),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.service"),
@@ -164,6 +167,7 @@ func TestAccAPIGatewayV2API_allAttributesWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeWebsocket)),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.action"),
@@ -179,6 +183,7 @@ func TestAccAPIGatewayV2API_allAttributesWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.service"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -193,6 +198,7 @@ func TestAccAPIGatewayV2API_allAttributesWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.service"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -232,6 +238,7 @@ func TestAccAPIGatewayV2API_allAttributesHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "execution_arn", "execute-api", regexache.MustCompile(`.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeHttp)),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
@@ -247,6 +254,7 @@ func TestAccAPIGatewayV2API_allAttributesHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeHttp)),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
@@ -262,6 +270,7 @@ func TestAccAPIGatewayV2API_allAttributesHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -276,6 +285,7 @@ func TestAccAPIGatewayV2API_allAttributesHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -917,6 +927,7 @@ resource "aws_apigatewayv2_api" "test" {
   api_key_selection_expression = "$context.authorizer.usageIdentifierKey"
   description                  = "test description"
   disable_execute_api_endpoint = true
+  ip_address_type              = "dualstack"
   name                         = %[1]q
   protocol_type                = "WEBSOCKET"
   route_selection_expression   = "$request.body.service"
@@ -930,6 +941,7 @@ func testAccAPIConfig_allAttributesHTTP(rName string) string {
 resource "aws_apigatewayv2_api" "test" {
   description                  = "test description"
   disable_execute_api_endpoint = true
+  ip_address_type              = "dualstack"
   name                         = %[1]q
   protocol_type                = "HTTP"
   version                      = "v1"
@@ -1261,7 +1273,8 @@ resource "aws_apigatewayv2_api" "test" {
   "info": {
     "title": "Title test",
     "version": "2.0",
-    "description": "Description test"
+    "description": "Description test",
+    "comment": "invalid field"
   },
   "paths": {
     "/update": {

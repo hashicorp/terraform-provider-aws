@@ -38,6 +38,7 @@ JSON
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The resource group's name. A resource group name can have a maximum of 127 characters, including letters, numbers, hyphens, dots, and underscores. The name cannot start with `AWS` or `aws`.
 * `configuration` - (Optional) A configuration associates the resource group with an AWS service and specifies how the service can interact with the resources in the group. See below for details.
 * `description` - (Optional) A description of the resource group.

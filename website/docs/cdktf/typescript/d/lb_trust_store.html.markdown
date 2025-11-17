@@ -55,12 +55,15 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) Full ARN of the trust store.
 * `name` - (Optional) Unique name of the trust store.
 
 ~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence.
 
 ## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 See the [LB Trust Store Resource](/docs/providers/aws/r/lb_trust_store.html) for details
 on the returned attributes - they are identical.
@@ -71,4 +74,4 @@ on the returned attributes - they are identical.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-c65b04c16076ab67cd01f7b31cc6359b079e96f9f0919d6b1a421cc6e4d49836 -->
+<!-- cache-key: cdktf-0.20.8 input-5bb6b8acfb3a944abaada0787f124e2e30f71e67d3eb92da7b134e78e51c32a2 -->

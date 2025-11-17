@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transitGatewayAttachmentId` - (Required) Identifier of EC2 Transit Gateway Attachment.
 * `transitGatewayRouteTableId` - (Required) Identifier of EC2 Transit Gateway Route Table.
 * `replaceExistingAssociation` - (Optional) Boolean whether the Gateway Attachment should remove any current Route Table association before associating with the specified Route Table. Default value: `false`. This argument is intended for use with EC2 Transit Gateways shared into the current account, otherwise the `transitGatewayDefaultRouteTableAssociation` argument of the `aws_ec2_transit_gateway_vpc_attachment` resource should be used.
@@ -87,4 +88,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_route_table_associatio
 % terraform import aws_ec2_transit_gateway_route_table_association.example tgw-rtb-12345678_tgw-attach-87654321
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3ac16f5f12533178bcc9006668852009e911e3309377a5bca5cfb4099f491912 -->
+<!-- cache-key: cdktf-0.20.8 input-b5a116d0309e360d26f59bdaed374343ad6880591d830e953bf2bfb7638d043c -->

@@ -54,20 +54,22 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 * `mostRecent` - (Optional) If more than one result is returned, use the most
 recent AMI.
-
 * `executableUsers` - (Optional) Limit search to users with *explicit* launch permission on
  the image. Valid items are the numeric account ID or `self`.
-
 * `includeDeprecated` - (Optional) If true, all deprecated AMIs are included in the response. If false, no deprecated AMIs are included in the response. If no value is specified, the default value is false.
-
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are
 several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
-
+* `allowUnsafeFilter` - (Optional) If true, allow unsafe filter values. With unsafe
+filters and `mostRecent` set to `true`, a third party may introduce a new image which
+will be returned by this data source. Consider filtering by owner or image ID rather
+than setting this argument.
 * `nameRegex` - (Optional) Regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API. This
 filtering is done locally on what AWS returns, and could have a performance
@@ -81,12 +83,9 @@ you want to match multiple AMIs, use the `aws_ami_ids` data source instead.
 
 ## Attribute Reference
 
-`id` is set to the ID of the found AMI. In addition, the following attributes
-are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-~> **NOTE:** Some values are not always set and may not be available for
-interpolation.
-
+* `id` - ID of the AMI.
 * `arn` - ARN of the AMI.
 * `architecture` - OS architecture of the AMI (ie: `i386` or `x86_64`).
 * `bootMode` - Boot mode of the image.
@@ -100,6 +99,7 @@ interpolation.
         * `volumeSize` - The size of the volume, in GiB.
         * `throughput` - The throughput that the EBS volume supports, in MiB/s.
         * `volumeType` - The volume type.
+        * `volumeInitializationRate` - The volume initialization rate, in MiB/s.
     * `noDevice` - Suppresses the specified device included in the block device mapping of the AMI.
     * `virtualName` - Virtual device name (for instance stores).
 * `creationDate` - Date and time the image was created.
@@ -115,6 +115,7 @@ interpolation.
 * `imdsSupport` - Instance Metadata Service (IMDS) support mode for the image. Set to `v2.0` if instances ran from this image enforce IMDSv2.
 * `kernelId` - Kernel associated with the image, if any. Only applicable
   for machine images.
+* `lastLaunchedTime` - Date and time, in ISO 8601 date-time format , when the AMI was last used to launch an EC2 instance. When the AMI is used to launch an instance, there is a 24-hour delay before that usage is reported. For more information, see the following [AWS document](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-last-launched-time.html).
 * `name` - Name of the AMI that was provided during image creation.
 * `ownerId` - AWS account ID of the image owner.
 * `platform` - Value is Windows for `Windows` AMIs; otherwise blank.
@@ -145,6 +146,9 @@ interpolation.
 * `platformDetails` - Platform details associated with the billing code of the AMI.
 * `enaSupport` - Whether enhanced networking with ENA is enabled.
 
+~> **NOTE:** Some values are not always set and may not be available for
+interpolation.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
@@ -153,4 +157,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
 
-<!-- cache-key: cdktf-0.20.8 input-6bfc785d19c21a4c97610e6294c1165146c55e004a58d2acdf72762d82db7ef8 -->
+<!-- cache-key: cdktf-0.20.8 input-bb5d7d662f9b4a8aa15b1c63d1ee7a13e07553335a38463929c9138cdcf1191a -->

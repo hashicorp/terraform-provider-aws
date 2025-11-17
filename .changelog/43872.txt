@@ -1,0 +1,9 @@
+```release-note:enhancement
+resource/aws_secretsmanager_secret: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_secretsmanager_secret_policy: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_secretsmanager_secret_rotation: Add resource identity support
+```

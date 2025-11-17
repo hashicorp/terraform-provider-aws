@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `artifactStoreUri` - (Required) The S3 URI for a general purpose bucket to use as the MLflow Tracking Server artifact store.
 * `roleArn` - (Required) The Amazon Resource Name (ARN) for an IAM role in your account that the MLflow Tracking Server uses to access the artifact store in Amazon S3. The role should have AmazonS3FullAccess permissions. For more information on IAM permissions for tracking server creation, see [Set up IAM permissions for MLflow](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow-create-tracking-server-iam.html).
 * `trackingServerName` - (Required) A unique string identifying the tracking server name. This string is part of the tracking server ARN.
@@ -92,4 +93,4 @@ Using `terraform import`, import SageMaker AI MLFlow Tracking Servers using the 
 % terraform import aws_sagemaker_mlflow_tracking_server.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-013ab16531a5987285c279b03b44b1f6bd0aae637457666198ffb8e2ff88a616 -->
+<!-- cache-key: cdktf-0.20.8 input-26f2b6e3eaa0da59c7f6ddef59ab43995b67c7ed29e94ce7955c98f0f7b107b7 -->

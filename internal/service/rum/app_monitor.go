@@ -134,8 +134,19 @@ func resourceAppMonitor() *schema.Resource {
 			},
 			names.AttrDomain: {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{names.AttrDomain, "domain_list"},
 				ValidateFunc: validation.StringLenBetween(1, 253),
+			},
+			"domain_list": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MaxItems:     5,
+				ExactlyOneOf: []string{names.AttrDomain, "domain_list"},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 253),
+				},
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
@@ -157,7 +168,6 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &rum.CreateAppMonitorInput{
 		Name:         aws.String(name),
 		CwLogEnabled: aws.Bool(d.Get("cw_log_enabled").(bool)),
-		Domain:       aws.String(d.Get(names.AttrDomain).(string)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -167,6 +177,14 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("custom_events"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.CustomEvents = expandCustomEvents(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk(names.AttrDomain); ok {
+		input.Domain = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("domain_list"); ok && len(v.([]any)) > 0 {
+		input.DomainList = flex.ExpandStringValueList(v.([]any))
 	}
 
 	_, err := conn.CreateAppMonitor(ctx, input)
@@ -217,6 +235,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("cw_log_enabled", appMon.DataStorage.CwLog.CwLogEnabled)
 	d.Set("cw_log_group", appMon.DataStorage.CwLog.CwLogGroup)
 	d.Set(names.AttrDomain, appMon.Domain)
+	d.Set("domain_list", appMon.DomainList)
 	d.Set(names.AttrName, name)
 
 	setTagsOut(ctx, appMon.Tags)
@@ -246,7 +265,15 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange(names.AttrDomain) {
-			input.Domain = aws.String(d.Get(names.AttrDomain).(string))
+			if v, ok := d.GetOk(names.AttrDomain); ok {
+				input.Domain = aws.String(v.(string))
+			}
+		}
+
+		if d.HasChange("domain_list") {
+			if v, ok := d.GetOk("domain_list"); ok && len(v.([]any)) > 0 {
+				input.DomainList = flex.ExpandStringValueList(v.([]any))
+			}
 		}
 
 		_, err := conn.UpdateAppMonitor(ctx, input)

@@ -82,8 +82,9 @@ resource "aws_glue_catalog_table_optimizer" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Required) The Catalog ID of the table.
 * `configuration` - (Required) A configuration block that defines the table optimizer settings. See [Configuration](#configuration) for additional details.
 * `database_name` - (Required) The name of the database in the catalog in which the table resides.
@@ -100,15 +101,17 @@ The following arguments are required:
 ### Orphan File Deletion Configuration
 
 * `iceberg_configuration` (Optional) - The configuration for an Iceberg orphan file deletion optimizer.
-    * `orphan_file_retention_period_in_days` (Optional) - The number of days that orphan files should be retained before file deletion. Defaults to `3`.
     * `location` (Optional) - Specifies a directory in which to look for files. You may choose a sub-directory rather than the top-level table location. Defaults to the table's location.
-  
+    * `orphan_file_retention_period_in_days` (Optional) - The number of days that orphan files should be retained before file deletion. Defaults to `3`.
+    * `run_rate_in_hours` (Optional) - interval in hours between orphan file deletion job runs. Defaults to `24`.
+
 ### Retention Configuration
 
 * `iceberg_configuration` (Optional) - The configuration for an Iceberg snapshot retention optimizer.
-    * `snapshot_retention_period_in_days` (Optional) - The number of days to retain the Iceberg snapshots. Defaults to `5`, or the corresponding Iceberg table configuration field if it exists.
-    * `number_of_snapshots_to_retain` (Optional) - The number of Iceberg snapshots to retain within the retention period. Defaults to `1` or the corresponding Iceberg table configuration field if it exists.
     * `clean_expired_files` (Optional) - If set to `false`, snapshots are only deleted from table metadata, and the underlying data and metadata files are not deleted. Defaults to `false`.
+    * `number_of_snapshots_to_retain` (Optional) - The number of Iceberg snapshots to retain within the retention period. Defaults to `1` or the corresponding Iceberg table configuration field if it exists.
+    * `run_rate_in_hours` (Optional) - Interval in hours between retention job runs. Defaults to `24`.
+    * `snapshot_retention_period_in_days` (Optional) - The number of days to retain the Iceberg snapshots. Defaults to `5`, or the corresponding Iceberg table configuration field if it exists.
 
 ## Attribute Reference
 

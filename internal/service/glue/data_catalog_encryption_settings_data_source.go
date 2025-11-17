@@ -16,9 +16,10 @@ import (
 )
 
 // @SDKDataSource("aws_glue_data_catalog_encryption_settings", name="Data Catalog Encryption Settings")
-func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
+func dataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataCatalogEncryptionSettingsRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrCatalogID: {
 				Type:     schema.TypeString,

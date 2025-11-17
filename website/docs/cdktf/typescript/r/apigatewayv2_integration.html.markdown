@@ -166,6 +166,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `apiId` - (Required) API identifier.
 * `integrationType` - (Required) Integration type of an integration.
 Valid values: `AWS` (supported only for WebSocket APIs), `AWS_PROXY`, `HTTP` (supported only for WebSocket APIs), `HTTP_PROXY`, `MOCK` (supported only for WebSocket APIs). For an HTTP API private integration, use `HTTP_PROXY`.
@@ -244,4 +245,4 @@ Using `terraform import`, import `aws_apigatewayv2_integration` using the API id
 
 -> **Note:** The API Gateway managed integration created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.
 
-<!-- cache-key: cdktf-0.20.8 input-205a246952bb46d9416d884b25606a48e36e52bf67832d463ea4bda3789710b5 -->
+<!-- cache-key: cdktf-0.20.8 input-19a8a0a3db8d36fc6fe256c58d6d4dc3f257fc738bc47f1b5cdc00513386c442 -->

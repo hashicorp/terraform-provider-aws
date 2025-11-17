@@ -42,6 +42,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the application
 
 ## Attribute Reference
@@ -59,4 +62,4 @@ Application version lifecycle (`appversionLifecycle`) supports the nested attrib
 * `maxAgeInDays` - Number of days to retain an application version.
 * `deleteSourceFromS3` - Specifies whether delete a version's source bundle from S3 when the application version is deleted.
 
-<!-- cache-key: cdktf-0.20.8 input-91e8e35e02809b1291798f560a469b0ee44ac2ca2072d3eb5b99110f092216bf -->
+<!-- cache-key: cdktf-0.20.8 input-deca5453401f6e137fecb2f9f2f192ed88ca748764e7e268dea182c52d336390 -->

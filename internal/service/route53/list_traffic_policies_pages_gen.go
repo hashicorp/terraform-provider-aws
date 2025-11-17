@@ -5,15 +5,16 @@ package route53
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 )
 
-func listTrafficPoliciesPages(ctx context.Context, conn *route53.Client, input *route53.ListTrafficPoliciesInput, fn func(*route53.ListTrafficPoliciesOutput, bool) bool) error {
+func listTrafficPoliciesPages(ctx context.Context, conn *route53.Client, input *route53.ListTrafficPoliciesInput, fn func(*route53.ListTrafficPoliciesOutput, bool) bool, optFns ...func(*route53.Options)) error {
 	for {
-		output, err := conn.ListTrafficPolicies(ctx, input)
+		output, err := conn.ListTrafficPolicies(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.TrafficPolicyIdMarker) == ""

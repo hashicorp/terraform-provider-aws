@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ssmcontacts_contact_channel: Add resource identity support
+```

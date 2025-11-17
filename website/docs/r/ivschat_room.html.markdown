@@ -52,6 +52,7 @@ resource "aws_ivschat_room" "example" {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `logging_configuration_identifiers` - (Optional) List of Logging Configuration
   ARNs to attach to the room.
 * `maximum_message_length` - (Optional) Maximum number of characters in a single
@@ -85,6 +86,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `5m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ivschat_room.example
+  identity = {
+    "arn" = "arn:aws:ivschat:us-west-2:123456789012:room/g1H2I3j4k5L6"
+  }
+}
+
+resource "aws_ivschat_room" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the IVS Chat room.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Chat Room using the ARN. For example:
 

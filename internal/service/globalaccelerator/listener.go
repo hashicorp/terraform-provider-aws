@@ -25,16 +25,14 @@ import (
 )
 
 // @SDKResource("aws_globalaccelerator_listener", name="Listener")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
 func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
 		ReadWithoutTimeout:   resourceListenerRead,
 		UpdateWithoutTimeout: resourceListenerUpdate,
 		DeleteWithoutTimeout: resourceListenerDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),

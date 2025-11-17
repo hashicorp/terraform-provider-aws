@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterIdentifier` - (Required) The cluster identifier of the cluster to access.
 * `endpointName` - (Required) The Redshift-managed VPC endpoint name.
 * `resourceOwner` - (Optional) The Amazon Web Services account ID of the owner of the cluster. This is only required if the cluster is in another Amazon Web Services account.
@@ -98,4 +99,4 @@ Using `terraform import`, import Redshift endpoint access using the `name`. For 
 % terraform import aws_redshift_endpoint_access.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b1a23f712abf5e70b5e09afe1545b494b878b5bffe5195cca6310e786a254ca9 -->
+<!-- cache-key: cdktf-0.20.8 input-375a92131bb2eebc025d8f29563ae1445f5b94915fe5c50c75eeec0838214aa0 -->

@@ -17,7 +17,7 @@ import (
 )
 
 // @SDKDataSource("aws_ssoadmin_instances", name="Instances")
-func DataSourceInstances() *schema.Resource {
+func dataSourceInstances() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstancesRead,
 

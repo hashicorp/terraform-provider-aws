@@ -822,8 +822,8 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Server: (%s)", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, 1*time.Minute,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, 1*time.Minute,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteServer(ctx, &transfer.DeleteServerInput{
 				ServerId: aws.String(d.Id()),
 			})
@@ -884,7 +884,7 @@ func updateServer(ctx context.Context, conn *transfer.Client, input *transfer.Up
 	// To prevent accessing the EC2 API directly to check the VPC Endpoint
 	// state, which can require confusing IAM permissions and have other
 	// eventual consistency consideration, we retry only via the Transfer API.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, tfec2.VPCEndpointCreationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, tfec2.VPCEndpointCreationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateServer(ctx, input)
 	}, "VPC Endpoint state is not yet available")
 
@@ -1243,20 +1243,25 @@ func flattenWorkflowDetail(apiObjects []awstypes.WorkflowDetail) []any {
 type securityPolicyName string
 
 const (
-	securityPolicyName2018_11             securityPolicyName = "TransferSecurityPolicy-2018-11"
-	securityPolicyName2020_06             securityPolicyName = "TransferSecurityPolicy-2020-06"
-	securityPolicyName2022_03             securityPolicyName = "TransferSecurityPolicy-2022-03"
-	securityPolicyName2023_05             securityPolicyName = "TransferSecurityPolicy-2023-05"
-	securityPolicyName2024_01             securityPolicyName = "TransferSecurityPolicy-2024-01"
-	securityPolicyNameFIPS_2020_06        securityPolicyName = "TransferSecurityPolicy-FIPS-2020-06"
-	securityPolicyNameFIPS_2023_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2023-05"
-	securityPolicyNameFIPS_2024_01        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-01"
-	securityPolicyNameFIPS_2024_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-05"
-	securityPolicyNamePQ_SSH_2023_04      securityPolicyName = "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"
-	securityPolicyNamePQ_SSH_FIPS_2023_04 securityPolicyName = "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"
-	securityPolicyNameRestricted_2018_11  securityPolicyName = "TransferSecurityPolicy-Restricted-2018-11"
-	securityPolicyNameRestricted_2020_06  securityPolicyName = "TransferSecurityPolicy-Restricted-2020-06"
-	securityPolicyNameRestricted_2024_06  securityPolicyName = "TransferSecurityPolicy-Restricted-2024-06"
+	securityPolicyName2018_11                   securityPolicyName = "TransferSecurityPolicy-2018-11"
+	securityPolicyName2020_06                   securityPolicyName = "TransferSecurityPolicy-2020-06"
+	securityPolicyName2022_03                   securityPolicyName = "TransferSecurityPolicy-2022-03"
+	securityPolicyName2023_05                   securityPolicyName = "TransferSecurityPolicy-2023-05"
+	securityPolicyName2024_01                   securityPolicyName = "TransferSecurityPolicy-2024-01"
+	securityPolicyName2025_03                   securityPolicyName = "TransferSecurityPolicy-2025-03"
+	securityPolicyNameFIPS_2020_06              securityPolicyName = "TransferSecurityPolicy-FIPS-2020-06"
+	securityPolicyNameFIPS_2023_05              securityPolicyName = "TransferSecurityPolicy-FIPS-2023-05"
+	securityPolicyNameFIPS_2024_01              securityPolicyName = "TransferSecurityPolicy-FIPS-2024-01"
+	securityPolicyNameFIPS_2024_05              securityPolicyName = "TransferSecurityPolicy-FIPS-2024-05"
+	securityPolicyNameFIPS_2024_10              securityPolicyName = "TransferSFTPConnectorSecurityPolicy-FIPS-2024-10"
+	securityPolicyNameFIPS_2025_03              securityPolicyName = "TransferSecurityPolicy-FIPS-2025-03"
+	securityPolicyNamePQ_SSH_2023_04            securityPolicyName = "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"
+	securityPolicyNamePQ_SSH_FIPS_2023_04       securityPolicyName = "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"
+	securityPolicyNameRestricted_2018_11        securityPolicyName = "TransferSecurityPolicy-Restricted-2018-11"
+	securityPolicyNameRestricted_2020_06        securityPolicyName = "TransferSecurityPolicy-Restricted-2020-06"
+	securityPolicyNameRestricted_2024_06        securityPolicyName = "TransferSecurityPolicy-Restricted-2024-06"
+	securityPolicyNameSSHAuditCompliant_2025_02 securityPolicyName = "TransferSecurityPolicy-SshAuditCompliant-2025-02"
+	securityPolicyNameAS2Restricted_2025_07     securityPolicyName = "TransferSecurityPolicy-AS2Restricted-2025-07"
 )
 
 func (securityPolicyName) Values() []securityPolicyName {
@@ -1266,14 +1271,18 @@ func (securityPolicyName) Values() []securityPolicyName {
 		securityPolicyName2022_03,
 		securityPolicyName2023_05,
 		securityPolicyName2024_01,
+		securityPolicyName2025_03,
 		securityPolicyNameFIPS_2020_06,
 		securityPolicyNameFIPS_2023_05,
 		securityPolicyNameFIPS_2024_01,
 		securityPolicyNameFIPS_2024_05,
+		securityPolicyNameFIPS_2025_03,
 		securityPolicyNamePQ_SSH_2023_04,
 		securityPolicyNamePQ_SSH_FIPS_2023_04,
 		securityPolicyNameRestricted_2018_11,
 		securityPolicyNameRestricted_2020_06,
 		securityPolicyNameRestricted_2024_06,
+		securityPolicyNameSSHAuditCompliant_2025_02,
+		securityPolicyNameAS2Restricted_2025_07,
 	}
 }

@@ -50,6 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dashboardAttributes` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Dashboard.
 * `guardianAttributes` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Guardian.
 
@@ -97,4 +98,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Account VDM Attributes 
 % terraform import aws_sesv2_account_vdm_attributes.example ses-account-vdm-attributes
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b4d0b06f4304f2a2394a2efa012918dd4528d7fc4bfc11ed8de9b1f68d2751e1 -->
+<!-- cache-key: cdktf-0.20.8 input-8b921ff22793c6ef51cbdc10ba3ede3f8adde3c18bf5592bc739919c372cb7a5 -->

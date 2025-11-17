@@ -846,7 +846,6 @@ func resourceApplication() *schema.Resource {
 				"runtime_environment": {
 					Type:             schema.TypeString,
 					Required:         true,
-					ForceNew:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.RuntimeEnvironment](),
 				},
 				"service_execution_role": {
@@ -954,7 +953,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 	applicationName := d.Get(names.AttrName).(string)
 
-	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
+	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "runtime_environment", "service_execution_role") {
 		currentApplicationVersionID := int64(d.Get("version_id").(int))
 		updateApplication := false
 
@@ -1284,20 +1283,6 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 			}
 
-			if d.HasChange("application_configuration.0.run_configuration") {
-				application, err := findApplicationDetailByName(ctx, conn, applicationName)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", applicationName, err)
-				}
-
-				if actual, expected := application.ApplicationStatus, awstypes.ApplicationStatusRunning; actual == expected {
-					input.RunConfigurationUpdate = expandRunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]any))
-
-					updateApplication = true
-				}
-			}
-
 			input.ApplicationConfigurationUpdate = applicationConfigurationUpdate
 		}
 
@@ -1386,7 +1371,24 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			updateApplication = true
 		}
 
+		if d.HasChange("runtime_environment") {
+			input.RuntimeEnvironmentUpdate = awstypes.RuntimeEnvironment(d.Get("runtime_environment").(string))
+
+			updateApplication = true
+		}
+
 		if updateApplication {
+			// Always send 'run_configuration', else defaults are applied.
+			application, err := findApplicationDetailByName(ctx, conn, applicationName)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", applicationName, err)
+			}
+
+			if actual, expected := application.ApplicationStatus, awstypes.ApplicationStatusRunning; actual == expected {
+				input.RunConfigurationUpdate = expandRunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]any))
+			}
+
 			input.CurrentApplicationVersionId = aws.Int64(currentApplicationVersionID)
 
 			output, err := waitIAMPropagation(ctx, func() (*kinesisanalyticsv2.UpdateApplicationOutput, error) {
@@ -1735,7 +1737,7 @@ func waitApplicationOperationSucceeded(ctx context.Context, conn *kinesisanalyti
 
 func waitIAMPropagation[T any](ctx context.Context, f func() (*T, error)) (*T, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return f()
 		},
 		func(err error) (bool, error) {

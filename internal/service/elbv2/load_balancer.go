@@ -17,6 +17,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -39,17 +40,15 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @SDKResource("aws_alb", name="Load Balancer")
 // @SDKResource("aws_lb", name="Load Balancer")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.LoadBalancer")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.LoadBalancer")
 func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
 		ReadWithoutTimeout:   resourceLoadBalancerRead,
 		UpdateWithoutTimeout: resourceLoadBalancerUpdate,
 		DeleteWithoutTimeout: resourceLoadBalancerDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: customdiff.Sequence(
 			customizeDiffLoadBalancerALB,
@@ -252,6 +251,20 @@ func resourceLoadBalancer() *schema.Resource {
 				Default:          awstypes.LoadBalancerTypeEnumApplication,
 				ValidateDiagFunc: enum.Validate[awstypes.LoadBalancerTypeEnum](),
 			},
+			"minimum_load_balancer_capacity": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_units": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -273,6 +286,13 @@ func resourceLoadBalancer() *schema.Resource {
 				Optional:         true,
 				Default:          false,
 				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+			},
+			"secondary_ips_auto_assigned_per_subnet": {
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
+				ValidateFunc:     validation.IntBetween(0, 7),
 			},
 			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
@@ -445,6 +465,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	var attributes []awstypes.LoadBalancerAttribute
+	var minCapacity *awstypes.MinimumLoadBalancerCapacity
 
 	if lbType == awstypes.LoadBalancerTypeEnumApplication || lbType == awstypes.LoadBalancerTypeEnumNetwork {
 		if v, ok := d.GetOk("access_logs"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -454,6 +475,9 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 				Key:   aws.String(loadBalancerAttributeAccessLogsS3Enabled),
 				Value: flex.BoolValueToString(false),
 			})
+		}
+		if v, ok := d.GetOk("minimum_load_balancer_capacity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			minCapacity = expandMinimumLoadBalancerCapacity(v.([]any))
 		}
 	}
 
@@ -469,6 +493,16 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	attributes = append(attributes, loadBalancerAttributes.expand(d, lbType, false)...)
+
+	if minCapacity != nil {
+		if err := modifyCapacityReservation(ctx, conn, d.Id(), minCapacity); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		if _, err := waitCapacityReservationProvisioned(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Load Balancer (%s) capacity reservation provision: %s", d.Id(), err)
+		}
+	}
 
 	wait := false
 	if len(attributes) > 0 {
@@ -563,6 +597,21 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	loadBalancerAttributes.flatten(d, attributes)
+
+	if lb.Type == awstypes.LoadBalancerTypeEnumApplication || lb.Type == awstypes.LoadBalancerTypeEnumNetwork {
+		capacity, err := findCapacityReservationByARN(ctx, conn, d.Id())
+
+		switch {
+		case tfawserr.ErrCodeEquals(err, errCodeAccessDenied, errCodeInvalidAction):
+			d.Set("minimum_load_balancer_capacity", nil)
+		case err != nil:
+			return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s) capacity reservation: %s", d.Id(), err)
+		default:
+			if err := d.Set("minimum_load_balancer_capacity", flattenMinimumLoadBalancerCapacity(capacity.MinimumLoadBalancerCapacity)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting minimum_load_balancer_capacity: %s", err)
+			}
+		}
+	}
 
 	return diags
 }
@@ -677,6 +726,16 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
+	if d.HasChange("minimum_load_balancer_capacity") {
+		if err := modifyCapacityReservation(ctx, conn, d.Id(), expandMinimumLoadBalancerCapacity(d.Get("minimum_load_balancer_capacity").([]any))); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		if _, err := waitCapacityReservationProvisioned(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Load Balancer (%s) capacity reservation provision: %s", d.Id(), err)
+		}
+	}
+
 	if _, err := waitLoadBalancerActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Load Balancer (%s) update: %s", d.Id(), err)
 	}
@@ -717,7 +776,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func modifyLoadBalancerAttributes(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string, attributes []awstypes.LoadBalancerAttribute) error {
-	input := &elasticloadbalancingv2.ModifyLoadBalancerAttributesInput{
+	input := elasticloadbalancingv2.ModifyLoadBalancerAttributesInput{
 		Attributes:      attributes,
 		LoadBalancerArn: aws.String(arn),
 	}
@@ -728,7 +787,7 @@ func modifyLoadBalancerAttributes(ctx context.Context, conn *elasticloadbalancin
 			return nil
 		}
 
-		_, err := conn.ModifyLoadBalancerAttributes(ctx, input)
+		_, err := conn.ModifyLoadBalancerAttributes(ctx, &input)
 
 		if err != nil {
 			// "Validation error: Load balancer attribute key 'routing.http.desync_mitigation_mode' is not recognized"
@@ -748,6 +807,28 @@ func modifyLoadBalancerAttributes(ctx context.Context, conn *elasticloadbalancin
 
 		return nil
 	}
+}
+
+func modifyCapacityReservation(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string, minCapacity *awstypes.MinimumLoadBalancerCapacity) error {
+	resetCapacityReservation := false
+	if minCapacity == nil {
+		resetCapacityReservation = true
+	} else if minCapacity.CapacityUnits == nil {
+		resetCapacityReservation = true
+	}
+	input := elasticloadbalancingv2.ModifyCapacityReservationInput{
+		LoadBalancerArn:             aws.String(arn),
+		MinimumLoadBalancerCapacity: minCapacity,
+		ResetCapacityReservation:    aws.Bool(resetCapacityReservation),
+	}
+
+	_, err := conn.ModifyCapacityReservation(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("modifying ELBv2 Load Balancer (%s) capacity reservation: %w", arn, err)
+	}
+
+	return nil
 }
 
 type loadBalancerAttributeInfo struct {
@@ -824,6 +905,11 @@ var loadBalancerAttributes = loadBalancerAttributeMap(map[string]loadBalancerAtt
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPPreserveHostHeaderEnabled,
 		tfType:                     schema.TypeBool,
 		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
+	},
+	"secondary_ips_auto_assigned_per_subnet": {
+		apiAttributeKey:            loadBalancerAttributeSecondaryIPsAutoAssignedPerSubnet,
+		tfType:                     schema.TypeInt,
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumNetwork},
 	},
 	"xff_header_processing_mode": {
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPXFFHeaderProcessingMode,
@@ -950,11 +1036,11 @@ func findLoadBalancerByARN(ctx context.Context, conn *elasticloadbalancingv2.Cli
 }
 
 func findLoadBalancerAttributesByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) ([]awstypes.LoadBalancerAttribute, error) {
-	input := &elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{
+	input := elasticloadbalancingv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeLoadBalancerAttributes(ctx, input)
+	output, err := conn.DescribeLoadBalancerAttributes(ctx, &input)
 
 	if errs.IsA[*awstypes.LoadBalancerNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -974,6 +1060,31 @@ func findLoadBalancerAttributesByARN(ctx context.Context, conn *elasticloadbalan
 	return output.Attributes, nil
 }
 
+func findCapacityReservationByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (*elasticloadbalancingv2.DescribeCapacityReservationOutput, error) {
+	input := elasticloadbalancingv2.DescribeCapacityReservationInput{
+		LoadBalancerArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeCapacityReservation(ctx, &input)
+
+	if errs.IsA[*awstypes.LoadBalancerNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func statusLoadBalancer(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findLoadBalancerByARN(ctx, conn, arn)
@@ -987,6 +1098,29 @@ func statusLoadBalancer(ctx context.Context, conn *elasticloadbalancingv2.Client
 		}
 
 		return output, string(output.State.Code), nil
+	}
+}
+
+func statusCapacityReservation(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findCapacityReservationByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		overallState := awstypes.CapacityReservationStateEnumProvisioned
+		for _, rs := range output.CapacityReservationState {
+			if rs.State.Code != awstypes.CapacityReservationStateEnumProvisioned {
+				overallState = rs.State.Code
+			}
+		}
+
+		return output, string(overallState), nil
 	}
 }
 
@@ -1020,7 +1154,7 @@ func waitForALBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, 
 	const (
 		timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
 	)
-	_, err = tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
+	_, err = tfresource.RetryUntilEqual(ctx, timeout, 0, func(ctx context.Context) (int, error) {
 		networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
 		if err != nil {
 			return 0, err
@@ -1032,7 +1166,7 @@ func waitForALBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, 
 			}
 
 			if ipv4IPAMPoolID != "" {
-				if _, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+				if _, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 					output, err := tfec2.FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx, conn, aws.ToString(v.Association.AllocationId), ipv4IPAMPoolID)
 					if err != nil {
 						return nil, err
@@ -1064,7 +1198,7 @@ func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, 
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err = tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
+	_, err = tfresource.RetryUntilEqual(ctx, timeout, 0, func(ctx context.Context) (int, error) {
 		networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-aws", "ELB "+name)
 		if err != nil {
 			return 0, err
@@ -1074,6 +1208,25 @@ func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, 
 	})
 
 	return err
+}
+
+func waitCapacityReservationProvisioned(ctx context.Context, conn *elasticloadbalancingv2.Client, lbArn string, timeout time.Duration) (*elasticloadbalancingv2.DescribeCapacityReservationOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.CapacityReservationStateEnumPending, awstypes.CapacityReservationStateEnumFailed, awstypes.CapacityReservationStateEnumRebalancing),
+		Target:     enum.Slice(awstypes.CapacityReservationStateEnumProvisioned),
+		Refresh:    statusCapacityReservation(ctx, conn, lbArn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*elasticloadbalancingv2.DescribeCapacityReservationOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func loadBalancerNameFromARN(s string) (string, error) {
@@ -1139,6 +1292,7 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 	// - there are subnet removals
 	//   OR security groups are being added where none currently exist
 	//   OR all security groups are being removed
+	//   OR secondary IPv4 addresses are being decreased
 	//
 	// Any other combination should be treated as normal. At this time, subnet
 	// handling is the only known difference between Network Load Balancers and
@@ -1213,6 +1367,21 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 
 			if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
 				if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	// Get diff for secondary IPv4 addresses
+	if diff.HasChange("secondary_ips_auto_assigned_per_subnet") {
+		if v := config.GetAttr("secondary_ips_auto_assigned_per_subnet"); v.IsWhollyKnown() {
+			o, n := diff.GetChange("secondary_ips_auto_assigned_per_subnet")
+			oldCount, newCount := o.(int), n.(int)
+
+			// Force new if secondary IPv4 address count is decreased
+			if newCount < oldCount {
+				if err := diff.ForceNew("secondary_ips_auto_assigned_per_subnet"); err != nil {
 					return err
 				}
 			}
@@ -1464,13 +1633,47 @@ func expandIPAMPools(tfList []any) *awstypes.IpamPools {
 	return &apiObject
 }
 
-func flattenIPAMPools(ipamPools *awstypes.IpamPools) []any {
-	if ipamPools == nil {
+func expandMinimumLoadBalancerCapacity(tfList []any) *awstypes.MinimumLoadBalancerCapacity {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObject awstypes.MinimumLoadBalancerCapacity
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		if v, ok := tfMap["capacity_units"].(int); ok && v != 0 {
+			apiObject.CapacityUnits = aws.Int32(int32(v))
+		}
+	}
+
+	return &apiObject
+}
+
+func flattenIPAMPools(apiObject *awstypes.IpamPools) []any {
+	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]any{
-		"ipv4_ipam_pool_id": aws.ToString(ipamPools.Ipv4IpamPoolId),
+		"ipv4_ipam_pool_id": aws.ToString(apiObject.Ipv4IpamPoolId),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenMinimumLoadBalancerCapacity(apiObject *awstypes.MinimumLoadBalancerCapacity) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"capacity_units": aws.ToInt32(apiObject.CapacityUnits),
 	}
 
 	return []any{tfMap}

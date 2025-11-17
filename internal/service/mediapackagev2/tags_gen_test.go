@@ -11,6 +11,6 @@ import (
 	tfmediapackagev2 "github.com/hashicorp/terraform-provider-aws/internal/service/mediapackagev2"
 )
 
-func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTags(tfmediapackagev2.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfmediapackagev2.ServicePackage(ctx), resourceAddress, knownValue)
 }

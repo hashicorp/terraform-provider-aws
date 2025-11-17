@@ -40,10 +40,10 @@ func testAccOrganization_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.arn", resourceName, "master_account_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.email", resourceName, "master_account_email"),
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.id", resourceName, "master_account_id"),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile(`organization/o-.+`)),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "organizations", "organization/o-{id}"),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "feature_set", string(awstypes.OrganizationFeatureSetAll)),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "master_account_arn", "organizations", regexache.MustCompile(`account/o-.+/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, "master_account_arn", "organizations", regexache.MustCompile(`account/`+organizationIDRegexPattern+`/\d{12}$`)),
 					resource.TestMatchResourceAttr(resourceName, "master_account_email", regexache.MustCompile(`.+@.+`)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "master_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "non_master_accounts.#", "0"),
@@ -184,6 +184,30 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeBackupPolicy)),
+				),
+			},
+			{
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeChatbotPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeChatbotPolicy)),
+				),
+			},
+			{
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeDeclarativePolicyEc2)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeDeclarativePolicyEc2)),
+				),
+			},
+			{
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeResourceControlPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeResourceControlPolicy)),
 				),
 			},
 			{

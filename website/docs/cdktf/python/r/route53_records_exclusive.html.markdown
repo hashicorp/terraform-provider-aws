@@ -168,7 +168,7 @@ Identify the Local Zones Group for a specific Local Zone by using the [`describe
 #### `coordinates`
 
 * `latitude` - (Required) A coordinate of the north–south position of a geographic point on the surface of the Earth (`-90` - `90`).
-* `latitude` - (Required) A coordinate of the east–west position of a geographic point on the surface of the Earth (`-180` - `180`).
+* `longitude` - (Required) A coordinate of the east–west position of a geographic point on the surface of the Earth (`-180` - `180`).
 
 ### `resource_records`
 
@@ -210,4 +210,4 @@ Using `terraform import`, import Route 53 Records Exclusive using the `zone_id`.
 % terraform import aws_route53_records_exclusive.example ABCD1234
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d1eeef3f098f888558193e20ab980c73651958809ee9cd680bcbe53e1e64c909 -->
+<!-- cache-key: cdktf-0.20.8 input-f056297b1aab15d407329e14f01909c93548d19a7746267f3f2a6007f7034d5f -->

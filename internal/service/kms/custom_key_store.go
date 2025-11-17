@@ -184,10 +184,12 @@ func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("key_store_password", d.Get("key_store_password"))
 	d.Set("trust_anchor_certificate", output.TrustAnchorCertificate)
 
-	d.Set("xks_proxy_connectivity", output.XksProxyConfiguration.Connectivity)
-	d.Set("xks_proxy_uri_endpoint", output.XksProxyConfiguration.UriEndpoint)
-	d.Set("xks_proxy_uri_path", output.XksProxyConfiguration.UriPath)
-	d.Set("xks_proxy_vpc_endpoint_service_name", output.XksProxyConfiguration.VpcEndpointServiceName)
+	if output.XksProxyConfiguration != nil {
+		d.Set("xks_proxy_connectivity", output.XksProxyConfiguration.Connectivity)
+		d.Set("xks_proxy_uri_endpoint", output.XksProxyConfiguration.UriEndpoint)
+		d.Set("xks_proxy_uri_path", output.XksProxyConfiguration.UriPath)
+		d.Set("xks_proxy_vpc_endpoint_service_name", output.XksProxyConfiguration.VpcEndpointServiceName)
+	}
 
 	return diags
 }

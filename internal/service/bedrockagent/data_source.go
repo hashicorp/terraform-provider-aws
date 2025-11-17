@@ -61,7 +61,7 @@ func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, e
 }
 
 type dataSourceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[dataSourceResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -810,7 +810,7 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 
 	input.ClientToken = aws.String(id.UniqueId())
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateDataSource(ctx, input)
 	}, errCodeValidationException, "cannot assume role")
 
@@ -898,7 +898,7 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 		return
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateDataSource(ctx, input)
 	}, errCodeValidationException, "cannot assume role")
 
@@ -1024,6 +1024,7 @@ func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataS
 }
 
 type dataSourceResourceModel struct {
+	framework.WithRegionModel
 	DataDeletionPolicy                fwtypes.StringEnum[awstypes.DataDeletionPolicy]                         `tfsdk:"data_deletion_policy"`
 	DataSourceConfiguration           fwtypes.ListNestedObjectValueOf[dataSourceConfigurationModel]           `tfsdk:"data_source_configuration"`
 	DataSourceID                      types.String                                                            `tfsdk:"data_source_id"`

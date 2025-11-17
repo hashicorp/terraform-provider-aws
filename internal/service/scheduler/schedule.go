@@ -45,6 +45,12 @@ func resourceSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"action_after_completion": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.ActionAfterCompletion](),
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -442,6 +448,10 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta an
 		ScheduleExpression: aws.String(d.Get(names.AttrScheduleExpression).(string)),
 	}
 
+	if v, ok := d.Get("action_after_completion").(string); ok && v != "" {
+		in.ActionAfterCompletion = types.ActionAfterCompletion(v)
+	}
+
 	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {
 		in.Description = aws.String(v)
 	}
@@ -532,6 +542,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), err)
 	}
 
+	d.Set("action_after_completion", out.ActionAfterCompletion)
 	d.Set(names.AttrARN, out.Arn)
 	d.Set(names.AttrDescription, out.Description)
 
@@ -577,6 +588,10 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		Name:               aws.String(d.Get(names.AttrName).(string)),
 		ScheduleExpression: aws.String(d.Get(names.AttrScheduleExpression).(string)),
 		Target:             expandTarget(ctx, d.Get(names.AttrTarget).([]any)[0].(map[string]any)),
+	}
+
+	if v, ok := d.Get("action_after_completion").(string); ok && v != "" {
+		in.ActionAfterCompletion = types.ActionAfterCompletion(v)
 	}
 
 	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {
@@ -710,15 +725,15 @@ func capacityProviderHash(v any) int {
 	m := v.(map[string]any)
 
 	if v, ok := m["base"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
+		fmt.Fprintf(&buf, "%d-", v)
 	}
 
 	if v, ok := m["capacity_provider"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	if v, ok := m[names.AttrWeight].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
+		fmt.Fprintf(&buf, "%d-", v)
 	}
 
 	return create.StringHashcode(buf.String())
@@ -729,11 +744,11 @@ func placementConstraintHash(v any) int {
 	m := v.(map[string]any)
 
 	if v, ok := m[names.AttrExpression]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	if v, ok := m[names.AttrType]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	return create.StringHashcode(buf.String())
@@ -744,11 +759,11 @@ func placementStrategyHash(v any) int {
 	m := v.(map[string]any)
 
 	if v, ok := m[names.AttrField]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	if v, ok := m[names.AttrType]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	return create.StringHashcode(buf.String())

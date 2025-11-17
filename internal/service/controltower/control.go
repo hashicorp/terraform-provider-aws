@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -241,6 +242,9 @@ func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta any
 		TargetIdentifier:  aws.String(targetIdentifier),
 	}
 	output, err := conn.DisableControl(ctx, &input)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ControlTower Control (%s): %s", d.Id(), err)
@@ -258,11 +262,7 @@ const (
 )
 
 func expandControlParameters(input []any) ([]types.EnabledControlParameter, error) {
-	if len(input) == 0 {
-		return nil, nil
-	}
-
-	var output []types.EnabledControlParameter
+	output := []types.EnabledControlParameter{}
 
 	for _, v := range input {
 		val := v.(map[string]any)
@@ -308,20 +308,14 @@ func flattenControlParameters(input []types.EnabledControlParameterSummary) (*sc
 			names.AttrKey: aws.ToString(v.Key),
 		}
 
-		var va any
-		err := v.Value.UnmarshalSmithyDocument(&va)
+		va, err := tfsmithy.DocumentToJSONString(v.Value)
 
 		if err != nil {
 			log.Printf("[WARN] Error unmarshalling control parameter value: %s", err)
 			return nil, err
 		}
 
-		out, err := json.Marshal(va)
-		if err != nil {
-			return nil, err
-		}
-
-		val[names.AttrValue] = string(out)
+		val[names.AttrValue] = va
 		output = append(output, val)
 	}
 

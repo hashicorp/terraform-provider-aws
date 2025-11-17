@@ -58,11 +58,11 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `language_code` - (Required) The language code you selected for your vocabulary.
-* `vocabulary_file_uri` - (Required) The Amazon S3 location (URI) of the text file that contains your custom vocabulary.
 * `vocabulary_name` - (Required) The name of the Vocabulary.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `phrases` - (Optional) - A list of terms to include in the vocabulary. Conflicts with `vocabulary_file_uri`
 * `vocabulary_file_uri` - (Optional) The Amazon S3 location (URI) of the text file that contains your custom vocabulary. Conflicts wth `phrases`.
 * `tags` - (Optional) A map of tags to assign to the Vocabulary. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -108,4 +108,4 @@ Using `terraform import`, import Transcribe Vocabulary using the `vocabulary_nam
 % terraform import aws_transcribe_vocabulary.example example-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4a63881191c0f51840ddf42c0326273b5b41ebbdda248795a18439aec52f460c -->
+<!-- cache-key: cdktf-0.20.8 input-e5eaecd1fc1891acd1fe7e044eeaa735a0c36939046237cd27f15b83b14a4db7 -->

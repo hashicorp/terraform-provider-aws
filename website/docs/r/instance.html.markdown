@@ -14,6 +14,8 @@ Provides an EC2 instance resource. This allows instances to be created, updated,
 
 ### Basic example using AMI lookup
 
+Using a data source
+
 ```terraform
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -31,8 +33,21 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
-resource "aws_instance" "web" {
+resource "aws_instance" "example" {
   ami           = data.aws_ami.ubuntu.id
+  instance_type = "t3.micro"
+
+  tags = {
+    Name = "HelloWorld"
+  }
+}
+```
+
+Using AWS Systems Manager Parameter Store
+
+```terraform
+resource "aws_instance" "example" {
+  ami           = "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
   instance_type = "t3.micro"
 
   tags = {
@@ -44,7 +59,7 @@ resource "aws_instance" "web" {
 ### Spot instance example
 
 ```terraform
-data "aws_ami" "this" {
+data "aws_ami" "example" {
   most_recent = true
   owners      = ["amazon"]
   filter {
@@ -57,8 +72,8 @@ data "aws_ami" "this" {
   }
 }
 
-resource "aws_instance" "this" {
-  ami = data.aws_ami.this.id
+resource "aws_instance" "example" {
+  ami = data.aws_ami.example.id
   instance_market_options {
     market_type = "spot"
     spot_options {
@@ -93,7 +108,7 @@ resource "aws_subnet" "my_subnet" {
   }
 }
 
-resource "aws_network_interface" "foo" {
+resource "aws_network_interface" "example" {
   subnet_id   = aws_subnet.my_subnet.id
   private_ips = ["172.16.10.100"]
 
@@ -102,13 +117,12 @@ resource "aws_network_interface" "foo" {
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "example" {
   ami           = "ami-005e54dee72cc1d00" # us-west-2
   instance_type = "t2.micro"
 
-  network_interface {
-    network_interface_id = aws_network_interface.foo.id
-    device_index         = 0
+  primary_network_interface {
+    network_interface_id = aws_network_interface.example.id
   }
 
   credit_specification {
@@ -195,17 +209,12 @@ Do not use `volume_tags` if you plan to manage block device tags outside the `aw
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ami` - (Optional) AMI to use for the instance. Required unless `launch_template` is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting `ami` will override the AMI specified in the Launch Template.
 * `associate_public_ip_address` - (Optional) Whether to associate a public IP address with an instance in a VPC.
 * `availability_zone` - (Optional) AZ to start the instance in.
-
 * `capacity_reservation_specification` - (Optional) Describes an instance's Capacity Reservation targeting option. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
-
--> **NOTE:** Changing `cpu_core_count` and/or `cpu_threads_per_core` will cause the resource to be destroyed and re-created.
-
-* `cpu_core_count` - (Optional, **Deprecated** use the `cpu_options` argument instead) Sets the number of CPU cores for an instance. This option is only supported on creation of instance type that support CPU Options [CPU Cores and Threads Per CPU Core Per Instance Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html#cpu-options-supported-instances-values) - specifying this option for unsupported instance types will return an error from the EC2 API.
 * `cpu_options` - (Optional) The CPU options for the instance. See [CPU Options](#cpu-options) below for more details.
-* `cpu_threads_per_core` - (Optional - has no effect unless `cpu_core_count` is also set, **Deprecated** use the `cpu_options` argument instead)  If set to 1, hyperthreading is disabled on the launched instance. Defaults to 2 if not set. See [Optimizing CPU Options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html) for more information.
 * `credit_specification` - (Optional) Configuration block for customizing the credit specification of the instance. See [Credit Specification](#credit-specification) below for more details. Terraform will only perform drift detection of its value when present in a configuration. Removing this configuration on existing instances will only stop managing it. It will not change the configuration back to the default for the instance type.
 * `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection).
 * `disable_api_termination` - (Optional) If true, enables [EC2 Instance Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination).
@@ -214,6 +223,7 @@ This resource supports the following arguments:
 * `enable_primary_ipv6` - (Optional) Whether to assign a primary IPv6 Global Unicast Address (GUA) to the instance when launched in a dual-stack or IPv6-only subnet. A primary IPv6 address ensures a consistent IPv6 address for the instance and is automatically assigned by AWS to the ENI. Once enabled, the first IPv6 GUA becomes the primary IPv6 address and cannot be disabled. The primary IPv6 address remains until the instance is terminated or the ENI is detached. Disabling `enable_primary_ipv6` after it has been enabled forces recreation of the instance.
 * `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 * `ephemeral_block_device` - (Optional) One or more configuration blocks to customize Ephemeral (also known as "Instance Store") volumes on the instance. See [Block Devices](#ebs-ephemeral-and-root-block-devices) below for details. When accessing this as an attribute reference, it is a set of objects.
+* `force_destroy` - (Optional) Destroys instance even if `disable_api_termination` or `disable_api_stop` is set to `true`. Defaults to `false`. Once this parameter is set to `true`, a successful `terraform apply` run before a destroy is required to update this value in the resource state. Without a successful `terraform apply` after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the instance or destroying the instance, this flag will not work. Additionally when importing an instance, a successful `terraform apply` is required to set this value in state before it will take effect on a destroy operation.
 * `get_password_data` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `hibernation` - (Optional) If true, the launched EC2 instance will support hibernation.
 * `host_id` - (Optional) ID of a dedicated host that the instance will be assigned to. Use when an instance is to be launched on a specific dedicated host.
@@ -229,9 +239,11 @@ This resource supports the following arguments:
 * `maintenance_options` - (Optional) Maintenance and recovery options for the instance. See [Maintenance Options](#maintenance-options) below for more details.
 * `metadata_options` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
-* `network_interface` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
-* `placement_group` - (Optional) Placement Group to start the instance in.
+* `network_interface` - (Optional, **Deprecated** to specify the primary network interface, use `primary_network_interface`, to attach additional network interfaces, use `aws_network_interface_attachment` resources) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
+* `placement_group` - (Optional) Placement Group to start the instance in. Conflicts with `placement_group_id`.
+* `placement_group_id` - (Optional) Placement Group ID to start the instance in. Conflicts with `placement_group`.
 * `placement_partition_number` - (Optional) Number of the partition the instance is in. Valid only if [the `aws_placement_group` resource's](placement_group.html) `strategy` argument is set to `"partition"`.
+* `primary_network_interface` - (Optional) The primary network interface. See [Primary Network Interface](#primary-network-interface) below.
 * `private_dns_name_options` - (Optional) Options for the instance hostname. The default values are inherited from the subnet. See [Private DNS Name Options](#private-dns-name-options) below for more details.
 * `private_ip` - (Optional) Private IP address to associate with the instance in a VPC.
 * `root_block_device` - (Optional) Configuration block to customize details about the root block device of the instance. See [Block Devices](#ebs-ephemeral-and-root-block-devices) below for details. When accessing this as an attribute reference, it is a list containing one object.
@@ -378,7 +390,11 @@ For more information, see the documentation on the [Instance Metadata Service](h
 
 ### Network Interfaces
 
-Each of the `network_interface` blocks attach a network interface to an EC2 Instance during boot time. However, because the network interface is attached at boot-time, replacing/modifying the network interface **WILL** trigger a recreation of the EC2 Instance. If you should need at any point to detach/modify/re-attach a network interface to the instance, use the `aws_network_interface` or `aws_network_interface_attachment` resources instead.
+`network_interface` is **deprecated**.
+Use `primary_network_interface` to specify the primary network interface.
+To attach additional network interfaces, use [`aws_network_interface_attachment`](docs/r/network_interface_attachment.html.markdown) resources.
+
+Each of the `network_interface` blocks attach a network interface to an EC2 Instance during boot time. However, because the network interface is attached at boot-time, replacing/modifying the network interface **WILL** trigger a recreation of the EC2 Instance. If you should need at any point to detach/modify/re-attach a network interface to the instance, use [`aws_network_interface_attachment`](docs/r/network_interface_attachment.html.markdown) resources instead.
 
 The `network_interface` configuration block _does_, however, allow users to supply their own network interface to be used as the default network interface on an EC2 Instance, attached at `eth0`.
 
@@ -387,6 +403,16 @@ Each `network_interface` block supports the following:
 * `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`. Currently, the only valid value is `false`, as this is only supported when creating new network interfaces when launching an instance.
 * `device_index` - (Required) Integer index of the network interface attachment. Limited by instance type.
 * `network_card_index` - (Optional) Integer index of the network card. Limited by instance type. The default index is `0`.
+* `network_interface_id` - (Required) ID of the network interface to attach.
+
+### Primary Network Interface
+
+Represents the primary network interface on the EC2 Instance.
+To manage additional network interfaces, use [`aws_network_interface_attachment`](docs/r/network_interface_attachment.html.markdown) resources.
+
+Each `primary_network_interface` block supports the following:
+
+* `delete_on_termination` - (Read-Only) Whether the network interface will be deleted when the instance terminates.
 * `network_interface_id` - (Required) ID of the network interface to attach.
 
 ### Private DNS Name Options
@@ -461,6 +487,32 @@ For `instance_market_options`, in addition to the arguments above, the following
 * `delete` - (Default `20m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_instance.example
+  identity = {
+    id = "i-12345678"
+  }
+}
+
+resource "aws_instance" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the instance.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import instances using the `id`. For example:
 

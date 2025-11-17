@@ -39,9 +39,48 @@ resource "aws_lb_listener" "front_end" {
 }
 ```
 
+With weighted target groups:
+
+```terraform
+resource "aws_lb" "front_end" {
+  # ...
+}
+
+resource "aws_lb_target_group" "front_end_blue" {
+  # ...
+}
+
+resource "aws_lb_target_group" "front_end_green" {
+  # ...
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = aws_lb.front_end.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "arn:aws:iam::187416307283:server-certificate/test_cert_rab3wuqwgja25ct3n4jdj2tzu4"
+
+  default_action {
+    type = "forward"
+
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.front_end_blue.arn
+        weight = 100
+      }
+      target_group {
+        arn    = aws_lb_target_group.front_end_green.arn
+        weight = 0
+      }
+    }
+  }
+}
+```
+
 To a NLB:
 
-```hcl
+```terraform
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = aws_lb.front_end.arn
   port              = "443"
@@ -186,6 +225,42 @@ resource "aws_lb_listener" "front_end" {
 }
 ```
 
+### JWT Validation Action
+
+```terraform
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    type = "jwt-validation"
+
+    jwt_validation {
+      issuer        = "https://example.com"
+      jwks_endpoint = "https://example.com/.well-known/jwks.json"
+      additional_claim {
+        format = "string-array"
+        name   = "claim_name1"
+        values = ["value1", "value2"]
+      }
+      additional_claim {
+        format = "single-string"
+        name   = "claim_name2"
+        values = ["value1"]
+      }
+    }
+  }
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
+}
+```
+
 ### Gateway Load Balancer Listener
 
 ```terraform
@@ -258,6 +333,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alpn_policy` - (Optional)  Name of the Application-Layer Protocol Negotiation (ALPN) policy. Can be set if `protocol` is `TLS`. Valid values are `HTTP1Only`, `HTTP2Only`, `HTTP2Optional`, `HTTP2Preferred`, and `None`.
 * `certificate_arn` - (Optional) ARN of the default SSL server certificate. Exactly one certificate is required if the protocol is HTTPS. For adding additional SSL certificates, see the [`aws_lb_listener_certificate` resource](/docs/providers/aws/r/lb_listener_certificate.html).
 * `mutual_authentication` - (Optional) The mutual authentication configuration information. See below.
@@ -292,7 +368,7 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `type` - (Required) Type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito` and `authenticate-oidc`.
+* `type` - (Required) Type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito`, `authenticate-oidc` and `jwt-validation`.
 
 The following arguments are optional:
 
@@ -300,6 +376,7 @@ The following arguments are optional:
 * `authenticate_oidc` - (Optional) Configuration block for an identity provider that is compliant with OpenID Connect (OIDC). Specify only when `type` is `authenticate-oidc`. See below.
 * `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
 * `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups. Specify only if `type` is `forward`. See below.
+* `jwt_validation` - (Optional) Configuration block for creating a JWT validation action. Required if `type` is `jwt-validation`.
 * `order` - (Optional) Order for the action. The action with the lowest value for order is performed first. Valid values are between `1` and `50000`. Defaults to the position in the list of actions.
 * `redirect` - (Optional) Configuration block for creating a redirect action. Required if `type` is `redirect`. See below.
 * `target_group_arn` - (Optional) ARN of the Target Group to which to route traffic. Specify only if `type` is `forward` and you want to route to a single target group. To route to one or more target groups, use a `forward` block instead. Can be specified with `forward` but ARNs must match.
@@ -385,6 +462,25 @@ The following arguments are optional:
 
 * `enabled` - (Optional) Whether target group stickiness is enabled. Default is `false`.
 
+#### jwt_validation
+
+The following arguments are required:
+
+* `issuer` - (Required) Issuer of the JWT.
+* `jwks_endpoint` - (Required) JSON Web Key Set (JWKS) endpoint. This endpoint contains JSON Web Keys (JWK) that are used to validate signatures from the provider. This must be a full URL, including the HTTPS protocol, the domain, and the path.
+
+The following arguments are optional:
+
+* `additional_claim` - (Optional) Repeatable configuration block for additional claims to validate.
+
+#### additional_claim
+
+The following arguments are required:
+
+* `format` - (Required) Format of the claim value. Valid values are `single-string`, `string-array` and `space-separated-values`.
+* `name` - (Required) Name of the claim to validate. `exp`, `iss`, `nbf`, or `iat` cannot be specified because they are validated by default.
+* `values` - (Required) List of expected values of the claim.
+
 #### redirect
 
 ~> **NOTE::** You can reuse URI components using the following reserved keywords: `#{protocol}`, `#{host}`, `#{port}`, `#{path}` (the leading "/" is removed) and `#{query}`.
@@ -403,22 +499,43 @@ The following arguments are optional:
 
 ### mutual_authentication
 
-* `advertise_trust_store_ca_names` - (Optional) Valid values are `off` and `on`.
-* `ignore_client_certificate_expiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
-* `mode` - (Required) Valid values are `off`, `verify` and `passthrough`.
-* `trust_store_arn` - (Required) ARN of the elbv2 Trust Store.
+* `advertise_trust_store_ca_names` - (Optional when `mode` is `verify`, invalid otherwise) Valid values are `off` and `on`.
+* `ignore_client_certificate_expiry` - (Optional when `mode` is `verify`, invalid otherwise) Whether client certificate expiry is ignored.
+  Default is `false`.
+* `mode` - (Required) Valid values are `off`, `passthrough`, and `verify`.
+* `trust_store_arn` - (Required when `mode` is `verify`, invalid otherwise) ARN of the elbv2 Trust Store.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the listener (matches `id`).
-* `id` - ARN of the listener (matches `arn`).
+* `arn` - ARN of the listener.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ~> **Note:** When importing a listener with a forward-type default action, you must include both a top-level target group ARN and a `forward` block with a `target_group` and `arn` to avoid import differences.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lb_listener.example
+  identity = {
+    "arn" = "arn:aws:elasticloadbalancing:us-west-2:187416307283:listener/app/front-end-alb/8e4497da625e2d8a/9ab28ade35828f96"
+  }
+}
+
+resource "aws_lb_listener" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the load balancer listener.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import listeners using their ARN. For example:
 

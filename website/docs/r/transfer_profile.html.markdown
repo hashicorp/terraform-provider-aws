@@ -26,6 +26,7 @@ resource "aws_transfer_profile" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `as2_id` - (Required) The As2Id is the AS2 name as defined in the RFC 4130. For inbound ttransfers this is the AS2 From Header for the AS2 messages sent from the partner. For Outbound messages this is the AS2 To Header for the AS2 messages sent to the partner. his ID cannot include spaces.
 * `certificate_ids` - (Optional) The list of certificate Ids from the imported certificate operation.
 * `profile_type` - (Required) The profile type should be LOCAL or PARTNER.

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -118,10 +119,22 @@ func TestAccECRRepositoryCreationTemplate_ignoreEquivalentLifecycle(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccRepositoryCreationTemplateConfig_lifecycleNewOrder(repositoryPrefix),
-				PlanOnly: true,
+				Config: testAccRepositoryCreationTemplateConfig_lifecycleNewOrder(repositoryPrefix),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -178,6 +191,50 @@ func TestAccECRRepositoryCreationTemplate_root(t *testing.T) {
 				Config: testAccRepositoryCreationTemplateConfig_root(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECRRepositoryCreationTemplate_mutabilityWithExclusion(t *testing.T) {
+	ctx := acctest.Context(t)
+	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_ecr_repository_creation_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRepositoryCreationTemplateConfig_mutabilityWithExclusion(repositoryPrefix, "latest*", "prod-*"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", string(types.ImageTagMutabilityMutableWithExclusion)),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter", "latest*"),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter_type", string(types.ImageTagMutabilityExclusionFilterTypeWildcard)),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.1.filter", "prod-*"),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.1.filter_type", string(types.ImageTagMutabilityExclusionFilterTypeWildcard)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRepositoryCreationTemplateConfig_mutabilityWithExclusion(repositoryPrefix, "prod-*", "latest*"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", string(types.ImageTagMutabilityMutableWithExclusion)),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter", "prod-*"),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter_type", string(types.ImageTagMutabilityExclusionFilterTypeWildcard)),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.1.filter", "latest*"),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.1.filter_type", string(types.ImageTagMutabilityExclusionFilterTypeWildcard)),
 				),
 			},
 		},
@@ -421,4 +478,33 @@ resource "aws_ecr_repository_creation_template" "root" {
   ]
 }
 `
+}
+
+func testAccRepositoryCreationTemplateConfig_mutabilityWithExclusion(repositoryPrefix, filter1, filter2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository_creation_template" "test" {
+  prefix = %[1]q
+
+  applied_for = [
+    "PULL_THROUGH_CACHE",
+    "REPLICATION",
+  ]
+
+  resource_tags = {
+    Foo = "Bar"
+  }
+
+  image_tag_mutability = "MUTABLE_WITH_EXCLUSION"
+
+  image_tag_mutability_exclusion_filter {
+    filter      = %[2]q
+    filter_type = "WILDCARD"
+  }
+
+  image_tag_mutability_exclusion_filter {
+    filter      = %[3]q
+    filter_type = "WILDCARD"
+  }
+}
+`, repositoryPrefix, filter1, filter2)
 }

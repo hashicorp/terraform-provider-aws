@@ -35,10 +35,16 @@ var (
 	LayerVersionParseResourceID                  = layerVersionParseResourceID
 	LayerVersionPermissionParseResourceID        = layerVersionPermissionParseResourceID
 	SignerServiceIsAvailable                     = signerServiceIsAvailable
+	InvocationParseResourceID                    = invocationParseResourceID
 
 	ValidFunctionName               = validFunctionName
 	ValidPermissionAction           = validPermissionAction
 	ValidPermissionEventSourceToken = validPermissionEventSourceToken
 	ValidQualifier                  = validQualifier
 	ValidPolicyStatementID          = validPolicyStatementID
+)
+
+type (
+	Policy          = policy
+	PolicyStatement = policyStatement
 )

@@ -195,6 +195,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `actionGroupState` - (Optional) Whether the action group is available for the agent to invoke or not when sending an [InvokeAgent](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_InvokeAgent.html) request. Valid values: `ENABLED`, `DISABLED`.
 * `apiSchema` - (Optional) Either details about the S3 object containing the OpenAPI schema for the action group or the JSON or YAML-formatted payload defining the schema. For more information, see [Action group OpenAPI schemas](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-api-schema.html). See [`apiSchema` Block](#api_schema-block) for details.
 * `description` - (Optional) Description of the action group.
@@ -277,6 +278,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -310,4 +312,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent Action Group th
 % terraform import aws_bedrockagent_agent_action_group.example MMAUDBZTH4,GGRRAED6JP,DRAFT
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-24717de6bf2c6ea146670ed6baa29be12e190a23071aa74b2516abd638ffcd16 -->
+<!-- cache-key: cdktf-0.20.8 input-4602ccfdedcc53a029145d0e4da96784a20f2dd1c9b113a836604cb06d152431 -->

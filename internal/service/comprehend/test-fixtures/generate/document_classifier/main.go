@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -13,7 +12,7 @@ import (
 	"math/rand"
 	"os"
 
-	"syreclabs.com/go/faker"
+	"github.com/jaswdr/faker/v2"
 )
 
 var doctypes = []string{
@@ -36,9 +35,9 @@ var spamDocs = []string{
 func main() {
 	log.SetFlags(0)
 
-	seed := int64(1) // Default rand seed
-	rand.Seed(seed)
-	faker.Seed(seed)
+	seed := int64(48) // Default rand seed
+	r := rand.New(rand.NewSource(seed))
+	fake := faker.NewWithSeedInt64(seed)
 
 	documentFile, err := os.OpenFile("./test-fixtures/document_classifier/documents.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
@@ -48,19 +47,19 @@ func main() {
 	documentsWriter := csv.NewWriter(documentFile)
 
 	for i := 0; i < 100; i++ {
-		name := faker.Name().Name()
-		doctype := doctypes[rand.Intn(len(doctypes))]
+		name := fake.Person().Name()
+		doctype := doctypes[r.Intn(len(doctypes))]
 
 		var line string
 		if doctype == "PHISHING" {
-			order := faker.RandomString(10)
-			phone := faker.PhoneNumber().PhoneNumber()
-			doc := phishingDocs[rand.Intn(len(phishingDocs))]
+			order := fake.RandomStringWithLength(10)
+			phone := fake.Phone().Number()
+			doc := phishingDocs[r.Intn(len(phishingDocs))]
 			line = fmt.Sprintf(doc, name, order, phone)
 		} else {
-			doc := spamDocs[rand.Intn(len(spamDocs))]
-			product := faker.Commerce().ProductName()
-			company := faker.Company().Name()
+			doc := spamDocs[r.Intn(len(spamDocs))]
+			product := fake.Beer().Name()
+			company := fake.Company().Name()
 			line = fmt.Sprintf(doc, name, product, company)
 		}
 

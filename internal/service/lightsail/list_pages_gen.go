@@ -5,15 +5,16 @@ package lightsail
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 )
 
-func getDisksPages(ctx context.Context, conn *lightsail.Client, input *lightsail.GetDisksInput, fn func(*lightsail.GetDisksOutput, bool) bool) error {
+func getDisksPages(ctx context.Context, conn *lightsail.Client, input *lightsail.GetDisksInput, fn func(*lightsail.GetDisksOutput, bool) bool, optFns ...func(*lightsail.Options)) error {
 	for {
-		output, err := conn.GetDisks(ctx, input)
+		output, err := conn.GetDisks(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextPageToken) == ""
@@ -25,11 +26,11 @@ func getDisksPages(ctx context.Context, conn *lightsail.Client, input *lightsail
 	}
 	return nil
 }
-func getDistributionsPages(ctx context.Context, conn *lightsail.Client, input *lightsail.GetDistributionsInput, fn func(*lightsail.GetDistributionsOutput, bool) bool) error {
+func getDistributionsPages(ctx context.Context, conn *lightsail.Client, input *lightsail.GetDistributionsInput, fn func(*lightsail.GetDistributionsOutput, bool) bool, optFns ...func(*lightsail.Options)) error {
 	for {
-		output, err := conn.GetDistributions(ctx, input)
+		output, err := conn.GetDistributions(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextPageToken) == ""
@@ -41,11 +42,11 @@ func getDistributionsPages(ctx context.Context, conn *lightsail.Client, input *l
 	}
 	return nil
 }
-func getDomainsPages(ctx context.Context, conn *lightsail.Client, input *lightsail.GetDomainsInput, fn func(*lightsail.GetDomainsOutput, bool) bool) error {
+func getDomainsPages(ctx context.Context, conn *lightsail.Client, input *lightsail.GetDomainsInput, fn func(*lightsail.GetDomainsOutput, bool) bool, optFns ...func(*lightsail.Options)) error {
 	for {
-		output, err := conn.GetDomains(ctx, input)
+		output, err := conn.GetDomains(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextPageToken) == ""
@@ -57,11 +58,11 @@ func getDomainsPages(ctx context.Context, conn *lightsail.Client, input *lightsa
 	}
 	return nil
 }
-func getLoadBalancersPages(ctx context.Context, conn *lightsail.Client, input *lightsail.GetLoadBalancersInput, fn func(*lightsail.GetLoadBalancersOutput, bool) bool) error {
+func getLoadBalancersPages(ctx context.Context, conn *lightsail.Client, input *lightsail.GetLoadBalancersInput, fn func(*lightsail.GetLoadBalancersOutput, bool) bool, optFns ...func(*lightsail.Options)) error {
 	for {
-		output, err := conn.GetLoadBalancers(ctx, input)
+		output, err := conn.GetLoadBalancers(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextPageToken) == ""
@@ -73,11 +74,11 @@ func getLoadBalancersPages(ctx context.Context, conn *lightsail.Client, input *l
 	}
 	return nil
 }
-func getRelationalDatabasesPages(ctx context.Context, conn *lightsail.Client, input *lightsail.GetRelationalDatabasesInput, fn func(*lightsail.GetRelationalDatabasesOutput, bool) bool) error {
+func getRelationalDatabasesPages(ctx context.Context, conn *lightsail.Client, input *lightsail.GetRelationalDatabasesInput, fn func(*lightsail.GetRelationalDatabasesOutput, bool) bool, optFns ...func(*lightsail.Options)) error {
 	for {
-		output, err := conn.GetRelationalDatabases(ctx, input)
+		output, err := conn.GetRelationalDatabases(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextPageToken) == ""

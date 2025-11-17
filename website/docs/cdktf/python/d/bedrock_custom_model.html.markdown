@@ -33,7 +33,10 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `model_id` – (Required) Name or ARN of the custom model.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `model_id` - (Required) Name or ARN of the custom model.
 
 ## Attribute Reference
 
@@ -60,5 +63,5 @@ This data source exports the following attributes in addition to the arguments a
         * `s3_uri` - The S3 URI where the validation data is stored..
 * `validation_metrics` - The loss metric for each validator that you provided.
     * `validation_loss` - The validation loss associated with the validator.
-  
-<!-- cache-key: cdktf-0.20.8 input-a690dde54b43034f963fb882a55edf456a82a6fff0d72e2dd7e489d45c4e07cb -->
+
+<!-- cache-key: cdktf-0.20.8 input-718fae7576b0b69694f3c1eb3696eeb893ac3789465d781bc14e79fabed87996 -->

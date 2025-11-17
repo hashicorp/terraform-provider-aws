@@ -18,6 +18,7 @@ import (
 )
 
 // @SDKDataSource("aws_cloudwatch_log_data_protection_policy_document", name="Data Protection Policy Document")
+// @Region(overrideEnabled=false)
 func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataProtectionPolicyDocumentRead,

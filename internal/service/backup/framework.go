@@ -217,7 +217,7 @@ func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			IdempotencyToken:     aws.String(sdkid.UniqueId()),
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.UpdateFramework(ctx, input)
 		})
 
@@ -238,7 +238,7 @@ func resourceFrameworkDelete(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Framework: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteFramework(ctx, &backup.DeleteFrameworkInput{
 			FrameworkName: aws.String(d.Id()),
 		})
@@ -444,7 +444,7 @@ func expandControlScope(ctx context.Context, tfList []any) *awstypes.ControlScop
 	// A maximum of one key-value pair can be provided.
 	// The tag value is optional, but it cannot be an empty string
 	if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
-		apiObject.Tags = Tags(tftags.New(ctx, v).IgnoreAWS())
+		apiObject.Tags = svcTags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	return apiObject
@@ -498,7 +498,7 @@ func flattenControlScope(ctx context.Context, apiObject *awstypes.ControlScope) 
 	}
 
 	if v := apiObject.Tags; v != nil {
-		tfMap[names.AttrTags] = KeyValueTags(ctx, v).IgnoreAWS().Map()
+		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return []any{tfMap}
