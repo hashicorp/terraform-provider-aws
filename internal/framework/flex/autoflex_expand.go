@@ -2123,11 +2123,11 @@ func (expander autoExpander) convertToXMLWrapper(ctx context.Context, sourcePath
 	switch vFrom := sourceValue.(type) {
 	case basetypes.SetValuable:
 		if setValue, ok := vFrom.(valueWithElementsAs); ok {
-			diags.Append(expander.listOrSetOfString(ctx, setValue, targetFieldVal)...)
+			diags.Append(expander.listOrSetOfString(ctx, setValue, targetFieldVal, fieldOpts{})...)
 		}
 	case basetypes.ListValuable:
 		if listValue, ok := vFrom.(valueWithElementsAs); ok {
-			diags.Append(expander.listOrSetOfString(ctx, listValue, targetFieldVal)...)
+			diags.Append(expander.listOrSetOfString(ctx, listValue, targetFieldVal, fieldOpts{})...)
 		}
 	default:
 		tflog.SubsystemError(ctx, subsystemName, "Unsupported source type for XML wrapper conversion", map[string]any{

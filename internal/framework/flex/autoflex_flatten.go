@@ -2358,12 +2358,12 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 
 		// Automatic XML wrapper detection (without explicit wrapper tags)
 		fromFieldVal := valFrom.FieldByIndex(fromField.Index)
-		_, toOpts = autoflexTags(toField)
+		_, toOpts := autoflexTags(toField)
 
 		// Handle pointer to XML wrapper struct
 		// Only auto-detect if target has explicit wrapper tag
 		if fromFieldVal.Kind() == reflect.Pointer {
-			if toOpts.WrapperField() != "" && !fromFieldVal.IsNil() && isXMLWrapperStruct(fromFieldVal.Type().Elem()) {
+			if toOpts.XMLWrapperField() != "" && !fromFieldVal.IsNil() && isXMLWrapperStruct(fromFieldVal.Type().Elem()) {
 				// Check if target is a collection type (Set, List, or NestedObjectCollection)
 				if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
 					targetType := valTo.Type(ctx)
@@ -2428,7 +2428,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 						// If flexer is not autoFlattener, fall through to normal field matching
 					}
 				}
-			} else if toOpts.WrapperField() != "" && fromFieldVal.IsNil() && isXMLWrapperStruct(fromFieldVal.Type().Elem()) {
+			} else if toOpts.XMLWrapperField() != "" && fromFieldVal.IsNil() && isXMLWrapperStruct(fromFieldVal.Type().Elem()) {
 				// Handle nil pointer to XML wrapper struct - should result in null collection
 				if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
 					switch tTo := valTo.Type(ctx).(type) {
@@ -2471,7 +2471,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 					}
 				}
 			}
-		} else if toOpts.WrapperField() != "" && isXMLWrapperStruct(fromFieldVal.Type()) {
+		} else if toOpts.XMLWrapperField() != "" && isXMLWrapperStruct(fromFieldVal.Type()) {
 			// Handle direct XML wrapper struct (non-pointer)
 			if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
 				switch valTo.Type(ctx).(type) {
