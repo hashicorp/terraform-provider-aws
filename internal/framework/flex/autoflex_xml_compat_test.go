@@ -7,10 +7,12 @@ package flex
 
 import (
 	"context"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -363,6 +365,26 @@ type FunctionAssociations struct {
 type FunctionAssociation struct {
 	FunctionArn *string   // required
 	EventType   EventType // required
+}
+
+type ConnectionMode string
+
+const (
+	ConnectionModeDirect     ConnectionMode = "direct"
+	ConnectionModeTenantOnly ConnectionMode = "tenant-only"
+)
+
+// Values returns all possible values of ConnectionMode
+func (c ConnectionMode) Values() []ConnectionMode {
+	return []ConnectionMode{
+		ConnectionModeDirect,
+		ConnectionModeTenantOnly,
+	}
+}
+
+type FunctionAssociationTF struct {
+	EventType   fwtypes.StringEnum[EventType] `tfsdk:"event_type"`
+	FunctionArn types.String                  `tfsdk:"function_arn"`
 }
 
 type DistributionConfigTF struct {
@@ -734,7 +756,7 @@ type viewerCertificateModel struct {
 
 type functionAssociationModel struct {
 	EventType   fwtypes.StringEnum[EventType] `tfsdk:"event_type"`
-	FunctionARN types.String                  `tfsdk:"function_arn"`
+	FunctionArn types.String                  `tfsdk:"function_arn"`
 }
 
 type lambdaFunctionAssociationModel struct {
@@ -772,39 +794,37 @@ func TestFlattenXMLWrapperRealWorld(t *testing.T) {
 
 	ctx := context.Background()
 
-	testCases := map[string]autoFlexTestCases{
-		"Origins": {
-			"two origins": {
-				Source: &testDistributionConfigModel{
-					Origins: &Origins{
-						Items: []Origin{
-							{DomainName: aws.String("example.com"), Id: aws.String("origin1")},
-							{DomainName: aws.String("cdn.example.com"), Id: aws.String("origin2")},
-						},
-						Quantity: aws.Int32(2),
+	testCases := autoFlexTestCases{
+		"two origins": {
+			Source: &testDistributionConfigModel{
+				Origins: &Origins{
+					Items: []Origin{
+						{DomainName: aws.String("example.com"), Id: aws.String("origin1")},
+						{DomainName: aws.String("cdn.example.com"), Id: aws.String("origin2")},
 					},
+					Quantity: aws.Int32(2),
 				},
-				Target: &distributionConfigModel{},
-				WantTarget: &distributionConfigModel{
-					Origin: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []originModel{
-						{
-							DomainName:         types.StringValue("example.com"),
-							ID:                 types.StringValue("origin1"),
-							CustomHeader:       fwtypes.NewSetNestedObjectValueOfNull[customHeaderModel](ctx),
-							CustomOriginConfig: fwtypes.NewListNestedObjectValueOfNull[customOriginConfigModel](ctx),
-							OriginShield:       fwtypes.NewListNestedObjectValueOfNull[originShieldModel](ctx),
-							S3OriginConfig:     fwtypes.NewListNestedObjectValueOfNull[s3OriginConfigModel](ctx),
-						},
-						{
-							DomainName:         types.StringValue("cdn.example.com"),
-							ID:                 types.StringValue("origin2"),
-							CustomHeader:       fwtypes.NewSetNestedObjectValueOfNull[customHeaderModel](ctx),
-							CustomOriginConfig: fwtypes.NewListNestedObjectValueOfNull[customOriginConfigModel](ctx),
-							OriginShield:       fwtypes.NewListNestedObjectValueOfNull[originShieldModel](ctx),
-							S3OriginConfig:     fwtypes.NewListNestedObjectValueOfNull[s3OriginConfigModel](ctx),
-						},
-					}),
-				},
+			},
+			Target: &distributionConfigModel{},
+			WantTarget: &distributionConfigModel{
+				Origin: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []originModel{
+					{
+						DomainName:         types.StringValue("example.com"),
+						ID:                 types.StringValue("origin1"),
+						CustomHeader:       fwtypes.NewSetNestedObjectValueOfNull[customHeaderModel](ctx),
+						CustomOriginConfig: fwtypes.NewListNestedObjectValueOfNull[customOriginConfigModel](ctx),
+						OriginShield:       fwtypes.NewListNestedObjectValueOfNull[originShieldModel](ctx),
+						S3OriginConfig:     fwtypes.NewListNestedObjectValueOfNull[s3OriginConfigModel](ctx),
+					},
+					{
+						DomainName:         types.StringValue("cdn.example.com"),
+						ID:                 types.StringValue("origin2"),
+						CustomHeader:       fwtypes.NewSetNestedObjectValueOfNull[customHeaderModel](ctx),
+						CustomOriginConfig: fwtypes.NewListNestedObjectValueOfNull[customOriginConfigModel](ctx),
+						OriginShield:       fwtypes.NewListNestedObjectValueOfNull[originShieldModel](ctx),
+						S3OriginConfig:     fwtypes.NewListNestedObjectValueOfNull[s3OriginConfigModel](ctx),
+					},
+				}),
 			},
 		},
 	}
@@ -965,7 +985,10 @@ func TestIsXMLWrapperStruct(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			result := isXMLWrapperStruct(reflect.TypeOf(tc.input))
+			if result != tc.expected {
+				t.Errorf("Expected %v, got %v for input %T", tc.expected, result, tc.input)
+			}
 		})
 	}
 }
@@ -1027,11 +1050,11 @@ func TestFlattenXMLWrapper(t *testing.T) {
 				Items: []FunctionAssociation{
 					{
 						EventType:   "viewer-request",
-						FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/example-function"),
+						FunctionArn: aws.String("arn:aws:cloudfront::123456789012:function/example-function"),
 					},
 					{
 						EventType:   "viewer-response",
-						FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/another-function"),
+						FunctionArn: aws.String("arn:aws:cloudfront::123456789012:function/another-function"),
 					},
 				},
 				Quantity: aws.Int32(2),
@@ -1041,11 +1064,11 @@ func TestFlattenXMLWrapper(t *testing.T) {
 				FunctionAssociations: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*FunctionAssociationTF{
 					{
 						EventType:   types.StringValue("viewer-request"),
-						FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/example-function"),
+						FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/example-function"),
 					},
 					{
 						EventType:   types.StringValue("viewer-response"),
-						FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/another-function"),
+						FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/another-function"),
 					},
 				}),
 			},
@@ -1088,11 +1111,11 @@ func TestExpandNoXMLWrapper(t *testing.T) {
 						[]*FunctionAssociationTF{
 							{
 								EventType:   types.StringValue("viewer-request"),
-								FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-1"),
+								FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-1"),
 							},
 							{
 								EventType:   types.StringValue("viewer-response"),
-								FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-2"),
+								FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-2"),
 							},
 						},
 					),
@@ -1106,11 +1129,11 @@ func TestExpandNoXMLWrapper(t *testing.T) {
 					Items: []FunctionAssociation{
 						{
 							EventType:   "viewer-request",
-							FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/test-function-1"),
+							FunctionArn: aws.String("arn:aws:cloudfront::123456789012:function/test-function-1"),
 						},
 						{
 							EventType:   "viewer-response",
-							FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/test-function-2"),
+							FunctionArn: aws.String("arn:aws:cloudfront::123456789012:function/test-function-2"),
 						},
 					},
 				},
@@ -1134,11 +1157,11 @@ func TestFlattenNoXMLWrapper(t *testing.T) {
 					Items: []FunctionAssociation{
 						{
 							EventType:   "viewer-request",
-							FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/test-function-1"),
+							FunctionArn: aws.String("arn:aws:cloudfront::123456789012:function/test-function-1"),
 						},
 						{
 							EventType:   "viewer-response",
-							FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/test-function-2"),
+							FunctionArn: aws.String("arn:aws:cloudfront::123456789012:function/test-function-2"),
 						},
 					},
 				},
@@ -1146,11 +1169,11 @@ func TestFlattenNoXMLWrapper(t *testing.T) {
 			// 	Items: []FunctionAssociation{
 			// 		{
 			// 			EventType:   "viewer-request",
-			// 			FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/example-function"),
+			// 			FunctionArn: aws.String("arn:aws:cloudfront::123456789012:function/example-function"),
 			// 		},
 			// 		{
 			// 			EventType:   "viewer-response",
-			// 			FunctionARN: aws.String("arn:aws:cloudfront::123456789012:function/another-function"),
+			// 			FunctionArn: aws.String("arn:aws:cloudfront::123456789012:function/another-function"),
 			// 		},
 			// 	},
 			// 	Quantity: aws.Int32(2),
@@ -1161,11 +1184,11 @@ func TestFlattenNoXMLWrapper(t *testing.T) {
 					Items: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*FunctionAssociationTF{
 						{
 							EventType:   types.StringValue("viewer-request"),
-							FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-1"),
+							FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-1"),
 						},
 						{
 							EventType:   types.StringValue("viewer-response"),
-							FunctionARN: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-2"),
+							FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-2"),
 						},
 					}),
 					Quantity: types.Int64Value(2),
