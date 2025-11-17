@@ -5047,7 +5047,7 @@ func TestAccDynamoDBTable_Replica_MRSC_TooManyReplicas(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_MRSC_replica_count3(rName),
-				ExpectError: regexache.MustCompile(`Using MultiRegionStrongConsistency supports at most 2 replicas`),
+				ExpectError: regexache.MustCompile(`Using MultiRegionStrongConsistency requires exactly 2 replicas, or 1 replica and 1 witness region. Too many Replicas were provided`),
 			},
 		},
 	})
