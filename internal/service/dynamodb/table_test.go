@@ -4416,6 +4416,10 @@ func TestAccDynamoDBTable_Replica_MRSC_tags_propagateToAddedReplica(t *testing.T
 							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
 							names.AttrPropagateTags: knownvalue.Bool(true),
 						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"region_name":           knownvalue.StringExact(acctest.ThirdRegion()),
+							names.AttrPropagateTags: knownvalue.Bool(false),
+						}),
 					})),
 				},
 			},
@@ -4540,6 +4544,10 @@ func TestAccDynamoDBTable_Replica_MRSC_tags_notPropagatedToAddedReplica(t *testi
 							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
 							names.AttrPropagateTags: knownvalue.Bool(true),
 						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"region_name":           knownvalue.StringExact(acctest.ThirdRegion()),
+							names.AttrPropagateTags: knownvalue.Bool(false),
+						}),
 					})),
 				},
 			},
@@ -4561,7 +4569,7 @@ func TestAccDynamoDBTable_Replica_MRSC_tags_notPropagatedToAddedReplica(t *testi
 						}),
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"region_name":           knownvalue.StringExact(acctest.ThirdRegion()),
-							names.AttrPropagateTags: knownvalue.Bool(false),
+							names.AttrPropagateTags: knownvalue.Bool(true),
 						}),
 					})),
 				},
