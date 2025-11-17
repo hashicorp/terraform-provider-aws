@@ -174,8 +174,8 @@ When enabled, tag policy compliance checks will run prior to:
 - Creation of a new resource
 - Modification of `tags` on an existing resource
 
-~> Notably, _non-tag updates to existing resource tags are always permitted_, even if the existing tags are non-compliant.
-This approach avoids blocking unrelated resource updates while still enforcing tags to be remedied in order for **any** tags, even compliant ones, to be modified.
+~> Notably, _non-tag updates to existing resources are always permitted_, even if the existing tags are non-compliant.
+This approach avoids blocking unrelated resource updates while still enforcing compliance in order for **any** tags to be modified.
 
 ### Warning Diagnostics with Plugin SDKV2 Resources
 
