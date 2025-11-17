@@ -199,12 +199,7 @@ func testAccCheckGroupPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			groupName, policyName, err := tfiam.GroupPolicyParseID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfiam.FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
+			_, err := tfiam.FindGroupPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["group"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -228,14 +223,9 @@ func testAccCheckGroupPolicyExists(ctx context.Context, n string, v *string) res
 			return fmt.Errorf("Not Found: %s", n)
 		}
 
-		groupName, policyName, err := tfiam.GroupPolicyParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		output, err := tfiam.FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
+		output, err := tfiam.FindGroupPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["group"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err

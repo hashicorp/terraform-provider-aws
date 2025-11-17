@@ -16,12 +16,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -339,7 +337,7 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 			timeout = 10 * time.Minute // IPAM eventual consistency
 		)
 		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
-			return findIPAMPoolAllocationsForEIP(ctx, conn, ipamPoolID, d.Get("allocation_id").(string))
+			return findIPAMPoolAllocationForResource(ctx, conn, ipamPoolID, d.Get("allocation_id").(string))
 		})
 
 		if err != nil {
@@ -429,26 +427,4 @@ func disassociateEIP(ctx context.Context, conn *ec2.Client, associationID string
 
 func eipARN(ctx context.Context, c *conns.AWSClient, allocationID string) string {
 	return c.RegionalARN(ctx, names.EC2, "elastic-ip/"+allocationID)
-}
-
-func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, ipamPoolID, eipAllocationID string) ([]awstypes.IpamPoolAllocation, error) {
-	input := ec2.GetIpamPoolAllocationsInput{
-		IpamPoolId: aws.String(ipamPoolID),
-	}
-
-	output, err := findIPAMPoolAllocations(ctx, conn, &input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	output = tfslices.Filter(output, func(v awstypes.IpamPoolAllocation) bool {
-		return v.ResourceType == awstypes.IpamPoolAllocationResourceTypeEip && aws.ToString(v.ResourceId) == eipAllocationID
-	})
-
-	if len(output) == 0 {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return output, nil
 }

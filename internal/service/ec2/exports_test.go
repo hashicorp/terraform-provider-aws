@@ -5,6 +5,7 @@ package ec2
 
 // Exports for use in tests only.
 var (
+	ResourceAllowedImagesSettings                         = newAllowedImagesSettingsResource
 	ResourceAMICopy                                       = resourceAMICopy
 	ResourceAMIFromInstance                               = resourceAMIFromInstance
 	ResourceAMILaunchPermission                           = resourceAMILaunchPermission
@@ -136,9 +137,11 @@ var (
 	CheckMostRecentAndMissingFilters                            = checkMostRecentAndMissingFilters
 	CustomFiltersSchema                                         = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                    = customerGatewayConfigurationToTunnelInfo
+	DefaultIPv6CIDRBlockAssociation                             = defaultIPv6CIDRBlockAssociation
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone         = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
 	ErrCodeInvalidSpotDatafeedNotFound                          = errCodeInvalidSpotDatafeedNotFound
 	ExpandIPPerms                                               = expandIPPerms
+	FindAllowedImagesSettings                                   = findAllowedImagesSettings
 	FindAvailabilityZones                                       = findAvailabilityZones
 	FindCapacityReservationByID                                 = findCapacityReservationByID
 	FindCarrierGatewayByID                                      = findCarrierGatewayByID
@@ -162,7 +165,7 @@ var (
 	FindHostByID                                                = findHostByID
 	FindIPAMByID                                                = findIPAMByID
 	FindIPAMPoolAllocationByTwoPartKey                          = findIPAMPoolAllocationByTwoPartKey
-	FindIPAMPoolAllocationsForVPC                               = findIPAMPoolAllocationsForVPC
+	FindIPAMPoolAllocationForResource                           = findIPAMPoolAllocationForResource
 	FindIPAMPoolByID                                            = findIPAMPoolByID
 	FindIPAMPoolCIDRByTwoPartKey                                = findIPAMPoolCIDRByTwoPartKey
 	FindIPAMResourceDiscoveryAssociationByID                    = findIPAMResourceDiscoveryAssociationByID
@@ -209,6 +212,7 @@ var (
 	FindSecurityGroupEgressRuleByID                             = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                            = findSecurityGroupIngressRuleByID
 	FindSecurityGroupVPCAssociationByTwoPartKey                 = findSecurityGroupVPCAssociationByTwoPartKey
+	FindSerialConsoleAccessStatus                               = findSerialConsoleAccessStatus
 	FindSnapshot                                                = findSnapshot
 	FindSnapshotByID                                            = findSnapshotByID
 	FindSpotDatafeedSubscription                                = findSpotDatafeedSubscription

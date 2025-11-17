@@ -3,7 +3,7 @@ subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_subnet"
 description: |-
-  Provides an VPC subnet resource.
+  Provides an VPC Subnet resource.
 ---
 
 # Resource: aws_subnet

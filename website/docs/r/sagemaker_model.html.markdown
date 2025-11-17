@@ -52,10 +52,10 @@ This resource supports the following arguments:
 * `name` - (Optional) The name of the model (must be unique). If omitted, Terraform will assign a random, unique name.
 * `primary_container` - (Optional) The primary docker image containing inference code that is used when the model is deployed for predictions.  If not specified, the `container` argument is required. Fields are documented below.
 * `execution_role_arn` - (Required) A role that SageMaker AI can assume to access model artifacts and docker images for deployment.
-* `inference_execution_config` - (Optional) Specifies details of how containers in a multi-container endpoint are called. see [Inference Execution Config](#inference-execution-config).
+* `inference_execution_config` - (Optional) Specifies details of how containers in a multi-container endpoint are called. See [Inference Execution Config](#inference-execution-config).
 * `container` (Optional) -  Specifies containers in the inference pipeline. If not specified, the `primary_container` argument is required. Fields are documented below.
 * `enable_network_isolation` (Optional) - Isolates the model container. No inbound or outbound network calls can be made to or from the model container.
-* `vpc_config` (Optional) - Specifies the VPC that you want your model to connect to. VpcConfig is used in hosting services and in batch transform.
+* `vpc_config` (Optional) - Specifies the VPC that you want your model to connect to. This configuration is used in hosting services and in batch transform. See [VPC Config](#vpc-config).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `primary_container` and `container` block both support:
@@ -109,6 +109,11 @@ The `primary_container` and `container` block both support:
 ## Inference Execution Config
 
 * `mode` - (Required) How containers in a multi-container are run. The following values are valid `Serial` and `Direct`.
+
+### VPC Config
+
+* `security_group_ids` - (Required) List of security group IDs you want to be applied to your training job or model. Specify the security groups for the VPC that is specified in the Subnets field.
+* `subnets` - (Required) List of subnet IDs in the VPC to which you want to connect your training job or model.
 
 ## Attribute Reference
 

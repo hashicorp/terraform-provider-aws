@@ -842,8 +842,17 @@ The `managed_rule_group_configs` block support the following arguments:
 * `creation_path` - (Required) The path of the account creation endpoint for your application. This is the page on your website that accepts the completed registration form for a new user. This page must accept POST requests.
 * `enable_regex_in_path` - (Optional) Whether or not to allow the use of regular expressions in the login page path.
 * `registration_page_path` - (Required) The path of the account registration endpoint for your application. This is the page on your website that presents the registration form to new users. This page must accept GET text/html requests.
-* `request_inspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`request_inspection`](#request_inspection-block) for more details.
+* `request_inspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`request_inspection`](#request_inspection-block-acfp) for more details.
 * `response_inspection` - (Optional) The criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. See [`response_inspection`](#response_inspection-block) for more details.
+
+### `request_inspection` Block (ACFP)
+
+* `addressFields` (Optional) The names of the fields in the request payload that contain your customer's primary physical address. See [`addressFields`](#address_fields-block) for more details.
+* `emailField` (Optional) The name of the field in the request payload that contains your customer's email. See [`emailField`](#email_field-block) for more details.
+* `passwordField` (Optional) Details about your login page password field. See [`passwordField`](#password_field-block) for more details.
+* `payloadType` (Required) The payload type for your login endpoint, either JSON or form encoded.
+* `phoneNumberFields` (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phoneNumberFields`](#phone_number_fields-block) for more details.
+* `usernameField` (Optional) Details about your login page username field. See [`usernameField`](#username_field-block) for more details.
 
 ### `aws_managed_rules_anti_ddos_rule_set` Block
 
@@ -867,11 +876,8 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `request_inspection` Block
 
-* `address_fields` (Optional) The names of the fields in the request payload that contain your customer's primary physical address. See [`address_fields`](#address_fields-block) for more details.
-* `email_field` (Optional) The name of the field in the request payload that contains your customer's email. See [`email_field`](#email_field-block) for more details.
 * `password_field` (Optional) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
 * `payload_type` (Required) The payload type for your login endpoint, either JSON or form encoded.
-* `phone_number_fields` (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phone_number_fields`](#phone_number_fields-block) for more details.
 * `username_field` (Optional) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
 
 ### `address_fields` Block
@@ -915,8 +921,8 @@ The `managed_rule_group_configs` block support the following arguments:
 ### `json` Block
 
 * `identifier` (Required) The identifier for the value to match against in the JSON.
-* `success_values` (Required) Strings in the response JSON that indicate a successful login attempt.
-* `failure_values` (Required) Strings in the response JSON that indicate a failed login attempt.
+* `success_strings` (Required) Strings in the body of the response that indicate a successful login attempt.
+* `failure_strings` (Required) Strings in the body of the response that indicate a failed login attempt.
 
 ### `status_code` Block
 
@@ -929,7 +935,7 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **Note** Only one of `all_query_arguments`, `body`, `cookies`, `header_order`, `headers`, `ja3_fingerprint`,`ja4_fingerprint`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, `uri_fragment` or `uri_path` can be specified. An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
+~> **Note** Only one of `all_query_arguments`, `body`, `cookies`, `header_order`, `headers`, `ja3_fingerprint`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, `uri_fragment` or `uri_path` can be specified. An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers. See [`body`](#body-block) below for details.
@@ -1131,9 +1137,9 @@ The `custom_key` block supports the following arguments:
 * `forwarded_ip` - (Optional) Use the first IP address in an HTTP header as an aggregate key. See [`forwarded_ip`](#ratelimit-forwarded_ip-block) below for details.
 * `http_method` - (Optional) Use the request's HTTP method as an aggregate key. See [RateLimit `http_method`](#ratelimit-http_method-block) below for details.
 * `header` - (Optional) Use the value of a header in the request as an aggregate key. See [RateLimit `header`](#ratelimit-header-block) below for details.
-* `ip` - (Optional) Use the request's originating IP address as an aggregate key. See [RateLimit `ip`](#ratelimit-ip-block) below for details.
-* `ja3_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [RateLimit ja3_fingerprint`](#ratelimit-ja3_fingerprint-block) below for details.
-* `ja4_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [RateLimit `ja4_fingerprint`](#ratelimit-ja4_fingerprint-block) below for details.
+* `ip` - (Optional) Use the request's originating IP address as an aggregate key. See [`RateLimit ip`](#ratelimit-ip-block) below for details.
+* `ja3_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja3_fingerprint-block) below for details.
+* `ja4_fingerprint` - (Optional) Use the JA3 fingerprint in the request as an aggregate key. See [`RateLimit ip`](#ratelimit-ja4_fingerprint-block) below for details.
 * `label_namespace` - (Optional) Use the specified label namespace as an aggregate key. See [RateLimit `label_namespace`](#ratelimit-label_namespace-block) below for details.
 * `query_argument` - (Optional) Use the specified query argument as an aggregate key. See [RateLimit `query_argument`](#ratelimit-query_argument-block) below for details.
 * `query_string` - (Optional) Use the request's query string as an aggregate key. See [RateLimit `query_string`](#ratelimit-query_string-block) below for details.
@@ -1265,4 +1271,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-951e2258b28bfb7b66660a8843072de79fa17c545dfb68ca308d3ddc22f0bd70 -->
+<!-- cache-key: cdktf-0.20.8 input-c6b569a06a37fb68c1bbce8db1bdc0486f16e179cf0730f80afe2e2b52bb2e67 -->

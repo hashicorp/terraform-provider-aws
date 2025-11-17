@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -403,6 +402,8 @@ type ResourceDatum struct {
 	overrideIdentifierAttribute      string
 	OverrideResourceType             string
 	tests.CommonArgs
+	isARNIdentity     bool
+	identityAttribute string
 }
 
 func (d ResourceDatum) ProviderPackage() string {
@@ -578,6 +579,17 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "NoImport":
 				d.NoImport = true
+
+			case "ArnIdentity":
+				d.isARNIdentity = true
+				args := common.ParseArgs(m[3])
+				if len(args.Positional) == 0 {
+					d.identityAttribute = "arn"
+				} else {
+					d.identityAttribute = args.Positional[0]
+				}
+
+				populateInherentRegionIdentity(&d, args)
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
@@ -762,4 +774,20 @@ func count[T any](s iter.Seq[T], f func(T) bool) (c int) {
 		}
 	}
 	return c
+}
+
+func populateInherentRegionIdentity(d *ResourceDatum, args common.Args) {
+	var attrs []string
+	if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+		attrs = strings.Split(attr, ";")
+	}
+	if d.Implementation == tests.ImplementationSDK {
+		attrs = append(attrs, "id")
+	} else {
+		if !slices.Contains(attrs, "id") {
+			d.SetImportStateIDAttribute(d.identityAttribute)
+		}
+	}
+	slices.Sort(attrs)
+	attrs = slices.Compact(attrs)
 }

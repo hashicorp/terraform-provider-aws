@@ -5,6 +5,7 @@ package licensemanager
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 )
@@ -13,7 +14,7 @@ func listDistributedGrantsPages(ctx context.Context, conn *licensemanager.Client
 	for {
 		output, err := conn.ListDistributedGrants(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -29,7 +30,7 @@ func listLicenseConfigurationsPages(ctx context.Context, conn *licensemanager.Cl
 	for {
 		output, err := conn.ListLicenseConfigurations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -45,7 +46,7 @@ func listLicenseSpecificationsForResourcePages(ctx context.Context, conn *licens
 	for {
 		output, err := conn.ListLicenseSpecificationsForResource(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -61,7 +62,7 @@ func listReceivedGrantsPages(ctx context.Context, conn *licensemanager.Client, i
 	for {
 		output, err := conn.ListReceivedGrants(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -77,7 +78,7 @@ func listReceivedLicensesPages(ctx context.Context, conn *licensemanager.Client,
 	for {
 		output, err := conn.ListReceivedLicenses(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

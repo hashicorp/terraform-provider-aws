@@ -158,12 +158,44 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 		// conflict. Here we loop through all the initial removables from the set
 		// difference, and we build up a slice of settings not found in the "add"
 		// set
+
+		defaultResourceName := func(ns *string) *string {
+			switch aws.ToString(ns) {
+			case "aws:autoscaling:asg":
+				return aws.String("AWSEBAutoScalingGroup")
+			case "aws:autoscaling:launchconfiguration":
+				return aws.String("AWSEBAutoScalingLaunchConfiguration")
+			default:
+				return nil
+			}
+		}
+		ensureResourceName := func(s *awstypes.ConfigurationOptionSetting) {
+			if s.ResourceName == nil || aws.ToString(s.ResourceName) == "" {
+				if rn := defaultResourceName(s.Namespace); rn != nil {
+					s.ResourceName = rn
+				}
+			}
+		}
+
+		for i := range add {
+			ensureResourceName(&add[i])
+		}
+		for i := range del {
+			ensureResourceName(&del[i])
+		}
+
+		key := func(ns, on, rn *string) string {
+			return aws.ToString(ns) + "|" + aws.ToString(on) + "|" + aws.ToString(rn)
+		}
+
+		addKeys := make(map[string]struct{}, len(add))
+		for _, a := range add {
+			addKeys[key(a.Namespace, a.OptionName, a.ResourceName)] = struct{}{}
+		}
+
 		var remove []awstypes.ConfigurationOptionSetting
 		for _, r := range del {
-			for _, a := range add {
-				if aws.ToString(r.Namespace) == aws.ToString(a.Namespace) && aws.ToString(r.OptionName) == aws.ToString(a.OptionName) {
-					continue
-				}
+			if _, exists := addKeys[key(r.Namespace, r.OptionName, r.ResourceName)]; !exists {
 				remove = append(remove, r)
 			}
 		}
@@ -176,8 +208,9 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 
 		for _, v := range remove {
 			input.OptionsToRemove = append(input.OptionsToRemove, awstypes.OptionSpecification{
-				Namespace:  v.Namespace,
-				OptionName: v.OptionName,
+				Namespace:    v.Namespace,
+				OptionName:   v.OptionName,
+				ResourceName: v.ResourceName,
 			})
 		}
 
