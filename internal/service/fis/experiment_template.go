@@ -227,6 +227,10 @@ func resourceExperimentTemplate() *schema.Resource {
 									"log_group_arn": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											verify.ValidARN,
+											validation.StringMatch(regexache.MustCompile(`:\*$`), "ARN must end with `:*`"),
+										),
 									},
 								},
 							},
