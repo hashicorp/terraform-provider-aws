@@ -506,6 +506,20 @@ func resourceCapacityProvider() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.PropagateMITags](),
 						},
+						"infrastructure_optimization": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"scale_in_after": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(-1, 3600),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -930,6 +944,10 @@ func expandManagedInstancesProviderCreate(configured any) *awstypes.CreateManage
 		apiObject.PropagateTags = awstypes.PropagateMITags(v)
 	}
 
+	if v, ok := tfMap["infrastructure_optimization"].([]any); ok && len(v) > 0 {
+		apiObject.InfrastructureOptimization = expandInfrastructureOptimization(v)
+	}
+
 	return apiObject
 }
 
@@ -955,6 +973,25 @@ func expandManagedInstancesProviderUpdate(configured any) *awstypes.UpdateManage
 
 	if v, ok := tfMap[names.AttrPropagateTags].(string); ok && v != "" {
 		apiObject.PropagateTags = awstypes.PropagateMITags(v)
+	}
+
+	if v, ok := tfMap["infrastructure_optimization"].([]any); ok && len(v) > 0 {
+		apiObject.InfrastructureOptimization = expandInfrastructureOptimization(v)
+	}
+
+	return apiObject
+}
+
+func expandInfrastructureOptimization(tfList []any) *awstypes.InfrastructureOptimization {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.InfrastructureOptimization{}
+
+	if v, ok := tfMap["scale_in_after"].(int); ok {
+		apiObject.ScaleInAfter = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -1346,6 +1383,22 @@ func flattenManagedInstancesProvider(provider *awstypes.ManagedInstancesProvider
 
 	if provider.InstanceLaunchTemplate != nil {
 		tfMap["instance_launch_template"] = flattenInstanceLaunchTemplate(provider.InstanceLaunchTemplate)
+	}
+
+	if provider.InfrastructureOptimization != nil {
+		tfMap["infrastructure_optimization"] = flattenInfrastructureOptimization(provider.InfrastructureOptimization)
+	}
+
+	return []map[string]any{tfMap}
+}
+
+func flattenInfrastructureOptimization(apiObject *awstypes.InfrastructureOptimization) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"scale_in_after": aws.ToInt32(apiObject.ScaleInAfter),
 	}
 
 	return []map[string]any{tfMap}
