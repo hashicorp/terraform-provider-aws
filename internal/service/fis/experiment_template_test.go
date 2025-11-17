@@ -1665,7 +1665,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.test_fis.arn
   handler       = "exports.example"
   runtime       = "nodejs20.x"
-  filename      = "fixtures/lambdatest.zip"
+  filename      = "test-fixtures/lambdatest.zip"
 
   tags = {
     Name = %[1]q
