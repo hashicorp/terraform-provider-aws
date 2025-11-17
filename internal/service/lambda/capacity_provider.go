@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	awsmocktypes "github.com/hashicorp/terraform-provider-aws/internal/service/lambda/mocks/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -340,7 +339,7 @@ func (r *resourceCapacityProvider) ImportState(ctx context.Context, request reso
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
-func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*awsmocktypes.GetCapacityProviderOutput, error) {
+func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.CapacityProviderStatePending),
 		Target:                    enum.Slice(awstypes.CapacityProviderStateActive),
@@ -350,14 +349,14 @@ func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, id str
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awsmocktypes.GetCapacityProviderOutput); ok {
+	if out, ok := outputRaw.(*awstypes.CapacityProvider); ok {
 		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
 }
 
-func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*awsmocktypes.DeleteCapacityProviderOutput, error) {
+func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityProviderStatePending, awstypes.CapacityProviderStateDeleting),
 		Target:  []string{},
@@ -366,7 +365,7 @@ func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, id st
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awsmocktypes.DeleteCapacityProviderOutput); ok {
+	if out, ok := outputRaw.(*awstypes.CapacityProvider); ok {
 		return out, smarterr.NewError(err)
 	}
 
