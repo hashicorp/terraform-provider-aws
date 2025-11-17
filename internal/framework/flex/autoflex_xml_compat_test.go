@@ -391,6 +391,10 @@ type DistributionConfigTF struct {
 	FunctionAssociations fwtypes.SetNestedObjectValueOf[FunctionAssociationTF] `tfsdk:"function_associations" autoflex:",xmlwrapper=items"`
 }
 
+type DistributionConfigAWS struct {
+	FunctionAssociations *FunctionAssociations
+}
+
 type CustomErrorResponses struct {
 	Quantity *int32 // required
 	Items    []CustomErrorResponse
@@ -1063,11 +1067,11 @@ func TestFlattenXMLWrapper(t *testing.T) {
 			WantTarget: &DistributionConfigTF{
 				FunctionAssociations: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*FunctionAssociationTF{
 					{
-						EventType:   types.StringValue("viewer-request"),
+						EventType:   fwtypes.StringEnumValue(EventTypeViewerRequest),
 						FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/example-function"),
 					},
 					{
-						EventType:   types.StringValue("viewer-response"),
+						EventType:   fwtypes.StringEnumValue(EventTypeViewerResponse),
 						FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/another-function"),
 					},
 				}),
@@ -1110,11 +1114,11 @@ func TestExpandNoXMLWrapper(t *testing.T) {
 						ctx,
 						[]*FunctionAssociationTF{
 							{
-								EventType:   types.StringValue("viewer-request"),
+								EventType:   fwtypes.StringEnumValue(EventTypeViewerRequest),
 								FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-1"),
 							},
 							{
-								EventType:   types.StringValue("viewer-response"),
+								EventType:   fwtypes.StringEnumValue(EventTypeViewerResponse),
 								FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-2"),
 							},
 						},
@@ -1183,11 +1187,11 @@ func TestFlattenNoXMLWrapper(t *testing.T) {
 				FunctionAssociations: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &FunctionAssociationsTF{
 					Items: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*FunctionAssociationTF{
 						{
-							EventType:   types.StringValue("viewer-request"),
+							EventType:   fwtypes.StringEnumValue(EventTypeViewerRequest),
 							FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-1"),
 						},
 						{
-							EventType:   types.StringValue("viewer-response"),
+							EventType:   fwtypes.StringEnumValue(EventTypeViewerResponse),
 							FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/test-function-2"),
 						},
 					}),
