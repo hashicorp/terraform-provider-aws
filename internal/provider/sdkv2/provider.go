@@ -252,10 +252,11 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 				"tag_policy_compliance": {
 					Type:     schema.TypeString,
 					Optional: true,
-					Description: "The severity with which to enforce the organizations effective tagging policy on resources managed by " +
-						`this provider instance. Valid values are "error", "warning", and "disabled". When unset or "disabled", the tag ` +
-						`policy will not be enforced by the provider. Enforcement may still occur for certain services on the server side.` +
-						"Can also be configured with the " + tftags.TagPolicyComplianceEnvVar + " environment variable.",
+					Description: `The severity with which to enforce organizational tagging policies on resources managed by this provider instance. ` +
+						`At this time this only includes compliance with required tag keys by resource type. ` +
+						`Valid values are "error", "warning", and "disabled". ` +
+						`When unset or "disabled", tag policy compliance will not be enforced by the provider. ` +
+						`Can also be configured with the ` + tftags.TagPolicyComplianceEnvVar + ` environment variable.`,
 				},
 				"token": {
 					Type:     schema.TypeString,
