@@ -472,7 +472,7 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 		return
 	}
 	//Neither is present
-	if !plan.isOdbNetworkArnAndExadataInfraArnPresent() && !plan.isOdbNetworkIdAndExadataInfraIdPresent() {
+	if !plan.isNetworkARNAndExadataInfraARNPresent() && !plan.isNetworkIdAndExadataInfraIdPresent() {
 		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. neither is present")
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, plan.DisplayName.ValueString(), err),
@@ -481,7 +481,7 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 		return
 	}
 	//Both are present
-	if plan.isOdbNetworkArnAndExadataInfraArnPresent() && plan.isOdbNetworkIdAndExadataInfraIdPresent() {
+	if plan.isNetworkARNAndExadataInfraARNPresent() && plan.isNetworkIdAndExadataInfraIdPresent() {
 		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. both are present")
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, plan.DisplayName.ValueString(), err),
@@ -852,9 +852,9 @@ type cloudVMCDbIormConfigResourceModel struct {
 	Share           types.Int32  `tfsdk:"share"`
 }
 
-func (r cloudVmClusterResourceModel) isOdbNetworkIdAndExadataInfraIdPresent() bool {
+func (r cloudVmClusterResourceModel) isNetworkIdAndExadataInfraIdPresent() bool {
 	return !r.OdbNetworkId.IsNull() && !r.OdbNetworkId.IsUnknown() && !r.CloudExadataInfrastructureId.IsNull() && !r.CloudExadataInfrastructureId.IsUnknown()
 }
-func (r cloudVmClusterResourceModel) isOdbNetworkArnAndExadataInfraArnPresent() bool {
+func (r cloudVmClusterResourceModel) isNetworkARNAndExadataInfraARNPresent() bool {
 	return !r.OdbNetworkArn.IsNull() && !r.OdbNetworkArn.IsUnknown() && !r.CloudExadataInfrastructureArn.IsNull() && !r.CloudExadataInfrastructureArn.IsUnknown()
 }

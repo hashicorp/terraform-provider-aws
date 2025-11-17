@@ -270,7 +270,7 @@ func TestAccODBCloudVmCluster_disappears(t *testing.T) {
 	})
 }
 
-func TestAccODBCloudVmCluster_usingArn(t *testing.T) {
+func TestAccODBCloudVmCluster_usingARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
