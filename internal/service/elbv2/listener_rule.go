@@ -263,6 +263,53 @@ func resourceListenerRule() *schema.Resource {
 								},
 							},
 						},
+						"jwt_validation": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumJwtValidation),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrIssuer: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"jwks_endpoint": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"additional_claim": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrFormat: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.JwtValidationActionAdditionalClaimFormatEnum](),
+												},
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrValues: {
+													Type:     schema.TypeSet,
+													Required: true,
+													MaxItems: 10,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringLenBetween(1, 256),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"order": {
 							Type:         schema.TypeInt,
 							Optional:     true,
