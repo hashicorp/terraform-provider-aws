@@ -582,7 +582,7 @@ func TestAccSageMakerModel_primaryContainerMultiModelConfigModelCacheSetting(t *
 	})
 }
 
-func TestAccSageMakerModel_primaryContainerAdditionalModelDataSources(t *testing.T) {
+func TestAccSageMakerModel_primaryContainerAdditionalModelDataSource(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
@@ -594,7 +594,7 @@ func TestAccSageMakerModel_primaryContainerAdditionalModelDataSources(t *testing
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelConfig_primaryContainerAdditionalModelDataSources(rName),
+				Config: testAccModelConfig_primaryContainerAdditionalModelDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_source.#", "1"),
@@ -978,7 +978,7 @@ resource "aws_s3_object" "test" {
 `, rName)
 }
 
-func testAccModelConfig_primaryContainerAdditionalModelDataSources(rName string) string {
+func testAccModelConfig_primaryContainerAdditionalModelDataSource(rName string) string {
 	return acctest.ConfigCompose(
 		testAccModelConfig_base(rName),
 		testAccModelConfig_s3DataSourceBase(rName),
