@@ -761,54 +761,57 @@ func expandModelDataSource(l []any) *awstypes.ModelDataSource {
 	return &modelDataSource
 }
 
-func expandAdditionalModelDataSource(m map[string]any) *awstypes.AdditionalModelDataSource {
-
-	additionalModelDataSource := awstypes.AdditionalModelDataSource{}
-
-	if v, ok := m["channel_name"]; ok && v.(string) != "" {
-		additionalModelDataSource.ChannelName = aws.String(v.(string))
-	}
-	if v, ok := m["s3_data_source"]; ok {
-		additionalModelDataSource.S3DataSource = expandS3ModelDataSource(v.([]any))
-	}
-
-	return &additionalModelDataSource
-}
-
-func expandAdditionalModelDataSources(a []any) []awstypes.AdditionalModelDataSource {
-	additionalModelDataSources := make([]awstypes.AdditionalModelDataSource, 0, len(a))
-
-	for _, m := range a {
-		additionalModelDataSources = append(additionalModelDataSources, *expandAdditionalModelDataSource(m.(map[string]any)))
-	}
-
-	return additionalModelDataSources
-}
-
-func expandS3ModelDataSource(l []any) *awstypes.S3ModelDataSource {
-	if len(l) == 0 {
+func expandAdditionalModelDataSources(tfList []any) []awstypes.AdditionalModelDataSource {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	s3ModelDataSource := awstypes.S3ModelDataSource{}
+	apiObjects := make([]awstypes.AdditionalModelDataSource, 0, len(tfList))
+	for _, m := range tfList {
+		if m == nil {
+			continue
+		}
+		apiObjects = append(apiObjects, expandAdditionalModelDataSource(m.(map[string]any)))
+	}
 
-	m := l[0].(map[string]any)
+	return apiObjects
+}
 
+func expandAdditionalModelDataSource(tfMap map[string]any) awstypes.AdditionalModelDataSource {
+	apiObject := awstypes.AdditionalModelDataSource{}
+
+	if v, ok := tfMap["channel_name"]; ok && v.(string) != "" {
+		apiObject.ChannelName = aws.String(v.(string))
+	}
+	if v, ok := tfMap["s3_data_source"]; ok {
+		apiObject.S3DataSource = expandS3ModelDataSource(v.([]any))
+	}
+
+	return apiObject
+}
+
+func expandS3ModelDataSource(tfList []any) *awstypes.S3ModelDataSource {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+
+	apiObject := awstypes.S3ModelDataSource{}
 	if v, ok := m["s3_uri"]; ok && v.(string) != "" {
-		s3ModelDataSource.S3Uri = aws.String(v.(string))
+		apiObject.S3Uri = aws.String(v.(string))
 	}
 	if v, ok := m["s3_data_type"]; ok && v.(string) != "" {
-		s3ModelDataSource.S3DataType = awstypes.S3ModelDataType(v.(string))
+		apiObject.S3DataType = awstypes.S3ModelDataType(v.(string))
 	}
 	if v, ok := m["compression_type"]; ok && v.(string) != "" {
-		s3ModelDataSource.CompressionType = awstypes.ModelCompressionType(v.(string))
+		apiObject.CompressionType = awstypes.ModelCompressionType(v.(string))
 	}
-
 	if v, ok := m["model_access_config"].([]any); ok && len(v) > 0 {
-		s3ModelDataSource.ModelAccessConfig = expandModelAccessConfig(v)
+		apiObject.ModelAccessConfig = expandModelAccessConfig(v)
 	}
 
-	return &s3ModelDataSource
+	return &apiObject
 }
 
 func expandModelImageConfig(l []any) *awstypes.ImageConfig {
@@ -853,20 +856,19 @@ func expandContainers(a []any) []awstypes.ContainerDefinition {
 	return containers
 }
 
-func expandModelAccessConfig(l []any) *awstypes.ModelAccessConfig {
-	if len(l) == 0 {
+func expandModelAccessConfig(tfList []any) *awstypes.ModelAccessConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	m := tfList[0].(map[string]any)
 
-	modelAccessConfig := &awstypes.ModelAccessConfig{}
-
+	apiObject := &awstypes.ModelAccessConfig{}
 	if v, ok := m["accept_eula"].(bool); ok {
-		modelAccessConfig.AcceptEula = aws.Bool(v)
+		apiObject.AcceptEula = aws.Bool(v)
 	}
 
-	return modelAccessConfig
+	return apiObject
 }
 
 func expandMultiModelConfig(l []any) *awstypes.MultiModelConfig {
@@ -885,51 +887,51 @@ func expandMultiModelConfig(l []any) *awstypes.MultiModelConfig {
 	return multiModelConfig
 }
 
-func flattenContainer(container *awstypes.ContainerDefinition) []any {
-	if container == nil {
+func flattenContainer(apiObject *awstypes.ContainerDefinition) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	cfg := make(map[string]any)
+	tfMap := make(map[string]any)
 
-	if container.Image != nil {
-		cfg["image"] = aws.ToString(container.Image)
-	}
-
-	cfg[names.AttrMode] = container.Mode
-
-	if container.ContainerHostname != nil {
-		cfg["container_hostname"] = aws.ToString(container.ContainerHostname)
-	}
-	if container.ModelDataUrl != nil {
-		cfg["model_data_url"] = aws.ToString(container.ModelDataUrl)
-	}
-	if container.ModelDataSource != nil {
-		cfg["model_data_source"] = flattenModelDataSource(container.ModelDataSource)
-	}
-	if len(container.AdditionalModelDataSources) > 0 {
-		cfg["additional_model_data_source"] = flattenAdditionalModelDataSources(container.AdditionalModelDataSources)
-	}
-	if container.ModelPackageName != nil {
-		cfg["model_package_name"] = aws.ToString(container.ModelPackageName)
-	}
-	if container.Environment != nil {
-		cfg[names.AttrEnvironment] = aws.StringMap(container.Environment)
+	if apiObject.Image != nil {
+		tfMap["image"] = aws.ToString(apiObject.Image)
 	}
 
-	if container.ImageConfig != nil {
-		cfg["image_config"] = flattenImageConfig(container.ImageConfig)
+	tfMap[names.AttrMode] = apiObject.Mode
+
+	if apiObject.ContainerHostname != nil {
+		tfMap["container_hostname"] = aws.ToString(apiObject.ContainerHostname)
+	}
+	if apiObject.ModelDataUrl != nil {
+		tfMap["model_data_url"] = aws.ToString(apiObject.ModelDataUrl)
+	}
+	if apiObject.ModelDataSource != nil {
+		tfMap["model_data_source"] = flattenModelDataSource(apiObject.ModelDataSource)
+	}
+	if len(apiObject.AdditionalModelDataSources) > 0 {
+		tfMap["additional_model_data_source"] = flattenAdditionalModelDataSources(apiObject.AdditionalModelDataSources)
+	}
+	if apiObject.ModelPackageName != nil {
+		tfMap["model_package_name"] = aws.ToString(apiObject.ModelPackageName)
+	}
+	if apiObject.Environment != nil {
+		tfMap[names.AttrEnvironment] = aws.StringMap(apiObject.Environment)
 	}
 
-	if container.InferenceSpecificationName != nil {
-		cfg["inference_specification_name"] = aws.ToString(container.InferenceSpecificationName)
+	if apiObject.ImageConfig != nil {
+		tfMap["image_config"] = flattenImageConfig(apiObject.ImageConfig)
 	}
 
-	if container.MultiModelConfig != nil {
-		cfg["multi_model_config"] = flattenMultiModelConfig(container.MultiModelConfig)
+	if apiObject.InferenceSpecificationName != nil {
+		tfMap["inference_specification_name"] = aws.ToString(apiObject.InferenceSpecificationName)
 	}
 
-	return []any{cfg}
+	if apiObject.MultiModelConfig != nil {
+		tfMap["multi_model_config"] = flattenMultiModelConfig(apiObject.MultiModelConfig)
+	}
+
+	return []any{tfMap}
 }
 
 func flattenModelDataSource(modelDataSource *awstypes.ModelDataSource) []any {
@@ -938,7 +940,6 @@ func flattenModelDataSource(modelDataSource *awstypes.ModelDataSource) []any {
 	}
 
 	cfg := make(map[string]any)
-
 	if modelDataSource.S3DataSource != nil {
 		cfg["s3_data_source"] = flattenS3ModelDataSource(modelDataSource.S3DataSource)
 	}
@@ -946,51 +947,45 @@ func flattenModelDataSource(modelDataSource *awstypes.ModelDataSource) []any {
 	return []any{cfg}
 }
 
-func flattenAdditionalModelDataSource(ds *awstypes.AdditionalModelDataSource) []any {
-	if ds == nil {
+func flattenAdditionalModelDataSources(apiObjects []awstypes.AdditionalModelDataSource) []any {
+	tfList := make([]any, 0, len(apiObjects))
+	for _, obj := range apiObjects {
+		tfList = append(tfList, flattenAdditionalModelDataSource(obj))
+	}
+
+	return tfList
+}
+
+func flattenAdditionalModelDataSource(apiObject awstypes.AdditionalModelDataSource) map[string]any {
+	tfMap := make(map[string]any)
+	if apiObject.ChannelName != nil {
+		tfMap["channel_name"] = aws.ToString(apiObject.ChannelName)
+	}
+	if apiObject.S3DataSource != nil {
+		tfMap["s3_data_source"] = flattenS3ModelDataSource(apiObject.S3DataSource)
+	}
+
+	return tfMap
+}
+
+func flattenS3ModelDataSource(apiObject *awstypes.S3ModelDataSource) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := make(map[string]any)
-	if ds.ChannelName != nil {
-		m["channel_name"] = aws.ToString(ds.ChannelName)
-	}
-	if ds.S3DataSource != nil {
-		m["s3_data_source"] = flattenS3ModelDataSource(ds.S3DataSource)
-	}
-	return []any{m}
-}
-
-func flattenAdditionalModelDataSources(additionalModelDataSources []awstypes.AdditionalModelDataSource) []any {
-	fSources := make([]any, 0, len(additionalModelDataSources))
-	for _, ds := range additionalModelDataSources {
-		flattened := flattenAdditionalModelDataSource(&ds)
-		if len(flattened) > 0 {
-			fSources = append(fSources, flattened[0].(map[string]any))
-		}
-	}
-	return fSources
-}
-func flattenS3ModelDataSource(s3ModelDataSource *awstypes.S3ModelDataSource) []any {
-	if s3ModelDataSource == nil {
-		return []any{}
+	tfMap := map[string]any{
+		"s3_data_type":     apiObject.S3DataType,
+		"compression_type": apiObject.CompressionType,
 	}
 
-	cfg := make(map[string]any)
-
-	if s3ModelDataSource.S3Uri != nil {
-		cfg["s3_uri"] = aws.ToString(s3ModelDataSource.S3Uri)
+	if apiObject.ModelAccessConfig != nil {
+		tfMap["model_access_config"] = flattenModelAccessConfig(apiObject.ModelAccessConfig)
+	}
+	if apiObject.S3Uri != nil {
+		tfMap["s3_uri"] = aws.ToString(apiObject.S3Uri)
 	}
 
-	cfg["s3_data_type"] = s3ModelDataSource.S3DataType
-
-	cfg["compression_type"] = s3ModelDataSource.CompressionType
-
-	if s3ModelDataSource.ModelAccessConfig != nil {
-		cfg["model_access_config"] = flattenModelAccessConfig(s3ModelDataSource.ModelAccessConfig)
-	}
-
-	return []any{cfg}
+	return []any{tfMap}
 }
 
 func flattenImageConfig(imageConfig *awstypes.ImageConfig) []any {
