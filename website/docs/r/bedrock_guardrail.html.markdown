@@ -109,7 +109,13 @@ The `content_policy_config` configuration block supports the following arguments
 
 The `filters_config` configuration block supports the following arguments:
 
+* `input_action` - (Optional) Action to take when harmful content is detected.
+* `input_enabled` - (Optional) Toggles guardrail evaluation on input.
+* `input_modalities` - (Optional) Selected input modalities.
 * `input_strength` - (Optional) Strength for filters.
+* `output_action` - (Optional) Action to take when harmful content is detected.
+* `output_enabled` - (Optional) Toggles guardrail evaluation on output.
+* `output_modalities` - (Optional) Selected output modalities.
 * `output_strength` - (Optional) Strength for filters.
 * `type` - (Optional) Type of filter in content policy.
 
