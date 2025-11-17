@@ -1249,7 +1249,7 @@ func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", "0"),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", "5"),
 				),
 			},
