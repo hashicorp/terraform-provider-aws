@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -737,13 +736,9 @@ func expandExperimentTemplateCloudWatchLogsConfiguration(l []any) *awstypes.Expe
 	}
 
 	raw := l[0].(map[string]any)
-	logGroupArn := raw["log_group_arn"].(string)
-	if !strings.HasSuffix(logGroupArn, ":*") {
-		logGroupArn += ":*"
-	}
 
 	config := awstypes.ExperimentTemplateCloudWatchLogsLogConfigurationInput{
-		LogGroupArn: aws.String(logGroupArn),
+		LogGroupArn: aws.String(raw["log_group_arn"].(string)),
 	}
 	return &config
 }

@@ -45,14 +45,6 @@ resource "aws_fis_experiment_template" "example" {
       value = "example"
     }
   }
-
-  log_configuration {
-    log_schema_version = 2
-
-    cloudwatch_logs_configuration {
-      log_group_arn = aws_cloudwatch_log_group.example.arn
-    }
-  }
 }
 ```
 
