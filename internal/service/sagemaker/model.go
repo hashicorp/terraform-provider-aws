@@ -673,12 +673,12 @@ func findModelByName(ctx context.Context, conn *sagemaker.Client, name string) (
 	return output, nil
 }
 
-func expandVPCConfigRequest(l []any) *awstypes.VpcConfig {
-	if len(l) == 0 {
+func expandVPCConfigRequest(tfList []any) *awstypes.VpcConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	m := tfList[0].(map[string]any)
 
 	return &awstypes.VpcConfig{
 		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
@@ -686,79 +686,59 @@ func expandVPCConfigRequest(l []any) *awstypes.VpcConfig {
 	}
 }
 
-func flattenVPCConfigResponse(vpcConfig *awstypes.VpcConfig) []map[string]any {
-	if vpcConfig == nil {
-		return []map[string]any{}
+func expandContainer(tfMap map[string]any) *awstypes.ContainerDefinition {
+	apiObject := awstypes.ContainerDefinition{}
+
+	if v, ok := tfMap["image"]; ok && v.(string) != "" {
+		apiObject.Image = aws.String(v.(string))
+	}
+	if v, ok := tfMap[names.AttrMode]; ok && v.(string) != "" {
+		apiObject.Mode = awstypes.ContainerMode(v.(string))
+	}
+	if v, ok := tfMap["container_hostname"]; ok && v.(string) != "" {
+		apiObject.ContainerHostname = aws.String(v.(string))
+	}
+	if v, ok := tfMap["model_data_url"]; ok && v.(string) != "" {
+		apiObject.ModelDataUrl = aws.String(v.(string))
+	}
+	if v, ok := tfMap["model_package_name"]; ok && v.(string) != "" {
+		apiObject.ModelPackageName = aws.String(v.(string))
+	}
+	if v, ok := tfMap["model_data_source"]; ok {
+		apiObject.ModelDataSource = expandModelDataSource(v.([]any))
+	}
+	if v, ok := tfMap["additional_model_data_source"]; ok {
+		apiObject.AdditionalModelDataSources = expandAdditionalModelDataSources(v.([]any))
+	}
+	if v, ok := tfMap[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
+		apiObject.Environment = flex.ExpandStringValueMap(v)
+	}
+	if v, ok := tfMap["image_config"]; ok {
+		apiObject.ImageConfig = expandModelImageConfig(v.([]any))
+	}
+	if v, ok := tfMap["inference_specification_name"]; ok && v.(string) != "" {
+		apiObject.InferenceSpecificationName = aws.String(v.(string))
+	}
+	if v, ok := tfMap["multi_model_config"].([]any); ok && len(v) > 0 {
+		apiObject.MultiModelConfig = expandMultiModelConfig(v)
 	}
 
-	m := map[string]any{
-		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(vpcConfig.SecurityGroupIds),
-		names.AttrSubnets:          flex.FlattenStringValueSet(vpcConfig.Subnets),
-	}
-
-	return []map[string]any{m}
+	return &apiObject
 }
 
-func expandContainer(m map[string]any) *awstypes.ContainerDefinition {
-	container := awstypes.ContainerDefinition{}
-
-	if v, ok := m["image"]; ok && v.(string) != "" {
-		container.Image = aws.String(v.(string))
-	}
-
-	if v, ok := m[names.AttrMode]; ok && v.(string) != "" {
-		container.Mode = awstypes.ContainerMode(v.(string))
-	}
-
-	if v, ok := m["container_hostname"]; ok && v.(string) != "" {
-		container.ContainerHostname = aws.String(v.(string))
-	}
-	if v, ok := m["model_data_url"]; ok && v.(string) != "" {
-		container.ModelDataUrl = aws.String(v.(string))
-	}
-	if v, ok := m["model_package_name"]; ok && v.(string) != "" {
-		container.ModelPackageName = aws.String(v.(string))
-	}
-	if v, ok := m["model_data_source"]; ok {
-		container.ModelDataSource = expandModelDataSource(v.([]any))
-	}
-
-	if v, ok := m["additional_model_data_source"]; ok {
-		container.AdditionalModelDataSources = expandAdditionalModelDataSources(v.([]any))
-	}
-	if v, ok := m[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
-		container.Environment = flex.ExpandStringValueMap(v)
-	}
-
-	if v, ok := m["image_config"]; ok {
-		container.ImageConfig = expandModelImageConfig(v.([]any))
-	}
-
-	if v, ok := m["inference_specification_name"]; ok && v.(string) != "" {
-		container.InferenceSpecificationName = aws.String(v.(string))
-	}
-
-	if v, ok := m["multi_model_config"].([]any); ok && len(v) > 0 {
-		container.MultiModelConfig = expandMultiModelConfig(v)
-	}
-
-	return &container
-}
-
-func expandModelDataSource(l []any) *awstypes.ModelDataSource {
-	if len(l) == 0 {
+func expandModelDataSource(tfList []any) *awstypes.ModelDataSource {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	modelDataSource := awstypes.ModelDataSource{}
+	tfMap := tfList[0].(map[string]any)
 
-	m := l[0].(map[string]any)
-
-	if v, ok := m["s3_data_source"]; ok {
-		modelDataSource.S3DataSource = expandS3ModelDataSource(v.([]any))
+	apiObject := awstypes.ModelDataSource{}
+	if v, ok := tfMap["s3_data_source"]; ok {
+		apiObject.S3DataSource = expandS3ModelDataSource(v.([]any))
 	}
 
-	return &modelDataSource
+	return &apiObject
 }
 
 func expandAdditionalModelDataSources(tfList []any) []awstypes.AdditionalModelDataSource {
@@ -768,10 +748,11 @@ func expandAdditionalModelDataSources(tfList []any) []awstypes.AdditionalModelDa
 
 	apiObjects := make([]awstypes.AdditionalModelDataSource, 0, len(tfList))
 	for _, m := range tfList {
-		if m == nil {
+		tfMap, ok := m.(map[string]any)
+		if !ok {
 			continue
 		}
-		apiObjects = append(apiObjects, expandAdditionalModelDataSource(m.(map[string]any)))
+		apiObjects = append(apiObjects, expandAdditionalModelDataSource(tfMap))
 	}
 
 	return apiObjects
@@ -814,22 +795,22 @@ func expandS3ModelDataSource(tfList []any) *awstypes.S3ModelDataSource {
 	return &apiObject
 }
 
-func expandModelImageConfig(l []any) *awstypes.ImageConfig {
-	if len(l) == 0 {
+func expandModelImageConfig(tfList []any) *awstypes.ImageConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	m := tfList[0].(map[string]any)
 
-	imageConfig := &awstypes.ImageConfig{
+	apiObject := &awstypes.ImageConfig{
 		RepositoryAccessMode: awstypes.RepositoryAccessMode(m["repository_access_mode"].(string)),
 	}
 
 	if v, ok := m["repository_auth_config"].([]any); ok && len(v) > 0 && v[0] != nil {
-		imageConfig.RepositoryAuthConfig = expandRepositoryAuthConfig(v[0].(map[string]any))
+		apiObject.RepositoryAuthConfig = expandRepositoryAuthConfig(v[0].(map[string]any))
 	}
 
-	return imageConfig
+	return apiObject
 }
 
 func expandRepositoryAuthConfig(tfMap map[string]any) *awstypes.RepositoryAuthConfig {
@@ -847,13 +828,13 @@ func expandRepositoryAuthConfig(tfMap map[string]any) *awstypes.RepositoryAuthCo
 }
 
 func expandContainers(a []any) []awstypes.ContainerDefinition {
-	containers := make([]awstypes.ContainerDefinition, 0, len(a))
+	apiObjects := make([]awstypes.ContainerDefinition, 0, len(a))
 
 	for _, m := range a {
-		containers = append(containers, *expandContainer(m.(map[string]any)))
+		apiObjects = append(apiObjects, *expandContainer(m.(map[string]any)))
 	}
 
-	return containers
+	return apiObjects
 }
 
 func expandModelAccessConfig(tfList []any) *awstypes.ModelAccessConfig {
@@ -871,20 +852,45 @@ func expandModelAccessConfig(tfList []any) *awstypes.ModelAccessConfig {
 	return apiObject
 }
 
-func expandMultiModelConfig(l []any) *awstypes.MultiModelConfig {
-	if len(l) == 0 {
+func expandMultiModelConfig(tfList []any) *awstypes.MultiModelConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	m := tfList[0].(map[string]any)
 
-	multiModelConfig := &awstypes.MultiModelConfig{}
-
+	apiObject := &awstypes.MultiModelConfig{}
 	if v, ok := m["model_cache_setting"].(string); ok && v != "" {
-		multiModelConfig.ModelCacheSetting = awstypes.ModelCacheSetting(v)
+		apiObject.ModelCacheSetting = awstypes.ModelCacheSetting(v)
 	}
 
-	return multiModelConfig
+	return apiObject
+}
+
+func expandModelInferenceExecutionConfig(tfList []any) *awstypes.InferenceExecutionConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+	apiObject := &awstypes.InferenceExecutionConfig{
+		Mode: awstypes.InferenceExecutionMode(m[names.AttrMode].(string)),
+	}
+
+	return apiObject
+}
+
+func flattenVPCConfigResponse(apiObject *awstypes.VpcConfig) []map[string]any {
+	if apiObject == nil {
+		return []map[string]any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
+		names.AttrSubnets:          flex.FlattenStringValueSet(apiObject.Subnets),
+	}
+
+	return []map[string]any{tfMap}
 }
 
 func flattenContainer(apiObject *awstypes.ContainerDefinition) []any {
@@ -892,14 +898,13 @@ func flattenContainer(apiObject *awstypes.ContainerDefinition) []any {
 		return []any{}
 	}
 
-	tfMap := make(map[string]any)
+	tfMap := map[string]any{
+		names.AttrMode: apiObject.Mode,
+	}
 
 	if apiObject.Image != nil {
 		tfMap["image"] = aws.ToString(apiObject.Image)
 	}
-
-	tfMap[names.AttrMode] = apiObject.Mode
-
 	if apiObject.ContainerHostname != nil {
 		tfMap["container_hostname"] = aws.ToString(apiObject.ContainerHostname)
 	}
@@ -918,15 +923,12 @@ func flattenContainer(apiObject *awstypes.ContainerDefinition) []any {
 	if apiObject.Environment != nil {
 		tfMap[names.AttrEnvironment] = aws.StringMap(apiObject.Environment)
 	}
-
 	if apiObject.ImageConfig != nil {
 		tfMap["image_config"] = flattenImageConfig(apiObject.ImageConfig)
 	}
-
 	if apiObject.InferenceSpecificationName != nil {
 		tfMap["inference_specification_name"] = aws.ToString(apiObject.InferenceSpecificationName)
 	}
-
 	if apiObject.MultiModelConfig != nil {
 		tfMap["multi_model_config"] = flattenMultiModelConfig(apiObject.MultiModelConfig)
 	}
@@ -934,17 +936,17 @@ func flattenContainer(apiObject *awstypes.ContainerDefinition) []any {
 	return []any{tfMap}
 }
 
-func flattenModelDataSource(modelDataSource *awstypes.ModelDataSource) []any {
-	if modelDataSource == nil {
+func flattenModelDataSource(apiObject *awstypes.ModelDataSource) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	cfg := make(map[string]any)
-	if modelDataSource.S3DataSource != nil {
-		cfg["s3_data_source"] = flattenS3ModelDataSource(modelDataSource.S3DataSource)
+	tfMap := make(map[string]any)
+	if apiObject.S3DataSource != nil {
+		tfMap["s3_data_source"] = flattenS3ModelDataSource(apiObject.S3DataSource)
 	}
 
-	return []any{cfg}
+	return []any{tfMap}
 }
 
 func flattenAdditionalModelDataSources(apiObjects []awstypes.AdditionalModelDataSource) []any {
@@ -988,20 +990,19 @@ func flattenS3ModelDataSource(apiObject *awstypes.S3ModelDataSource) []any {
 	return []any{tfMap}
 }
 
-func flattenImageConfig(imageConfig *awstypes.ImageConfig) []any {
-	if imageConfig == nil {
+func flattenImageConfig(apiObject *awstypes.ImageConfig) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	cfg := make(map[string]any)
-
-	cfg["repository_access_mode"] = imageConfig.RepositoryAccessMode
-
-	if tfMap := flattenRepositoryAuthConfig(imageConfig.RepositoryAuthConfig); len(tfMap) > 0 {
-		cfg["repository_auth_config"] = []any{tfMap}
+	tfMap := map[string]any{
+		"repository_access_mode": apiObject.RepositoryAccessMode,
+	}
+	if v := flattenRepositoryAuthConfig(apiObject.RepositoryAuthConfig); len(v) > 0 {
+		tfMap["repository_auth_config"] = []any{v}
 	}
 
-	return []any{cfg}
+	return []any{tfMap}
 }
 
 func flattenRepositoryAuthConfig(apiObject *awstypes.RepositoryAuthConfig) map[string]any {
@@ -1010,7 +1011,6 @@ func flattenRepositoryAuthConfig(apiObject *awstypes.RepositoryAuthConfig) map[s
 	}
 
 	tfMap := make(map[string]any)
-
 	if v := apiObject.RepositoryCredentialsProviderArn; v != nil {
 		tfMap["repository_credentials_provider_arn"] = aws.ToString(v)
 	}
@@ -1018,62 +1018,47 @@ func flattenRepositoryAuthConfig(apiObject *awstypes.RepositoryAuthConfig) map[s
 	return tfMap
 }
 
-func flattenContainers(containers []awstypes.ContainerDefinition) []any {
-	fContainers := make([]any, 0, len(containers))
-	for _, container := range containers {
-		fContainers = append(fContainers, flattenContainer(&container)[0].(map[string]any))
+func flattenContainers(apiObjects []awstypes.ContainerDefinition) []any {
+	tfList := make([]any, 0, len(apiObjects))
+	for _, obj := range apiObjects {
+		tfList = append(tfList, flattenContainer(&obj)[0].(map[string]any))
 	}
-	return fContainers
+	return tfList
 }
 
-func flattenModelAccessConfig(config *awstypes.ModelAccessConfig) []any {
-	if config == nil {
+func flattenModelAccessConfig(apiObject *awstypes.ModelAccessConfig) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	cfg := make(map[string]any)
+	tfMap := map[string]any{
+		"accept_eula": aws.ToBool(apiObject.AcceptEula),
+	}
 
-	cfg["accept_eula"] = aws.ToBool(config.AcceptEula)
-
-	return []any{cfg}
+	return []any{tfMap}
 }
 
-func flattenMultiModelConfig(config *awstypes.MultiModelConfig) []any {
-	if config == nil {
+func flattenMultiModelConfig(apiObject *awstypes.MultiModelConfig) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	cfg := make(map[string]any)
-
-	if config.ModelCacheSetting != "" {
-		cfg["model_cache_setting"] = config.ModelCacheSetting
+	tfMap := make(map[string]any)
+	if apiObject.ModelCacheSetting != "" {
+		tfMap["model_cache_setting"] = apiObject.ModelCacheSetting
 	}
 
-	return []any{cfg}
+	return []any{tfMap}
 }
 
-func expandModelInferenceExecutionConfig(l []any) *awstypes.InferenceExecutionConfig {
-	if len(l) == 0 {
-		return nil
-	}
-
-	m := l[0].(map[string]any)
-
-	config := &awstypes.InferenceExecutionConfig{
-		Mode: awstypes.InferenceExecutionMode(m[names.AttrMode].(string)),
-	}
-
-	return config
-}
-
-func flattenModelInferenceExecutionConfig(config *awstypes.InferenceExecutionConfig) []any {
-	if config == nil {
+func flattenModelInferenceExecutionConfig(apiObject *awstypes.InferenceExecutionConfig) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	cfg := make(map[string]any)
+	tfMap := map[string]any{
+		names.AttrMode: apiObject.Mode,
+	}
 
-	cfg[names.AttrMode] = config.Mode
-
-	return []any{cfg}
+	return []any{tfMap}
 }
