@@ -94,8 +94,6 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"source_account_id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -116,6 +114,8 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 					listplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"updated_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -277,6 +277,13 @@ func (r *resourceView) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 	state.SourceViews = flex.FlattenFrameworkStringValueListOfString(ctx, sourceViews)
 
+	resourceTags, err := findResourceTagsByARN(ctx, conn, state.ARN.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
+		return
+	}
+	setTagsOut(ctx, resourceTags)
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -413,6 +420,21 @@ func findSourceViewsByArn(ctx context.Context, conn *billing.Client, arn string)
 	}
 
 	return sourceViews, nil
+}
+
+func findResourceTagsByARN(ctx context.Context, conn *billing.Client, arn string) ([]awstypes.ResourceTag, error) {
+	out, err := conn.ListTagsForResource(ctx, &billing.ListTagsForResourceInput{
+		ResourceArn: aws.String(arn),
+	})
+	if err != nil {
+		tflog.Error(ctx, "Error listing resource tags for billing view", map[string]any{
+			names.AttrARN: arn,
+			"error":       err.Error(),
+		})
+		return nil, err
+	}
+
+	return out.ResourceTags, nil
 }
 
 func statusBillingView(conn *billing.Client, arn string) retry.StateRefreshFunc {
