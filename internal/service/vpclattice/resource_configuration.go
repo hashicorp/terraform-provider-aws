@@ -266,7 +266,6 @@ func (r *resourceConfigurationResource) Create(ctx context.Context, request reso
 
 	// Additional fields.
 	input.ClientToken = aws.String(sdkid.UniqueId())
-	input.CustomDomainName = fwflex.StringFromFramework(ctx, data.CustomDomainName)
 	input.DomainVerificationIdentifier = fwflex.StringFromFramework(ctx, data.DomainVerificationID)
 	input.ResourceConfigurationGroupIdentifier = fwflex.StringFromFramework(ctx, data.ResourceConfigurationGroupID)
 	input.ResourceGatewayIdentifier = fwflex.StringFromFramework(ctx, data.ResourceGatewayID)
