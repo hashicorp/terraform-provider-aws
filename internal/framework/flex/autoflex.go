@@ -167,8 +167,9 @@ func autoflexTags(field reflect.StructField) (string, tagOptions) {
 }
 
 type fieldOpts struct {
-	legacy    bool
-	omitempty bool
+	legacy     bool
+	omitempty  bool
+	xmlWrapper bool
 }
 
 // valueWithElementsAs extends the Value interface for values that have an ElementsAs method.

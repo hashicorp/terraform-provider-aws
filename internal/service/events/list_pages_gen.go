@@ -5,6 +5,7 @@ package events
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 )
@@ -13,7 +14,7 @@ func listAPIDestinationsPages(ctx context.Context, conn *eventbridge.Client, inp
 	for {
 		output, err := conn.ListApiDestinations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -29,7 +30,7 @@ func listArchivesPages(ctx context.Context, conn *eventbridge.Client, input *eve
 	for {
 		output, err := conn.ListArchives(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -45,7 +46,7 @@ func listConnectionsPages(ctx context.Context, conn *eventbridge.Client, input *
 	for {
 		output, err := conn.ListConnections(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -61,7 +62,7 @@ func listEventBusesPages(ctx context.Context, conn *eventbridge.Client, input *e
 	for {
 		output, err := conn.ListEventBuses(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -77,7 +78,7 @@ func listEventSourcesPages(ctx context.Context, conn *eventbridge.Client, input 
 	for {
 		output, err := conn.ListEventSources(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -93,7 +94,7 @@ func listRulesPages(ctx context.Context, conn *eventbridge.Client, input *eventb
 	for {
 		output, err := conn.ListRules(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -109,7 +110,7 @@ func listTargetsByRulePages(ctx context.Context, conn *eventbridge.Client, input
 	for {
 		output, err := conn.ListTargetsByRule(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

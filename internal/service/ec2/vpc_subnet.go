@@ -823,7 +823,7 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 			}
 
 			for _, subnet := range page.Subnets {
-				ctx := tflog.SetField(ctx, "tf_aws.resource_attribute.id", aws.ToString(subnet.SubnetId))
+				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), aws.ToString(subnet.SubnetId))
 
 				result := request.NewListResult(ctx)
 
@@ -844,7 +844,7 @@ func (l *subnetListResource) List(ctx context.Context, request list.ListRequest,
 				}
 
 				if v, ok := tags["Name"]; ok {
-					result.DisplayName = v.ValueString()
+					result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(subnet.SubnetId))
 				} else {
 					result.DisplayName = aws.ToString(subnet.SubnetId)
 				}

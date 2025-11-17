@@ -89,6 +89,11 @@ This data source exports the following attributes in addition to the arguments a
     * `kms_key_id` - KMS key id used to encrypt data at rest.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `endpoint_v2` - V2 domain-specific endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
+* `identity_center_options` - Configuration for enabling and managing IAM Identity Center integration within a domain.
+    * `enabled_api_access` - Boolean whether IAM Identity Center is enabled for API access.
+    * `identity_center_instance_arn` - ARN of the IAM Identity Center instance to create an OpenSearch UI application that uses IAM Identity Center for authentication.
+    * `roles_key` - Attribute that contains the backend role identifier (such as group name or group ID) in IAM Identity Center.
+    * `subject_key` - Attribute that contains the subject identifier (such as username, user ID, or email) in IAM Identity Center.
 * `ip_address_type` - Type of IP addresses supported by the endpoint for the domain.
 * `log_publishing_options` - Domain log publishing related options.
     * `log_type` - Type of OpenSearch log being published.

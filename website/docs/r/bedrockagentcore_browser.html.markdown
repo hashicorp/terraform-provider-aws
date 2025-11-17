@@ -25,6 +25,23 @@ resource "aws_bedrockagentcore_browser" "example" {
 }
 ```
 
+### Browser with VPC Configuration
+
+```terraform
+resource "aws_bedrockagentcore_browser" "vpc_example" {
+  name        = "vpc-browser"
+  description = "Browser with VPC configuration"
+
+  network_configuration {
+    network_mode = "VPC"
+    vpc_config {
+      security_groups = ["sg-12345678"]
+      subnets         = ["subnet-12345678", "subnet-87654321"]
+    }
+  }
+}
+```
+
 ### Browser with Execution Role and Recording
 
 ```terraform
@@ -80,14 +97,21 @@ The following arguments are optional:
 * `description` - (Optional) Description of the browser.
 * `execution_role_arn` - (Optional) ARN of the IAM role that the browser assumes for execution.
 * `recording` - (Optional) Recording configuration for browser sessions. See [`recording`](#recording) below.
-* `client_token` - (Optional) Unique identifier for request idempotency. If not provided, one will be generated automatically.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `network_configuration`
 
 The `network_configuration` object supports the following:
 
-* `network_mode` - (Required) Network mode for the browser. Valid values: `PUBLIC`, `SANDBOX`.
+* `network_mode` - (Required) Network mode for the browser. Valid values: `PUBLIC`, `VPC`.
+* `vpc_config` - (Optional) VPC configuration when `network_mode` is `VPC`. See [`vpc_config`](#vpc_config) below.
+
+### `vpc_config`
+
+The `vpc_config` object supports the following:
+
+* `security_groups` - (Required) Set of security group IDs for the VPC configuration.
+* `subnets` - (Required) Set of subnet IDs for the VPC configuration.
 
 ### `recording`
 
@@ -101,7 +125,7 @@ The `recording` object supports the following:
 The `s3_location` object supports the following:
 
 * `bucket` - (Required) Name of the S3 bucket where recordings are stored.
-* `prefix` - (Optional) S3 key prefix for recording files.
+* `prefix` - (Required) S3 key prefix for recording files.
 
 ## Attribute Reference
 

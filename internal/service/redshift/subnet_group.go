@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_redshift_subnet_group", name="Subnet Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.ClusterSubnetGroup")
 func resourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,

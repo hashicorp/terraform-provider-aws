@@ -288,7 +288,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Map:
-		diags.Append(flattener.map_(ctx, sourcePath, vFrom, targetPath, tTo, vTo)...)
+		diags.Append(flattener.map_(ctx, sourcePath, vFrom, targetPath, tTo, vTo, fieldOpts)...)
 		return diags
 
 	case reflect.Struct:
@@ -296,7 +296,7 @@ func (flattener autoFlattener) convert(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Interface:
-		diags.Append(flattener.interface_(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.interface_(ctx, vFrom, tTo, vTo, fieldOpts)...)
 		return diags
 	}
 
@@ -715,7 +715,7 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 	return diags
 }
 
-func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
@@ -992,7 +992,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 }
 
 // map_ copies an AWS API map value to a compatible Plugin Framework value.
-func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tMapKey := vFrom.Type().Key(); tMapKey.Kind() {
@@ -2155,7 +2155,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		for toField := range tfreflect.ExportedStructFields(typeTo) {
 			toFieldName := toField.Name
 			_, toOpts := autoflexTags(toField)
-			if wrapperField := toOpts.WrapperField(); wrapperField != "" {
+			if wrapperField := toOpts.XMLWrapperField(); wrapperField != "" {
 				toFieldVal := valTo.FieldByIndex(toField.Index)
 				if !toFieldVal.CanSet() {
 					continue
@@ -2216,7 +2216,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			continue
 		}
 		toFieldName := toField.Name
-		toNameOverride, toOpts := autoflexTags(toField)
+		toNameOverride, toFieldOpts := autoflexTags(toField)
 		toFieldVal := valTo.FieldByIndex(toField.Index)
 		if toNameOverride == "-" {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored target field", map[string]any{
@@ -2225,7 +2225,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			})
 			continue
 		}
-		if toOpts.NoFlatten() {
+		if toFieldOpts.NoFlatten() {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping noflatten target field", map[string]any{
 				logAttrKeySourceFieldname: fromFieldName,
 				logAttrKeyTargetFieldname: toFieldName,
@@ -2247,7 +2247,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		})
 
 		// Check if target has wrapper tag and source is an XML wrapper struct
-		if wrapperField := toOpts.WrapperField(); wrapperField != "" {
+		if wrapperField := toFieldOpts.XMLWrapperField(); wrapperField != "" {
 			fromFieldVal := valFrom.FieldByIndex(fromField.Index)
 
 			// Handle direct XML wrapper struct
@@ -2496,8 +2496,9 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		}
 
 		opts := fieldOpts{
-			legacy:    toOpts.Legacy(),
-			omitempty: toOpts.OmitEmpty(),
+			legacy:     toFieldOpts.Legacy(),
+			omitempty:  toFieldOpts.OmitEmpty(),
+			xmlWrapper: toFieldOpts.XMLWrapperField() != "",
 		}
 
 		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)

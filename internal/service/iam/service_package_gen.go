@@ -434,6 +434,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  policyResourceAsListResource,
+			TypeName: "aws_iam_policy",
+			Name:     "Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "Policy",
+			}),
+			Identity: inttypes.GlobalARNIdentity(),
+		},
+		{
 			Factory:  roleResourceAsListResource,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
@@ -443,6 +454,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				ResourceType:        "Role",
 			}),
 			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+		},
+		{
+			Factory:  rolePolicyAttachmentResourceAsListResource,
+			TypeName: "aws_iam_role_policy_attachment",
+			Name:     "Role Policy Attachment",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrRole, true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			}),
 		},
 	})
 }
