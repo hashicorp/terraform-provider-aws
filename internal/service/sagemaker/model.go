@@ -129,18 +129,6 @@ func resourceModel() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"s3_uri": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validModelDataURL,
-												},
-												"s3_data_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
-												},
 												"compression_type": {
 													Type:             schema.TypeString,
 													Required:         true,
@@ -160,6 +148,18 @@ func resourceModel() *schema.Resource {
 															},
 														},
 													},
+												},
+												"s3_data_type": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
+												},
+												"s3_uri": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validModelDataURL,
 												},
 											},
 										},
@@ -183,18 +183,6 @@ func resourceModel() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"s3_uri": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validModelDataURL,
-												},
-												"s3_data_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
-												},
 												"compression_type": {
 													Type:             schema.TypeString,
 													Required:         true,
@@ -215,6 +203,18 @@ func resourceModel() *schema.Resource {
 															},
 														},
 													},
+												},
+												"s3_data_type": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
+												},
+												"s3_uri": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validModelDataURL,
 												},
 											},
 										},
@@ -367,18 +367,6 @@ func resourceModel() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"s3_uri": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validModelDataURL,
-												},
-												"s3_data_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
-												},
 												"compression_type": {
 													Type:             schema.TypeString,
 													Required:         true,
@@ -399,6 +387,18 @@ func resourceModel() *schema.Resource {
 															},
 														},
 													},
+												},
+												"s3_data_type": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
+												},
+												"s3_uri": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validModelDataURL,
 												},
 											},
 										},
@@ -422,18 +422,6 @@ func resourceModel() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"s3_uri": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validModelDataURL,
-												},
-												"s3_data_type": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
-												},
 												"compression_type": {
 													Type:             schema.TypeString,
 													Required:         true,
@@ -454,6 +442,18 @@ func resourceModel() *schema.Resource {
 															},
 														},
 													},
+												},
+												"s3_data_type": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.S3ModelDataType](),
+												},
+												"s3_uri": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validModelDataURL,
 												},
 											},
 										},
