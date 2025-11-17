@@ -8,7 +8,6 @@ ENHANCEMENTS:
 
 * data-source/aws_route53_zone: Support filtering by `tags` only or by `vpc_id` only ([#39671](https://github.com/hashicorp/terraform-provider-aws/issues/39671))
 * resource/aws_vpn_connection: Add `tunnel_bandwidth` argument to support higher bandwidth tunnels ([#45070](https://github.com/hashicorp/terraform-provider-aws/issues/45070))
-* resource/dlm_lifecycle_policy: Add `exclude_data_volume_tags` argument to support more possibilities in custom policies ([#45031](https://github.com/hashicorp/terraform-provider-aws/issues/45031))
 
 BUG FIXES:
 
