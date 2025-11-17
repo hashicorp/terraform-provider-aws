@@ -10,16 +10,17 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda/mocks"
-	awsmocktypes "github.com/hashicorp/terraform-provider-aws/internal/service/lambda/mocks/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,7 +30,7 @@ func TestAccLambdaCapacityProvider_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var capacityprovider awsmocktypes.GetCapacityProviderOutput
+	var capacityprovider awstypes.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_capacity_provider.test"
 
@@ -68,7 +69,7 @@ func TestAccLambdaCapacityProvider_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var capacityprovider awsmocktypes.GetCapacityProviderOutput
+	var capacityprovider awstypes.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_capacity_provider.test"
 
@@ -101,8 +102,7 @@ func TestAccLambdaCapacityProvider_disappears(t *testing.T) {
 
 func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		//conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
-		conn := mocks.LambdaClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_capacity_provider" {
@@ -124,7 +124,7 @@ func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckCapacityProviderExists(ctx context.Context, name string, capacityprovider *awsmocktypes.GetCapacityProviderOutput) resource.TestCheckFunc {
+func testAccCheckCapacityProviderExists(ctx context.Context, name string, capacityprovider *awstypes.CapacityProvider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -135,8 +135,7 @@ func testAccCheckCapacityProviderExists(ctx context.Context, name string, capaci
 			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameCapacityProvider, name, errors.New("not set"))
 		}
 
-		//conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
-		conn := mocks.LambdaClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 		resp, err := tflambda.FindCapacityProviderByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 		if err != nil {
 			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameCapacityProvider, rs.Primary.ID, err)
@@ -149,10 +148,9 @@ func testAccCheckCapacityProviderExists(ctx context.Context, name string, capaci
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	// conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
-	conn := mocks.LambdaClient(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
-	input := awsmocktypes.ListCapacityProvidersInput{}
+	input := lambda.ListCapacityProvidersInput{}
 
 	_, err := conn.ListCapacityProviders(ctx, &input)
 

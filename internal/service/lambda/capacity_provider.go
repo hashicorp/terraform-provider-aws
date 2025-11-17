@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -41,9 +42,9 @@ import (
 func newResourceCapacityProvider(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCapacityProvider{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -60,22 +61,55 @@ type resourceCapacityProvider struct {
 func (r *resourceCapacityProvider) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrARN:                      framework.ARNAttributeComputedOnly(),
+			"capacity_provider_scaling_config": framework.ResourceOptionalComputedListOfObjectsAttribute[capacityProviderScalingConfigModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"instance_requirements":            framework.ResourceOptionalComputedListOfObjectsAttribute[instanceRequirementsModel](ctx, 1, nil, listplanmodifier.RequiresReplaceIfConfigured(), listplanmodifier.UseStateForUnknown()),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrKMSKeyARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			"permissions_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[permissionConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplaceIfConfigured(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"capacity_provider_operator_role_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+				},
+			},
 			names.AttrVPCConfig: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -84,95 +118,8 @@ func (r *resourceCapacityProvider) Schema(ctx context.Context, _ resource.Schema
 							CustomType: fwtypes.SetOfStringType,
 						},
 						names.AttrSecurityGroupIDs: schema.SetAttribute{
-							Optional:   true,
+							Required:   true,
 							CustomType: fwtypes.SetOfStringType,
-						},
-					},
-				},
-			},
-			"permissions_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[permissionConfigModel](ctx),
-				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"instance_profile_arn": schema.StringAttribute{
-							CustomType: fwtypes.ARNType,
-							Required:   true,
-						},
-						"capacity_provider_operator_arn": schema.StringAttribute{
-							CustomType: fwtypes.ARNType,
-							Required:   true,
-						},
-					},
-				},
-			},
-			"capacity_provider_overrides": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[capacityProviderOverridesModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrKMSKeyARN: schema.StringAttribute{
-							CustomType: fwtypes.ARNType,
-							Optional:   true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"instance_requirements": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[instanceRequirementsModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"architecture": schema.StringAttribute{
-										Optional: true,
-									},
-									"allowed_instance_types": schema.ListAttribute{
-										CustomType: fwtypes.ListOfStringType,
-										Optional:   true,
-									},
-									"excluded_instance_types": schema.ListAttribute{
-										CustomType: fwtypes.ListOfStringType,
-										Optional:   true,
-									},
-								},
-							},
-						},
-						"capacity_provider_autoscaling": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[capacityProviderAutoscalingModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"max_instance_count": schema.Int64Attribute{
-										Required: true,
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"instance_scaling_targets_percent": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[instanceScalingTargetsPercentageModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"target_cpu": schema.Int64Attribute{
-													Optional: true,
-												},
-												"target_memory": schema.Int64Attribute{
-													Optional: true,
-												},
-											},
-										},
-									},
-								},
-							},
 						},
 					},
 				},
@@ -190,29 +137,33 @@ func (r *resourceCapacityProvider) Create(ctx context.Context, request resource.
 	conn := r.Meta().LambdaClient(ctx)
 
 	var plan resourceCapacityProviderModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	var input lambda.CreateCapacityProviderInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CapacityProvider")))
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CapacityProvider")))
 	if response.Diagnostics.HasError() {
 		return
 	}
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateCapacityProvider(ctx, &input)
+	out, err := tfresource.RetryWhenIsAErrorMessageContains[*lambda.CreateCapacityProviderOutput, *awstypes.InvalidParameterValueException](ctx, time.Minute*2, func(ctx context.Context) (*lambda.CreateCapacityProviderOutput, error) {
+		return conn.CreateCapacityProvider(ctx, &input)
+	}, "doesn't have permission to perform")
+
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
+
 	if out == nil {
 		smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, out.CapacityProvider, &plan, flex.WithFieldNamePrefix("CapacityProvider")))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -220,18 +171,19 @@ func (r *resourceCapacityProvider) Create(ctx context.Context, request resource.
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitCapacityProviderActive(ctx, conn, plan.ARN.ValueString(), createTimeout)
 	if err != nil {
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(names.AttrARN), plan.ARN.ValueString()))
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, plan))
 }
 
 func (r *resourceCapacityProvider) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
 	var state resourceCapacityProviderModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -247,33 +199,33 @@ func (r *resourceCapacityProvider) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("CapacityProvider")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("CapacityProvider")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
 	var plan, state resourceCapacityProviderModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	diff, d := flex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var input lambda.UpdateCapacityProviderInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CapacityProvider")))
+		smerr.AddEnrich(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CapacityProvider")))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -288,7 +240,7 @@ func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.
 			return
 		}
 
-		smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Flatten(ctx, out, &plan))
+		smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("CapacityProvider")))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -301,14 +253,14 @@ func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
 }
 
 func (r *resourceCapacityProvider) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().LambdaClient(ctx)
 
 	var state resourceCapacityProviderModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -412,14 +364,16 @@ func findCapacityProviderByARN(ctx context.Context, conn *lambda.Client, id stri
 
 type resourceCapacityProviderModel struct {
 	framework.WithRegionModel
-	ARN                       types.String                                                    `tfsdk:"arn"`
-	Name                      types.String                                                    `tfsdk:"name"`
-	PermissionConfig          fwtypes.ListNestedObjectValueOf[permissionConfigModel]          `tfsdk:"permission_config"`
-	VpcConfig                 fwtypes.ListNestedObjectValueOf[vpcConfigModel]                 `tfsdk:"vpc_config"`
-	CapacityProviderOverrides fwtypes.ListNestedObjectValueOf[capacityProviderOverridesModel] `tfsdk:"capacity_provider_overrides"`
-	Tags                      tftags.Map                                                      `tfsdk:"tags"`
-	TagsAll                   tftags.Map                                                      `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value                                                  `tfsdk:"timeouts"`
+	ARN                           types.String                                                        `tfsdk:"arn"`
+	Name                          types.String                                                        `tfsdk:"name"`
+	KMSKeyARN                     fwtypes.ARN                                                         `tfsdk:"kms_key_arn"`
+	PermissionsConfig             fwtypes.ListNestedObjectValueOf[permissionConfigModel]              `tfsdk:"permissions_config"`
+	VpcConfig                     fwtypes.ListNestedObjectValueOf[vpcConfigModel]                     `tfsdk:"vpc_config"`
+	CapacityProviderScalingConfig fwtypes.ListNestedObjectValueOf[capacityProviderScalingConfigModel] `tfsdk:"capacity_provider_scaling_config"`
+	InstanceRequirements          fwtypes.ListNestedObjectValueOf[instanceRequirementsModel]          `tfsdk:"instance_requirements"`
+	Tags                          tftags.Map                                                          `tfsdk:"tags"`
+	TagsAll                       tftags.Map                                                          `tfsdk:"tags_all"`
+	Timeouts                      timeouts.Value                                                      `tfsdk:"timeouts"`
 }
 
 type vpcConfigModel struct {
@@ -428,30 +382,24 @@ type vpcConfigModel struct {
 }
 
 type permissionConfigModel struct {
-	InstanceProfileARN          fwtypes.ARN `tfsdk:"instance_profile_arn"`
-	CapacityProviderOperatorARN fwtypes.ARN `tfsdk:"capacity_provider_operator_arn"`
-}
-
-type capacityProviderOverridesModel struct {
-	InstanceRequirements        fwtypes.ListNestedObjectValueOf[instanceRequirementsModel]        `tfsdk:"instance_requirements"`
-	CapacityProviderAutoscaling fwtypes.ListNestedObjectValueOf[capacityProviderAutoscalingModel] `tfsdk:"capacity_provider_autoscaling"`
-	KmsKeyARN                   fwtypes.ARN                                                       `tfsdk:"kms_key_arn"`
+	CapacityProviderOperatorRoleARN fwtypes.ARN `tfsdk:"capacity_provider_operator_role_arn"`
 }
 
 type instanceRequirementsModel struct {
-	Architecture          types.String         `tfsdk:"architecture"`
-	AllowedInstanceTypes  fwtypes.ListOfString `tfsdk:"allowed_instance_types"`
-	ExcludedInstanceTypes fwtypes.ListOfString `tfsdk:"excluded_instance_types"`
+	Architectures         fwtypes.ListOfStringEnum[awstypes.Architecture] `tfsdk:"architectures"`
+	AllowedInstanceTypes  fwtypes.ListOfString                            `tfsdk:"allowed_instance_types"`
+	ExcludedInstanceTypes fwtypes.ListOfString                            `tfsdk:"excluded_instance_types"`
 }
 
-type capacityProviderAutoscalingModel struct {
-	MaxInstanceCount              types.Int64                                                            `tfsdk:"max_instance_count"`
-	InstanceScalingTargetsPercent fwtypes.ListNestedObjectValueOf[instanceScalingTargetsPercentageModel] `tfsdk:"instance_scaling_targets_percent"`
+type capacityProviderScalingConfigModel struct {
+	MaxVCpuCount    types.Int32                                              `tfsdk:"max_vcpu_count"`
+	ScalingMode     fwtypes.StringEnum[awstypes.CapacityProviderScalingMode] `tfsdk:"scaling_mode"`
+	ScalingPolicies fwtypes.ListNestedObjectValueOf[scalingPoliciesModel]    `tfsdk:"scaling_policies"`
 }
 
-type instanceScalingTargetsPercentageModel struct {
-	TargetCPU    types.Int64 `tfsdk:"target_cpu"`
-	TargetMemory types.Int64 `tfsdk:"target_memory"`
+type scalingPoliciesModel struct {
+	PredefinedMetricType fwtypes.StringEnum[awstypes.CapacityProviderPredefinedMetricType] `tfsdk:"predefined_metric_type"`
+	TargetValue          types.Float64                                                     `tfsdk:"target_value"`
 }
 
 //func sweepCapacityProviders(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

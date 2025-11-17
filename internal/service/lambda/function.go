@@ -94,9 +94,9 @@ func resourceFunction() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ec2_managed_instance_capacity_provider_config": {
+						"lambda_managed_instances_capacity_provider_config": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -104,22 +104,13 @@ func resourceFunction() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"function_autoscaling_config": {
-										Type:     schema.TypeList,
+									"execution_environment_memory_gib_per_vcpu": {
+										Type:     schema.TypeFloat,
 										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"min_execution_environments": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-												"max_execution_environments": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-											},
-										},
+									},
+									"per_execution_environment_max_concurrency": {
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
 								},
 							},
@@ -553,9 +544,12 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	// check if function is associated with a capacity provider.
 	// this will indicate the type of publish we need to do.
-	if _, ok := d.GetOk("capacity_provider_config"); ok {
-		// new api with publish options
-		// input.CapacityProviderConfig = expandCapacityProviderConfig(v.([]any))
+	if v, ok := d.GetOk("capacity_provider_config"); ok {
+		input.CapacityProviderConfig = expandCapacityProviderConfig(v.([]any))
+
+		if d.Get("publish").(bool) {
+			input.PublishTo = awstypes.FunctionVersionLatestPublishedLatestPublished
+		}
 	}
 
 	if v, ok := d.GetOk("filename"); ok {
@@ -750,6 +744,9 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("architectures", function.Architectures)
 	functionARN := aws.ToString(function.FunctionArn)
 	d.Set(names.AttrARN, functionARN)
+	if err := d.Set("capacity_provider_config", flattenCapacityProviderConfig(function.CapacityProviderConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_config: %s", err)
+	}
 	d.Set("code_sha256", function.CodeSha256)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []any{
@@ -1148,6 +1145,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		// this will indicate the type of publish we need to do.
 		if _, ok := d.GetOk("capacity_provider_config"); ok {
 			// new api with publish options
+			input.PublishTo = awstypes.FunctionVersionLatestPublishedLatestPublished
 		}
 
 		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
@@ -1439,7 +1437,7 @@ func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lamb
 func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.FunctionConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatePending),
-		Target:  enum.Slice(awstypes.StateActive),
+		Target:  enum.Slice(awstypes.StateActive, awstypes.StateActiveNonInvocable),
 		Refresh: statusFunctionState(ctx, conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
@@ -1672,14 +1670,57 @@ func signerServiceIsAvailable(region string) bool {
 	return ok
 }
 
-// TODO needs to be completed when SDK is available
-func flattenCapacityProviderConfig(apiObject any) []any {
-	return nil
+func flattenCapacityProviderConfig(apiObject *awstypes.CapacityProviderConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	innerMap := make(map[string]any)
+	if apiObject.LambdaManagedInstancesCapacityProviderConfig != nil {
+		innerMap["capacity_provider_arn"] = apiObject.LambdaManagedInstancesCapacityProviderConfig.CapacityProviderArn
+
+		if apiObject.LambdaManagedInstancesCapacityProviderConfig.ExecutionEnvironmentMemoryGiBPerVCpu != nil {
+			innerMap["execution_environment_memory_gib_per_vcpu"] = apiObject.LambdaManagedInstancesCapacityProviderConfig.ExecutionEnvironmentMemoryGiBPerVCpu
+		}
+
+		if apiObject.LambdaManagedInstancesCapacityProviderConfig.PerExecutionEnvironmentMaxConcurrency != nil {
+			innerMap["per_execution_environment_max_concurrency"] = apiObject.LambdaManagedInstancesCapacityProviderConfig.PerExecutionEnvironmentMaxConcurrency
+		}
+	}
+
+	out := map[string]any{
+		"lambda_managed_instance_capacity_provider_config": []any{innerMap},
+	}
+
+	return []any{out}
 }
 
-// TODO needs to be completed when SDK is available
-func expandCapacityProviderConfig(tfList []any) any {
-	return nil
+func expandCapacityProviderConfig(tfList []any) *awstypes.CapacityProviderConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out awstypes.CapacityProviderConfig
+	m := tfList[0].(map[string]any)
+	if v, ok := m["lambda_managed_instance_capacity_provider_config"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		im := v.([]any)[0].(map[string]any)
+		var lmic awstypes.LambdaManagedInstancesCapacityProviderConfig
+		if val, ok := im["capacity_provider_arn"].(string); ok && v != "" {
+			lmic.CapacityProviderArn = aws.String(val)
+		}
+
+		if val, ok := im["execution_environment_memory_gib_per_vcpu"].(float64); ok {
+			lmic.ExecutionEnvironmentMemoryGiBPerVCpu = aws.Float64(val)
+		}
+
+		if val, ok := im["per_execution_environment_max_concurrency"].(int); ok {
+			lmic.PerExecutionEnvironmentMaxConcurrency = aws.Int32(int32(val))
+		}
+
+		out.LambdaManagedInstancesCapacityProviderConfig = &lmic
+	}
+
+	return &out
 }
 
 func flattenEnvironment(apiObject *awstypes.EnvironmentResponse) []any {
