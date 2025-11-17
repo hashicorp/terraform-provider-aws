@@ -437,11 +437,6 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withInfrastructur
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.0.scale_in_after", "300"),
 				),
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
 			{
 				Config: testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -480,7 +475,7 @@ func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheck
 				return err
 			}
 
-			return fmt.Errorf("ECS Capacity ProviderID %s still exists", rs.Primary.ID)
+			return fmt.Errorf("ECS Capacity Provider ID %s still exists", rs.Primary.ID)
 		}
 
 		return nil
