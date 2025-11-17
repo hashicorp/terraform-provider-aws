@@ -134,6 +134,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  resourceCapability,
+			TypeName: "aws_eks_capability",
+			Name:     "Capability",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  resourceCluster,
 			TypeName: "aws_eks_cluster",
 			Name:     "Cluster",

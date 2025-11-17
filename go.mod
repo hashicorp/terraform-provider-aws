@@ -392,3 +392,545 @@ require (
 )
 
 replace github.com/hashicorp/terraform-plugin-log => github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb
+
+replace github.com/aws/aws-sdk-go-v2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2
+
+replace github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/aws/protocol/eventstream
+
+replace github.com/aws/aws-sdk-go-v2/config => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/config
+
+replace github.com/aws/aws-sdk-go-v2/credentials => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/credentials
+
+replace github.com/aws/aws-sdk-go-v2/feature/ec2/imds => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/feature/ec2/imds
+
+replace github.com/aws/aws-sdk-go-v2/feature/s3/manager => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/feature/s3/manager
+
+replace github.com/aws/aws-sdk-go-v2/internal/configsources => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/internal/configsources
+
+replace github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/internal/endpoints/v2
+
+replace github.com/aws/aws-sdk-go-v2/internal/ini => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/internal/ini
+
+replace github.com/aws/aws-sdk-go-v2/internal/v4a => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/internal/v4a
+
+replace github.com/aws/aws-sdk-go-v2/service/accessanalyzer => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/accessanalyzer
+
+replace github.com/aws/aws-sdk-go-v2/service/account => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/account
+
+replace github.com/aws/aws-sdk-go-v2/service/acm => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/acm
+
+replace github.com/aws/aws-sdk-go-v2/service/acmpca => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/acmpca
+
+replace github.com/aws/aws-sdk-go-v2/service/amp => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/amp
+
+replace github.com/aws/aws-sdk-go-v2/service/amplify => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/amplify
+
+replace github.com/aws/aws-sdk-go-v2/service/apigateway => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/apigateway
+
+replace github.com/aws/aws-sdk-go-v2/service/apigatewayv2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/apigatewayv2
+
+replace github.com/aws/aws-sdk-go-v2/service/appconfig => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/appconfig
+
+replace github.com/aws/aws-sdk-go-v2/service/appfabric => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/appfabric
+
+replace github.com/aws/aws-sdk-go-v2/service/appflow => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/appflow
+
+replace github.com/aws/aws-sdk-go-v2/service/appintegrations => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/appintegrations
+
+replace github.com/aws/aws-sdk-go-v2/service/applicationautoscaling => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/applicationautoscaling
+
+replace github.com/aws/aws-sdk-go-v2/service/applicationinsights => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/applicationinsights
+
+replace github.com/aws/aws-sdk-go-v2/service/applicationsignals => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/applicationsignals
+
+replace github.com/aws/aws-sdk-go-v2/service/appmesh => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/appmesh
+
+replace github.com/aws/aws-sdk-go-v2/service/apprunner => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/apprunner
+
+replace github.com/aws/aws-sdk-go-v2/service/appstream => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/appstream
+
+replace github.com/aws/aws-sdk-go-v2/service/appsync => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/appsync
+
+replace github.com/aws/aws-sdk-go-v2/service/arcregionswitch => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/arcregionswitch
+
+replace github.com/aws/aws-sdk-go-v2/service/athena => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/athena
+
+replace github.com/aws/aws-sdk-go-v2/service/auditmanager => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/auditmanager
+
+replace github.com/aws/aws-sdk-go-v2/service/autoscaling => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/autoscaling
+
+replace github.com/aws/aws-sdk-go-v2/service/autoscalingplans => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/autoscalingplans
+
+replace github.com/aws/aws-sdk-go-v2/service/backup => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/backup
+
+replace github.com/aws/aws-sdk-go-v2/service/batch => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/batch
+
+replace github.com/aws/aws-sdk-go-v2/service/bcmdataexports => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/bcmdataexports
+
+replace github.com/aws/aws-sdk-go-v2/service/bedrock => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/bedrock
+
+replace github.com/aws/aws-sdk-go-v2/service/bedrockagent => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/bedrockagent
+
+replace github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/bedrockagentcorecontrol
+
+replace github.com/aws/aws-sdk-go-v2/service/billing => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/billing
+
+replace github.com/aws/aws-sdk-go-v2/service/budgets => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/budgets
+
+replace github.com/aws/aws-sdk-go-v2/service/chatbot => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/chatbot
+
+replace github.com/aws/aws-sdk-go-v2/service/chime => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/chime
+
+replace github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/chimesdkmediapipelines
+
+replace github.com/aws/aws-sdk-go-v2/service/chimesdkvoice => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/chimesdkvoice
+
+replace github.com/aws/aws-sdk-go-v2/service/cleanrooms => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cleanrooms
+
+replace github.com/aws/aws-sdk-go-v2/service/cloud9 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cloud9
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudcontrol => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cloudcontrol
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudformation => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cloudformation
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudfront => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cloudfront
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cloudhsmv2
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudsearch => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cloudsearch
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudtrail => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cloudtrail
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudwatch => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cloudwatch
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cloudwatchlogs
+
+replace github.com/aws/aws-sdk-go-v2/service/codeartifact => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/codeartifact
+
+replace github.com/aws/aws-sdk-go-v2/service/codebuild => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/codebuild
+
+replace github.com/aws/aws-sdk-go-v2/service/codecatalyst => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/codecatalyst
+
+replace github.com/aws/aws-sdk-go-v2/service/codecommit => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/codecommit
+
+replace github.com/aws/aws-sdk-go-v2/service/codeconnections => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/codeconnections
+
+replace github.com/aws/aws-sdk-go-v2/service/codedeploy => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/codedeploy
+
+replace github.com/aws/aws-sdk-go-v2/service/codeguruprofiler => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/codeguruprofiler
+
+replace github.com/aws/aws-sdk-go-v2/service/codegurureviewer => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/codegurureviewer
+
+replace github.com/aws/aws-sdk-go-v2/service/codepipeline => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/codepipeline
+
+replace github.com/aws/aws-sdk-go-v2/service/codestarconnections => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/codestarconnections
+
+replace github.com/aws/aws-sdk-go-v2/service/codestarnotifications => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/codestarnotifications
+
+replace github.com/aws/aws-sdk-go-v2/service/cognitoidentity => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cognitoidentity
+
+replace github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/cognitoidentityprovider
+
+replace github.com/aws/aws-sdk-go-v2/service/comprehend => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/comprehend
+
+replace github.com/aws/aws-sdk-go-v2/service/computeoptimizer => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/computeoptimizer
+
+replace github.com/aws/aws-sdk-go-v2/service/configservice => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/configservice
+
+replace github.com/aws/aws-sdk-go-v2/service/connect => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/connect
+
+replace github.com/aws/aws-sdk-go-v2/service/connectcases => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/connectcases
+
+replace github.com/aws/aws-sdk-go-v2/service/controltower => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/controltower
+
+replace github.com/aws/aws-sdk-go-v2/service/costandusagereportservice => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/costandusagereportservice
+
+replace github.com/aws/aws-sdk-go-v2/service/costexplorer => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/costexplorer
+
+replace github.com/aws/aws-sdk-go-v2/service/costoptimizationhub => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/costoptimizationhub
+
+replace github.com/aws/aws-sdk-go-v2/service/customerprofiles => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/customerprofiles
+
+replace github.com/aws/aws-sdk-go-v2/service/databasemigrationservice => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/databasemigrationservice
+
+replace github.com/aws/aws-sdk-go-v2/service/databrew => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/databrew
+
+replace github.com/aws/aws-sdk-go-v2/service/dataexchange => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/dataexchange
+
+replace github.com/aws/aws-sdk-go-v2/service/datapipeline => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/datapipeline
+
+replace github.com/aws/aws-sdk-go-v2/service/datasync => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/datasync
+
+replace github.com/aws/aws-sdk-go-v2/service/datazone => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/datazone
+
+replace github.com/aws/aws-sdk-go-v2/service/dax => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/dax
+
+replace github.com/aws/aws-sdk-go-v2/service/detective => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/detective
+
+replace github.com/aws/aws-sdk-go-v2/service/devicefarm => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/devicefarm
+
+replace github.com/aws/aws-sdk-go-v2/service/devopsguru => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/devopsguru
+
+replace github.com/aws/aws-sdk-go-v2/service/directconnect => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/directconnect
+
+replace github.com/aws/aws-sdk-go-v2/service/directoryservice => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/directoryservice
+
+replace github.com/aws/aws-sdk-go-v2/service/dlm => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/dlm
+
+replace github.com/aws/aws-sdk-go-v2/service/docdb => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/docdb
+
+replace github.com/aws/aws-sdk-go-v2/service/docdbelastic => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/docdbelastic
+
+replace github.com/aws/aws-sdk-go-v2/service/drs => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/drs
+
+replace github.com/aws/aws-sdk-go-v2/service/dsql => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/dsql
+
+replace github.com/aws/aws-sdk-go-v2/service/dynamodb => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/dynamodb
+
+replace github.com/aws/aws-sdk-go-v2/service/ec2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ec2
+
+replace github.com/aws/aws-sdk-go-v2/service/ecr => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ecr
+
+replace github.com/aws/aws-sdk-go-v2/service/ecrpublic => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ecrpublic
+
+replace github.com/aws/aws-sdk-go-v2/service/ecs => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ecs
+
+replace github.com/aws/aws-sdk-go-v2/service/efs => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/efs
+
+replace github.com/aws/aws-sdk-go-v2/service/eks => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/eks
+
+replace github.com/aws/aws-sdk-go-v2/service/elasticache => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/elasticache
+
+replace github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/elasticbeanstalk
+
+replace github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/elasticloadbalancing
+
+replace github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/elasticloadbalancingv2
+
+replace github.com/aws/aws-sdk-go-v2/service/elasticsearchservice => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/elasticsearchservice
+
+replace github.com/aws/aws-sdk-go-v2/service/elastictranscoder => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/elastictranscoder
+
+replace github.com/aws/aws-sdk-go-v2/service/emr => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/emr
+
+replace github.com/aws/aws-sdk-go-v2/service/emrcontainers => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/emrcontainers
+
+replace github.com/aws/aws-sdk-go-v2/service/emrserverless => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/emrserverless
+
+replace github.com/aws/aws-sdk-go-v2/service/eventbridge => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/eventbridge
+
+replace github.com/aws/aws-sdk-go-v2/service/evidently => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/evidently
+
+replace github.com/aws/aws-sdk-go-v2/service/evs => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/evs
+
+replace github.com/aws/aws-sdk-go-v2/service/finspace => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/finspace
+
+replace github.com/aws/aws-sdk-go-v2/service/firehose => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/firehose
+
+replace github.com/aws/aws-sdk-go-v2/service/fis => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/fis
+
+replace github.com/aws/aws-sdk-go-v2/service/fms => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/fms
+
+replace github.com/aws/aws-sdk-go-v2/service/fsx => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/fsx
+
+replace github.com/aws/aws-sdk-go-v2/service/gamelift => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/gamelift
+
+replace github.com/aws/aws-sdk-go-v2/service/glacier => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/glacier
+
+replace github.com/aws/aws-sdk-go-v2/service/globalaccelerator => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/globalaccelerator
+
+replace github.com/aws/aws-sdk-go-v2/service/glue => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/glue
+
+replace github.com/aws/aws-sdk-go-v2/service/grafana => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/grafana
+
+replace github.com/aws/aws-sdk-go-v2/service/greengrass => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/greengrass
+
+replace github.com/aws/aws-sdk-go-v2/service/groundstation => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/groundstation
+
+replace github.com/aws/aws-sdk-go-v2/service/guardduty => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/guardduty
+
+replace github.com/aws/aws-sdk-go-v2/service/healthlake => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/healthlake
+
+replace github.com/aws/aws-sdk-go-v2/service/iam => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/iam
+
+replace github.com/aws/aws-sdk-go-v2/service/identitystore => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/identitystore
+
+replace github.com/aws/aws-sdk-go-v2/service/imagebuilder => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/imagebuilder
+
+replace github.com/aws/aws-sdk-go-v2/service/inspector => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/inspector
+
+replace github.com/aws/aws-sdk-go-v2/service/inspector2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/inspector2
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/internal/accept-encoding
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/checksum => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/internal/checksum
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/internal/endpoint-discovery
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/presigned-url => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/internal/presigned-url
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/s3shared => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/internal/s3shared
+
+replace github.com/aws/aws-sdk-go-v2/service/internetmonitor => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/internetmonitor
+
+replace github.com/aws/aws-sdk-go-v2/service/invoicing => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/invoicing
+
+replace github.com/aws/aws-sdk-go-v2/service/iot => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/iot
+
+replace github.com/aws/aws-sdk-go-v2/service/ivs => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ivs
+
+replace github.com/aws/aws-sdk-go-v2/service/ivschat => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ivschat
+
+replace github.com/aws/aws-sdk-go-v2/service/kafka => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/kafka
+
+replace github.com/aws/aws-sdk-go-v2/service/kafkaconnect => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/kafkaconnect
+
+replace github.com/aws/aws-sdk-go-v2/service/kendra => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/kendra
+
+replace github.com/aws/aws-sdk-go-v2/service/keyspaces => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/keyspaces
+
+replace github.com/aws/aws-sdk-go-v2/service/kinesis => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/kinesis
+
+replace github.com/aws/aws-sdk-go-v2/service/kinesisanalytics => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/kinesisanalytics
+
+replace github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/kinesisanalyticsv2
+
+replace github.com/aws/aws-sdk-go-v2/service/kinesisvideo => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/kinesisvideo
+
+replace github.com/aws/aws-sdk-go-v2/service/kms => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/kms
+
+replace github.com/aws/aws-sdk-go-v2/service/lakeformation => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/lakeformation
+
+replace github.com/aws/aws-sdk-go-v2/service/lambda => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/lambda
+
+replace github.com/aws/aws-sdk-go-v2/service/launchwizard => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/launchwizard
+
+replace github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/lexmodelbuildingservice
+
+replace github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/lexmodelsv2
+
+replace github.com/aws/aws-sdk-go-v2/service/licensemanager => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/licensemanager
+
+replace github.com/aws/aws-sdk-go-v2/service/lightsail => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/lightsail
+
+replace github.com/aws/aws-sdk-go-v2/service/location => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/location
+
+replace github.com/aws/aws-sdk-go-v2/service/m2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/m2
+
+replace github.com/aws/aws-sdk-go-v2/service/macie2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/macie2
+
+replace github.com/aws/aws-sdk-go-v2/service/mediaconnect => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/mediaconnect
+
+replace github.com/aws/aws-sdk-go-v2/service/mediaconvert => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/mediaconvert
+
+replace github.com/aws/aws-sdk-go-v2/service/medialive => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/medialive
+
+replace github.com/aws/aws-sdk-go-v2/service/mediapackage => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/mediapackage
+
+replace github.com/aws/aws-sdk-go-v2/service/mediapackagev2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/mediapackagev2
+
+replace github.com/aws/aws-sdk-go-v2/service/mediapackagevod => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/mediapackagevod
+
+replace github.com/aws/aws-sdk-go-v2/service/mediastore => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/mediastore
+
+replace github.com/aws/aws-sdk-go-v2/service/memorydb => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/memorydb
+
+replace github.com/aws/aws-sdk-go-v2/service/mgn => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/mgn
+
+replace github.com/aws/aws-sdk-go-v2/service/mq => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/mq
+
+replace github.com/aws/aws-sdk-go-v2/service/mwaa => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/mwaa
+
+replace github.com/aws/aws-sdk-go-v2/service/neptune => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/neptune
+
+replace github.com/aws/aws-sdk-go-v2/service/neptunegraph => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/neptunegraph
+
+replace github.com/aws/aws-sdk-go-v2/service/networkfirewall => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/networkfirewall
+
+replace github.com/aws/aws-sdk-go-v2/service/networkflowmonitor => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/networkflowmonitor
+
+replace github.com/aws/aws-sdk-go-v2/service/networkmanager => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/networkmanager
+
+replace github.com/aws/aws-sdk-go-v2/service/networkmonitor => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/networkmonitor
+
+replace github.com/aws/aws-sdk-go-v2/service/notifications => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/notifications
+
+replace github.com/aws/aws-sdk-go-v2/service/notificationscontacts => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/notificationscontacts
+
+replace github.com/aws/aws-sdk-go-v2/service/oam => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/oam
+
+replace github.com/aws/aws-sdk-go-v2/service/observabilityadmin => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/observabilityadmin
+
+replace github.com/aws/aws-sdk-go-v2/service/odb => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/odb
+
+replace github.com/aws/aws-sdk-go-v2/service/opensearch => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/opensearch
+
+replace github.com/aws/aws-sdk-go-v2/service/opensearchserverless => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/opensearchserverless
+
+replace github.com/aws/aws-sdk-go-v2/service/organizations => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/organizations
+
+replace github.com/aws/aws-sdk-go-v2/service/osis => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/osis
+
+replace github.com/aws/aws-sdk-go-v2/service/outposts => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/outposts
+
+replace github.com/aws/aws-sdk-go-v2/service/paymentcryptography => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/paymentcryptography
+
+replace github.com/aws/aws-sdk-go-v2/service/pcaconnectorad => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/pcaconnectorad
+
+replace github.com/aws/aws-sdk-go-v2/service/pcs => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/pcs
+
+replace github.com/aws/aws-sdk-go-v2/service/pinpoint => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/pinpoint
+
+replace github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/pinpointsmsvoicev2
+
+replace github.com/aws/aws-sdk-go-v2/service/pipes => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/pipes
+
+replace github.com/aws/aws-sdk-go-v2/service/polly => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/polly
+
+replace github.com/aws/aws-sdk-go-v2/service/pricing => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/pricing
+
+replace github.com/aws/aws-sdk-go-v2/service/qbusiness => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/qbusiness
+
+replace github.com/aws/aws-sdk-go-v2/service/quicksight => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/quicksight
+
+replace github.com/aws/aws-sdk-go-v2/service/ram => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ram
+
+replace github.com/aws/aws-sdk-go-v2/service/rbin => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/rbin
+
+replace github.com/aws/aws-sdk-go-v2/service/rds => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/rds
+
+replace github.com/aws/aws-sdk-go-v2/service/redshift => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/redshift
+
+replace github.com/aws/aws-sdk-go-v2/service/redshiftdata => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/redshiftdata
+
+replace github.com/aws/aws-sdk-go-v2/service/redshiftserverless => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/redshiftserverless
+
+replace github.com/aws/aws-sdk-go-v2/service/rekognition => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/rekognition
+
+replace github.com/aws/aws-sdk-go-v2/service/resiliencehub => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/resiliencehub
+
+replace github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/resourceexplorer2
+
+replace github.com/aws/aws-sdk-go-v2/service/resourcegroups => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/resourcegroups
+
+replace github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/resourcegroupstaggingapi
+
+replace github.com/aws/aws-sdk-go-v2/service/rolesanywhere => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/rolesanywhere
+
+replace github.com/aws/aws-sdk-go-v2/service/route53 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/route53
+
+replace github.com/aws/aws-sdk-go-v2/service/route53domains => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/route53domains
+
+replace github.com/aws/aws-sdk-go-v2/service/route53profiles => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/route53profiles
+
+replace github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/route53recoverycontrolconfig
+
+replace github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/route53recoveryreadiness
+
+replace github.com/aws/aws-sdk-go-v2/service/route53resolver => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/route53resolver
+
+replace github.com/aws/aws-sdk-go-v2/service/rum => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/rum
+
+replace github.com/aws/aws-sdk-go-v2/service/s3 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/s3
+
+replace github.com/aws/aws-sdk-go-v2/service/s3control => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/s3control
+
+replace github.com/aws/aws-sdk-go-v2/service/s3outposts => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/s3outposts
+
+replace github.com/aws/aws-sdk-go-v2/service/s3tables => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/s3tables
+
+replace github.com/aws/aws-sdk-go-v2/service/s3vectors => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/s3vectors
+
+replace github.com/aws/aws-sdk-go-v2/service/sagemaker => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/sagemaker
+
+replace github.com/aws/aws-sdk-go-v2/service/scheduler => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/scheduler
+
+replace github.com/aws/aws-sdk-go-v2/service/schemas => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/schemas
+
+replace github.com/aws/aws-sdk-go-v2/service/secretsmanager => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/secretsmanager
+
+replace github.com/aws/aws-sdk-go-v2/service/securityhub => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/securityhub
+
+replace github.com/aws/aws-sdk-go-v2/service/securitylake => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/securitylake
+
+replace github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/serverlessapplicationrepository
+
+replace github.com/aws/aws-sdk-go-v2/service/servicecatalog => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/servicecatalog
+
+replace github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/servicecatalogappregistry
+
+replace github.com/aws/aws-sdk-go-v2/service/servicediscovery => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/servicediscovery
+
+replace github.com/aws/aws-sdk-go-v2/service/servicequotas => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/servicequotas
+
+replace github.com/aws/aws-sdk-go-v2/service/ses => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ses
+
+replace github.com/aws/aws-sdk-go-v2/service/sesv2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/sesv2
+
+replace github.com/aws/aws-sdk-go-v2/service/sfn => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/sfn
+
+replace github.com/aws/aws-sdk-go-v2/service/shield => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/shield
+
+replace github.com/aws/aws-sdk-go-v2/service/signer => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/signer
+
+replace github.com/aws/aws-sdk-go-v2/service/sns => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/sns
+
+replace github.com/aws/aws-sdk-go-v2/service/sqs => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/sqs
+
+replace github.com/aws/aws-sdk-go-v2/service/ssm => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ssm
+
+replace github.com/aws/aws-sdk-go-v2/service/ssmcontacts => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ssmcontacts
+
+replace github.com/aws/aws-sdk-go-v2/service/ssmincidents => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ssmincidents
+
+replace github.com/aws/aws-sdk-go-v2/service/ssmquicksetup => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ssmquicksetup
+
+replace github.com/aws/aws-sdk-go-v2/service/ssmsap => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ssmsap
+
+replace github.com/aws/aws-sdk-go-v2/service/sso => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/sso
+
+replace github.com/aws/aws-sdk-go-v2/service/ssoadmin => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ssoadmin
+
+replace github.com/aws/aws-sdk-go-v2/service/ssooidc => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/ssooidc
+
+replace github.com/aws/aws-sdk-go-v2/service/storagegateway => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/storagegateway
+
+replace github.com/aws/aws-sdk-go-v2/service/sts => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/sts
+
+replace github.com/aws/aws-sdk-go-v2/service/swf => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/swf
+
+replace github.com/aws/aws-sdk-go-v2/service/synthetics => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/synthetics
+
+replace github.com/aws/aws-sdk-go-v2/service/taxsettings => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/taxsettings
+
+replace github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/timestreaminfluxdb
+
+replace github.com/aws/aws-sdk-go-v2/service/timestreamquery => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/timestreamquery
+
+replace github.com/aws/aws-sdk-go-v2/service/timestreamwrite => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/timestreamwrite
+
+replace github.com/aws/aws-sdk-go-v2/service/transcribe => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/transcribe
+
+replace github.com/aws/aws-sdk-go-v2/service/transfer => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/transfer
+
+replace github.com/aws/aws-sdk-go-v2/service/verifiedpermissions => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/verifiedpermissions
+
+replace github.com/aws/aws-sdk-go-v2/service/vpclattice => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/vpclattice
+
+replace github.com/aws/aws-sdk-go-v2/service/waf => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/waf
+
+replace github.com/aws/aws-sdk-go-v2/service/wafregional => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/wafregional
+
+replace github.com/aws/aws-sdk-go-v2/service/wafv2 => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/wafv2
+
+replace github.com/aws/aws-sdk-go-v2/service/wellarchitected => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/wellarchitected
+
+replace github.com/aws/aws-sdk-go-v2/service/workmail => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/workmail
+
+replace github.com/aws/aws-sdk-go-v2/service/workspaces => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/workspaces
+
+replace github.com/aws/aws-sdk-go-v2/service/workspacesweb => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/workspacesweb
+
+replace github.com/aws/aws-sdk-go-v2/service/xray => /home/ec2-user/terraform-provider-aws/aws-sdk-go-v2/service/xray
