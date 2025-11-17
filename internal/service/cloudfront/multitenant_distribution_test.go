@@ -36,9 +36,9 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 				Config: testAccMultiTenantDistributionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
 				),
 			},
 		},
@@ -61,9 +61,9 @@ func TestAccCloudFrontMultiTenantDistribution_another(t *testing.T) {
 				Config: testAccMultiTenantDistributionConfig_another(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
 				),
 			},
 		},
@@ -125,8 +125,8 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 
   origin {
     domain_name = "example.com"
-    id   = "example"
-    
+    id          = "example"
+
     custom_origin_config {
       http_port              = 80
       https_port             = 443
@@ -138,8 +138,8 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   default_cache_behavior {
     target_origin_id       = "example"
     viewer_protocol_policy = "redirect-to-https"
-    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"  # AWS Managed CachingDisabled policy
-    
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
     allowed_methods {
       items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
       cached_methods = ["GET", "HEAD", "OPTIONS"]
@@ -193,8 +193,8 @@ resource "aws_cloudfront_cache_policy" "test" {
 }
 
 resource "aws_cloudfront_multitenant_distribution" "test" {
-  enabled         = false
-  comment         = "Test tenant-only distribution with config"
+  enabled = false
+  comment = "Test tenant-only distribution with config"
   origin {
     domain_name = "www.example.com"
     id          = "myCustomOrigin"
@@ -209,7 +209,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     target_origin_id       = "myCustomOrigin"
     viewer_protocol_policy = "allow-all"
     cache_policy_id        = aws_cloudfront_cache_policy.test.id
-    
+
     allowed_methods {
       items          = ["GET", "HEAD"]
       cached_methods = ["GET", "HEAD"]
