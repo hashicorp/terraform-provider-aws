@@ -5095,7 +5095,7 @@ func TestAccDynamoDBTable_Replica_MRSC_MixedConsistencyModes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_MRSC_replica_mixed_consistency_mode(rName),
-				ExpectError: regexache.MustCompile(`Using MultiRegionStrongConsistency requires all replicas to use 'consistency_mode' set to 'STRONG'`),
+				ExpectError: regexache.MustCompile(`Using MultiRegionStrongConsistency requires exactly 2 replicas, or 1 replica and 1 witness region`),
 			},
 		},
 	})
