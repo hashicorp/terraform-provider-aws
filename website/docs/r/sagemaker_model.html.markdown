@@ -12,8 +12,6 @@ Provides a SageMaker AI model resource.
 
 ## Example Usage
 
-Basic usage:
-
 ```terraform
 resource "aws_sagemaker_model" "example" {
   name               = "my-model"
@@ -65,7 +63,7 @@ The `primary_container` and `container` block both support:
 * `model_data_url` - (Optional) The URL for the S3 location where model artifacts are stored.
 * `model_package_name` - (Optional) The Amazon Resource Name (ARN) of the model package to use to create the model.
 * `model_data_source` - (Optional) The location of model data to deploy. Use this for uncompressed model deployment. For information about how to deploy an uncompressed model, see [Deploying uncompressed models](https://docs.aws.amazon.com/sagemaker/latest/dg/large-model-inference-uncompressed.html) in the _AWS SageMaker AI Developer Guide_.
-* `additional_model_data_sources` - (Optional) Data sources that are available to your model in addition to the one that you specify for `model_data_source`.
+* `additional_model_data_source` - (Optional) Data sources that are available to your model in addition to the one that you specify for `model_data_source`. See [Additional Model Data Source](#additional-model-data-source).
 * `container_hostname` - (Optional) The DNS host name for the container.
 * `environment` - (Optional) Environment variables for the Docker container.
    A list of key value pairs.
@@ -84,23 +82,23 @@ The `primary_container` and `container` block both support:
 
 ### Model Data Source
 
-* `s3_data_source` - (Required) The S3 location of model data to deploy.
+* `s3_data_source` - (Required) S3 location of model data to deploy. See [S3 Data Source](#s3-data-source).
 
-### Additional Model Data Sources 
+### Additional Model Data Source
 
-* `channel_name` - (required) A custom name where the aditional object will be stored. it will be stored in `/opt/ml/additional-model-data-sources/<channel_name>/`.
-* `s3_data_source` - (Required) The S3 location of model data to deploy.
+* `channel_name` - (required) Custom name for the additional model data source object. It will be stored in `/opt/ml/additional-model-data-sources/<channel_name>/`.
+* `s3_data_source` - (Required) The S3 location of model data to deploy. See [S3 Data Source](#s3-data-source).
 
 #### S3 Data Source
 
 * `compression_type` - (Required) How the model data is prepared. Allowed values are: `None` and `Gzip`.
+* `model_access_config` - (Optional) Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the [`model_access_config` configuration block]. See [Model Access Config](#model-access-config).
 * `s3_data_type` - (Required) The type of model data to deploy. Allowed values are: `S3Object` and `S3Prefix`.
 * `s3_uri` - (Required) The S3 path of model data to deploy.
-* `model_access_config` - (Optional) Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the [`model_access_config` configuration block]. see [Model Access Config](#model-access-config).
 
 ##### Model Access Config
 
-* `accept_eula` - (Required) Specifies agreement to the model end-user license agreement (EULA). The AcceptEula value must be explicitly defined as `true` in order to accept the EULA that this model requires. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model.
+* `accept_eula` - (Required) Specifies agreement to the model end-user license agreement (EULA). The value must be explicitly defined as `true` in order to accept the EULA that this model requires. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model.
 
 ### Multi Model Config
 

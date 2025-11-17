@@ -597,9 +597,9 @@ func TestAccSageMakerModel_primaryContainerAdditionalModelDataSources(t *testing
 				Config: testAccModelConfig_primaryContainerAdditionalModelDataSources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_sources.0.channel_name", "test-channel"),
-					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_sources.0.s3_data_source.0.s3_data_type", "S3Prefix"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_source.0.channel_name", "test-channel"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_source.0.s3_data_source.0.s3_data_type", "S3Prefix"),
 				),
 			},
 			{
@@ -991,7 +991,7 @@ resource "aws_sagemaker_model" "test" {
     image          = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
     model_data_url = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
 
-    additional_model_data_sources {
+    additional_model_data_source {
       channel_name = "test-channel"
       s3_data_source {
         s3_uri           = "s3://${aws_s3_object.test.bucket}/model/"

@@ -167,7 +167,7 @@ func resourceModel() *schema.Resource {
 								},
 							},
 						},
-						"additional_model_data_sources": {
+						"additional_model_data_source": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -406,7 +406,7 @@ func resourceModel() *schema.Resource {
 								},
 							},
 						},
-						"additional_model_data_sources": {
+						"additional_model_data_source": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -723,7 +723,7 @@ func expandContainer(m map[string]any) *awstypes.ContainerDefinition {
 		container.ModelDataSource = expandModelDataSource(v.([]any))
 	}
 
-	if v, ok := m["additional_model_data_sources"]; ok {
+	if v, ok := m["additional_model_data_source"]; ok {
 		container.AdditionalModelDataSources = expandAdditionalModelDataSources(v.([]any))
 	}
 	if v, ok := m[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
@@ -908,7 +908,7 @@ func flattenContainer(container *awstypes.ContainerDefinition) []any {
 		cfg["model_data_source"] = flattenModelDataSource(container.ModelDataSource)
 	}
 	if len(container.AdditionalModelDataSources) > 0 {
-		cfg["additional_model_data_sources"] = flattenAdditionalModelDataSources(container.AdditionalModelDataSources)
+		cfg["additional_model_data_source"] = flattenAdditionalModelDataSources(container.AdditionalModelDataSources)
 	}
 	if container.ModelPackageName != nil {
 		cfg["model_package_name"] = aws.ToString(container.ModelPackageName)
