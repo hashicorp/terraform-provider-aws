@@ -9,3 +9,7 @@ resource/aws_sfn_state_machine: Add plan-time validation of `logging_configurati
 ```release-note:enhancement
 resource/aws_prometheus_query_logging_configuration: Add plan-time validation of `destination.cloudwatch_logs.log_group_arn`
 ```
+
+```release-note:enhancement
+resource/aws_prometheus_workspace: Add plan-time validation of `logging_configuration.log_group_arn`
+```
