@@ -702,18 +702,17 @@ resource "aws_security_group" "test" {
 // Minimal configuration.
 func testAccDBClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+# InfluxDB V2.
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
-  name                   = %[1]q
   allocated_storage      = 20
+  bucket                 = "initial"
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
+  organization           = "organization"
   username               = "admin"
   password               = "testpassword"
   vpc_subnet_ids         = aws_subnet.test[*].id
   vpc_security_group_ids = [aws_security_group.test.id]
-  db_instance_type       = "db.influx.medium"
-  port                   = 8086
-  bucket                 = "initial"
-  organization           = "organization"
-  deployment_type        = "MULTI_NODE_READ_REPLICAS"
 }
 `, rName))
 }
