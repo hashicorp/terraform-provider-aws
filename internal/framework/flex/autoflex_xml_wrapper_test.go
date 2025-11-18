@@ -559,29 +559,44 @@ func TestXMLWrapperRealCloudFrontTypes(t *testing.T) {
 
 	// Test with actual CloudFront TrustedSigners type
 	t.Run("TrustedSigners", func(t *testing.T) {
+		t.Parallel()
+
 		// Terraform model matching CloudFront schema
 		type trustedSignersModel struct {
 			Items   fwtypes.ListValueOf[types.String] `tfsdk:"items"`
 			Enabled types.Bool                        `tfsdk:"enabled"`
 		}
 
-		source := fwtypes.NewListNestedObjectValueOfValueSliceMust[trustedSignersModel](ctx, []trustedSignersModel{
-			{
-				Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("AKIAIOSFODNN7EXAMPLE")}),
-				Enabled: types.BoolValue(true),
-			},
-		})
+		type tfSource struct {
+			TrustedSigners fwtypes.ListNestedObjectValueOf[trustedSignersModel] `tfsdk:"trusted_signers" autoflex:",xmlwrapper=Items"`
+		}
 
-		target := &awstypes.TrustedSigners{}
-		diags := Expand(ctx, source, target)
+		type awsTarget struct {
+			TrustedSigners *awstypes.TrustedSigners
+		}
+
+		source := tfSource{
+			TrustedSigners: fwtypes.NewListNestedObjectValueOfValueSliceMust[trustedSignersModel](ctx, []trustedSignersModel{
+				{
+					Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("AKIAIOSFODNN7EXAMPLE")}),
+					Enabled: types.BoolValue(true),
+				},
+			}),
+		}
+
+		var target awsTarget
+		diags := Expand(ctx, source, &target)
 
 		if diags.HasError() {
 			t.Errorf("TrustedSigners expand failed: %v", diags)
 		} else {
 			// Verify correct AWS structure
-			if len(target.Items) != 1 || *target.Quantity != 1 || !*target.Enabled {
+			if target.TrustedSigners == nil {
+				t.Fatal("Expected non-nil TrustedSigners")
+			}
+			if len(target.TrustedSigners.Items) != 1 || *target.TrustedSigners.Quantity != 1 || !*target.TrustedSigners.Enabled {
 				t.Errorf("TrustedSigners incorrect: Items=%v, Quantity=%v, Enabled=%v",
-					target.Items, *target.Quantity, *target.Enabled)
+					target.TrustedSigners.Items, *target.TrustedSigners.Quantity, *target.TrustedSigners.Enabled)
 			}
 		}
 	})
@@ -649,7 +664,6 @@ func TestFlattenXMLWrapperRule1ComplexStructItems(t *testing.T) {
 		}
 	})
 }
-
 
 // Test isXMLWrapperStruct detection function
 func TestIsXMLWrapperStruct(t *testing.T) {
@@ -895,9 +909,9 @@ func TestNestedXMLWrappers(t *testing.T) {
 	}
 
 	type tfCacheBehavior struct {
-		PathPattern      types.String                                           `tfsdk:"path_pattern"`
-		TargetOriginId   types.String                                           `tfsdk:"target_origin_id"`
-		TrustedKeyGroups fwtypes.ListNestedObjectValueOf[tfTrustedKeyGroups]    `tfsdk:"trusted_key_groups" autoflex:",xmlwrapper=Items"`
+		PathPattern      types.String                                        `tfsdk:"path_pattern"`
+		TargetOriginId   types.String                                        `tfsdk:"target_origin_id"`
+		TrustedKeyGroups fwtypes.ListNestedObjectValueOf[tfTrustedKeyGroups] `tfsdk:"trusted_key_groups" autoflex:",xmlwrapper=Items"`
 	}
 
 	t.Run("Expand", func(t *testing.T) {
