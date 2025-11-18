@@ -42,12 +42,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_s3tables_table_bucket_replication.example
-  id = "arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace"
+  id = "arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket"
 }
 ```
 
 Using `terraform import`, import S3 Tables Table Bucket Replication using the `table_bucket_arn`. For example:
 
 ```console
-% terraform import aws_s3tables_table_bucket_replication.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace'
+% terraform import aws_s3tables_table_bucket_replication.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket'
 ```
