@@ -23,24 +23,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @FrameworkResource("aws_s3tables_table_bucket_replication", name="Table Bucket Replication")
-// @ArnIdentity("table_bucket_arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableBucketReplicationOutput")
+// @FrameworkResource("aws_s3tables_table_replication", name="Table Replication")
+// @ArnIdentity("table_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableReplicationOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
-func newTableBucketReplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &tableBucketReplicationResource{}, nil
+func newTableReplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &tableReplicationResource{}, nil
 }
 
-type tableBucketReplicationResource struct {
-	framework.ResourceWithModel[tableBucketReplicationResourceModel]
-	framework.WithImportByIdentity
+type tableReplicationResource struct {
+	framework.ResourceWithModel[tableReplicationResourceModel]
 }
 
-func (r *tableBucketReplicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *tableReplicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"table_bucket_arn": schema.StringAttribute{
+			"table_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -51,8 +50,8 @@ func (r *tableBucketReplicationResource) Schema(ctx context.Context, request res
 	}
 }
 
-func (r *tableBucketReplicationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data tableBucketReplicationResourceModel
+func (r *tableReplicationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data tableReplicationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -60,13 +59,13 @@ func (r *tableBucketReplicationResource) Create(ctx context.Context, request res
 
 	conn := r.Meta().S3TablesClient(ctx)
 
-	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
+	tableARN := fwflex.StringValueFromFramework(ctx, data.TableARN)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *tableBucketReplicationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data tableBucketReplicationResourceModel
+func (r *tableReplicationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data tableReplicationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -74,8 +73,8 @@ func (r *tableBucketReplicationResource) Read(ctx context.Context, request resou
 
 	conn := r.Meta().S3TablesClient(ctx)
 
-	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
-	output, err := findTableBucketReplicationByARN(ctx, conn, tableBucketARN)
+	tableARN := fwflex.StringValueFromFramework(ctx, data.TableARN)
+	output, err := findTableReplicationByARN(ctx, conn, tableARN)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -85,16 +84,21 @@ func (r *tableBucketReplicationResource) Read(ctx context.Context, request resou
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket Replication (%s)", tableBucketARN), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Replication (%s)", tableARN), err.Error())
 
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *tableBucketReplicationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var new tableBucketReplicationResourceModel
+func (r *tableReplicationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new tableReplicationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -102,13 +106,13 @@ func (r *tableBucketReplicationResource) Update(ctx context.Context, request res
 
 	conn := r.Meta().S3TablesClient(ctx)
 
-	tableBucketARN := fwflex.StringValueFromFramework(ctx, new.TableBucketARN)
+	tableARN := fwflex.StringValueFromFramework(ctx, new.TableARN)
 
-	response.Diagnostics.Append(response.State.Set(ctx, new)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *tableBucketReplicationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data tableBucketReplicationResourceModel
+func (r *tableReplicationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data tableReplicationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -116,19 +120,17 @@ func (r *tableBucketReplicationResource) Delete(ctx context.Context, request res
 
 	conn := r.Meta().S3TablesClient(ctx)
 
-	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
+	tableARN := fwflex.StringValueFromFramework(ctx, new.TableARN)
 }
 
-func findTableBucketReplicationByARN(ctx context.Context, conn *s3tables.Client, tableBucketARN string) (*s3tables.GetTableBucketPolicyOutput, error) {
-	input := s3tables.GetTableBucketPolicyInput{
-		TableBucketARN: aws.String(tableBucketARN),
-	}
+func findTableReplicationByARN(ctx context.Context, conn *s3tables.Client, tableARN string) (*s3tables.GetTablePolicyOutput, error) {
+	input := s3tables.GetTablePolicyInput{}
 
-	return findTableBucketReplication(ctx, conn, &input)
+	return findTableReplication(ctx, conn, &input)
 }
 
-func findTableBucketReplication(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableBucketPolicyInput) (*s3tables.GetTableBucketPolicyOutput, error) {
-	output, err := conn.GetTableBucketPolicy(ctx, input)
+func findTableReplication(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTablePolicyInput) (*s3tables.GetTablePolicyOutput, error) {
+	output, err := conn.GetTablePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -147,7 +149,7 @@ func findTableBucketReplication(ctx context.Context, conn *s3tables.Client, inpu
 	return output, nil
 }
 
-type tableBucketReplicationResourceModel struct {
+type tableReplicationResourceModel struct {
 	framework.WithRegionModel
-	TableBucketARN fwtypes.ARN `tfsdk:"table_bucket_arn"`
+	TableARN fwtypes.ARN `tfsdk:"table_arn"`
 }
