@@ -21,7 +21,7 @@ var tmpl string
 
 func main() {
 	const (
-		source   = `../../../internal/tags/tagris/tagris-cfn-terraform-mapping.csv`
+		source   = `../../../internal/tags/tagpolicy/tagris-cfn-terraform-mapping.csv`
 		filename = `../../../website/docs/guides/tag-policy-compliance.html.markdown`
 	)
 	g := common.NewGenerator()

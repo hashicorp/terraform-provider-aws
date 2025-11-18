@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tags/tagris"
+	"github.com/hashicorp/terraform-provider-aws/internal/tags/tagpolicy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
@@ -196,7 +196,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	// Fetch tag policy details when enforced
 	if c.TagPolicyConfig != nil {
 		tflog.Debug(ctx, "Retrieving tag policy details")
-		reqTags, err := tagris.GetRequiredTags(ctx, cfg)
+		reqTags, err := tagpolicy.GetRequiredTags(ctx, cfg)
 		if err != nil {
 			diags = append(diags, errs.NewErrorDiagnostic(
 				"Retrieving Required Tags",
