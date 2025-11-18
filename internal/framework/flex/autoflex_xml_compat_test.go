@@ -619,19 +619,18 @@ type testDistributionConfigModel struct {
 	Origins *Origins
 }
 
-
 type distributionConfigModel struct {
-	CacheBehavior        fwtypes.ListNestedObjectValueOf[cacheBehaviorModel]        `tfsdk:"cache_behavior" autoflex:",wrapper=items"`
+	CacheBehavior        fwtypes.ListNestedObjectValueOf[cacheBehaviorModel]        `tfsdk:"cache_behavior" autoflex:",xmlwrapper=Items"`
 	CallerReference      types.String                                               `tfsdk:"caller_reference"`
 	Comment              types.String                                               `tfsdk:"comment"`
-	CustomErrorResponse  fwtypes.SetNestedObjectValueOf[customErrorResponseModel]   `tfsdk:"custom_error_response" autoflex:",wrapper=items"`
+	CustomErrorResponse  fwtypes.SetNestedObjectValueOf[customErrorResponseModel]   `tfsdk:"custom_error_response" autoflex:",xmlwrapper=Items"`
 	DefaultCacheBehavior fwtypes.ListNestedObjectValueOf[defaultCacheBehaviorModel] `tfsdk:"default_cache_behavior"`
 	DefaultRootObject    types.String                                               `tfsdk:"default_root_object"`
 	Enabled              types.Bool                                                 `tfsdk:"enabled"`
 	HTTPVersion          fwtypes.StringEnum[HttpVersion]                            `tfsdk:"http_version"`
 	ID                   types.String                                               `tfsdk:"id"`
-	Origin               fwtypes.SetNestedObjectValueOf[originModel]                `tfsdk:"origin" autoflex:",wrapper=items"`
-	OriginGroup          fwtypes.SetNestedObjectValueOf[originGroupModel]           `tfsdk:"origin_group" autoflex:",wrapper=items"`
+	Origin               fwtypes.SetNestedObjectValueOf[originModel]                `tfsdk:"origin" autoflex:",xmlwrapper=Items"`
+	OriginGroup          fwtypes.SetNestedObjectValueOf[originGroupModel]           `tfsdk:"origin_group" autoflex:",xmlwrapper=Items"`
 	Restrictions         fwtypes.ListNestedObjectValueOf[restrictionsModel]         `tfsdk:"restrictions"`
 	TenantConfig         fwtypes.ListNestedObjectValueOf[tenantConfigModel]         `tfsdk:"tenant_config"`
 	ViewerCertificate    fwtypes.ListNestedObjectValueOf[viewerCertificateModel]    `tfsdk:"viewer_certificate"`
@@ -866,7 +865,7 @@ func TestExpandXMLWrapperDirect(t *testing.T) {
 	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
 }
 
-func TestIsXMLWrapperStruct(t *testing.T) {
+func TestIsXMLWrapperStructOld(t *testing.T) {
 	t.Parallel()
 
 	type embedWithField struct {

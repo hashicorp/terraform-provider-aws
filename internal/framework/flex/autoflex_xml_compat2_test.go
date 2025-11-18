@@ -37,6 +37,7 @@ package flex
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -711,5 +712,217 @@ func TestFlattenMultipleXMLWrappersInStruct(t *testing.T) {
 	keyGroups := target.TrustedKeyGroups.Elements()
 	if len(keyGroups) != 1 {
 		t.Errorf("Expected 1 key group, got %d", len(keyGroups))
+	}
+}
+
+// Test isXMLWrapperStruct detection function
+func TestIsXMLWrapperStruct(t *testing.T) {
+	t.Parallel()
+
+	type embedWithField struct {
+		Count int64
+	}
+	type embedWithoutField struct{}
+
+	testCases := []struct {
+		name     string
+		input    any
+		expected bool
+	}{
+		{
+			name: "valid XML wrapper - Rule 1",
+			input: struct {
+				Items    []string
+				Quantity *int32
+			}{},
+			expected: true,
+		},
+		{
+			name: "valid XML wrapper - Rule 2 with Enabled",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				Enabled  *bool
+			}{},
+			expected: true,
+		},
+		{
+			name:     "not a struct",
+			input:    "string",
+			expected: false,
+		},
+		{
+			name:     "struct without Items field",
+			input:    struct{ Quantity *int32 }{},
+			expected: false,
+		},
+		{
+			name:     "struct without Quantity field",
+			input:    struct{ Items []string }{},
+			expected: false,
+		},
+		{
+			name: "struct with wrong Quantity type (not pointer)",
+			input: struct {
+				Items    []string
+				Quantity int32
+			}{},
+			expected: false,
+		},
+		{
+			name: "struct with Items not a slice",
+			input: struct {
+				Items    string
+				Quantity *int32
+			}{},
+			expected: false,
+		},
+		{
+			name: "struct with 4 fields including Items/Quantity",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				Name     string
+				Extra    string
+			}{},
+			expected: true, // Has Items/Quantity, so it's a valid wrapper
+		},
+		{
+			name: "struct with anonymous embedWithField",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				embedWithField
+			}{},
+			expected: true,
+		},
+		{
+			name: "struct with anonymous embedWithoutField",
+			input: struct {
+				Items    []string
+				Quantity *int32
+				embedWithoutField
+			}{},
+			expected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := isXMLWrapperStruct(reflect.TypeOf(tc.input))
+			if result != tc.expected {
+				t.Errorf("Expected %v, got %v for input %T", tc.expected, result, tc.input)
+			}
+		})
+	}
+}
+
+// Test that structs with Items/Quantity but NO xmlwrapper tag are NOT treated as XML wrappers
+func TestExpandNoXMLWrapperTag(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	// AWS types
+	type awsFunctionAssociation struct {
+		FunctionArn *string
+		EventType   string
+	}
+
+	type awsFunctionAssociations struct {
+		Items    []awsFunctionAssociation
+		Quantity *int32
+	}
+
+	// Terraform types (NO xmlwrapper tag)
+	type tfFunctionAssociation struct {
+		EventType   types.String `tfsdk:"event_type"`
+		FunctionArn types.String `tfsdk:"function_arn"`
+	}
+
+	type tfFunctionAssociations struct {
+		Items    fwtypes.ListNestedObjectValueOf[tfFunctionAssociation] `tfsdk:"items"`
+		Quantity types.Int64                                            `tfsdk:"quantity"`
+	}
+
+	// Source with nested struct containing Items/Quantity
+	source := tfFunctionAssociations{
+		Items: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfFunctionAssociation{
+			{
+				EventType:   types.StringValue("viewer-request"),
+				FunctionArn: types.StringValue("arn:aws:cloudfront::123456789012:function/test-1"),
+			},
+		}),
+		Quantity: types.Int64Value(1),
+	}
+
+	var target awsFunctionAssociations
+	diags := Expand(ctx, source, &target)
+
+	if diags.HasError() {
+		t.Fatalf("Expand failed: %v", diags)
+	}
+
+	// Without xmlwrapper tag, should map fields directly (not treat as wrapper)
+	if len(target.Items) != 1 {
+		t.Errorf("Expected 1 item, got %d", len(target.Items))
+	}
+	if target.Quantity == nil || *target.Quantity != 1 {
+		t.Errorf("Expected Quantity=1, got %v", target.Quantity)
+	}
+}
+
+func TestFlattenNoXMLWrapperTag(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	// AWS types
+	type awsFunctionAssociation struct {
+		FunctionArn *string
+		EventType   string
+	}
+
+	type awsFunctionAssociations struct {
+		Items    []awsFunctionAssociation
+		Quantity *int32
+	}
+
+	// Terraform types (NO xmlwrapper tag)
+	type tfFunctionAssociation struct {
+		EventType   types.String `tfsdk:"event_type"`
+		FunctionArn types.String `tfsdk:"function_arn"`
+	}
+
+	type tfFunctionAssociations struct {
+		Items    fwtypes.ListNestedObjectValueOf[tfFunctionAssociation] `tfsdk:"items"`
+		Quantity types.Int64                                            `tfsdk:"quantity"`
+	}
+
+	source := awsFunctionAssociations{
+		Quantity: aws.Int32(1),
+		Items: []awsFunctionAssociation{
+			{
+				EventType:   "viewer-request",
+				FunctionArn: aws.String("arn:aws:cloudfront::123456789012:function/test-1"),
+			},
+		},
+	}
+
+	var target tfFunctionAssociations
+	diags := Flatten(ctx, source, &target)
+
+	if diags.HasError() {
+		t.Fatalf("Flatten failed: %v", diags)
+	}
+
+	// Without xmlwrapper tag, should map fields directly (not treat as wrapper)
+	if target.Items.IsNull() {
+		t.Error("Expected non-null Items")
+	}
+	if target.Quantity.IsNull() || target.Quantity.ValueInt64() != 1 {
+		t.Errorf("Expected Quantity=1, got %v", target.Quantity)
 	}
 }
