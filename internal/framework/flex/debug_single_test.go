@@ -10,6 +10,7 @@ import (
 
 // Test single field flattening
 func TestDebugSingleFieldFlatten(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	// Simple source struct with just one XML wrapper field

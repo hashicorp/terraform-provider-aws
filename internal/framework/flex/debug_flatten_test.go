@@ -11,6 +11,7 @@ import (
 )
 
 func TestDebugFlattenTrustedSigners(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	// Test our custom TrustedSigners type (matching the failing test)
@@ -43,6 +44,7 @@ func TestDebugFlattenTrustedSigners(t *testing.T) {
 
 // Test the XML wrapper detection function directly
 func TestXMLWrapperDetection(t *testing.T) {
+	t.Parallel()
 	// Test our custom types
 	t.Logf("TrustedSigners isXMLWrapperStruct: %v", isXMLWrapperStruct(reflect.TypeOf(TrustedSigners{})))
 	t.Logf("TrustedKeyGroups isXMLWrapperStruct: %v", isXMLWrapperStruct(reflect.TypeOf(TrustedKeyGroups{})))
@@ -50,6 +52,7 @@ func TestXMLWrapperDetection(t *testing.T) {
 
 // Test flattening XML wrapper struct directly (like working examples)
 func TestDebugFlattenStructWithXMLWrappers(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	// Test 1: Direct XML wrapper to wrapper-tagged field (like working examples)

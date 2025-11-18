@@ -305,6 +305,7 @@ func TestXMLWrapperRule1Symmetry(t *testing.T) {
 
 	// Test scalar elements symmetry
 	t.Run("ScalarElements", func(t *testing.T) {
+		t.Parallel()
 		// Original Terraform value
 		original := fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{
 			types.StringValue("item1"),
@@ -342,6 +343,7 @@ func TestXMLWrapperRule1Symmetry(t *testing.T) {
 
 	// Test struct elements symmetry
 	t.Run("StructElements", func(t *testing.T) {
+		t.Parallel()
 		// Original Terraform value
 		original := fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{
 			{Name: types.StringValue("test"), Value: types.Int32Value(42)},

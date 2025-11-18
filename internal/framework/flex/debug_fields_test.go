@@ -10,6 +10,7 @@ import (
 
 // Test field names and types directly
 func TestDebugFieldMatching(t *testing.T) {
+	t.Parallel()
 	// Check source struct fields
 	sourceType := reflect.TypeOf(DefaultCacheBehavior{})
 	t.Logf("Source struct: %s", sourceType.Name())
