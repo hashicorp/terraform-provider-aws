@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VPCEncryptionControl_basic(t *testing.T) {
+func TestAccVPCVPCEncryptionControl_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.VpcEncryptionControl
@@ -62,7 +62,7 @@ func TestAccEC2VPCEncryptionControl_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEncryptionControl_disappears(t *testing.T) {
+func TestAccVPCVPCEncryptionControl_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.VpcEncryptionControl
@@ -93,7 +93,7 @@ func TestAccEC2VPCEncryptionControl_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEncryptionControl_enforce(t *testing.T) {
+func TestAccVPCVPCEncryptionControl_enforce(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.VpcEncryptionControl
