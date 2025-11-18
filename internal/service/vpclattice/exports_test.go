@@ -7,6 +7,7 @@ package vpclattice
 var (
 	ResourceAccessLogSubscription             = resourceAccessLogSubscription
 	ResourceAuthPolicy                        = resourceAuthPolicy
+	ResourceDomainVerification                = newDomainVerificationResource
 	ResourceListener                          = resourceListener
 	ResourceListenerRule                      = resourceListenerRule
 	ResourceResourceConfiguration             = newResourceConfigurationResource
@@ -22,6 +23,7 @@ var (
 
 	FindAccessLogSubscriptionByID             = findAccessLogSubscriptionByID
 	FindAuthPolicyByID                        = findAuthPolicyByID
+	FindDomainVerificationByID                = findDomainVerificationByID
 	FindListenerByTwoPartKey                  = findListenerByTwoPartKey
 	FindListenerRuleByThreePartKey            = findListenerRuleByThreePartKey
 	FindResourceConfigurationByID             = findResourceConfigurationByID
