@@ -94,6 +94,43 @@ func TestAccEC2VPCEncryptionControl_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEC2VPCEncryptionControl_enforce(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.VpcEncryptionControl
+	resourceName := "aws_vpc_encryption_control.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeEnforce),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("mode"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeEnforce)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state_message"), tfknownvalue.StringExact("succeeded")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("vpc_id"), "aws_vpc.test", tfjsonpath.New("id"), compare.ValuesSame()),
+				},
+			},
+			// {
+			// 	ResourceName:            resourceName,
+			// 	ImportState:             true,
+			// 	ImportStateVerify:       true,
+			// 	ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			// },
+		},
+	})
+}
+
 func testAccCheckVPCEncryptionControlDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
