@@ -201,8 +201,8 @@ const (
 	healthCheckPortTrafficPort = "traffic-port"
 )
 
-func healthCheckProtocolEnumValues() []string {
-	return enum.Slice(
+func healthCheckProtocolEnumValues() []awstypes.ProtocolEnum {
+	return enum.EnumSlice(
 		awstypes.ProtocolEnumHttp,
 		awstypes.ProtocolEnumHttps,
 		awstypes.ProtocolEnumTcp,

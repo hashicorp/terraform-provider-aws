@@ -190,7 +190,9 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 	conn := r.Meta().S3ExpressClient(ctx)
 
 	bucket := fwflex.StringValueFromFramework(ctx, data.ID)
-	output, err := findBucket(ctx, conn, bucket)
+	// https://github.com/hashicorp/terraform-provider-aws/issues/44095.
+	// Disable S3 Expression session authentication for HeadBucket.
+	output, err := findBucket(ctx, conn, bucket, func(o *s3.Options) { o.DisableS3ExpressSessionAuth = aws.Bool(true) })
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))

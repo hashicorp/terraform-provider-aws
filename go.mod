@@ -55,7 +55,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.11
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.29.3
-	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.68.5
+	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.56.2
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.12.14
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.11
@@ -104,8 +104,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.11.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.52.6
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.267.0
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.51.4
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.268.0
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.67.4
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.4
@@ -113,7 +113,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.3
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.33.13
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.13
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.52.0
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.37.13
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.32.12
 	github.com/aws/aws-sdk-go-v2/service/emr v1.55.6
@@ -167,7 +167,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.4
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.45.6
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.84.3
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.85.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.85.5
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.12
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.32.5
@@ -206,7 +206,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.96.2
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.13
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.26.13
-	github.com/aws/aws-sdk-go-v2/service/rds v1.108.9
+	github.com/aws/aws-sdk-go-v2/service/rds v1.109.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.37.12
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.31.15
@@ -228,7 +228,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.5.2
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.222.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.223.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.12
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.39.13
@@ -271,7 +271,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.12
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.10
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.64.4
-	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.33.5
+	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.11
 	github.com/aws/smithy-go v1.23.2
 	github.com/beevik/etree v1.6.0
