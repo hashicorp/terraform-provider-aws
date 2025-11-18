@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -111,25 +112,8 @@ func (r *resourceVPCEncryptionControl) Create(ctx context.Context, req resource.
 	}
 
 	if plan.Mode.ValueEnum() == awstypes.VpcEncryptionControlModeEnforce {
-		var modifyInput ec2.ModifyVpcEncryptionControlInput
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &modifyInput, flex.WithFieldNamePrefix("VpcEncryptionControl")))
+		ec = vpcEncryptionControlModify(ctx, conn, plan, createTimeout, &resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		out, err := conn.ModifyVpcEncryptionControl(ctx, &modifyInput)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, "vpc_id", plan.VPCID.String())
-			return
-		}
-		if out == nil || out.VpcEncryptionControl == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), "vpc_id", plan.VPCID.String())
-			return
-		}
-
-		ec, err = waitVPCEncryptionControlAvailable(ctx, conn, plan.ID.ValueString(), createTimeout)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, "vpc_id", plan.VPCID.String())
 			return
 		}
 	}
@@ -187,26 +171,9 @@ func (r *resourceVPCEncryptionControl) Update(ctx context.Context, req resource.
 	}
 
 	if diff.HasChanges() {
-		var input ec2.ModifyVpcEncryptionControlInput
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("VpcEncryptionControl")))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		out, err := conn.ModifyVpcEncryptionControl(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-		if out == nil || out.VpcEncryptionControl == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), "vpc_id", plan.VPCID.String())
-			return
-		}
-
 		updateTimeout := 20 * time.Minute
-		ec, err := waitVPCEncryptionControlAvailable(ctx, conn, plan.ID.ValueString(), updateTimeout)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		ec := vpcEncryptionControlModify(ctx, conn, plan, updateTimeout, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
 			return
 		}
 
@@ -324,6 +291,32 @@ func findVPCEncryptionControlsByIDs(ctx context.Context, conn *ec2.Client, ids [
 	}
 
 	return output, nil
+}
+
+func vpcEncryptionControlModify(ctx context.Context, conn *ec2.Client, plan resourceVPCEncryptionControlModel, timeout time.Duration, diags *diag.Diagnostics) *awstypes.VpcEncryptionControl {
+	var modifyInput ec2.ModifyVpcEncryptionControlInput
+	smerr.EnrichAppend(ctx, diags, flex.Expand(ctx, plan, &modifyInput, flex.WithFieldNamePrefix("VpcEncryptionControl")))
+	if diags.HasError() {
+		return nil
+	}
+
+	out, err := conn.ModifyVpcEncryptionControl(ctx, &modifyInput)
+	if err != nil {
+		smerr.AddError(ctx, diags, err, "vpc_id", plan.VPCID.String())
+		return nil
+	}
+	if out == nil || out.VpcEncryptionControl == nil {
+		smerr.AddError(ctx, diags, errors.New("empty output"), "vpc_id", plan.VPCID.String())
+		return nil
+	}
+
+	ec, err := waitVPCEncryptionControlAvailable(ctx, conn, plan.ID.ValueString(), timeout)
+	if err != nil {
+		smerr.AddError(ctx, diags, err, "vpc_id", plan.VPCID.String())
+		return nil
+	}
+
+	return ec
 }
 
 type resourceVPCEncryptionControlModel struct {
