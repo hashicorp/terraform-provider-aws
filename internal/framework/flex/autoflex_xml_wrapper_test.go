@@ -307,75 +307,95 @@ func TestXMLWrapperRule1Symmetry(t *testing.T) {
 	// Test scalar elements symmetry
 	t.Run("ScalarElements", func(t *testing.T) {
 		t.Parallel()
+
+		type tfSource struct {
+			XMLWrapper fwtypes.SetValueOf[types.String] `tfsdk:"xml_wrapper" autoflex:",xmlwrapper=Items"`
+		}
+
+		type awsTarget struct {
+			XMLWrapper *testXMLWrapperScalar
+		}
+
 		// Original Terraform value
-		original := fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{
-			types.StringValue("item1"),
-			types.StringValue("item2"),
-		})
+		original := tfSource{
+			XMLWrapper: fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{
+				types.StringValue("item1"),
+				types.StringValue("item2"),
+			}),
+		}
 
 		// Expand: TF → AWS
-		awsStruct := &testXMLWrapperScalar{}
-		expandDiags := Expand(ctx, original, awsStruct)
+		var awsStruct awsTarget
+		expandDiags := Expand(ctx, original, &awsStruct)
 		if expandDiags.HasError() {
 			t.Fatalf("Expand failed: %v", expandDiags)
 		}
 
 		// Verify expand result
-		if len(awsStruct.Items) != 2 || *awsStruct.Quantity != 2 {
-			t.Errorf("Expand produced incorrect result: Items=%v, Quantity=%v", awsStruct.Items, *awsStruct.Quantity)
+		if awsStruct.XMLWrapper == nil {
+			t.Fatal("Expected non-nil XMLWrapper")
+		}
+		if len(awsStruct.XMLWrapper.Items) != 2 || *awsStruct.XMLWrapper.Quantity != 2 {
+			t.Errorf("Expand produced incorrect result: Items=%v, Quantity=%v", awsStruct.XMLWrapper.Items, *awsStruct.XMLWrapper.Quantity)
 		}
 
-		// Flatten: AWS → TF (using struct-to-struct pattern)
-		sourceStruct := &struct{ XMLWrapper *testXMLWrapperScalar }{XMLWrapper: awsStruct}
-		targetStruct := &struct {
-			XMLWrapper fwtypes.SetValueOf[types.String] `autoflex:",xmlwrapper=Items"`
-		}{}
-
-		flattenDiags := Flatten(ctx, sourceStruct, targetStruct)
+		// Flatten: AWS → TF
+		var targetStruct tfSource
+		flattenDiags := Flatten(ctx, &awsStruct, &targetStruct)
 		if flattenDiags.HasError() {
 			t.Fatalf("Flatten failed: %v", flattenDiags)
 		}
 
 		// Verify symmetry: flattened result should match original
-		if !original.Equal(targetStruct.XMLWrapper) {
-			t.Errorf("Symmetry broken: original=%v, flattened=%v", original, targetStruct.XMLWrapper)
+		if !original.XMLWrapper.Equal(targetStruct.XMLWrapper) {
+			t.Errorf("Symmetry broken: original=%v, flattened=%v", original.XMLWrapper, targetStruct.XMLWrapper)
 		}
 	})
 
 	// Test struct elements symmetry
 	t.Run("StructElements", func(t *testing.T) {
 		t.Parallel()
+
+		type tfSource struct {
+			XMLWrapper fwtypes.SetNestedObjectValueOf[testStructItemModel] `tfsdk:"xml_wrapper" autoflex:",xmlwrapper=Items"`
+		}
+
+		type awsTarget struct {
+			XMLWrapper *testXMLWrapperStruct
+		}
+
 		// Original Terraform value
-		original := fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{
-			{Name: types.StringValue("test"), Value: types.Int32Value(42)},
-		})
+		original := tfSource{
+			XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{
+				{Name: types.StringValue("test"), Value: types.Int32Value(42)},
+			}),
+		}
 
 		// Expand: TF → AWS
-		awsStruct := &testXMLWrapperStruct{}
-		expandDiags := Expand(ctx, original, awsStruct)
+		var awsStruct awsTarget
+		expandDiags := Expand(ctx, original, &awsStruct)
 		if expandDiags.HasError() {
 			t.Fatalf("Expand failed: %v", expandDiags)
 		}
 
 		// Verify expand result
-		if len(awsStruct.Items) != 1 || *awsStruct.Quantity != 1 {
-			t.Errorf("Expand produced incorrect result: Items=%v, Quantity=%v", awsStruct.Items, *awsStruct.Quantity)
+		if awsStruct.XMLWrapper == nil {
+			t.Fatal("Expected non-nil XMLWrapper")
+		}
+		if len(awsStruct.XMLWrapper.Items) != 1 || *awsStruct.XMLWrapper.Quantity != 1 {
+			t.Errorf("Expand produced incorrect result: Items=%v, Quantity=%v", awsStruct.XMLWrapper.Items, *awsStruct.XMLWrapper.Quantity)
 		}
 
-		// Flatten: AWS → TF (using struct-to-struct pattern)
-		sourceStruct := &struct{ XMLWrapper *testXMLWrapperStruct }{XMLWrapper: awsStruct}
-		targetStruct := &struct {
-			XMLWrapper fwtypes.SetNestedObjectValueOf[testStructItemModel] `autoflex:",xmlwrapper=Items"`
-		}{}
-
-		flattenDiags := Flatten(ctx, sourceStruct, targetStruct)
+		// Flatten: AWS → TF
+		var targetStruct tfSource
+		flattenDiags := Flatten(ctx, &awsStruct, &targetStruct)
 		if flattenDiags.HasError() {
 			t.Fatalf("Flatten failed: %v", flattenDiags)
 		}
 
 		// Verify symmetry: flattened result should match original
-		if !original.Equal(targetStruct.XMLWrapper) {
-			t.Errorf("Symmetry broken: original=%v, flattened=%v", original, targetStruct.XMLWrapper)
+		if !original.XMLWrapper.Equal(targetStruct.XMLWrapper) {
+			t.Errorf("Symmetry broken: original=%v, flattened=%v", original.XMLWrapper, targetStruct.XMLWrapper)
 		}
 	})
 }
@@ -512,41 +532,53 @@ func TestXMLWrapperRule2Symmetry(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Rule2Pattern", func(t *testing.T) {
-		// Original Terraform value (Rule 2 pattern)
-		original := fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
-			{
-				Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("signer1"), types.StringValue("signer2")}),
-				Enabled: types.BoolValue(true),
-			},
-		})
+		t.Parallel()
 
-		// Expand: TF → AWS (this works)
-		awsStruct := &testXMLWrapperRule2{}
-		expandDiags := Expand(ctx, original, awsStruct)
+		// Wrap source and target in structs with xmlwrapper tags
+		type tfSource struct {
+			XMLWrapper fwtypes.ListNestedObjectValueOf[testRule2Model] `tfsdk:"xml_wrapper" autoflex:",xmlwrapper=Items"`
+		}
+
+		type awsTarget struct {
+			XMLWrapper *testXMLWrapperRule2
+		}
+
+		// Original Terraform value (Rule 2 pattern)
+		original := tfSource{
+			XMLWrapper: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+				{
+					Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("signer1"), types.StringValue("signer2")}),
+					Enabled: types.BoolValue(true),
+				},
+			}),
+		}
+
+		// Expand: TF → AWS
+		var awsStruct awsTarget
+		expandDiags := Expand(ctx, original, &awsStruct)
 		if expandDiags.HasError() {
 			t.Fatalf("Expand failed: %v", expandDiags)
 		}
 
 		// Verify expand result
-		if len(awsStruct.Items) != 2 || *awsStruct.Quantity != 2 || !*awsStruct.Enabled {
+		if awsStruct.XMLWrapper == nil {
+			t.Fatal("Expected non-nil XMLWrapper")
+		}
+		if len(awsStruct.XMLWrapper.Items) != 2 || *awsStruct.XMLWrapper.Quantity != 2 || !*awsStruct.XMLWrapper.Enabled {
 			t.Errorf("Expand produced incorrect result: Items=%v, Quantity=%v, Enabled=%v",
-				awsStruct.Items, *awsStruct.Quantity, *awsStruct.Enabled)
+				awsStruct.XMLWrapper.Items, *awsStruct.XMLWrapper.Quantity, *awsStruct.XMLWrapper.Enabled)
 		}
 
-		// Flatten: AWS → TF (this should now work)
-		sourceStruct := &struct{ XMLWrapper *testXMLWrapperRule2 }{XMLWrapper: awsStruct}
-		targetStruct := &struct {
-			XMLWrapper fwtypes.ListNestedObjectValueOf[testRule2Model] `autoflex:",xmlwrapper=Items"`
-		}{}
-
-		flattenDiags := Flatten(ctx, sourceStruct, targetStruct)
+		// Flatten: AWS → TF
+		var targetStruct tfSource
+		flattenDiags := Flatten(ctx, &awsStruct, &targetStruct)
 		if flattenDiags.HasError() {
 			t.Fatalf("Flatten failed: %v", flattenDiags)
 		}
 
 		// Verify symmetry: flattened result should match original
-		if !original.Equal(targetStruct.XMLWrapper) {
-			t.Errorf("Symmetry broken: original=%v, flattened=%v", original, targetStruct.XMLWrapper)
+		if !original.XMLWrapper.Equal(targetStruct.XMLWrapper) {
+			t.Errorf("Symmetry broken: original=%v, flattened=%v", original.XMLWrapper, targetStruct.XMLWrapper)
 		}
 	})
 }
