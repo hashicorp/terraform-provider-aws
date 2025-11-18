@@ -1,0 +1,7 @@
+```release-note:new-data-source
+aws_bedrock_prompt_router
+```
+
+```release-note:new-data-source
+aws_bedrock_prompt_routers
+```
