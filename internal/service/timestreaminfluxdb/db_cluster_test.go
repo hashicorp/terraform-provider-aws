@@ -534,7 +534,9 @@ func TestAccTimestreamInfluxDBDBCluster_dbParameterGroupV3(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream-influxdb", regexache.MustCompile(`db-cluster/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "db_parameter_group_identifier", "InfluxDBV3Core"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8181"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "influx_auth_parameters_secret_arn"),
 				),
 			},
 			{
@@ -549,9 +551,6 @@ func TestAccTimestreamInfluxDBDBCluster_dbParameterGroupV3(t *testing.T) {
 
 func TestAccTimestreamInfluxDBDBCluster_validateConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -562,6 +561,7 @@ func TestAccTimestreamInfluxDBDBCluster_validateConfig(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDBClusterConfig_v2MissingAllocatedStorage(rName),
@@ -570,10 +570,6 @@ func TestAccTimestreamInfluxDBDBCluster_validateConfig(t *testing.T) {
 			{
 				Config:      testAccDBClusterConfig_v2MissingBucket(rName),
 				ExpectError: regexache.MustCompile("bucket is required for InfluxDB V2 clusters"),
-			},
-			{
-				Config:      testAccDBClusterConfig_v2MissingDeploymentType(rName),
-				ExpectError: regexache.MustCompile("deployment_type is required for InfluxDB V2 clusters"),
 			},
 			{
 				Config:      testAccDBClusterConfig_v2MissingOrganization(rName),
@@ -713,7 +709,6 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
   port                   = 8086
   bucket                 = "initial"
   organization           = "organization"
-  deployment_type        = "MULTI_NODE_READ_REPLICAS"
 }
 `, rName))
 }
@@ -1022,7 +1017,7 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 `, rName))
 }
 
-func testAccDBClusterConfig_v2MissingDeploymentType(rName string) string {
+func testAccDBClusterConfig_v2WithoutDeploymentType(rName string) string {
 	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                   = %[1]q

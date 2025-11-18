@@ -179,9 +179,9 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: `The Amazon Resource Name (ARN) of the AWS Secrets Manager secret containing the 
-					initial InfluxDB authorization parameters. The secret value is a JSON formatted 
-					key-value pair holding InfluxDB authorization values: organization, bucket, 
-					username, and password.`,
+					initial InfluxDB authorization parameters. For InfluxDB V2 clusters, the secret value is a JSON
+					formatted key-value pair holding InfluxDB authorization values: organization, bucket,
+					username, and password. For InfluxDB V3 clusters, the secret contains the InfluxDB admin token.`,
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -367,6 +367,53 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 			}),
 		},
 	}
+}
+
+func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var config dbClusterResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !config.DeploymentType.IsNull() {
+		return
+	}
+
+	var plan dbClusterResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.DeploymentType.IsNull() && !plan.DeploymentType.IsUnknown() {
+		return
+	}
+
+	hasParameterGroup := !plan.DBParameterGroupIdentifier.IsNull() && !plan.DBParameterGroupIdentifier.IsUnknown()
+
+	if hasParameterGroup {
+		meta := r.Meta()
+		if meta == nil {
+			return
+		}
+		paramGroupID := plan.DBParameterGroupIdentifier.ValueString()
+		isV3, diags := isParameterGroupV3(ctx, meta, paramGroupID)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if isV3 {
+			return
+		}
+	}
+
+	v := fwtypes.StringEnumValue(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)
+	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("deployment_type"), v)...)
 }
 
 func dbClusterDBParameterGroupIdentifierReplaceIf(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
@@ -686,14 +733,6 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 				)
 			}
 
-			if data.DeploymentType.IsNull() || data.DeploymentType.IsUnknown() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("deployment_type"),
-					"Missing Required Configuration for InfluxDB V2",
-					"deployment_type is required for InfluxDB V2 clusters",
-				)
-			}
-
 			if data.Organization.IsNull() || data.Organization.IsUnknown() {
 				resp.Diagnostics.AddAttributeError(
 					path.Root("organization"),
@@ -731,14 +770,6 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 					path.Root(names.AttrBucket),
 					"Missing Required Configuration for InfluxDB V2",
 					"bucket is required when using an InfluxDB V2 parameter group",
-				)
-			}
-
-			if data.DeploymentType.IsNull() || data.DeploymentType.IsUnknown() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("deployment_type"),
-					"Missing Required Configuration for InfluxDB V2",
-					"deployment_type is required when using an InfluxDB V2 parameter group",
 				)
 			}
 
