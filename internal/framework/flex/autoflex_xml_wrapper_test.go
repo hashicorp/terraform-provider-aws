@@ -862,3 +862,174 @@ func TestFlattenNoXMLWrapperTag(t *testing.T) {
 		t.Errorf("Expected Quantity=1, got %v", target.Quantity)
 	}
 }
+
+// Test nested XML wrappers: wrapper inside wrapper
+// Example: CacheBehaviors (Rule 1) → CacheBehavior → TrustedKeyGroups (Rule 2)
+func TestNestedXMLWrappers(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	// AWS types: Outer wrapper (Rule 1) containing inner wrapper (Rule 2)
+	type awsTrustedKeyGroups struct {
+		Items    []string
+		Quantity *int32
+		Enabled  *bool
+	}
+
+	type awsCacheBehavior struct {
+		PathPattern      *string
+		TargetOriginId   *string
+		TrustedKeyGroups *awsTrustedKeyGroups
+	}
+
+	type awsCacheBehaviors struct {
+		Items    []awsCacheBehavior
+		Quantity *int32
+	}
+
+	// Terraform types: Both levels have xmlwrapper tags
+	type tfTrustedKeyGroups struct {
+		Items   fwtypes.ListValueOf[types.String] `tfsdk:"items"`
+		Enabled types.Bool                        `tfsdk:"enabled"`
+	}
+
+	type tfCacheBehavior struct {
+		PathPattern      types.String                                           `tfsdk:"path_pattern"`
+		TargetOriginId   types.String                                           `tfsdk:"target_origin_id"`
+		TrustedKeyGroups fwtypes.ListNestedObjectValueOf[tfTrustedKeyGroups]    `tfsdk:"trusted_key_groups" autoflex:",xmlwrapper=Items"`
+	}
+
+	t.Run("Expand", func(t *testing.T) {
+		t.Parallel()
+
+		// Terraform source with nested wrappers
+		type tfSource struct {
+			CacheBehaviors fwtypes.SetNestedObjectValueOf[tfCacheBehavior] `tfsdk:"cache_behaviors" autoflex:",xmlwrapper=Items"`
+		}
+
+		source := tfSource{
+			CacheBehaviors: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfCacheBehavior{
+				{
+					PathPattern:    types.StringValue("/api/*"),
+					TargetOriginId: types.StringValue("api-origin"),
+					TrustedKeyGroups: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfTrustedKeyGroups{
+						{
+							Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("key-group-1")}),
+							Enabled: types.BoolValue(true),
+						},
+					}),
+				},
+			}),
+		}
+
+		type awsTarget struct {
+			CacheBehaviors *awsCacheBehaviors
+		}
+
+		var target awsTarget
+		diags := Expand(ctx, source, &target)
+
+		if diags.HasError() {
+			t.Fatalf("Expand failed: %v", diags)
+		}
+
+		// Verify outer wrapper
+		if target.CacheBehaviors == nil {
+			t.Fatal("Expected non-nil CacheBehaviors")
+		}
+		if len(target.CacheBehaviors.Items) != 1 || *target.CacheBehaviors.Quantity != 1 {
+			t.Errorf("Outer wrapper incorrect: Items=%d, Quantity=%v", len(target.CacheBehaviors.Items), *target.CacheBehaviors.Quantity)
+		}
+
+		// Verify inner wrapper
+		behavior := target.CacheBehaviors.Items[0]
+		if behavior.TrustedKeyGroups == nil {
+			t.Fatal("Expected non-nil TrustedKeyGroups")
+		}
+		if len(behavior.TrustedKeyGroups.Items) != 1 || *behavior.TrustedKeyGroups.Quantity != 1 {
+			t.Errorf("Inner wrapper incorrect: Items=%d, Quantity=%v",
+				len(behavior.TrustedKeyGroups.Items), *behavior.TrustedKeyGroups.Quantity)
+		}
+		if !*behavior.TrustedKeyGroups.Enabled {
+			t.Error("Expected Enabled=true")
+		}
+	})
+
+	t.Run("Flatten", func(t *testing.T) {
+		t.Parallel()
+
+		// AWS source with nested wrappers
+		type awsSource struct {
+			CacheBehaviors *awsCacheBehaviors
+		}
+
+		source := awsSource{
+			CacheBehaviors: &awsCacheBehaviors{
+				Quantity: aws.Int32(1),
+				Items: []awsCacheBehavior{
+					{
+						PathPattern:    aws.String("/api/*"),
+						TargetOriginId: aws.String("api-origin"),
+						TrustedKeyGroups: &awsTrustedKeyGroups{
+							Enabled:  aws.Bool(true),
+							Quantity: aws.Int32(1),
+							Items:    []string{"key-group-1"},
+						},
+					},
+				},
+			},
+		}
+
+		type tfTarget struct {
+			CacheBehaviors fwtypes.SetNestedObjectValueOf[tfCacheBehavior] `tfsdk:"cache_behaviors" autoflex:",xmlwrapper=Items"`
+		}
+
+		var target tfTarget
+		diags := Flatten(ctx, &source, &target)
+
+		if diags.HasError() {
+			t.Fatalf("Flatten failed: %v", diags)
+		}
+
+		// Verify outer wrapper flattened correctly
+		if target.CacheBehaviors.IsNull() {
+			t.Fatal("Expected non-null CacheBehaviors")
+		}
+
+		// Extract the actual behavior structs
+		var behaviors []tfCacheBehavior
+		diags = target.CacheBehaviors.ElementsAs(ctx, &behaviors, false)
+		if diags.HasError() {
+			t.Fatalf("ElementsAs failed: %v", diags)
+		}
+
+		if len(behaviors) != 1 {
+			t.Fatalf("Expected 1 cache behavior, got %d", len(behaviors))
+		}
+
+		// Verify inner wrapper flattened correctly
+		behavior := behaviors[0]
+		if behavior.TrustedKeyGroups.IsNull() {
+			t.Error("Expected non-null TrustedKeyGroups")
+		}
+
+		var keyGroups []tfTrustedKeyGroups
+		diags = behavior.TrustedKeyGroups.ElementsAs(ctx, &keyGroups, false)
+		if diags.HasError() {
+			t.Fatalf("ElementsAs failed: %v", diags)
+		}
+
+		if len(keyGroups) != 1 {
+			t.Fatalf("Expected 1 TrustedKeyGroups element, got %d", len(keyGroups))
+		}
+
+		keyGroup := keyGroups[0]
+		if keyGroup.Items.IsNull() {
+			t.Error("Expected non-null Items")
+		}
+		if keyGroup.Enabled.IsNull() || !keyGroup.Enabled.ValueBool() {
+			t.Error("Expected Enabled=true")
+		}
+	})
+}
