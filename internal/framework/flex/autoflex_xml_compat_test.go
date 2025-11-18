@@ -619,16 +619,6 @@ type testDistributionConfigModel struct {
 	Origins *Origins
 }
 
-// Terraform models
-type multiTenantDistributionResourceModel struct {
-	ARN                           types.String                                             `tfsdk:"arn"`
-	DistributionConfig            fwtypes.ListNestedObjectValueOf[distributionConfigModel] `tfsdk:"distribution_config" `
-	DomainName                    types.String                                             `tfsdk:"domain_name"`
-	ID                            types.String                                             `tfsdk:"id"`
-	InProgressInvalidationBatches types.Int32                                              `tfsdk:"in_progress_invalidation_batches"`
-	LastModifiedTime              types.String                                             `tfsdk:"last_modified_time"`
-	Status                        types.String                                             `tfsdk:"status"`
-}
 
 type distributionConfigModel struct {
 	CacheBehavior        fwtypes.ListNestedObjectValueOf[cacheBehaviorModel]        `tfsdk:"cache_behavior" autoflex:",wrapper=items"`
