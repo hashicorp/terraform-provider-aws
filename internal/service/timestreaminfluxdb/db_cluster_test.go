@@ -695,6 +695,50 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
+func testAccDBClusterConfig_v3Base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
+  security_group_id = aws_security_group.test.id
+}
+`, rName)
+}
+
 // Minimal configuration.
 func testAccDBClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
@@ -929,47 +973,10 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 }
 
 func testAccDBClusterConfig_dbParameterGroupV3(rName string) string {
-	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count = 2
-
-  subnet_id      = aws_subnet.test[count.index].id
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_vpc_endpoint" "s3" {
-  vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_endpoint_route_table_association" "test" {
-  route_table_id  = aws_route_table.test.id
-  vpc_endpoint_id = aws_vpc_endpoint.s3.id
-}
-
-resource "aws_security_group_rule" "test" {
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
-  security_group_id = aws_security_group.test.id
-}
-
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                          = %[1]q
   vpc_subnet_ids                = aws_subnet.test[*].id
@@ -1082,47 +1089,10 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 }
 
 func testAccDBClusterConfig_v2WithV3ParameterGroup(rName string) string {
-	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count = 2
-
-  subnet_id      = aws_subnet.test[count.index].id
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_vpc_endpoint" "s3" {
-  vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_endpoint_route_table_association" "test" {
-  route_table_id  = aws_route_table.test.id
-  vpc_endpoint_id = aws_vpc_endpoint.s3.id
-}
-
-resource "aws_security_group_rule" "test" {
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
-  security_group_id = aws_security_group.test.id
-}
-
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                          = %[1]q
   allocated_storage             = 20
@@ -1145,47 +1115,10 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 }
 
 func testAccDBClusterConfig_v3WithV2Fields(rName string) string {
-	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count = 2
-
-  subnet_id      = aws_subnet.test[count.index].id
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_vpc_endpoint" "s3" {
-  vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_endpoint_route_table_association" "test" {
-  route_table_id  = aws_route_table.test.id
-  vpc_endpoint_id = aws_vpc_endpoint.s3.id
-}
-
-resource "aws_security_group_rule" "test" {
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
-  security_group_id = aws_security_group.test.id
-}
-
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                          = %[1]q
   allocated_storage             = 20
@@ -1208,47 +1141,10 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 }
 
 func testAccDBClusterConfig_v3WithAllocatedStorage(rName string) string {
-	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count = 2
-
-  subnet_id      = aws_subnet.test[count.index].id
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_vpc_endpoint" "s3" {
-  vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_endpoint_route_table_association" "test" {
-  route_table_id  = aws_route_table.test.id
-  vpc_endpoint_id = aws_vpc_endpoint.s3.id
-}
-
-resource "aws_security_group_rule" "test" {
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
-  security_group_id = aws_security_group.test.id
-}
-
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                          = %[1]q
   allocated_storage             = 20
@@ -1266,47 +1162,10 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 }
 
 func testAccDBClusterConfig_v3WithBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count = 2
-
-  subnet_id      = aws_subnet.test[count.index].id
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_vpc_endpoint" "s3" {
-  vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_endpoint_route_table_association" "test" {
-  route_table_id  = aws_route_table.test.id
-  vpc_endpoint_id = aws_vpc_endpoint.s3.id
-}
-
-resource "aws_security_group_rule" "test" {
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
-  security_group_id = aws_security_group.test.id
-}
-
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                          = %[1]q
   bucket                        = "initial"
@@ -1324,47 +1183,10 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 }
 
 func testAccDBClusterConfig_v3WithDeploymentType(rName string) string {
-	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count = 2
-
-  subnet_id      = aws_subnet.test[count.index].id
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_vpc_endpoint" "s3" {
-  vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_endpoint_route_table_association" "test" {
-  route_table_id  = aws_route_table.test.id
-  vpc_endpoint_id = aws_vpc_endpoint.s3.id
-}
-
-resource "aws_security_group_rule" "test" {
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
-  security_group_id = aws_security_group.test.id
-}
-
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                          = %[1]q
   deployment_type               = "MULTI_NODE_READ_REPLICAS"
@@ -1382,47 +1204,10 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 }
 
 func testAccDBClusterConfig_v3WithOrganization(rName string) string {
-	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count = 2
-
-  subnet_id      = aws_subnet.test[count.index].id
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_vpc_endpoint" "s3" {
-  vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_endpoint_route_table_association" "test" {
-  route_table_id  = aws_route_table.test.id
-  vpc_endpoint_id = aws_vpc_endpoint.s3.id
-}
-
-resource "aws_security_group_rule" "test" {
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
-  security_group_id = aws_security_group.test.id
-}
-
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                          = %[1]q
   organization                  = "organization"
@@ -1440,47 +1225,10 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 }
 
 func testAccDBClusterConfig_v3WithPassword(rName string) string {
-	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count = 2
-
-  subnet_id      = aws_subnet.test[count.index].id
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_vpc_endpoint" "s3" {
-  vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_endpoint_route_table_association" "test" {
-  route_table_id  = aws_route_table.test.id
-  vpc_endpoint_id = aws_vpc_endpoint.s3.id
-}
-
-resource "aws_security_group_rule" "test" {
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
-  security_group_id = aws_security_group.test.id
-}
-
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                          = %[1]q
   password                      = "testpassword"
@@ -1498,47 +1246,10 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 }
 
 func testAccDBClusterConfig_v3WithUsername(rName string) string {
-	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count = 2
-
-  subnet_id      = aws_subnet.test[count.index].id
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_vpc_endpoint" "s3" {
-  vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_endpoint_route_table_association" "test" {
-  route_table_id  = aws_route_table.test.id
-  vpc_endpoint_id = aws_vpc_endpoint.s3.id
-}
-
-resource "aws_security_group_rule" "test" {
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  prefix_list_ids   = [aws_vpc_endpoint.s3.prefix_list_id]
-  security_group_id = aws_security_group.test.id
-}
-
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                          = %[1]q
   username                      = "admin"
