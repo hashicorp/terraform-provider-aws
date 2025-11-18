@@ -53,12 +53,11 @@ func TestAccEC2VPCEncryptionControl_basic(t *testing.T) {
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("vpc_id"), "aws_vpc.test", tfjsonpath.New("id"), compare.ValuesSame()),
 				},
 			},
-			// {
-			// 	ResourceName:            resourceName,
-			// 	ImportState:             true,
-			// 	ImportStateVerify:       true,
-			// 	ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -121,12 +120,11 @@ func TestAccEC2VPCEncryptionControl_enforce(t *testing.T) {
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("vpc_id"), "aws_vpc.test", tfjsonpath.New("id"), compare.ValuesSame()),
 				},
 			},
-			// {
-			// 	ResourceName:            resourceName,
-			// 	ImportState:             true,
-			// 	ImportStateVerify:       true,
-			// 	ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

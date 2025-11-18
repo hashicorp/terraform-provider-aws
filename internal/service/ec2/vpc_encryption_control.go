@@ -29,6 +29,9 @@ import (
 )
 
 // @FrameworkResource("aws_vpc_encryption_control", name="VPC Encryption Control")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.VpcEncryptionControl")
+// @Testing(hasNoPreExistingResource=true)
 func newResourceVPCEncryptionControl(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceVPCEncryptionControl{}
 
@@ -41,7 +44,8 @@ const (
 
 type resourceVPCEncryptionControl struct {
 	framework.ResourceWithModel[resourceVPCEncryptionControlModel]
-	framework.WithTimeouts
+	// framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *resourceVPCEncryptionControl) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
