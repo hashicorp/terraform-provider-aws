@@ -1823,11 +1823,6 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 					} else {
 						elements[i] = val
 					}
-				} else if item.Kind() == reflect.Struct {
-					// This would need to be handled by a nested object conversion
-					// For now, we'll return an error for unsupported types
-					diags.Append(DiagFlatteningIncompatibleTypes(item.Type(), reflect.TypeOf(elementType)))
-					return diags
 				} else {
 					diags.Append(DiagFlatteningIncompatibleTypes(item.Type(), reflect.TypeOf(elementType)))
 					return diags

@@ -20,6 +20,11 @@ import (
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
+const (
+	xmlWrapperFieldItems    = xmlWrapperFieldItems
+	xmlWrapperFieldQuantity = xmlWrapperFieldQuantity
+)
+
 // Expand  = TF -->  AWS
 
 // Expander is implemented by types that customize their expansion
@@ -630,7 +635,7 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 	case reflect.Struct:
 		// Check if target is an XML wrapper struct
 		if fieldOpts.xmlWrapper && isXMLWrapperStruct(vTo.Type()) {
-			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, "Items")...)
+			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, xmlWrapperFieldItems)...)
 			return diags
 		}
 
@@ -709,7 +714,7 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 	case reflect.Struct:
 		// Check if target is an XML wrapper struct
 		if fieldOpts.xmlWrapper && isXMLWrapperStruct(vTo.Type()) {
-			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, "Items")...)
+			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, xmlWrapperFieldItems)...)
 			return diags
 		}
 
@@ -764,7 +769,7 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 			if isXMLWrapperStruct(tElem) {
 				// Create new instance of the XML wrapper struct
 				newStruct := reflect.New(tElem).Elem()
-				diags.Append(expander.xmlWrapper(ctx, vFrom, newStruct, "Items")...)
+				diags.Append(expander.xmlWrapper(ctx, vFrom, newStruct, xmlWrapperFieldItems)...)
 				if !diags.HasError() {
 					vTo.Set(newStruct.Addr())
 				}
@@ -1566,8 +1571,8 @@ func (expander autoExpander) xmlWrapper(ctx context.Context, vFrom valueWithElem
 	}
 
 	// Get the Items and Quantity fields
-	itemsField := vTo.FieldByName("Items")
-	quantityField := vTo.FieldByName("Quantity")
+	itemsField := vTo.FieldByName(xmlWrapperFieldItems)
+	quantityField := vTo.FieldByName(xmlWrapperFieldQuantity)
 
 	if !itemsField.IsValid() || !quantityField.IsValid() {
 		tflog.SubsystemError(ctx, subsystemName, "XML wrapper struct missing required fields")
@@ -1673,13 +1678,13 @@ func isXMLWrapperStruct(t reflect.Type) bool {
 	}
 
 	// Check for Items field (slice)
-	itemsField, hasItems := t.FieldByName("Items")
+	itemsField, hasItems := t.FieldByName(xmlWrapperFieldItems)
 	if !hasItems || itemsField.Type.Kind() != reflect.Slice {
 		return false
 	}
 
 	// Check for Quantity field (pointer to int32)
-	quantityField, hasQuantity := t.FieldByName("Quantity")
+	quantityField, hasQuantity := t.FieldByName(xmlWrapperFieldQuantity)
 	if !hasQuantity || quantityField.Type.Kind() != reflect.Pointer {
 		return false
 	}
@@ -1744,8 +1749,8 @@ func (expander autoExpander) nestedObjectCollectionToXMLWrapper(ctx context.Cont
 		if nestedObj.Kind() == reflect.Ptr && !nestedObj.IsNil() {
 			structObj := nestedObj.Elem()
 			if structObj.Kind() == reflect.Struct {
-				// Check if the struct has an "Items" field - indicates Rule 2
-				itemsField := structObj.FieldByName("Items")
+				// Check if the struct has an xmlWrapperFieldItems field - indicates Rule 2
+				itemsField := structObj.FieldByName(xmlWrapperFieldItems)
 				if itemsField.IsValid() {
 					return expander.expandRule2XMLWrapper(ctx, nestedObj, vTo)
 				}
@@ -1764,8 +1769,8 @@ func (expander autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedOb
 	tflog.SubsystemTrace(ctx, subsystemName, "Expanding Rule 2 XML wrapper (items + additional fields)")
 
 	// Get target fields
-	itemsField := vTo.FieldByName("Items")
-	quantityField := vTo.FieldByName("Quantity")
+	itemsField := vTo.FieldByName(xmlWrapperFieldItems)
+	quantityField := vTo.FieldByName(xmlWrapperFieldQuantity)
 
 	if !itemsField.IsValid() || !quantityField.IsValid() {
 		diags.Append(diagExpandingIncompatibleTypes(nestedObjPtr.Type(), vTo.Type()))
@@ -1775,8 +1780,8 @@ func (expander autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedOb
 	// Get the struct from the pointer
 	nestedObj := nestedObjPtr.Elem()
 
-	// Extract "Items" field from nested object
-	itemsSourceField := nestedObj.FieldByName("Items")
+	// Extract xmlWrapperFieldItems field from nested object
+	itemsSourceField := nestedObj.FieldByName(xmlWrapperFieldItems)
 	if !itemsSourceField.IsValid() {
 		diags.AddError("Missing items field", "Rule 2 XML wrapper requires 'Items' field")
 		return diags
@@ -1799,7 +1804,7 @@ func (expander autoExpander) expandRule2XMLWrapper(ctx context.Context, nestedOb
 		fieldName := targetFieldType.Name
 
 		// Skip Items and Quantity (already handled)
-		if fieldName == "Items" || fieldName == "Quantity" {
+		if fieldName == xmlWrapperFieldItems || fieldName == xmlWrapperFieldQuantity {
 			continue
 		}
 
@@ -1823,8 +1828,8 @@ func (expander autoExpander) expandRule1XMLWrapper(ctx context.Context, fromSlic
 	tflog.SubsystemTrace(ctx, subsystemName, "Expanding Rule 1 XML wrapper (direct collection)")
 
 	// Get the Items and Quantity fields from target struct
-	itemsField := vTo.FieldByName("Items")
-	quantityField := vTo.FieldByName("Quantity")
+	itemsField := vTo.FieldByName(xmlWrapperFieldItems)
+	quantityField := vTo.FieldByName(xmlWrapperFieldQuantity)
 
 	if !itemsField.IsValid() || !quantityField.IsValid() {
 		diags.Append(diagExpandingIncompatibleTypes(fromSlice.Type(), vTo.Type()))
@@ -1949,9 +1954,9 @@ func (expander autoExpander) isXMLWrapperCollapseTarget(structType reflect.Type)
 		fieldName := field.Name
 
 		switch fieldName {
-		case "Items":
+		case xmlWrapperFieldItems:
 			hasItems = true
-		case "Quantity":
+		case xmlWrapperFieldQuantity:
 			hasQuantity = true
 		default:
 			// Any other field suggests this is a complex collapse target
@@ -2237,15 +2242,15 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 		}
 
 		// Get the Items and Quantity fields in the target
-		itemsField := targetStructVal.FieldByName("Items")
-		quantityField := targetStructVal.FieldByName("Quantity")
+		itemsField := targetStructVal.FieldByName(xmlWrapperFieldItems)
+		quantityField := targetStructVal.FieldByName(xmlWrapperFieldQuantity)
 
 		if itemsField.IsValid() && quantityField.IsValid() {
 			// Check if the source field is actually usable (not null/unknown)
 			if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
 				if !sourceValue.IsNull() && !sourceValue.IsUnknown() {
 					// Convert the collection to Items slice and Quantity
-					diags.Append(expander.convertCollectionToItemsQuantity(ctx, sourcePath.AtName(mainSourceFieldName), sourceFieldVal, targetPath.AtName("Items"), itemsField, quantityField)...)
+					diags.Append(expander.convertCollectionToItemsQuantity(ctx, sourcePath.AtName(mainSourceFieldName), sourceFieldVal, targetPath.AtName(xmlWrapperFieldItems), itemsField, quantityField)...)
 					if diags.HasError() {
 						return diags
 					}
@@ -2274,7 +2279,7 @@ func (expander autoExpander) buildGenericXMLWrapperCollapse(ctx context.Context,
 		targetFieldVal := targetStructVal.Field(i)
 
 		// Skip Items and Quantity as they were handled above
-		if targetFieldName == "Items" || targetFieldName == "Quantity" {
+		if targetFieldName == xmlWrapperFieldItems || targetFieldName == xmlWrapperFieldQuantity {
 			continue
 		}
 
