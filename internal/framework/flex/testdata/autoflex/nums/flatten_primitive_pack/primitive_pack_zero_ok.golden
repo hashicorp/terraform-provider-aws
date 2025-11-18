@@ -7,6 +7,19 @@
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfAllThePrimitiveFields"
   },
   {
+    "@level": "debug",
+    "@message": "Checking XML wrapper special case",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsAllThePrimitiveFields",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfAllThePrimitiveFields",
+    "isXMLWrapper": false,
+    "sourceKind": "struct",
+    "sourceType": "flex.awsAllThePrimitiveFields",
+    "toType": "*flex.tfAllThePrimitiveFields"
+  },
+  {
     "@level": "info",
     "@message": "Converting",
     "@module": "provider.autoflex",

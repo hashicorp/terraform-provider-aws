@@ -7,6 +7,19 @@
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsRFC3339TimeValue"
   },
   {
+    "@level": "debug",
+    "@message": "Checking XML wrapper special case",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsRFC3339TimeValue",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsRFC3339TimeValue",
+    "isXMLWrapper": false,
+    "sourceKind": "struct",
+    "sourceType": "flex.awsRFC3339TimeValue",
+    "toType": "*flex.awsRFC3339TimeValue"
+  },
+  {
     "@level": "info",
     "@message": "Converting",
     "@module": "provider.autoflex",
