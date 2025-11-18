@@ -21,8 +21,8 @@ import (
 )
 
 const (
-	xmlWrapperFieldItems    = xmlWrapperFieldItems
-	xmlWrapperFieldQuantity = xmlWrapperFieldQuantity
+	xmlWrapperFieldItems    = "Items"
+	xmlWrapperFieldQuantity = "Quantity"
 )
 
 // Expand  = TF -->  AWS
