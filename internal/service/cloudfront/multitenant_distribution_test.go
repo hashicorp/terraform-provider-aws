@@ -118,7 +118,7 @@ func testAccCheckMultiTenantDistributionExists(ctx context.Context, n string, v 
 }
 
 func testAccMultiTenantDistributionConfig_basic() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_cloudfront_multitenant_distribution" "test" {
   enabled = false
   comment = "Test multi-tenant distribution"
@@ -168,7 +168,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
     }
   }
 }
-`)
+`
 }
 
 func testAccMultiTenantDistributionConfig_another(rName string) string {

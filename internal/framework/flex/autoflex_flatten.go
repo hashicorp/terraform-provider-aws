@@ -125,7 +125,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 
 		if sourceType.Kind() == reflect.Struct && isXMLWrapperStruct(sourceType) {
 			tflog.SubsystemDebug(ctx, subsystemName, "Source is XML wrapper, checking target", map[string]any{
-				"toImplementsAttrValue": reflect.TypeOf(to).Implements(reflect.TypeOf((*attr.Value)(nil)).Elem()),
+				"toImplementsAttrValue": reflect.TypeOf(to).Implements(reflect.TypeFor[attr.Value]()),
 			})
 			if attrVal, ok := to.(attr.Value); ok {
 				// Handle Rule 2: NestedObjectCollectionType target
@@ -847,49 +847,6 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			return diags
 		}
 
-	default:
-		// Check for custom types with string underlying type (e.g., enums)
-		// For type declarations like "type MyEnum string", Kind() will not be reflect.String,
-		// but we can convert values to string using String() method
-		if tSliceElem.Kind() != reflect.String {
-			// Try to see if this is a string-based custom type by checking if we can call String() on it
-			sampleVal := reflect.New(tSliceElem).Elem()
-			if sampleVal.CanInterface() {
-				// Check if it has an underlying string type
-				if tSliceElem.ConvertibleTo(reflect.TypeOf("")) {
-					var elementType attr.Type = types.StringType
-					attrValueFromReflectValue := newStringValueFromReflectValue
-					if tTo, ok := tTo.(attr.TypeWithElementType); ok {
-						if tElem, ok := tTo.ElementType().(basetypes.StringTypable); ok {
-							//
-							// []stringy -> types.List/Set(OfStringEnum).
-							//
-							elementType = tElem
-							attrValueFromReflectValue = func(val reflect.Value) (attr.Value, diag.Diagnostics) {
-								return tElem.ValueFromString(ctx, types.StringValue(val.String()))
-							}
-						}
-					}
-
-					switch tTo := tTo.(type) {
-					case basetypes.ListTypable:
-						//
-						// []custom_string_type -> types.List(OfString).
-						//
-						diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, elementType, attrValueFromReflectValue, fieldOpts)...)
-						return diags
-
-					case basetypes.SetTypable:
-						//
-						// []custom_string_type -> types.Set(OfString).
-						//
-						diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, elementType, attrValueFromReflectValue, fieldOpts)...)
-						return diags
-					}
-				}
-			}
-		}
-
 	case reflect.Uint8:
 		switch tTo := tTo.(type) {
 		case basetypes.StringTypable:
@@ -980,6 +937,49 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 			//
 			diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, sourcePath, vFrom, targetPath, tTo, vTo, fieldOpts)...)
 			return diags
+		}
+
+	default:
+		// Check for custom types with string underlying type (e.g., enums)
+		// For type declarations like "type MyEnum string", Kind() will not be reflect.String,
+		// but we can convert values to string using String() method
+		if tSliceElem.Kind() != reflect.String {
+			// Try to see if this is a string-based custom type by checking if we can call String() on it
+			sampleVal := reflect.New(tSliceElem).Elem()
+			if sampleVal.CanInterface() {
+				// Check if it has an underlying string type
+				if tSliceElem.ConvertibleTo(reflect.TypeOf("")) {
+					var elementType attr.Type = types.StringType
+					attrValueFromReflectValue := newStringValueFromReflectValue
+					if tTo, ok := tTo.(attr.TypeWithElementType); ok {
+						if tElem, ok := tTo.ElementType().(basetypes.StringTypable); ok {
+							//
+							// []stringy -> types.List/Set(OfStringEnum).
+							//
+							elementType = tElem
+							attrValueFromReflectValue = func(val reflect.Value) (attr.Value, diag.Diagnostics) {
+								return tElem.ValueFromString(ctx, types.StringValue(val.String()))
+							}
+						}
+					}
+
+					switch tTo := tTo.(type) {
+					case basetypes.ListTypable:
+						//
+						// []custom_string_type -> types.List(OfString).
+						//
+						diags.Append(flattener.sliceOfPrimtiveToList(ctx, vFrom, tTo, vTo, elementType, attrValueFromReflectValue, fieldOpts)...)
+						return diags
+
+					case basetypes.SetTypable:
+						//
+						// []custom_string_type -> types.Set(OfString).
+						//
+						diags.Append(flattener.sliceOfPrimitiveToSet(ctx, vFrom, tTo, vTo, elementType, attrValueFromReflectValue, fieldOpts)...)
+						return diags
+					}
+				}
+			}
 		}
 	}
 
