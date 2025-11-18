@@ -109,20 +109,20 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 	if valFrom.IsValid() {
 		sourceType := valFrom.Type()
 		sourceVal := valFrom
-		
+
 		// Handle pointer to XML wrapper struct
 		if sourceType.Kind() == reflect.Pointer && !valFrom.IsNil() && isXMLWrapperStruct(sourceType.Elem()) {
 			sourceType = sourceType.Elem()
 			sourceVal = valFrom.Elem()
 		}
-		
+
 		tflog.SubsystemDebug(ctx, subsystemName, "Checking XML wrapper special case", map[string]any{
-			"sourceType": sourceType.String(),
-			"sourceKind": sourceType.Kind().String(),
+			"sourceType":   sourceType.String(),
+			"sourceKind":   sourceType.Kind().String(),
 			"isXMLWrapper": isXMLWrapperStruct(sourceType),
-			"toType": reflect.TypeOf(to).String(),
+			"toType":       reflect.TypeOf(to).String(),
 		})
-		
+
 		if sourceType.Kind() == reflect.Struct && isXMLWrapperStruct(sourceType) {
 			tflog.SubsystemDebug(ctx, subsystemName, "Source is XML wrapper, checking target", map[string]any{
 				"toImplementsAttrValue": reflect.TypeOf(to).Implements(reflect.TypeOf((*attr.Value)(nil)).Elem()),
@@ -134,16 +134,16 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 					// If so, return null instead of creating a block
 					enabledField := sourceVal.FieldByName("Enabled")
 					itemsField := sourceVal.FieldByName("Items")
-					
+
 					if enabledField.IsValid() && itemsField.IsValid() {
 						// Check if Enabled is false and Items is empty
 						isEnabled := true
 						if enabledField.Kind() == reflect.Pointer && !enabledField.IsNil() {
 							isEnabled = enabledField.Elem().Bool()
 						}
-						
+
 						itemsEmpty := itemsField.IsNil() || (itemsField.Kind() == reflect.Slice && itemsField.Len() == 0)
-						
+
 						if !isEnabled && itemsEmpty {
 							tflog.SubsystemTrace(ctx, subsystemName, "XML wrapper is empty (Enabled=false, Items empty), returning null")
 							nullVal, d := nestedObjType.NullValue(ctx)
@@ -154,9 +154,9 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 							return diags
 						}
 					}
-					
+
 					tflog.SubsystemTrace(ctx, subsystemName, "Flattening XML wrapper to NestedObjectCollection via autoFlattenConvert")
-					
+
 					// Inline Rule 2 logic
 					nestedObjPtr, d := nestedObjType.NewObjectPtr(ctx)
 					diags.Append(d...)
@@ -194,7 +194,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 					}
 					return diags
 				}
-				
+
 				// Handle Rule 1: Simple Set/List target (extract Items field)
 				itemsField := sourceVal.FieldByName("Items")
 				if itemsField.IsValid() {
@@ -1663,7 +1663,7 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 		tflog.SubsystemTrace(ctx, subsystemName, "Target is NestedObjectCollectionType - checking for Rule 2", map[string]any{
 			"target_type": tTo.String(),
 		})
-		
+
 		// Create a sample object to check its structure
 		samplePtr, d := nestedObjType.NewObjectPtr(ctx)
 		diags.Append(d...)
@@ -1675,12 +1675,12 @@ func (flattener autoFlattener) xmlWrapperFlatten(ctx context.Context, vFrom refl
 		// Check if the target model has an Items field (Rule 2 pattern)
 		sampleValue := reflect.ValueOf(samplePtr).Elem()
 		hasItems := sampleValue.FieldByName("Items").IsValid()
-		
+
 		tflog.SubsystemTrace(ctx, subsystemName, "Rule 2 detection result", map[string]any{
 			"has_items_field": hasItems,
 			"sample_type":     sampleValue.Type().String(),
 		})
-		
+
 		if hasItems {
 			tflog.SubsystemTrace(ctx, subsystemName, "Using Rule 2 flatten")
 			return flattener.xmlWrapperFlattenRule2(ctx, vFrom, nestedObjType, vTo)
@@ -2051,31 +2051,31 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			logAttrKeySourceType: typeFrom.String(),
 			logAttrKeyTargetType: typeTo.String(),
 		})
-		
+
 		if attrVal, ok := to.(attr.Value); ok {
 			tflog.SubsystemTrace(ctx, subsystemName, "Target implements attr.Value", map[string]any{
 				"target_type": attrVal.Type(ctx).String(),
 			})
-			
+
 			if nestedObjType, ok := attrVal.Type(ctx).(fwtypes.NestedObjectCollectionType); ok {
 				tflog.SubsystemTrace(ctx, subsystemName, "Target is NestedObjectCollectionType", map[string]any{
 					"target_type": nestedObjType.String(),
 				})
-				
+
 				// Check if wrapper is in empty state (Enabled=false, Items empty/nil)
 				// If so, return null instead of creating a block
 				enabledField := valFrom.FieldByName("Enabled")
 				itemsField := valFrom.FieldByName("Items")
-				
+
 				if enabledField.IsValid() && itemsField.IsValid() {
 					// Check if Enabled is false and Items is empty
 					isEnabled := true
 					if enabledField.Kind() == reflect.Pointer && !enabledField.IsNil() {
 						isEnabled = enabledField.Elem().Bool()
 					}
-					
+
 					itemsEmpty := itemsField.IsNil() || (itemsField.Kind() == reflect.Slice && itemsField.Len() == 0)
-					
+
 					if !isEnabled && itemsEmpty {
 						tflog.SubsystemTrace(ctx, subsystemName, "XML wrapper is empty (Enabled=false, Items empty), returning null for Rule 2")
 						nullVal, d := nestedObjType.NullValue(ctx)
@@ -2086,7 +2086,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 						return diags
 					}
 				}
-				
+
 				// Check if target model has Items field (Rule 2)
 				samplePtr, d := nestedObjType.NewObjectPtr(ctx)
 				diags.Append(d...)
@@ -2098,17 +2098,17 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 							logAttrKeySourceType: typeFrom.String(),
 							logAttrKeyTargetType: typeTo.String(),
 						})
-						
+
 						// Map source fields to target nested object fields
 						for i := 0; i < typeFrom.NumField(); i++ {
 							sourceField := typeFrom.Field(i)
 							sourceFieldName := sourceField.Name
 							sourceFieldVal := valFrom.Field(i)
-							
+
 							if sourceFieldName == "Quantity" {
 								continue // Skip Quantity
 							}
-							
+
 							targetField := sampleValue.FieldByName(sourceFieldName)
 							if targetField.IsValid() && targetField.CanAddr() {
 								if targetAttr, ok := targetField.Addr().Interface().(attr.Value); ok {
@@ -2116,13 +2116,13 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 								}
 							}
 						}
-						
+
 						if !diags.HasError() {
 							// Create single-element collection
 							ptrType := reflect.TypeOf(samplePtr)
 							objectSlice := reflect.MakeSlice(reflect.SliceOf(ptrType), 1, 1)
 							objectSlice.Index(0).Set(reflect.ValueOf(samplePtr))
-							
+
 							targetValue, d := nestedObjType.ValueFromObjectSlice(ctx, objectSlice.Interface())
 							diags.Append(d...)
 							if !diags.HasError() {
@@ -2133,7 +2133,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 					}
 				}
 			}
-			
+
 			// Try other collection types if we have autoFlattener
 			if f, ok := flexer.(*autoFlattener); ok {
 				switch attrVal.Type(ctx).(type) {
@@ -2374,21 +2374,21 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 						wrapperVal := fromFieldVal.Elem()
 						enabledField := wrapperVal.FieldByName("Enabled")
 						itemsField := wrapperVal.FieldByName("Items")
-						
+
 						if enabledField.IsValid() && itemsField.IsValid() {
 							isEnabled := true
 							if enabledField.Kind() == reflect.Pointer && !enabledField.IsNil() {
 								isEnabled = enabledField.Elem().Bool()
 							}
-							
+
 							itemsEmpty := itemsField.IsNil() || (itemsField.Kind() == reflect.Slice && itemsField.Len() == 0)
-							
+
 							if !isEnabled && itemsEmpty {
 								tflog.SubsystemTrace(ctx, subsystemName, "XML wrapper is empty (Enabled=false, Items empty), setting null", map[string]any{
 									logAttrKeySourceFieldname: fromFieldName,
 									logAttrKeyTargetFieldname: toFieldName,
 								})
-								
+
 								// Call NullValue on NestedObjectCollectionType
 								if nestedObjType, ok := tt.(fwtypes.NestedObjectCollectionType); ok {
 									nullVal, d := nestedObjType.NullValue(ctx)
@@ -2400,11 +2400,11 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 								}
 							}
 						}
-						
+
 						// Determine wrapper field based on target type
 						// For NestedObjectCollection, the wrapper field doesn't matter as Rule 2 will be used
 						wrapperField := "Items"
-						
+
 						tflog.SubsystemTrace(ctx, subsystemName, "Auto-converting pointer to XML wrapper struct to collection", map[string]any{
 							logAttrKeySourceFieldname: fromFieldName,
 							logAttrKeyTargetFieldname: toFieldName,
@@ -3041,16 +3041,16 @@ func (flattener autoFlattener) xmlWrapperFlattenRule2(ctx context.Context, vFrom
 	// If so, return null instead of creating a block
 	enabledField := vFrom.FieldByName("Enabled")
 	itemsField := vFrom.FieldByName("Items")
-	
+
 	if enabledField.IsValid() && itemsField.IsValid() {
 		// Check if Enabled is false and Items is empty
 		isEnabled := true
 		if enabledField.Kind() == reflect.Pointer && !enabledField.IsNil() {
 			isEnabled = enabledField.Elem().Bool()
 		}
-		
+
 		itemsEmpty := itemsField.IsNil() || (itemsField.Kind() == reflect.Slice && itemsField.Len() == 0)
-		
+
 		if !isEnabled && itemsEmpty {
 			tflog.SubsystemTrace(ctx, subsystemName, "XML wrapper is empty (Enabled=false, Items empty), returning null for Rule 2")
 			nullVal, d := tTo.NullValue(ctx)

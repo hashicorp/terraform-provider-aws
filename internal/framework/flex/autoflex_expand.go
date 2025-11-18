@@ -1689,15 +1689,10 @@ func isXMLWrapperStruct(t reflect.Type) bool {
 		return false
 	}
 
-	// Items and Quantity should be the only non-anonymous fields
-	nNonAnonymousFields := 0
-	for i := 0; i < t.NumField(); i++ {
-		if !t.Field(i).Anonymous {
-			nNonAnonymousFields++
-		}
-	}
-
-	return nNonAnonymousFields == 2
+	// Rule 1: Items and Quantity only (2 fields)
+	// Rule 2: Items, Quantity, and any additional fields (3+ fields)
+	// Both are valid XML wrappers
+	return true
 }
 
 // nestedObjectCollectionToXMLWrapper converts a NestedObjectCollectionValue to an XML wrapper struct
