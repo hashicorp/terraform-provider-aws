@@ -112,7 +112,7 @@ You can configure a MRSC global table with three replicas, or with two replicas 
 
 **Note** Please see detailed information, restrictions, caveats etc on the [AWS Support Page](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/multi-region-strong-consistency-gt.html).
 
-Consistency Mode (`consistency_mode`) is a new argument on the embedded `replica` that allows you to configure consistency mode for Global Tables.
+Consistency Mode (`consistency_mode`) on the embedded `replica` allows you to configure consistency mode for Global Tables.
 
 ##### Consistency mode with 3 Replicas
 
@@ -161,7 +161,9 @@ resource "aws_dynamodb_table" "example" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = "us-west-2"
+  global_table_witness {
+    region_name = "us-west-2"
+  }
 }
 ```
 
@@ -241,12 +243,12 @@ The following arguments are optional:
 * `deletion_protection_enabled` - (Optional) Enables deletion protection for table. Defaults to `false`.
 * `import_table` - (Optional) Import Amazon S3 data into a new table. See below.
 * `global_secondary_index` - (Optional) Describe a GSI for the table; subject to the normal limits on the number of GSIs, projected attributes, etc. See below.
+* `global_table_witness` - (Optional) Witness Region in a Multi-Region Strong Consistency deployment. **Note** This must be used alongside a single `replica` with `consistency_mode` set to `STRONG`. Other combinations will fail to provision. See below.
 * `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table; these can only be allocated _at creation_ so you cannot change this definition after you have created the resource. See below.
 * `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand table. See below.
 * `point_in_time_recovery` - (Optional) Enable point-in-time recovery options. See below.
 * `range_key` - (Optional, Forces new resource) Attribute to use as the range (sort) key. Must also be defined as an `attribute`, see below.
 * `read_capacity` - (Optional) Number of read units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
-* `global_table_witness_region_name` - (Optional) Name of the region to use as a Witness Region in a Multi-Region Strong Consistency deployment. **Note** This must be used alongside a single `replica` with `consistency_mode` set to `STRONG`. Other combinations will fail to provision.
 * `replica` - (Optional) Configuration block(s) with [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) replication configurations. See below.
 * `restore_date_time` - (Optional) Time of the point-in-time recovery point to restore.
 * `restore_source_name` - (Optional) Name of the table to restore. Must match the name of an existing table.
@@ -303,6 +305,10 @@ The following arguments are optional:
 * `read_capacity` - (Optional) Number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
 * `warm_throughput` - (Optional) Sets the number of warm read and write units for this index. See below.
 * `write_capacity` - (Optional) Number of write units for this index. Must be set if billing_mode is set to PROVISIONED.
+
+### `global_table_witness`
+
+* `region_name` - (Required) Name of the AWS Region that serves as a witness for the MRSC global table.
 
 ### `local_secondary_index`
 

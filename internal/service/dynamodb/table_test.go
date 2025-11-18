@@ -3512,9 +3512,13 @@ func TestAccDynamoDBTable_Replica_MRSC_Create_witness(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"region_name":      knownvalue.StringExact(acctest.AlternateRegion()),
@@ -3578,9 +3582,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_doubleAddCMK(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.kms_key_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							names.AttrKMSKeyARN: knownvalue.StringExact(""),
@@ -3595,9 +3603,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_doubleAddCMK(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							names.AttrKMSKeyARN: knownvalue.NotNull(),
@@ -3613,9 +3625,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_doubleAddCMK(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							names.AttrKMSKeyARN: knownvalue.NotNull(),
@@ -3815,9 +3831,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_pitr(t *testing.T) {
 					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"point_in_time_recovery": knownvalue.Bool(true),
@@ -3834,9 +3854,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_pitr(t *testing.T) {
 					testAccCheckTableNotRecreated(&replica1, &replica3),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"point_in_time_recovery": knownvalue.Bool(false),
@@ -4016,9 +4040,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_pitrKMS(t *testing.T) {
 					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"point_in_time_recovery": knownvalue.Bool(false),
@@ -4035,9 +4063,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_pitrKMS(t *testing.T) {
 					testAccCheckTableNotRecreated(&replica1, &replica3),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"point_in_time_recovery": knownvalue.Bool(true),
@@ -4054,9 +4086,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_pitrKMS(t *testing.T) {
 					testAccCheckTableNotRecreated(&replica1, &replica3),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"point_in_time_recovery": knownvalue.Bool(true),
@@ -4073,9 +4109,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_pitrKMS(t *testing.T) {
 					testAccCheckTableNotRecreated(&replica1, &replica3),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"point_in_time_recovery": knownvalue.Bool(false),
@@ -4092,9 +4132,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_pitrKMS(t *testing.T) {
 					testAccCheckTableNotRecreated(&replica1, &replica3),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"point_in_time_recovery": knownvalue.Bool(false),
@@ -4205,9 +4249,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_updateIsPropagated_oneOfTwo(
 						"Pozo":  "Amargo",
 						"benny": "smiles",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
@@ -4225,9 +4273,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_updateIsPropagated_oneOfTwo(
 						"Pozo":  "Amargo",
 						"benny": "frowns",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
@@ -4347,9 +4399,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_updateIsPropagated_twoOfTwo(
 						"Pozo":      "Amargo",
 						"Structure": "Adobe",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
@@ -4367,9 +4423,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_updateIsPropagated_twoOfTwo(
 						"Pozo":      "Amargo",
 						"Structure": "Steel",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
@@ -4476,9 +4536,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_propagateToAddedReplica(t *t
 				Config: testAccTableConfig_replica_MRSC_TagsNext1_witness(rName, acctest.AlternateRegion(), true, acctest.ThirdRegion()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
@@ -4495,9 +4559,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_propagateToAddedReplica(t *t
 						"Name": rName,
 						"Pozo": "Amargo",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
@@ -4555,9 +4623,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_notPropagatedToAddedReplica(
 						"Name": rName,
 						"Pozo": "Amargo",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
@@ -4677,9 +4749,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_nonPropagatedTagsAreUnmanage
 						"Pozo":      "Amargo",
 						"Structure": "Adobe",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
@@ -4697,9 +4773,13 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tags_nonPropagatedTagsAreUnmanage
 						"Pozo":      "Amargo",
 						"Structure": "Steel",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"region_name":           knownvalue.StringExact(acctest.AlternateRegion()),
@@ -4895,8 +4975,14 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tagsUpdate(t *testing.T) {
 						"region_name":           acctest.AlternateRegion(),
 						names.AttrPropagateTags: acctest.CtTrue,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccTableConfig_replica_MRSC_TagsUpdate2_witness(rName, acctest.AlternateRegion(), acctest.ThirdRegion()),
@@ -4912,8 +4998,14 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tagsUpdate(t *testing.T) {
 						"region_name":           acctest.AlternateRegion(),
 						names.AttrPropagateTags: acctest.CtTrue,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccTableConfig_replica_MRSC_TagsUpdate3_witness(rName, acctest.AlternateRegion(), acctest.ThirdRegion()),
@@ -4929,8 +5021,14 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tagsUpdate(t *testing.T) {
 						"region_name":           acctest.AlternateRegion(),
 						names.AttrPropagateTags: acctest.CtTrue,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccTableConfig_replica_MRSC_TagsUpdate4_witness(rName, acctest.AlternateRegion(), acctest.ThirdRegion()),
@@ -4948,8 +5046,14 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tagsUpdate(t *testing.T) {
 						"region_name":           acctest.AlternateRegion(),
 						names.AttrPropagateTags: acctest.CtTrue,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccTableConfig_replica_MRSC_TagsUpdate5_witness(rName, acctest.AlternateRegion(), acctest.ThirdRegion()),
@@ -4962,8 +5066,14 @@ func TestAccDynamoDBTable_Replica_MRSC_witness_tagsUpdate(t *testing.T) {
 						"region_name":           acctest.AlternateRegion(),
 						names.AttrPropagateTags: acctest.CtTrue,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "global_table_witness_region_name", acctest.ThirdRegion()),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"region_name": knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -7146,7 +7256,9 @@ resource "aws_dynamodb_table" "test_mrsc" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = data.aws_region.third.name
+  global_table_witness {
+    region_name = data.aws_region.third.name
+  }
 }
 `, rName))
 }
@@ -7185,7 +7297,9 @@ resource "aws_dynamodb_table" "test_mrsc" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = data.aws_region.third.name
+  global_table_witness {
+    region_name = data.aws_region.third.name
+  }
 }
 `, rName))
 }
@@ -7394,7 +7508,9 @@ resource "aws_dynamodb_table" "test" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = data.aws_region.third.name
+  global_table_witness {
+    region_name = data.aws_region.third.name
+  }
 
   server_side_encryption {
     enabled = true
@@ -7629,7 +7745,9 @@ resource "aws_dynamodb_table" "test" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = data.aws_region.third.name
+  global_table_witness {
+    region_name = data.aws_region.third.name
+  }
 
   server_side_encryption {
     enabled     = true
@@ -7763,8 +7881,9 @@ resource "aws_dynamodb_table" "test" {
     consistency_mode       = "STRONG"
   }
 
-  global_table_witness_region_name = data.aws_region.third.name
-
+  global_table_witness {
+    region_name = data.aws_region.third.name
+  }
 }
 `, rName, mainPITR, replica1, replica2))
 }
@@ -7961,7 +8080,9 @@ resource "aws_dynamodb_table" "test" {
     consistency_mode       = "STRONG"
   }
 
-  global_table_witness_region_name = data.aws_region.third.name
+  global_table_witness {
+    region_name = data.aws_region.third.name
+  }
 }
 `, rName, mainPITR, replica1, replica2))
 }
@@ -8084,7 +8205,9 @@ resource "aws_dynamodb_table" "test" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = data.aws_region.third.name
+  global_table_witness {
+    region_name = data.aws_region.third.name
+  }
 
   tags = {
     Name  = %[1]q
@@ -8217,7 +8340,9 @@ resource "aws_dynamodb_table" "test" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = %[4]q
+  global_table_witness {
+    region_name = %[4]q
+  }
 
   tags = {
     Name = %[1]q
@@ -8319,7 +8444,9 @@ resource "aws_dynamodb_table" "test" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = %[4]q
+  global_table_witness {
+    region_name = %[4]q
+  }
 
   tags = {
     Name = %[1]q
@@ -8554,7 +8681,9 @@ resource "aws_dynamodb_table" "test" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = %[3]q
+  global_table_witness {
+    region_name = %[3]q
+  }
 
   tags = {
     Name = %[1]q
@@ -8624,7 +8753,9 @@ resource "aws_dynamodb_table" "test" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = %[3]q
+  global_table_witness {
+    region_name = %[3]q
+  }
 
   tags = {
     Name   = %[1]q
@@ -8695,7 +8826,9 @@ resource "aws_dynamodb_table" "test" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = %[3]q
+  global_table_witness {
+    region_name = %[3]q
+  }
 
   tags = {
     Name   = %[1]q
@@ -8769,7 +8902,9 @@ resource "aws_dynamodb_table" "test" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = %[3]q
+  global_table_witness {
+    region_name = %[3]q
+  }
 
   tags = {
     Name    = %[1]q
@@ -8823,12 +8958,15 @@ func testAccTableConfig_replica_MRSC_TagsUpdate5_witness(rName, region1 string, 
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name                             = %[1]q
-  hash_key                         = "TestTableHashKey"
-  billing_mode                     = "PAY_PER_REQUEST"
-  stream_enabled                   = true
-  stream_view_type                 = "NEW_AND_OLD_IMAGES"
-  global_table_witness_region_name = %[3]q
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  global_table_witness {
+    region_name = %[3]q
+  }
 
   attribute {
     name = "TestTableHashKey"

@@ -226,10 +226,21 @@ func resourceTable() *schema.Resource {
 						},
 					},
 				},
-				"global_table_witness_region_name": {
-					Type:     schema.TypeString,
+				"global_table_witness": {
+					Type:     schema.TypeList,
 					Optional: true,
 					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"region_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidRegionName,
+							},
+						},
+					},
 				},
 				"hash_key": {
 					Type:     schema.TypeString,
@@ -889,7 +900,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if v := d.Get("replica").(*schema.Set); v.Len() > 0 {
-		if err := createReplicas(ctx, conn, d.Id(), v.List(), d.Get("global_table_witness_region_name").(string), true, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := createReplicas(ctx, conn, d.Id(), v.List(), expandGlobalTableWitness(d.Get("global_table_witness")), true, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("replicas: %w", err))
 		}
 
@@ -956,7 +967,9 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "global_secondary_index", err)
 	}
 
-	d.Set("global_table_witness_region_name", flattenGlobalTableWitnesses(table.GlobalTableWitnesses))
+	if err := d.Set("global_table_witness", flattenGlobalTableWitnesses(table.GlobalTableWitnesses)); err != nil {
+		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "global_table_witness", err)
+	}
 
 	if err := d.Set("on_demand_throughput", flattenOnDemandThroughput(table.OnDemandThroughput)); err != nil {
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "on_demand_throughput", err)
@@ -1400,7 +1413,7 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
 		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
-		if err := deleteReplicas(ctx, conn, d.Id(), replicas, d.Get("global_table_witness_region_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if err := deleteReplicas(ctx, conn, d.Id(), replicas, expandGlobalTableWitness(d.Get("global_table_witness")), d.Timeout(schema.TimeoutDelete)); err != nil {
 			// ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found.
 			// ValidationException: Cannot add, delete, or update the local region through ReplicaUpdates. Use CreateTable, DeleteTable, or UpdateTable as required.
 			if !tfawserr.ErrMessageContains(err, errCodeValidationException, "request was not found") &&
@@ -1920,7 +1933,7 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 		}
 	}
 
-	globalTableWitnessRegionName := d.Get("global_table_witness_region_name").(string)
+	globalTableWitnessRegionName := expandGlobalTableWitness(d.Get("global_table_witness"))
 
 	if len(removeFirst) > 0 { // mini ForceNew, recreates replica but doesn't recreate the table
 		if err := deleteReplicas(ctx, conn, d.Id(), removeFirst, globalTableWitnessRegionName, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -2728,22 +2741,22 @@ func flattenGSIWarmThroughput(apiObject *awstypes.GlobalSecondaryIndexWarmThroug
 	return []any{m}
 }
 
-func flattenGlobalTableWitnesses(apiObjects []awstypes.GlobalTableWitnessDescription) string {
-	if apiObjects == nil {
+func expandGlobalTableWitness(v any) string {
+	if v == nil || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 		return ""
 	}
 
-	if len(apiObjects) > 1 {
-		return ""
+	return v.([]any)[0].(map[string]any)["region_name"].(string)
+}
+
+func flattenGlobalTableWitnesses(apiObjects []awstypes.GlobalTableWitnessDescription) []any {
+	if len(apiObjects) != 1 {
+		return []any{}
 	}
 
-	for _, apiObject := range apiObjects {
-		if apiObject.RegionName != nil {
-			return aws.ToString(apiObject.RegionName)
-		}
-	}
-
-	return ""
+	return []any{map[string]any{
+		"region_name": aws.ToString(apiObjects[0].RegionName),
+	}}
 }
 
 func flattenReplicaDescription(apiObject *awstypes.ReplicaDescription) map[string]any {
