@@ -7,7 +7,7 @@ package tagpolicy
 // Lookup cross references Tagris resource type names to a corresponding
 // Terraform resource type
 var Lookup = map[string]string{
-	{{- range $tagris, $tf := .Mapping }}
-	"{{$tagris}}": "{{$tf}}",
-	{{- end }}
+  {{- range $_, $m := .Mapping }}
+  "{{ $m.Tagris }}": "{{ $m.Tf }}",
+  {{- end }}
 }

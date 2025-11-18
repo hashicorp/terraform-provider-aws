@@ -7,7 +7,9 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
@@ -50,6 +52,11 @@ func main() {
 
 		// g.Infof("No lookup match found for: %s", r[1])
 	}
+
+	// Sort by tag type name
+	slices.SortFunc(mapping, func(a, b m) int {
+		return cmp.Compare(a.Tagris, b.Tagris)
+	})
 
 	data := map[string]any{
 		"Mapping": mapping,
