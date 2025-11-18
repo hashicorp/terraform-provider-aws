@@ -152,7 +152,7 @@ func (r *resourceVPCEncryptionControl) Read(ctx context.Context, req resource.Re
 	}
 
 	out, err := findVPCEncryptionControlByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
