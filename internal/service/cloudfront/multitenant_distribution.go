@@ -33,6 +33,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	defaultConnectionAttempts          = 3
+	defaultConnectionTimeout           = 10
+	defaultResponseCompletionTimeout   = 30
+	defaultOriginKeepaliveTimeout      = 5
+	defaultOriginReadTimeout           = 30
+)
+
 // @FrameworkResource("aws_cloudfront_multitenant_distribution", name="Multi-tenant Distribution")
 // @Tags(identifierAttribute="arn")
 //
@@ -460,12 +468,12 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"connection_attempts": schema.Int32Attribute{
 							Optional: true,
 							Computed: true,
-							Default:  int32default.StaticInt32(3),
+							Default:  int32default.StaticInt32(defaultConnectionAttempts),
 						},
 						"connection_timeout": schema.Int32Attribute{
 							Optional: true,
 							Computed: true,
-							Default:  int32default.StaticInt32(10),
+							Default:  int32default.StaticInt32(defaultConnectionTimeout),
 						},
 						names.AttrDomainName: schema.StringAttribute{
 							Required: true,
@@ -482,7 +490,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"response_completion_timeout": schema.Int32Attribute{
 							Optional: true,
 							Computed: true,
-							Default:  int32default.StaticInt32(30),
+							Default:  int32default.StaticInt32(defaultResponseCompletionTimeout),
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -516,12 +524,12 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 									"origin_keepalive_timeout": schema.Int32Attribute{
 										Optional: true,
 										Computed: true,
-										Default:  int32default.StaticInt32(5),
+										Default:  int32default.StaticInt32(defaultOriginKeepaliveTimeout),
 									},
 									"origin_read_timeout": schema.Int32Attribute{
 										Optional: true,
 										Computed: true,
-										Default:  int32default.StaticInt32(30),
+										Default:  int32default.StaticInt32(defaultOriginReadTimeout),
 									},
 									"origin_protocol_policy": schema.StringAttribute{
 										Required:   true,
