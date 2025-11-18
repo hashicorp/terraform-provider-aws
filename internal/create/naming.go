@@ -61,7 +61,7 @@ type NameGeneratorOptionsFunc func(*nameGenerator)
 
 // WithConfiguredName is a helper function to construct functional options
 // that set a name generator's configured name value.
-// An empty ("") configured name inidicates that no name was configured.
+// An empty ("") configured name indicates that no name was configured.
 func WithConfiguredName(name string) NameGeneratorOptionsFunc {
 	return func(g *nameGenerator) {
 		g.configuredName = name
@@ -70,7 +70,7 @@ func WithConfiguredName(name string) NameGeneratorOptionsFunc {
 
 // WithConfiguredPrefix is a helper function to construct functional options
 // that set a name generator's configured prefix value.
-// An empty ("") configured prefix inidicates that no prefix was configured.
+// An empty ("") configured prefix indicates that no prefix was configured.
 func WithConfiguredPrefix(prefix string) NameGeneratorOptionsFunc {
 	return func(g *nameGenerator) {
 		g.configuredPrefix = prefix
