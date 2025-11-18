@@ -62,6 +62,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newTableBucketReplicationResource,
+			TypeName: "aws_s3tables_table_bucket_replication",
+			Name:     "Table Bucket Replication",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentityNamed("table_bucket_arn"),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTablePolicyResource,
 			TypeName: "aws_s3tables_table_policy",
 			Name:     "Table Policy",
