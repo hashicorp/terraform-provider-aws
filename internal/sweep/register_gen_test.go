@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
@@ -210,6 +211,7 @@ func registerSweepers() {
 	backup.RegisterSweepers()
 	batch.RegisterSweepers()
 	bcmdataexports.RegisterSweepers()
+	bedrock.RegisterSweepers()
 	bedrockagent.RegisterSweepers()
 	bedrockagentcore.RegisterSweepers()
 	billing.RegisterSweepers()

@@ -55,6 +55,18 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Inference Profiles",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newPromptRouterDataSource,
+			TypeName: "aws_bedrock_prompt_router",
+			Name:     "Prompt Router",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newPromptRoutersDataSource,
+			TypeName: "aws_bedrock_prompt_routers",
+			Name:     "Prompt Routers",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
@@ -106,6 +118,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
+		},
+		{
+			Factory:  newPromptRouterResource,
+			TypeName: "aws_bedrock_prompt_router",
+			Name:     "Prompt Router",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "prompt_router_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newProvisionedModelThroughputResource,
