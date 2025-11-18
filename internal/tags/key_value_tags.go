@@ -72,7 +72,7 @@ type TagPolicyConfig struct {
 	//
 	// Must be one of "error" or "warning". This is a higher level abstraction on
 	// the diagnostic severity types exposed by the plugin libraries, as it must be
-	// shared across both Plugin SDK V and Plugin Framework based resources.
+	// shared across both Plugin SDK V2 and Plugin Framework based resources.
 	Severity string
 
 	// RequiredTags is a mapping of Terraform resource type names to the required

@@ -5,4 +5,4 @@
 //go:generate go run tag_policy_compliance.go
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
-package tagrislookup
+package tagpolicy
