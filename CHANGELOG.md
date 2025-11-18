@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * data-source/aws_route53_zone: Support filtering by `tags` only or by `vpc_id` only ([#39671](https://github.com/hashicorp/terraform-provider-aws/issues/39671))
 * resource/aws_bedrockagentcore_agent_runtime: Add `agent_runtime_artifact.code_configuration` block ([#45091](https://github.com/hashicorp/terraform-provider-aws/issues/45091))
 * resource/aws_bedrockagentcore_agent_runtime: Make `agent_runtime_artifact.container_configuration` block optional ([#45091](https://github.com/hashicorp/terraform-provider-aws/issues/45091))
+* resource/aws_dynamodb_table: Add `global_table_witness` argument ([#43908](https://github.com/hashicorp/terraform-provider-aws/issues/43908))
 * resource/aws_fis_experiment_template: Add plan-time validation of `log_configuration.cloudwatch_logs_configuration.log_group_arn` ([#35941](https://github.com/hashicorp/terraform-provider-aws/issues/35941))
 * resource/aws_fis_experiment_template: Add support for `Functions` to `action.*.target` ([#41209](https://github.com/hashicorp/terraform-provider-aws/issues/41209))
 * resource/aws_lambda_invocation: Add import support ([#41240](https://github.com/hashicorp/terraform-provider-aws/issues/41240))
