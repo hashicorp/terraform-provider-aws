@@ -6,6 +6,8 @@ package retry
 import (
 	"context"
 	"errors"
+	"iter"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -305,6 +307,64 @@ func TestWaitForStateOf_NotFound_NotFoundChecks(t *testing.T) {
 
 	if !cmp.Equal(expectedErr, err) {
 		t.Errorf("Errors don't match.\nExpected: %q\nGiven: %q\n", expectedErr, err)
+	}
+}
+
+func inconsistentResultStateRefreshFuncOf(t *testing.T) (StateRefreshFuncOf[*value, string], func()) {
+	t.Helper()
+
+	sequence := []refresh[*value, string]{
+		{nil, "", nil}, // 1
+		{&value{val: "value"}, "pending", nil},
+		{nil, "", nil}, {nil, "", nil}, // 2
+		{&value{val: "value"}, "pending", nil},
+		{nil, "", nil}, {nil, "", nil}, {nil, "", nil}, // 3
+	}
+
+	next, stop := iter.Pull(slices.Values(sequence))
+
+	return func(context.Context) (*value, string, error) {
+		v, _ := next()
+
+		return v.obj, v.state, v.err
+	}, stop
+}
+
+func TestWaitForStateOf_EmptyTarget_ContinuousTargetOccurence(t *testing.T) {
+	t.Parallel()
+
+	const continuousTargetOccurence = 3
+	const expectedCount = 8
+
+	var count atomic.Int32
+
+	inner, stop := inconsistentResultStateRefreshFuncOf(t)
+	defer stop()
+
+	refresh := func(ctx context.Context) (*value, string, error) {
+		count.Add(1)
+		return inner(ctx)
+	}
+
+	conf := &StateChangeConfOf[*value, string]{
+		Pending:                   []string{"pending", "incomplete"},
+		Target:                    []string{},
+		Timeout:                   100 * time.Millisecond,
+		PollInterval:              10 * time.Millisecond,
+		ContinuousTargetOccurence: continuousTargetOccurence,
+		Refresh:                   refresh,
+	}
+
+	obj, err := conf.WaitForStateContext(t.Context())
+	if obj != nil {
+		t.Errorf("should not return obj")
+	}
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	if v := count.Load(); v != expectedCount {
+		t.Errorf("Expected %d refresh calls, got %d", expectedCount, v)
 	}
 }
 
