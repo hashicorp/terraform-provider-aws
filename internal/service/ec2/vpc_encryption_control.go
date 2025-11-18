@@ -171,6 +171,52 @@ func (r *resourceVPCEncryptionControl) Read(ctx context.Context, req resource.Re
 }
 
 func (r *resourceVPCEncryptionControl) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().EC2Client(ctx)
+
+	var plan, state resourceVPCEncryptionControlModel
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := flex.Diff(ctx, plan, state)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		var input ec2.ModifyVpcEncryptionControlInput
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("VpcEncryptionControl")))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		out, err := conn.ModifyVpcEncryptionControl(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			return
+		}
+		if out == nil || out.VpcEncryptionControl == nil {
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), "vpc_id", plan.VPCID.String())
+			return
+		}
+
+		updateTimeout := 20 * time.Minute
+		ec, err := waitVPCEncryptionControlAvailable(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			return
+		}
+
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, ec, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resourceVPCEncryptionControl) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
