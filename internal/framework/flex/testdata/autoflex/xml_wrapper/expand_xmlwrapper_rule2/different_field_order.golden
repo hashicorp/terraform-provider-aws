@@ -1,0 +1,68 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testRule2Model]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testXMLWrapperRule2DifferentOrder"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testRule2Model]",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testXMLWrapperRule2DifferentOrder"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Items",
+    "autoflex.source.path": "[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testRule2Model",
+    "autoflex.target.fieldname": "Items",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testXMLWrapperRule2DifferentOrder"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "[0].Items",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
+    "autoflex.target.path": "Items",
+    "autoflex.target.type": "[]string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding with ElementsAs",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "[0].Items",
+    "autoflex.source.size": 1,
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
+    "autoflex.target.path": "Items",
+    "autoflex.target.type": "[]string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Enabled",
+    "autoflex.source.path": "[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testRule2Model",
+    "autoflex.target.fieldname": "Enabled",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testXMLWrapperRule2DifferentOrder"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "[0].Enabled",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.BoolValue",
+    "autoflex.target.path": "Enabled",
+    "autoflex.target.type": "*bool"
+  }
+]

@@ -141,9 +141,9 @@ func TestExpandXMLWrapperRule1ScalarElements(t *testing.T) {
 			t.Parallel()
 
 			if testName == "OriginSslProtocols" {
-				runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: false})
+				runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: false, GoldenLogs: true})
 			} else {
-				runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+				runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
 			}
 		})
 	}
@@ -192,7 +192,7 @@ func TestExpandXMLWrapperRule1StructElements(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
 		})
 	}
 }
@@ -237,7 +237,7 @@ func TestFlattenXMLWrapperRule1ScalarElements(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
 		})
 	}
 }
@@ -451,7 +451,7 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
 		})
 	}
 }
