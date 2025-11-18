@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/google/go-cmp/cmp"
 )
 
 //
@@ -294,6 +295,39 @@ func TestWaitForState_failure(t *testing.T) {
 	}
 	if obj != nil {
 		t.Fatalf("should not return obj")
+	}
+}
+
+func TestWaitForState_NotFound_NotFoundChecks(t *testing.T) {
+	t.Parallel()
+
+	const notFoundCheckCount = 5
+
+	expectedErr := &NotFoundError{
+		Retries: notFoundCheckCount + 1,
+	}
+
+	conf := &StateChangeConf{
+		Pending:        []string{"pending", "incomplete"},
+		Target:         []string{"running"},
+		PollInterval:   10 * time.Millisecond,
+		Timeout:        100 * time.Millisecond,
+		NotFoundChecks: notFoundCheckCount,
+		Refresh: func(context.Context) (any, string, error) {
+			return nil, "", nil
+		},
+	}
+
+	obj, err := conf.WaitForStateContext(t.Context())
+	if obj != nil {
+		t.Errorf("should not return obj")
+	}
+	if err == nil {
+		t.Fatal("Expected error. No error returned.")
+	}
+
+	if !cmp.Equal(expectedErr, err) {
+		t.Errorf("Errors don't match.\nExpected: %q\nGiven: %q\n", expectedErr, err)
 	}
 }
 
