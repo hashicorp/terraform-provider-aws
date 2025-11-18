@@ -4,4 +4,3 @@
 {{- range $_, $m := .Mapping }}
 | `{{ $m.Tagris }}` | `{{ $m.Tf }}` |
 {{- end }}
-

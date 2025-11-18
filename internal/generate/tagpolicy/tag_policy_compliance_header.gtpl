@@ -27,22 +27,23 @@ See the [AWS documentation on tag policies](https://docs.aws.amazon.com/organiza
 
 ## Getting Started
 
-In order to utilize this feature, the following conditions must be met:
+In order to utilize this feature:
 
 - **The AWS account must have a tag policy attached.**
-To be useful, the policy should define required tags for at least one resource.
-- **The calling principal used to execute Terraform must have the `ListRequiredTags` IAM permission.**
+To observe the effects of validation, this policy should define required tags for at least one resource.
+- **The calling principal used to execute Terraform must have the [`ListRequiredTags`](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_ListRequireTags.html) [IAM permission](https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonresourcegrouptaggingapi.html).**
 This API was introduced in November 2025, and may require modification of existing permissions.
 
-If a tag policy is not already attached to the account, or existing tag policies do not yet include required tag definitions, refer to the section below for setup.
+If an appropriate tag policy is already in place, proceed to [Enforcing Tag Policy Compliance](#enforcing-tag-policy-compliance).
+Otherwise, refer to [Creating a Tag Policy](#creating-a-tag-policy) for the necessary setup.
 
 ### Creating a Tag Policy
 
 The Terraform AWS provider will enforce compliance with any required tags defined in an organization's effective tag policy.
 An "effective" tag policy in this context is the policy resulting from the merged content of all tag policies attached to a given account.
 
-To create and attach tag policies, the [`CreatePolicy`](https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreatePolicy.html) and [`AttachPolicy`](https://docs.aws.amazon.com/organizations/latest/APIReference/API_AttachPolicy.html) APIs are used.
 The [`aws_organizations_policy`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_policy) and [`aws_organizations_policy_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/organizations_policy_attachment) resources from the Terraform AWS provider can be used to perform this function via Terraform.
+These resources wrap the [`CreatePolicy`](https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreatePolicy.html) and [`AttachPolicy`](https://docs.aws.amazon.com/organizations/latest/APIReference/API_AttachPolicy.html) APIs, respectively.
 
 -> Tag policies must be created in the management account of an AWS organization.
 
@@ -69,7 +70,7 @@ In this policy, the `Owner` key is **required** on all `logs:log-group` resource
 This tag resource type maps to the [`aws_cloudwatch_log_group`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) resource in the Terraform AWS provider.
 
 The Terraform configuration below will create a tag policy and attach it to the current account.
-`tag-policy.json` should contain a valid tag policy, similar to the example above.
+`tag-policy.json` should be a file in the same directory as the Terraform configuration that contains a valid tag policy, similar to the example above.
 
 ```hcl
 data "aws_caller_identity" "current" {}
@@ -148,7 +149,6 @@ resource "aws_cloudwatch_log_group" "example" {
 Alternatively, the `default_tags` argument can be set in the `provider` block.
 All resources within this configuration will now inherit the `Owner` tag, making the `aws_cloudwatch_log_group` compliant even without a configured `tags` argument.
 
-
 ```hcl
 provider "aws" {
   tag_policy_compliance = "error"
@@ -175,7 +175,7 @@ When enabled, tag policy compliance checks will run prior to:
 - Modification of `tags` on an existing resource
 
 ~> Notably, _non-tag updates to existing resources are always permitted_, even if the existing tags are non-compliant.
-This approach avoids blocking unrelated resource updates while still enforcing compliance in order for **any** tags to be modified.
+This approach avoids blocking unrelated resource updates while still enforcing compliance once **any** tags are modified.
 
 ### Warning Diagnostics with Plugin SDKV2 Resources
 
@@ -190,7 +190,7 @@ For example,
 ```
 
 ~> A majority of resources in the Terraform AWS provider are implemented with Terraform Plugin SDK V2.
-While all net-new resources will use the preferred [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework), this limitation will affect many of the oldest and most popular resources until they are migrated or an enhancement is made to Plugin SDK V2.
+While all net-new resources [must use](https://github.com/hashicorp/terraform-provider-aws/issues/32917) the preferred [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework), this limitation will affect many of the oldest and most popular resources until they are migrated or an enhancement is made to Plugin SDK V2.
 
 ## Resource Type Cross Reference
 
