@@ -13,9 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftimestreaminfluxdb "github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
@@ -45,17 +49,24 @@ func TestAccTimestreamInfluxDBDBCluster_basic(t *testing.T) {
 				Config: testAccDBClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream-influxdb", regexache.MustCompile(`db-cluster/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "db_storage_type", string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_type"),
-					resource.TestCheckResourceAttr(resourceName, "failover_mode", string(awstypes.FailoverModeAutomatic)),
-					resource.TestCheckResourceAttrSet(resourceName, "influx_auth_parameters_secret_arn"),
-					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8086"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("timestream-influxdb", regexache.MustCompile(`db-cluster/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("db_storage_type"), tfknownvalue.StringExact(awstypes.DbStorageTypeInfluxIoIncludedT1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deployment_type"), tfknownvalue.StringExact(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("engine_type"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("failover_mode"), tfknownvalue.StringExact(awstypes.FailoverModeAutomatic)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("influx_auth_parameters_secret_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_type"), tfknownvalue.StringExact(awstypes.NetworkTypeIpv4)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPort), knownvalue.Int32Exact(8086)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPubliclyAccessible), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reader_endpoint"), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:            resourceName,

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -30,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -571,31 +571,20 @@ func (r *dbClusterResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func isParameterGroupV3(ctx context.Context, meta *conns.AWSClient, paramGroupID string) (bool, diag.Diagnostics) {
+func isParameterGroupV3(ctx context.Context, conn *timestreaminfluxdb.Client, parameterGroupID string) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	conn := meta.TimestreamInfluxDBClient(ctx)
-	if conn == nil {
+	out, err := findDBParameterGroupByID(ctx, conn, parameterGroupID)
+
+	if tfresource.NotFound(err) {
 		return false, diags
 	}
 
-	in := &timestreaminfluxdb.GetDbParameterGroupInput{
-		Identifier: aws.String(paramGroupID),
-	}
-
-	out, err := conn.GetDbParameterGroup(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return false, diags
-		}
 		diags.AddWarning(
 			"Unable to query parameter group",
 			"Could not determine parameter group type. Validation will be skipped.",
 		)
-		return false, diags
-	}
-
-	if out == nil || out.Parameters == nil {
 		return false, diags
 	}
 
@@ -604,8 +593,6 @@ func isParameterGroupV3(ctx context.Context, meta *conns.AWSClient, paramGroupID
 		return true, diags
 	case *awstypes.ParametersMemberInfluxDBv3Enterprise:
 		return true, diags
-	case *awstypes.ParametersMemberInfluxDBv2:
-		return false, diags
 	default:
 		return false, diags
 	}
@@ -618,16 +605,19 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 		return
 	}
 
-	if !data.AllocatedStorage.IsNull() && !data.AllocatedStorage.IsUnknown() {
-		if data.AllocatedStorage.ValueInt64() > math.MaxInt32 {
+	isNullOrUnknown := func(val attr.Value) bool {
+		return val.IsNull() || val.IsUnknown()
+	}
+
+	if !isNullOrUnknown(data.AllocatedStorage) {
+		switch v := data.AllocatedStorage.ValueInt64(); {
+		case v > math.MaxInt32:
 			resp.Diagnostics.AddError(
 				"Invalid value for allocated_storage",
 				"allocated_storage was greater than the maximum allowed value for int32",
 			)
 			return
-		}
-
-		if data.AllocatedStorage.ValueInt64() < math.MinInt32 {
+		case v < math.MinInt32:
 			resp.Diagnostics.AddError(
 				"Invalid value for allocated_storage",
 				"allocated_storage was less than the minimum allowed value for int32",
@@ -636,23 +626,21 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 		}
 	}
 
-	hasV2Fields := (!data.AllocatedStorage.IsNull() && !data.AllocatedStorage.IsUnknown()) ||
-		(!data.Bucket.IsNull() && !data.Bucket.IsUnknown()) ||
-		(!data.DeploymentType.IsNull() && !data.DeploymentType.IsUnknown()) ||
-		(!data.Organization.IsNull() && !data.Organization.IsUnknown()) ||
-		(!data.Password.IsNull() && !data.Password.IsUnknown()) ||
-		(!data.Username.IsNull() && !data.Username.IsUnknown())
+	hasV2Fields := !isNullOrUnknown(data.AllocatedStorage) ||
+		!isNullOrUnknown(data.Bucket) ||
+		!isNullOrUnknown(data.DeploymentType) ||
+		!isNullOrUnknown(data.Organization) ||
+		!isNullOrUnknown(data.Password) ||
+		!isNullOrUnknown(data.Username)
 
 	var isV3Cluster bool
-	hasParameterGroup := !data.DBParameterGroupIdentifier.IsNull() && !data.DBParameterGroupIdentifier.IsUnknown()
-
-	if hasParameterGroup {
+	if !isNullOrUnknown(data.DBParameterGroupIdentifier) {
 		meta := r.Meta()
 		if meta == nil {
 			return
 		}
 		paramGroupID := data.DBParameterGroupIdentifier.ValueString()
-		isV3, diags := isParameterGroupV3(ctx, meta, paramGroupID)
+		isV3, diags := isParameterGroupV3(ctx, meta.TimestreamInfluxDBClient(ctx), paramGroupID)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -668,153 +656,68 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 		}
 	}
 
-	if !isV3Cluster {
-		if !hasParameterGroup {
-			if data.AllocatedStorage.IsNull() || data.AllocatedStorage.IsUnknown() {
+	if isV3Cluster {
+		for _, v := range []struct {
+			val  attr.Value
+			path string
+		}{
+			{data.AllocatedStorage, names.AttrAllocatedStorage},
+			{data.Bucket, names.AttrBucket},
+			{data.DeploymentType, "deployment_type"},
+			{data.Organization, "organization"},
+			{data.Password, names.AttrPassword},
+			{data.Username, names.AttrUsername},
+		} {
+			if !isNullOrUnknown(v.val) {
 				resp.Diagnostics.AddAttributeError(
-					path.Root(names.AttrAllocatedStorage),
-					"Missing Required Configuration for InfluxDB V2",
-					"allocated_storage is required for InfluxDB V2 clusters",
+					path.Root(v.path),
+					"Invalid Configuration for InfluxDB V3",
+					v.path+" must not be set when using an InfluxDB V3 db parameter group",
 				)
 			}
-
-			if data.Bucket.IsNull() || data.Bucket.IsUnknown() {
+		}
+	} else {
+		for _, v := range []struct {
+			val  attr.Value
+			path string
+		}{
+			{data.AllocatedStorage, names.AttrAllocatedStorage},
+			{data.Bucket, names.AttrBucket},
+			{data.Organization, "organization"},
+			{data.Password, names.AttrPassword},
+			{data.Username, names.AttrUsername},
+		} {
+			if isNullOrUnknown(v.val) {
 				resp.Diagnostics.AddAttributeError(
-					path.Root(names.AttrBucket),
+					path.Root(v.path),
 					"Missing Required Configuration for InfluxDB V2",
-					"bucket is required for InfluxDB V2 clusters",
-				)
-			}
-
-			if data.DeploymentType.IsNull() || data.DeploymentType.IsUnknown() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("deployment_type"),
-					"Missing Required Configuration for InfluxDB V2",
-					"deployment_type is required for InfluxDB V2 clusters",
-				)
-			}
-
-			if data.Organization.IsNull() || data.Organization.IsUnknown() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("organization"),
-					"Missing Required Configuration for InfluxDB V2",
-					"organization is required for InfluxDB V2 clusters",
-				)
-			}
-
-			if data.Password.IsNull() || data.Password.IsUnknown() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root(names.AttrPassword),
-					"Missing Required Configuration for InfluxDB V2",
-					"password is required for InfluxDB V2 clusters",
-				)
-			}
-
-			if data.Username.IsNull() || data.Username.IsUnknown() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root(names.AttrUsername),
-					"Missing Required Configuration for InfluxDB V2",
-					"username is required for InfluxDB V2 clusters",
-				)
-			}
-		} else {
-			if data.AllocatedStorage.IsNull() || data.AllocatedStorage.IsUnknown() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root(names.AttrAllocatedStorage),
-					"Missing Required Configuration for InfluxDB V2",
-					"allocated_storage is required when using an InfluxDB V2 parameter group",
-				)
-			}
-
-			if data.Bucket.IsNull() || data.Bucket.IsUnknown() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root(names.AttrBucket),
-					"Missing Required Configuration for InfluxDB V2",
-					"bucket is required when using an InfluxDB V2 parameter group",
-				)
-			}
-
-			if data.DeploymentType.IsNull() || data.DeploymentType.IsUnknown() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("deployment_type"),
-					"Missing Required Configuration for InfluxDB V2",
-					"deployment_type is required when using an InfluxDB V2 parameter group",
-				)
-			}
-
-			if data.Organization.IsNull() || data.Organization.IsUnknown() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("organization"),
-					"Missing Required Configuration for InfluxDB V2",
-					"organization is required when using an InfluxDB V2 parameter group",
-				)
-			}
-
-			if data.Password.IsNull() || data.Password.IsUnknown() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root(names.AttrPassword),
-					"Missing Required Configuration for InfluxDB V2",
-					"password is required when using an InfluxDB V2 parameter group",
-				)
-			}
-
-			if data.Username.IsNull() || data.Username.IsUnknown() {
-				resp.Diagnostics.AddAttributeError(
-					path.Root(names.AttrUsername),
-					"Missing Required Configuration for InfluxDB V2",
-					"username is required when using an InfluxDB V2 parameter group",
+					v.path+" is required for InfluxDB V2 clusters",
 				)
 			}
 		}
 	}
+}
 
-	if isV3Cluster {
-		if !data.AllocatedStorage.IsNull() && !data.AllocatedStorage.IsUnknown() {
-			resp.Diagnostics.AddAttributeError(
-				path.Root(names.AttrAllocatedStorage),
-				"Invalid Configuration for InfluxDB V3",
-				"allocated_storage must not be set when using an InfluxDB V3 db parameter group",
-			)
+func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if !req.Plan.Raw.IsNull() {
+		var data dbClusterResourceModel
+		resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 
-		if !data.Bucket.IsNull() && !data.Bucket.IsUnknown() {
-			resp.Diagnostics.AddAttributeError(
-				path.Root(names.AttrBucket),
-				"Invalid Configuration for InfluxDB V3",
-				"bucket must not be set when using an InfluxDB V3 db parameter group",
-			)
+		var isV3Cluster bool
+		if !data.DBParameterGroupIdentifier.IsNull() {
+			isV3, diags := isParameterGroupV3(ctx, r.Meta().TimestreamInfluxDBClient(ctx), data.DBParameterGroupIdentifier.ValueString())
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			isV3Cluster = isV3
 		}
 
-		if !data.DeploymentType.IsNull() && !data.DeploymentType.IsUnknown() {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("deployment_type"),
-				"Invalid Configuration for InfluxDB V3",
-				"deployment_type must not be set when using an InfluxDB V3 db parameter group",
-			)
-		}
-
-		if !data.Organization.IsNull() && !data.Organization.IsUnknown() {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("organization"),
-				"Invalid Configuration for InfluxDB V3",
-				"organization must not be set when using an InfluxDB V3 db parameter group",
-			)
-		}
-
-		if !data.Password.IsNull() && !data.Password.IsUnknown() {
-			resp.Diagnostics.AddAttributeError(
-				path.Root(names.AttrPassword),
-				"Invalid Configuration for InfluxDB V3",
-				"password must not be set when using an InfluxDB V3 db parameter group",
-			)
-		}
-
-		if !data.Username.IsNull() && !data.Username.IsUnknown() {
-			resp.Diagnostics.AddAttributeError(
-				path.Root(names.AttrUsername),
-				"Invalid Configuration for InfluxDB V3",
-				"username must not be set when using an InfluxDB V3 db parameter group",
-			)
+		if !isV3Cluster && data.DeploymentType.IsUnknown() {
+			resp.Plan.SetAttribute(ctx, path.Root("deployment_type"), fwtypes.StringEnumValue(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas))
 		}
 	}
 }
@@ -825,7 +728,6 @@ func waitDBClusterCreated(ctx context.Context, conn *timestreaminfluxdb.Client, 
 		Target:                    enum.Slice(awstypes.ClusterStatusAvailable),
 		Refresh:                   statusDBCluster(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -843,7 +745,6 @@ func waitDBClusterUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, 
 		Target:                    enum.Slice(awstypes.ClusterStatusAvailable),
 		Refresh:                   statusDBCluster(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -887,11 +788,43 @@ func statusDBCluster(conn *timestreaminfluxdb.Client, id string) retry.StateRefr
 }
 
 func findDBClusterByID(ctx context.Context, conn *timestreaminfluxdb.Client, id string) (*timestreaminfluxdb.GetDbClusterOutput, error) {
-	in := &timestreaminfluxdb.GetDbClusterInput{
+	in := timestreaminfluxdb.GetDbClusterInput{
 		DbClusterId: aws.String(id),
 	}
 
+	return findDBCluster(ctx, conn, &in)
+}
+
+func findDBCluster(ctx context.Context, conn *timestreaminfluxdb.Client, in *timestreaminfluxdb.GetDbClusterInput) (*timestreaminfluxdb.GetDbClusterOutput, error) {
 	out, err := conn.GetDbCluster(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Id == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
+
+func findDBParameterGroupByID(ctx context.Context, conn *timestreaminfluxdb.Client, id string) (*timestreaminfluxdb.GetDbParameterGroupOutput, error) {
+	in := timestreaminfluxdb.GetDbParameterGroupInput{
+		Identifier: aws.String(id),
+	}
+
+	return findDBParameterGroup(ctx, conn, &in)
+}
+
+func findDBParameterGroup(ctx context.Context, conn *timestreaminfluxdb.Client, in *timestreaminfluxdb.GetDbParameterGroupInput) (*timestreaminfluxdb.GetDbParameterGroupOutput, error) {
+	out, err := conn.GetDbParameterGroup(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
