@@ -40,10 +40,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.3
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.60.5
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.5
-	github.com/aws/aws-sdk-go-v2/service/backup v1.52.0
+	github.com/aws/aws-sdk-go-v2/service/backup v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/batch v1.58.6
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.5
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.49.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.49.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.51.3
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/billing v1.8.6
@@ -136,7 +136,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.67.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.4
-	github.com/aws/aws-sdk-go-v2/service/iam v1.50.2
+	github.com/aws/aws-sdk-go-v2/service/iam v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.11
@@ -146,7 +146,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iot v1.69.11
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.48.5
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.11
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.45.2
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.27.12
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.12
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.5
