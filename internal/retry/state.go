@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 )
@@ -107,7 +107,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 			return t, err
 		}
 
-		if itypes.IsZero(t) {
+		if inttypes.IsZero(t) {
 			// If we're waiting for the absence of a thing, then return.
 			if len(conf.Target) == 0 {
 				targetOccurence++
