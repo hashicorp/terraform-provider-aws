@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_lb_listener: Support `jwt-validation` as a valid `default_action.type` and add `default_action.jwt_validation` configuration block ([#45089](https://github.com/hashicorp/terraform-provider-aws/issues/45089))
 * resource/aws_lb_listener_rule: Support `jwt-validation` as a valid `action.type` and add `action.jwt_validation` configuration block ([#45089](https://github.com/hashicorp/terraform-provider-aws/issues/45089))
 * resource/aws_vpn_connection: Add `tunnel_bandwidth` argument to support higher bandwidth tunnels ([#45070](https://github.com/hashicorp/terraform-provider-aws/issues/45070))
+* resource/aws_dlm_lifecycle_policy: Add `exclude_data_volume_tags` parameter to `policy_details` configuration block for custom policies ([#45113](https://github.com/hashicorp/terraform-provider-aws/issues/45113))
 
 BUG FIXES:
 
