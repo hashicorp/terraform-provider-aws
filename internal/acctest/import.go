@@ -70,19 +70,15 @@ func ImportMatchResourceAttr(key string, r *regexp.Regexp) resource.ImportStateC
 	}
 }
 
-func ImportCheckResourceAttrSet(key string, set bool) resource.ImportStateCheckFunc {
+func ImportCheckResourceAttrSet(key string) resource.ImportStateCheckFunc {
 	return func(is []*terraform.InstanceState) error {
 		if len(is) != 1 {
 			return fmt.Errorf("Attribute '%s' expected 1 instance state, got %d", key, len(is))
 		}
 
 		rs := is[0]
-		if set && rs.Attributes[key] == "" {
-			return fmt.Errorf("Attribute '%s' expected to be set, got not set", key)
-		}
-
-		if !set && rs.Attributes[key] != "" {
-			return fmt.Errorf("Attribute '%s' expected to be not set, got set (%q)", key, rs.Attributes[key])
+		if rs.Attributes[key] == "" {
+			return fmt.Errorf("Attribute '%s' expected to be set, had no value", key)
 		}
 
 		return nil
