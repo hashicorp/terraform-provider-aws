@@ -12,10 +12,10 @@ require (
 	github.com/YakDriver/regexache v0.25.0
 	github.com/YakDriver/smarterr v0.8.0
 	github.com/aws/aws-sdk-go-v2 v1.39.6
-	github.com/aws/aws-sdk-go-v2/config v1.31.20
-	github.com/aws/aws-sdk-go-v2/credentials v1.18.24
+	github.com/aws/aws-sdk-go-v2/config v1.31.21
+	github.com/aws/aws-sdk-go-v2/credentials v1.18.25
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.13
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.7
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.8
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/account v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/acm v1.37.13
@@ -223,7 +223,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.26.12
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/rum v1.29.4
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.90.2
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.91.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.66.9
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.12.0
@@ -254,7 +254,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.36.8
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.43.4
-	github.com/aws/aws-sdk-go-v2/service/sts v1.40.2
+	github.com/aws/aws-sdk-go-v2/service/sts v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/swf v1.33.6
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.42.4
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.16.12
