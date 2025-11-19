@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/backup"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -88,7 +89,7 @@ func TestAccBackupLogicallyAirGappedVault_disappears(t *testing.T) {
 	})
 }
 
-func TestAccBackupLogicallyAirGappedVault_encryptionKeyArn(t *testing.T) {
+func TestAccBackupLogicallyAirGappedVault_encryptionKeyARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v backup.DescribeBackupVaultOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -106,10 +107,12 @@ func TestAccBackupLogicallyAirGappedVault_encryptionKeyArn(t *testing.T) {
 		CheckDestroy:             testAccCheckLogicallyAirGappedVaultDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogicallyAirGappedVaultConfig_encryptionKeyArn(rName),
+				Config: testAccLogicallyAirGappedVaultConfig_encryptionKeyARN(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("encryption_key_arn"), kmsKeyResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogicallyAirGappedVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -235,7 +238,7 @@ resource "aws_backup_logically_air_gapped_vault" "test" {
 `, rName)
 }
 
-func testAccLogicallyAirGappedVaultConfig_encryptionKeyArn(rName string) string {
+func testAccLogicallyAirGappedVaultConfig_encryptionKeyARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
