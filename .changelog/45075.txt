@@ -1,1 +1,1 @@
-resource/aws_bedrockagent_knowledge_base: Add support for `custom_metadata_field` in RDS storage configuration field mapping
+resource/aws_bedrockagent_knowledge_base: Add support for `storage_configuration.rds_configuration.field_mapping.custom_metadata_field` argument
