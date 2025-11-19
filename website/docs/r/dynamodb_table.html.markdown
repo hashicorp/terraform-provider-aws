@@ -108,9 +108,13 @@ resource "aws_dynamodb_table" "example" {
 
 A global table configured for Multi-Region strong consistency (MRSC) provides the ability to perform a strongly consistent read with multi-Region scope. Performing a strongly consistent read on an MRSC table ensures you're always reading the latest version of an item, irrespective of the Region in which you're performing the read.
 
+You can configure a MRSC global table with three replicas, or with two replicas and one witness. A witness is a component of a MRSC global table that contains data written to global table replicas, and provides an optional alternative to a full replica while supporting MRSC's availability architecture. You cannot perform read or write operations on a witness. A witness is located in a different Region than the two replicas.
+
 **Note** Please see detailed information, restrictions, caveats etc on the [AWS Support Page](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/multi-region-strong-consistency-gt.html).
 
-Consistency Mode (`consistency_mode`) is a new argument on the embedded `replica` that allows you to configure consistency mode for Global Tables.
+Consistency Mode (`consistency_mode`) on the embedded `replica` allows you to configure consistency mode for Global Tables.
+
+##### Consistency mode with 3 Replicas
 
 ```terraform
 resource "aws_dynamodb_table" "example" {
@@ -133,6 +137,32 @@ resource "aws_dynamodb_table" "example" {
   replica {
     region_name      = "us-west-2"
     consistency_mode = "STRONG"
+  }
+}
+```
+
+##### Consistency Mode with 2 Replicas and Witness Region
+
+```terraform
+resource "aws_dynamodb_table" "example" {
+  name             = "example"
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name      = "us-east-2"
+    consistency_mode = "STRONG"
+  }
+
+  global_table_witness {
+    region_name = "us-west-2"
   }
 }
 ```
@@ -213,6 +243,7 @@ The following arguments are optional:
 * `deletion_protection_enabled` - (Optional) Enables deletion protection for table. Defaults to `false`.
 * `import_table` - (Optional) Import Amazon S3 data into a new table. See below.
 * `global_secondary_index` - (Optional) Describe a GSI for the table; subject to the normal limits on the number of GSIs, projected attributes, etc. See below.
+* `global_table_witness` - (Optional) Witness Region in a Multi-Region Strong Consistency deployment. **Note** This must be used alongside a single `replica` with `consistency_mode` set to `STRONG`. Other combinations will fail to provision. See below.
 * `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table; these can only be allocated _at creation_ so you cannot change this definition after you have created the resource. See below.
 * `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand table. See below.
 * `point_in_time_recovery` - (Optional) Enable point-in-time recovery options. See below.
@@ -274,6 +305,10 @@ The following arguments are optional:
 * `read_capacity` - (Optional) Number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
 * `warm_throughput` - (Optional) Sets the number of warm read and write units for this index. See below.
 * `write_capacity` - (Optional) Number of write units for this index. Must be set if billing_mode is set to PROVISIONED.
+
+### `global_table_witness`
+
+* `region_name` - (Required) Name of the AWS Region that serves as a witness for the MRSC global table.
 
 ### `local_secondary_index`
 

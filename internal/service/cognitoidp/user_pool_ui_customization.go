@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -99,7 +99,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("image_file"); ok {
-		v, err := itypes.Base64Decode(v.(string))
+		v, err := inttypes.Base64Decode(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -197,7 +197,7 @@ func findUserPoolUICustomizationByTwoPartKey(ctx context.Context, conn *cognitoi
 
 	// The GetUICustomization API operation will return an empty struct
 	// if nothing is present rather than nil or an error, so we equate that with nil.
-	if output == nil || output.UICustomization == nil || itypes.IsZero(output.UICustomization) {
+	if output == nil || output.UICustomization == nil || inttypes.IsZero(output.UICustomization) {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

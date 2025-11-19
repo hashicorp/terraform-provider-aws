@@ -16,7 +16,7 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/shopspring/decimal"
 )
 
@@ -389,7 +389,7 @@ func StringToInt32Value(v *string) int32 {
 
 // StringValueToBase64String converts a string to a Go base64 string pointer.
 func StringValueToBase64String(v string) *string {
-	return aws.String(itypes.Base64EncodeOnce([]byte(v)))
+	return aws.String(inttypes.Base64EncodeOnce([]byte(v)))
 }
 
 // StringValueToInt64 converts a string to a Go int32 pointer.
