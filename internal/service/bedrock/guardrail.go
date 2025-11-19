@@ -161,7 +161,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 									},
 									"input_modalities": schema.ListAttribute{
 										Optional:    true,
-										CustomType:  fwtypes.ListOfStringType,
+										CustomType:  fwtypes.ListOfStringEnumType[awstypes.GuardrailModality](),
 										ElementType: types.StringType,
 										Validators: []validator.List{
 											listvalidator.SizeAtLeast(1),
@@ -180,7 +180,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 									},
 									"output_modalities": schema.ListAttribute{
 										Optional:    true,
-										CustomType:  fwtypes.ListOfStringType,
+										CustomType:  fwtypes.ListOfStringEnumType[awstypes.GuardrailModality](),
 										ElementType: types.StringType,
 										Validators: []validator.List{
 											listvalidator.SizeAtLeast(1),
@@ -831,11 +831,11 @@ type guardrailContentPolicyConfigModel struct {
 type guardrailContentFilterConfigModel struct {
 	InputAction      fwtypes.StringEnum[awstypes.GuardrailContentFilterAction] `tfsdk:"input_action"`
 	InputEnabled     types.Bool                                                `tfsdk:"input_enabled"`
-	InputModalities  fwtypes.ListOfString                                      `tfsdk:"input_modalities"`
+	InputModalities  fwtypes.ListOfStringEnum[awstypes.GuardrailModality]      `tfsdk:"input_modalities"`
 	InputStrength    fwtypes.StringEnum[awstypes.GuardrailFilterStrength]      `tfsdk:"input_strength"`
 	OutputAction     fwtypes.StringEnum[awstypes.GuardrailContentFilterAction] `tfsdk:"output_action"`
 	OutputEnabled    types.Bool                                                `tfsdk:"output_enabled"`
-	OutputModalities fwtypes.ListOfString                                      `tfsdk:"output_modalities"`
+	OutputModalities fwtypes.ListOfStringEnum[awstypes.GuardrailModality]      `tfsdk:"output_modalities"`
 	OutputStrength   fwtypes.StringEnum[awstypes.GuardrailFilterStrength]      `tfsdk:"output_strength"`
 	Type             fwtypes.StringEnum[awstypes.GuardrailContentFilterType]   `tfsdk:"type"`
 }
