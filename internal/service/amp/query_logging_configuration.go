@@ -9,12 +9,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -82,6 +84,9 @@ func (r *queryLoggingConfigurationResource) Schema(ctx context.Context, request 
 									"log_group_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										Validators: []validator.String{
+											stringvalidator.RegexMatches(regexache.MustCompile(`:\*$`), "ARN must end with `:*`"),
+										},
 									},
 								},
 							},

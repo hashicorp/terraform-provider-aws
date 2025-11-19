@@ -752,17 +752,22 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_read_write" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
 }
 
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = "aurora-postgresql"
+  engine_latest_version      = true
+  preferred_instance_classes = ["db.serverless"]
+}
+
 resource "aws_rds_cluster" "test" {
   cluster_identifier          = %[1]q
-  engine                      = "aurora-postgresql"
-  engine_mode                 = "provisioned"
-  engine_version              = "15.4"
-  database_name               = "test"
   master_username             = "test"
   manage_master_user_password = true
+  database_name               = "test"
+  skip_final_snapshot         = true
+  engine                      = data.aws_rds_orderable_db_instance.test.engine
+  engine_version              = data.aws_rds_orderable_db_instance.test.engine_version
   enable_http_endpoint        = true
   vpc_security_group_ids      = [aws_security_group.test.id]
-  skip_final_snapshot         = true
   db_subnet_group_name        = aws_db_subnet_group.test.name
 
   serverlessv2_scaling_configuration {
@@ -846,9 +851,10 @@ resource "null_resource" "db_setup" {
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_new;"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE ROLE bedrock_user WITH PASSWORD '$PGPASSWORD' LOGIN;"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "GRANT ALL ON SCHEMA bedrock_integration TO bedrock_user;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json);"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json, custom_metadata jsonb);"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING hnsw (embedding vector_cosine_ops);"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING gin (to_tsvector('simple', chunks));"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING gin (custom_metadata);"
     EOT
   }
 }
