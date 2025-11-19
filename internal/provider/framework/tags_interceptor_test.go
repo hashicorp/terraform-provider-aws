@@ -200,7 +200,7 @@ func Test_resourceValidateRequiredTagsInterceptor(t *testing.T) {
 			r.modifyPlan(ctx, tt.opts)
 
 			if !tt.opts.response.Diagnostics.Equal(tt.wantDiags) {
-				t.Errorf("response diagnotics not equal. got: %s want: %s", tt.opts.response.Diagnostics, tt.wantDiags)
+				t.Errorf("response diagnostics not equal. got: %s want: %s", tt.opts.response.Diagnostics, tt.wantDiags)
 			}
 		})
 	}
