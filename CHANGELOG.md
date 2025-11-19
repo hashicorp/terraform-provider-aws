@@ -1,5 +1,9 @@
 ## 6.22.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_s3_bucket_server_side_encryption_configuration: Starting in March 2026, Amazon S3 will introduce a new default bucket security setting by automatically disabling server-side encryption with customer-provided keys (SSE-C) for all new buckets. Use the `blocked_encryption_types` argument to manage this behavior for specific buckets. ([#45105](https://github.com/hashicorp/terraform-provider-aws/issues/45105))
+
 FEATURES:
 
 * **New Ephemeral Resource:** `aws_ecr_authorization_token` ([#44949](https://github.com/hashicorp/terraform-provider-aws/issues/44949))
@@ -25,6 +29,7 @@ ENHANCEMENTS:
 * resource/aws_organizations_organization: Add `SECURITYHUB_POLICY` as a valid value for `enabled_policy_types` argument ([#45135](https://github.com/hashicorp/terraform-provider-aws/issues/45135))
 * resource/aws_prometheus_query_logging_configuration: Add plan-time validation of `destination.cloudwatch_logs.log_group_arn` ([#35941](https://github.com/hashicorp/terraform-provider-aws/issues/35941))
 * resource/aws_prometheus_workspace: Add plan-time validation of `logging_configuration.log_group_arn` ([#35941](https://github.com/hashicorp/terraform-provider-aws/issues/35941))
+* resource/aws_s3_bucket_server_side_encryption_configuration: Add `rule.blocked_encryption_types` argument ([#45105](https://github.com/hashicorp/terraform-provider-aws/issues/45105))
 * resource/aws_sagemaker_model: Add `container.additional_model_data_source` and `primary_container.additional_model_data_source` arguments ([#44407](https://github.com/hashicorp/terraform-provider-aws/issues/44407))
 * resource/aws_sfn_state_machine: Add plan-time validation of `logging_configuration.log_destination` ([#35941](https://github.com/hashicorp/terraform-provider-aws/issues/35941))
 * resource/aws_timestreaminfluxdb_db_cluster: Add `engine_type` attribute ([#44899](https://github.com/hashicorp/terraform-provider-aws/issues/44899))
