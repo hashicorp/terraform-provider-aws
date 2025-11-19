@@ -48,7 +48,7 @@ func TestAccLambdaCapacityProvider_basic(t *testing.T) {
 				Config: testAccCapacityProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &capacityprovider),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`capacityprovider:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`capacity-provider:.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -56,8 +56,8 @@ func TestAccLambdaCapacityProvider_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -162,8 +162,10 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCapacityProviderConfig_base(policyName, roleName, sgName string) string {
-	return fmt.Sprintf(`
+func testAccCapacityProviderConfig_base(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
@@ -190,8 +192,11 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
         "ec2:DescribeNetworkInterfaces",
         "ec2:DeleteNetworkInterface",
         "ec2:AssignPrivateIpAddresses",
-        "ec2:UnassignPrivateIpAddresses"
-"lambda.*"
+        "ec2:UnassignPrivateIpAddresses",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeInstanceTypeOfferings",
+        "ec2:RunInstances"
       ],
       "Resource": [
         "*"
@@ -221,7 +226,7 @@ EOF
 }
 
 resource "aws_iam_role" "test" {
-  name = %[2]q
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -245,46 +250,28 @@ resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name = %[3]q
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "test" {
-  count = 2
-
-  vpc_id            = aws_vpc.vpc_for_lambda.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  cidr_block      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
-  ipv6_cidr_block = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
-
-  assign_ipv6_address_on_creation = true
-
-  tags = {
-    Name = %[3]q
-  }
-}
-
-# This is defined here, rather than only in test cases where it's needed is to
-# prevent a timeout issue when fully removing Lambda Filesystems
 resource "aws_subnet" "test" {
   count = 2
 
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[1]
 
-  cidr_block      = cidrsubnet(aws_vpc.test.cidr_block, 8, 2)
-  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
+  cidr_block      = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
 
   assign_ipv6_address_on_creation = true
 
   tags = {
-    Name = %[3]q
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = %[3]q
+  name        = %[1]q
   description = "Allow all inbound traffic for lambda test"
   vpc_id      = aws_vpc.test.id
 
@@ -303,10 +290,10 @@ resource "aws_security_group" "test" {
   }
 
   tags = {
-    Name = %[3]q
+    Name = %[1]q
   }
 }
-`, policyName, roleName, sgName)
+`, rName))
 }
 
 func testaccCapacityProvider_baseEC2(rName string) string {
@@ -364,20 +351,23 @@ resource "aws_iam_instance_profile" "test" {
 
 func testAccCapacityProviderConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCapacityProviderConfig_base(rName, rName, rName),
-		testaccCapacityProvider_baseEC2(rName),
+		testAccCapacityProviderConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lambda_capacity_provider" "test" {
   name = %[1]q
 
   vpc_config {
-    subnet_ids = aws_subnet.subnet_for_lambda.*.id
+    subnet_ids         = aws_subnet.test.*.id
+    security_group_ids = [aws_security_group.test.id]
   }
 
   permissions_config {
-    instance_profile_arn           = aws_iam_instance_profile.test.arn
-    capacity_provider_operator_arn = aws_iam_role.test.arn
+    capacity_provider_operator_role_arn = aws_iam_role.test.arn
   }
+
+  depends_on = [
+    aws_iam_role_policy.iam_policy_for_lambda
+  ]
 }
 `, rName))
 }

@@ -169,7 +169,7 @@ func (r *resourceCapacityProvider) Create(ctx context.Context, request resource.
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitCapacityProviderActive(ctx, conn, plan.ARN.ValueString(), createTimeout)
+	_, err = waitCapacityProviderActive(ctx, conn, plan.Name.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(names.AttrARN), plan.ARN.ValueString()))
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
@@ -188,7 +188,7 @@ func (r *resourceCapacityProvider) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	out, err := findCapacityProviderByARN(ctx, conn, state.ARN.ValueString())
+	out, err := findCapacityProviderByName(ctx, conn, state.Name.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -266,7 +266,7 @@ func (r *resourceCapacityProvider) Delete(ctx context.Context, request resource.
 	}
 
 	input := lambda.DeleteCapacityProviderInput{
-		CapacityProviderName: state.ARN.ValueStringPointer(),
+		CapacityProviderName: state.Name.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteCapacityProvider(ctx, &input)
@@ -280,7 +280,7 @@ func (r *resourceCapacityProvider) Delete(ctx context.Context, request resource.
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitCapacityProviderDeleted(ctx, conn, state.ARN.ValueString(), deleteTimeout)
+	_, err = waitCapacityProviderDeleted(ctx, conn, state.Name.ValueString(), deleteTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ARN.String())
 		return
@@ -288,7 +288,7 @@ func (r *resourceCapacityProvider) Delete(ctx context.Context, request resource.
 }
 
 func (r *resourceCapacityProvider) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
 func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
@@ -326,7 +326,7 @@ func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, id st
 
 func statusCapacityProvider(ctx context.Context, conn *lambda.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := findCapacityProviderByARN(ctx, conn, id)
+		out, err := findCapacityProviderByName(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -339,9 +339,9 @@ func statusCapacityProvider(ctx context.Context, conn *lambda.Client, id string)
 	}
 }
 
-func findCapacityProviderByARN(ctx context.Context, conn *lambda.Client, id string) (*awstypes.CapacityProvider, error) {
+func findCapacityProviderByName(ctx context.Context, conn *lambda.Client, name string) (*awstypes.CapacityProvider, error) {
 	input := lambda.GetCapacityProviderInput{
-		CapacityProviderName: aws.String(id),
+		CapacityProviderName: aws.String(name),
 	}
 
 	out, err := conn.GetCapacityProvider(ctx, &input)

@@ -19,7 +19,7 @@ var (
 	ResourceProvisionedConcurrencyConfig = resourceProvisionedConcurrencyConfig
 
 	FindAliasByTwoPartKey                        = findAliasByTwoPartKey
-	FindCapacityProviderByARN                    = findCapacityProviderByARN
+	FindCapacityProviderByARN                    = findCapacityProviderByName
 	FindCodeSigningConfigByARN                   = findCodeSigningConfigByARN
 	FindEventSourceMappingByID                   = findEventSourceMappingByID
 	FindFunctionByName                           = findFunctionByName
