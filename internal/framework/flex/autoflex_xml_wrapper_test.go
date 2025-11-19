@@ -49,18 +49,24 @@ import (
 
 // Test data types for Rule 1 XML wrappers
 type testXMLWrapperScalar struct {
-	Items    []string `autoflex:",xmlwrapper=Items"`
+	Items    []string
 	Quantity *int32
 }
 
 // Test int32 slice items (like StatusCodes)
 type testXMLWrapperInt32 struct {
-	Items    []int32 `autoflex:",xmlwrapper=Items"`
+	Items    []int32
+	Quantity *int32
+}
+
+// Test int64 slice items
+type testXMLWrapperInt64 struct {
+	Items    []int64
 	Quantity *int32
 }
 
 type testXMLWrapperStruct struct {
-	Items    []testStructItem `autoflex:",xmlwrapper=Items"`
+	Items    []testStructItem
 	Quantity *int32
 }
 
@@ -95,45 +101,81 @@ func TestExpandXMLWrapperRule1ScalarElements(t *testing.T) {
 				WantTarget: &awstypes.OriginSslProtocols{Items: []awstypes.SslProtocol{awstypes.SslProtocolTLSv12}, Quantity: aws.Int32(1)},
 			},
 		},
-		"TestXMLWrapperScalar": {
-			"null set": {
-				Source:     fwtypes.NewSetValueOfNull[types.String](ctx),
-				Target:     &testXMLWrapperScalar{},
-				WantTarget: &testXMLWrapperScalar{}, // AutoFlex currently creates empty struct, not nil
-			},
-			"empty set": {
-				Source:     fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{}),
-				Target:     &testXMLWrapperScalar{},
-				WantTarget: &testXMLWrapperScalar{Items: []string{}, Quantity: aws.Int32(0)},
-			},
-			"single item": {
-				Source: fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{
-					types.StringValue("item1"),
-				}),
-				Target:     &testXMLWrapperScalar{},
-				WantTarget: &testXMLWrapperScalar{Items: []string{"item1"}, Quantity: aws.Int32(1)},
-			},
-			"multiple items": {
-				Source: fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{
-					types.StringValue("item1"),
-					types.StringValue("item2"),
-				}),
-				Target:     &testXMLWrapperScalar{},
-				WantTarget: &testXMLWrapperScalar{Items: []string{"item1", "item2"}, Quantity: aws.Int32(2)},
-			},
-		},
-		"TestXMLWrapperInt32": {
-			"empty set": {
-				Source:     fwtypes.NewSetValueOfMust[types.Int32](ctx, []attr.Value{}),
-				Target:     &testXMLWrapperInt32{},
-				WantTarget: &testXMLWrapperInt32{Items: []int32{}, Quantity: aws.Int32(0)},
-			},
-			"single item": {
-				Source:     fwtypes.NewSetValueOfMust[types.Int32](ctx, []attr.Value{types.Int32Value(404)}),
-				Target:     &testXMLWrapperInt32{},
-				WantTarget: &testXMLWrapperInt32{Items: []int32{404}, Quantity: aws.Int32(1)},
-			},
-		},
+		"TestXMLWrapperScalar": func() autoFlexTestCases {
+			type tfModel struct {
+				Field fwtypes.SetValueOf[types.String] `tfsdk:"field" autoflex:",xmlwrapper=Items"`
+			}
+			type awsModel struct {
+				Field *testXMLWrapperScalar
+			}
+			return autoFlexTestCases{
+				"null set": {
+					Source:     &tfModel{Field: fwtypes.NewSetValueOfNull[types.String](ctx)},
+					Target:     &awsModel{},
+					WantTarget: &awsModel{Field: nil},
+				},
+				"empty set": {
+					Source:     &tfModel{Field: fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{})},
+					Target:     &awsModel{},
+					WantTarget: &awsModel{Field: &testXMLWrapperScalar{Items: []string{}, Quantity: aws.Int32(0)}},
+				},
+				"single item": {
+					Source: &tfModel{Field: fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{
+						types.StringValue("item1"),
+					})},
+					Target:     &awsModel{},
+					WantTarget: &awsModel{Field: &testXMLWrapperScalar{Items: []string{"item1"}, Quantity: aws.Int32(1)}},
+				},
+				"multiple items": {
+					Source: &tfModel{Field: fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{
+						types.StringValue("item1"),
+						types.StringValue("item2"),
+					})},
+					Target:     &awsModel{},
+					WantTarget: &awsModel{Field: &testXMLWrapperScalar{Items: []string{"item1", "item2"}, Quantity: aws.Int32(2)}},
+				},
+			}
+		}(),
+		"TestXMLWrapperInt32": func() autoFlexTestCases {
+			type tfModel struct {
+				Field fwtypes.SetValueOf[types.Int32] `tfsdk:"field" autoflex:",xmlwrapper=Items"`
+			}
+			type awsModel struct {
+				Field *testXMLWrapperInt32
+			}
+			return autoFlexTestCases{
+				"empty set": {
+					Source:     &tfModel{Field: fwtypes.NewSetValueOfMust[types.Int32](ctx, []attr.Value{})},
+					Target:     &awsModel{},
+					WantTarget: &awsModel{Field: &testXMLWrapperInt32{Items: []int32{}, Quantity: aws.Int32(0)}},
+				},
+				"single item": {
+					Source:     &tfModel{Field: fwtypes.NewSetValueOfMust[types.Int32](ctx, []attr.Value{types.Int32Value(404)})},
+					Target:     &awsModel{},
+					WantTarget: &awsModel{Field: &testXMLWrapperInt32{Items: []int32{404}, Quantity: aws.Int32(1)}},
+				},
+			}
+		}(),
+		"TestXMLWrapperInt64": func() autoFlexTestCases {
+			type tfModel struct {
+				Field fwtypes.SetValueOf[types.Int64] `tfsdk:"field" autoflex:",xmlwrapper=Items"`
+			}
+			type awsModel struct {
+				Field *testXMLWrapperInt64
+			}
+			return autoFlexTestCases{
+				"empty set": {
+					Source:     &tfModel{Field: fwtypes.NewSetValueOfMust[types.Int64](ctx, []attr.Value{})},
+					Target:     &awsModel{},
+					WantTarget: &awsModel{Field: &testXMLWrapperInt64{Items: []int64{}, Quantity: aws.Int32(0)}},
+				},
+				"single item": {
+					Source:     &tfModel{Field: fwtypes.NewSetValueOfMust[types.Int64](ctx, []attr.Value{types.Int64Value(12345)})},
+					Target:     &awsModel{},
+					WantTarget: &awsModel{Field: &testXMLWrapperInt64{Items: []int64{12345}, Quantity: aws.Int32(1)}},
+				},
+			}
+		}(),
 	}
 
 	for testName, cases := range testCases {
@@ -155,27 +197,34 @@ func TestExpandXMLWrapperRule1StructElements(t *testing.T) {
 
 	ctx := context.Background()
 
+	type tfModel struct {
+		Field fwtypes.SetNestedObjectValueOf[testStructItemModel] `tfsdk:"field" autoflex:",xmlwrapper=Items"`
+	}
+	type awsModel struct {
+		Field *testXMLWrapperStruct
+	}
+
 	testCases := map[string]autoFlexTestCases{
 		"TestXMLWrapperStruct": {
 			"null set": {
-				Source:     fwtypes.NewSetNestedObjectValueOfNull[testStructItemModel](ctx),
-				Target:     &testXMLWrapperStruct{},
-				WantTarget: &testXMLWrapperStruct{}, // AutoFlex currently creates empty struct, not nil
+				Source:     &tfModel{Field: fwtypes.NewSetNestedObjectValueOfNull[testStructItemModel](ctx)},
+				Target:     &awsModel{},
+				WantTarget: &awsModel{Field: nil},
 			},
 			"empty set": {
-				Source:     fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{}),
-				Target:     &testXMLWrapperStruct{},
-				WantTarget: &testXMLWrapperStruct{Items: []testStructItem{}, Quantity: aws.Int32(0)},
+				Source:     &tfModel{Field: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{})},
+				Target:     &awsModel{},
+				WantTarget: &awsModel{Field: &testXMLWrapperStruct{Items: []testStructItem{}, Quantity: aws.Int32(0)}},
 			},
 			"single item": {
-				Source: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{
+				Source: &tfModel{Field: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{
 					{
 						Name:  types.StringValue("test"),
 						Value: types.Int32Value(42),
 					},
-				}),
-				Target: &testXMLWrapperStruct{},
-				WantTarget: &testXMLWrapperStruct{
+				})},
+				Target: &awsModel{},
+				WantTarget: &awsModel{Field: &testXMLWrapperStruct{
 					Items: []testStructItem{
 						{
 							Name:  aws.String("test"),
@@ -183,7 +232,7 @@ func TestExpandXMLWrapperRule1StructElements(t *testing.T) {
 						},
 					},
 					Quantity: aws.Int32(1),
-				},
+				}},
 			},
 		},
 	}
@@ -425,44 +474,54 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 
 	ctx := context.Background()
 
+	type tfModel struct {
+		Field fwtypes.ListNestedObjectValueOf[testRule2Model] `tfsdk:"field" autoflex:",xmlwrapper=Items"`
+	}
+	type awsModel struct {
+		Field *testXMLWrapperRule2
+	}
+	type awsModelDifferentOrder struct {
+		Field *testXMLWrapperRule2DifferentOrder
+	}
+
 	testCases := map[string]autoFlexTestCases{
 		"TestXMLWrapperRule2": {
 			"null block": {
-				Source:     fwtypes.NewListNestedObjectValueOfNull[testRule2Model](ctx),
-				Target:     &testXMLWrapperRule2{},
-				WantTarget: &testXMLWrapperRule2{}, // AutoFlex currently creates empty struct, not nil
+				Source:     &tfModel{Field: fwtypes.NewListNestedObjectValueOfNull[testRule2Model](ctx)},
+				Target:     &awsModel{},
+				WantTarget: &awsModel{Field: nil},
 			},
 			"empty items, enabled false": {
-				Source: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
 					{
 						Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{}),
 						Enabled: types.BoolValue(false),
 					},
-				}),
-				Target:     &testXMLWrapperRule2{},
-				WantTarget: &testXMLWrapperRule2{Items: []string{}, Quantity: aws.Int32(0), Enabled: aws.Bool(false)},
+				})},
+				Target:     &awsModel{},
+				WantTarget: &awsModel{Field: &testXMLWrapperRule2{Items: []string{}, Quantity: aws.Int32(0), Enabled: aws.Bool(false)}},
 			},
 			"with items, enabled true": {
-				Source: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
 					{
 						Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("item1")}),
 						Enabled: types.BoolValue(true),
 					},
-				}),
-				Target:     &testXMLWrapperRule2{},
-				WantTarget: &testXMLWrapperRule2{Items: []string{"item1"}, Quantity: aws.Int32(1), Enabled: aws.Bool(true)},
+				})},
+				Target:     &awsModel{},
+				WantTarget: &awsModel{Field: &testXMLWrapperRule2{Items: []string{"item1"}, Quantity: aws.Int32(1), Enabled: aws.Bool(true)}},
 			},
 		},
 		"TestXMLWrapperRule2DifferentOrder": {
 			"different field order": {
-				Source: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
 					{
 						Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("item1")}),
 						Enabled: types.BoolValue(true),
 					},
-				}),
-				Target:     &testXMLWrapperRule2DifferentOrder{},
-				WantTarget: &testXMLWrapperRule2DifferentOrder{Items: []string{"item1"}, Quantity: aws.Int32(1), Enabled: aws.Bool(true)},
+				})},
+				Target:     &awsModelDifferentOrder{},
+				WantTarget: &awsModelDifferentOrder{Field: &testXMLWrapperRule2DifferentOrder{Items: []string{"item1"}, Quantity: aws.Int32(1), Enabled: aws.Bool(true)}},
 			},
 		},
 	}
@@ -504,14 +563,8 @@ func TestFlattenXMLWrapperRule2(t *testing.T) {
 					XMLWrapper: &testXMLWrapperRule2{Items: []string{}, Quantity: aws.Int32(0), Enabled: aws.Bool(false)},
 				},
 				Target: &targetStruct{},
-				WantTarget: &targetStruct{
-					XMLWrapper: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
-						{
-							Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{}),
-							Enabled: types.BoolValue(false),
-						},
-					}),
-				},
+				// Empty state (Enabled=false, Items=[]) should flatten to null per Rule 2
+				WantTarget: &targetStruct{XMLWrapper: fwtypes.NewListNestedObjectValueOfNull[testRule2Model](ctx)},
 			},
 		},
 	}
@@ -663,7 +716,7 @@ func TestFlattenXMLWrapperRule1ComplexStructItems(t *testing.T) {
 	}
 
 	type tfDistributionModel struct {
-		Origin  fwtypes.SetNestedObjectValueOf[tfOriginModel] `tfsdk:"origin"`
+		Origin  fwtypes.SetNestedObjectValueOf[tfOriginModel] `tfsdk:"origin" autoflex:",xmlwrapper=Items"`
 		Comment types.String                                  `tfsdk:"comment"`
 	}
 

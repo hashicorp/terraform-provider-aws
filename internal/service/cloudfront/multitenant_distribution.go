@@ -272,7 +272,6 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.ViewerProtocolPolicy](),
 						},
-						// Note: smooth_streaming and trusted_signers removed - not supported for multi-tenant distributions
 					},
 					Blocks: map[string]schema.Block{
 						"allowed_methods": schema.ListNestedBlock{
@@ -344,7 +343,6 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 								},
 							},
 						},
-						// Note: trusted_signers removed - not supported for multi-tenant distributions
 					},
 				},
 			},
@@ -381,7 +379,6 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"target_origin_id": schema.StringAttribute{
 							Required: true,
 						},
-						// Note: smooth_streaming removed - not supported for multi-tenant distributions
 						"viewer_protocol_policy": schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.ViewerProtocolPolicy](),
@@ -457,7 +454,6 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 								},
 							},
 						},
-						// Note: trusted_signers removed - not supported for multi-tenant distributions
 					},
 				},
 			},

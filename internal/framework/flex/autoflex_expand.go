@@ -696,6 +696,21 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWi
 				return diags
 			}
 		}
+
+	case reflect.Pointer:
+		switch tElem := vTo.Type().Elem(); tElem.Kind() {
+		case reflect.Struct:
+			// Check if target is a pointer to an XML wrapper struct
+			if isXMLWrapperStruct(tElem) {
+				// Create new instance of the XML wrapper struct
+				newStruct := reflect.New(tElem).Elem()
+				diags.Append(expander.xmlWrapper(ctx, vFrom, newStruct, xmlWrapperFieldItems)...)
+				if !diags.HasError() {
+					vTo.Set(newStruct.Addr())
+				}
+				return diags
+			}
+		}
 	}
 
 	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
@@ -787,10 +802,17 @@ func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueW
 }
 
 // listOrSetOfInt32 copies a Plugin Framework ListOfInt32(ish) or SetOfInt32(ish) value to a compatible AWS API value.
-func (expander autoExpander) listOrSetOfInt32(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) listOrSetOfInt32(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
+	case reflect.Struct:
+		// Check if target is an XML wrapper struct
+		if fieldOpts.xmlWrapper && isXMLWrapperStruct(vTo.Type()) {
+			diags.Append(expander.xmlWrapper(ctx, vFrom, vTo, xmlWrapperFieldItems)...)
+			return diags
+		}
+
 	case reflect.Slice:
 		switch tSliceElem := vTo.Type().Elem(); tSliceElem.Kind() {
 		case reflect.Int32:
@@ -825,6 +847,21 @@ func (expander autoExpander) listOrSetOfInt32(ctx context.Context, vFrom valueWi
 				}
 
 				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+		}
+
+	case reflect.Pointer:
+		switch tElem := vTo.Type().Elem(); tElem.Kind() {
+		case reflect.Struct:
+			// Check if target is a pointer to an XML wrapper struct
+			if isXMLWrapperStruct(tElem) {
+				// Create new instance of the XML wrapper struct
+				newStruct := reflect.New(tElem).Elem()
+				diags.Append(expander.xmlWrapper(ctx, vFrom, newStruct, xmlWrapperFieldItems)...)
+				if !diags.HasError() {
+					vTo.Set(newStruct.Addr())
+				}
 				return diags
 			}
 		}
@@ -981,7 +1018,7 @@ func (expander autoExpander) set(ctx context.Context, sourcePath path.Path, vFro
 		return diags
 
 	case basetypes.Int32Typable:
-		diags.Append(expander.listOrSetOfInt32(ctx, v, vTo)...)
+		diags.Append(expander.listOrSetOfInt32(ctx, v, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.StringTypable:
