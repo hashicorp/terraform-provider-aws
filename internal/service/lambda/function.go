@@ -923,6 +923,12 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			FunctionName: aws.String(d.Id()),
 		}
 
+		if d.HasChange("capacity_provider_config") {
+			if v, ok := d.GetOk("capacity_provider_config"); ok {
+				input.CapacityProviderConfig = expandCapacityProviderConfig(v.([]any))
+			}
+		}
+
 		if d.HasChange("dead_letter_config") {
 			if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]any)) > 0 {
 				if v.([]any)[0] == nil {
@@ -1625,7 +1631,8 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
 		d.HasChange(names.AttrEnvironment) ||
-		d.HasChange("ephemeral_storage")
+		d.HasChange("ephemeral_storage") ||
+		d.HasChange("capacity_provider_config")
 }
 
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.

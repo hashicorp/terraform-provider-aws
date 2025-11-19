@@ -292,6 +292,29 @@ func (r *resourceCapacityProvider) ImportState(ctx context.Context, request reso
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
+func (r *resourceCapacityProvider) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data resourceCapacityProviderModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !data.InstanceRequirements.IsNull() || !data.InstanceRequirements.IsUnknown() {
+		ir, d := data.InstanceRequirements.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if ir != nil {
+			if ir.Architectures.IsNull() {
+				smerr.AddError(ctx, &response.Diagnostics, errors.New("architectures must be specified when instance_requirements is configured"), smerr.ID)
+				return
+			}
+		}
+	}
+}
+
 func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.CapacityProviderStatePending),
@@ -311,10 +334,12 @@ func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, id str
 
 func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending: enum.Slice(awstypes.CapacityProviderStatePending, awstypes.CapacityProviderStateDeleting),
-		Target:  []string{},
-		Refresh: statusCapacityProvider(ctx, conn, id),
-		Timeout: timeout,
+		Pending:                   enum.Slice(awstypes.CapacityProviderStatePending, awstypes.CapacityProviderStateDeleting),
+		Target:                    []string{},
+		Refresh:                   statusCapacityProvider(ctx, conn, id),
+		Timeout:                   timeout,
+		Delay:                     time.Second * 5,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
