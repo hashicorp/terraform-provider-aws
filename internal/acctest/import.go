@@ -36,7 +36,7 @@ func ImportCheckResourceAttr(key, expected string) resource.ImportStateCheckFunc
 
 		rs := is[0]
 		if rs.Attributes[key] != expected {
-			return fmt.Errorf("Attribute '%s' expected %s, got %s", key, expected, rs.Attributes[key])
+			return fmt.Errorf("Attribute '%s' expected %q, got %q", key, expected, rs.Attributes[key])
 		}
 		return nil
 	}
@@ -68,7 +68,7 @@ func ImportCheckResourceAttrSet(key string, set bool) resource.ImportStateCheckF
 		}
 
 		if !set && rs.Attributes[key] != "" {
-			return fmt.Errorf("Attribute '%s' expected to be not set, got set (%s)", key, rs.Attributes[key])
+			return fmt.Errorf("Attribute '%s' expected to be not set, got set (%q)", key, rs.Attributes[key])
 		}
 
 		return nil
