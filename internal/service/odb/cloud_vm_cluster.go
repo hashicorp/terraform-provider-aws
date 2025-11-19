@@ -464,29 +464,56 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().ODBClient(ctx)
-	var plan cloudVmClusterResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+func (r *resourceCloudVmCluster) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data cloudVmClusterResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	//Neither is present
-	if !plan.isNetworkARNAndExadataInfraARNPresent() && !plan.isNetworkIdAndExadataInfraIdPresent() {
+	if !data.isNetworkARNAndExadataInfraARNPresent() && !data.isNetworkIdAndExadataInfraIdPresent() {
 		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. neither is present")
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, plan.DisplayName.ValueString(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	//Both are present
-	if plan.isNetworkARNAndExadataInfraARNPresent() && plan.isNetworkIdAndExadataInfraIdPresent() {
+	if data.isNetworkARNAndExadataInfraARNPresent() && data.isNetworkIdAndExadataInfraIdPresent() {
 		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. both are present")
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, plan.DisplayName.ValueString(), err),
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
 			err.Error(),
 		)
+		return
+	}
+	// both exadata infra id and ARN present
+	if data.isExadataInfraARNAndIdPresent() {
+		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. exadata infrastructure id and ARN present")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	// both odb network infra and ARN present
+	if data.isNetworkARNAndIdPresent() {
+		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. odb network id and ARN ")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
+func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().ODBClient(ctx)
+	var plan cloudVmClusterResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 	odbNetwork := plan.OdbNetworkId
@@ -855,6 +882,15 @@ type cloudVMCDbIormConfigResourceModel struct {
 func (r cloudVmClusterResourceModel) isNetworkIdAndExadataInfraIdPresent() bool {
 	return !r.OdbNetworkId.IsNull() && !r.OdbNetworkId.IsUnknown() && !r.CloudExadataInfrastructureId.IsNull() && !r.CloudExadataInfrastructureId.IsUnknown()
 }
+
 func (r cloudVmClusterResourceModel) isNetworkARNAndExadataInfraARNPresent() bool {
 	return !r.OdbNetworkArn.IsNull() && !r.OdbNetworkArn.IsUnknown() && !r.CloudExadataInfrastructureArn.IsNull() && !r.CloudExadataInfrastructureArn.IsUnknown()
+}
+
+func (r cloudVmClusterResourceModel) isNetworkARNAndIdPresent() bool {
+	return (!r.OdbNetworkId.IsNull() && !r.OdbNetworkId.IsUnknown()) && (!r.OdbNetworkArn.IsNull() && !r.OdbNetworkArn.IsUnknown())
+}
+
+func (r cloudVmClusterResourceModel) isExadataInfraARNAndIdPresent() bool {
+	return (!r.CloudExadataInfrastructureId.IsNull() && !r.CloudExadataInfrastructureId.IsUnknown()) && (!r.CloudExadataInfrastructureArn.IsNull() && !r.CloudExadataInfrastructureArn.IsUnknown())
 }
