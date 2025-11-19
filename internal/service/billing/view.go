@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -66,16 +65,10 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"billing_view_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.BillingViewType](),
 				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"derived_view_count": schema.Int32Attribute{
 				Computed: true,
@@ -90,15 +83,9 @@ func (r *resourceView) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			names.AttrOwnerAccountID: schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"source_account_id": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"source_view_count": schema.Int32Attribute{
 				Computed: true,
@@ -277,13 +264,6 @@ func (r *resourceView) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 	state.SourceViews = flex.FlattenFrameworkStringValueListOfString(ctx, sourceViews)
 
-	resourceTags, err := findResourceTagsByARN(ctx, conn, state.ARN.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
-		return
-	}
-	setTagsOut(ctx, resourceTags)
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -409,7 +389,7 @@ func findSourceViewsByARN(ctx context.Context, conn *billing.Client, arn string)
 	for sourceViewsPag.HasMorePages() {
 		sourceView, err := sourceViewsPag.NextPage(ctx)
 		if err != nil {
-			tflog.Error(ctx, "Error listing source views for billing view", map[string]any{
+			tflog.Error(ctx, "Listing source views for billing view", map[string]any{
 				names.AttrARN: arn,
 				"error":       err.Error(),
 			})
@@ -420,22 +400,6 @@ func findSourceViewsByARN(ctx context.Context, conn *billing.Client, arn string)
 	}
 
 	return sourceViews, nil
-}
-
-func findResourceTagsByARN(ctx context.Context, conn *billing.Client, arn string) ([]awstypes.ResourceTag, error) {
-	input := billing.ListTagsForResourceInput{
-		ResourceArn: aws.String(arn),
-	}
-	out, err := conn.ListTagsForResource(ctx, &input)
-	if err != nil {
-		tflog.Error(ctx, "Error listing resource tags for billing view", map[string]any{
-			names.AttrARN: arn,
-			"error":       err.Error(),
-		})
-		return nil, err
-	}
-
-	return out.ResourceTags, nil
 }
 
 func statusView(conn *billing.Client, arn string) retry.StateRefreshFunc {
@@ -506,23 +470,22 @@ func waitViewDeleted(ctx context.Context, conn *billing.Client, arn string, time
 }
 
 type resourceViewModel struct {
-	ARN                  types.String                                               `tfsdk:"arn"`
-	BillingViewType      fwtypes.StringEnum[awstypes.BillingViewType]               `tfsdk:"billing_view_type"`
-	CreatedAt            timetypes.RFC3339                                          `tfsdk:"created_at"`
-	DataFilterExpression fwtypes.ListNestedObjectValueOf[dataFilterExpressionModel] `tfsdk:"data_filter_expression"`
-	DerivedViewCount     types.Int32                                                `tfsdk:"derived_view_count"`
-	Description          types.String                                               `tfsdk:"description"`
-
-	Name                        types.String         `tfsdk:"name"`
-	OwnerAccountId              types.String         `tfsdk:"owner_account_id"`
-	Tags                        tftags.Map           `tfsdk:"tags"`
-	TagsAll                     tftags.Map           `tfsdk:"tags_all"`
-	SourceAccountId             types.String         `tfsdk:"source_account_id"`
-	SourceViewCount             types.Int32          `tfsdk:"source_view_count"`
-	SourceViews                 fwtypes.ListOfString `tfsdk:"source_views"`
-	Timeouts                    timeouts.Value       `tfsdk:"timeouts"`
-	UpdatedAt                   timetypes.RFC3339    `tfsdk:"updated_at"`
-	ViewDefinitionLastUpdatedAt timetypes.RFC3339    `tfsdk:"view_definition_last_updated_at"`
+	ARN                         types.String                                               `tfsdk:"arn"`
+	BillingViewType             fwtypes.StringEnum[awstypes.BillingViewType]               `tfsdk:"billing_view_type"`
+	CreatedAt                   timetypes.RFC3339                                          `tfsdk:"created_at"`
+	DataFilterExpression        fwtypes.ListNestedObjectValueOf[dataFilterExpressionModel] `tfsdk:"data_filter_expression"`
+	DerivedViewCount            types.Int32                                                `tfsdk:"derived_view_count"`
+	Description                 types.String                                               `tfsdk:"description"`
+	Name                        types.String                                               `tfsdk:"name"`
+	OwnerAccountId              types.String                                               `tfsdk:"owner_account_id"`
+	Tags                        tftags.Map                                                 `tfsdk:"tags"`
+	TagsAll                     tftags.Map                                                 `tfsdk:"tags_all"`
+	SourceAccountId             types.String                                               `tfsdk:"source_account_id"`
+	SourceViewCount             types.Int32                                                `tfsdk:"source_view_count"`
+	SourceViews                 fwtypes.ListOfString                                       `tfsdk:"source_views"`
+	Timeouts                    timeouts.Value                                             `tfsdk:"timeouts"`
+	UpdatedAt                   timetypes.RFC3339                                          `tfsdk:"updated_at"`
+	ViewDefinitionLastUpdatedAt timetypes.RFC3339                                          `tfsdk:"view_definition_last_updated_at"`
 }
 
 type dataFilterExpressionModel struct {

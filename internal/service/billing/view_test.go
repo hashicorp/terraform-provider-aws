@@ -45,6 +45,8 @@ func TestAccBillingView_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description"),
 					acctest.CheckResourceAttrContains(resourceName, names.AttrARN, "billingview/custom-"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -131,6 +133,61 @@ func TestAccBillingView_disappears(t *testing.T) {
 	})
 }
 
+func TestAccBillingView_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var view1, view2, view3 awstypes.BillingViewElement
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_billing_view.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BillingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccViewConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, resourceName, &view1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccViewConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, resourceName, &view2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccViewConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, resourceName, &view3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BillingClient(ctx)
@@ -142,7 +199,7 @@ func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			arn := rs.Primary.Attributes[names.AttrARN]
 			if arn == "" {
-				return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, rs.Primary.ID, errors.New("no ARN is set"))
+				return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, arn, errors.New("no ARN is set"))
 			}
 
 			_, err := tfbilling.FindViewByARN(ctx, conn, arn)
@@ -150,10 +207,10 @@ func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.Billing, create.ErrActionCheckingDestroyed, tfbilling.ResNameView, rs.Primary.ID, err)
+				return create.Error(names.Billing, create.ErrActionCheckingDestroyed, tfbilling.ResNameView, arn, err)
 			}
 
-			return create.Error(names.Billing, create.ErrActionCheckingDestroyed, tfbilling.ResNameView, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.Billing, create.ErrActionCheckingDestroyed, tfbilling.ResNameView, arn, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -171,12 +228,12 @@ func testAccCheckViewExists(ctx context.Context, name string, view *awstypes.Bil
 
 		arn := rs.Primary.Attributes[names.AttrARN]
 		if arn == "" {
-			return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, rs.Primary.ID, errors.New("no ARN is set"))
+			return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, arn, errors.New("no ARN is set"))
 		}
 
 		resp, err := tfbilling.FindViewByARN(ctx, conn, arn)
 		if err != nil {
-			return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, rs.Primary.ID, err)
+			return create.Error(names.Billing, create.ErrActionCheckingExistence, tfbilling.ResNameView, arn, err)
 		}
 
 		*view = *resp
@@ -225,4 +282,33 @@ resource "aws_billing_view" "test" {
   source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
 }
 `, rName, description))
+}
+
+func testAccViewConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
+resource "aws_billing_view" "test" {
+  name         = %[1]q
+  description  = "Test description"
+  source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccViewConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
+resource "aws_billing_view" "test" {
+  name         = %[1]q
+  description  = "Test description"
+  source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
+
+  tags = {
+    %[2]q = %[3]q
+	%[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

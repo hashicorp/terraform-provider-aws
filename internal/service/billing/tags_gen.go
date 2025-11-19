@@ -4,11 +4,50 @@ package billing
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/billing"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/billing/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// listTags lists billing service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func listTags(ctx context.Context, conn *billing.Client, identifier string, optFns ...func(*billing.Options)) (tftags.KeyValueTags, error) {
+	input := billing.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
+
+	if err != nil {
+		return tftags.New(ctx, nil), smarterr.NewError(err)
+	}
+
+	return keyValueTags(ctx, output.ResourceTags), nil
+}
+
+// ListTags lists billing service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).BillingClient(ctx), identifier)
+
+	if err != nil {
+		return smarterr.NewError(err)
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
+}
 
 // []*SERVICE.Tag handling
 
@@ -56,4 +95,52 @@ func setTagsOut(ctx context.Context, tags []awstypes.ResourceTag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
+}
+
+// updateTags updates billing service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func updateTags(ctx context.Context, conn *billing.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*billing.Options)) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Billing)
+	if len(removedTags) > 0 {
+		input := billing.UntagResourceInput{
+			ResourceArn:     aws.String(identifier),
+			ResourceTagKeys: removedTags.Keys(),
+		}
+
+		_, err := conn.UntagResource(ctx, &input, optFns...)
+
+		if err != nil {
+			return smarterr.NewError(err)
+		}
+	}
+
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Billing)
+	if len(updatedTags) > 0 {
+		input := billing.TagResourceInput{
+			ResourceArn:  aws.String(identifier),
+			ResourceTags: svcTags(updatedTags),
+		}
+
+		_, err := conn.TagResource(ctx, &input, optFns...)
+
+		if err != nil {
+			return smarterr.NewError(err)
+		}
+	}
+
+	return nil
+}
+
+// UpdateTags updates billing service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return updateTags(ctx, meta.(*conns.AWSClient).BillingClient(ctx), identifier, oldTags, newTags)
 }

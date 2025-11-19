@@ -39,30 +39,30 @@ The following arguments are optional:
 
 A `data-filter-expression` block supports the following:
 
-* `dimensions` - (Optional) The specific `dimension` to use for `expression`. Refer to [#dimensions](#dimensions) for more details.
-* `tags` - (Optional) The specific `tag` to use for `expression`. Refer to [#tags](#tags) for more details.
-* `time_range` - (Optional) The specific `time_range` to use for `expression`. Refer to [#time-range](#time-range) for more details.
+* `dimensions` - (Optional) Dimension to use for `expression`. Refer to [#dimensions](#dimensions) for more details.
+* `tags` - (Optional) Tags to use for `expression`. Refer to [#tags](#tags) for more details.
+* `time_range` - (Optional) Time range to use for `expression`. Refer to [#time-range](#time-range) for more details.
 
 #### dimensions
 
 A `dimensions` block supports the following:
 
-* `key` - (Required) The key of the dimension. Possible values are `LINKED_ACCOUNT`.
-* `values` - (Required) A list of metadata values that you can use to filter and group your results.
+* `key` - (Required) Key of the dimension. Possible values are `LINKED_ACCOUNT`.
+* `values` - (Required) List of metadata values that you can use to filter and group your results.
 
 #### tags
 
 A `tags` block supports the following:
 
-* `key` - (Required) The key of the tag.
-* `values` - (Required) A list of values for the tag.
+* `key` - (Required) Key of the tag.
+* `values` - (Required) List of values for the tag.
 
 #### time-range
 
 A `time_range` block supports the following:
 
-* `begin_date_inclusive` - (Required) The inclusive start date of the time range.
-* `begin_date_inclusive` - (Required) The inclusive end date of the time range.
+* `begin_date_inclusive` - (Required) Inclusive start date of the time range.
+* `begin_date_inclusive` - (Required) Inclusive end date of the time range.
 
 ## Attribute Reference
 
