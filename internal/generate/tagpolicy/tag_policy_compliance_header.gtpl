@@ -141,7 +141,7 @@ resource "aws_cloudwatch_log_group" "example" {
   name = "required-tags-demo"
 
   tags = {
-     Owner = "foo"
+    Owner = "foo"
   }
 }
 ```
