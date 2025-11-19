@@ -301,7 +301,6 @@ func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context,
 		// Only run validation during resource creation or when tags are modified
 		if isCreate || hasTagsChange {
 			if policy := c.TagPolicyConfig(ctx); policy != nil {
-
 				// Verify required tags are present
 				if reqTags, ok := policy.RequiredTags[typeName]; ok {
 					if !allPlanTags.ContainsAllKeys(reqTags) {
