@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
@@ -171,7 +171,7 @@ func resourceSubnet() *schema.Resource {
 }
 
 // @SDKListResource("aws_subnet")
-func subnetResourceAsListResource() itypes.ListResourceForSDK {
+func subnetResourceAsListResource() inttypes.ListResourceForSDK {
 	l := subnetListResource{}
 	l.SetResourceSchema(resourceSubnet())
 

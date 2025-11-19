@@ -45,7 +45,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
@@ -1061,5 +1061,5 @@ func md5Reader(src io.Reader) (string, error) {
 		return "", err
 	}
 
-	return itypes.Base64Encode(h.Sum(nil)), nil
+	return inttypes.Base64Encode(h.Sum(nil)), nil
 }
