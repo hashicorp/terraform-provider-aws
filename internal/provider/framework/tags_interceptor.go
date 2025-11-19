@@ -273,7 +273,7 @@ type resourceValidateRequiredTagsInterceptor struct{}
 func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context, opts interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]) {
 	c := opts.c
 
-	_, _, _, typeName, _, ok := interceptors.InfoFromContext(ctx, c)
+	_, _, _, typeName, _, ok := interceptors.InfoFromContext(ctx, c) //nolint:dogsled // legitimate use as-is, signature to be refactored
 	if !ok {
 		return
 	}
