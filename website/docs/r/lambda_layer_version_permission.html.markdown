@@ -117,17 +117,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Layer Permissions using `layer_name` and `version_number`, separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Layer Permissions using `layer_name`, `version_number` and `statement_id`, separated by a comma (`,`). For example:
 
 ```terraform
 import {
   to = aws_lambda_layer_version_permission.example
-  id = "arn:aws:lambda:us-west-2:123456789012:layer:shared_utilities,1"
+  id = "arn:aws:lambda:us-west-2:123456789012:layer:shared_utilities,1,statement1"
 }
 ```
 
 For backwards compatibility, the following legacy `terraform import` command is also supported:
 
 ```console
-% terraform import aws_lambda_layer_version_permission.example arn:aws:lambda:us-west-2:123456789012:layer:shared_utilities,1
+% terraform import aws_lambda_layer_version_permission.example arn:aws:lambda:us-west-2:123456789012:layer:shared_utilities,1,statement1
 ```

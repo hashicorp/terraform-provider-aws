@@ -24,7 +24,7 @@ var (
 	FindFunctionEventInvokeConfigByTwoPartKey    = findFunctionEventInvokeConfigByTwoPartKey
 	FindFunctionRecursionConfigByName            = findFunctionRecursionConfigByName
 	FindFunctionURLByTwoPartKey                  = findFunctionURLByTwoPartKey
-	FindLayerVersionByTwoPartKey                 = findLayerVersionByTwoPartKey
+	FindLayerVersionPermissionByThreePartKey     = findLayerVersionPermissionByThreePartKey
 	FindLayerVersionPolicyByTwoPartKey           = findLayerVersionPolicyByTwoPartKey
 	FindPolicyStatementByTwoPartKey              = findPolicyStatementByTwoPartKey
 	FindProvisionedConcurrencyConfigByTwoPartKey = findProvisionedConcurrencyConfigByTwoPartKey

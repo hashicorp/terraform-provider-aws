@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_lambda_layer_version_permission: Fix wrong permissions being read into state file during refresh
+```
+```release-note:breaking-change
+resource/aws_lambda_layer_version_permission: Import syntax adjusted to contain statement ID for correct targeting during read
+```
