@@ -46,6 +46,8 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_id` - (Required) ID of the EMR cluster
 * `compute_limits` - (Required) Configuration block with compute limit settings. Described below.
+* `scaling_strategy` - (Optional) Determines whether a custom scaling utilization performance index can be set. Valid Values: `ADVANCED` and `DEFAULT`.
+* `utilization_performance_index` - (Optional) Integer value that represents an advanced scaling strategy. Setting a higher value optimizes for performance. Setting a lower value optimizes for resource conservation. Setting the value to `50` balances performance and resource conservation. See [the AWS documentation](https://docs.aws.amazon.com/emr/latest/ManagementGuide/managed-scaling-allocation-strategy-optimized.html#managed-scaling-allocation-strategy-optimized-getting-started) for more details. Required when `scaling_strategy` is set to `ADVANCED`. Valid values: `1`, `25`, `50`, `75`, and `100`.
 
 ### compute_limits
 
