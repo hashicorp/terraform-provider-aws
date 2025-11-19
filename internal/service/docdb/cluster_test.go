@@ -106,6 +106,36 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 	})
 }
 
+func TestAccDocDBCluster_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster awstypes.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_networkType(rName, "IPV4"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_networkType(rName, "DUAL"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDocDBCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBCluster
@@ -1731,6 +1761,27 @@ resource "aws_docdb_cluster" "test" {
   skip_final_snapshot = true
 }
 `, rName, passwordConfig))
+}
+
+func testAccClusterConfig_networkType(rName string, networkType string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		fmt.Sprintf(`
+resource "aws_docdb_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier   = %[1]q
+  db_subnet_group_name = aws_docdb_subnet_group.test.name
+  master_password      = "avoid-plaintext-passwords"
+  master_username      = "tfacctest"
+  skip_final_snapshot  = true
+  network_type         = %[2]q
+  apply_immediately    = true
+}
+`, rName, networkType))
 }
 
 func testAccClusterConfig_serverless(rName string, minCapacity, maxCapacity float64) string {
