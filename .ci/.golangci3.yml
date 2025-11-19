@@ -27,6 +27,7 @@ linters:
         - performance
         - style
     importas:
+      no-unaliased: true
       alias:
         - pkg: github.com/hashicorp/terraform-provider-aws/internal/types
           alias: inttypes
