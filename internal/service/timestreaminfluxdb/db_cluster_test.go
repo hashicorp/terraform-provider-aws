@@ -1024,22 +1024,6 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
 `, rName))
 }
 
-func testAccDBClusterConfig_v2WithoutDeploymentType(rName string) string {
-	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
-resource "aws_timestreaminfluxdb_db_cluster" "test" {
-  name                   = %[1]q
-  allocated_storage      = 20
-  username               = "admin"
-  password               = "testpassword"
-  vpc_subnet_ids         = aws_subnet.test[*].id
-  vpc_security_group_ids = [aws_security_group.test.id]
-  db_instance_type       = "db.influx.medium"
-  bucket                 = "initial"
-  organization           = "organization"
-}
-`, rName))
-}
-
 func testAccDBClusterConfig_v2MissingOrganization(rName string) string {
 	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
