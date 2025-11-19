@@ -217,10 +217,7 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	plan.ARN = flex.StringToFramework(ctx, out.Arn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	view, err := waitViewCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
@@ -257,17 +254,17 @@ func (r *resourceView) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	sourceViews, err := findSourceViewsByARN(ctx, conn, state.ARN.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		return
 	}
 	state.SourceViews = flex.FlattenFrameworkStringValueListOfString(ctx, sourceViews)
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -305,10 +302,7 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		plan.ARN = flex.StringToFramework(ctx, out.Arn)
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
@@ -382,12 +376,12 @@ func findViewByARN(ctx context.Context, conn *billing.Client, arn string) (*awst
 func findSourceViewsByARN(ctx context.Context, conn *billing.Client, arn string) ([]string, error) {
 	sourceViews := make([]string, 0)
 
-	sourceViewsPag := billing.NewListSourceViewsForBillingViewPaginator(conn, &billing.ListSourceViewsForBillingViewInput{
+	paginator := billing.NewListSourceViewsForBillingViewPaginator(conn, &billing.ListSourceViewsForBillingViewInput{
 		Arn: aws.String(arn),
 	})
 
-	for sourceViewsPag.HasMorePages() {
-		sourceView, err := sourceViewsPag.NextPage(ctx)
+	for paginator.HasMorePages() {
+		sourceView, err := paginator.NextPage(ctx)
 		if err != nil {
 			tflog.Error(ctx, "Listing source views for billing view", map[string]any{
 				names.AttrARN: arn,
