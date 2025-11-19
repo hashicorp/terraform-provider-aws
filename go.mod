@@ -231,7 +231,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.224.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.12
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.3
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.39.13
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.65.4
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.3
