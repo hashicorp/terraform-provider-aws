@@ -307,7 +307,7 @@ resource "aws_billing_view" "test" {
 
   tags = {
     %[2]q = %[3]q
-	%[4]q = %[5]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
