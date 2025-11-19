@@ -296,59 +296,6 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testaccCapacityProvider_baseEC2(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		fmt.Sprintf(`
-data "aws_iam_policy_document" "test_assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test_instance" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.test_assume_role_policy.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
-}
-
-data "aws_iam_policy_document" "test_instance_assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
-    }
-  }
-}
-
-resource "aws_iam_role" "test_instance" {
-  name               = "%[1]s-instance"
-  assume_role_policy = data.aws_iam_policy_document.test_instance_assume_role_policy.json
-}
-
-resource "aws_iam_role_policy_attachment" "test_instance" {
-  role       = aws_iam_role.test_instance.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
-}
-
-resource "aws_iam_instance_profile" "test" {
-  name = %[1]q
-  role = aws_iam_role.test_instance.name
-}
-`, rName))
-}
-
 func testAccCapacityProviderConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCapacityProviderConfig_base(rName),
