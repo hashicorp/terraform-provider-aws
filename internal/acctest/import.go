@@ -28,6 +28,20 @@ func ComposeAggregateImportStateCheckFunc(fs ...resource.ImportStateCheckFunc) r
 	}
 }
 
+func ImportCheckNoResourceAttr(key string) resource.ImportStateCheckFunc {
+	return func(is []*terraform.InstanceState) error {
+		if len(is) != 1 {
+			return fmt.Errorf("Attribute '%s' expected 1 instance state, got %d", key, len(is))
+		}
+
+		rs := is[0]
+		if v, ok := rs.Attributes[key]; ok {
+			return fmt.Errorf("Attribute '%s' expected no value, got %q", key, v)
+		}
+		return nil
+	}
+}
+
 func ImportCheckResourceAttr(key, expected string) resource.ImportStateCheckFunc {
 	return func(is []*terraform.InstanceState) error {
 		if len(is) != 1 {
