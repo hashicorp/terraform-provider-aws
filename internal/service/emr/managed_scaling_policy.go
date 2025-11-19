@@ -157,9 +157,11 @@ func resourceManagedScalingPolicyRead(ctx context.Context, d *schema.ResourceDat
 	if err := d.Set("compute_limits", flattenComputeLimits(managedScalingPolicy.ComputeLimits)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting compute_limits: %s", err)
 	}
-	d.Set("scaling_strategy", managedScalingPolicy.ScalingStrategy)
-	d.Set("utilization_performance_index", managedScalingPolicy.UtilizationPerformanceIndex)
 
+	if managedScalingPolicy.ScalingStrategy != "" {
+		d.Set("scaling_strategy", managedScalingPolicy.ScalingStrategy)
+		d.Set("utilization_performance_index", managedScalingPolicy.UtilizationPerformanceIndex)
+	}
 	return diags
 }
 
