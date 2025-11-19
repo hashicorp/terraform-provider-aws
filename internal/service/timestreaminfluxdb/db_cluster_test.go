@@ -562,7 +562,6 @@ func TestAccTimestreamInfluxDBDBCluster_dbParameterGroupV3(t *testing.T) {
 
 func TestAccTimestreamInfluxDBDBCluster_validateConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
