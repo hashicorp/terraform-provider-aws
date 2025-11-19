@@ -51,6 +51,8 @@ func TestAccVPCVPCEncryptionControl_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state_message"), tfknownvalue.StringExact("succeeded")),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("vpc_id"), "aws_vpc.test", tfjsonpath.New("id"), compare.ValuesSame()),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_exclusions"), knownvalue.Null()),
 				},
 			},
 			{
@@ -118,6 +120,29 @@ func TestAccVPCVPCEncryptionControl_enforce(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state_message"), tfknownvalue.StringExact("succeeded")),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("vpc_id"), "aws_vpc.test", tfjsonpath.New("id"), compare.ValuesSame()),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_exclusions"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"egress_only_internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"nat_gateway_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"virtual_private_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"vpc_peering": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+					})),
 				},
 			},
 			{

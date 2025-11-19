@@ -57,6 +57,10 @@ func (r *resourceVPCEncryptionControl) Schema(ctx context.Context, req resource.
 				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlMode](),
 				Required:   true,
 			},
+			"resource_exclusions": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[vpcEncryptionControlExclusionsModel](ctx),
+				Computed:   true,
+			},
 			"state": schema.StringAttribute{
 				Computed: true,
 			},
@@ -321,11 +325,25 @@ func vpcEncryptionControlModify(ctx context.Context, conn *ec2.Client, plan reso
 
 type resourceVPCEncryptionControlModel struct {
 	framework.WithRegionModel
-	ID           types.String                                          `tfsdk:"id"`
-	Mode         fwtypes.StringEnum[awstypes.VpcEncryptionControlMode] `tfsdk:"mode"`
-	State        types.String                                          `tfsdk:"state"`
-	StateMessage types.String                                          `tfsdk:"state_message"`
-	VPCID        types.String                                          `tfsdk:"vpc_id"`
+	ID                 types.String                                               `tfsdk:"id"`
+	Mode               fwtypes.StringEnum[awstypes.VpcEncryptionControlMode]      `tfsdk:"mode"`
+	State              types.String                                               `tfsdk:"state"`
+	StateMessage       types.String                                               `tfsdk:"state_message"`
+	ResourceExclusions fwtypes.ObjectValueOf[vpcEncryptionControlExclusionsModel] `tfsdk:"resource_exclusions"`
+	VPCID              types.String                                               `tfsdk:"vpc_id"`
+}
+
+type vpcEncryptionControlExclusionsModel struct {
+	EgressOnlyInternetGateway fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"egress_only_internet_gateway"`
+	InternetGateway           fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"internet_gateway"`
+	NatGateway                fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"nat_gateway"`
+	VirtualPrivateGateway     fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"virtual_private_gateway"`
+	VpcPeering                fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"vpc_peering"`
+}
+
+type vpcEncryptionControlExclusionModel struct {
+	State        types.String `tfsdk:"state"`
+	StateMessage types.String `tfsdk:"state_message"`
 }
 
 // DescribeVpcEncryptionControlsPaginatorOptions is the paginator options for
