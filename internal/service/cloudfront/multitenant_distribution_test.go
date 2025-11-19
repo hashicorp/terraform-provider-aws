@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -45,9 +44,8 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontMultiTenantDistribution_another(t *testing.T) {
+func TestAccCloudFrontMultiTenantDistribution_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
@@ -58,13 +56,12 @@ func TestAccCloudFrontMultiTenantDistribution_another(t *testing.T) {
 		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiTenantDistributionConfig_another(rName),
+				Config: testAccMultiTenantDistributionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceMultiTenantDistribution, resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -169,72 +166,4 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 }
 `
-}
-
-func testAccMultiTenantDistributionConfig_another(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudfront_cache_policy" "test" {
-  name        = %[1]q
-  comment     = "test tenant cache policy"
-  default_ttl = 50
-  max_ttl     = 100
-  min_ttl     = 1
-  parameters_in_cache_key_and_forwarded_to_origin {
-    cookies_config {
-      cookie_behavior = "none"
-    }
-    headers_config {
-      header_behavior = "none"
-    }
-    query_strings_config {
-      query_string_behavior = "none"
-    }
-  }
-}
-
-resource "aws_cloudfront_multitenant_distribution" "test" {
-  enabled = false
-  comment = "Test tenant-only distribution with config"
-  origin {
-    domain_name = "www.example.com"
-    id          = "myCustomOrigin"
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
-  }
-  default_cache_behavior {
-    target_origin_id       = "myCustomOrigin"
-    viewer_protocol_policy = "allow-all"
-    cache_policy_id        = aws_cloudfront_cache_policy.test.id
-
-    allowed_methods {
-      items          = ["GET", "HEAD"]
-      cached_methods = ["GET", "HEAD"]
-    }
-  }
-  tenant_config {
-    parameter_definition {
-      name = "tenantName"
-      definition {
-        string_schema {
-          required      = false
-          comment       = "tenantName"
-          default_value = "root"
-        }
-      }
-    }
-  }
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
-  }
-  viewer_certificate {
-    cloudfront_default_certificate = true
-  }
-}
-`, rName)
 }
