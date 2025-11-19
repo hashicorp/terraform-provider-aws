@@ -50,7 +50,8 @@ func newResourceCapacityProvider(_ context.Context) (resource.ResourceWithConfig
 }
 
 const (
-	ResNameCapacityProvider = "Capacity Provider"
+	capacityProviderNamePrefix = "CapacityProvider"
+	ResNameCapacityProvider    = "Capacity Provider"
 )
 
 type resourceCapacityProvider struct {
@@ -143,13 +144,13 @@ func (r *resourceCapacityProvider) Create(ctx context.Context, request resource.
 	}
 
 	var input lambda.CreateCapacityProviderInput
-	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CapacityProvider")))
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix(capacityProviderNamePrefix)))
 	if response.Diagnostics.HasError() {
 		return
 	}
 	input.Tags = getTagsIn(ctx)
 
-	out, err := tfresource.RetryWhenIsAErrorMessageContains[*lambda.CreateCapacityProviderOutput, *awstypes.InvalidParameterValueException](ctx, time.Minute*2, func(ctx context.Context) (*lambda.CreateCapacityProviderOutput, error) {
+	out, err := tfresource.RetryWhenIsAErrorMessageContains[*lambda.CreateCapacityProviderOutput, *awstypes.InvalidParameterValueException](ctx, iamPropagationTimeout, func(ctx context.Context) (*lambda.CreateCapacityProviderOutput, error) {
 		return conn.CreateCapacityProvider(ctx, &input)
 	}, "doesn't have permission to perform")
 
@@ -163,7 +164,7 @@ func (r *resourceCapacityProvider) Create(ctx context.Context, request resource.
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, out.CapacityProvider, &plan, flex.WithFieldNamePrefix("CapacityProvider")))
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, out.CapacityProvider, &plan, flex.WithFieldNamePrefix(capacityProviderNamePrefix)))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -199,7 +200,7 @@ func (r *resourceCapacityProvider) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("CapacityProvider")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix(capacityProviderNamePrefix)))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -225,7 +226,7 @@ func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.
 
 	if diff.HasChanges() {
 		var input lambda.UpdateCapacityProviderInput
-		smerr.AddEnrich(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("CapacityProvider")))
+		smerr.AddEnrich(ctx, &response.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix(capacityProviderNamePrefix)))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -240,7 +241,7 @@ func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.
 			return
 		}
 
-		smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("CapacityProvider")))
+		smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix(capacityProviderNamePrefix)))
 		if response.Diagnostics.HasError() {
 			return
 		}
