@@ -52,10 +52,22 @@ type resourceVPCEncryptionControl struct {
 func (r *resourceVPCEncryptionControl) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"egress_only_internet_gateway_exclusion": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlExclusionStateInput](),
+				Optional:   true,
+			},
 			names.AttrID: framework.IDAttribute(),
+			"internet_gateway_exclusion": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlExclusionStateInput](),
+				Optional:   true,
+			},
 			"mode": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlMode](),
 				Required:   true,
+			},
+			"nat_gateway_exclusion": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlExclusionStateInput](),
+				Optional:   true,
 			},
 			"resource_exclusions": schema.ObjectAttribute{
 				CustomType: fwtypes.NewObjectTypeOf[vpcEncryptionControlExclusionsModel](ctx),
@@ -67,12 +79,18 @@ func (r *resourceVPCEncryptionControl) Schema(ctx context.Context, req resource.
 			"state_message": schema.StringAttribute{
 				Computed: true,
 			},
+			"virtual_private_gateway_exclusion": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlExclusionStateInput](),
+				Optional:   true,
+			},
 			names.AttrVPCID: schema.StringAttribute{
 				Required: true,
 			},
+			"vpc_peering_exclusion": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlExclusionStateInput](),
+				Optional:   true,
+			},
 		},
-		// Blocks: map[string]schema.Block{
-		// },
 	}
 }
 
@@ -325,12 +343,17 @@ func vpcEncryptionControlModify(ctx context.Context, conn *ec2.Client, plan reso
 
 type resourceVPCEncryptionControlModel struct {
 	framework.WithRegionModel
-	ID                 types.String                                               `tfsdk:"id"`
-	Mode               fwtypes.StringEnum[awstypes.VpcEncryptionControlMode]      `tfsdk:"mode"`
-	State              types.String                                               `tfsdk:"state"`
-	StateMessage       types.String                                               `tfsdk:"state_message"`
-	ResourceExclusions fwtypes.ObjectValueOf[vpcEncryptionControlExclusionsModel] `tfsdk:"resource_exclusions"`
-	VPCID              types.String                                               `tfsdk:"vpc_id"`
+	EgressOnlyInternetGatewayExclusion fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"egress_only_internet_gateway_exclusion"`
+	ID                                 types.String                                                         `tfsdk:"id"`
+	InternetGatewayExclusion           fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"internet_gateway_exclusion"`
+	Mode                               fwtypes.StringEnum[awstypes.VpcEncryptionControlMode]                `tfsdk:"mode"`
+	NatGatewayExclusion                fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"nat_gateway_exclusion"`
+	State                              types.String                                                         `tfsdk:"state"`
+	StateMessage                       types.String                                                         `tfsdk:"state_message"`
+	ResourceExclusions                 fwtypes.ObjectValueOf[vpcEncryptionControlExclusionsModel]           `tfsdk:"resource_exclusions"`
+	VirtualPrivateGatewayExclusion     fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"virtual_private_gateway_exclusion"`
+	VPCID                              types.String                                                         `tfsdk:"vpc_id"`
+	VpcPeeringExclusion                fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"vpc_peering_exclusion"`
 }
 
 type vpcEncryptionControlExclusionsModel struct {
