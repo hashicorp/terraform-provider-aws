@@ -1160,6 +1160,12 @@ func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, inp
 		func(ctx context.Context) (any, error) {
 			return conn.CreateExpressGatewayService(ctx, input)
 		},
+		func(err error) (bool, error) {
+			// if errs.IsA[*awstypes.InvalidParameterException](err) {
+			// 	return true, err
+			// }
+			return false, err
+		},
 	)
 	if err != nil {
 		return nil, err
@@ -1175,6 +1181,12 @@ func retryExpressGatewayServiceUpdate(ctx context.Context, conn *ecs.Client, inp
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (any, error) {
 			return conn.UpdateExpressGatewayService(ctx, input)
+		},
+		func(err error) (bool, error) {
+			// if errs.IsA[*awstypes.InvalidParameterException](err) {
+			// 	return true, err
+			// }
+			return false, err
 		},
 	)
 	if err != nil {

@@ -179,6 +179,7 @@ func TestAccECSExpressGatewayService_update(t *testing.T) {
 				Config: testAccExpressGatewayServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service1),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"),
 				),
 			},
 			{
@@ -235,6 +236,67 @@ func TestAccECSExpressGatewayService_update(t *testing.T) {
 // 		},
 // 	})
 // }
+
+func TestAccECSExpressGatewayService_networkConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service1 awstypes.ECSExpressGatewayService
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExpressGatewayServiceConfig_networkConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service1),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_configuration.0.subnets.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_configuration.0.subnets.1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_configuration.0.security_groups.0"),
+					// Verify additional attributes are set correctly
+					resource.TestCheckResourceAttr(resourceName, "service_name", rName+"-service"),
+					resource.TestCheckResourceAttr(resourceName, "cpu", "512"),
+					resource.TestCheckResourceAttr(resourceName, "memory", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.container_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.0.name", "ENV"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.0.value", "test"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.aws_logs_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.aws_logs_configuration.0.log_group"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.aws_logs_configuration.0.log_stream_prefix", "test"),
+				),
+			},
+			{
+				ResourceName: resourceName,
+				// ImportState:       true,
+				// ImportStateVerify: true,
+				// ImportStateVerifyIgnore: []string{
+				// 	"wait_for_steady_state",
+				// 	"current_deployment", // is not returned in Create response, so will show as diff in Import.
+				// },
+			},
+		},
+	})
+}
 
 func TestAccECSExpressGatewayService_checkIdempotency(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -372,7 +434,6 @@ resource "aws_iam_role" "execution" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ecs-tasks-gamma.amazonaws.com",
           "ecs-tasks.amazonaws.com",
 					"ecs-slr.aws.internal"
         ]
@@ -424,285 +485,13 @@ resource "aws_iam_role" "infrastructure" {
 POLICY
 }
 
-resource "aws_iam_role_policy" "infrastructure" {
-  name = "EcsExpressServicesInfraPolicy"
-  role = aws_iam_role.infrastructure.id
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "CreateSLRForAutoscaling",
-      "Effect": "Allow",
-      "Action": "iam:CreateServiceLinkedRole",
-      "Resource": "arn:aws:iam::*:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService",
-      "Condition": {
-        "StringEquals": {
-          "iam:AWSServiceName": "ecs.application-autoscaling.amazonaws.com"
-        }
-      }
-    },
-    {
-      "Sid": "ELBOperations",
-      "Effect": "Allow",
-      "Action": [
-        "elasticloadbalancing:CreateListener",
-        "elasticloadbalancing:CreateLoadBalancer",
-        "elasticloadbalancing:CreateRule",
-        "elasticloadbalancing:CreateTargetGroup",
-        "elasticloadbalancing:ModifyListener",
-        "elasticloadbalancing:ModifyRule",
-        "elasticloadbalancing:AddListenerCertificates",
-        "elasticloadbalancing:RemoveListenerCertificates",
-        "elasticloadbalancing:RegisterTargets",
-        "elasticloadbalancing:DeregisterTargets",
-        "elasticloadbalancing:DeleteTargetGroup",
-        "elasticloadbalancing:DeleteLoadBalancer",
-        "elasticloadbalancing:DeleteRule",
-        "elasticloadbalancing:DeleteListener"
-      ],
-      "Resource": [
-        "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*",
-        "arn:aws:elasticloadbalancing:*:*:listener/app/*/*/*",
-        "arn:aws:elasticloadbalancing:*:*:listener-rule/app/*/*/*/*",
-        "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/AmazonECSManaged": "true"
-        }
-      }
-    },
-    {
-      "Sid": "TagOnCreateELBResources",
-      "Effect": "Allow",
-      "Action": "elasticloadbalancing:AddTags",
-      "Resource": [
-        "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*",
-        "arn:aws:elasticloadbalancing:*:*:listener/app/*/*/*",
-        "arn:aws:elasticloadbalancing:*:*:listener-rule/app/*/*/*/*",
-        "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "elasticloadbalancing:CreateAction": [
-            "CreateLoadBalancer",
-            "CreateListener",
-            "CreateRule",
-            "CreateTargetGroup"
-          ]
-        }
-      }
-    },
-    {
-      "Sid": "BlanketAllowCreateSecurityGroupsInVPCs",
-      "Effect": "Allow",
-      "Action": "ec2:CreateSecurityGroup",
-      "Resource": "arn:aws:ec2:*:*:vpc/*"
-    },
-    {
-      "Sid": "CreateSecurityGroupResourcesWithTags",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateSecurityGroup",
-        "ec2:AuthorizeSecurityGroupEgress",
-        "ec2:AuthorizeSecurityGroupIngress"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:security-group/*",
-        "arn:aws:ec2:*:*:security-group-rule/*",
-        "arn:aws:ec2:*:*:vpc/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/AmazonECSManaged": "true"
-        }
-      }
-    },
-    {
-      "Sid": "ModifySecurityGroupOperations",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:AuthorizeSecurityGroupEgress",
-        "ec2:AuthorizeSecurityGroupIngress",
-        "ec2:DeleteSecurityGroup",
-        "ec2:RevokeSecurityGroupEgress",
-        "ec2:RevokeSecurityGroupIngress"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:security-group/*",
-        "arn:aws:ec2:*:*:vpc/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/AmazonECSManaged": "true"
-        }
-      }
-    },
-    {
-      "Sid": "TagOnCreateEC2Resources",
-      "Effect": "Allow",
-      "Action": "ec2:CreateTags",
-      "Resource": [
-        "arn:aws:ec2:*:*:security-group/*",
-        "arn:aws:ec2:*:*:security-group-rule/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "ec2:CreateAction": [
-            "CreateSecurityGroup",
-            "AuthorizeSecurityGroupIngress",
-            "AuthorizeSecurityGroupEgress"
-          ]
-        }
-      }
-    },
-    {
-      "Sid": "CertificateOperations",
-      "Effect": "Allow",
-      "Action": [
-        "acm:RequestCertificate",
-        "acm:AddTagsToCertificate",
-        "acm:DeleteCertificate",
-        "acm:DescribeCertificate"
-      ],
-      "Resource": "arn:aws:acm:*:*:certificate/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/AmazonECSManaged": "true"
-        }
-      }
-    },
-    {
-      "Sid": "ApplicationAutoscalingCreateOperations",
-      "Effect": "Allow",
-      "Action": [
-        "application-autoscaling:RegisterScalableTarget",
-        "application-autoscaling:TagResource",
-        "application-autoscaling:DeregisterScalableTarget"
-      ],
-      "Resource": "arn:aws:application-autoscaling:*:*:scalable-target/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/AmazonECSManaged": "true"
-        }
-      }
-    },
-    {
-      "Sid": "ApplicationAutoscalingPolicyOperations",
-      "Effect": "Allow",
-      "Action": [
-        "application-autoscaling:PutScalingPolicy",
-        "application-autoscaling:DeleteScalingPolicy"
-      ],
-      "Resource": "arn:aws:application-autoscaling:*:*:scalable-target/*",
-      "Condition": {
-        "StringEquals": {
-          "application-autoscaling:service-namespace": "ecs"
-        }
-      }
-    },
-    {
-      "Sid": "ApplicationAutoscalingReadOperations",
-      "Effect": "Allow",
-      "Action": [
-        "application-autoscaling:DescribeScalableTargets",
-        "application-autoscaling:DescribeScalingPolicies",
-        "application-autoscaling:DescribeScalingActivities"
-      ],
-      "Resource": "arn:aws:application-autoscaling:*:*:scalable-target/*"
-    },
-    {
-      "Sid": "CloudWatchAlarmCreateOperations",
-      "Effect": "Allow",
-      "Action": "cloudwatch:PutMetricAlarm",
-      "Resource": "arn:aws:cloudwatch:*:*:alarm:*",
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/AmazonECSManaged": "true"
-        }
-      }
-    },
-    {
-      "Sid": "TagOnCreateCloudWatchAlarms",
-      "Effect": "Allow",
-      "Action": "cloudwatch:TagResource",
-      "Resource": "arn:aws:cloudwatch:*:*:alarm:*",
-      "Condition": {
-        "StringEquals": {
-          "cloudwatch:CreateAction": "PutMetricAlarm"
-        }
-      }
-    },
-    {
-      "Sid": "CloudWatchAlarmOperations",
-      "Effect": "Allow",
-      "Action": [
-        "cloudwatch:DeleteAlarms",
-        "cloudwatch:DescribeAlarms"
-      ],
-      "Resource": "arn:aws:cloudwatch:*:*:alarm:*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/AmazonECSManaged": "true"
-        }
-      }
-    },
-    {
-      "Sid": "ELBReadOperations",
-      "Effect": "Allow",
-      "Action": [
-        "elasticloadbalancing:DescribeLoadBalancers",
-        "elasticloadbalancing:DescribeTargetGroups",
-        "elasticloadbalancing:DescribeListeners",
-        "elasticloadbalancing:DescribeRules"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "VPCReadOperations",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:DescribeSecurityGroups",
-        "ec2:DescribeSubnets",
-        "ec2:DescribeRouteTables",
-        "ec2:DescribeVpcs"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "CloudWatchLogsCreateOperations",
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:TagResource"
-      ],
-      "Resource": "arn:aws:logs:*:*:log-group:*",
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/AmazonECSManaged": "true"
-        }
-      }
-    },
-    {
-      "Sid": "CloudWatchLogsReadOperations",
-      "Effect": "Allow",
-      "Action": "logs:DescribeLogGroups",
-      "Resource": "*"
-    },
-    {
-      "Sid": "ECSDeleteOperation",
-      "Effect": "Allow",
-      "Action": "ecs:DeleteService",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
+resource "aws_iam_role_policy_attachment" "infrastructure" {
+  role       = aws_iam_role.infrastructure.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices"
 }
 
 resource "time_sleep" "wait_for_iam" {
-  depends_on = [aws_iam_role_policy.infrastructure]
+  depends_on = [aws_iam_role_policy_attachment.infrastructure]
   create_duration = "10s"
 }
 `, rName)
@@ -768,33 +557,6 @@ resource "aws_ecs_express_gateway_service" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccExpressGatewayServiceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
-resource "aws_ecs_express_gateway_service" "test" {
-  execution_role_arn      = aws_iam_role.execution.arn
-  infrastructure_role_arn = aws_iam_role.infrastructure.arn
-
-  primary_container {
-    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
-  }
-
-  network_configuration {
-    subnets         = data.aws_subnets.default.ids
-    security_groups = [data.aws_security_group.default.id]
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-
-  depends_on = [
-    time_sleep.wait_for_iam
-  ]
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
 func testAccExpressGatewayServiceConfig_waitForSteadyState(rName string, waitForSteadyState bool) string {
 	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_express_gateway_service" "test" {
@@ -816,6 +578,114 @@ resource "aws_ecs_express_gateway_service" "test" {
   ]
 }
 `, rName, waitForSteadyState))
+}
+
+func testAccExpressGatewayServiceConfig_networkConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+  tags = {
+    Name = "%[1]s-vpc"
+  }
+}
+
+resource "aws_subnet" "test_subnet1" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = false
+  tags = {
+    Name = "%[1]s-subnet-1"
+  }
+}
+
+resource "aws_subnet" "test_subnet2" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+  map_public_ip_on_launch = false
+  tags = {
+    Name = "%[1]s-subnet-2"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name        = "%[1]s-sg"
+  description = "Security group for ECS Express Gateway Service test"
+  vpc_id      = aws_vpc.test.id
+  tags = {
+    Name = "%[1]s-sg"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name              = "/ecs/%[1]s-log-group"
+  retention_in_days = 30
+}
+
+resource "aws_iam_role" "task_role" {
+  name = "%[1]s-task-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "task_role" {
+  role       = aws_iam_role.task_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchFullAccess"
+}
+
+resource "aws_ecs_express_gateway_service" "test" {
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+  service_name            = "%[1]s-service"
+  cluster                 = "default"
+  cpu                     = "512"
+  memory                  = "1024"
+  task_role_arn           = aws_iam_role.task_role.arn
+  health_check_path       = "/"
+
+  primary_container {
+    image          = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+    container_port = 80
+    command        = ["CMD-SHELL"]
+
+    environment {
+      name  = "ENV"
+      value = "test"
+    }
+
+    aws_logs_configuration {
+      log_group         = aws_cloudwatch_log_group.test.name
+      log_stream_prefix = "test"
+    }
+  }
+
+  network_configuration {
+    subnets         = [aws_subnet.test_subnet1.id, aws_subnet.test_subnet2.id]
+    security_groups = [aws_security_group.test.id]
+  }
+
+  depends_on = [
+    time_sleep.wait_for_iam
+  ]
+}
+`, rName))
 }
 
 func testAccExpressGatewayServiceConfig_duplicate(rName string) string {
