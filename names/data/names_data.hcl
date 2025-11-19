@@ -680,6 +680,37 @@ service "arcregionswitch" {
   brand                    = "AWS"
 }
 
+service "arczonalshift" {
+
+  cli_v2_command { 
+    aws_cli_v2_command           = "arc-zonal-shift"
+    aws_cli_v2_command_no_dashes = "arczonalshift"
+  }
+
+  // If any blocks below here have attirbutes with empty strings or false bools, they will be ommitted
+  // Blocks with zero attributes will be ommitted 
+  sdk {
+    id             = "ARC Zonal Shift" 
+    client_version = 2 
+  }
+
+  names {
+    provider_name_upper = "ARCZonalShift"
+    human_friendly      = "Application Recovery Controller Zonal Shift"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListZonalShifts"
+  }
+
+  resource_prefix {
+    correct = "aws_arczonalshift"
+  }
+
+  provider_package_correct = "arczonalshift"
+  doc_prefix          = ["arczonalshift_"]
+}
+
 service "athena" {
   sdk {
     id            = "Athena"
