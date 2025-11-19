@@ -113,8 +113,8 @@ The `filters_config` configuration block supports the following arguments:
 * `input_enabled` - (Optional) Toggles guardrail evaluation on input.
 * `input_modalities` - (Optional) List of selected input modalities. Valid values: `IMAGE`, `TEXT`.
 * `input_strength` - (Optional) Strength for filters. Valid values: `NONE`, `LOW`, `MEDIUM`, `HIGH`.
-* `output_action` - (Optional) Action to take when harmful content is detected.
-* `output_enabled` - (Optional) Toggles guardrail evaluation on output. Valid values: `BLOCK`, `NONE`.
+* `output_action` - (Optional) Action to take when harmful content is detected. Valid values: `BLOCK`, `NONE`.
+* `output_enabled` - (Optional) Toggles guardrail evaluation on output.
 * `output_modalities` - (Optional) List of selected output modalities. Valid values: `IMAGE`, `TEXT`.
 * `output_strength` - (Optional) Strength for filters. Valid values: `NONE`, `LOW`, `MEDIUM`, `HIGH`.
 * `type` - (Optional) Type of filter in content policy. Valid Values: `SEXUAL`, `VIOLENCE`, `HATE`, `INSULTS`, `MISCONDUCT`, `PROMPT_ATTACK`.
