@@ -7,17 +7,17 @@ import (
 	"context"
 	"iter"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 )
 
 // ServicePackage is the minimal interface exported from each AWS service package.
 // Its methods return the Plugin SDK and Framework resources and data sources implemented in the package.
 type ServicePackage interface {
-	FrameworkDataSources(context.Context) []*types.ServicePackageFrameworkDataSource
-	FrameworkResources(context.Context) []*types.ServicePackageFrameworkResource
-	SDKDataSources(context.Context) []*types.ServicePackageSDKDataSource
-	SDKResources(context.Context) []*types.ServicePackageSDKResource
+	FrameworkDataSources(context.Context) []*inttypes.ServicePackageFrameworkDataSource
+	FrameworkResources(context.Context) []*inttypes.ServicePackageFrameworkResource
+	SDKDataSources(context.Context) []*inttypes.ServicePackageSDKDataSource
+	SDKResources(context.Context) []*inttypes.ServicePackageSDKResource
 	ServicePackageName() string
 }
 
@@ -25,24 +25,24 @@ type ServicePackage interface {
 // Actions are imperative operations that can be invoked to perform Day-2 operations.
 type ServicePackageWithActions interface {
 	ServicePackage
-	Actions(context.Context) []*types.ServicePackageAction
+	Actions(context.Context) []*inttypes.ServicePackageAction
 }
 
 // ServicePackageWithEphemeralResources is an interface that extends ServicePackage with ephemeral resources.
 // Ephemeral resources are resources that are not part of the Terraform state, but are used to create other resources.
 type ServicePackageWithEphemeralResources interface {
 	ServicePackage
-	EphemeralResources(context.Context) []*types.ServicePackageEphemeralResource
+	EphemeralResources(context.Context) []*inttypes.ServicePackageEphemeralResource
 }
 
 type ServicePackageWithFrameworkListResources interface {
 	ServicePackage
-	FrameworkListResources(context.Context) iter.Seq[*types.ServicePackageFrameworkListResource]
+	FrameworkListResources(context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource]
 }
 
 type ServicePackageWithSDKListResources interface {
 	ServicePackage
-	SDKListResources(ctx context.Context) iter.Seq[*types.ServicePackageSDKListResource]
+	SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource]
 }
 
 type (

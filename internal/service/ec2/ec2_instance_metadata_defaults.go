@@ -22,7 +22,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -134,7 +134,7 @@ func (r *instanceMetadataDefaultsResource) Read(ctx context.Context, request res
 	output, err := findInstanceMetadataDefaults(ctx, conn)
 
 	switch {
-	case err == nil && itypes.IsZero(output):
+	case err == nil && inttypes.IsZero(output):
 		err = tfresource.NewEmptyResultError(nil)
 		fallthrough
 	case tfresource.NotFound(err):
