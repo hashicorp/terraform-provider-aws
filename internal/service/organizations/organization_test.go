@@ -460,7 +460,7 @@ func testAccOrganizationConfig_enabledPolicyTypeWithServiceAccessPrincipals(poli
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   aws_service_access_principals = [%[2]q]
-  enabled_policy_types = [%[1]q]
+  enabled_policy_types          = [%[1]q]
 }
 `, policyType1, serviceAccessPrincipals)
 }
