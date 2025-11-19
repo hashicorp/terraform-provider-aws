@@ -80,21 +80,21 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Type:     schema.TypeString,
 					Optional: true,
 					Description: "File containing the client certificate for mTLS authentication. " +
-						"Can also be configured using the `AWS_CLIENT_CERTIFICATE` environment variable.",
+						"Can also be configured using the `TF_AWS_CLIENT_CERTIFICATE_PATH` environment variable.",
 				},
 				"client_private_key": {
 					Type:      schema.TypeString,
 					Optional:  true,
 					Sensitive: true,
 					Description: "File containing the client private key for mTLS authentication. " +
-						"Can also be configured using the `AWS_CLIENT_PRIVATE_KEY` environment variable.",
+						"Can also be configured using the `TF_AWS_CLIENT_PRIVATE_KEY_PATH` environment variable.",
 				},
 				"client_private_key_passphrase": {
 					Type:      schema.TypeString,
 					Optional:  true,
 					Sensitive: true,
 					Description: "Passphrase for the client private key file. " +
-						"Can also be configured using the `AWS_CLIENT_PRIVATE_KEY_PASSPHRASE` environment variable.",
+						"Can also be configured using the `TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE` environment variable.",
 				},
 				"default_tags": {
 					Type:        schema.TypeList,
@@ -388,17 +388,17 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 	}
 
 	if config.ClientCertificate == "" {
-		if v := os.Getenv("AWS_CLIENT_CERTIFICATE"); v != "" {
+		if v := os.Getenv("TF_AWS_CLIENT_CERTIFICATE_PATH"); v != "" {
 			config.ClientCertificate = v
 		}
 	}
 	if config.ClientPrivateKey == "" {
-		if v := os.Getenv("AWS_CLIENT_PRIVATE_KEY"); v != "" {
+		if v := os.Getenv("TF_AWS_CLIENT_PRIVATE_KEY_PATH"); v != "" {
 			config.ClientPrivateKey = v
 		}
 	}
 	if config.ClientPrivateKeyPassphrase == "" {
-		if v := os.Getenv("AWS_CLIENT_PRIVATE_KEY_PASSPHRASE"); v != "" {
+		if v := os.Getenv("TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE"); v != "" {
 			config.ClientPrivateKeyPassphrase = v
 		}
 	}

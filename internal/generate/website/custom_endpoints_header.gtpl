@@ -92,17 +92,17 @@ provider "aws" {
 Alternatively, use environment variables:
 
 ```bash
-export AWS_CLIENT_CERTIFICATE="/path/to/client-cert.pem"
-export AWS_CLIENT_PRIVATE_KEY="/path/to/client-key.pem"
-export AWS_CLIENT_PRIVATE_KEY_PASSPHRASE="optional-passphrase"
+export TF_AWS_CLIENT_CERTIFICATE_PATH="/path/to/client-cert.pem"
+export TF_AWS_CLIENT_PRIVATE_KEY_PATH="/path/to/client-key.pem"
+export TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE="optional-passphrase"
 export AWS_CA_BUNDLE="/path/to/ca-bundle.pem"
 ```
 
 ### mTLS Configuration Options
 
-* `client_certificate` - Path to the client certificate file in PEM format. Can also be set using the `AWS_CLIENT_CERTIFICATE` environment variable.
-* `client_private_key` - Path to the client private key file in PEM format. Can also be set using the `AWS_CLIENT_PRIVATE_KEY` environment variable.
-* `client_private_key_passphrase` - (Optional) Passphrase for encrypted private key files. Can also be set using the `AWS_CLIENT_PRIVATE_KEY_PASSPHRASE` environment variable.
+* `client_certificate` - Path to the client certificate file in PEM format. Can also be set using the `TF_AWS_CLIENT_CERTIFICATE_PATH` environment variable.
+* `client_private_key` - Path to the client private key file in PEM format. Can also be set using the `TF_AWS_CLIENT_PRIVATE_KEY_PATH` environment variable.
+* `client_private_key_passphrase` - (Optional) Passphrase for encrypted private key files. Can also be set using the `TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE` environment variable.
 * `custom_ca_bundle` - (Optional) Path to custom CA certificate bundle for verifying server certificates. Can also be set using the `AWS_CA_BUNDLE` environment variable.
 
 ### Certificate Requirements

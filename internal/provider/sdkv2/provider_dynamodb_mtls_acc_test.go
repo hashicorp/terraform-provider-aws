@@ -666,9 +666,9 @@ func TestAccProvider_DynamoDBMTLSWithEncryptedKeyEnvVars(t *testing.T) {
 	mockServer := newMockDynamoDBMTLSServer(t, ca)
 	defer mockServer.Close()
 
-	t.Setenv("AWS_CLIENT_CERTIFICATE", clientCertFile)
-	t.Setenv("AWS_CLIENT_PRIVATE_KEY", clientKeyFile)
-	t.Setenv("AWS_CLIENT_PRIVATE_KEY_PASSPHRASE", passphrase)
+	t.Setenv("TF_AWS_CLIENT_CERTIFICATE_PATH", clientCertFile)
+	t.Setenv("TF_AWS_CLIENT_PRIVATE_KEY_PATH", clientKeyFile)
+	t.Setenv("TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE", passphrase)
 	t.Setenv("AWS_CA_BUNDLE", caCertFile)
 
 	resource.Test(t, resource.TestCase{

@@ -113,17 +113,17 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 			},
 			"client_certificate": schema.StringAttribute{
 				Optional:    true,
-				Description: "File containing the client certificate for mTLS authentication. Can also be configured using the `AWS_CLIENT_CERTIFICATE` environment variable.",
+				Description: "File containing the client certificate for mTLS authentication. Can also be configured using the `TF_AWS_CLIENT_CERTIFICATE_PATH` environment variable.",
 			},
 			"client_private_key": schema.StringAttribute{
 				Optional:    true,
 				Sensitive:   true,
-				Description: "File containing the client private key for mTLS authentication. Can also be configured using the `AWS_CLIENT_PRIVATE_KEY` environment variable.",
+				Description: "File containing the client private key for mTLS authentication. Can also be configured using the `TF_AWS_CLIENT_PRIVATE_KEY_PATH` environment variable.",
 			},
 			"client_private_key_passphrase": schema.StringAttribute{
 				Optional:    true,
 				Sensitive:   true,
-				Description: "Passphrase for the client private key file. Can also be configured using the `AWS_CLIENT_PRIVATE_KEY_PASSPHRASE` environment variable.",
+				Description: "Passphrase for the client private key file. Can also be configured using the `TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE` environment variable.",
 			},
 			"ec2_metadata_service_endpoint": schema.StringAttribute{
 				Optional:    true,

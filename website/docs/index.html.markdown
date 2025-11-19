@@ -77,9 +77,9 @@ provider "aws" {
 Alternatively, use environment variables:
 
 ```bash
-export AWS_CLIENT_CERTIFICATE="/path/to/client-cert.pem"
-export AWS_CLIENT_PRIVATE_KEY="/path/to/client-key.pem"
-export AWS_CLIENT_PRIVATE_KEY_PASSPHRASE="optional-passphrase"
+export TF_AWS_CLIENT_CERTIFICATE_PATH="/path/to/client-cert.pem"
+export TF_AWS_CLIENT_PRIVATE_KEY_PATH="/path/to/client-key.pem"
+export TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE="optional-passphrase"
 export AWS_CA_BUNDLE="/path/to/ca-bundle.pem"
 ```
 
@@ -271,9 +271,9 @@ credential_process = custom-process --username jdoe
 |Session Token|`token`|`AWS_SESSION_TOKEN`|`aws_session_token`|
 |Region|`region`|`AWS_REGION` or `AWS_DEFAULT_REGION`|`region`|
 |Custom CA Bundle |`custom_ca_bundle`|`AWS_CA_BUNDLE`|`ca_bundle`|
-|Client Certificate |`client_certificate`|`AWS_CLIENT_CERTIFICATE`|N/A|
-|Client Private Key |`client_private_key`|`AWS_CLIENT_PRIVATE_KEY`|N/A|
-|Client Private Key Passphrase |`client_private_key_passphrase`|`AWS_CLIENT_PRIVATE_KEY_PASSPHRASE`|N/A|
+|Client Certificate |`client_certificate`|`TF_AWS_CLIENT_CERTIFICATE_PATH`|N/A|
+|Client Private Key |`client_private_key`|`TF_AWS_CLIENT_PRIVATE_KEY_PATH`|N/A|
+|Client Private Key Passphrase |`client_private_key_passphrase`|`TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE`|N/A|
 |EC2 IMDS Endpoint |`ec2_metadata_service_endpoint`|`AWS_EC2_METADATA_SERVICE_ENDPOINT`|N/A|
 |EC2 IMDS Endpoint Mode|`ec2_metadata_service_endpoint_mode`|`AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE`|N/A|
 |Disable EC2 IMDS|`skip_metadata_api_check`|`AWS_EC2_METADATA_DISABLED`|N/A|
@@ -351,13 +351,13 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   IAM Role Chaining is supported by specifying the roles to assume in order.
 * `assume_role_with_web_identity` - (Optional) Configuration block for assuming an IAM role using a web identity. See the [`assume_role_with_web_identity` Configuration Block](#assume_role_with_web_identity-configuration-block) section below. Only one `assume_role_with_web_identity` block may be in the configuration.
 * `client_certificate` - (Optional) File containing the client certificate for mTLS authentication.
-  Can also be set using the `AWS_CLIENT_CERTIFICATE` environment variable.
+  Can also be set using the `TF_AWS_CLIENT_CERTIFICATE_PATH` environment variable.
   Used with `client_private_key` for mutual TLS authentication with AWS services.
 * `client_private_key` - (Optional) File containing the client private key for mTLS authentication.
-  Can also be set using the `AWS_CLIENT_PRIVATE_KEY` environment variable.
+  Can also be set using the `TF_AWS_CLIENT_PRIVATE_KEY_PATH` environment variable.
   Used with `client_certificate` for mutual TLS authentication with AWS services.
 * `client_private_key_passphrase` - (Optional) Passphrase for the client private key file.
-  Can also be set using the `AWS_CLIENT_PRIVATE_KEY_PASSPHRASE` environment variable.
+  Can also be set using the `TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE` environment variable.
   Required only if the client private key file is encrypted.
 * `custom_ca_bundle` - (Optional) File containing custom root and intermediate certificates.
   Can also be set using the `AWS_CA_BUNDLE` environment variable.
