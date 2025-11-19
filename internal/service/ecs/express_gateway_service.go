@@ -717,32 +717,6 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 			return
 		}
 
-		// Explicitly map scaling_target if present - this might override flex.Expand
-		// if !plan.ScalingTarget.IsNull() && !plan.ScalingTarget.IsUnknown() {
-		// 	scalingSlice, d := plan.ScalingTarget.ToSlice(ctx)
-		// 	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
-		// 	if len(scalingSlice) > 0 {
-		// 		st := scalingSlice[0]
-		// 		scalingTarget := &awstypes.ExpressGatewayScalingTarget{}
-		// 		if !st.MinTaskCount.IsNull() {
-		// 			scalingTarget.MinTaskCount = aws.Int32(int32(st.MinTaskCount.ValueInt64()))
-		// 		}
-		// 		if !st.MaxTaskCount.IsNull() {
-		// 			scalingTarget.MaxTaskCount = aws.Int32(int32(st.MaxTaskCount.ValueInt64()))
-		// 		}
-		// 		if !st.AutoScalingMetric.IsNull() {
-		// 			scalingTarget.AutoScalingMetric = awstypes.ExpressGatewayServiceScalingMetric(st.AutoScalingMetric.ValueString())
-		// 		}
-		// 		if !st.AutoScalingTargetValue.IsNull() {
-		// 			scalingTarget.AutoScalingTargetValue = aws.Int32(int32(st.AutoScalingTargetValue.ValueInt64()))
-		// 		}
-		// 		input.ScalingTarget = scalingTarget
-		// 	}
-		// } else {
-		// 	// If scaling_target is null/unknown, explicitly set to nil to avoid sending empty struct
-		// 	input.ScalingTarget = nil
-		// }
-
 		operationTime = time.Now().UTC()
 
 		out, err := retryExpressGatewayServiceUpdate(ctx, conn, &input)
@@ -755,7 +729,6 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 			return
 		}
 
-		// TIP: Using the output from the update function, re-set any computed attributes
 		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 		if resp.Diagnostics.HasError() {
 			return
@@ -816,7 +789,6 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
 	}
 
-	// Set tags from API response - let framework handle tags automatically
 	setTagsOut(ctx, waitOut.Tags)
 
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -883,8 +855,6 @@ func waitExpressGatewayServiceActive(ctx context.Context, conn *ecs.Client, ARN 
 		Target:  []string{gatewayServiceStatusActive},
 		Refresh: statusExpressGatewayService(ctx, conn, ARN),
 		Timeout: timeout,
-		// NotFoundChecks:            20,
-		// ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -1190,12 +1160,6 @@ func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, inp
 		func(ctx context.Context) (any, error) {
 			return conn.CreateExpressGatewayService(ctx, input)
 		},
-		func(err error) (bool, error) {
-			// if errs.IsA[*awstypes.InvalidParameterException](err) {
-			// 	return true, err
-			// }
-			return false, err
-		},
 	)
 	if err != nil {
 		return nil, err
@@ -1211,12 +1175,6 @@ func retryExpressGatewayServiceUpdate(ctx context.Context, conn *ecs.Client, inp
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (any, error) {
 			return conn.UpdateExpressGatewayService(ctx, input)
-		},
-		func(err error) (bool, error) {
-			// if errs.IsA[*awstypes.InvalidParameterException](err) {
-			// 	return true, err
-			// }
-			return false, err
 		},
 	)
 	if err != nil {
