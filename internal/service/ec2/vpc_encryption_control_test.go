@@ -145,7 +145,7 @@ func TestAccVPCVPCEncryptionControl_enforce(t *testing.T) {
 							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
-						"nat_gateway_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"nat_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
@@ -204,7 +204,7 @@ func TestAccVPCVPCEncryptionControl_enforce_ImplicitExclusions(t *testing.T) {
 							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
-						"nat_gateway_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"nat_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
@@ -263,7 +263,7 @@ func TestAccVPCVPCEncryptionControl_enforce_ExplicitExclusions(t *testing.T) {
 							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
-						"nat_gateway_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"nat_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
