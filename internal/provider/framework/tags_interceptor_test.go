@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,19 +49,19 @@ func (c mockRequiredTagsClient) TagPolicyConfig(ctx context.Context) *tftags.Tag
 
 type mockServicePackage struct{}
 
-func (sp mockServicePackage) FrameworkDataSources(context.Context) []*types.ServicePackageFrameworkDataSource {
+func (sp mockServicePackage) FrameworkDataSources(context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return nil
 }
 
-func (sp mockServicePackage) FrameworkResources(context.Context) []*types.ServicePackageFrameworkResource {
+func (sp mockServicePackage) FrameworkResources(context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return nil
 }
 
-func (sp mockServicePackage) SDKDataSources(context.Context) []*types.ServicePackageSDKDataSource {
+func (sp mockServicePackage) SDKDataSources(context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return nil
 }
 
-func (sp mockServicePackage) SDKResources(context.Context) []*types.ServicePackageSDKResource {
+func (sp mockServicePackage) SDKResources(context.Context) []*inttypes.ServicePackageSDKResource {
 	return nil
 }
 
