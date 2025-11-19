@@ -551,7 +551,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrRegion, names.AttrTags, names.AttrTagsAll) {
 		input := &apprunner.UpdateServiceInput{
 			ServiceArn: aws.String(d.Id()),
 		}

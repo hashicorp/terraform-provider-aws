@@ -24,6 +24,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newDomainVerificationResource,
+			TypeName: "aws_vpclattice_domain_verification",
+			Name:     "Domain Verification",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newResourceConfigurationResource,
 			TypeName: "aws_vpclattice_resource_configuration",
 			Name:     "Resource Configuration",
