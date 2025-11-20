@@ -143,8 +143,8 @@ github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.5 h1:T6YofQNDDRCRjrXGbISm7N
 github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.5/go.mod h1:6beJzOhsJ3eZZer/LZsc22MDwGBDB36JBkgyx6g3m0w=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.21.4 h1:KKLd2otYauuDybA81T8Z+jjPBi0z9yvLgdVBldmUBXE=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.21.4/go.mod h1:j4TcbQRWZQJpZqORVYHaV4lTpmrxVz+TT0kwF6EogTg=
-github.com/aws/aws-sdk-go-v2/service/codecommit v1.33.3 h1:D0CCIRXUefKZX30AyyG7QZby5+tVzP3Z+M66HoZVI4g=
-github.com/aws/aws-sdk-go-v2/service/codecommit v1.33.3/go.mod h1:jZuIO2m8qmy6VFTQgB/8bTb72o+X4zLRfnu1PubtriM=
+github.com/aws/aws-sdk-go-v2/service/codecommit v1.33.4 h1:hcWOsME6nj9abHmBhXXEhsmuDigtJqLuVOF+2foCWeg=
+github.com/aws/aws-sdk-go-v2/service/codecommit v1.33.4/go.mod h1:Apq9XzUs2Fpf4zGYSTT30AzyGpmQ5WdUQ9FB4Oo3VEY=
 github.com/aws/aws-sdk-go-v2/service/codeconnections v1.10.11 h1:UjRTTd2hwOv/bzqqaDlemhOqBK+J/tjTdv6PRJSvCxg=
 github.com/aws/aws-sdk-go-v2/service/codeconnections v1.10.11/go.mod h1:MMDcKcUGX6vTU6iI4+JFF486CGygY/COEldYNSdQDFQ=
 github.com/aws/aws-sdk-go-v2/service/codedeploy v1.35.3 h1:K6u1VZc2SmFqWaBELcIfowpH4livshEk3Iwg/Kuvd9g=
