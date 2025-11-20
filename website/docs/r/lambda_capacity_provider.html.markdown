@@ -57,7 +57,7 @@ The following arguments are optional:
 ### capacity_provider_scaling_policy
 
 * `max_vpcu_count` - (Optional) The maximum number of VPCUs for the Capacity Provider.
-* `scaling_mode` - (Optional) The scaling mode for the Capacity Provider. Valid values are `AUTO` and `MANUAL`. Defaults to `AUTO`.
+* `scaling_mode` - (Required) The scaling mode for the Capacity Provider. Valid values are `AUTO` and `MANUAL`. Defaults to `AUTO`.
 * `scaling_policies` - (Optional) List of scaling policies. See [Scaling Policies](#scaling_policies) below.
 
 #### scaling_policies
@@ -67,7 +67,7 @@ The following arguments are optional:
 
 ### instance_requirements
 
-* `architectures` - (Optional) List of CPU architectures. Valid values are `X86_64` and `ARM64`.
+* `architectures` - (Required) List of CPU architectures. Valid values are `X86_64` and `ARM64`.
 * `allowed_instance_types` - (Optional) List of allowed instance types.
 * `excluded_instance_types` - (Optional) List of excluded instance types.
 

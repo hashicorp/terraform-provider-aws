@@ -323,6 +323,21 @@ func (r *resourceCapacityProvider) ValidateConfig(ctx context.Context, request r
 			}
 		}
 	}
+
+	if !data.CapacityProviderScalingConfig.IsNull() || !data.CapacityProviderScalingConfig.IsUnknown() {
+		sc, d := data.CapacityProviderScalingConfig.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if sc != nil {
+			if sc.ScalingMode.IsNull() {
+				smerr.AddError(ctx, &response.Diagnostics, errors.New("scaling_mode must be specified when capacity_provider_scaling_config is configured"), smerr.ID)
+				return
+			}
+		}
+	}
 }
 
 func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
