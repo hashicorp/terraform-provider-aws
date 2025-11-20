@@ -229,7 +229,7 @@ func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tflambda.FindCapacityProviderByARN(ctx, conn, rs.Primary.ID)
+			_, err := tflambda.FindCapacityProviderByName(ctx, conn, rs.Primary.ID)
 			if retry.NotFound(err) {
 				return nil
 			}
@@ -256,7 +256,7 @@ func testAccCheckCapacityProviderExists(ctx context.Context, name string, capaci
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
-		resp, err := tflambda.FindCapacityProviderByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+		resp, err := tflambda.FindCapacityProviderByName(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 		if err != nil {
 			return create.Error(names.Lambda, create.ErrActionCheckingExistence, tflambda.ResNameCapacityProvider, rs.Primary.ID, err)
 		}
