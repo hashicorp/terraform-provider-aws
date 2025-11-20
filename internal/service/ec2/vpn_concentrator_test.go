@@ -35,8 +35,8 @@ func TestAccEC2VPNConcentrator_basic(t *testing.T) {
 					testAccCheckVPNConcentratorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ipsec.1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
 				),
 			},
 			{
@@ -60,11 +60,11 @@ func TestAccEC2VPNConcentrator_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConcentratorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNConcentratorConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVPNConcentratorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNConcentratorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -73,20 +73,20 @@ func TestAccEC2VPNConcentrator_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPNConcentratorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPNConcentratorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNConcentratorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVPNConcentratorConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVPNConcentratorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNConcentratorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
