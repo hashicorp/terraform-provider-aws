@@ -265,6 +265,8 @@ The `sse_kms_encrypted_objects` configuration block supports the following argum
 
 ~> **NOTE:** Currently, changes to the `server_side_encryption_configuration` configuration of *existing* resources cannot be automatically detected by Terraform. To manage changes in encryption of an S3 bucket, use the `aws_s3_bucket_server_side_encryption_configuration` resource instead. If you use `server_side_encryption_configuration` on an `aws_s3_bucket`, Terraform will assume management over the encryption configuration for the S3 bucket, treating additional encryption changes as drift. For this reason, `server_side_encryption_configuration` cannot be mixed with the external `aws_s3_bucket_server_side_encryption_configuration` resource for a given S3 bucket.
 
+~> **NOTE:** Starting in March 2026, Amazon S3 will automatically block server-side encryption with customer-provided keys (SSE-C) for all new buckets. The `blocked_encryption_types` argument is not available in this deprecated configuration block. Use the [`aws_s3_bucket_server_side_encryption_configuration`](/docs/providers/aws/r/s3_bucket_server_side_encryption_configuration.html) resource to manage this behavior for specific buckets.
+
 The `server_side_encryption_configuration` configuration block supports the following argument:
 
 * `rule` - (Required) Single object for server-side encryption by default configuration. (documented below)
