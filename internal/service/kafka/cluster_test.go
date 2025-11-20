@@ -55,6 +55,27 @@ var (
 	clusterZookeeperConnectStringRegexp = regexache.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortZookeeper))
 )
 
+func TestNormalizeKafkaVersion(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		s1 string
+		s2 string
+	}{
+		{"", ""},
+		{"2.8.1", "2.8.1"},
+		{"2.8", "2.8"},
+		{"2", "2"},
+		{"3.8.x", "3.8"},
+		{"3.8.link", "3.8"},
+		{"4.1.x.kraft", "4.1"},
+	} {
+		if got, want := tfkafka.NormalizeKafkaVersion(tc.s1), tc.s2; got != want {
+			t.Errorf("NormalizeKafkaVersion(%q) = %q, want %q", tc.s1, got, want)
+		}
+	}
+}
+
 func TestAccKafkaCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.ClusterInfo

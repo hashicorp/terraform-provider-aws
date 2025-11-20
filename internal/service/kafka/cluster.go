@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -1321,6 +1322,15 @@ func clusterUUIDFromARN(clusterARN string) (string, error) {
 		return "", fmt.Errorf("invalid MSK Cluster ARN (%s)", clusterARN)
 	}
 	return parts[2], nil
+}
+
+// normalizeKafkaVersion removes any trailing non-numeric components from the version string.
+func normalizeKafkaVersion(version string) string {
+	loc := regexache.MustCompile(`\.[[:alpha:]]+(\.[[:alpha:]]+)?$`).FindStringIndex(version)
+	if loc == nil || loc[1] != len(version) {
+		return version
+	}
+	return version[:loc[0]]
 }
 
 func expandBrokerNodeGroupInfo(tfMap map[string]any) *types.BrokerNodeGroupInfo {
