@@ -854,12 +854,12 @@ func flattenOpenZFSReadCacheConfiguration(apiObject *awstypes.OpenZFSReadCacheCo
 
 	tfMap := make(map[string]any)
 
-	if apiObject.SizeGiB != nil {
-		tfMap[names.AttrSize] = aws.ToInt32(apiObject.SizeGiB)
-	}
 	if apiObject.SizingMode != "" {
 		tfMap["sizing_mode"] = string(apiObject.SizingMode)
 	}
+
+	// if apiObject.SizeGiB is nil, tfMap[names.AttrSize] will be zero value (0)
+	tfMap[names.AttrSize] = aws.ToInt32(apiObject.SizeGiB)
 
 	return []any{tfMap}
 }
