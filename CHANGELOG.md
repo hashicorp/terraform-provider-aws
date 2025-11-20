@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Ephemeral Resource:** `aws_ecr_authorization_token` ([#44949](https://github.com/hashicorp/terraform-provider-aws/issues/44949))
+* **New Resource:** `aws_billing_view` ([#45097](https://github.com/hashicorp/terraform-provider-aws/issues/45097))
 * **New Resource:** `aws_vpclattice_domain_verification` ([#45085](https://github.com/hashicorp/terraform-provider-aws/issues/45085))
 
 ENHANCEMENTS:
@@ -15,6 +16,7 @@ ENHANCEMENTS:
 * data-source/aws_lb_listener_rule: Add `action.jwt_validation` attribute ([#45089](https://github.com/hashicorp/terraform-provider-aws/issues/45089))
 * data-source/aws_route53_zone: Support filtering by `tags` only or by `vpc_id` only ([#39671](https://github.com/hashicorp/terraform-provider-aws/issues/39671))
 * resource/aws_backup_logically_air_gapped_vault: Add `encryption_key_arn` argument ([#45020](https://github.com/hashicorp/terraform-provider-aws/issues/45020))
+* resource/aws_bedrock_guardrail: Add `input_action`, `input_enabled`, `input_modalities`, `output_action`, `output_enabled`, and `output_modalities` arguments to the `content_policy_config.filters_config` block ([#45104](https://github.com/hashicorp/terraform-provider-aws/issues/45104))
 * resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.rds_configuration.field_mapping.custom_metadata_field` argument ([#45075](https://github.com/hashicorp/terraform-provider-aws/issues/45075))
 * resource/aws_bedrockagentcore_agent_runtime: Add `agent_runtime_artifact.code_configuration` block ([#45091](https://github.com/hashicorp/terraform-provider-aws/issues/45091))
 * resource/aws_bedrockagentcore_agent_runtime: Make `agent_runtime_artifact.container_configuration` block optional ([#45091](https://github.com/hashicorp/terraform-provider-aws/issues/45091))
