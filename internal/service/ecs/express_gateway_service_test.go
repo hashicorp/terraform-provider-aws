@@ -60,11 +60,14 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrServiceARN),
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_steady_state",
-					"current_deployment", // is not returned in Create response, so will show as diff in Import.
+					"current_deployment", // not returned immediately in Create response, so will show as diff in Import
+					"primary_container",  // top-level create-only attribute that will show as null in Import
+					"execution_role",     // top-level create-only attribute that will show as null in Import
 				},
 			},
 		},
@@ -137,16 +140,18 @@ func TestAccECSExpressGatewayService_tags(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 			},
-			// {
-			// 	ResourceName: resourceName,
-			// 	ImportState:  true,
-
-			// 	// ImportStateVerify: true,
-			// 	// ImportStateVerifyIgnore: []string{
-			// 	// 	"wait_for_steady_state",
-			// 	// 	"current_deployment", // is not returned in Create response, so will show as diff in Import.
-			// 	// },
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrServiceARN),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_steady_state",
+					"current_deployment", // not returned immediately in Create response, so will show as diff in Import
+					"primary_container",  // top-level create-only attribute that will show as null in Import
+					"execution_role",     // top-level create-only attribute that will show as null in Import
+				},
+			},
 		},
 	})
 }
@@ -232,15 +237,6 @@ func TestAccECSExpressGatewayService_waitForSteadyState(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:latest"),
 				),
 			},
-			// {
-			// 	ResourceName: resourceName,
-			// 	ImportState:  true,
-			// 	// ImportStateVerify: true,
-			// 	// ImportStateVerifyIgnore: []string{
-			// 	// 	"wait_for_steady_state",
-			// 	// 	"current_deployment", // is not returned in Create response, so will show as diff in Import.
-			// 	// },
-			// },
 		},
 	})
 }
@@ -294,13 +290,17 @@ func TestAccECSExpressGatewayService_networkConfiguration(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				// ImportState:       true,
-				// ImportStateVerify: true,
-				// ImportStateVerifyIgnore: []string{
-				// 	"wait_for_steady_state",
-				// 	"current_deployment", // is not returned in Create response, so will show as diff in Import.
-				// },
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrServiceARN),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_steady_state",
+					"current_deployment",    // not returned immediately in Create response, so will show as diff in Import
+					"primary_container",     // top-level create-only attribute that will show as null in Import
+					"network_configuration", // top-level create-only attribute that will show as null in Import
+					"execution_role",        // top-level create-only attribute that will show as null in Import
+				},
 			},
 		},
 	})
