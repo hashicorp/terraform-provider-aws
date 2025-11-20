@@ -345,8 +345,8 @@ github.com/aws/aws-sdk-go-v2/service/licensemanager v1.37.0 h1:9gckoRoE/7Frpeylh
 github.com/aws/aws-sdk-go-v2/service/licensemanager v1.37.0/go.mod h1:hOEVTzUvxa3cACGfGG9ITLIJyu38xfNo7Ro/OaP/y0s=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.50.7 h1:o5kT+nFYZbestjv0GWibkVS3bCf+ZijhGiMc3Xxj/hg=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.50.7/go.mod h1:x+omzRoqYYFX+H8/va+Gt2Yg4xGaHZMRowr77Y/UGIA=
-github.com/aws/aws-sdk-go-v2/service/location v1.50.4 h1:95HV4iCeSPGfTTiPI5JjmZAHud0YCn0wB1KViqk+Epk=
-github.com/aws/aws-sdk-go-v2/service/location v1.50.4/go.mod h1:XqDleYNKtPYvlUb14t3vWzJL/j81V1wyxALzAkhakfs=
+github.com/aws/aws-sdk-go-v2/service/location v1.50.5 h1:W+btCDgh5jJSEb4UT/u3/OKp8yW4kmgpoyDxLNEoz2Q=
+github.com/aws/aws-sdk-go-v2/service/location v1.50.5/go.mod h1:4Qh2hQkY2QVsH3Km3nMSyokJI79SjVjHaEFvYXPTXLQ=
 github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.37.2 h1:IXo/4IslBFio+k7Pm0gLptSh+B2GvSZQKRTDwfs9jkc=
 github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.37.2/go.mod h1:tF6+C2s8Ru1RIyN1jPJR4VVk10Zz7pBhrYgZ72rFy7c=
 github.com/aws/aws-sdk-go-v2/service/m2 v1.26.5 h1:36dEuPAWGx9dmFvxAbsaoueMqEx24E1VYQEcJiaamF4=
