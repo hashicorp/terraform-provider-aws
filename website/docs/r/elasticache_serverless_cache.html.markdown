@@ -91,6 +91,7 @@ The following arguments are required:
 
 * `engine` - (Required) Name of the cache engine to be used for this cache cluster. Valid values are `memcached`, `redis` or `valkey`.
 * `name` - (Required) The Cluster name which serves as a unique identifier to the serverless cache
+* `security_group_ids` - (Required) A list of the one or more VPC security groups to be associated with the serverless cache. The security group will authorize traffic access for the VPC end-point (private-link).
 
 The following arguments are optional:
 
@@ -101,7 +102,6 @@ The following arguments are optional:
 * `kms_key_id` - (Optional) ARN of the customer managed key for encrypting the data at rest. If no KMS key is provided, a default service key is used.
 * `major_engine_version` - (Optional) The version of the cache engine that will be used to create the serverless cache.
   See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html) in the AWS Documentation for supported versions.
-* `security_group_ids` - (Optional) A list of the one or more VPC security groups to be associated with the serverless cache. The security group will authorize traffic access for the VPC end-point (private-link). If no other information is given this will be the VPC’s Default Security Group that is associated with the cluster VPC end-point.
 * `snapshot_arns_to_restore` - (Optional, Redis only) The list of ARN(s) of the snapshot that the new serverless cache will be created from. Available for Redis only.
 * `snapshot_retention_limit` - (Optional, Redis only) The number of snapshots that will be retained for the serverless cache that is being created. As new snapshots beyond this limit are added, the oldest snapshots will be deleted on a rolling basis. Available for Redis only.
 * `subnet_ids` - (Optional) A list of the identifiers of the subnets where the VPC endpoint for the serverless cache will be deployed. All the subnetIds must belong to the same VPC.
