@@ -17,8 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -66,15 +64,7 @@ func (r *resourceCapacityProvider) Schema(ctx context.Context, _ resource.Schema
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN:                      framework.ARNAttributeComputedOnly(),
 			"capacity_provider_scaling_config": framework.ResourceOptionalComputedListOfObjectsAttribute[capacityProviderScalingConfigModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
-			"force_destroy": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(false),
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"instance_requirements": framework.ResourceOptionalComputedListOfObjectsAttribute[instanceRequirementsModel](ctx, 1, nil, listplanmodifier.RequiresReplaceIfConfigured(), listplanmodifier.UseStateForUnknown()),
+			"instance_requirements":            framework.ResourceOptionalComputedListOfObjectsAttribute[instanceRequirementsModel](ctx, 1, nil, listplanmodifier.RequiresReplaceIfConfigured(), listplanmodifier.UseStateForUnknown()),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -228,7 +218,7 @@ func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state, flex.WithIgnoredField("ForceDestroy"))
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
@@ -280,16 +270,20 @@ func (r *resourceCapacityProvider) Delete(ctx context.Context, request resource.
 		CapacityProviderName: state.Name.ValueStringPointer(),
 	}
 
-	_, err := conn.DeleteCapacityProvider(ctx, &input)
+	deleteCapacityProvider := func(startTime time.Time) (time.Duration, error) {
+		functionDeletePropagationTimeout := time.Minute * 5
+
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceConflictException](ctx, functionDeletePropagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.DeleteCapacityProvider(ctx, &input)
+		}, "To delete this capacity provider, first remove its association")
+
+		return time.Since(startTime), err
+	}
+
+	timeElapsed, err := deleteCapacityProvider(time.Now())
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
-
-	// TODO should have a way to force delete associated resources
-	//if errs.IsAErrorMessageContains[*awstypes.ResourceConflictException](err, "To delete this capacity provider, first remove its association") &&
-	//	state.ForceDestroy.ValueBool() {
-	//	// TODO delete all associated function
-	//}
 
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ARN.String())
@@ -297,7 +291,7 @@ func (r *resourceCapacityProvider) Delete(ctx context.Context, request resource.
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitCapacityProviderDeleted(ctx, conn, state.Name.ValueString(), deleteTimeout)
+	_, err = waitCapacityProviderDeleted(ctx, conn, state.Name.ValueString(), deleteTimeout-timeElapsed)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ARN.String())
 		return
@@ -407,7 +401,6 @@ func findCapacityProviderByName(ctx context.Context, conn *lambda.Client, name s
 type resourceCapacityProviderModel struct {
 	framework.WithRegionModel
 	ARN                           types.String                                                        `tfsdk:"arn"`
-	ForceDestroy                  types.Bool                                                          `tfsdk:"force_destroy"`
 	Name                          types.String                                                        `tfsdk:"name"`
 	KMSKeyARN                     fwtypes.ARN                                                         `tfsdk:"kms_key_arn"`
 	PermissionsConfig             fwtypes.ListNestedObjectValueOf[permissionConfigModel]              `tfsdk:"permissions_config"`

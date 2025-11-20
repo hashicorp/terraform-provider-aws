@@ -107,10 +107,12 @@ func resourceFunction() *schema.Resource {
 									"execution_environment_memory_gib_per_vcpu": {
 										Type:     schema.TypeFloat,
 										Optional: true,
+										Computed: true,
 									},
 									"per_execution_environment_max_concurrency": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -329,6 +331,11 @@ func resourceFunction() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"publish_to": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.FunctionVersionLatestPublished](),
+			},
 			"qualified_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -542,14 +549,8 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		Timeout:      aws.Int32(int32(d.Get(names.AttrTimeout).(int))),
 	}
 
-	// check if function is associated with a capacity provider.
-	// this will indicate the type of publish we need to do.
 	if v, ok := d.GetOk("capacity_provider_config"); ok {
 		input.CapacityProviderConfig = expandCapacityProviderConfig(v.([]any))
-
-		//if d.Get("publish").(bool) {
-		//	input.PublishTo = awstypes.FunctionVersionLatestPublishedLatestPublished
-		//}
 	}
 
 	if v, ok := d.GetOk("filename"); ok {
@@ -614,6 +615,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 	if packageType == awstypes.PackageTypeZip {
 		input.Handler = aws.String(d.Get("handler").(string))
 		input.Runtime = awstypes.Runtime(d.Get("runtime").(string))
+	}
+
+	if v, ok := d.GetOk("publish_to"); ok {
+		input.PublishTo = awstypes.FunctionVersionLatestPublished(v.(string))
 	}
 
 	if v, ok := d.GetOk("image_config"); ok && len(v.([]any)) > 0 {
@@ -1147,12 +1152,9 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			FunctionName: aws.String(d.Id()),
 		}
 
-		// check if function is associated with a capacity provider.
-		// this will indicate the type of publish we need to do.
-		//if _, ok := d.GetOk("capacity_provider_config"); ok {
-		//	// new api with publish options
-		//	input.PublishTo = awstypes.FunctionVersionLatestPublishedLatestPublished
-		//}
+		if v, ok := d.GetOk("publish_to"); ok {
+			input.PublishTo = awstypes.FunctionVersionLatestPublished(v.(string))
+		}
 
 		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PublishVersion(ctx, &input)
