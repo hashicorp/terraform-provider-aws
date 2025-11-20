@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Ephemeral Resource:** `aws_ecr_authorization_token` ([#44949](https://github.com/hashicorp/terraform-provider-aws/issues/44949))
+* **New Guide:** `Tag Policy Compliance` ([#45143](https://github.com/hashicorp/terraform-provider-aws/issues/45143))
 * **New Resource:** `aws_billing_view` ([#45097](https://github.com/hashicorp/terraform-provider-aws/issues/45097))
 * **New Resource:** `aws_vpclattice_domain_verification` ([#45085](https://github.com/hashicorp/terraform-provider-aws/issues/45085))
 
@@ -15,6 +16,7 @@ ENHANCEMENTS:
 * data-source/aws_lb_listener: Add `default_action.jwt_validation` attribute ([#45089](https://github.com/hashicorp/terraform-provider-aws/issues/45089))
 * data-source/aws_lb_listener_rule: Add `action.jwt_validation` attribute ([#45089](https://github.com/hashicorp/terraform-provider-aws/issues/45089))
 * data-source/aws_route53_zone: Support filtering by `tags` only or by `vpc_id` only ([#39671](https://github.com/hashicorp/terraform-provider-aws/issues/39671))
+* provider: Add support for enforcing tag policy compliance. This opt-in feature can be enabled via the new `tag_policy_compliance` provider argument, or the `TF_AWS_TAG_POLICY_COMPLIANCE` environment variable. When enabled, the principal executing Terraform must have the `tags:ListRequiredTags` IAM permission. ([#45143](https://github.com/hashicorp/terraform-provider-aws/issues/45143))
 * resource/aws_backup_logically_air_gapped_vault: Add `encryption_key_arn` argument ([#45020](https://github.com/hashicorp/terraform-provider-aws/issues/45020))
 * resource/aws_bedrock_guardrail: Add `input_action`, `input_enabled`, `input_modalities`, `output_action`, `output_enabled`, and `output_modalities` arguments to the `content_policy_config.filters_config` block ([#45104](https://github.com/hashicorp/terraform-provider-aws/issues/45104))
 * resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.rds_configuration.field_mapping.custom_metadata_field` argument ([#45075](https://github.com/hashicorp/terraform-provider-aws/issues/45075))
