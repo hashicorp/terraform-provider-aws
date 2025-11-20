@@ -275,7 +275,7 @@ resource "aws_lambda_function" "lambda" {
 data "aws_lambda_invocation" "invocation_test" {
   function_name = aws_lambda_function.lambda.function_name
   tenant_id     = "tenant-1"
-  input = <<JSON
+  input         = <<JSON
 {
   "key1": "value1",
   "key2": "value2"

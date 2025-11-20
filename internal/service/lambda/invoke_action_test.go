@@ -622,7 +622,7 @@ action "aws_lambda_invoke" "test" {
   config {
     function_name = aws_lambda_function.test.function_name
     payload       = %[1]q
-	tenant_id     = "tenant-1"
+    tenant_id     = "tenant-1"
   }
 }
 
