@@ -315,7 +315,7 @@ require (
 	github.com/shopspring/decimal v1.4.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.63.0
 	go.opentelemetry.io/otel v1.38.0
-	golang.org/x/crypto v0.44.0
+	golang.org/x/crypto v0.45.0
 	golang.org/x/text v0.31.0
 	golang.org/x/tools v0.39.0
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.5
