@@ -58,21 +58,36 @@ func TestClusterUUIDFromARN(t *testing.T) {
 	t.Parallel()
 
 	for _, tc := range []struct {
-		s1      string
-		s2      string
+		input   string
+		output  string
 		wantErr bool
 	}{
-		{"", "", true},
-		{"testing", "", true},
-		{"arn:aws:kafka:us-east-1:012345678012:cluster/exampleClusterName/abcdefab-1234-abcd-5678-cdef0123ab01-2", "abcdefab-1234-abcd-5678-cdef0123ab01-2", false},         //lintignore:AWSAT003,AWSAT005
-		{"arn:aws:kafka:us-east-1:012345678012:cluster-operation/exampleClusterName/abcdefab-1234-abcd-5678-cdef0123ab01-2/0123abcd-abcd-4f7f-1234-9876543210ef", "", true}, //lintignore:AWSAT003,AWSAT005
-		{"arn:aws:globalaccelerator::123456789012:accelerator/a-123", "", true},                                                                                             //lintignore:AWSAT005
+		{
+			input:   "",
+			wantErr: true,
+		},
+		{
+			input:   "testing",
+			wantErr: true,
+		},
+		{
+			input:  "arn:aws:kafka:us-east-1:012345678012:cluster/exampleClusterName/abcdefab-1234-abcd-5678-cdef0123ab01-2", //lintignore:AWSAT003,AWSAT005
+			output: "abcdefab-1234-abcd-5678-cdef0123ab01-2",
+		},
+		{
+			input:   "arn:aws:kafka:us-east-1:012345678012:cluster-operation/exampleClusterName/abcdefab-1234-abcd-5678-cdef0123ab01-2/0123abcd-abcd-4f7f-1234-9876543210ef", //lintignore:AWSAT003,AWSAT005
+			wantErr: true,
+		},
+		{
+			input:   "arn:aws:globalaccelerator::123456789012:accelerator/a-123", //lintignore:AWSAT005
+			wantErr: true,
+		},
 	} {
-		got, err := tfkafka.ClusterUUIDFromARN(tc.s1)
+		got, err := tfkafka.ClusterUUIDFromARN(tc.input)
 		if gotErr := err != nil; gotErr != tc.wantErr {
-			t.Errorf("ClusterUUIDFromARN(%q) = %v, want error presence = %t", tc.s1, err, tc.wantErr)
-		} else if want := tc.s2; got != want {
-			t.Errorf("ClusterUUIDFromARN(%q) = %q, want %q", tc.s1, got, want)
+			t.Errorf("ClusterUUIDFromARN(%q) = %v, want error presence = %t", tc.input, err, tc.wantErr)
+		} else if want := tc.output; got != want {
+			t.Errorf("ClusterUUIDFromARN(%q) = %q, want %q", tc.input, got, want)
 		}
 	}
 }
@@ -81,8 +96,8 @@ func TestNormalizeKafkaVersion(t *testing.T) {
 	t.Parallel()
 
 	for _, tc := range []struct {
-		s1 string
-		s2 string
+		input  string
+		output string
 	}{
 		{"", ""},
 		{"2.8.1", "2.8.1"},
@@ -92,8 +107,8 @@ func TestNormalizeKafkaVersion(t *testing.T) {
 		{"3.8.link", "3.8"},
 		{"4.1.x.kraft", "4.1"},
 	} {
-		if got, want := tfkafka.NormalizeKafkaVersion(tc.s1), tc.s2; got != want {
-			t.Errorf("NormalizeKafkaVersion(%q) = %q, want %q", tc.s1, got, want)
+		if got, want := tfkafka.NormalizeKafkaVersion(tc.input), tc.output; got != want {
+			t.Errorf("NormalizeKafkaVersion(%q) = %q, want %q", tc.input, got, want)
 		}
 	}
 }
