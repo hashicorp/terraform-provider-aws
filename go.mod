@@ -157,7 +157,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kms v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.82.1
-	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.13.12
+	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.13.13
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.36.12
