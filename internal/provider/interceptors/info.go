@@ -15,7 +15,7 @@ type infoAWSClient interface {
 	ServicePackage(_ context.Context, name string) conns.ServicePackage
 }
 
-func InfoFromContext(ctx context.Context, c infoAWSClient) (conns.ServicePackage, string, string, *tftags.InContext, bool) {
+func InfoFromContext(ctx context.Context, c infoAWSClient) (conns.ServicePackage, string, string, string, *tftags.InContext, bool) {
 	if inContext, ok := conns.FromContext(ctx); ok {
 		if sp := c.ServicePackage(ctx, inContext.ServicePackageName()); sp != nil {
 			serviceName, err := names.HumanFriendly(sp.ServicePackageName())
@@ -28,11 +28,16 @@ func InfoFromContext(ctx context.Context, c infoAWSClient) (conns.ServicePackage
 				resourceName = "<thing>"
 			}
 
+			typeName := inContext.TypeName()
+			if typeName == "" {
+				resourceName = "aws_<service>_<thing>"
+			}
+
 			if tagsInContext, ok := tftags.FromContext(ctx); ok {
-				return sp, serviceName, resourceName, tagsInContext, true
+				return sp, serviceName, resourceName, typeName, tagsInContext, true
 			}
 		}
 	}
 
-	return nil, "", "", nil, false
+	return nil, "", "", "", nil, false
 }

@@ -249,6 +249,15 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Description: "The region where AWS STS operations will take place. Examples\n" +
 						"are us-east-1 and us-west-2.", // lintignore:AWSAT003,
 				},
+				"tag_policy_compliance": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Description: `The severity with which to enforce organizational tagging policies on resources managed by this provider instance. ` +
+						`At this time this only includes compliance with required tag keys by resource type. ` +
+						`Valid values are "error", "warning", and "disabled". ` +
+						`When unset or "disabled", tag policy compliance will not be enforced by the provider. ` +
+						`Can also be configured with the ` + tftags.TagPolicyComplianceEnvVar + ` environment variable.`,
+				},
 				"token": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -465,6 +474,13 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		config.IgnoreTagsConfig = expandIgnoreTags(ctx, nil)
 	}
 
+	tagCfg, dg := expandTagPolicyConfig(cty.GetAttrPath("tag_policy_compliance"), d.Get("tag_policy_compliance").(string))
+	diags = append(diags, dg...)
+	if dg.HasError() {
+		return nil, diags
+	}
+	config.TagPolicyConfig = tagCfg
+
 	if v, ok := d.GetOk("max_retries"); ok {
 		config.MaxRetries = v.(int)
 	}
@@ -586,9 +602,9 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 						}
 					}
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, v.TypeName, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
 					}
 
@@ -703,6 +719,11 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					why:         CustomizeDiff,
 					interceptor: setTagsAll(),
 				})
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        Before,
+					why:         CustomizeDiff,
+					interceptor: validateRequiredTags(),
+				})
 			}
 
 			if len(resource.Identity.Attributes) > 0 {
@@ -751,9 +772,9 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 						}
 					}
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, resource.Name, overrideRegion)
+					ctx = conns.NewResourceContext(ctx, servicePackageName, resource.Name, resource.TypeName, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
 					}
 
@@ -1153,4 +1174,39 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]any) *tftags.IgnoreC
 	}
 
 	return ignoreConfig
+}
+
+func expandTagPolicyConfig(path cty.Path, severity string) (*tftags.TagPolicyConfig, diag.Diagnostics) {
+	envSeverity := os.Getenv(tftags.TagPolicyComplianceEnvVar)
+	switch {
+	case severity != "" && severity != "disabled":
+		return &tftags.TagPolicyConfig{Severity: severity}, validateTagPolicySeverity(path, severity)
+	case envSeverity != "" && severity != "disabled":
+		return &tftags.TagPolicyConfig{Severity: envSeverity}, validateTagPolicySeverityEnvVar(envSeverity)
+	}
+
+	return nil, nil
+}
+
+func validateTagPolicySeverity(path cty.Path, s string) diag.Diagnostics {
+	switch s {
+	case "error", "warning", "disabled":
+		return nil
+	}
+	return diag.Diagnostics{errs.NewInvalidValueAttributeError(path, `Must be one of "error", "warning", or "disabled"`)}
+}
+
+const (
+	summaryInvalidEnvironmentVariableValue = "Invalid environment variable value"
+)
+
+func validateTagPolicySeverityEnvVar(s string) diag.Diagnostics {
+	switch s {
+	case "error", "warning", "disabled":
+		return nil
+	}
+	return diag.Diagnostics{errs.NewErrorDiagnostic(
+		summaryInvalidEnvironmentVariableValue,
+		fmt.Sprintf(`%s must be one of "error", "warning", or "disabled"`, tftags.TagPolicyComplianceEnvVar),
+	)}
 }

@@ -243,7 +243,7 @@ func TestAWSClientValidateInContextRegionInPartition(t *testing.T) { // nosemgre
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx = NewResourceContext(ctx, "test", "Test", testCase.Region)
+			ctx = NewResourceContext(ctx, "test", "Test", "aws_test_test", testCase.Region)
 			err := testCase.AWSClient.ValidateInContextRegionInPartition(ctx)
 
 			if got := err == nil; got != testCase.Expected {
