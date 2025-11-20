@@ -357,10 +357,13 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 				return nil
 			},
 			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
-				switch storageType, deploymentType := d.Get(names.AttrStorageType).(string), d.Get("deployment_type").(string); storageType {
+				switch storageType := d.Get(names.AttrStorageType).(string); storageType {
 				case string(awstypes.StorageTypeIntelligentTiering):
-					if deploymentType != string(awstypes.OpenZFSDeploymentTypeMultiAz1) {
+					if deploymentType := d.Get("deployment_type").(string); deploymentType != string(awstypes.OpenZFSDeploymentTypeMultiAz1) {
 						return fmt.Errorf("invalid deployment_type %q for storage_type %q: only %q is supported", deploymentType, storageType, awstypes.OpenZFSDeploymentTypeMultiAz1)
+					}
+					if _, ok := d.GetOk("storage_capacity"); ok {
+						return fmt.Errorf("storage_capacity cannot be specified for storage_type %q", storageType)
 					}
 				}
 				return nil
