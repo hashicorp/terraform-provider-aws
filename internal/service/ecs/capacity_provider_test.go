@@ -954,7 +954,7 @@ resource "aws_ecs_capacity_provider" "test" {
 
   managed_instances_provider {
     infrastructure_role_arn = aws_iam_role.test.arn
-	propagate_tags          = "NONE"
+	propagate_tags 			= "NONE"
 
     instance_launch_template {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
