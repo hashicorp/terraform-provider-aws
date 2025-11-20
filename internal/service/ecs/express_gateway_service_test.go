@@ -59,13 +59,13 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				// ImportStateVerify: true,
-				// ImportStateVerifyIgnore: []string{
-				// 	"wait_for_steady_state",
-				// 	"current_deployment", // is not returned in Create response, so will show as diff in Import.
-				// },
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_steady_state",
+					"current_deployment", // is not returned in Create response, so will show as diff in Import.
+				},
 			},
 		},
 	})
@@ -395,16 +395,6 @@ func testAccCheckExpressGatewayServiceExists(ctx context.Context, name string, s
 	}
 }
 
-// func testAccCheckExpressGatewayServiceNotRecreated(before, after *awstypes.ECSExpressGatewayService) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.ToString(before.ServiceArn), aws.ToString(after.ServiceArn); before != after {
-// 			return create.Error(names.ECS, create.ErrActionCheckingNotRecreated, tfecs.ResNameExpressGatewayService, before, errors.New("recreated"))
-// 		}
-
-// 		return nil
-// 	}
-// }
-
 func testAccExpressGatewayServiceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_vpc" "default" {
@@ -429,9 +419,6 @@ data "aws_security_group" "default" {
   }
 }
 
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-
 resource "aws_iam_role" "execution" {
   name = "%[1]s-execution"
   assume_role_policy = <<POLICY
@@ -442,8 +429,7 @@ resource "aws_iam_role" "execution" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ecs-tasks.amazonaws.com",
-					"ecs-slr.aws.internal"
+          "ecs-tasks.amazonaws.com"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -481,9 +467,7 @@ resource "aws_iam_role" "infrastructure" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ecs-service-principal.ecs.aws.internal",
-          "ecs.amazonaws.com",
-					"ecs-slr.aws.internal"
+          "ecs.amazonaws.com"
         ]
       },
       "Action": "sts:AssumeRole"

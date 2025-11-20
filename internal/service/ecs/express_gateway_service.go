@@ -42,124 +42,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Custom plan modifier for active_configurations that handles two criteria:
-// 1. Not allowing active_configurations to trigger an update when no change has been made to the express service template
-// 2. Allowing changes to be made to active configurations state as a result of an update
-type activeConfigurationsPlanModifier struct{}
-
-func (m activeConfigurationsPlanModifier) Description(ctx context.Context) string {
-	return "Manages active_configurations plan behavior to prevent unwanted plan changes while allowing state updates"
-}
-
-func (m activeConfigurationsPlanModifier) MarkdownDescription(ctx context.Context) string {
-	return "Manages active_configurations plan behavior to prevent unwanted plan changes while allowing state updates"
-}
-
-func (m activeConfigurationsPlanModifier) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	if req.StateValue.IsNull() {
-		return
-	}
-
-	hasUserChanges := m.hasUserConfigurableChanges(ctx, req)
-
-	if hasUserChanges {
-		// There are user changes, so set to unknown to allow state updates during apply
-		// This prevents "inconsistent result after apply" errors while still updating state
-		resp.PlanValue = types.ListUnknown(req.PlanValue.ElementType(ctx))
-	} else {
-		// No user changes detected, keep the state value to prevent showing changes in plan
-		// This prevents unnecessary plan output when no actual changes are made
-		resp.PlanValue = req.StateValue
-	}
-}
-
-// hasUserConfigurableChanges determines if there are changes to user-configurable attributes
-// by checking if the plan differs from state in meaningful ways
-func (m activeConfigurationsPlanModifier) hasUserConfigurableChanges(ctx context.Context, req planmodifier.ListRequest) bool {
-	// Get the parent resource path (remove the last step which is "active_configurations")
-	resourcePath := req.Path.ParentPath()
-
-	var plannedResource, stateResource types.Object
-
-	if diags := req.Plan.GetAttribute(ctx, resourcePath, &plannedResource); diags.HasError() {
-		// If we can't get the plan, assume there are changes to be safe
-		return true
-	}
-
-	if diags := req.State.GetAttribute(ctx, resourcePath, &stateResource); diags.HasError() {
-		// If we can't get the state, assume there are changes to be safe
-		return true
-	}
-
-	// If either is null/unknown, assume there are changes
-	if plannedResource.IsNull() || plannedResource.IsUnknown() || stateResource.IsNull() || stateResource.IsUnknown() {
-		return true
-	}
-
-	// Get the attributes from both planned and state resources
-	plannedAttrs := plannedResource.Attributes()
-	stateAttrs := stateResource.Attributes()
-
-	// List of user-configurable attributes to check for changes
-	userConfigurableAttrs := []string{
-		"cpu", "memory", "health_check_path", "execution_role_arn", "task_role_arn",
-		"infrastructure_role_arn", "cluster", "service_name",
-		"wait_for_steady_state", "tags", "network_configuration", "primary_container", "scaling_target",
-	}
-
-	// Check if any user-configurable attributes have changed
-	for _, attrName := range userConfigurableAttrs {
-		plannedVal, plannedExists := plannedAttrs[attrName]
-		stateVal, stateExists := stateAttrs[attrName]
-
-		// If existence differs, there's a change
-		if plannedExists != stateExists {
-			return true
-		}
-
-		// If both exist, check if values are equal
-		if plannedExists && stateExists {
-			if !plannedVal.Equal(stateVal) {
-				return true
-			}
-		}
-	}
-
-	// No user-configurable changes detected
-	return false
-}
-
-func suppressActiveConfigurationsInPlan() planmodifier.List {
-	return activeConfigurationsPlanModifier{}
-}
-
-// Custom plan modifier for create-only tags that prevents tags from being updated after creation
-// This ensures tags can only be set during resource creation and prevents drift detection during updates
-type createOnlyTagsPlanModifier struct{}
-
-func (m createOnlyTagsPlanModifier) Description(ctx context.Context) string {
-	return "Makes tags create-only by preventing updates and suppressing drift detection"
-}
-
-func (m createOnlyTagsPlanModifier) MarkdownDescription(ctx context.Context) string {
-	return "Makes tags create-only by preventing updates and suppressing drift detection"
-}
-
-func (m createOnlyTagsPlanModifier) PlanModifyMap(ctx context.Context, req planmodifier.MapRequest, resp *planmodifier.MapResponse) {
-	// If this is a create operation (no state), allow the planned tags
-	if req.StateValue.IsNull() {
-		return
-	}
-
-	// For updates, always use the state value to prevent showing changes in plan
-	// This effectively makes tags immutable after creation and prevents drift detection
-	resp.PlanValue = req.StateValue
-}
-
-func createOnlyTags() planmodifier.Map {
-	return createOnlyTagsPlanModifier{}
-}
-
 // @FrameworkResource("aws_ecs_express_gateway_service", name="Express Gateway Service")
 // @Tags(identifierAttribute="service_arn")
 func newResourceExpressGatewayService(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -187,10 +69,6 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 			"active_configurations": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[activeConfigurationModel](ctx),
 				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					// listplanmodifier.UseStateForUnknown(),
-					suppressActiveConfigurationsInPlan(),
-				},
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"service_revision_arn": types.StringType,
@@ -286,8 +164,6 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"status": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[statusModel](ctx),
 				Computed:   true,
@@ -301,6 +177,8 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 					},
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"task_role_arn": schema.StringAttribute{
 				Optional: true,
 			},
@@ -633,6 +511,8 @@ func (r *resourceExpressGatewayService) Read(ctx context.Context, req resource.R
 		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*out.Status}, &state.Status))
 	}
 
+	setTagsOut(ctx, out.Tags)
+
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
@@ -646,7 +526,7 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state, flex.WithIgnoredField("active_configurations"), flex.WithIgnoredField(names.AttrTags), flex.WithIgnoredField(names.AttrTagsAll))
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -658,7 +538,7 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 	if diff.HasChanges() {
 		var input ecs.UpdateExpressGatewayServiceInput
 
-		// Ensure ServiceArn is set - this is required for the update operation
+		// ServiceArn is required for the update operation
 		input.ServiceArn = plan.ServiceArn.ValueStringPointer()
 
 		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
@@ -697,7 +577,7 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 	} else {
 		// No changes, just read current state
 		var err error
-		waitOut, err = findExpressGatewayServiceByARN(ctx, conn, plan.ServiceArn.ValueString())
+		waitOut, err = findExpressGatewayServiceNoTagsByARN(ctx, conn, plan.ServiceArn.ValueString())
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ServiceArn.String())
 			return
@@ -737,8 +617,6 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 	if waitOut.Status != nil {
 		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
 	}
-
-	setTagsOut(ctx, waitOut.Tags)
 
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -849,7 +727,7 @@ func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id
 
 func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findExpressGatewayServiceByARN(ctx, conn, gatewayServiceARN)
+		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -864,7 +742,7 @@ func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayS
 
 func statusExpressGatewayServiceForDeletion(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findExpressGatewayServiceByARN(ctx, conn, gatewayServiceARN)
+		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
 		if tfresource.NotFound(err) {
 			mockService := &awstypes.ECSExpressGatewayService{
 				ServiceArn: aws.String(gatewayServiceARN),
@@ -893,23 +771,49 @@ func statusExpressGatewayServiceForDeletion(ctx context.Context, conn *ecs.Clien
 }
 
 func findExpressGatewayServiceByARN(ctx context.Context, conn *ecs.Client, ARN string) (*awstypes.ECSExpressGatewayService, error) {
-	input := ecs.DescribeExpressGatewayServiceInput{
+	input := &ecs.DescribeExpressGatewayServiceInput{
+		ServiceArn: aws.String(ARN),
+		Include:    []awstypes.ExpressGatewayServiceInclude{awstypes.ExpressGatewayServiceIncludeTags},
+	}
+
+	output, err := findExpressGatewayService(ctx, conn, input)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error.
+	if errs.IsUnsupportedOperationInPartitionError(partitionFromConn(conn), err) {
+		input.Include = nil
+
+		output, err = findExpressGatewayService(ctx, conn, input)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findExpressGatewayServiceNoTagsByARN(ctx context.Context, conn *ecs.Client, ARN string) (*awstypes.ECSExpressGatewayService, error) {
+	input := &ecs.DescribeExpressGatewayServiceInput{
 		ServiceArn: aws.String(ARN),
 	}
 
-	out, err := conn.DescribeExpressGatewayService(ctx, &input)
+	return findExpressGatewayService(ctx, conn, input)
+}
+
+func findExpressGatewayService(ctx context.Context, conn *ecs.Client, input *ecs.DescribeExpressGatewayServiceInput) (*awstypes.ECSExpressGatewayService, error) {
+	out, err := conn.DescribeExpressGatewayService(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError:   err,
-				LastRequest: &input,
+				LastRequest: input,
 			})
 		}
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError:   err,
-				LastRequest: &input,
+				LastRequest: input,
 			})
 		}
 
@@ -917,7 +821,7 @@ func findExpressGatewayServiceByARN(ctx context.Context, conn *ecs.Client, ARN s
 	}
 
 	if out == nil || out.Service == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
 	return out.Service, nil
