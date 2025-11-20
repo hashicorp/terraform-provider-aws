@@ -458,6 +458,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `primary_network_interface_id` - ID of the instance's primary network interface.
 * `private_dns` - Private DNS name assigned to the instance. Can only be used inside the Amazon EC2, and only available if you've enabled DNS hostnames for your VPC.
 * `public_dns` - Public DNS name assigned to the instance. For EC2-VPC, this is only available if you've enabled DNS hostnames for your VPC.
+* `public_dns_name_dualstack` - Public DNS name that resolves to the both IPv6 (AAAA) and IPv4 (A) addresses of the instance. Only available if the instance has both.
+* `public_dns_name_ipv4` - Public DNS name that resolves to the instance's public IPv4 address. Only available if the instance has a public IPv4 address assigned.
+* `public_dns_name_ipv6` - Public DNS name that resolves to the instance's IPv6 address. Only available if the instance has IPv6 addresses on its primary network interface.
 * `public_ip` - Public IP address assigned to the instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `public_ip` as this field will change after the EIP is attached.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
