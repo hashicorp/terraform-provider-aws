@@ -47,13 +47,13 @@ func (r *vpnConcentratorResource) Schema(ctx context.Context, _ resource.SchemaR
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"transit_gateway_attachment_id": schema.StringAttribute{
+			names.AttrTransitGatewayAttachmentID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"transit_gateway_id": schema.StringAttribute{
+			names.AttrTransitGatewayID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
