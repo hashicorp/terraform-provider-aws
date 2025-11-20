@@ -1373,6 +1373,71 @@ func TestAccSiteVPNConnection_ipv6(t *testing.T) {
 	})
 }
 
+func TestAccSiteVPNConnection_largeBandwidthTunnel_TGW(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpn awstypes.VpnConnection
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+	resourceName := "aws_vpn_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteVPNConnectionConfig_largeBandwidth_TGW(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "tunnel_bandwidth", "large"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, regexache.MustCompile(`tgw-attach-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
+			},
+		},
+	})
+}
+
+func TestAccSiteVPNConnection_largeBandwidthTunnel_withoutTGWorVGW(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpn awstypes.VpnConnection
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteVPNConnectionConfig_largeBandwidth_WithoutTGWorVGW(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "tunnel_bandwidth", "large"),
+					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "core_network_attachment_arn", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
+			},
+		},
+	})
+}
+
 func TestAccSiteVPNConnection_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2844,3 +2909,48 @@ const testAccVPNTunnelInfoXML = `
   </ipsec_tunnel>
 </vpn_connection>
 `
+
+func testAccSiteVPNConnectionConfig_largeBandwidth_TGW(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "198.51.100.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  description = %[1]q
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id = aws_customer_gateway.test.id
+  transit_gateway_id  = aws_ec2_transit_gateway.test.id
+  tunnel_bandwidth    = "large"
+  type                = "ipsec.1"
+}
+`, rName, rBgpAsn)
+}
+
+func testAccSiteVPNConnectionConfig_largeBandwidth_WithoutTGWorVGW(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "198.51.100.2"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id = aws_customer_gateway.test.id
+  tunnel_bandwidth    = "large"
+  type                = "ipsec.1"
+}
+`, rName, rBgpAsn)
+}

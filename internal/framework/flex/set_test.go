@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 func TestExpandFrameworkStringValueSet(t *testing.T) {
@@ -19,7 +19,7 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 
 	type testCase struct {
 		input    types.Set
-		expected itypes.Set[string]
+		expected inttypes.Set[string]
 	}
 	tests := map[string]testCase{
 		"null": {

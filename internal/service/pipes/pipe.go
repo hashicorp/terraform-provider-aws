@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -208,7 +208,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("desired_state", output.DesiredState)
 	d.Set("enrichment", output.Enrichment)
-	if v := output.EnrichmentParameters; !types.IsZero(v) {
+	if v := output.EnrichmentParameters; !inttypes.IsZero(v) {
 		if err := d.Set("enrichment_parameters", []any{flattenPipeEnrichmentParameters(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting enrichment_parameters: %s", err)
 		}
@@ -216,7 +216,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		d.Set("enrichment_parameters", nil)
 	}
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
-	if v := output.LogConfiguration; !types.IsZero(v) {
+	if v := output.LogConfiguration; !inttypes.IsZero(v) {
 		if err := d.Set("log_configuration", []any{flattenPipeLogConfiguration(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
 		}
@@ -227,7 +227,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set(names.AttrSource, output.Source)
-	if v := output.SourceParameters; !types.IsZero(v) {
+	if v := output.SourceParameters; !inttypes.IsZero(v) {
 		if err := d.Set("source_parameters", []any{flattenPipeSourceParameters(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting source_parameters: %s", err)
 		}
@@ -235,7 +235,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		d.Set("source_parameters", nil)
 	}
 	d.Set(names.AttrTarget, output.Target)
-	if v := output.TargetParameters; !types.IsZero(v) {
+	if v := output.TargetParameters; !inttypes.IsZero(v) {
 		if err := d.Set("target_parameters", []any{flattenPipeTargetParameters(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting target_parameters: %s", err)
 		}

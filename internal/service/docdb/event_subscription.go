@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -329,7 +329,7 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.Client, input *docd
 		}
 
 		for _, v := range page.EventSubscriptionsList {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}

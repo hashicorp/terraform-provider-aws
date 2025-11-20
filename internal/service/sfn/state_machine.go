@@ -113,6 +113,10 @@ func resourceStateMachine() *schema.Resource {
 						"log_destination": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.All(
+								verify.ValidARN,
+								validation.StringMatch(regexache.MustCompile(`:\*$`), "ARN must end with `:*`"),
+							),
 						},
 					},
 				},

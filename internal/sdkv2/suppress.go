@@ -24,6 +24,18 @@ func SuppressEquivalentJSONDocuments(k, old, new string, _ *schema.ResourceData)
 	return json.EqualStrings(old, new)
 }
 
+// SuppressEquivalentJSONDocumentsWithEmpty provides custom difference suppression
+// for JSON documents in the given strings that are equivalent, handling empty
+// strings (`""`) and empty JSON strings (`"{}"`) as equivalent.
+// This is useful for suppressing diffs for non-IAM JSON policy documents.
+func SuppressEquivalentJSONDocumentsWithEmpty(k, old, new string, _ *schema.ResourceData) bool {
+	if equalEmptyJSONStrings(old, new) {
+		return true
+	}
+
+	return json.EqualStrings(old, new)
+}
+
 // SuppressEquivalentCloudWatchLogsLogGroupARN provides custom difference suppression
 // for strings that represent equal CloudWatch Logs log group ARNs.
 func SuppressEquivalentCloudWatchLogsLogGroupARN(_, old, new string, _ *schema.ResourceData) bool {

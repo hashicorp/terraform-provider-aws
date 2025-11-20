@@ -1037,9 +1037,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceImageBlockPublicAccess,
 			TypeName: "aws_ec2_image_block_public_access",
 			Name:     "Image Block Public Access",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalSingletonIdentity(
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(
 				inttypes.WithV6_0SDKv2Fix(),
+				inttypes.WithVersion(1),
+				inttypes.WithSDKv2IdentityUpgraders(imageBlockPublicAccessIdentityUpgradeV0),
 			),
 		},
 		{
@@ -1100,9 +1102,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceSerialConsoleAccess,
 			TypeName: "aws_ec2_serial_console_access",
 			Name:     "Serial Console Access",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalSingletonIdentity(
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(
 				inttypes.WithV6_0SDKv2Fix(),
+				inttypes.WithVersion(1),
+				inttypes.WithSDKv2IdentityUpgraders(serialConsoleAccessIdentityUpgradeV0),
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
