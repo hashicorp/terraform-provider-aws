@@ -3012,9 +3012,9 @@ resource "aws_customer_gateway" "test" {
 }
 
 resource "aws_vpn_connection" "test" {
-  customer_gateway_id   = aws_customer_gateway.test.id
-  vpn_concentrator_id   = aws_vpn_concentrator.test.id
-  type                  = aws_customer_gateway.test.type
+  customer_gateway_id = aws_customer_gateway.test.id
+  vpn_concentrator_id = aws_vpn_concentrator.test.id
+  type                = aws_customer_gateway.test.type
 
   tags = {
     Name = %[1]q
