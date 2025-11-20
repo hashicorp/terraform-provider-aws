@@ -1925,15 +1925,15 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Root CA certificate from CSR: %w", caARN, err)
 		}
 
-		certARN := aws.ToString(issueCertOutput.CertificateArn)
+		caCertARN := aws.ToString(issueCertOutput.CertificateArn)
 
 		// Wait for certificate status to become ISSUED.
 		getCertOutput, err := tfresource.RetryWhenIsA[*acmpca.GetCertificateOutput, *acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func(ctx context.Context) (*acmpca.GetCertificateOutput, error) {
-			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, caARN, certARN)
+			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, caCertARN, caARN)
 		})
 
 		if err != nil {
-			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate (%s) to become ISSUED: %w", caARN, certARN, err)
+			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate (%s) to become ISSUED: %w", caARN, caCertARN, err)
 		}
 
 		importCACertificateInput := acmpca.ImportCertificateAuthorityCertificateInput{
