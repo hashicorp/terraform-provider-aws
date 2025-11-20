@@ -49,11 +49,11 @@ func TestAccVPCVPCEncryptionControl_basic(t *testing.T) {
 					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("mode"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeMonitor)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeMonitor)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state_message"), tfknownvalue.StringExact("succeeded")),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("vpc_id"), "aws_vpc.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrVPCID), "aws_vpc.test", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("egress_only_internet_gateway_exclusion"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion"), knownvalue.Null()),
@@ -124,11 +124,11 @@ func TestAccVPCVPCEncryptionControl_enforce(t *testing.T) {
 					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("mode"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeEnforce)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeEnforce)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state_message"), tfknownvalue.StringExact("succeeded")),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("vpc_id"), "aws_vpc.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrVPCID), "aws_vpc.test", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("egress_only_internet_gateway_exclusion"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion"), knownvalue.Null()),
@@ -138,23 +138,23 @@ func TestAccVPCVPCEncryptionControl_enforce(t *testing.T) {
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_exclusions"), knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"egress_only_internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"nat_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"virtual_private_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"vpc_peering": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 					})),
@@ -197,23 +197,23 @@ func TestAccVPCVPCEncryptionControl_enforce_ImplicitExclusions(t *testing.T) {
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_exclusions"), knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"egress_only_internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"nat_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"virtual_private_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"vpc_peering": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 					})),
@@ -256,23 +256,23 @@ func TestAccVPCVPCEncryptionControl_enforce_ExplicitExclusions(t *testing.T) {
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_exclusions"), knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"egress_only_internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"nat_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"virtual_private_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"vpc_peering": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"state":         tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 					})),
@@ -307,11 +307,11 @@ func TestAccVPCVPCEncryptionControl_update_monitorToEnforce(t *testing.T) {
 					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("mode"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeMonitor)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeMonitor)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state_message"), tfknownvalue.StringExact("succeeded")),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("vpc_id"), "aws_vpc.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrVPCID), "aws_vpc.test", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 				},
 			},
 			{
@@ -320,11 +320,11 @@ func TestAccVPCVPCEncryptionControl_update_monitorToEnforce(t *testing.T) {
 					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("mode"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeEnforce)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeEnforce)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state_message"), tfknownvalue.StringExact("succeeded")),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("vpc_id"), "aws_vpc.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrVPCID), "aws_vpc.test", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 				},
 			},
 			{
@@ -356,11 +356,8 @@ func TestAccVPCVPCEncryptionControl_update_enforceToMonitor(t *testing.T) {
 					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("mode"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeEnforce)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state_message"), tfknownvalue.StringExact("succeeded")),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("vpc_id"), "aws_vpc.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeEnforce)),
 				},
 			},
 			{
@@ -369,11 +366,8 @@ func TestAccVPCVPCEncryptionControl_update_enforceToMonitor(t *testing.T) {
 					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("mode"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeMonitor)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlStateAvailable)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("state_message"), tfknownvalue.StringExact("succeeded")),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("vpc_id"), "aws_vpc.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeMonitor)),
 				},
 			},
 			{

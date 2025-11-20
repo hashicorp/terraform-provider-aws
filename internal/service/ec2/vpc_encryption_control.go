@@ -61,7 +61,7 @@ func (r *resourceVPCEncryptionControl) Schema(ctx context.Context, req resource.
 				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlExclusionStateInput](),
 				Optional:   true,
 			},
-			"mode": schema.StringAttribute{
+			names.AttrMode: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlMode](),
 				Required:   true,
 			},
@@ -73,7 +73,7 @@ func (r *resourceVPCEncryptionControl) Schema(ctx context.Context, req resource.
 				CustomType: fwtypes.NewObjectTypeOf[vpcEncryptionControlExclusionsModel](ctx),
 				Computed:   true,
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				Computed: true,
 			},
 			"state_message": schema.StringAttribute{
@@ -111,11 +111,11 @@ func (r *resourceVPCEncryptionControl) Create(ctx context.Context, req resource.
 
 	out, err := conn.CreateVpcEncryptionControl(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, "vpc_id", plan.VPCID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrVPCID, plan.VPCID.String())
 		return
 	}
 	if out == nil || out.VpcEncryptionControl == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), "vpc_id", plan.VPCID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), names.AttrVPCID, plan.VPCID.String())
 		return
 	}
 
@@ -129,7 +129,7 @@ func (r *resourceVPCEncryptionControl) Create(ctx context.Context, req resource.
 	createTimeout := 20 * time.Minute
 	ec, err := waitVPCEncryptionControlAvailable(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, "vpc_id", plan.VPCID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrVPCID, plan.VPCID.String())
 		return
 	}
 
@@ -222,7 +222,7 @@ func (r *resourceVPCEncryptionControl) Delete(ctx context.Context, req resource.
 	}
 
 	_, err := conn.DeleteVpcEncryptionControl(ctx, &input)
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVpcEncryptionControlIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEncryptionControlIdNotFound) {
 		return
 	}
 	if err != nil {
@@ -300,7 +300,7 @@ func findVPCEncryptionControlsByIDs(ctx context.Context, conn *ec2.Client, ids [
 	pages := NewDescribeVpcEncryptionControlsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidVpcEncryptionControlIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEncryptionControlIdNotFound) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
@@ -324,17 +324,17 @@ func vpcEncryptionControlModify(ctx context.Context, conn *ec2.Client, plan reso
 
 	out, err := conn.ModifyVpcEncryptionControl(ctx, &modifyInput)
 	if err != nil {
-		smerr.AddError(ctx, diags, err, "vpc_id", plan.VPCID.String())
+		smerr.AddError(ctx, diags, err, names.AttrVPCID, plan.VPCID.String())
 		return nil
 	}
 	if out == nil || out.VpcEncryptionControl == nil {
-		smerr.AddError(ctx, diags, errors.New("empty output"), "vpc_id", plan.VPCID.String())
+		smerr.AddError(ctx, diags, errors.New("empty output"), names.AttrVPCID, plan.VPCID.String())
 		return nil
 	}
 
 	ec, err := waitVPCEncryptionControlAvailable(ctx, conn, plan.ID.ValueString(), timeout)
 	if err != nil {
-		smerr.AddError(ctx, diags, err, "vpc_id", plan.VPCID.String())
+		smerr.AddError(ctx, diags, err, names.AttrVPCID, plan.VPCID.String())
 		return nil
 	}
 
