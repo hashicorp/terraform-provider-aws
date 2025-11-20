@@ -56,7 +56,7 @@ func TestAccLambdaCapacityProvider_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateIdFunc:                    testAccCheckCapacityProviderImportStateID(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
@@ -149,7 +149,7 @@ func TestAccLambdaCapacityProvider_instanceRequirements(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateIdFunc:                    testAccCheckCapacityProviderImportStateID(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
@@ -207,11 +207,17 @@ func TestAccLambdaCapacityProvider_scalingConfig(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateIdFunc:                    testAccCheckCapacityProviderImportStateID(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
+}
+
+func testAccCheckCapacityProviderImportStateID(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		return acctest.AttrImportStateIdFunc(n, names.AttrName)(s)
+	}
 }
 
 func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -452,7 +458,7 @@ resource "aws_lambda_capacity_provider" "test" {
 
   instance_requirements {
     excluded_instance_types = ["m5.8xlarge"]
-    architectures = ["x86_64"]
+    architectures           = ["x86_64"]
   }
 
   depends_on = [
@@ -478,10 +484,10 @@ resource "aws_lambda_capacity_provider" "test" {
     capacity_provider_operator_role_arn = aws_iam_role.test.arn
   }
 
-	capacity_provider_scaling_config {
-    scaling_mode = "Auto"
-	max_vcpu_count = 30
-	}
+  capacity_provider_scaling_config {
+    scaling_mode   = "Auto"
+    max_vcpu_count = 30
+  }
 
   depends_on = [
     aws_iam_role_policy.iam_policy_for_lambda

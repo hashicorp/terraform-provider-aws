@@ -38,7 +38,9 @@ import (
 
 // @FrameworkResource("aws_lambda_capacity_provider", name="Capacity Provider")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda/types;types.CapacityProvider")
+// @Testing(importStateIdAttribute="name")
+// @Testing(importStateIdFunc=testAccCheckCapacityProviderImportStateID)
 func newResourceCapacityProvider(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCapacityProvider{}
 
