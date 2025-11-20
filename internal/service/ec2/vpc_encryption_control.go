@@ -33,6 +33,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.VpcEncryptionControl")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importIgnore="egress_only_internet_gateway_exclusion;internet_gateway_exclusion;nat_gateway_exclusion;virtual_private_gateway_exclusion;vpc_peering_exclusion")
 func newResourceVPCEncryptionControl(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceVPCEncryptionControl{}
 
@@ -169,6 +170,11 @@ func (r *resourceVPCEncryptionControl) Read(ctx context.Context, req resource.Re
 		return
 	}
 
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flattenExclusionInputs(ctx, out, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
@@ -261,6 +267,56 @@ func wrapError[T any](v T, err error) (T, error) {
 	return v, smarterr.NewError(err)
 }
 
+func waitVPCEncryptionControlExclusionsApplied(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcEncryptionControl, error) {
+	var output awstypes.VpcEncryptionControl
+	err := tfresource.WaitUntil(ctx, timeout, func(ctx context.Context) (bool, error) {
+		var err error
+		output, err = findVPCEncryptionControlByID(ctx, conn, id)
+		if retry.NotFound(err) {
+			return false, nil
+		}
+		if err != nil {
+			return false, err
+		}
+
+		exclusions := output.ResourceExclusions
+		if exclusions == nil {
+			return true, nil
+		}
+
+		if isExclusionPending(exclusions.EgressOnlyInternetGateway) {
+			return false, nil
+		}
+		if isExclusionPending(exclusions.InternetGateway) {
+			return false, nil
+		}
+		if isExclusionPending(exclusions.NatGateway) {
+			return false, nil
+		}
+		if isExclusionPending(exclusions.VirtualPrivateGateway) {
+			return false, nil
+		}
+		if isExclusionPending(exclusions.VpcPeering) {
+			return false, nil
+		}
+
+		return true, nil
+	}, tfresource.WaitOpts{})
+
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+	return &output, nil
+}
+
+// Returns `true` if still in progress
+func isExclusionPending(apiObject *awstypes.VpcEncryptionControlExclusion) bool {
+	if apiObject == nil {
+		return false
+	}
+	return apiObject.State == awstypes.VpcEncryptionControlExclusionStateEnabling || apiObject.State == awstypes.VpcEncryptionControlExclusionStateDisabling
+}
+
 func statusVPCEncryptionControl(conn *ec2.Client, id string) retry.StateRefreshFuncOf[*awstypes.VpcEncryptionControl, awstypes.VpcEncryptionControlState] {
 	return func(ctx context.Context) (*awstypes.VpcEncryptionControl, awstypes.VpcEncryptionControlState, error) {
 		encryptionControl, err := findVPCEncryptionControlByID(ctx, conn, id)
@@ -313,7 +369,7 @@ func findVPCEncryptionControlsByIDs(ctx context.Context, conn *ec2.Client, ids [
 
 func vpcEncryptionControlModify(ctx context.Context, conn *ec2.Client, plan resourceVPCEncryptionControlModel, timeout time.Duration, diags *diag.Diagnostics) *awstypes.VpcEncryptionControl {
 	var modifyInput ec2.ModifyVpcEncryptionControlInput
-	smerr.EnrichAppend(ctx, diags, flex.Expand(ctx, plan, &modifyInput, flex.WithFieldNamePrefix("VpcEncryptionControl")))
+	smerr.EnrichAppend(ctx, diags, flattenForModify(ctx, plan, &modifyInput))
 	if diags.HasError() {
 		return nil
 	}
@@ -334,7 +390,66 @@ func vpcEncryptionControlModify(ctx context.Context, conn *ec2.Client, plan reso
 		return nil
 	}
 
+	if ec.ResourceExclusions != nil {
+		ec, err = waitVPCEncryptionControlExclusionsApplied(ctx, conn, plan.ID.ValueString(), timeout)
+		if err != nil {
+			smerr.AddError(ctx, diags, err, names.AttrVPCID, plan.VPCID.String())
+			return nil
+		}
+	}
+
 	return ec
+}
+
+func flattenForModify(_ context.Context, plan resourceVPCEncryptionControlModel, apiObject *ec2.ModifyVpcEncryptionControlInput) (diags diag.Diagnostics) {
+	apiObject.VpcEncryptionControlId = plan.ID.ValueStringPointer()
+	apiObject.Mode = plan.Mode.ValueEnum()
+
+	if plan.Mode.ValueEnum() == awstypes.VpcEncryptionControlModeEnforce {
+		apiObject.EgressOnlyInternetGatewayExclusion = plan.EgressOnlyInternetGatewayExclusion.ValueEnum()
+		apiObject.InternetGatewayExclusion = plan.InternetGatewayExclusion.ValueEnum()
+		apiObject.NatGatewayExclusion = plan.NatGatewayExclusion.ValueEnum()
+		apiObject.VirtualPrivateGatewayExclusion = plan.VirtualPrivateGatewayExclusion.ValueEnum()
+		apiObject.VpcPeeringExclusion = plan.VpcPeeringExclusion.ValueEnum()
+	}
+
+	return diags
+}
+
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
+func flattenExclusionInputs(ctx context.Context, apiObject awstypes.VpcEncryptionControl, tfObject *resourceVPCEncryptionControlModel) (diags diag.Diagnostics) {
+	exclusions := apiObject.ResourceExclusions
+	if exclusions == nil {
+		return diags
+	}
+
+	diags.Append(flattenExclusionInput(ctx, exclusions.EgressOnlyInternetGateway, &tfObject.EgressOnlyInternetGatewayExclusion)...)
+
+	diags.Append(flattenExclusionInput(ctx, exclusions.InternetGateway, &tfObject.InternetGatewayExclusion)...)
+
+	diags.Append(flattenExclusionInput(ctx, exclusions.NatGateway, &tfObject.NatGatewayExclusion)...)
+
+	diags.Append(flattenExclusionInput(ctx, exclusions.VirtualPrivateGateway, &tfObject.VirtualPrivateGatewayExclusion)...)
+
+	diags.Append(flattenExclusionInput(ctx, exclusions.VpcPeering, &tfObject.VpcPeeringExclusion)...)
+
+	return diags
+}
+
+func flattenExclusionInput(_ context.Context, apiObject *awstypes.VpcEncryptionControlExclusion, tfObject *fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput]) (diags diag.Diagnostics) {
+	if apiObject == nil {
+		return diags
+	}
+
+	switch apiObject.State {
+	case awstypes.VpcEncryptionControlExclusionStateEnabled:
+		*tfObject = fwtypes.StringEnumValue(awstypes.VpcEncryptionControlExclusionStateInputEnable)
+
+	case awstypes.VpcEncryptionControlExclusionStateDisabled:
+		*tfObject = fwtypes.StringEnumValue(awstypes.VpcEncryptionControlExclusionStateInputDisable)
+	}
+
+	return diags
 }
 
 type resourceVPCEncryptionControlModel struct {
