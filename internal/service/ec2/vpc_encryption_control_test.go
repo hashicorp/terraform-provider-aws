@@ -426,31 +426,31 @@ func TestAccVPCVPCEncryptionControl_update_monitorToEnforce_ImplicitExclusions(t
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeEnforce)),
 
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("egress_only_internet_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputEnable)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("nat_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("virtual_private_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputEnable)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_peering_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("egress_only_internet_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputEnable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("nat_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputEnable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("virtual_private_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_peering_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputEnable)),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_exclusions"), knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"egress_only_internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"nat_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
-							"state_message": tfknownvalue.StringExact("succeeded"),
-						}),
-						"virtual_private_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
-						"vpc_peering": knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"virtual_private_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"vpc_peering": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 					})),
