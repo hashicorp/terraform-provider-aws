@@ -119,6 +119,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptunegraph"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/networkflowmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
@@ -300,6 +301,7 @@ func registerSweepers() {
 	neptune.RegisterSweepers()
 	neptunegraph.RegisterSweepers()
 	networkfirewall.RegisterSweepers()
+	networkflowmonitor.RegisterSweepers()
 	networkmanager.RegisterSweepers()
 	notifications.RegisterSweepers()
 	notificationscontacts.RegisterSweepers()

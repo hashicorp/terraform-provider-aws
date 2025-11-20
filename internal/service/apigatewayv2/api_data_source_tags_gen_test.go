@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -205,7 +205,7 @@ func TestAccAPIGatewayV2APIDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 }
 
 func expectFullAPIDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfapigatewayv2.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfapigatewayv2.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrARN,
 	}), knownValue)
 }

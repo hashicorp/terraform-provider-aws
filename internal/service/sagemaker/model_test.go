@@ -582,6 +582,35 @@ func TestAccSageMakerModel_primaryContainerMultiModelConfigModelCacheSetting(t *
 	})
 }
 
+func TestAccSageMakerModel_primaryContainerAdditionalModelDataSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerAdditionalModelDataSource(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_source.0.channel_name", "test-channel"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.additional_model_data_source.0.s3_data_source.0.s3_data_type", "S3Prefix"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSageMakerModel_containersMultiModelConfigModelCacheSetting(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -887,25 +916,8 @@ resource "aws_sagemaker_model" "test" {
 `, rName))
 }
 
-func testAccModelConfig_primaryContainerUncompressedModel(rName string) string {
-	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
-resource "aws_sagemaker_model" "test" {
-  name               = %[1]q
-  execution_role_arn = aws_iam_role.test.arn
-
-  primary_container {
-    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-    model_data_source {
-      s3_data_source {
-        s3_data_type     = "S3Prefix"
-        s3_uri           = "s3://${aws_s3_object.test.bucket}/model/"
-        compression_type = "None"
-      }
-    }
-  }
-}
-
-
+func testAccModelConfig_s3DataSourceBase(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name        = %[1]q
   description = "Allow SageMaker AI to create model"
@@ -962,6 +974,55 @@ resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.bucket
   key     = "model/inference.py"
   content = "some-data"
+}
+`, rName)
+}
+
+func testAccModelConfig_primaryContainerAdditionalModelDataSource(rName string) string {
+	return acctest.ConfigCompose(
+		testAccModelConfig_base(rName),
+		testAccModelConfig_s3DataSourceBase(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image          = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    model_data_url = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
+
+    additional_model_data_source {
+      channel_name = "test-channel"
+      s3_data_source {
+        s3_uri           = "s3://${aws_s3_object.test.bucket}/model/"
+        s3_data_type     = "S3Prefix"
+        compression_type = "None"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccModelConfig_primaryContainerUncompressedModel(rName string) string {
+	return acctest.ConfigCompose(
+		testAccModelConfig_base(rName),
+		testAccModelConfig_s3DataSourceBase(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    model_data_source {
+      s3_data_source {
+        s3_data_type     = "S3Prefix"
+        s3_uri           = "s3://${aws_s3_object.test.bucket}/model/"
+        compression_type = "None"
+      }
+    }
+  }
 }
 `, rName))
 }

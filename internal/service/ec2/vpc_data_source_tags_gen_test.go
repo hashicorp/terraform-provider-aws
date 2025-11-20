@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -193,7 +193,7 @@ func TestAccVPCDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 }
 
 func expectFullVPCDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfec2.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfec2.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 	}), knownValue)
 }

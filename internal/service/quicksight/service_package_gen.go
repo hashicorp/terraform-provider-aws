@@ -27,7 +27,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAccountSettingsResource,
 			TypeName: "aws_quicksight_account_settings",
 			Name:     "Account Settings",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newCustomPermissionsResource,

@@ -19,8 +19,6 @@ var (
 
 	ValidPrincipal = validPrincipal
 
-	FilterPermissions = filterPermissions
-
 	IncludePrincipalIdentifierInList = includePrincipalIdentifierInList
 
 	FilterCatalogPermissions          = filterCatalogPermissions

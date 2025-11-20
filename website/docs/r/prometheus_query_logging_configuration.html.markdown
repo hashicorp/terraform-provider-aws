@@ -54,7 +54,7 @@ The following arguments are optional:
 
 #### `cloudwatch_logs`
 
-* `log_group_arn` - (Required) The ARN of the CloudWatch log group to which query logs will be sent.
+* `log_group_arn` - (Required) The ARN of the CloudWatch log group to which query logs will be sent. The ARN must end with `:*`
 
 #### `filters`
 

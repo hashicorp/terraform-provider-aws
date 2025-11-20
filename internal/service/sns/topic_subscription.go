@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -67,17 +68,7 @@ var (
 			Optional: true,
 			Default:  false,
 		},
-		"filter_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v any) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
+		"filter_policy": sdkv2.JSONDocumentSchemaOptional(),
 		"filter_policy_scope": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -103,28 +94,8 @@ var (
 			Optional: true,
 			Default:  false,
 		},
-		"redrive_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v any) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
-		"replay_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v any) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
+		"redrive_policy": sdkv2.JSONDocumentSchemaOptional(),
+		"replay_policy":  sdkv2.JSONDocumentSchemaOptional(),
 		"subscription_role_arn": {
 			Type:         schema.TypeString,
 			Optional:     true,

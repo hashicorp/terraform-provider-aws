@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -212,8 +212,8 @@ func TestAccTransferWebAppCustomization_files(t *testing.T) {
 	resourceName := "aws_transfer_web_app_customization.test"
 	darkBytes, _ := os.ReadFile("test-fixtures/Terraform-LogoMark_onDark.png")
 	lightBytes, _ := os.ReadFile("test-fixtures/Terraform-LogoMark_onLight.png")
-	darkFileBase64Encoded := itypes.Base64Encode(darkBytes)
-	lightFileBase64Encoded := itypes.Base64Encode(lightBytes)
+	darkFileBase64Encoded := inttypes.Base64Encode(darkBytes)
+	lightFileBase64Encoded := inttypes.Base64Encode(lightBytes)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
