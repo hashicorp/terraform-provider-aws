@@ -148,7 +148,7 @@ func resourceVPNConnection() *schema.Resource {
 			names.AttrTransitGatewayID: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"vpn_gateway_id"},
+				ConflictsWith: []string{"vpn_gateway_id", "vpn_concentrator_id"},
 			},
 			"transport_transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
@@ -643,13 +643,13 @@ func resourceVPNConnection() *schema.Resource {
 			"vpn_gateway_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrTransitGatewayID},
+				ConflictsWith: []string{names.AttrTransitGatewayID, "vpn_concentrator_id"},
 			},
 			"vpn_concentrator_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				// Not supported in Modify
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrTransitGatewayID, "vpn_gateway_id"},
 			},
 		},
 
