@@ -49,26 +49,28 @@ type resourceVPCEncryptionControl struct {
 	framework.WithImportByIdentity
 }
 
+var (
+	vpcEncryptionControlExclusionStateInputType = fwtypes.StringEnumType[awstypes.VpcEncryptionControlExclusionStateInput]()
+
+	vpcEncryptionControlExclusionStateInputAttribute = schema.StringAttribute{
+		CustomType: vpcEncryptionControlExclusionStateInputType,
+		Optional:   true,
+		Computed:   true,
+		Default:    vpcEncryptionControlExclusionStateInputType.AttributeDefault(awstypes.VpcEncryptionControlExclusionStateInputDisable),
+	}
+)
+
 func (r *resourceVPCEncryptionControl) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"egress_only_internet_gateway_exclusion": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlExclusionStateInput](),
-				Optional:   true,
-			},
-			names.AttrID: framework.IDAttribute(),
-			"internet_gateway_exclusion": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlExclusionStateInput](),
-				Optional:   true,
-			},
+			"egress_only_internet_gateway_exclusion": vpcEncryptionControlExclusionStateInputAttribute,
+			names.AttrID:                             framework.IDAttribute(),
+			"internet_gateway_exclusion":             vpcEncryptionControlExclusionStateInputAttribute,
 			names.AttrMode: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlMode](),
 				Required:   true,
 			},
-			"nat_gateway_exclusion": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlExclusionStateInput](),
-				Optional:   true,
-			},
+			"nat_gateway_exclusion": vpcEncryptionControlExclusionStateInputAttribute,
 			"resource_exclusions": schema.ObjectAttribute{
 				CustomType: fwtypes.NewObjectTypeOf[vpcEncryptionControlExclusionsModel](ctx),
 				Computed:   true,
@@ -79,17 +81,11 @@ func (r *resourceVPCEncryptionControl) Schema(ctx context.Context, req resource.
 			"state_message": schema.StringAttribute{
 				Computed: true,
 			},
-			"virtual_private_gateway_exclusion": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlExclusionStateInput](),
-				Optional:   true,
-			},
+			"virtual_private_gateway_exclusion": vpcEncryptionControlExclusionStateInputAttribute,
 			names.AttrVPCID: schema.StringAttribute{
 				Required: true,
 			},
-			"vpc_peering_exclusion": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlExclusionStateInput](),
-				Optional:   true,
-			},
+			"vpc_peering_exclusion": vpcEncryptionControlExclusionStateInputAttribute,
 		},
 	}
 }
