@@ -65,7 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.60.1
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.13
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.5
-	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.21.3
+	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/codeconnections v1.10.11
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.35.3
