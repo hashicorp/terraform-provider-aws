@@ -79,15 +79,15 @@ func (r *vpnConcentratorResource) Create(ctx context.Context, request resource.C
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.CreateVpnConcentratorInput{
+	input := ec2.CreateVpnConcentratorInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpnConcentrator),
 	}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := conn.CreateVpnConcentrator(ctx, input)
+	output, err := conn.CreateVpnConcentrator(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating EC2 VPN Concentrator", err.Error())
@@ -150,9 +150,10 @@ func (r *vpnConcentratorResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.DeleteVpnConcentrator(ctx, &ec2.DeleteVpnConcentratorInput{
+	input := ec2.DeleteVpnConcentratorInput{
 		VpnConcentratorId: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteVpnConcentrator(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 VPN Concentrator (%s)", data.ID.ValueString()), err.Error())
@@ -166,11 +167,11 @@ func (r *vpnConcentratorResource) Delete(ctx context.Context, request resource.D
 }
 
 func findVPNConcentratorByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnConcentrator, error) {
-	input := &ec2.DescribeVpnConcentratorsInput{
+	input := ec2.DescribeVpnConcentratorsInput{
 		VpnConcentratorIds: []string{id},
 	}
 
-	output, err := conn.DescribeVpnConcentrators(ctx, input)
+	output, err := conn.DescribeVpnConcentrators(ctx, &input)
 
 	if err != nil {
 		return nil, err
