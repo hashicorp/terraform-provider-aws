@@ -53,7 +53,7 @@ func resourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta any) bool {
-				return semver.LessThan(new.(string), old.(string))
+				return semver.LessThan(normalizeKafkaVersion(new.(string)), normalizeKafkaVersion(old.(string)))
 			}),
 			customdiff.ForceNewIfChange("storage_mode", func(_ context.Context, old, new, meta any) bool {
 				return types.StorageMode(new.(string)) == types.StorageModeLocal
