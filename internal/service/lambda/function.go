@@ -547,9 +547,9 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 	if v, ok := d.GetOk("capacity_provider_config"); ok {
 		input.CapacityProviderConfig = expandCapacityProviderConfig(v.([]any))
 
-		if d.Get("publish").(bool) {
-			input.PublishTo = awstypes.FunctionVersionLatestPublishedLatestPublished
-		}
+		//if d.Get("publish").(bool) {
+		//	input.PublishTo = awstypes.FunctionVersionLatestPublishedLatestPublished
+		//}
 	}
 
 	if v, ok := d.GetOk("filename"); ok {
@@ -1149,10 +1149,10 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		// check if function is associated with a capacity provider.
 		// this will indicate the type of publish we need to do.
-		if _, ok := d.GetOk("capacity_provider_config"); ok {
-			// new api with publish options
-			input.PublishTo = awstypes.FunctionVersionLatestPublishedLatestPublished
-		}
+		//if _, ok := d.GetOk("capacity_provider_config"); ok {
+		//	// new api with publish options
+		//	input.PublishTo = awstypes.FunctionVersionLatestPublishedLatestPublished
+		//}
 
 		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PublishVersion(ctx, &input)
@@ -1696,7 +1696,7 @@ func flattenCapacityProviderConfig(apiObject *awstypes.CapacityProviderConfig) [
 	}
 
 	out := map[string]any{
-		"lambda_managed_instance_capacity_provider_config": []any{innerMap},
+		"lambda_managed_instances_capacity_provider_config": []any{innerMap},
 	}
 
 	return []any{out}
@@ -1709,18 +1709,18 @@ func expandCapacityProviderConfig(tfList []any) *awstypes.CapacityProviderConfig
 
 	var out awstypes.CapacityProviderConfig
 	m := tfList[0].(map[string]any)
-	if v, ok := m["lambda_managed_instance_capacity_provider_config"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+	if v, ok := m["lambda_managed_instances_capacity_provider_config"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		im := v.([]any)[0].(map[string]any)
 		var lmic awstypes.LambdaManagedInstancesCapacityProviderConfig
 		if val, ok := im["capacity_provider_arn"].(string); ok && v != "" {
 			lmic.CapacityProviderArn = aws.String(val)
 		}
 
-		if val, ok := im["execution_environment_memory_gib_per_vcpu"].(float64); ok {
+		if val, ok := im["execution_environment_memory_gib_per_vcpu"].(float64); ok && val != 0 {
 			lmic.ExecutionEnvironmentMemoryGiBPerVCpu = aws.Float64(val)
 		}
 
-		if val, ok := im["per_execution_environment_max_concurrency"].(int); ok {
+		if val, ok := im["per_execution_environment_max_concurrency"].(int); ok && val != 0 {
 			lmic.PerExecutionEnvironmentMaxConcurrency = aws.Int32(int32(val))
 		}
 
