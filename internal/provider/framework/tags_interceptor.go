@@ -298,28 +298,35 @@ func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context,
 		isCreate := request.State.Raw.IsNull()
 		hasTagsChange := !allPlanTags.Equal(allStateTags)
 
-		// Only run validation during resource creation or when tags are modified
-		if isCreate || hasTagsChange {
-			if policy := c.TagPolicyConfig(ctx); policy != nil {
-				// Verify required tags are present
-				if reqTags, ok := policy.RequiredTags[typeName]; ok {
-					if !allPlanTags.ContainsAllKeys(reqTags) {
-						missing := reqTags.Removed(allPlanTags).Keys()
-						slices.Sort(missing)
+		if !isCreate && !hasTagsChange {
+			return
+		}
 
-						summary := "Missing Required Tags"
-						detail := fmt.Sprintf("An organizational tag policy requires the following tags for %s: %s", typeName, missing)
+		policy := c.TagPolicyConfig(ctx)
+		if policy == nil {
+			return
+		}
 
-						switch policy.Severity {
-						case "warning":
-							opts.response.Diagnostics.AddAttributeWarning(path.Root(names.AttrTags), summary, detail)
-						default:
-							opts.response.Diagnostics.AddAttributeError(path.Root(names.AttrTags), summary, detail)
-						}
-						return
-					}
-				}
-			}
+		reqTags, ok := policy.RequiredTags[typeName]
+		if !ok {
+			return
+		}
+
+		if allPlanTags.ContainsAllKeys(reqTags) {
+			return
+		}
+
+		missing := reqTags.Removed(allPlanTags).Keys()
+		slices.Sort(missing)
+
+		summary := "Missing Required Tags"
+		detail := fmt.Sprintf("An organizational tag policy requires the following tags for %s: %s", typeName, missing)
+
+		switch policy.Severity {
+		case "warning":
+			opts.response.Diagnostics.AddAttributeWarning(path.Root(names.AttrTags), summary, detail)
+		default:
+			opts.response.Diagnostics.AddAttributeError(path.Root(names.AttrTags), summary, detail)
 		}
 	}
 }
