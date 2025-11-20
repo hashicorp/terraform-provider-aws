@@ -151,7 +151,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.13
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.6
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.42.5
-	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.12
+	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.13
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.13
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.32.11
 	github.com/aws/aws-sdk-go-v2/service/kms v1.48.2
