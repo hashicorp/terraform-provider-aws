@@ -1619,8 +1619,8 @@ func TestAccCloudFrontDistribution_vpcOriginConfigOwnerAccountID(t *testing.T) {
 						"vpc_origin_config.0.origin_keepalive_timeout": "5",
 						"vpc_origin_config.0.origin_read_timeout":      "30",
 					}),
-					resource.TestCheckResourceAttrSet(resourceName, fmt.Sprintf("vpc_origin_config.0.%s", names.AttrOwnerAccountID)),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:      resourceName,

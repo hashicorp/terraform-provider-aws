@@ -742,7 +742,6 @@ func resourceDistribution() *schema.Resource {
 									names.AttrOwnerAccountID: {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
 									},
 									"vpc_origin_id": {
 										Type:     schema.TypeString,
@@ -2580,8 +2579,10 @@ func flattenVPCOriginConfig(apiObject *awstypes.VpcOriginConfig) map[string]any 
 		"vpc_origin_id":            aws.ToString(apiObject.VpcOriginId),
 	}
 
-	if apiObject.OwnerAccountId != nil {
-		tfMap[names.AttrOwnerAccountID] = aws.ToString(apiObject.OwnerAccountId)
+	// Only include owner_account_id if API returned a non-empty value.
+	// This prevents TypeSet hash mismatches when the field is absent vs empty string.
+	if v := aws.ToString(apiObject.OwnerAccountId); v != "" {
+		tfMap[names.AttrOwnerAccountID] = v
 	}
 
 	return tfMap
