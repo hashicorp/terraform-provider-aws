@@ -432,6 +432,37 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 	})
 }
 
+func TestAccSiteVPNConnection_vpnConcentratorID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpn awstypes.VpnConnection
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	vpnConcentratorResourceName := "aws_vpn_concentrator.test"
+	resourceName := "aws_vpn_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteVPNConnectionConfig_vpnConcentrator(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_concentrator_id", vpnConcentratorResourceName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
+			},
+		},
+	})
+}
+
 func TestAccSiteVPNConnection_tunnel1InsideCIDR(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2951,6 +2982,43 @@ resource "aws_vpn_connection" "test" {
   customer_gateway_id = aws_customer_gateway.test.id
   tunnel_bandwidth    = "large"
   type                = "ipsec.1"
+}
+`, rName, rBgpAsn)
+}
+
+func testAccSiteVPNConnectionConfig_vpnConcentrator(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  description = %[1]q
+}
+
+resource "aws_vpn_concentrator" "test" {
+  type               = "ipsec.1"
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "198.51.100.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id   = aws_customer_gateway.test.id
+  vpn_concentrator_id   = aws_vpn_concentrator.test.id
+  type                  = aws_customer_gateway.test.type
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, rBgpAsn)
 }

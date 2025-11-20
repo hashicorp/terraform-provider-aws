@@ -645,6 +645,12 @@ func resourceVPNConnection() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{names.AttrTransitGatewayID},
 			},
+			"vpn_concentrator_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				// Not supported in Modify
+				ForceNew: true,
+			},
 		},
 
 		CustomizeDiff: customizeDiffValidateOutsideIPAddressType,
@@ -714,6 +720,10 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VpnGatewayId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("vpn_concentrator_id"); ok {
+		input.VpnConcentratorId = aws.String(v.(string))
+	}
+
 	output, err := conn.CreateVpnConnection(ctx, &input)
 
 	if err != nil {
@@ -753,6 +763,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("customer_gateway_id", vpnConnection.CustomerGatewayId)
 	d.Set("preshared_key_arn", vpnConnection.PreSharedKeyArn)
 	d.Set(names.AttrType, vpnConnection.Type)
+	d.Set("vpn_concentrator_id", vpnConnection.VpnConcentratorId)
 	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
 
 	if v := vpnConnection.TransitGatewayId; v != nil {
@@ -873,7 +884,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChanges("customer_gateway_id", names.AttrTransitGatewayID, "vpn_gateway_id") {
+	if d.HasChanges("customer_gateway_id", names.AttrTransitGatewayID, "vpn_concentrator_id", "vpn_gateway_id") {
 		input := ec2.ModifyVpnConnectionInput{
 			VpnConnectionId: aws.String(d.Id()),
 		}
