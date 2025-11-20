@@ -121,6 +121,7 @@ var (
 	ResourceVPCRouteServerPeer                            = newVPCRouteServerPeerResource
 	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
 	ResourceVPCRouteServerVPCAssociation                  = newVPCRouteServerVPCAssociationResource
+	ResourceVPNConcentrator                               = newVPNConcentratorResource
 	ResourceVPNConnection                                 = resourceVPNConnection
 	ResourceVPNConnectionRoute                            = resourceVPNConnectionRoute
 	ResourceVPNGateway                                    = resourceVPNGateway
