@@ -1634,7 +1634,8 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange("runtime") ||
 		d.HasChange(names.AttrEnvironment) ||
 		d.HasChange("ephemeral_storage") ||
-		d.HasChange("capacity_provider_config")
+		d.HasChange("capacity_provider_config") ||
+		d.HasChange("publish_to")
 }
 
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.
