@@ -23,6 +23,7 @@ var (
 	FindServerlessClusterByARN                   = findServerlessClusterByARN
 	FindVPCConnectionByARN                       = findVPCConnectionByARN
 
+	ClusterUUIDFromARN    = clusterUUIDFromARN
 	NormalizeKafkaVersion = normalizeKafkaVersion
 	SortEndpointsString   = sortEndpointsString
 )

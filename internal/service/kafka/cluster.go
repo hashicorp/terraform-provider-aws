@@ -1317,6 +1317,10 @@ func clusterUUIDFromARN(clusterARN string) (string, error) {
 	}
 
 	// arn:${Partition}:kafka:${Region}:${Account}:cluster/${ClusterName}/${Uuid}
+	if parsedARN.Service != "kafka" {
+		return "", fmt.Errorf("invalid MSK Cluster ARN (%s)", clusterARN)
+	}
+
 	parts := strings.Split(parsedARN.Resource, "/")
 	if len(parts) != 3 || parts[0] != "cluster" || parts[1] == "" || parts[2] == "" {
 		return "", fmt.Errorf("invalid MSK Cluster ARN (%s)", clusterARN)
