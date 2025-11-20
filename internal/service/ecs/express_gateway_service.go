@@ -42,10 +42,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Custom plan modifier for active_configurations that handles three criteria:
-// 1. Not allowing active_configurations to be part of the terraform plan due to it being a computed nested variable
-// 2. Not allowing active_configurations to trigger an update when no change has been made to the express service template
-// 3. Allowing changes to be made to active configurations state as a result of an update
+// Custom plan modifier for active_configurations that handles two criteria:
+// 1. Not allowing active_configurations to trigger an update when no change has been made to the express service template
+// 2. Allowing changes to be made to active configurations state as a result of an update
 type activeConfigurationsPlanModifier struct{}
 
 func (m activeConfigurationsPlanModifier) Description(ctx context.Context) string {
@@ -57,13 +56,10 @@ func (m activeConfigurationsPlanModifier) MarkdownDescription(ctx context.Contex
 }
 
 func (m activeConfigurationsPlanModifier) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	// If this is a create operation (no state), use the planned value (null)
 	if req.StateValue.IsNull() {
 		return
 	}
 
-	// Check if there are any actual changes to user-configurable attributes by examining the plan
-	// We need to determine if this is a no-op operation or if there are real user changes
 	hasUserChanges := m.hasUserConfigurableChanges(ctx, req)
 
 	if hasUserChanges {
@@ -80,22 +76,16 @@ func (m activeConfigurationsPlanModifier) PlanModifyList(ctx context.Context, re
 // hasUserConfigurableChanges determines if there are changes to user-configurable attributes
 // by checking if the plan differs from state in meaningful ways
 func (m activeConfigurationsPlanModifier) hasUserConfigurableChanges(ctx context.Context, req planmodifier.ListRequest) bool {
-	// Access the full resource plan and state through the request path
-	// We need to check if any user-configurable attributes have changed
-
 	// Get the parent resource path (remove the last step which is "active_configurations")
 	resourcePath := req.Path.ParentPath()
 
-	// Get the planned and current state values for the entire resource
 	var plannedResource, stateResource types.Object
 
-	// Try to get the planned resource value
 	if diags := req.Plan.GetAttribute(ctx, resourcePath, &plannedResource); diags.HasError() {
 		// If we can't get the plan, assume there are changes to be safe
 		return true
 	}
 
-	// Try to get the state resource value
 	if diags := req.State.GetAttribute(ctx, resourcePath, &stateResource); diags.HasError() {
 		// If we can't get the state, assume there are changes to be safe
 		return true
@@ -170,9 +160,8 @@ func createOnlyTags() planmodifier.Map {
 	return createOnlyTagsPlanModifier{}
 }
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_ecs_express_gateway_service", name="Express Gateway Service")
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="service_arn")
 func newResourceExpressGatewayService(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceExpressGatewayService{}
 
@@ -389,8 +378,7 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 										Required: true,
 									},
 									"log_stream_prefix": schema.StringAttribute{
-										Optional: true,
-										Computed: true,
+										Required: true,
 									},
 								},
 							},
@@ -497,6 +485,7 @@ func (r *resourceExpressGatewayService) Create(ctx context.Context, req resource
 	input.Tags = getTagsIn(ctx)
 
 	operationTime := time.Now().UTC()
+
 	out, err := retryExpressGatewayServiceCreate(ctx, conn, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ServiceName.String())
@@ -508,6 +497,7 @@ func (r *resourceExpressGatewayService) Create(ctx context.Context, req resource
 	}
 
 	plan.ServiceArn = flex.StringToFramework(ctx, out.Service.ServiceArn)
+	plan.ID = flex.StringToFramework(ctx, out.Service.ServiceArn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 
@@ -523,16 +513,7 @@ func (r *resourceExpressGatewayService) Create(ctx context.Context, req resource
 		return
 	}
 
-	// Set computed attributes from final service state
-	plan.ServiceArn = flex.StringToFramework(ctx, waitOut.ServiceArn)
-	plan.ID = flex.StringToFramework(ctx, waitOut.ServiceArn)
-
-	if waitOut.CreatedAt != nil {
-		plan.CreatedAt = timetypes.NewRFC3339TimeValue(*waitOut.CreatedAt)
-	}
-	if waitOut.UpdatedAt != nil {
-		plan.UpdatedAt = timetypes.NewRFC3339TimeValue(*waitOut.UpdatedAt)
-	}
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
 
 	// Set Optional+Computed attributes from API response
 	if waitOut.Cluster != nil {
@@ -545,10 +526,11 @@ func (r *resourceExpressGatewayService) Create(ctx context.Context, req resource
 		}
 	}
 
-	plan.Region = types.StringValue(r.Meta().Region(ctx))
-
-	if waitOut.ServiceName != nil {
-		plan.ServiceName = flex.StringToFramework(ctx, waitOut.ServiceName)
+	if waitOut.CreatedAt != nil {
+		plan.CreatedAt = timetypes.NewRFC3339TimeValue(*waitOut.CreatedAt)
+	}
+	if waitOut.UpdatedAt != nil {
+		plan.UpdatedAt = timetypes.NewRFC3339TimeValue(*waitOut.UpdatedAt)
 	}
 
 	if waitOut.CurrentDeployment != nil {
@@ -557,7 +539,11 @@ func (r *resourceExpressGatewayService) Create(ctx context.Context, req resource
 		plan.CurrentDeployment = types.StringNull()
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
+	plan.Region = types.StringValue(r.Meta().Region(ctx))
+
+	if waitOut.ServiceName != nil {
+		plan.ServiceName = flex.StringToFramework(ctx, waitOut.ServiceName)
+	}
 
 	if waitOut.Status != nil {
 		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
@@ -598,6 +584,10 @@ func (r *resourceExpressGatewayService) Read(ctx context.Context, req resource.R
 	state.ServiceArn = flex.StringToFramework(ctx, out.ServiceArn)
 	state.ID = flex.StringToFramework(ctx, out.ServiceArn)
 
+	if len(out.ActiveConfigurations) > 0 {
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.ActiveConfigurations, &state.ActiveConfigurations))
+	}
+
 	if out.CreatedAt != nil {
 		state.CreatedAt = timetypes.NewRFC3339TimeValue(*out.CreatedAt)
 	}
@@ -625,60 +615,19 @@ func (r *resourceExpressGatewayService) Read(ctx context.Context, req resource.R
 		}
 	}
 
-	if out.ServiceName != nil {
-		state.ServiceName = flex.StringToFramework(ctx, out.ServiceName)
-	} else {
-		state.ServiceName = types.StringNull()
-	}
-
 	if out.CurrentDeployment != nil {
 		state.CurrentDeployment = flex.StringToFramework(ctx, out.CurrentDeployment)
 	} else {
 		state.CurrentDeployment = types.StringNull()
 	}
 
-	// Handle user input attributes - preserve user input, only set from API if user didn't specify
-	if len(out.ActiveConfigurations) > 0 {
-		config := out.ActiveConfigurations[0]
-
-		if config.ExecutionRoleArn != nil {
-			state.ExecutionRoleArn = flex.StringToFramework(ctx, config.ExecutionRoleArn)
-		} else {
-			state.ExecutionRoleArn = types.StringNull()
-		}
-
-		// Top-level attributes (cpu, memory, health_check_path) remain as user specified them
-		// Only active_configurations gets populated with API response data
-
-		// Set NetworkConfiguration from ActiveConfigurations - only if it was originally configured
-		// Check if network_configuration was configured in the original state
-		if !state.NetworkConfiguration.IsNull() && !state.NetworkConfiguration.IsUnknown() {
-			if config.NetworkConfiguration != nil {
-				// Filter out empty security groups to prevent inconsistencies
-				filteredNetConfig := *config.NetworkConfiguration
-				if len(filteredNetConfig.SecurityGroups) > 0 {
-					var nonEmptySecurityGroups []string
-					for _, sg := range filteredNetConfig.SecurityGroups {
-						if sg != "" {
-							nonEmptySecurityGroups = append(nonEmptySecurityGroups, sg)
-						}
-					}
-					filteredNetConfig.SecurityGroups = nonEmptySecurityGroups
-				}
-				smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceNetworkConfiguration{filteredNetConfig}, &state.NetworkConfiguration))
-			}
-			// If it was configured but API doesn't return it, preserve existing state
-		} else {
-			// If network_configuration was never configured, keep it as null
-			state.NetworkConfiguration = fwtypes.NewListNestedObjectValueOfNull[networkConfigurationModel](ctx)
-		}
-	}
-
 	if out.InfrastructureRoleArn != nil {
 		state.InfrastructureRoleArn = flex.StringToFramework(ctx, out.InfrastructureRoleArn)
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.ActiveConfigurations, &state.ActiveConfigurations))
+	if out.ServiceName != nil {
+		state.ServiceName = flex.StringToFramework(ctx, out.ServiceName)
+	}
 
 	if out.Status != nil {
 		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*out.Status}, &state.Status))
@@ -755,7 +704,8 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 		}
 	}
 
-	// Set computed attributes from updated service state
+	// Set Computed attributes from updated service state
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
 	if waitOut.CreatedAt != nil {
 		plan.CreatedAt = timetypes.NewRFC3339TimeValue(*waitOut.CreatedAt)
 	}
@@ -774,16 +724,15 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 		}
 	}
 
-	if waitOut.ServiceName != nil {
-		plan.ServiceName = flex.StringToFramework(ctx, waitOut.ServiceName)
-	}
 	if waitOut.CurrentDeployment != nil {
 		plan.CurrentDeployment = flex.StringToFramework(ctx, waitOut.CurrentDeployment)
 	} else {
 		plan.CurrentDeployment = types.StringNull()
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
+	if waitOut.ServiceName != nil {
+		plan.ServiceName = flex.StringToFramework(ctx, waitOut.ServiceName)
+	}
 
 	if waitOut.Status != nil {
 		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
@@ -1016,7 +965,7 @@ func statusExpressGatewayServiceWaitForStable(ctx context.Context, conn *ecs.Cli
 				Cluster: output.Cluster,
 				Service: output.ServiceName,
 				CreatedAt: &awstypes.CreatedAt{
-					After: output.UpdatedAt,
+					After: &operationTime,
 				},
 			}
 

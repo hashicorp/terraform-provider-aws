@@ -47,7 +47,7 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExpressGatewayServiceConfig_basic(rName),
+				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrServiceARN),
@@ -93,7 +93,7 @@ func TestAccECSExpressGatewayService_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExpressGatewayServiceConfig_basic(rName),
+				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfecs.ResourceExpressGatewayService, resourceName),
@@ -176,14 +176,14 @@ func TestAccECSExpressGatewayService_update(t *testing.T) {
 		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExpressGatewayServiceConfig_basic(rName),
+				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service1),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"),
 				),
 			},
 			{
-				Config: testAccExpressGatewayServiceConfig_updated(rName),
+				Config: testAccExpressGatewayServiceConfig_updated(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service2),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:latest"),
@@ -193,49 +193,57 @@ func TestAccECSExpressGatewayService_update(t *testing.T) {
 	})
 }
 
-// func TestAccECSExpressGatewayService_waitForSteadyState(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccECSExpressGatewayService_waitForSteadyState(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-// 	var service awstypes.ECSExpressGatewayService
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_ecs_express_gateway_service.test"
+	var service awstypes.ECSExpressGatewayService
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		ExternalProviders: map[string]resource.ExternalProvider{
-// 			"time": {
-// 				Source: "hashicorp/time",
-// 			},
-// 		},
-// 		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccExpressGatewayServiceConfig_waitForSteadyState(rName, true),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
-// 					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
-// 				),
-// 			},
-// 			{
-// 				ResourceName: resourceName,
-// 				ImportState:  true,
-// 				// ImportStateVerify: true,
-// 				// ImportStateVerifyIgnore: []string{
-// 				// 	"wait_for_steady_state",
-// 				// 	"current_deployment", // is not returned in Create response, so will show as diff in Import.
-// 				// },
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExpressGatewayServiceConfig_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"),
+				),
+			},
+			{
+				Config: testAccExpressGatewayServiceConfig_updated(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:latest"),
+				),
+			},
+			// {
+			// 	ResourceName: resourceName,
+			// 	ImportState:  true,
+			// 	// ImportStateVerify: true,
+			// 	// ImportStateVerifyIgnore: []string{
+			// 	// 	"wait_for_steady_state",
+			// 	// 	"current_deployment", // is not returned in Create response, so will show as diff in Import.
+			// 	// },
+			// },
+		},
+	})
+}
 
 func TestAccECSExpressGatewayService_networkConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -322,7 +330,7 @@ func TestAccECSExpressGatewayService_checkIdempotency(t *testing.T) {
 		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExpressGatewayServiceConfig_basic(rName),
+				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &awstypes.ECSExpressGatewayService{}),
 				),
@@ -497,11 +505,17 @@ resource "time_sleep" "wait_for_iam" {
 `, rName)
 }
 
-func testAccExpressGatewayServiceConfig_basic(rName string) string {
+func testAccExpressGatewayServiceConfig_basic(rName string, waitForSteadyState bool) string {
+	waitForSteadyStateConfig := ""
+	if waitForSteadyState {
+		waitForSteadyStateConfig = "wait_for_steady_state = true"
+	}
+
 	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
+  %[2]s
 
   primary_container {
     image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
@@ -511,14 +525,20 @@ resource "aws_ecs_express_gateway_service" "test" {
     time_sleep.wait_for_iam
   ]
 }
-`))
+`, rName, waitForSteadyStateConfig))
 }
 
-func testAccExpressGatewayServiceConfig_updated(rName string) string {
+func testAccExpressGatewayServiceConfig_updated(rName string, waitForSteadyState bool) string {
+	waitForSteadyStateConfig := ""
+	if waitForSteadyState {
+		waitForSteadyStateConfig = "wait_for_steady_state = true"
+	}
+
 	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
+  %[2]s
 
   primary_container {
     image = "public.ecr.aws/nginx/nginx:latest"
@@ -528,7 +548,7 @@ resource "aws_ecs_express_gateway_service" "test" {
     time_sleep.wait_for_iam
   ]
 }
-`))
+`, rName, waitForSteadyStateConfig))
 }
 
 func testAccExpressGatewayServiceConfig_tags1(rName, tagKey1, tagValue1 string) string {
@@ -555,29 +575,6 @@ resource "aws_ecs_express_gateway_service" "test" {
   ]
 }
 `, rName, tagKey1, tagValue1))
-}
-
-func testAccExpressGatewayServiceConfig_waitForSteadyState(rName string, waitForSteadyState bool) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
-resource "aws_ecs_express_gateway_service" "test" {
-  execution_role_arn      = aws_iam_role.execution.arn
-  infrastructure_role_arn = aws_iam_role.infrastructure.arn
-  wait_for_steady_state   = %[2]t
-
-  primary_container {
-    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
-  }
-
-  network_configuration {
-    subnets         = data.aws_subnets.default.ids
-    security_groups = [data.aws_security_group.default.id]
-  }
-
-  depends_on = [
-    time_sleep.wait_for_iam
-  ]
-}
-`, rName, waitForSteadyState))
 }
 
 func testAccExpressGatewayServiceConfig_networkConfiguration(rName string) string {
