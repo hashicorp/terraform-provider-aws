@@ -393,8 +393,8 @@ github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.15 h1:kEMTeGHiBg
 github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.15/go.mod h1:HdA06DT0yuzIYRJs0nVV/Ex+WL0ve2Gy1UnAHT4JkAY=
 github.com/aws/aws-sdk-go-v2/service/oam v1.23.6 h1:JHJ/PeT/yQJuZBtEq5/Qwchk3+PsJBZJqeHi65v5t0Y=
 github.com/aws/aws-sdk-go-v2/service/oam v1.23.6/go.mod h1:dhCUbm8ln+gUKZKPuee0wIX2sr7JAxjKuYwHbrlNTic=
-github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.8.6 h1:MsffOU8pULJVmQcvo8DarlR1rXAazOvITj7XuJB3QWo=
-github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.8.6/go.mod h1:2GvP5es3RAok0PA4Fx95x5fJ0Xn7muSESZFHw1vp1BM=
+github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.8.7 h1:r64c1yvTAZLO0sjh4x6HcnwdFxOAzKYnH3NacqvJ9nI=
+github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.8.7/go.mod h1:NKutYfxwSyTo5XxXJpOFmLyh5rHEzlS4/WSyVHksszc=
 github.com/aws/aws-sdk-go-v2/service/odb v1.5.6 h1:JLUu5UEdUX210Ojg5uTjzeRw5auZe6/10dd1vuCFlso=
 github.com/aws/aws-sdk-go-v2/service/odb v1.5.6/go.mod h1:jhCkBILzvRrCEyX2Wl+xn2BOBmrBedW7On1p1gzf3rA=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.54.0 h1:hN7HAN0qO5eLnh08ezJPfqsBBdNj6AWD7w5YQSLtYiM=
