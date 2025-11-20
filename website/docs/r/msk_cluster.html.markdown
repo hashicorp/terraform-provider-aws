@@ -210,6 +210,9 @@ This resource supports the following arguments:
 * `number_of_broker_nodes` - (Required) The desired total number of broker nodes in the kafka cluster.  It must be a multiple of the number of specified client subnets.
 * `client_authentication` - (Optional) Configuration block for specifying a client authentication. See [client_authentication Argument Reference](#client_authentication-argument-reference) below.
 * `configuration_info` - (Optional) Configuration block for specifying an MSK Configuration to attach to Kafka brokers. See [configuration_info Argument Reference](#configuration_info-argument-reference) below.
+* `deletion_protection` - (Optional) If the MSK cluster should have deletion protection enabled.
+  The cluster can't be deleted when this value is set to `true`.
+  The default is `false`.
 * `encryption_info` - (Optional) Configuration block for specifying encryption. See [encryption_info Argument Reference](#encryption_info-argument-reference) below.
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level. See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
 * `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See [open_monitoring Argument Reference](#open_monitoring-argument-reference) below.
