@@ -1179,9 +1179,9 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]any) *tftags.IgnoreC
 func expandTagPolicyConfig(path cty.Path, severity string) (*tftags.TagPolicyConfig, diag.Diagnostics) {
 	envSeverity := os.Getenv(tftags.TagPolicyComplianceEnvVar)
 	switch {
-	case severity != "":
+	case severity != "" && severity != "disabled":
 		return &tftags.TagPolicyConfig{Severity: severity}, validateTagPolicySeverity(path, severity)
-	case envSeverity != "":
+	case envSeverity != "" && severity != "disabled":
 		return &tftags.TagPolicyConfig{Severity: envSeverity}, validateTagPolicySeverityEnvVar(envSeverity)
 	}
 
