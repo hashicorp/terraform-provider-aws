@@ -1329,7 +1329,7 @@ func clusterUUIDFromARN(clusterARN string) (string, error) {
 }
 
 // normalizeKafkaVersion removes any trailing non-numeric components from the version string.
-func normalizeKafkaVersion(version string) string {
+func normalizeKafkaVersion(version string) string { // nosemgrep:ci.kafka-in-func-name
 	loc := regexache.MustCompile(`\.[[:alpha:]]+(\.[[:alpha:]]+)?$`).FindStringIndex(version)
 	if loc == nil || loc[1] != len(version) {
 		return version

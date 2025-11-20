@@ -24,6 +24,6 @@ var (
 	FindVPCConnectionByARN                       = findVPCConnectionByARN
 
 	ClusterUUIDFromARN    = clusterUUIDFromARN
-	NormalizeKafkaVersion = normalizeKafkaVersion
+	NormalizeKafkaVersion = normalizeKafkaVersion // nosemgrep:ci.kafka-in-var-name
 	SortEndpointsString   = sortEndpointsString
 )
