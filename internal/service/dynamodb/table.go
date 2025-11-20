@@ -191,7 +191,13 @@ func resourceTable() *schema.Resource {
 						Schema: map[string]*schema.Schema{
 							"hash_key": {
 								Type:     schema.TypeString,
-								Required: true,
+								Optional: true,
+							},
+							"hash_keys": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								MaxItems: 4,
 							},
 							names.AttrName: {
 								Type:     schema.TypeString,
@@ -212,6 +218,12 @@ func resourceTable() *schema.Resource {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
+							"range_keys": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								MaxItems: 4,
+							},
 							"read_capacity": {
 								Type:     schema.TypeInt,
 								Optional: true,
@@ -225,6 +237,7 @@ func resourceTable() *schema.Resource {
 							},
 						},
 					},
+					Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
 				},
 				"hash_key": {
 					Type:     schema.TypeString,
@@ -2566,14 +2579,28 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 			gsi[names.AttrName] = aws.ToString(g.IndexName)
 		}
 
+		var hashKeys []string
+		var rangeKeys []string
+
 		for _, attribute := range g.KeySchema {
 			if attribute.KeyType == awstypes.KeyTypeHash {
-				gsi["hash_key"] = aws.ToString(attribute.AttributeName)
+				hashKeys = append(hashKeys, aws.ToString(attribute.AttributeName))
 			}
-
 			if attribute.KeyType == awstypes.KeyTypeRange {
-				gsi["range_key"] = aws.ToString(attribute.AttributeName)
+				rangeKeys = append(rangeKeys, aws.ToString(attribute.AttributeName))
 			}
+		}
+		// Set single values or lists based on count
+		if len(hashKeys) == 1 {
+			gsi["hash_key"] = hashKeys[0]
+		} else if len(hashKeys) > 1 {
+			gsi["hash_keys"] = hashKeys
+		}
+
+		if len(rangeKeys) == 1 {
+			gsi["range_key"] = rangeKeys[0]
+		} else if len(rangeKeys) > 1 {
+			gsi["range_keys"] = rangeKeys
 		}
 
 		if g.Projection != nil {
@@ -2874,18 +2901,45 @@ func expandProjection(data map[string]any) *awstypes.Projection {
 func expandKeySchema(data map[string]any) []awstypes.KeySchemaElement {
 	keySchema := []awstypes.KeySchemaElement{}
 
-	if v, ok := data["hash_key"]; ok && v != nil && v != "" {
-		keySchema = append(keySchema, awstypes.KeySchemaElement{
-			AttributeName: aws.String(v.(string)),
-			KeyType:       awstypes.KeyTypeHash,
-		})
+	hKey, hKok := data["hash_key"]
+	hKeys, hKsok := data["hash_keys"].(*schema.Set)
+	rKey, rKok := data["range_key"]
+	rKeys, rKsok := data["range_keys"].(*schema.Set)
+
+	if hKok || hKsok {
+		if (hKey != nil && hKey != "") && (hKeys == nil || hKeys.Len() == 0) {
+			// use hash_key
+			keySchema = append(keySchema, awstypes.KeySchemaElement{
+				AttributeName: aws.String(hKey.(string)),
+				KeyType:       awstypes.KeyTypeHash,
+			})
+		} else if hKeys != nil && hKeys.Len() > 0 {
+			//use hash_keys
+			for _, hKeyItem := range hKeys.List() {
+				keySchema = append(keySchema, awstypes.KeySchemaElement{
+					AttributeName: aws.String(hKeyItem.(string)),
+					KeyType:       awstypes.KeyTypeHash,
+				})
+			}
+		}
 	}
 
-	if v, ok := data["range_key"]; ok && v != nil && v != "" {
-		keySchema = append(keySchema, awstypes.KeySchemaElement{
-			AttributeName: aws.String(v.(string)),
-			KeyType:       awstypes.KeyTypeRange,
-		})
+	if rKok || rKsok {
+		if (rKey != nil && rKey != "") && (rKeys == nil || rKeys.Len() == 0) {
+			// use range_key
+			keySchema = append(keySchema, awstypes.KeySchemaElement{
+				AttributeName: aws.String(rKey.(string)),
+				KeyType:       awstypes.KeyTypeRange,
+			})
+		} else if rKeys != nil && rKeys.Len() > 0 {
+			//use range_keys
+			for _, rKeyItem := range rKeys.List() {
+				keySchema = append(keySchema, awstypes.KeySchemaElement{
+					AttributeName: aws.String(rKeyItem.(string)),
+					KeyType:       awstypes.KeyTypeRange,
+				})
+			}
+		}
 	}
 
 	return keySchema
@@ -2997,9 +3051,9 @@ func expandS3BucketSource(data map[string]any) *awstypes.S3BucketSource {
 // validators
 
 func validateTableAttributes(d *schema.ResourceDiff) error {
+	var errs []error
 	// Collect all indexed attributes
 	indexedAttributes := map[string]bool{}
-
 	if v, ok := d.GetOk("hash_key"); ok {
 		indexedAttributes[v.(string)] = true
 	}
@@ -3016,14 +3070,43 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 	}
 	if v, ok := d.GetOk("global_secondary_index"); ok {
 		indexes := v.(*schema.Set).List()
+
 		for _, idx := range indexes {
 			index := idx.(map[string]any)
 
-			hashKey := index["hash_key"].(string)
-			indexedAttributes[hashKey] = true
+			hk, hkok := index["hash_key"].(string)
+			hks, hksok := index["hash_keys"].(*schema.Set)
 
-			if rk, ok := index["range_key"].(string); ok && rk != "" {
-				indexedAttributes[rk] = true
+			if (hkok && hksok) && (hk != "" && hks.Len() > 0) {
+				errs = append(errs, fmt.Errorf("At most one can be set for hash_key (String type) or hash_keys (Set type) but both are set: %q, %v", hk, hks.List()))
+			} else {
+				// Check if hash_key is not empty then hash_keys must be empty and vice versa.
+				// then for whichever one is not empty check the indexed attributes
+				if hkok && hk != "" {
+					indexedAttributes[hk] = true
+				} else if hksok && hks.Len() > 0 {
+					for _, hk := range hks.List() {
+						if hkStr, ok := hk.(string); ok && hkStr != "" {
+							indexedAttributes[hkStr] = true
+						}
+					}
+				}
+			}
+			rk, rkok := index["range_key"].(string)
+			rks, rksok := index["range_keys"].(*schema.Set)
+
+			if (rkok && rksok) && (rk != "" && rks.Len() > 0) {
+				errs = append(errs, fmt.Errorf("At most one can be set for range_key (String type) or range_keys (Set type) but both are set: %q, %v", rk, rks.List()))
+			} else {
+				if rk, ok := index["range_key"].(string); ok && rk != "" {
+					indexedAttributes[rk] = true
+				} else if rks, ok := index["range_keys"].(*schema.Set); ok && rks.Len() > 0 {
+					for _, rk := range rks.List() {
+						if rkStr, ok := rk.(string); ok && rkStr != "" {
+							indexedAttributes[rkStr] = true
+						}
+					}
+				}
 			}
 		}
 	}
@@ -3041,8 +3124,6 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 			delete(indexedAttributes, attrName)
 		}
 	}
-
-	var errs []error
 
 	if len(unindexedAttributes) > 0 {
 		slices.Sort(unindexedAttributes)

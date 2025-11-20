@@ -825,6 +825,383 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_extended_gsiMultiHashKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_addSecondaryGSI_multipleHashKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
+					resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestTableHashKey",
+						names.AttrType: "S",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestTableRangeKey",
+						names.AttrType: "S",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestLSIRangeKey",
+						names.AttrType: "N",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "ReplacementGSIRangeKey",
+						names.AttrType: "N",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						names.AttrName:         "ReplacementTestTableGSI",
+						"hash_keys.#":          "2",
+						"range_key":            "ReplacementGSIRangeKey",
+						"write_capacity":       "5",
+						"read_capacity":        "5",
+						"projection_type":      "INCLUDE",
+						"non_key_attributes.#": "1",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "TestNonKeyAttribute"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
+						names.AttrName:    "TestTableLSI",
+						"range_key":       "TestLSIRangeKey",
+						"projection_type": "ALL",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_extended_gsiMultiHashKey_transition(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_initialState(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckInitialTableConf(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_addSecondaryGSI_multipleHashKeys_transition(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
+					resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestTableHashKey",
+						names.AttrType: "S",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestTableHashKey2",
+						names.AttrType: "S",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestTableRangeKey",
+						names.AttrType: "S",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestLSIRangeKey",
+						names.AttrType: "N",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						names.AttrName:    "InitialTestTableGSI",
+						"range_key":       "TestGSIRangeKey",
+						"write_capacity":  "1",
+						"read_capacity":   "1",
+						"projection_type": "KEYS_ONLY",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
+						names.AttrName:    "TestTableLSI",
+						"range_key":       "TestLSIRangeKey",
+						"projection_type": "ALL",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_extended_gsiMultiHashKeyMutliRangeKey_maxSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_addSecondaryGSI_multipleHashKeysMultipelRangeKeys_max(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
+					resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", "8"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestTableHashKey",
+						names.AttrType: "S",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestTableRangeKey",
+						names.AttrType: "S",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestLSIRangeKey",
+						names.AttrType: "N",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "ReplacementGSIRangeKey",
+						names.AttrType: "N",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						names.AttrName:         "ReplacementTestTableGSI",
+						"hash_keys.#":          "4",
+						"range_keys.#":         "4",
+						"write_capacity":       "5",
+						"read_capacity":        "5",
+						"projection_type":      "INCLUDE",
+						"non_key_attributes.#": "1",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "TestNonKeyAttribute"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
+						names.AttrName:    "TestTableLSI",
+						"range_key":       "TestLSIRangeKey",
+						"projection_type": "ALL",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_extended_gsiMultiRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_initialState(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckInitialTableConf(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_addSecondaryGSI_multipleRangeKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
+					resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
+					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestTableHashKey",
+						names.AttrType: "S",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestTableRangeKey",
+						names.AttrType: "S",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "TestLSIRangeKey",
+						names.AttrType: "N",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						names.AttrName: "ReplacementGSIRangeKey",
+						names.AttrType: "N",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						names.AttrName:         "ReplacementTestTableGSI",
+						"hash_key":             "TestTableHashKey",
+						"range_keys.#":         "2",
+						"write_capacity":       "5",
+						"read_capacity":        "5",
+						"projection_type":      "INCLUDE",
+						"non_key_attributes.#": "1",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "TestNonKeyAttribute"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
+						names.AttrName:    "TestTableLSI",
+						"range_key":       "TestLSIRangeKey",
+						"projection_type": "ALL",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_extended_gsiMultiRangeKey_singleAndMultiSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_addSecondaryGSI_multipleRangeKeys_singleAndMultiSet(rName),
+				ExpectError: regexache.MustCompile(`At most one can be set for range_key`),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_extended_gsiMultiHashKey_singleAndMultiSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_addSecondaryGSI_multipleHashKeys_singleAndMultiSet(rName),
+				ExpectError: regexache.MustCompile(`At most one can be set for hash_key`),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_extended_gsiMultiHashKey_tooMany(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_addSecondaryGSI_multipleHashKeys_tooMany(rName),
+				ExpectError: regexache.MustCompile(`Too many list items`),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_extended_gsiMultiRangeKey_tooMany(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_addSecondaryGSI_multipleRangeKeys_tooMany(rName),
+				ExpectError: regexache.MustCompile(`Too many list items`),
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_enablePITR(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
@@ -5652,6 +6029,456 @@ resource "aws_dynamodb_table" "test" {
   global_secondary_index {
     name               = "ReplacementTestTableGSI"
     hash_key           = "TestTableHashKey"
+    range_key          = "ReplacementGSIRangeKey"
+    write_capacity     = 5
+    read_capacity      = 5
+    projection_type    = "INCLUDE"
+    non_key_attributes = ["TestNonKeyAttribute"]
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_addSecondaryGSI_multipleHashKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+	name = "TestTableHashKey2"
+	type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  local_secondary_index {
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name               = "ReplacementTestTableGSI"
+    hash_keys          = ["TestTableHashKey", "TestTableHashKey2"]
+    range_key          = "ReplacementGSIRangeKey"
+    write_capacity     = 5
+    read_capacity      = 5
+    projection_type    = "INCLUDE"
+    non_key_attributes = ["TestNonKeyAttribute"]
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_addSecondaryGSI_multipleHashKeys_transition(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+	name = "TestTableHashKey2"
+	type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "TestGSIRangeKey"
+    type = "S"
+  }
+
+  local_secondary_index {
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "InitialTestTableGSI"
+    hash_keys       = ["TestTableHashKey", "TestTableHashKey2"]
+    range_key       = "TestGSIRangeKey"
+    write_capacity  = 1
+    read_capacity   = 1
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_addSecondaryGSI_multipleHashKeysMultipelRangeKeys_max(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+	name = "TestTableHashKey2"
+	type = "S"
+  }
+
+  attribute {
+	name = "TestTableHashKey3"
+	type = "S"
+  }
+
+  attribute {
+	name = "TestTableHashKey4"
+	type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey2"
+    type = "N"
+  }
+
+  local_secondary_index {
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name               = "ReplacementTestTableGSI"
+    hash_keys          = ["TestTableHashKey", "TestTableHashKey2", "TestTableHashKey3", "TestTableHashKey4"]
+    range_keys         = ["ReplacementGSIRangeKey", "TestTableRangeKey", "TestLSIRangeKey", "ReplacementGSIRangeKey2"]
+    write_capacity     = 5
+    read_capacity      = 5
+    projection_type    = "INCLUDE"
+    non_key_attributes = ["TestNonKeyAttribute"]
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_addSecondaryGSI_multipleRangeKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey2"
+    type = "N"
+  }
+
+  local_secondary_index {
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name               = "ReplacementTestTableGSI"
+    hash_key           = "TestTableHashKey"
+    range_keys         = ["ReplacementGSIRangeKey", "ReplacementGSIRangeKey2"]
+    write_capacity     = 5
+    read_capacity      = 5
+    projection_type    = "INCLUDE"
+    non_key_attributes = ["TestNonKeyAttribute"]
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_addSecondaryGSI_multipleRangeKeys_singleAndMultiSet(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey2"
+    type = "N"
+  }
+
+  local_secondary_index {
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name               = "ReplacementTestTableGSI"
+    hash_key           = "TestTableHashKey"
+	range_key          = "ReplacementGSIRangeKey"
+    range_keys         = ["ReplacementGSIRangeKey", "ReplacementGSIRangeKey2"]
+    write_capacity     = 5
+    read_capacity      = 5
+    projection_type    = "INCLUDE"
+    non_key_attributes = ["TestNonKeyAttribute"]
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_addSecondaryGSI_multipleHashKeys_singleAndMultiSet(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey2"
+    type = "N"
+  }
+
+  local_secondary_index {
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name               = "ReplacementTestTableGSI"
+    hash_key           = "TestTableHashKey"
+	hash_keys		   = ["TestTableRangeKey","TestTableHashKey"]
+	range_key          = "ReplacementGSIRangeKey"
+    write_capacity     = 5
+    read_capacity      = 5
+    projection_type    = "INCLUDE"
+    non_key_attributes = ["TestNonKeyAttribute"]
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_addSecondaryGSI_multipleRangeKeys_tooMany(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey2"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey3"
+    type = "N"
+  }
+
+  local_secondary_index {
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name               = "ReplacementTestTableGSI"
+    hash_key           = "TestTableHashKey"
+    range_keys         = ["ReplacementGSIRangeKey", "ReplacementGSIRangeKey2", "TestLSIRangeKey", "TestTableRangeKey", "ReplacementGSIRangeKey3"]
+    write_capacity     = 5
+    read_capacity      = 5
+    projection_type    = "INCLUDE"
+    non_key_attributes = ["TestNonKeyAttribute"]
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_addSecondaryGSI_multipleHashKeys_tooMany(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey2"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey3"
+    type = "N"
+  }
+
+  local_secondary_index {
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name               = "ReplacementTestTableGSI"
+    hash_keys          = ["TestTableHashKey", "ReplacementGSIRangeKey2", "TestLSIRangeKey", "TestTableRangeKey", "ReplacementGSIRangeKey3"]
     range_key          = "ReplacementGSIRangeKey"
     write_capacity     = 5
     read_capacity      = 5
