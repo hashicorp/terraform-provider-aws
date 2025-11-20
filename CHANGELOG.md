@@ -1875,7 +1875,6 @@ ENHANCEMENTS:
 * resource/aws_vpclattice_resource_configuration: Add `custom_domain_name` and `domain_verification_id` arguments and `domain_verification_arn` and `domain_verification_status` attributes to support custom domain names for resource configurations ([#45085](https://github.com/hashicorp/terraform-provider-aws/issues/45085))
 * resource/aws_vpn_connection: Add `tunnel_bandwidth` argument to support higher bandwidth tunnels ([#45070](https://github.com/hashicorp/terraform-provider-aws/issues/45070))
 
-
 BUG FIXES:
 
 * resource/aws_db_instance: Fix blue/green deployments failing with "not in available state" by improving stability and handling `storage-config-upgrade` and `storage-initialization` statuses ([#41275](https://github.com/hashicorp/terraform-provider-aws/issues/41275))
