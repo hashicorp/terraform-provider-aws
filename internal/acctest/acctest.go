@@ -1298,7 +1298,7 @@ func PreCheckResourceGroupsTaggingAPIRequiredTags(ctx context.Context, t *testin
 
 	// Ensure some required tags are configured
 	if output == nil || len(output.RequiredTags) == 0 {
-		t.Skip("no requird tags found")
+		t.Skip("no required tags found")
 	}
 }
 
