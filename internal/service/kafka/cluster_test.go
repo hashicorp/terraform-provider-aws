@@ -6,7 +6,6 @@ package kafka_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -1377,6 +1376,44 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 	})
 }
 
+func TestAccKafkaCluster_rebalancing(t *testing.T) {
+	ctx := acctest.Context(t)
+	acctest.SkipIfEnvVarNotSet(t, "MSK_EXPRESS_BROKER_ENABLED")
+	var cluster types.ClusterInfo
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_rebalancing(rName, "ACTIVE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "rebalancing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rebalancing.0.status", "ACTIVE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_rebalancing(rName, "PAUSED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "rebalancing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rebalancing.0.status", "PAUSED"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckResourceAttrIsSortedCSV(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		is, err := acctest.PrimaryInstanceState(s, resourceName)
@@ -2467,53 +2504,6 @@ resource "aws_msk_cluster" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func TestAccKafkaCluster_rebalancing(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	// Skip this test by default as it requires MSK Express brokers which:
-	// - Are only available in specific regions
-	// - Require specific instance types
-	// - May not be available in all test accounts
-	// To run this test, set the environment variable: TF_ACC_MSK_EXPRESS_BROKER_ENABLED=1
-	if os.Getenv("TF_ACC_MSK_EXPRESS_BROKER_ENABLED") == "" {
-		t.Skip("Skipping test - requires MSK Express broker support. Set TF_ACC_MSK_EXPRESS_BROKER_ENABLED=1 to run.")
-	}
-
-	var cluster types.ClusterInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_rebalancing(rName, "ACTIVE"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "rebalancing.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rebalancing.0.status", "ACTIVE"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccClusterConfig_rebalancing(rName, "PAUSED"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "rebalancing.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rebalancing.0.status", "PAUSED"),
-				),
-			},
-		},
-	})
 }
 
 func testAccClusterConfig_rebalancing(rName, status string) string {
