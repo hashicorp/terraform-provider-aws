@@ -16,7 +16,6 @@ ENHANCEMENTS:
 * resource/aws_lb_listener_rule: Support `jwt-validation` as a valid `action.type` and add `action.jwt_validation` configuration block ([#45089](https://github.com/hashicorp/terraform-provider-aws/issues/45089))
 * resource/aws_vpn_connection: Add `tunnel_bandwidth` argument to support higher bandwidth tunnels ([#45070](https://github.com/hashicorp/terraform-provider-aws/issues/45070))
 
-
 BUG FIXES:
 
 * resource/aws_elastic_beanstalk_configuration_template: Fix updates not applying by including `ResourceName` for option settings and preventing duplicate add/remove operations ([#45077](https://github.com/hashicorp/terraform-provider-aws/issues/45077))
