@@ -6,6 +6,7 @@ package sdkv2
 import (
 	"context"
 	"fmt"
+	"slices"
 	"unique"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -303,6 +304,11 @@ func validateRequiredTags() customizeDiffInterceptor {
 	return interceptorFunc1[*schema.ResourceDiff, error](func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
 		c := opts.c
 
+		_, _, _, typeName, _, ok := interceptors.InfoFromContext(ctx, c)
+		if !ok {
+			return nil
+		}
+
 		switch d, when, why := opts.d, opts.when, opts.why; when {
 		case Before:
 			switch why {
@@ -310,38 +316,42 @@ func validateRequiredTags() customizeDiffInterceptor {
 				isCreate := d.GetRawState().IsNull()
 				hasTagsChange := d.HasChange(names.AttrTags)
 
-				if isCreate || hasTagsChange {
-					_, _, _, typeName, _, ok := interceptors.InfoFromContext(ctx, c)
-					if !ok {
-						return nil
-					}
+				if !isCreate && !hasTagsChange {
+					return nil
+				}
 
-					if policy := c.TagPolicyConfig(ctx); policy != nil {
-						cfgTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
-						allTags := c.DefaultTagsConfig(ctx).MergeTags(cfgTags)
+				policy := c.TagPolicyConfig(ctx)
+				if policy == nil {
+					return nil
+				}
 
-						// Verify required tags are present
-						if reqTags, ok := policy.RequiredTags[typeName]; ok {
-							if !allTags.ContainsAllKeys(reqTags) {
-								missing := reqTags.Removed(allTags).Keys()
-								summary := "Missing Required Tags"
-								detail := fmt.Sprintf("An organizational tag policy requires the following tags for %s: %s", typeName, missing)
+				reqTags, ok := policy.RequiredTags[typeName]
+				if !ok {
+					return nil
+				}
 
-								// CustomizeDiff does not support diagnostics (only an error return)
-								switch policy.Severity {
-								case "warning":
-									// Warning diagnostics are only logged
-									tflog.Warn(ctx, "Required Tags Validation", map[string]any{
-										"summary": summary,
-										"detail":  detail,
-									})
-								default:
-									// Error diagnostics merge summary and detail into a single message
-									return fmt.Errorf("%s - %s", summary, detail)
-								}
-							}
-						}
-					}
+				cfgTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
+				allTags := c.DefaultTagsConfig(ctx).MergeTags(cfgTags)
+				if allTags.ContainsAllKeys(reqTags) {
+					return nil
+				}
+
+				missing := reqTags.Removed(allTags).Keys()
+				slices.Sort(missing)
+				summary := "Missing Required Tags"
+				detail := fmt.Sprintf("An organizational tag policy requires the following tags for %s: %s", typeName, missing)
+
+				// CustomizeDiff does not support diagnostics (only an error return)
+				switch policy.Severity {
+				case "warning":
+					// Warning diagnostics are only logged
+					tflog.Warn(ctx, "Required Tags Validation", map[string]any{
+						"summary": summary,
+						"detail":  detail,
+					})
+				default:
+					// Error diagnostics merge summary and detail into a single message
+					return fmt.Errorf("%s - %s", summary, detail)
 				}
 			}
 		}
