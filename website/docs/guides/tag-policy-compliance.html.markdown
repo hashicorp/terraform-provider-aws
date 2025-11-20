@@ -70,14 +70,30 @@ In this policy, the `Owner` key is **required** on all `logs:log-group` resource
 This tag resource type maps to the [`aws_cloudwatch_log_group`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) resource in the Terraform AWS provider.
 
 The Terraform configuration below will create a tag policy and attach it to the current account.
-`tag-policy.json` should be a file in the same directory as the Terraform configuration that contains a valid tag policy, similar to the example above.
+The policy content is inlined for demonstration purposes.
+Consider moving this to a separate JSON file for more complex policy definitions.
 
 ```hcl
 data "aws_caller_identity" "current" {}
 
 resource "aws_organizations_policy" "example" {
   name    = "tag-policy-example"
-  content = file("tag-policy.json")
+  content = <<EOF
+{
+  "tags": {
+    "Owner": {
+      "tag_key": {
+        "@@assign": "Owner"
+      },
+      "report_required_tag_for": {
+        "@@assign": [
+          "logs:log-group"
+        ]
+      }
+    }
+  }
+}
+EOF
   type    = "TAG_POLICY"
 }
 
