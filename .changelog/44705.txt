@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/vpc_ipam_pool: Support provisioning of VPC Resource Planning Pools
+```
+
+```release-note:enhancement
+data-source/vpc_ipam_pool: Add source_resource attribute
+```
+
+```release-note:enhancement
+resource/vpc_subnet: Support provisioning of subnets using IPAM
+```
+
+```release-note:enhancement
+resource/vpc_ipam_pool_cidr: Support deprovisioning when allocations take a long time to be released by IPAM
+```
