@@ -120,6 +120,48 @@ func TestValidAccountID(t *testing.T) {
 	}
 }
 
+func TestValidCatalogID(t *testing.T) {
+	t.Parallel()
+
+	validNames := []string{
+		"123456789012",
+		"999999999999",
+		"123456789012:s3tablescatalog",
+		"123456789012:s3tablescatalog/s3tables-bucket-name",
+	}
+	for _, v := range validNames {
+		_, errors := ValidCatalogID(v, "catalog_id")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid AWS Catalog ID: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"12345678901",   // too short
+		"1234567890123", // too long
+		"invalid",
+		"x123456789012",
+		"123456789012:",
+		"12345678901:randomcatalog",
+		"1234567890123:randomcatalog",
+		"invalid:randomcatalog",
+		"x123456789012:randomcatalog",
+		"123456789012:randomcatalog",
+		"12345678901:s3tablescatalog",
+		"1234567890123:s3tablescatalog",
+		"invalid:s3tablescatalog",
+		"x123456789012:s3tablescatalog",
+		"123456789012:s3tablescatalog/",
+		"123456789012:s3tablescatalog/a/b/c",
+	}
+	for _, v := range invalidNames {
+		_, errors := ValidCatalogID(v, "catalog_id")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid AWS Catalog ID", v)
+		}
+	}
+}
+
 func TestValidRegionName(t *testing.T) {
 	t.Parallel()
 

@@ -29,6 +29,7 @@ import (
 
 var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|aws-marketplace|\d{12}|cw.{10})$`)
 var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
+var s3TablesBucketNameRegexp = regexache.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`)
 
 // validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
 var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.com$`)
@@ -148,6 +149,48 @@ func ValidAccountID(v any, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't look like AWS Account ID (exactly 12 digits): %q",
 			k, value))
+	}
+
+	return
+}
+
+func ValidCatalogID(v any, k string) (ws []string, errors []error) {
+	value, ok := v.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+	parts := strings.Split(value, ":")
+
+	if !inttypes.IsAWSAccountID(parts[0]) {
+		errors = append(errors, fmt.Errorf(
+			"%q doesn't look like AWS Account ID (exactly 12 digits): %q",
+			k, value))
+	}
+
+	switch {
+	case len(parts) == 1:
+		return
+	case len(parts) > 2:
+		errors = append(errors, fmt.Errorf("%q is not a valid catalog ID: %q", k, value))
+		return
+	}
+
+	catalogParts := strings.Split(parts[1], "/")
+	if catalogParts[0] != "s3tablescatalog" {
+		errors = append(errors, fmt.Errorf("%q is not a valid S3 table catalog ID: %q", k, value))
+	}
+
+	switch len(catalogParts) {
+	case 1:
+		return
+	case 2:
+		if !s3TablesBucketNameRegexp.MatchString(catalogParts[1]) {
+			errors = append(errors, fmt.Errorf("%q is not a valid S3 table bucket name: %q", k, value))
+		}
+	default:
+		errors = append(errors, fmt.Errorf("%q is not a valid catalog ID: %q", k, value))
+		return
 	}
 
 	return
