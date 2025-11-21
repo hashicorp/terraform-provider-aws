@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -361,9 +362,7 @@ func testAccAnalyzer_upgradeV5_95_0(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/45136.
 func testAccAnalyzer_nullInResourceTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var analyzer types.AnalyzerSummary
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -376,10 +375,8 @@ func testAccAnalyzer_nullInResourceTags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerConfig_nullInResourceTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.analysis_rule.0.exclusion.1.resource_tags.#", "0"),
-				),
+				// Error, but no crash.
+				ExpectError: regexache.MustCompile(`External Access analyzers cannot be created with the configuration`),
 			},
 		},
 	})
@@ -634,7 +631,6 @@ resource "aws_accessanalyzer_analyzer" "test" {
 func testAccAnalyzerConfig_nullInResourceTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_accessanalyzer_analyzer" "test" {
-
   analyzer_name = %[1]q
 
   configuration {
