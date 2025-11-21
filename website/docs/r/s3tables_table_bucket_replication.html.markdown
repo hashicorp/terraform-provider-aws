@@ -17,10 +17,19 @@ Manages Amazon S3 Tables Table Bucket Replication configuration.
 ```terraform
 resource "aws_s3tables_table_bucket_replication" "example" {
   table_bucket_arn = aws_s3tables_table_bucket.example.arn
-}
+  role             = aws_iam_role.example.arn
 
-resource "aws_s3tables_table_bucket" "example" {
-  name = "example-bucket"
+  rule {
+    status = "ENABLED"
+
+    source_selection {
+      table_pattern = "*"
+    }
+
+    destination {
+      destination_bucket_arn = aws_s3_bucket.example.arn
+    }
+  }
 }
 ```
 
@@ -29,7 +38,29 @@ resource "aws_s3tables_table_bucket" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `role` - (Required) ARN referencing the IAM role assumed by S3 when replicating tables in this bucket.
+* `rule` - (Optional) Replication rules. See [Rule](#rule) below for more details.
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that owns this replication configuration.
+
+### Rule
+
+The `rule` block supports the following:
+
+* `destination` - (Required) Replication destination. See [Destination](#destination) below for more details.
+* `source_selection` - (Required) Source selection. See [Source Selection](#source-selection) below for more details.
+* `status` - (Required) Whether rule is enabled or disabled. Valid values: `Enabled`, `Disabled`.
+
+### Destination
+
+The `destination` block supports the following:
+
+* `destination_bucket_arn` (Required) ARN of destination bucket to replicate source tables to.
+
+### Source Selection
+
+The `source_selection` block supports the following:
+
+* `table_pattern` (Required) Table pattern to use for source selection. Valid values: `*`.
 
 ## Attribute Reference
 

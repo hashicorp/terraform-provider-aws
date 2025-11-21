@@ -10,10 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -21,6 +25,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3tables_table_bucket_replication", name="Table Bucket Replication")
@@ -40,11 +45,67 @@ type tableBucketReplicationResource struct {
 func (r *tableBucketReplicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrRole: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+			},
 			"table_bucket_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"version_token": schema.StringAttribute{
+				Computed: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrRule: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[bucketReplicationRuleModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrStatus: schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.SomethingOrOther](),
+							Required:   true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						names.AttrDestination: schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[replicationDestinationModel](ctx),
+							Validators: []validator.Set{
+								setvalidator.SizeAtLeast(1),
+								setvalidator.SizeAtMost(5),
+								setvalidator.IsRequired(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"destination_bucket_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+								},
+							},
+						},
+						"source_selection": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[sourceSelectionModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+								listvalidator.IsRequired(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"table_pattern": schema.StringAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -61,6 +122,24 @@ func (r *tableBucketReplicationResource) Create(ctx context.Context, request res
 	conn := r.Meta().S3TablesClient(ctx)
 
 	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
+	input := s3tables.PutTableBucketReplicationInput{
+		TableBucketArn: aws.String(tableBucketARN),
+	}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input.Configuration)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	output, err := conn.PutTableBucketReplication(ctx, &input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Tables Table Bucket Replication (%s)", tableBucketARN), err.Error())
+
+		return
+	}
+
+	// Set values for unknowns.
+	data.VersionToken = fwflex.StringToFramework(ctx, output.VersionToken)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -90,12 +169,22 @@ func (r *tableBucketReplicationResource) Read(ctx context.Context, request resou
 		return
 	}
 
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Configuration, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *tableBucketReplicationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var new tableBucketReplicationResourceModel
+	var old, new tableBucketReplicationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -103,6 +192,25 @@ func (r *tableBucketReplicationResource) Update(ctx context.Context, request res
 	conn := r.Meta().S3TablesClient(ctx)
 
 	tableBucketARN := fwflex.StringValueFromFramework(ctx, new.TableBucketARN)
+	input := s3tables.PutTableBucketReplicationInput{
+		TableBucketArn: aws.String(tableBucketARN),
+		VersionToken:   fwflex.StringFromFramework(ctx, old.VersionToken),
+	}
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input.Configuration)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	output, err := conn.PutTableBucketReplication(ctx, &input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating S3 Tables Table Bucket Replication (%s)", tableBucketARN), err.Error())
+
+		return
+	}
+
+	// Set values for unknowns.
+	new.VersionToken = fwflex.StringToFramework(ctx, output.VersionToken)
 
 	response.Diagnostics.Append(response.State.Set(ctx, new)...)
 }
@@ -117,6 +225,21 @@ func (r *tableBucketReplicationResource) Delete(ctx context.Context, request res
 	conn := r.Meta().S3TablesClient(ctx)
 
 	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
+	input := s3tables.DeleteTableBucketReplicationInput{
+		TableBucketArn: aws.String(tableBucketARN),
+		VersionToken:   fwflex.StringFromFramework(ctx, data.VersionToken),
+	}
+	_, err := conn.DeleteTableBucketReplication(ctx, &input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Tables Table Replication (%s)", tableBucketARN), err.Error())
+
+		return
+	}
 }
 
 func findTableBucketReplicationByARN(ctx context.Context, conn *s3tables.Client, tableBucketARN string) (*s3tables.GetTableBucketPolicyOutput, error) {
@@ -149,5 +272,22 @@ func findTableBucketReplication(ctx context.Context, conn *s3tables.Client, inpu
 
 type tableBucketReplicationResourceModel struct {
 	framework.WithRegionModel
-	TableBucketARN fwtypes.ARN `tfsdk:"table_bucket_arn"`
+	Role           fwtypes.ARN                                                 `tfsdk:"role"`
+	Rules          fwtypes.ListNestedObjectValueOf[bucketReplicationRuleModel] `tfsdk:"rule"`
+	TableBucketARN fwtypes.ARN                                                 `tfsdk:"table_bucket_arn"`
+	VersionToken   types.String                                                `tfsdk:"version_token"`
+}
+
+type bucketReplicationRuleModel struct {
+	Destinations    fwtypes.SetNestedObjectValueOf[replicationDestinationModel] `tfsdk:"destination"`
+	SourceSelection fwtypes.ListNestedObjectValueOf[sourceSelectionModel]       `tfsdk:"source_selection"`
+	Status          fwtypes.StringEnum[awstypes.SomethingOrOther]               `tfsdk:"status"`
+}
+
+type replicationDestinationModel struct {
+	DestinationBucketARN fwtypes.ARN `tfsdk:"destination_bucket_arn"`
+}
+
+type sourceSelectionModel struct {
+	TablePattern types.String `tfsdk:"table_pattern"`
 }
