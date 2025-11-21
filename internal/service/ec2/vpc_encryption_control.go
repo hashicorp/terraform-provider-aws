@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -37,6 +38,10 @@ import (
 func newResourceVPCEncryptionControl(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceVPCEncryptionControl{}
 
+	r.SetDefaultCreateTimeout(20 * time.Minute)
+	r.SetDefaultUpdateTimeout(20 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
+
 	return r, nil
 }
 
@@ -46,7 +51,7 @@ const (
 
 type resourceVPCEncryptionControl struct {
 	framework.ResourceWithModel[resourceVPCEncryptionControlModel]
-	// framework.WithTimeouts
+	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
@@ -88,6 +93,13 @@ func (r *resourceVPCEncryptionControl) Schema(ctx context.Context, req resource.
 			},
 			"vpc_peering_exclusion": vpcEncryptionControlExclusionStateInputAttribute,
 		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+		},
 	}
 }
 
@@ -122,8 +134,7 @@ func (r *resourceVPCEncryptionControl) Create(ctx context.Context, req resource.
 		return
 	}
 
-	// createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	createTimeout := 20 * time.Minute
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	ec, err := waitVPCEncryptionControlAvailable(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrVPCID, plan.VPCID.String())
@@ -195,7 +206,7 @@ func (r *resourceVPCEncryptionControl) Update(ctx context.Context, req resource.
 	}
 
 	if diff.HasChanges() {
-		updateTimeout := 20 * time.Minute
+		updateTimeout := r.UpdateTimeout(ctx, state.Timeouts)
 		ec := vpcEncryptionControlModify(ctx, conn, plan, updateTimeout, &resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
 			return
@@ -232,8 +243,7 @@ func (r *resourceVPCEncryptionControl) Delete(ctx context.Context, req resource.
 		return
 	}
 
-	// deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	deleteTimeout := 5 * time.Minute
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitVPCEncryptionControlDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
@@ -459,9 +469,10 @@ type resourceVPCEncryptionControlModel struct {
 	InternetGatewayExclusion           fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"internet_gateway_exclusion"`
 	Mode                               fwtypes.StringEnum[awstypes.VpcEncryptionControlMode]                `tfsdk:"mode"`
 	NatGatewayExclusion                fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"nat_gateway_exclusion"`
+	ResourceExclusions                 fwtypes.ObjectValueOf[vpcEncryptionControlExclusionsModel]           `tfsdk:"resource_exclusions"`
 	State                              types.String                                                         `tfsdk:"state"`
 	StateMessage                       types.String                                                         `tfsdk:"state_message"`
-	ResourceExclusions                 fwtypes.ObjectValueOf[vpcEncryptionControlExclusionsModel]           `tfsdk:"resource_exclusions"`
+	Timeouts                           timeouts.Value                                                       `tfsdk:"timeouts"`
 	VirtualPrivateGatewayExclusion     fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"virtual_private_gateway_exclusion"`
 	VPCID                              types.String                                                         `tfsdk:"vpc_id"`
 	VpcPeeringExclusion                fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"vpc_peering_exclusion"`
