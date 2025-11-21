@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appflow_flow: Fix the usage of the max_parallelism.max_parallelism parameter used in Sap OData Source
+```
