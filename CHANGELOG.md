@@ -5,6 +5,10 @@ ENHANCEMENTS:
 * resource/aws_fsx_openzfs_file_system: Support `INTELLIGENT_TIERING` storage type and add `read_cache_configuration` argument ([#45159](https://github.com/hashicorp/terraform-provider-aws/issues/45159))
 * resource/aws_msk_cluster: Add `rebalancing` configuration block to support intelligent rebalancing for Express broker clusters ([#45073](https://github.com/hashicorp/terraform-provider-aws/issues/45073))
 
+BUG FIXES:
+
+* resource/aws_accessanalyzer_analyzer: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `configuration.unused_access.analysis_rule.exclusion.resource_tags` contains `null` values ([#45202](https://github.com/hashicorp/terraform-provider-aws/issues/45202))
+
 ## 6.22.0 (November 20, 2025)
 
 NOTES:
