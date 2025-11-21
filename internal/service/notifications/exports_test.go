@@ -5,15 +5,17 @@ package notifications
 
 // Exports for use in tests only.
 var (
-	ResourceChannelAssociation                           = newChannelAssociationResource
-	ResourceEventRule                                    = newEventRuleResource
-	ResourceManagedNotificationAccountContactAssociation = newManagedNotificationAccountContactAssociationResource
-	ResourceNotificationConfiguration                    = newNotificationConfigurationResource
-	ResourceNotificationHub                              = newNotificationHubResource
+	ResourceChannelAssociation                              = newChannelAssociationResource
+	ResourceEventRule                                       = newEventRuleResource
+	ResourceManagedNotificationAccountContactAssociation    = newManagedNotificationAccountContactAssociationResource
+	ResourceManagedNotificationAdditionalChannelAssociation = newManagedNotificationAdditionalChannelAssociationResource
+	ResourceNotificationConfiguration                       = newNotificationConfigurationResource
+	ResourceNotificationHub                                 = newNotificationHubResource
 
-	FindChannelAssociationByTwoPartKey                           = findChannelAssociationByTwoPartKey
-	FindEventRuleByARN                                           = findEventRuleByARN
-	FindManagedNotificationAccountContactAssociationByTwoPartKey = findManagedNotificationAccountContactAssociationByTwoPartKey
-	FindNotificationConfigurationByARN                           = findNotificationConfigurationByARN
-	FindNotificationHubByRegion                                  = findNotificationHubByRegion
+	FindChannelAssociationByTwoPartKey                              = findChannelAssociationByTwoPartKey
+	FindEventRuleByARN                                              = findEventRuleByARN
+	FindManagedNotificationAccountContactAssociationByTwoPartKey    = findManagedNotificationAccountContactAssociationByTwoPartKey
+	FindManagedNotificationAdditionalChannelAssociationByTwoPartKey = findManagedNotificationAdditionalChannelAssociationByTwoPartKey
+	FindNotificationConfigurationByARN                              = findNotificationConfigurationByARN
+	FindNotificationHubByRegion                                     = findNotificationHubByRegion
 )
