@@ -1,5 +1,9 @@
 ## 6.23.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_fsx_openzfs_file_system: Support `INTELLIGENT_TIERING` storage type and add `read_cache_configuration` argument ([#45159](https://github.com/hashicorp/terraform-provider-aws/issues/45159))
+
 ## 6.22.0 (November 20, 2025)
 
 NOTES:
