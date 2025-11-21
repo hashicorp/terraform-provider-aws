@@ -309,6 +309,15 @@ func validateRequiredTags() customizeDiffInterceptor {
 			return nil
 		}
 
+		policy := c.TagPolicyConfig(ctx)
+		if policy == nil {
+			return nil
+		}
+		reqTags, ok := policy.RequiredTags[typeName]
+		if !ok {
+			return nil
+		}
+
 		switch d, when, why := opts.d, opts.when, opts.why; when {
 		case Before:
 			switch why {
@@ -317,16 +326,6 @@ func validateRequiredTags() customizeDiffInterceptor {
 				hasTagsChange := d.HasChange(names.AttrTags)
 
 				if !isCreate && !hasTagsChange {
-					return nil
-				}
-
-				policy := c.TagPolicyConfig(ctx)
-				if policy == nil {
-					return nil
-				}
-
-				reqTags, ok := policy.RequiredTags[typeName]
-				if !ok {
 					return nil
 				}
 
