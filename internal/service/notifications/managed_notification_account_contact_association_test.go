@@ -200,12 +200,11 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_alternateO
 func testAccManagedNotificationAccountContactAssociationConfig_basic(contactIdentifier string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
-# Note: This test requires a pre-existing managed notification configuration
-# The ARN format is: arn:aws:notifications::<account-id>:managed-notification-configuration/category/<category>/sub-category/<sub-category>
 resource "aws_notifications_managed_notification_account_contact_association" "test" {
   contact_identifier                     = %[1]q
-  managed_notification_configuration_arn = "arn:aws:notifications::${data.aws_caller_identity.current.account_id}:managed-notification-configuration/category/AWS-Health/sub-category/Security"
+  managed_notification_configuration_arn = "arn:${data.aws_partition.current.partition}:notifications::${data.aws_caller_identity.current.account_id}:managed-notification-configuration/category/AWS-Health/sub-category/Security"
 }
 `, contactIdentifier)
 }
