@@ -764,14 +764,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				v.errs = append(v.errs, fmt.Errorf("preIdentityVersion is required when hasNoPreExistingResource is false: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
 			}
-			if !d.GeneratorSeen {
-				d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
-				d.GoImports = append(d.GoImports,
-					common.GoImport{
-						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-					},
-				)
-			}
+			tests.Configure(&d.CommonArgs)
 			if d.IsARNIdentity() {
 				d.arnAttribute = d.IdentityAttributeName()
 			}

@@ -697,14 +697,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
 			}
-			if !d.GeneratorSeen {
-				d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
-				d.GoImports = append(d.GoImports,
-					common.GoImport{
-						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-					},
-				)
-			}
+			tests.Configure(&d.CommonArgs)
 			if d.HasInherentRegionIdentity() {
 				if d.Implementation == common.ImplementationFramework {
 					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
