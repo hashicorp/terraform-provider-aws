@@ -686,6 +686,38 @@ func TestAccAthenaWorkGroup_tags(t *testing.T) {
 	})
 }
 
+func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1 types.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_configurationManagedQueryResultsConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
 func testAccCheckCreateNamedQuery(ctx context.Context, workGroup *types.WorkGroup, databaseName, queryName, query string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
@@ -1024,4 +1056,27 @@ resource "aws_athena_database" "test" {
   force_destroy = true
 }
 `, rName, dbName)
+}
+
+func testAccWorkGroupConfig_configurationManagedQueryResultsConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
+}
+
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    managed_query_results_configuration {
+      enabled = true
+      encryption_configuration {
+        kms_key = aws_kms_key.test.arn
+      }
+    }
+  }
+}
+`, rName)
 }
