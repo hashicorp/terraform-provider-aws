@@ -24,6 +24,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	intOrg "github.com/hashicorp/terraform-provider-aws/internal/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -125,6 +126,10 @@ func resourceAccount() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"principal_org_path": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -252,6 +257,12 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("parent_id", parentAccountID)
 	d.Set(names.AttrStatus, account.Status)
 	d.Set(names.AttrState, account.State)
+
+	path, err := intOrg.BuildPrincipalOrgPath(ctx, conn, d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "building principal org path for Account %s: %s", d.Id(), err)
+	}
+	d.Set("principal_org_path", path)
 
 	return diags
 }

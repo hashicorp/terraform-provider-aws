@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	intOrg "github.com/hashicorp/terraform-provider-aws/internal/organizations"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,6 +37,12 @@ func dataSourceOrganizationalUnit() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreateOrganizationalUnit.html#organizations-CreateOrganizationalUnit-request-ParentId"),
+			},
+			"principal_org_path": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Description: "The full path of the organizational unit within the AWS Organization. " +
+					"See https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed-view-data-orgs.html#access_policies_last-accessed-viewing-orgs-entity-path",
 			},
 		},
 	}
@@ -61,6 +68,13 @@ func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(aws.ToString(ou.Id))
 	d.Set(names.AttrARN, ou.Arn)
+
+	principalOrgPath, err := intOrg.BuildPrincipalOrgPath(ctx, conn, aws.ToString(ou.Id))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "computing principal org path for OU %s: %s", aws.ToString(ou.Id), err)
+	}
+
+	d.Set("principal_org_path", principalOrgPath)
 
 	return diags
 }
