@@ -348,6 +348,7 @@ func TestAccODBCloudVmCluster_variables(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
 				Config:             testAccCloudVmClusterConfig_useVariables(vmcDisplayName),
 				PlanOnly:           true,
