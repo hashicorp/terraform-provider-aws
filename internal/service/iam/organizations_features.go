@@ -20,7 +20,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -199,8 +199,8 @@ func findOrganizationsFeatures(ctx context.Context, conn *iam.Client) (*iam.List
 }
 
 func updateOrganizationFeatures(ctx context.Context, conn *iam.Client, new, old []awstypes.FeatureType) error {
-	toEnable := itypes.Set[awstypes.FeatureType](new).Difference(old)
-	toDisable := itypes.Set[awstypes.FeatureType](old).Difference(new)
+	toEnable := inttypes.Set[awstypes.FeatureType](new).Difference(old)
+	toDisable := inttypes.Set[awstypes.FeatureType](old).Difference(new)
 
 	if slices.Contains(toEnable, awstypes.FeatureTypeRootCredentialsManagement) {
 		input := &iam.EnableOrganizationsRootCredentialsManagementInput{}

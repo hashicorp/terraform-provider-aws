@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -394,7 +394,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	if d.HasChange(names.AttrPermissions) {
-		var oldAccountIDs, newAccountIDs itypes.Set[string]
+		var oldAccountIDs, newAccountIDs inttypes.Set[string]
 		o, n := d.GetChange(names.AttrPermissions)
 
 		if v := o.(map[string]any); len(v) > 0 {
