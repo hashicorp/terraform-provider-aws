@@ -771,12 +771,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				return
 			}
 			if !generatorSeen {
-				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
+				d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
 				d.GoImports = append(d.GoImports,
-					common.GoImport{
-						Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
-						Alias: "sdkacctest",
-					},
 					common.GoImport{
 						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 					},
