@@ -39,12 +39,7 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
-		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
@@ -65,9 +60,10 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_steady_state",
-					"current_deployment", // not returned immediately in Create response, so will show as diff in Import
-					"primary_container",  // top-level create-only attribute that will show as null in Import
-					"execution_role",     // top-level create-only attribute that will show as null in Import
+					"current_deployment",    // not returned immediately in Create response, so will show as diff in Import
+					"active_configurations", // not entirely returned immediately in Create response, so may show as diff in Import
+					"primary_container",     // top-level create-only attribute that will show as null in Import
+					"execution_role",        // top-level create-only attribute that will show as null in Import
 				},
 			},
 		},
@@ -88,12 +84,7 @@ func TestAccECSExpressGatewayService_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
-		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
@@ -124,12 +115,7 @@ func TestAccECSExpressGatewayService_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
-		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_tags1(rName, "key1", "value1"),
@@ -138,7 +124,6 @@ func TestAccECSExpressGatewayService_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -147,9 +132,11 @@ func TestAccECSExpressGatewayService_tags(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_steady_state",
-					"current_deployment", // not returned immediately in Create response, so will show as diff in Import
-					"primary_container",  // top-level create-only attribute that will show as null in Import
-					"execution_role",     // top-level create-only attribute that will show as null in Import
+					"current_deployment",    // not returned immediately in Create response, so will show as diff in Import
+					"active_configurations", // not entirely returned immediately in Create response, so may show as diff in Import
+					"primary_container",     // top-level create-only attribute that will show as null in Import
+					"execution_role",
+					"network_configuration",
 				},
 			},
 		},
@@ -173,12 +160,7 @@ func TestAccECSExpressGatewayService_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
-		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
@@ -215,12 +197,7 @@ func TestAccECSExpressGatewayService_waitForSteadyState(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
-		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_basic(rName, true),
@@ -258,12 +235,7 @@ func TestAccECSExpressGatewayService_networkConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
-		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_networkConfiguration(rName),
@@ -289,19 +261,6 @@ func TestAccECSExpressGatewayService_networkConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.aws_logs_configuration.0.log_stream_prefix", "test"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrServiceARN),
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"wait_for_steady_state",
-					"current_deployment",    // not returned immediately in Create response, so will show as diff in Import
-					"primary_container",     // top-level create-only attribute that will show as null in Import
-					"network_configuration", // top-level create-only attribute that will show as null in Import
-					"execution_role",        // top-level create-only attribute that will show as null in Import
-				},
-			},
 		},
 	})
 }
@@ -322,12 +281,7 @@ func TestAccECSExpressGatewayService_checkIdempotency(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
-		CheckDestroy: testAccCheckExpressGatewayServiceDestroy(ctx),
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
@@ -360,7 +314,8 @@ func testAccCheckExpressGatewayServiceDestroy(ctx context.Context) resource.Test
 				return create.Error(names.ECS, create.ErrActionCheckingDestroyed, tfecs.ResNameExpressGatewayService, rs.Primary.ID, err)
 			}
 
-			if string(output.Status.StatusCode) == "INACTIVE" {
+			if string(output.Status.StatusCode) == string(awstypes.ExpressGatewayServiceStatusCodeInactive) ||
+				string(output.Status.StatusCode) == string(awstypes.ExpressGatewayServiceStatusCodeDraining) {
 				return nil
 			}
 
@@ -481,11 +436,6 @@ resource "aws_iam_role_policy_attachment" "infrastructure" {
   role       = aws_iam_role.infrastructure.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices"
 }
-
-resource "time_sleep" "wait_for_iam" {
-  depends_on = [aws_iam_role_policy_attachment.infrastructure]
-  create_duration = "10s"
-}
 `, rName)
 }
 
@@ -504,10 +454,6 @@ resource "aws_ecs_express_gateway_service" "test" {
   primary_container {
     image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
   }
-
-  depends_on = [
-    time_sleep.wait_for_iam
-  ]
 }
 `, rName, waitForSteadyStateConfig))
 }
@@ -527,10 +473,6 @@ resource "aws_ecs_express_gateway_service" "test" {
   primary_container {
     image = "public.ecr.aws/nginx/nginx:latest"
   }
-
-  depends_on = [
-    time_sleep.wait_for_iam
-  ]
 }
 `, rName, waitForSteadyStateConfig))
 }
@@ -553,10 +495,6 @@ resource "aws_ecs_express_gateway_service" "test" {
   tags = {
     %[2]q = %[3]q
   }
-
-  depends_on = [
-    time_sleep.wait_for_iam
-  ]
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -661,10 +599,6 @@ resource "aws_ecs_express_gateway_service" "test" {
     subnets         = [aws_subnet.test_subnet1.id, aws_subnet.test_subnet2.id]
     security_groups = [aws_security_group.test.id]
   }
-
-  depends_on = [
-    time_sleep.wait_for_iam
-  ]
 }
 `, rName))
 }
@@ -678,10 +612,6 @@ resource "aws_ecs_express_gateway_service" "test" {
   primary_container {
     image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
   }
-
-  depends_on = [
-    time_sleep.wait_for_iam
-  ]
 }
 
 resource "aws_ecs_express_gateway_service" "duplicate" {

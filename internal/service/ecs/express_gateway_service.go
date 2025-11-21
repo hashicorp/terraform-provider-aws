@@ -526,7 +526,9 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state, flex.WithIgnoredField("active_configurations"), flex.WithIgnoredField(names.AttrTags), flex.WithIgnoredField(names.AttrTagsAll))
+	diff, d := flex.Diff(ctx, plan, state, flex.WithIgnoredField("active_configurations"), flex.WithIgnoredField("current_deployment"),
+		flex.WithIgnoredField("scaling_target"), flex.WithIgnoredField(names.AttrTags), flex.WithIgnoredField(names.AttrTags),
+		flex.WithIgnoredField(names.AttrTagsAll))
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -630,10 +632,10 @@ func (r *resourceExpressGatewayService) Delete(ctx context.Context, req resource
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	input := ecs.DeleteExpressGatewayServiceInput{
 		ServiceArn: state.ServiceArn.ValueStringPointer(),
 	}
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 
 	_, err := tfresource.RetryWhen(ctx, deleteTimeout,
 		func(ctx context.Context) (any, error) {
@@ -641,13 +643,15 @@ func (r *resourceExpressGatewayService) Delete(ctx context.Context, req resource
 		},
 		func(err error) (bool, error) {
 			if errs.IsA[*awstypes.InvalidParameterException](err) || errs.IsA[*awstypes.ServiceNotActiveException](err) {
-				return true, err
+				return false, err
 			}
 			return false, err
 		},
 	)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
+			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") {
+			// Service was already deleted/inactive
 			return
 		}
 
@@ -710,8 +714,8 @@ func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gate
 
 func waitExpressGatewayServiceInactive(ctx context.Context, conn *ecs.Client, id string, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{gatewayServiceStatusActive, gatewayServiceStatusDraining},
-		Target:     []string{gatewayServiceStatusInactive},
+		Pending:    []string{gatewayServiceStatusActive},
+		Target:     []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining},
 		Refresh:    statusExpressGatewayServiceForDeletion(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
@@ -743,18 +747,9 @@ func statusExpressGatewayService(ctx context.Context, conn *ecs.Client, gatewayS
 func statusExpressGatewayServiceForDeletion(ctx context.Context, conn *ecs.Client, gatewayServiceARN string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findExpressGatewayServiceNoTagsByARN(ctx, conn, gatewayServiceARN)
-		if tfresource.NotFound(err) {
-			mockService := &awstypes.ECSExpressGatewayService{
-				ServiceArn: aws.String(gatewayServiceARN),
-				Status: &awstypes.ExpressGatewayServiceStatus{
-					StatusCode: awstypes.ExpressGatewayServiceStatusCodeInactive,
-				},
-			}
-			return mockService, gatewayServiceStatusInactive, nil
-		}
-
 		if err != nil {
-			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") {
+			if tfresource.NotFound(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
+				errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") {
 				mockService := &awstypes.ECSExpressGatewayService{
 					ServiceArn: aws.String(gatewayServiceARN),
 					Status: &awstypes.ExpressGatewayServiceStatus{
@@ -1014,9 +1009,9 @@ func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, inp
 			return conn.CreateExpressGatewayService(ctx, input)
 		},
 		func(err error) (bool, error) {
-			// if errs.IsA[*awstypes.InvalidParameterException](err) {
-			// 	return true, err
-			// }
+			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") {
+				return true, err
+			}
 			return false, err
 		},
 	)
@@ -1036,9 +1031,9 @@ func retryExpressGatewayServiceUpdate(ctx context.Context, conn *ecs.Client, inp
 			return conn.UpdateExpressGatewayService(ctx, input)
 		},
 		func(err error) (bool, error) {
-			// if errs.IsA[*awstypes.InvalidParameterException](err) {
-			// 	return true, err
-			// }
+			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") {
+				return true, err
+			}
 			return false, err
 		},
 	)
