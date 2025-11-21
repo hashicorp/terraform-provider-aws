@@ -68,8 +68,8 @@ func resourceTable() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				return validStreamSpec(diff)
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				return validateTableAttributes(diff)
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				return validateTableAttributes(ctx, diff, meta)
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
@@ -144,6 +144,18 @@ func resourceTable() *schema.Resource {
 			}),
 			validateWarmThroughputCustomDiff,
 			validateTTLCustomDiff,
+			func(ctx context.Context, diff *schema.ResourceDiff, i any) error {
+				rs := diff.GetRawState()
+				if rs.IsNull() {
+					return nil
+				}
+
+				if diff.HasChange("attribute") && !diff.HasChange("global_secondary_index") {
+					_ = diff.Clear("attribute")
+				}
+
+				return nil
+			},
 		),
 
 		SchemaVersion: 1,
@@ -187,6 +199,7 @@ func resourceTable() *schema.Resource {
 				"global_secondary_index": {
 					Type:     schema.TypeSet,
 					Optional: true,
+					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"hash_key": {
@@ -1134,6 +1147,36 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		input.BillingMode = newBillingMode
 		input.ProvisionedThroughput = expandProvisionedThroughputUpdate(d.Id(), capacityMap, newBillingMode, oldBillingMode)
+
+		table, err := findTableByName(ctx, conn, aws.ToString(input.TableName))
+		if err == nil && table != nil {
+			for _, g := range table.GlobalSecondaryIndexes {
+				found := false
+
+				for _, gsiUpdate := range gsiUpdates {
+					if gsiUpdate.Update == nil {
+						continue
+					}
+
+					if aws.ToString(gsiUpdate.Update.IndexName) != aws.ToString(g.IndexName) {
+						continue
+					}
+
+					found = true
+
+					gsiUpdate.Update.ProvisionedThroughput = input.ProvisionedThroughput
+				}
+
+				if !found {
+					gsiUpdates = append(gsiUpdates, awstypes.GlobalSecondaryIndexUpdate{
+						Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+							IndexName:             g.IndexName,
+							ProvisionedThroughput: input.ProvisionedThroughput,
+						},
+					})
+				}
+			}
+		}
 	}
 
 	if d.HasChange("deletion_protection_enabled") {
@@ -3061,7 +3104,9 @@ func expandS3BucketSource(data map[string]any) *awstypes.S3BucketSource {
 
 // validators
 
-func validateTableAttributes(d *schema.ResourceDiff) error {
+func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	c := meta.(*conns.AWSClient)
+	conn := c.DynamoDBClient(ctx)
 	// Collect all indexed attributes
 	indexedAttributes := map[string]bool{}
 
@@ -3079,6 +3124,7 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 			indexedAttributes[rangeKey] = true
 		}
 	}
+
 	if v, ok := d.GetOk("global_secondary_index"); ok {
 		indexes := v.(*schema.Set).List()
 		for _, idx := range indexes {
@@ -3093,6 +3139,17 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 		}
 	}
 
+	// validate against remote as well, because we're using the remote state as a bridge between the table and gsi resources
+	remoteGSIAttributes := map[string]bool{}
+	if table, err := findTableByName(ctx, conn, d.Get(names.AttrName).(string)); err == nil && table != nil {
+		for _, g := range table.GlobalSecondaryIndexes {
+			for _, ks := range g.KeySchema {
+				remoteGSIAttributes[aws.ToString(ks.AttributeName)] = true
+				delete(indexedAttributes, aws.ToString(ks.AttributeName))
+			}
+		}
+	}
+
 	// Check if all indexed attributes have an attribute definition
 	attributes := d.Get("attribute").(*schema.Set).List()
 	unindexedAttributes := []string{}
@@ -3100,7 +3157,10 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 		attribute := attr.(map[string]any)
 		attrName := attribute[names.AttrName].(string)
 
-		if _, ok := indexedAttributes[attrName]; !ok {
+		_, ok1 := indexedAttributes[attrName]
+		_, ok2 := remoteGSIAttributes[attrName]
+
+		if !ok1 && !ok2 {
 			unindexedAttributes = append(unindexedAttributes, attrName)
 		} else {
 			delete(indexedAttributes, attrName)

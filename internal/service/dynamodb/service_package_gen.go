@@ -42,6 +42,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newResourceGlobalSecondaryIndex,
+			TypeName: "aws_dynamodb_global_secondary_index",
+			Name:     "Global Secondary Index",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newResourcePolicyResource,
 			TypeName: "aws_dynamodb_resource_policy",
 			Name:     "Resource Policy",
