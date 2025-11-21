@@ -133,6 +133,32 @@ func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName 
 	}
 }
 
+func statusAllGSI(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findTableByName(ctx, conn, tableName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
+		}
+
+		for _, g := range output.GlobalSecondaryIndexes {
+			if g.IndexStatus != awstypes.IndexStatusActive {
+				return output, string(g.IndexStatus), nil
+			}
+		}
+
+		return output, string(awstypes.IndexStatusActive), nil
+	}
+}
+
 func statusGSIWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)

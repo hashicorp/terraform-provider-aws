@@ -151,6 +151,23 @@ func waitGSIActive(ctx context.Context, conn *dynamodb.Client, tableName, indexN
 	return nil, err
 }
 
+func waitAllGSIActive(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.IndexStatusCreating, awstypes.IndexStatusUpdating),
+		Target:  enum.Slice(awstypes.IndexStatusActive),
+		Refresh: statusAllGSI(ctx, conn, tableName),
+		Timeout: max(createTableTimeout, timeout),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitGSIWarmThroughputActive(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) error { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStatusCreating, awstypes.IndexStatusUpdating),
@@ -164,7 +181,7 @@ func waitGSIWarmThroughputActive(ctx context.Context, conn *dynamodb.Client, tab
 	return err
 }
 
-func waitGSIDeleted(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*awstypes.GlobalSecondaryIndexDescription, error) {
+func waitGSIDeleted(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*awstypes.GlobalSecondaryIndexDescription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStatusActive, awstypes.IndexStatusDeleting, awstypes.IndexStatusUpdating),
 		Target:  []string{},
