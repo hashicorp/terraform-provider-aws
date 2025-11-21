@@ -174,7 +174,7 @@ func (r *resourceCapacityProvider) Create(ctx context.Context, request resource.
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitCapacityProviderActive(ctx, conn, plan.Name.ValueString(), createTimeout)
 	if err != nil {
-		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(names.AttrARN), plan.ARN.ValueString()))
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(names.AttrName), plan.Name.ValueString()))
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
@@ -198,7 +198,7 @@ func (r *resourceCapacityProvider) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		return
 	}
 
@@ -235,11 +235,11 @@ func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.
 
 		out, err := conn.UpdateCapacityProvider(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.ARN.String())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
 			return
 		}
 		if out == nil {
-			smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.ARN.String())
+			smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 			return
 		}
 
@@ -249,9 +249,9 @@ func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		_, err = waitCapacityProviderActive(ctx, conn, plan.ARN.ValueString(), updateTimeout)
+		_, err = waitCapacityProviderActive(ctx, conn, plan.Name.ValueString(), updateTimeout)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.ARN.String())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
 			return
 		}
 	}
@@ -288,14 +288,14 @@ func (r *resourceCapacityProvider) Delete(ctx context.Context, request resource.
 	}
 
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ARN.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.Name.String())
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitCapacityProviderDeleted(ctx, conn, state.Name.ValueString(), deleteTimeout-timeElapsed)
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ARN.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.Name.String())
 		return
 	}
 }
