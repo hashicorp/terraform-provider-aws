@@ -12,7 +12,7 @@ Provides a S3 bucket resource.
 
 -> This resource provides functionality for managing S3 general purpose buckets in an AWS Partition. To manage Amazon S3 Express directory buckets, use the [`aws_directory_bucket`](/docs/providers/aws/r/s3_directory_bucket.html) resource. To manage [S3 on Outposts](https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html), use the [`aws_s3control_bucket`](/docs/providers/aws/r/s3control_bucket.html) resource.
 
--> Object Lock can be enabled by using the `object_lock_enable` attribute or by using the [`aws_s3_bucket_object_lock_configuration`](/docs/providers/aws/r/s3_bucket_object_lock_configuration.html) resource. Please note, that by using the resource, Object Lock can be enabled/disabled without destroying and recreating the bucket.
+-> Object Lock can be enabled by using the `object_lock_enabled` attribute or by using the [`aws_s3_bucket_object_lock_configuration`](/docs/providers/aws/r/s3_bucket_object_lock_configuration.html) resource.
 
 ## Example Usage
 
@@ -37,7 +37,7 @@ This resource supports the following arguments:
 * `bucket` - (Optional, Forces new resource) Name of the bucket. If omitted, Terraform will assign a random, unique name. Must be lowercase and less than or equal to 63 characters in length. A full list of bucket naming rules [may be found here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html). The name must not be in the format `[bucket_name]--[azid]--x-s3`. Use the [`aws_s3_directory_bucket`](s3_directory_bucket.html) resource to manage S3 Express buckets.
 * `bucket_prefix` - (Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with `bucket`. Must be lowercase and less than or equal to 37 characters in length. A full list of bucket naming rules [may be found here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
 * `force_destroy` - (Optional, Default:`false`) Boolean that indicates all objects (including any [locked objects](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)) should be deleted from the bucket *when the bucket is destroyed* so that the bucket can be destroyed without error. These objects are *not* recoverable. This only deletes objects when the bucket is destroyed, *not* when setting this parameter to `true`. Once this parameter is set to `true`, there must be a successful `terraform apply` run before a destroy is required to update this value in the resource state. Without a successful `terraform apply` after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the bucket or destroying the bucket, this flag will not work. Additionally when importing a bucket, a successful `terraform apply` is required to set this value in state before it will take effect on a destroy operation.
-* `object_lock_enabled` - (Optional, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled. Valid values are `true` or `false`. This argument is not supported in all regions or partitions.
+* `object_lock_enabled` - (Optional) Indicates whether this bucket has an Object Lock configuration enabled. Valid values are `true` or `false`. This argument is not supported in all regions or partitions.
 * `tags` - (Optional) Map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The following arguments are deprecated, and will be removed in a future major version:
@@ -152,7 +152,6 @@ The `logging` configuration block supports the following arguments:
 
 ### Object Lock Configuration
 
-~> **NOTE:** You can only **enable** S3 Object Lock for **new** buckets. If you need to **enable** S3 Object Lock for an **existing** bucket, please contact AWS Support.
 When you create a bucket with S3 Object Lock enabled, Amazon S3 automatically enables versioning for the bucket.
 Once you create a bucket with S3 Object Lock enabled, you can't disable Object Lock or suspend versioning for the bucket.
 
