@@ -45,7 +45,7 @@ func newResourceCapacityProvider(_ context.Context) (resource.ResourceWithConfig
 	r := &resourceCapacityProvider{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
