@@ -645,7 +645,7 @@ resource "aws_accessanalyzer_analyzer" "test" {
         }
         exclusion {
           resource_tags = [
-            { key1 = null},
+            { key1 = null },
           ]
         }
       }
