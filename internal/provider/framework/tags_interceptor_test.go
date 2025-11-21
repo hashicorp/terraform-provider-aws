@@ -91,11 +91,41 @@ func Test_resourceValidateRequiredTagsInterceptor(t *testing.T) {
 		},
 	}
 
+	// Null tags
 	attrs := map[string]tftypes.Value{
 		"name": tftypes.NewValue(tftypes.String, "test"),
 		"tags": tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, nil),
 	}
 	rawVal := tftypes.NewValue(resourceSchema.Type().TerraformType(ctx), attrs)
+
+	// Partial required tags
+	attrsPartial := map[string]tftypes.Value{
+		"name": tftypes.NewValue(tftypes.String, "test"),
+		"tags": tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, map[string]tftypes.Value{
+			"bar": tftypes.NewValue(tftypes.String, nil),
+		}),
+	}
+	rawValPartial := tftypes.NewValue(resourceSchema.Type().TerraformType(ctx), attrsPartial)
+
+	// All required tags
+	attrsRequired := map[string]tftypes.Value{
+		"name": tftypes.NewValue(tftypes.String, "test"),
+		"tags": tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, map[string]tftypes.Value{
+			"foo": tftypes.NewValue(tftypes.String, nil),
+			"bar": tftypes.NewValue(tftypes.String, nil),
+		}),
+	}
+	rawValRequired := tftypes.NewValue(resourceSchema.Type().TerraformType(ctx), attrsRequired)
+
+	// Unknown tag values
+	attrsUnknown := map[string]tftypes.Value{
+		"name": tftypes.NewValue(tftypes.String, "test"),
+		"tags": tftypes.NewValue(tftypes.Map{ElementType: tftypes.String}, map[string]tftypes.Value{
+			"foo": tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			"bar": tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		}),
+	}
+	rawValUnknown := tftypes.NewValue(resourceSchema.Type().TerraformType(ctx), attrsUnknown)
 
 	tests := []struct {
 		name      string
@@ -136,6 +166,93 @@ func Test_resourceValidateRequiredTagsInterceptor(t *testing.T) {
 			},
 		},
 		{
+			name: "create, partial tags",
+			opts: interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]{
+				c: mockRequiredTagsClient{},
+				request: &resource.ModifyPlanRequest{
+					Config: tfsdk.Config{
+						Raw:    rawValPartial,
+						Schema: resourceSchema,
+					},
+					State: tfsdk.State{
+						Raw:    tftypes.NewValue(resourceSchema.Type().TerraformType(ctx), nil), // Raw state is null on creation
+						Schema: resourceSchema,
+					},
+					Plan: tfsdk.Plan{
+						Raw:    rawValPartial,
+						Schema: resourceSchema,
+					},
+				},
+				response: &resource.ModifyPlanResponse{
+					Plan: tfsdk.Plan{
+						Raw:    rawValPartial,
+						Schema: resourceSchema,
+					},
+				},
+				when: Before,
+			},
+			wantDiags: diag.Diagnostics{diag.NewAttributeErrorDiagnostic(
+				path.Root(names.AttrTags),
+				"Missing Required Tags",
+				"An organizational tag policy requires the following tags for aws_test: [foo]",
+			),
+			},
+		},
+		{
+			name: "create, required tags",
+			opts: interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]{
+				c: mockRequiredTagsClient{},
+				request: &resource.ModifyPlanRequest{
+					Config: tfsdk.Config{
+						Raw:    rawValRequired,
+						Schema: resourceSchema,
+					},
+					State: tfsdk.State{
+						Raw:    tftypes.NewValue(resourceSchema.Type().TerraformType(ctx), nil), // Raw state is null on creation
+						Schema: resourceSchema,
+					},
+					Plan: tfsdk.Plan{
+						Raw:    rawValRequired,
+						Schema: resourceSchema,
+					},
+				},
+				response: &resource.ModifyPlanResponse{
+					Plan: tfsdk.Plan{
+						Raw:    rawValRequired,
+						Schema: resourceSchema,
+					},
+				},
+				when: Before,
+			},
+		},
+		{
+			name: "create, unknown tag values",
+			opts: interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]{
+				c: mockRequiredTagsClient{},
+				request: &resource.ModifyPlanRequest{
+					Config: tfsdk.Config{
+						Raw:    rawValUnknown,
+						Schema: resourceSchema,
+					},
+					State: tfsdk.State{
+						Raw:    tftypes.NewValue(resourceSchema.Type().TerraformType(ctx), nil), // Raw state is null on creation
+						Schema: resourceSchema,
+					},
+					Plan: tfsdk.Plan{
+						Raw:    rawValUnknown,
+						Schema: resourceSchema,
+					},
+				},
+				response: &resource.ModifyPlanResponse{
+					Plan: tfsdk.Plan{
+						Raw:    rawValUnknown,
+						Schema: resourceSchema,
+					},
+				},
+				when: Before,
+			},
+		},
+		{
 			name: "update, no tags change",
 			opts: interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]{
 				c: mockRequiredTagsClient{},
@@ -156,6 +273,93 @@ func Test_resourceValidateRequiredTagsInterceptor(t *testing.T) {
 				response: &resource.ModifyPlanResponse{
 					Plan: tfsdk.Plan{
 						Raw:    rawVal,
+						Schema: resourceSchema,
+					},
+				},
+				when: Before,
+			},
+		},
+		{
+			name: "update, add required",
+			opts: interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]{
+				c: mockRequiredTagsClient{},
+				request: &resource.ModifyPlanRequest{
+					Config: tfsdk.Config{
+						Raw:    rawValRequired,
+						Schema: resourceSchema,
+					},
+					State: tfsdk.State{
+						Raw:    rawValPartial,
+						Schema: resourceSchema,
+					},
+					Plan: tfsdk.Plan{
+						Raw:    rawValRequired,
+						Schema: resourceSchema,
+					},
+				},
+				response: &resource.ModifyPlanResponse{
+					Plan: tfsdk.Plan{
+						Raw:    rawValRequired,
+						Schema: resourceSchema,
+					},
+				},
+				when: Before,
+			},
+		},
+		{
+			name: "update, remove required",
+			opts: interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]{
+				c: mockRequiredTagsClient{},
+				request: &resource.ModifyPlanRequest{
+					Config: tfsdk.Config{
+						Raw:    rawValPartial,
+						Schema: resourceSchema,
+					},
+					State: tfsdk.State{
+						Raw:    rawValRequired,
+						Schema: resourceSchema,
+					},
+					Plan: tfsdk.Plan{
+						Raw:    rawValPartial,
+						Schema: resourceSchema,
+					},
+				},
+				response: &resource.ModifyPlanResponse{
+					Plan: tfsdk.Plan{
+						Raw:    rawValRequired,
+						Schema: resourceSchema,
+					},
+				},
+				when: Before,
+			},
+			wantDiags: diag.Diagnostics{diag.NewAttributeErrorDiagnostic(
+				path.Root(names.AttrTags),
+				"Missing Required Tags",
+				"An organizational tag policy requires the following tags for aws_test: [foo]",
+			),
+			},
+		},
+		{
+			name: "update, unknown tag values",
+			opts: interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]{
+				c: mockRequiredTagsClient{},
+				request: &resource.ModifyPlanRequest{
+					Config: tfsdk.Config{
+						Raw:    rawValUnknown,
+						Schema: resourceSchema,
+					},
+					State: tfsdk.State{
+						Raw:    rawValPartial,
+						Schema: resourceSchema,
+					},
+					Plan: tfsdk.Plan{
+						Raw:    rawValUnknown,
+						Schema: resourceSchema,
+					},
+				},
+				response: &resource.ModifyPlanResponse{
+					Plan: tfsdk.Plan{
+						Raw:    rawValUnknown,
 						Schema: resourceSchema,
 					},
 				},

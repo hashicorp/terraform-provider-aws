@@ -278,6 +278,15 @@ func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context,
 		return
 	}
 
+	policy := c.TagPolicyConfig(ctx)
+	if policy == nil {
+		return
+	}
+	reqTags, ok := policy.RequiredTags[typeName]
+	if !ok {
+		return
+	}
+
 	switch request, _, when := opts.request, opts.response, opts.when; when {
 	case Before:
 		// If the entire plan is null, the resource is planned for destruction.
@@ -292,6 +301,10 @@ func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context,
 			return
 		}
 
+		if !planTags.IsWhollyKnown() {
+			return
+		}
+
 		allPlanTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags))
 		allStateTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, stateTags))
 
@@ -299,16 +312,6 @@ func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context,
 		hasTagsChange := !allPlanTags.Equal(allStateTags)
 
 		if !isCreate && !hasTagsChange {
-			return
-		}
-
-		policy := c.TagPolicyConfig(ctx)
-		if policy == nil {
-			return
-		}
-
-		reqTags, ok := policy.RequiredTags[typeName]
-		if !ok {
 			return
 		}
 
