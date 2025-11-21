@@ -30,6 +30,7 @@ This resource supports the following arguments:
 * `name` - (Required) Name of the Logically Air Gapped Backup Vault to create.
 * `max_retention_days` - (Required) Maximum retention period that the Logically Air Gapped Backup Vault retains recovery points.
 * `min_retention_days` - (Required) Minimum retention period that the Logically Air Gapped Backup Vault retains recovery points.
+* `encryption_key_arn` - (Optional) The AWS KMS key identifier (ARN) used to encrypt the backups in the logically air-gapped vault.
 * `tags` - (Optional) Metadata that you can assign to help organize the resources that you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
