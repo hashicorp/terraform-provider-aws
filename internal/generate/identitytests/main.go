@@ -526,7 +526,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		IdentityVersions:      make(map[int64]*version.Version, 0),
 	}
 	skip := false
-	generatorSeen := false
 	tlsKey := false
 	var tlsKeyCN string
 
@@ -606,11 +605,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
-				}
-
-				// This needs better handling
-				if _, ok := args.Keyword["generator"]; ok {
-					generatorSeen = true
 				}
 
 				if attr, ok := args.Keyword["idAttrDuplicates"]; ok {
@@ -770,7 +764,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				v.errs = append(v.errs, fmt.Errorf("preIdentityVersion is required when hasNoPreExistingResource is false: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
 			}
-			if !generatorSeen {
+			if !d.GeneratorSeen {
 				d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
 				d.GoImports = append(d.GoImports,
 					common.GoImport{

@@ -51,7 +51,8 @@ type CommonArgs struct {
 	UseAlternateAccount     bool
 	AlternateRegionProvider bool
 
-	Generator string
+	Generator     string
+	GeneratorSeen bool
 
 	RequiredEnvVars []string
 
@@ -333,6 +334,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 
 	// TF Variables
 	if attr, ok := args.Keyword["generator"]; ok {
+		stuff.GeneratorSeen = true
 		if attr != "false" {
 			if funcName, importSpec, err := common.ParseIdentifierSpec(attr); err != nil {
 				return fmt.Errorf("%s: %w", attr, err)
