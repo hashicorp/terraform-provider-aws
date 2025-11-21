@@ -689,15 +689,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tagged {
 		if !skip {
-			if d.Name == "" {
-				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			if err := tests.Configure(&d.CommonArgs); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 				return
 			}
 			if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
 				v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
 			}
-			tests.Configure(&d.CommonArgs)
 			if d.HasInherentRegionIdentity() {
 				if d.Implementation == common.ImplementationFramework {
 					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
@@ -708,6 +707,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if d.IsSingletonIdentity() {
 				d.Serialize = true
 			}
+
 			v.taggedResources = append(v.taggedResources, d)
 		}
 	}

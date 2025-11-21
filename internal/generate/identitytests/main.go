@@ -743,6 +743,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if d.HasResourceIdentity() {
 		if !skip {
+			if err := tests.Configure(&d.CommonArgs); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+				return
+			}
 			if d.idAttrDuplicates != "" {
 				d.GoImports = append(d.GoImports,
 					common.GoImport{
@@ -753,10 +757,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					},
 				)
 			}
-			if d.Name == "" {
-				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				return
-			}
 			if d.HasV6_0NullValuesError {
 				d.PreIdentityVersion = v5_100_0
 			}
@@ -764,7 +764,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				v.errs = append(v.errs, fmt.Errorf("preIdentityVersion is required when hasNoPreExistingResource is false: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
 			}
-			tests.Configure(&d.CommonArgs)
 			if d.IsARNIdentity() {
 				d.arnAttribute = d.IdentityAttributeName()
 			}
@@ -778,6 +777,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if d.IsSingletonIdentity() {
 				d.Serialize = true
 			}
+
 			v.identityResources = append(v.identityResources, d)
 		}
 	}

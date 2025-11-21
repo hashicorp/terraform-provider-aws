@@ -4,6 +4,7 @@
 package tests
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -491,7 +492,11 @@ func endpointsConstOrQuote(region string) string {
 	return buf.String()
 }
 
-func Configure(d *CommonArgs) {
+func Configure(d *CommonArgs) error {
+	if d.Name == "" {
+		return errors.New("no name parameter set")
+	}
+
 	if !d.generatorSeen {
 		d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
 		d.GoImports = append(d.GoImports,
@@ -500,4 +505,6 @@ func Configure(d *CommonArgs) {
 			},
 		)
 	}
+
+	return nil
 }
