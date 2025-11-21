@@ -6,6 +6,7 @@ package elasticache
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -90,18 +92,23 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 			names.AttrEngine: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIf(
 						func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-							// In-place updates are only supported for redis -> valkey
+							// In-place update support for redis -> valkey
 							if req.StateValue.Equal(types.StringValue(engineRedis)) && req.PlanValue.Equal(types.StringValue(engineValkey)) {
+								return
+							}
+							// In-place updates support for valkey -> redis
+							if req.StateValue.Equal(types.StringValue(engineValkey)) && req.PlanValue.Equal(types.StringValue(engineRedis)) {
 								return
 							}
 
 							// Any other change will force a replacement
 							resp.RequiresReplace = true
 						},
-						"Engine modifications other than redis to valkey require a replacement",
-						"Engine modifications other than redis to valkey require a replacement",
+						"Engine modifications other than redis to valkey or valkey to redis require a replacement",
+						"Engine modifications other than redis to valkey or valkey to redis require a replacement",
 					),
 				},
 			},
@@ -122,16 +129,30 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIf(
 						func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-							// Not replacing if upgrading from 7 to 8
-							if req.StateValue.Equal(types.StringValue("7")) && req.PlanValue.Equal(types.StringValue("8")) {
+							var engineVal types.String
+							req.Config.GetAttribute(ctx, path.Root(names.AttrEngine), &engineVal)
+
+							stateFloatVal, err := strconv.ParseFloat(req.StateValue.ValueString(), 64)
+							if err != nil {
+								response.Diagnostics.AddError("incorrect major_engine_version format", err.Error())
+								return
+							}
+
+							planFloatVal, err := strconv.ParseFloat(req.PlanValue.ValueString(), 64)
+							if err != nil {
+								response.Diagnostics.AddError("incorrect major_engine_version format", err.Error())
+								return
+							}
+
+							if stateFloatVal < planFloatVal && engineVal.Equal(types.StringValue(engineValkey)) {
 								return
 							}
 
 							// Any other change will force a replacement
 							resp.RequiresReplace = true
 						},
-						"major_engine_version change other than 7 to 8 needs replacement",
-						"major_engine_version change other than 7 to 8 needs replacement",
+						"major_engine_version downgrade is not supported for valkey",
+						"major_engine_version downgrade is not supported for valkey",
 					),
 				},
 			},
