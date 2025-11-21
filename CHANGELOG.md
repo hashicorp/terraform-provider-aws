@@ -1,4 +1,4 @@
-## 6.23.0 (Unreleased)
+## 6.22.1 (November 21, 2025)
 
 ENHANCEMENTS:
 
