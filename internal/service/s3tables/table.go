@@ -37,11 +37,17 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3tables_table", name="Table")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableOutput")
+// @Testing(importStateIdAttribute="arn")
+// @Testing(importStateIdFunc="testAccTableImportStateIdFunc")
+// @Testing(preCheck="testAccPreCheck")
 func newTableResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableResource{}, nil
 }
@@ -128,6 +134,8 @@ func (r *tableResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.TableType](),
 				Computed:   true,
@@ -247,6 +255,9 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
 	// Handle metadata separately since it's an interface type.
 	if !data.Metadata.IsNull() && !data.Metadata.IsUnknown() {
@@ -743,6 +754,8 @@ type tableResourceModel struct {
 	Namespace                types.String                                              `tfsdk:"namespace" autoflex:",noflatten"` // On read, Namespace is an array
 	OwnerAccountID           types.String                                              `tfsdk:"owner_account_id"`
 	TableBucketARN           fwtypes.ARN                                               `tfsdk:"table_bucket_arn"`
+	Tags                     tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                `tfsdk:"tags_all"`
 	Type                     fwtypes.StringEnum[awstypes.TableType]                    `tfsdk:"type"`
 	VersionToken             types.String                                              `tfsdk:"version_token"`
 	WarehouseLocation        types.String                                              `tfsdk:"warehouse_location"`

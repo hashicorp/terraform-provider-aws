@@ -119,7 +119,7 @@ The `protocol_configuration` block supports the following:
 The `mcp` block supports the following:
 
 * `instructions` - (Optional) Instructions for the MCP protocol configuration.
-* `search_type` - (Optional) Search type for MCP. Valid values: `SEMANTIC`, `HYBRID`.
+* `search_type` - (Optional) Search type for MCP. Valid values: `SEMANTIC`.
 * `supported_versions` - (Optional) Set of supported MCP protocol versions.
 
 ## Attribute Reference

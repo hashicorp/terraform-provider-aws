@@ -336,6 +336,12 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
+												"custom_metadata_field": schema.StringAttribute{
+													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
 												"metadata_field": schema.StringAttribute{
 													Required: true,
 													PlanModifiers: []planmodifier.String{
@@ -870,10 +876,11 @@ type rdsConfigurationModel struct {
 }
 
 type rdsFieldMappingModel struct {
-	MetadataField   types.String `tfsdk:"metadata_field"`
-	PrimaryKeyField types.String `tfsdk:"primary_key_field"`
-	TextField       types.String `tfsdk:"text_field"`
-	VectorField     types.String `tfsdk:"vector_field"`
+	CustomMetadataField types.String `tfsdk:"custom_metadata_field"`
+	MetadataField       types.String `tfsdk:"metadata_field"`
+	PrimaryKeyField     types.String `tfsdk:"primary_key_field"`
+	TextField           types.String `tfsdk:"text_field"`
+	VectorField         types.String `tfsdk:"vector_field"`
 }
 
 type redisEnterpriseCloudConfigurationModel struct {

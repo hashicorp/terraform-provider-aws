@@ -225,6 +225,42 @@ resource "aws_lb_listener" "front_end" {
 }
 ```
 
+### JWT Validation Action
+
+```terraform
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    type = "jwt-validation"
+
+    jwt_validation {
+      issuer        = "https://example.com"
+      jwks_endpoint = "https://example.com/.well-known/jwks.json"
+      additional_claim {
+        format = "string-array"
+        name   = "claim_name1"
+        values = ["value1", "value2"]
+      }
+      additional_claim {
+        format = "single-string"
+        name   = "claim_name2"
+        values = ["value1"]
+      }
+    }
+  }
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
+}
+```
+
 ### Gateway Load Balancer Listener
 
 ```terraform
@@ -332,15 +368,15 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `type` - (Required) Type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito` and `authenticate-oidc`.
+* `type` - (Required) Type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito`, `authenticate-oidc` and `jwt-validation`.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authenticate_cognito` - (Optional) Configuration block for using Amazon Cognito to authenticate users. Specify only when `type` is `authenticate-cognito`. See below.
 * `authenticate_oidc` - (Optional) Configuration block for an identity provider that is compliant with OpenID Connect (OIDC). Specify only when `type` is `authenticate-oidc`. See below.
 * `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
 * `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups. Specify only if `type` is `forward`. See below.
+* `jwt_validation` - (Optional) Configuration block for creating a JWT validation action. Required if `type` is `jwt-validation`.
 * `order` - (Optional) Order for the action. The action with the lowest value for order is performed first. Valid values are between `1` and `50000`. Defaults to the position in the list of actions.
 * `redirect` - (Optional) Configuration block for creating a redirect action. Required if `type` is `redirect`. See below.
 * `target_group_arn` - (Optional) ARN of the Target Group to which to route traffic. Specify only if `type` is `forward` and you want to route to a single target group. To route to one or more target groups, use a `forward` block instead. Can be specified with `forward` but ARNs must match.
@@ -355,7 +391,6 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authentication_request_extra_params` - (Optional) Query parameters to include in the redirect request to the authorization endpoint. Max: 10. See below.
 * `on_unauthenticated_request` - (Optional) Behavior if the user is not authenticated. Valid values are `deny`, `allow` and `authenticate`.
 * `scope` - (Optional) Set of user claims to be requested from the IdP.
@@ -380,7 +415,6 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authentication_request_extra_params` - (Optional) Query parameters to include in the redirect request to the authorization endpoint. Max: 10.
 * `on_unauthenticated_request` - (Optional) Behavior if the user is not authenticated. Valid values: `deny`, `allow` and `authenticate`
 * `scope` - (Optional) Set of user claims to be requested from the IdP.
@@ -395,7 +429,6 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `message_body` - (Optional) Message body.
 * `status_code` - (Optional) HTTP response code. Valid values are `2XX`, `4XX`, or `5XX`.
 
@@ -407,7 +440,6 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `stickiness` - (Optional) Configuration block for target group stickiness for the rule. See below.
 
 ##### target_group
@@ -418,7 +450,6 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `weight` - (Optional) Weight. The range is 0 to 999.
 
 ##### stickiness
@@ -429,8 +460,26 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `enabled` - (Optional) Whether target group stickiness is enabled. Default is `false`.
+
+#### jwt_validation
+
+The following arguments are required:
+
+* `issuer` - (Required) Issuer of the JWT.
+* `jwks_endpoint` - (Required) JSON Web Key Set (JWKS) endpoint. This endpoint contains JSON Web Keys (JWK) that are used to validate signatures from the provider. This must be a full URL, including the HTTPS protocol, the domain, and the path.
+
+The following arguments are optional:
+
+* `additional_claim` - (Optional) Repeatable configuration block for additional claims to validate.
+
+#### additional_claim
+
+The following arguments are required:
+
+* `format` - (Required) Format of the claim value. Valid values are `single-string`, `string-array` and `space-separated-values`.
+* `name` - (Required) Name of the claim to validate. `exp`, `iss`, `nbf`, or `iat` cannot be specified because they are validated by default.
+* `values` - (Required) List of expected values of the claim.
 
 #### redirect
 
@@ -442,7 +491,6 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `host` - (Optional) Hostname. This component is not percent-encoded. The hostname can contain `#{host}`. Defaults to `#{host}`.
 * `path` - (Optional) Absolute path, starting with the leading "/". This component is not percent-encoded. The path can contain #{host}, #{path}, and #{port}. Defaults to `/#{path}`.
 * `port` - (Optional) Port. Specify a value from `1` to `65535` or `#{port}`. Defaults to `#{port}`.

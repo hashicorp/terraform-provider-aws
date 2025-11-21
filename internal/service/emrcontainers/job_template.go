@@ -135,6 +135,7 @@ func resourceJobTemplate() *schema.Resource {
 													Type:             schema.TypeString,
 													Optional:         true,
 													ForceNew:         true,
+													Computed:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.PersistentAppUI](),
 												},
 												"s3_monitoring_configuration": {
@@ -499,7 +500,7 @@ func expandCloudWatchMonitoringConfiguration(tfMap map[string]any) *awstypes.Par
 
 	apiObject := &awstypes.ParametricCloudWatchMonitoringConfiguration{}
 
-	if v, ok := tfMap["log_group_mame"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
 
@@ -620,7 +621,7 @@ func flattenConfigurationOverrides(apiObject *awstypes.ParametricConfigurationOv
 	tfMap := map[string]any{}
 
 	if v := apiObject.ApplicationConfiguration; v != nil {
-		tfMap["application_configuration"] = []any{flattenConfigurations(v)}
+		tfMap["application_configuration"] = flattenConfigurations(v)
 	}
 
 	if v := apiObject.MonitoringConfiguration; v != nil {
