@@ -10,7 +10,9 @@ description: |-
 
 -> **Note:** When creating IAM roles for the Express Gateway Service in the same Terraform configuration, you should add a `time_sleep` resource to ensure proper role propagation. See the [IAM Role Timing](#iam-role-timing) section below for details.
 
-Manages an ECS Express Gateway Service. The Express Gateway Service provides a simplified way to deploy containerized applications with built-in load balancing, auto-scaling, and networking capabilities.
+Manages an ECS Express service. The Express service provides a simplified way to deploy containerized applications with automatic provisioning and management of AWS infrastructure including Application Load Balancers (ALBs), target groups, security groups, and auto-scaling policies. This service offers built-in load balancing, auto-scaling, and networking capabilities with zero-downtime deployments.
+
+Express services automatically handle infrastructure provisioning and updates through rolling deployments, ensuring high availability during service modifications. When you update an Express service, a new service revision is created and deployed with zero downtime.
 
 ## Example Usage
 
@@ -140,13 +142,13 @@ resource "aws_ecs_express_gateway_service" "example" {
 The following arguments are required:
 
 * `execution_role_arn` - (Required) ARN of the IAM role that allows ECS to pull container images and publish container logs to Amazon CloudWatch.
-* `infrastructure_role_arn` - (Required) ARN of the IAM role that allows ECS to manage AWS infrastructure on your behalf. Changing this forces a new resource to be created.
+* `infrastructure_role_arn` - (Required) ARN of the IAM role that allows ECS to manage AWS infrastructure on your behalf. **Important:** The infrastructure role cannot be modified after the service is created. Changing this forces a new resource to be created.
 
 The following arguments are optional:
 
 * `cluster` - (Optional) Name or ARN of the ECS cluster. Defaults to `default`.
 * `cpu` - (Optional) Number of CPU units used by the task. Valid values are powers of 2 between 256 and 4096.
-* `health_check_path` - (Optional) Path for health check requests. Defaults to `/`.
+* `health_check_path` - (Optional) Path for health check requests. Defaults to `/ping`.
 * `memory` - (Optional) Amount of memory (in MiB) used by the task. Valid values are between 512 and 8192.
 * `service_name` - (Optional) Name of the service. If not specified, a name will be generated. Changing this forces a new resource to be created.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -200,7 +202,7 @@ The `network_configuration` configuration block supports the following:
 The `scaling_target` configuration block supports the following:
 
 * `auto_scaling_metric` - (Optional) Metric to use for auto-scaling. Valid values are `CPU` and `MEMORY`.
-* `auto_scaling_target_value` - (Optional) Target value for the auto-scaling metric (as a percentage).
+* `auto_scaling_target_value` - (Optional) Target value for the auto-scaling metric (as a percentage). Defaults to `60`.
 * `max_task_count` - (Optional) Maximum number of tasks to run.
 * `min_task_count` - (Optional) Minimum number of tasks to run.
 
@@ -249,6 +251,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `20m`)
 * `delete` - (Default `20m`)
 * `update` - (Default `20m`)
+
+## Service Updates and Deletion
+
+### Updates
+When you update an Express service configuration, a new service revision is created and deployed using a rolling deployment strategy with zero downtime. The service automatically manages the transition from the old configuration to the new one, ensuring continuous availability.
+
+### Deletion
+When an Express service is deleted, it enters a `DRAINING` state where existing tasks are allowed to complete gracefully before termination. The deletion process is irreversible - once initiated, the service and all its associated AWS infrastructure (load balancers, target groups, etc.) will be permanently removed. During the draining process, no new tasks are started, and the service becomes unavailable once all tasks have completed.
 
 ## Import
 
