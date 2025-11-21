@@ -369,7 +369,6 @@ func testAccAnalyzer_nullInResourceTags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -634,17 +633,9 @@ resource "aws_accessanalyzer_analyzer" "test" {
 
 func testAccAnalyzerConfig_nullInResourceTags(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_organizations_organization" "test" {
-  aws_service_access_principals = ["access-analyzer.${data.aws_partition.current.dns_suffix}"]
-}
-
 resource "aws_accessanalyzer_analyzer" "test" {
-  depends_on = [aws_organizations_organization.test]
 
   analyzer_name = %[1]q
-  type          = "ORGANIZATION_UNUSED_ACCESS"
 
   configuration {
     unused_access {
