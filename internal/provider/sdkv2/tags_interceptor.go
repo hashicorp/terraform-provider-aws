@@ -329,6 +329,10 @@ func validateRequiredTags() customizeDiffInterceptor {
 					return nil
 				}
 
+				if !d.GetRawPlan().GetAttr(names.AttrTags).IsWhollyKnown() {
+					return nil
+				}
+
 				cfgTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
 				allTags := c.DefaultTagsConfig(ctx).MergeTags(cfgTags)
 				if allTags.ContainsAllKeys(reqTags) {

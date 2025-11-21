@@ -301,6 +301,10 @@ func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context,
 			return
 		}
 
+		if !planTags.IsWhollyKnown() {
+			return
+		}
+
 		allPlanTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags))
 		allStateTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, stateTags))
 
