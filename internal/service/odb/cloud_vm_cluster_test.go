@@ -411,13 +411,13 @@ func (cloudVmClusterResourceTest) testAccPreCheck(ctx context.Context, t *testin
 func testAccCloudVmClusterConfig_useVariables(rName string) string {
 	return fmt.Sprintf(`
 variable cloud_exadata_infrastructure_id {
-  default = "exa_gjrmtxl4qk"
+  default     = "exa_gjrmtxl4qk"
   type        = string
   description = "ODB Exadata Infrastructure Resource ID"
 
 }
 variable odb_network_id {
-  default = "odbnet_3l9st3litg"
+  default     = "odbnet_3l9st3litg"
   type        = string
   description = "ODB Network"
 }
