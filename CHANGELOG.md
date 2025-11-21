@@ -7,7 +7,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Fix crash in required tag validation interceptor when tag values are unknown. This addresses a regression introduced in [v6.22.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6220-november-20-2025). ([#45201](https://github.com/hashicorp/terraform-provider-aws/issues/45201))
+* provider: Fix early return logic in the required tag validation interceptor. This addresses a performance regression introduced in [v6.22.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6220-november-20-2025). ([#45201](https://github.com/hashicorp/terraform-provider-aws/issues/45201))
 * resource/aws_accessanalyzer_analyzer: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `configuration.unused_access.analysis_rule.exclusion.resource_tags` contains `null` values ([#45202](https://github.com/hashicorp/terraform-provider-aws/issues/45202))
+* resource/aws_odb_cloud_vm_cluster: Fix incorrect validation error when arguments are configured using variables. This addresses a regression introduced in [v6.22.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6220-november-20-2025) ([#45205](https://github.com/hashicorp/terraform-provider-aws/issues/45205))
 
 ## 6.22.0 (November 20, 2025)
 
