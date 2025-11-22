@@ -512,6 +512,65 @@ func TestAccNetworkManagerVPCAttachment_attachmentOptions(t *testing.T) {
 	})
 }
 
+func TestAccNetworkManagerVPCAttachment_routingPolicyLabel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.VpcAttachment
+	resourceName := "aws_networkmanager_vpc_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCAttachmentConfig_routingPolicyLabel(rName, "test-label"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "test-label"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerVPCAttachment_routingPolicyLabelUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.VpcAttachment
+	resourceName := "aws_networkmanager_vpc_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCAttachmentConfig_routingPolicyLabel(rName, "label-v1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCAttachmentExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "label-v1"),
+				),
+			},
+			{
+				Config: testAccVPCAttachmentConfig_routingPolicyLabel(rName, "label-v2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCAttachmentExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "label-v2"),
+					testAccCheckVPCAttachmentRecreated(&v1, &v2, true),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVPCAttachmentExists(ctx context.Context, n string, v *awstypes.VpcAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -728,4 +787,15 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   }
 }
 `, rName, applianceModeSupport, dnsSupport, ipv6Support, securityGroupReferencingSupport))
+}
+
+func testAccVPCAttachmentConfig_routingPolicyLabel(rName, label string) string {
+	return acctest.ConfigCompose(testAccVPCAttachmentConfig_base(rName, false), fmt.Sprintf(`
+resource "aws_networkmanager_vpc_attachment" "test" {
+  subnet_arns          = aws_subnet.test[*].arn
+  core_network_id      = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  vpc_arn              = aws_vpc.test.arn
+  routing_policy_label = %[1]q
+}
+`, label))
 }
