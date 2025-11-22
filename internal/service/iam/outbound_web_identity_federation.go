@@ -48,7 +48,6 @@ func (r *resourceOutboundWebIdentityFederation) Schema(ctx context.Context, req 
 }
 
 func (r *resourceOutboundWebIdentityFederation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-
 	conn := r.Meta().IAMClient(ctx)
 
 	var plan resourceOutboundWebIdentityFederationModel
@@ -73,7 +72,6 @@ func (r *resourceOutboundWebIdentityFederation) Create(ctx context.Context, req 
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
 	} else {
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err)

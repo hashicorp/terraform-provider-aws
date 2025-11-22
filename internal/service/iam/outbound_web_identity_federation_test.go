@@ -45,7 +45,7 @@ func testAccIAMOutboundWebIdentityFederation_basic(t *testing.T) {
 			{
 				Config: testAccOutboundWebIdentityFederationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "jwt_vending_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_vending_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "issuer_identifier"),
 				),
 			},
@@ -78,7 +78,7 @@ func testAccIAMOutboundWebIdentityFederation_alreadyEnabled(t *testing.T) {
 				},
 				Config: testAccOutboundWebIdentityFederationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "jwt_vending_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_vending_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "issuer_identifier"),
 				),
 			},
