@@ -131,7 +131,7 @@ The following arguments are optional:
 
 ### bgp_options
 
-* `peer_asn` - (Optional) Peer ASN.
+* `peer_asn` - (Optional) Peer ASN. Supports 2-byte and 4-byte ASNs (1 to 4294967295).
 
 ## Attribute Reference
 

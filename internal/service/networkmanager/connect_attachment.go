@@ -236,8 +236,6 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
-	// routing_policy_label is not returned by the API, so we don't set it here
-	// The value is maintained in state from what was set during create
 	d.Set("segment_name", attachment.SegmentName)
 	d.Set(names.AttrState, attachment.State)
 	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)
