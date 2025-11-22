@@ -47,14 +47,13 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the VPN Concentrator.
-* `state` - Current state of the VPN Concentrator.
+* `vpn_concentrator_id` - ID of the VPN Concentrator.
 * `transit_gateway_attachment_id` - ID of the transit gateway attachment created for the VPN concentrator.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPN Concentrators using the VPN concentrator `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPN Concentrators using the VPN concentrator ID. For example:
 
 ```terraform
 import {
@@ -63,7 +62,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPN Concentrators using the VPN concentrator `id`. For example:
+Using `terraform import`, import VPN Concentrators using the VPN concentrator ID. For example:
 
 ```console
 % terraform import aws_vpn_concentrator.example vcn-12345678

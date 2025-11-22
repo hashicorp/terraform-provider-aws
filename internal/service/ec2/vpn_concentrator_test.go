@@ -10,7 +10,11 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -33,16 +37,55 @@ func TestAccEC2VPNConcentrator_basic(t *testing.T) {
 				Config: testAccVPNConcentratorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNConcentratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ipsec.1"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("ipsec.1")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTransitGatewayID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTransitGatewayAttachmentID), knownvalue.NotNull()),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "vpn_concentrator_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vpn_concentrator_id"),
+			},
+		},
+	})
+}
+
+func TestAccEC2VPNConcentrator_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpn_concentrator.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConcentratorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPNConcentratorConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPNConcentratorExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNConcentrator, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -63,31 +106,57 @@ func TestAccEC2VPNConcentrator_tags(t *testing.T) {
 				Config: testAccVPNConcentratorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNConcentratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "vpn_concentrator_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vpn_concentrator_id"),
 			},
 			{
 				Config: testAccVPNConcentratorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNConcentratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
 				Config: testAccVPNConcentratorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNConcentratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -102,7 +171,7 @@ func testAccCheckVPNConcentratorDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tfec2.FindVPNConcentratorByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPNConcentratorByID(ctx, conn, rs.Primary.Attributes["vpn_concentrator_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -112,7 +181,7 @@ func testAccCheckVPNConcentratorDestroy(ctx context.Context) resource.TestCheckF
 				return err
 			}
 
-			return fmt.Errorf("EC2 VPN Concentrator %s still exists", rs.Primary.ID)
+			return fmt.Errorf("EC2 VPN Concentrator %s still exists", rs.Primary.Attributes["vpn_concentrator_id"])
 		}
 
 		return nil
@@ -128,7 +197,7 @@ func testAccCheckVPNConcentratorExists(ctx context.Context, n string) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindVPNConcentratorByID(ctx, conn, rs.Primary.ID)
+		_, err := tfec2.FindVPNConcentratorByID(ctx, conn, rs.Primary.Attributes["vpn_concentrator_id"])
 
 		return err
 	}

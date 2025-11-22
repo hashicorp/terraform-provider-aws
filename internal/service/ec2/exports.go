@@ -22,7 +22,6 @@ var (
 	FindTransitGatewayAttachmentByTransitGatewayIDAndDirectConnectGatewayID = findTransitGatewayAttachmentByTransitGatewayIDAndDirectConnectGatewayID
 	FindVPCByID                                                             = findVPCByID
 	FindVPCEndpointByID                                                     = findVPCEndpointByID
-	FindVPNConcentratorByID                                                 = findVPNConcentratorByID
 	NetworkInterfaceDetachedTimeout                                         = networkInterfaceDetachedTimeout
 	NewCustomFilterListFramework                                            = newCustomFilterListFramework
 	NewFilter                                                               = newFilter

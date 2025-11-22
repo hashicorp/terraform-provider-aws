@@ -6,10 +6,13 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -32,19 +35,11 @@ func newVPNConcentratorResource(context.Context) (resource.ResourceWithConfigure
 
 type vpnConcentratorResource struct {
 	framework.ResourceWithModel[vpnConcentratorModel]
-	framework.WithImportByID
 }
 
 func (r *vpnConcentratorResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
-			names.AttrState: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrTransitGatewayAttachmentID: schema.StringAttribute{
@@ -66,6 +61,7 @@ func (r *vpnConcentratorResource) Schema(ctx context.Context, _ resource.SchemaR
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"vpn_concentrator_id": framework.IDAttribute(),
 		},
 	}
 }
@@ -94,12 +90,13 @@ func (r *vpnConcentratorResource) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	data.ID = fwflex.StringToFramework(ctx, output.VpnConcentrator.VpnConcentratorId)
+	id := aws.ToString(output.VpnConcentrator.VpnConcentratorId)
+	data.VPNConcentratorID = fwflex.StringValueToFramework(ctx, id)
 
-	vpnConcentrator, err := waitVPNConcentratorAvailable(ctx, conn, data.ID.ValueString())
+	vpnConcentrator, err := waitVPNConcentratorAvailable(ctx, conn, id)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 VPN Concentrator (%s) create", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 VPN Concentrator (%s) create", id), err.Error())
 		return
 	}
 
@@ -120,7 +117,8 @@ func (r *vpnConcentratorResource) Read(ctx context.Context, request resource.Rea
 
 	conn := r.Meta().EC2Client(ctx)
 
-	vpnConcentrator, err := findVPNConcentratorByID(ctx, conn, data.ID.ValueString())
+	id := fwflex.StringValueFromFramework(ctx, data.VPNConcentratorID)
+	output, err := findVPNConcentratorByID(ctx, conn, id)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -129,11 +127,11 @@ func (r *vpnConcentratorResource) Read(ctx context.Context, request resource.Rea
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 VPN Concentrator (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 VPN Concentrator (%s)", id), err.Error())
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, vpnConcentrator, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -150,55 +148,47 @@ func (r *vpnConcentratorResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().EC2Client(ctx)
 
+	id := fwflex.StringValueFromFramework(ctx, data.VPNConcentratorID)
 	input := ec2.DeleteVpnConcentratorInput{
-		VpnConcentratorId: fwflex.StringFromFramework(ctx, data.ID),
+		VpnConcentratorId: aws.String(id),
 	}
 	_, err := conn.DeleteVpnConcentrator(ctx, &input)
 
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 VPN Concentrator (%s)", data.ID.ValueString()), err.Error())
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConcentratorIDNotFound) {
 		return
 	}
 
-	if err := waitVPNConcentratorDeleted(ctx, conn, data.ID.ValueString(), data.TransitGatewayAttachmentID.ValueString()); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 VPN Concentrator (%s) delete", data.ID.ValueString()), err.Error())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 VPN Concentrator (%s)", id), err.Error())
 		return
+	}
+
+	if _, err := waitVPNConcentratorDeleted(ctx, conn, id); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 VPN Concentrator (%s) delete", id), err.Error())
+		return
+	}
+
+	if attachmentID := fwflex.StringValueFromFramework(ctx, data.TransitGatewayAttachmentID); attachmentID != "" {
+		const (
+			timeout = 10 * time.Minute
+		)
+		if _, err := waitTransitGatewayAttachmentDeleted(ctx, conn, attachmentID, timeout); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Transit Gateway Attachment (%s) delete", attachmentID), err.Error())
+			return
+		}
 	}
 }
 
-func findVPNConcentratorByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnConcentrator, error) {
-	input := ec2.DescribeVpnConcentratorsInput{
-		VpnConcentratorIds: []string{id},
-	}
-
-	output, err := conn.DescribeVpnConcentrators(ctx, &input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.VpnConcentrators) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	vpnConcentrator := &output.VpnConcentrators[0]
-
-	if state := aws.ToString(vpnConcentrator.State); state == "deleted" {
-		return nil, &tfresource.EmptyResultError{
-			LastRequest: input,
-		}
-	}
-
-	return vpnConcentrator, nil
+func (r *vpnConcentratorResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("vpn_concentrator_id"), request, response)
 }
 
 type vpnConcentratorModel struct {
 	framework.WithRegionModel
-	ID                         types.String                                     `tfsdk:"id"`
-	State                      types.String                                     `tfsdk:"state"`
 	Tags                       tftags.Map                                       `tfsdk:"tags"`
 	TagsAll                    tftags.Map                                       `tfsdk:"tags_all"`
 	TransitGatewayAttachmentID types.String                                     `tfsdk:"transit_gateway_attachment_id"`
 	TransitGatewayID           types.String                                     `tfsdk:"transit_gateway_id"`
 	Type                       fwtypes.StringEnum[awstypes.VpnConcentratorType] `tfsdk:"type"`
+	VPNConcentratorID          types.String                                     `tfsdk:"vpn_concentrator_id"`
 }

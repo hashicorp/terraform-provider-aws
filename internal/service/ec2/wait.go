@@ -3555,8 +3555,8 @@ func waitVPNConcentratorAvailable(ctx context.Context, conn *ec2.Client, id stri
 		timeout = 10 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"pending"},
-		Target:     []string{"available"},
+		Pending:    []string{vpnConcentratorStatePending},
+		Target:     []string{vpnConcentratorStateAvailable},
 		Refresh:    statusVPNConcentrator(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
@@ -3572,14 +3572,12 @@ func waitVPNConcentratorAvailable(ctx context.Context, conn *ec2.Client, id stri
 	return nil, err
 }
 
-func waitVPNConcentratorDeleted(ctx context.Context, conn *ec2.Client, id, attachmentID string) error {
+func waitVPNConcentratorDeleted(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnConcentrator, error) {
 	const (
 		timeout = 10 * time.Minute
 	)
-
-	// Wait for VPN Concentrator to be deleted
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"available", "deleting"},
+		Pending:    []string{vpnConcentratorStateAvailable, vpnConcentratorStateDeleting},
 		Target:     []string{},
 		Refresh:    statusVPNConcentrator(ctx, conn, id),
 		Timeout:    timeout,
@@ -3587,20 +3585,13 @@ func waitVPNConcentratorDeleted(ctx context.Context, conn *ec2.Client, id, attac
 		MinTimeout: 10 * time.Second,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return err
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpnConcentrator); ok {
+		return output, err
 	}
 
-	// Wait for Transit Gateway Attachment to be deleted
-	if attachmentID != "" {
-		_, err = waitTransitGatewayAttachmentDeleted(ctx, conn, attachmentID, timeout)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return nil, err
 }
 
 func waitVPCBlockPublicAccessOptionsUpdated(ctx context.Context, conn *ec2.Client, timeout time.Duration) (*awstypes.VpcBlockPublicAccessOptions, error) { //nolint:unparam
