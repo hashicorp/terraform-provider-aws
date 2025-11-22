@@ -63,6 +63,7 @@ var (
 	FindUserPolicyAttachmentsByName             = findUserPolicyAttachmentsByName
 	FindUserPolicyByTwoPartKey                  = findUserPolicyByTwoPartKey
 	FindVirtualMFADeviceBySerialNumber          = findVirtualMFADeviceBySerialNumber
+	GetOutboundWebIdentityFederation            = getOutboundWebIdentityFederation
 
 	AttachPolicyToUser                = attachPolicyToUser
 	CheckPwdPolicy                    = checkPwdPolicy
