@@ -66,19 +66,20 @@ func validTargetGroupName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 32 {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 32 characters", k))
+			"%q cannot be longer than 32 characters: %q", k, value))
 	}
 	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters and hyphens allowed in %q", k))
+			"only alphanumeric characters and hyphens allowed in %q: %q",
+			k, value))
 	}
 	if regexache.MustCompile(`^-`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot begin with a hyphen", k))
+			"%q cannot begin with a hyphen: %q", k, value))
 	}
 	if regexache.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot end with a hyphen", k))
+			"%q cannot end with a hyphen: %q", k, value))
 	}
 	return
 }
@@ -88,15 +89,17 @@ func validTargetGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 	prefixMaxLength := 32 - id.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than %d characters", k, prefixMaxLength))
+			"%q cannot be longer than %d characters: %q",
+			k, prefixMaxLength, value))
 	}
 	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters and hyphens allowed in %q", k))
+			"only alphanumeric characters and hyphens allowed in %q: %q",
+			k, value))
 	}
 	if regexache.MustCompile(`^-`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot begin with a hyphen", k))
+			"%q cannot begin with a hyphen: %q", k, value))
 	}
 	return
 }
@@ -108,7 +111,7 @@ func validTargetGroupHealthInput(v any, k string) (ws []string, errors []error) 
 		_, err := strconv.Atoi(value)
 		if err != nil {
 			errors = append(errors, fmt.Errorf(
-				"%q must be an integer or 'off'", k))
+				"%q must be an integer or 'off': %q", k, value))
 		}
 	}
 	return
@@ -121,7 +124,7 @@ func validTargetGroupHealthPercentageInput(v any, k string) (ws []string, errors
 		intValue, err := strconv.Atoi(value)
 		if err != nil || intValue < 1 || intValue > 100 {
 			errors = append(errors, fmt.Errorf(
-				"%q must be an integer between 0 and 100 or 'off'", k))
+				"%q must be an integer between 0 and 100 or 'off': %q", k, value))
 		}
 	}
 	return
