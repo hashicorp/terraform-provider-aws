@@ -4,6 +4,7 @@
 package tests
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -51,7 +52,8 @@ type CommonArgs struct {
 	UseAlternateAccount     bool
 	AlternateRegionProvider bool
 
-	Generator string
+	Generator     string
+	generatorSeen bool
 
 	RequiredEnvVars []string
 
@@ -333,6 +335,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 
 	// TF Variables
 	if attr, ok := args.Keyword["generator"]; ok {
+		stuff.generatorSeen = true
 		if attr != "false" {
 			if funcName, importSpec, err := common.ParseIdentifierSpec(attr); err != nil {
 				return fmt.Errorf("%s: %w", attr, err)
@@ -487,4 +490,21 @@ func endpointsConstOrQuote(region string) string {
 	buf.WriteString("RegionID")
 
 	return buf.String()
+}
+
+func Configure(d *CommonArgs) error {
+	if d.Name == "" {
+		return errors.New("no name parameter set")
+	}
+
+	if !d.generatorSeen {
+		d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
+		d.GoImports = append(d.GoImports,
+			common.GoImport{
+				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+			},
+		)
+	}
+
+	return nil
 }
