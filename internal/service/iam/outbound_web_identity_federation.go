@@ -114,7 +114,6 @@ func (r *resourceOutboundWebIdentityFederation) Read(ctx context.Context, req re
 }
 
 func (r *resourceOutboundWebIdentityFederation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	conn := r.Meta().IAMClient(ctx)
 
 	var state resourceOutboundWebIdentityFederationModel
@@ -128,7 +127,6 @@ func (r *resourceOutboundWebIdentityFederation) Delete(ctx context.Context, req 
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID)
 		return
 	}
-
 }
 
 type resourceOutboundWebIdentityFederationModel struct {
