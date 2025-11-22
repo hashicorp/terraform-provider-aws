@@ -41,6 +41,8 @@ func TestAccDocDBSubnetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "supported_network_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_network_types.*", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -251,6 +253,32 @@ func TestAccDocDBSubnetGroup_tags(t *testing.T) {
 	})
 }
 
+func TestAccDocDBSubnetGroup_dualStack(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBSubnetGroup
+
+	resourceName := "aws_docdb_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetGroupConfig_dualStack(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "supported_network_types.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_network_types.*", "IPV4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_network_types.*", "DUAL"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
@@ -368,4 +396,13 @@ resource "aws_docdb_subnet_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccSubnetGroupConfig_dualStack(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
+resource "aws_docdb_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName))
 }
