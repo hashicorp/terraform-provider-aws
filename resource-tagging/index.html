@@ -1,0 +1,2275 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+        <link rel="prev" href="../resource-name-generation/">
+      
+      
+        <link rel="next" href="../adding-a-tag-resource/">
+      
+      <link rel="icon" href="../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Resource Tagging - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#adding-resource-tagging-support" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Resource Tagging
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="true">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="true">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-resource/" class="md-nav__link">
+        Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-service/" class="md-nav__link">
+        Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-datasource/" class="md-nav__link">
+        Data source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Ephemeral Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-function/" class="md-nav__link">
+        Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-region/" class="md-nav__link">
+        AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-import-support/" class="md-nav__link">
+        Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Resource Tagging
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Resource Tagging
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#generating-tag-code-for-a-service" class="md-nav__link">
+    Generating Tag Code for a Service
+  </a>
+  
+    <nav class="md-nav" aria-label="Generating Tag Code for a Service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generating-tagging-types" class="md-nav__link">
+    Generating Tagging Types
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generating-standalone-tag-listing-functions" class="md-nav__link">
+    Generating Standalone Tag Listing Functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generating-standalone-tag-updating-functions" class="md-nav__link">
+    Generating Standalone Tag Updating Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Generating Standalone Tag Updating Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generating-standalone-post-creation-tag-updating-functions" class="md-nav__link">
+    Generating Standalone Post-Creation Tag Updating Functions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-code-generation" class="md-nav__link">
+    Running Code generation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-code" class="md-nav__link">
+    Resource Code
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Code">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resource-schema" class="md-nav__link">
+    Resource Schema
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transparent-tagging" class="md-nav__link">
+    Transparent Tagging
+  </a>
+  
+    <nav class="md-nav" aria-label="Transparent Tagging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resource-create-operation" class="md-nav__link">
+    Resource Create Operation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-read-operation" class="md-nav__link">
+    Resource Read Operation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-update-operation" class="md-nav__link">
+    Resource Update Operation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#explicit-tagging" class="md-nav__link">
+    Explicit Tagging
+  </a>
+  
+    <nav class="md-nav" aria-label="Explicit Tagging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resource-create-operation_1" class="md-nav__link">
+    Resource Create Operation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-read-operation_1" class="md-nav__link">
+    Resource Read Operation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-update-operation_1" class="md-nav__link">
+    Resource Update Operation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-acceptance-tests" class="md-nav__link">
+    Resource Acceptance Tests
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Acceptance Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generated-acceptance-tests" class="md-nav__link">
+    Generated Acceptance Tests
+  </a>
+  
+    <nav class="md-nav" aria-label="Generated Acceptance Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#controlling-test-generation" class="md-nav__link">
+    Controlling Test Generation
+  </a>
+  
+    <nav class="md-nav" aria-label="Controlling Test Generation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#precheck-parameters" class="md-nav__link">
+    PreCheck parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#required-argument-parameters" class="md-nav__link">
+    Required Argument parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exists-and-destroy-parameters" class="md-nav__link">
+    Exists and Destroy parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#import-parameters" class="md-nav__link">
+    Import parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serialization-parameters" class="md-nav__link">
+    Serialization parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#empty-and-null-tag-parameters" class="md-nav__link">
+    Empty and Null Tag parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-update-parameters" class="md-nav__link">
+    Tag Update parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-identifier-parameters" class="md-nav__link">
+    Resource Identifier parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-removal-parameters" class="md-nav__link">
+    Tag Removal parameters
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-terraform-configurations" class="md-nav__link">
+    Test Terraform Configurations
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manually-created-acceptance-tests" class="md-nav__link">
+    Manually Created Acceptance Tests
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-documentation" class="md-nav__link">
+    Resource Documentation
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="false">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agents/" class="md-nav__link">
+        AI Agents
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3_3" type="checkbox" id="__nav_3_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3" tabindex="0" aria-expanded="false">
+          AI Agent Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="AI Agent Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          AI Agent Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/arn-based-resource-identity/" class="md-nav__link">
+        ARN-Based Resource Identity
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/parameterized-resource-identity/" class="md-nav__link">
+        Parameterized Resource Identity
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/smarterr/" class="md-nav__link">
+        Smarterr
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../enhanced-region-support/" class="md-nav__link">
+        Enhanced Region Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../go-vcr/" class="md-nav__link">
+        Go-VCR
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#generating-tag-code-for-a-service" class="md-nav__link">
+    Generating Tag Code for a Service
+  </a>
+  
+    <nav class="md-nav" aria-label="Generating Tag Code for a Service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generating-tagging-types" class="md-nav__link">
+    Generating Tagging Types
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generating-standalone-tag-listing-functions" class="md-nav__link">
+    Generating Standalone Tag Listing Functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generating-standalone-tag-updating-functions" class="md-nav__link">
+    Generating Standalone Tag Updating Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Generating Standalone Tag Updating Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generating-standalone-post-creation-tag-updating-functions" class="md-nav__link">
+    Generating Standalone Post-Creation Tag Updating Functions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-code-generation" class="md-nav__link">
+    Running Code generation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-code" class="md-nav__link">
+    Resource Code
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Code">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resource-schema" class="md-nav__link">
+    Resource Schema
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transparent-tagging" class="md-nav__link">
+    Transparent Tagging
+  </a>
+  
+    <nav class="md-nav" aria-label="Transparent Tagging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resource-create-operation" class="md-nav__link">
+    Resource Create Operation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-read-operation" class="md-nav__link">
+    Resource Read Operation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-update-operation" class="md-nav__link">
+    Resource Update Operation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#explicit-tagging" class="md-nav__link">
+    Explicit Tagging
+  </a>
+  
+    <nav class="md-nav" aria-label="Explicit Tagging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resource-create-operation_1" class="md-nav__link">
+    Resource Create Operation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-read-operation_1" class="md-nav__link">
+    Resource Read Operation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-update-operation_1" class="md-nav__link">
+    Resource Update Operation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-acceptance-tests" class="md-nav__link">
+    Resource Acceptance Tests
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Acceptance Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generated-acceptance-tests" class="md-nav__link">
+    Generated Acceptance Tests
+  </a>
+  
+    <nav class="md-nav" aria-label="Generated Acceptance Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#controlling-test-generation" class="md-nav__link">
+    Controlling Test Generation
+  </a>
+  
+    <nav class="md-nav" aria-label="Controlling Test Generation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#precheck-parameters" class="md-nav__link">
+    PreCheck parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#required-argument-parameters" class="md-nav__link">
+    Required Argument parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exists-and-destroy-parameters" class="md-nav__link">
+    Exists and Destroy parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#import-parameters" class="md-nav__link">
+    Import parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serialization-parameters" class="md-nav__link">
+    Serialization parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#empty-and-null-tag-parameters" class="md-nav__link">
+    Empty and Null Tag parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-update-parameters" class="md-nav__link">
+    Tag Update parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-identifier-parameters" class="md-nav__link">
+    Resource Identifier parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-removal-parameters" class="md-nav__link">
+    Tag Removal parameters
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-terraform-configurations" class="md-nav__link">
+    Test Terraform Configurations
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manually-created-acceptance-tests" class="md-nav__link">
+    Manually Created Acceptance Tests
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-documentation" class="md-nav__link">
+    Resource Documentation
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<!-- markdownlint-configure-file { "code-block-style": false } -->
+<h1 id="adding-resource-tagging-support">Adding Resource Tagging Support<a class="headerlink" href="#adding-resource-tagging-support" title="Permanent link">#</a></h1>
+<p>AWS provides key-value metadata across many services and resources, which can be used for a variety of use cases including billing, ownership, and more. See the <a href="https://aws.amazon.com/answers/account-management/aws-tagging-strategies/">AWS Tagging Strategy page</a> for more information about tagging at a high level.</p>
+<p>The Terraform AWS Provider supports default tags configured on the provider in addition to tags configured on the resource.
+Implementing tagging support for Terraform AWS Provider resources requires the following, each with its own section below:</p>
+<ul>
+<li><em>Generated Service Tagging Code</em>: Each service has a <code>generate.go</code> file where generator directives live.
+  Through these directives and their flags, you can customize code generation for the service.
+  You can find the code that the tagging generator generates in a <code>tags_gen.go</code> file in a service, such as <code>internal/service/ec2/tags_gen.go</code>.
+  You should generally <em>not</em> need to edit the generator code itself (i.e., in <code>internal/generate/tags</code>).</li>
+<li><em>Resource Code</em>: In the resource code, add the <code>tags</code> and <code>tags_all</code> schema attributes,
+  along with a plan modification in the resource definition, and handling in <code>Create</code>, <code>Read</code>, and <code>Update</code> functions.</li>
+<li><em>Resource Acceptance Tests</em>: In the resource acceptance tests, add new acceptance test functions and configurations to exercise the new tagging logic.</li>
+<li><em>Resource Documentation</em>: In the resource documentation, add the <code>tags</code> argument and <code>tags_all</code> attribute.</li>
+</ul>
+<h2 id="generating-tag-code-for-a-service">Generating Tag Code for a Service<a class="headerlink" href="#generating-tag-code-for-a-service" title="Permanent link">#</a></h2>
+<p>This step is generally only necessary for the first implementation and may have been previously completed.</p>
+<p>More details about this code generation,
+including fixes for potential error messages in this process,
+can be found in the <a href="https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md"><code>generate</code> package documentation</a>.</p>
+<p>The generator will create several types of tagging-related code.
+All services that support tagging will generate the function <code>keyValueTags</code>, which converts from service-specific structs returned by the AWS SDK into a common format used by the provider,
+and the function <code>svcTags</code>, which converts from the common format back to the service-specific structs.
+In addition, many services have separate functions to list or update tags, so the corresponding <code>listTags</code> and <code>updateTags</code> can be generated.
+Optionally, to retrieve a specific tag, you can generate the <code>GetTag</code> function.</p>
+<p>If the service directory does not contain a <code>generate.go</code> file, create one.
+This file must only contain generate directives and a package declaration (e.g., <code>package eks</code>).
+For examples of the <code>generate.go</code> file, many service directories contain one, e.g., <code>internal/service/eks/generate.go</code>.</p>
+<p>If the <code>generate.go</code> file does not contain a generate directive for tagging code, i.e., <code>//go:generate go run ../../generate/tags/main.go</code>, add it.
+Note that without flags, the directive itself will not do anything useful.
+You must not include more than one <code>generate/tags/main.go</code> directive, as subsequent directives will overwrite previous directives.
+To generate multiple types of tag code, use multiple flags with the directive.</p>
+<h3 id="generating-tagging-types">Generating Tagging Types<a class="headerlink" href="#generating-tagging-types" title="Permanent link">#</a></h3>
+<p>Determine how the service implements tagging:
+Some services will use a simple map style (<code>map[string]*string</code> in Go),
+while others will have a separate structure, often a <code>[]service.Tag</code> struct with <code>Key</code> and <code>Value</code> fields.</p>
+<p>If the service uses the simple map style, pass the flag <code>-ServiceTagsMap</code>.</p>
+<p>If the service uses a slice of structs, pass the flag <code>-ServiceTagsSlice</code>.
+If the name of the tag struct is not <code>Tag</code>, pass the flag <code>-TagType=&lt;struct name&gt;</code>.
+Note that the struct name is used without the package name.
+For example, the AppMesh service uses the struct <code>TagRef</code>, so the flag is <code>-TagType=TagRef</code>.
+If the key and value fields on the struct are not <code>Key</code> and <code>Value</code>,
+specify the names using the flags <code>-TagTypeKeyElem</code> and <code>-TagTypeValElem</code> respectively.
+For example, the KMS service uses the struct <code>Tag</code>, but the key and value fields are <code>TagKey</code> and <code>TagValue</code>,
+so the flags are <code>-TagTypeKeyElem=TagKey</code> and <code>-TagTypeValElem=TagValue</code>.</p>
+<p>Some services, such as EC2 and Auto Scaling, return a different type depending on the API call used to retrieve the tag.
+To indicate the additional type, include the flag <code>-TagType2=&lt;struct name&gt;</code>.
+For example, the Auto Scaling uses the struct <code>Tag</code> as part of resource calls, but returns the struct <code>TagDescription</code> from the <code>DescribeTags</code> API call. The flag used is <code>-TagType2=TagDescription</code>.</p>
+<p>For more details on flags for generating service keys, see the
+<a href="https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md">documentation for the tag generator</a></p>
+<h3 id="generating-standalone-tag-listing-functions">Generating Standalone Tag Listing Functions<a class="headerlink" href="#generating-standalone-tag-listing-functions" title="Permanent link">#</a></h3>
+<p>If the service API uses a standalone function to retrieve tags instead of including them with the resource (usually a <code>ListTags</code> or <code>ListTagsForResource</code> API call), pass the flag <code>-ListTags</code>.</p>
+<p>If the API call is not <code>ListTagsForResource</code>, pass the flag <code>-ListTagsOp=&lt;API call name&gt;</code>.
+Note that this does not include the package name.
+For example, the Auto Scaling service uses the API call <code>DescribeTags</code>, so the flag is <code>-ListTagsOp=DescribeTags</code>.</p>
+<p>If the API call uses a field other than <code>ResourceArn</code> to identify the resource, pass the flag <code>-ListTagsInIDElem=&lt;field name&gt;</code>.
+For example, the CloudWatch service uses the field <code>ResourceARN</code>, so the flag is <code>-ListTagsInIDElem=ResourceARN</code>.
+Some API calls take a slice of identifiers instead of a single identifier.
+In this case, pass the flag <code>-ListTagsInIDNeedSlice=yes</code>.</p>
+<p>If the field containing the tags in the result of the API call is not named <code>Tags</code>, pass the flag <code>-ListTagsOutTagsElem=&lt;struct name&gt;</code>.
+For example, the CloudTrail service returns a nested structure, where the resulting flag is <code>-ListTagsOutTagsElem=ResourceTagList[0].TagsList</code>.</p>
+<p>In some cases, it can be useful to retrieve single tags.
+Pass the flag <code>-GetTag</code> to generate a function to do so.</p>
+<p>For more details on flags for generating tag listing functions, see the
+<a href="https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md">documentation for the tag generator</a></p>
+<h3 id="generating-standalone-tag-updating-functions">Generating Standalone Tag Updating Functions<a class="headerlink" href="#generating-standalone-tag-updating-functions" title="Permanent link">#</a></h3>
+<p>If the service API uses a standalone function to update tags instead of including them when updating the resource (usually a <code>TagResource</code> and <code>UntagResource</code> API call), pass the flag <code>-UpdateTags</code>.</p>
+<p>If the API call to add tags is not <code>TagResource</code>, pass the flag <code>-TagOp=&lt;API call name&gt;</code>.
+Note that this does not include the package name.
+For example, the ElastiCache service uses the API call <code>AddTagsToResource</code>, so the flag is <code>-TagOp=AddTagsToResource</code>.</p>
+<p>If the API call to add tags uses a field other than <code>ResourceArn</code> to identify the resource, pass the flag <code>-TagInIDElem=&lt;field name&gt;</code>.
+For example, the EC2 service uses the field <code>Resources</code>, so the flag is <code>-TagInIDElem=Resources</code>.
+Some API calls take a slice of identifiers instead of a single identifier.
+In this case, pass the flag <code>-TagInIDNeedSlice=yes</code>.</p>
+<p>If the API call to remove tags is not <code>UntagResource</code>, pass the flag <code>-UntagOp=&lt;API call name&gt;</code>.
+Note that this does not include the package name.
+For example, the ElastiCache service uses the API call <code>RemoveTagsFromResource</code>, so the flag is <code>-UntagOp=RemoveTagsFromResource</code>.</p>
+<p>If the API call to remove tags uses a field other than <code>ResourceArn</code> to identify the resource, pass the flag <code>-UntagInTagsElem=&lt;field name&gt;</code>.
+For example, the Route 53 service uses the field <code>Keys</code>, so the flag is <code>-UntagInTagsElem=Keys</code>.</p>
+<p>For more details on flags for generating tag updating functions, see the
+<a href="https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md">documentation for the tag generator</a></p>
+<h4 id="generating-standalone-post-creation-tag-updating-functions">Generating Standalone Post-Creation Tag Updating Functions<a class="headerlink" href="#generating-standalone-post-creation-tag-updating-functions" title="Permanent link">#</a></h4>
+<p>When creating a resource, some AWS APIs support passing tags in the Create call while others require setting the tags after the initial creation.
+If the API does not support tagging on creation, pass the <code>-CreateTags</code> flag to generate a <code>createTags</code> function that can be called from the resource Create handler function.</p>
+<h3 id="running-code-generation">Running Code generation<a class="headerlink" href="#running-code-generation" title="Permanent link">#</a></h3>
+<p>Run the command <code>make gen</code> to run the code generators for the project.
+To ensure that the code compiles, run <code>make test</code>.</p>
+<h2 id="resource-code">Resource Code<a class="headerlink" href="#resource-code" title="Permanent link">#</a></h2>
+<h3 id="resource-schema">Resource Schema<a class="headerlink" href="#resource-schema" title="Permanent link">#</a></h3>
+<p>Add the following imports to the resource's Go source file:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">imports</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="cm">/* ... other imports ... */</span>
+<span class="w">    </span><span class="nx">tftags</span><span class="w"> </span><span class="s">&quot;github.com/hashicorp/terraform-provider-aws/internal/tags&quot;</span>
+<span class="w">    </span><span class="s">&quot;github.com/hashicorp/terraform-provider-aws/internal/verify&quot;</span>
+<span class="w">    </span><span class="s">&quot;github.com/hashicorp/terraform-provider-aws/names&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Add the <code>tags</code> parameter and <code>tags_all</code> attribute to the schema, using constants defined in the <code>names</code> package.
+The <code>tags</code> parameter contains the tags set directly on the resource.
+The <code>tags_all</code> attribute contains a union of the tags set directly on the resource and default tags configured on the provider.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_1_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">resourceExample</span><span class="p">)</span><span class="w"> </span><span class="nx">Schema</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">req</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">SchemaRequest</span><span class="p">,</span><span class="w"> </span><span class="nx">resp</span><span class="w"> </span><span class="o">*</span><span class="nx">resource</span><span class="p">.</span><span class="nx">SchemaResponse</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Schema</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">schema</span><span class="p">.</span><span class="nx">Schema</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">Attributes</span><span class="p">:</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="nx">schema</span><span class="p">.</span><span class="nx">Attribute</span><span class="p">{</span>
+<span class="w">            </span><span class="cm">/* ... other configuration ... */</span>
+<span class="w">            </span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrTags</span><span class="p">:</span><span class="w">    </span><span class="nx">tftags</span><span class="p">.</span><span class="nx">TagsAttribute</span><span class="p">(),</span>
+<span class="w">            </span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrTagsAll</span><span class="p">:</span><span class="w"> </span><span class="nx">tftags</span><span class="p">.</span><span class="nx">TagsAttributeComputedOnly</span><span class="p">(),</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">ResourceExample</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">schema</span><span class="p">.</span><span class="nx">Resource</span><span class="p">{</span>
+<span class="w">        </span><span class="cm">/* ... other configuration ... */</span>
+<span class="w">        </span><span class="nx">Schema</span><span class="p">:</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">Schema</span><span class="p">{</span>
+<span class="w">            </span><span class="cm">/* ... other configuration ... */</span>
+<span class="w">            </span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrTags</span><span class="p">:</span><span class="w">    </span><span class="nx">tftags</span><span class="p">.</span><span class="nx">TagsSchema</span><span class="p">(),</span>
+<span class="w">            </span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrTagsAll</span><span class="p">:</span><span class="w"> </span><span class="nx">tftags</span><span class="p">.</span><span class="nx">TagsSchemaComputed</span><span class="p">(),</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="transparent-tagging">Transparent Tagging<a class="headerlink" href="#transparent-tagging" title="Permanent link">#</a></h3>
+<p>All service that support tagging use a facility we call <em>transparent</em> (or <em>implicit</em>) <em>tagging</em>, where the majority of resource tagging functionality is implemented using code located in the provider's runtime packages (see <code>internal/provider/intercept.go</code> and <code>internal/provider/fwprovider/intercept.go</code> for details) and not in the resource's CRUD handler functions. Resource implementers opt-in to transparent tagging by adding an <em>annotation</em> (a specially formatted Go comment) to the resource's factory function (similar to the <a href="../add-a-new-resource/">resource self-registration mechanism</a>).</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_2_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1">// @FrameworkResource(&quot;aws_service_example&quot;, name=&quot;Example&quot;)</span>
+<span class="c1">// @Tags(identifierAttribute=&quot;arn&quot;)</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">newResourceExample</span><span class="p">(</span><span class="nx">_</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">resource</span><span class="p">.</span><span class="nx">ResourceWithConfigure</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">resourceExample</span><span class="p">{},</span><span class="w"> </span><span class="kc">nil</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1">// @SDKResource(&quot;aws_service_example&quot;, name=&quot;Example&quot;)</span>
+<span class="c1">// @Tags(identifierAttribute=&quot;arn&quot;)</span>
+<span class="kd">func</span><span class="w"> </span><span class="nx">ResourceExample</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">schema</span><span class="p">.</span><span class="nx">Resource</span><span class="p">{</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>The <code>identifierAttribute</code> argument to the <code>@Tags</code> annotation identifies the attribute in the resource type's schema whose value is used in tag listing and updating API calls.
+Common values are <code>"arn"</code> and <code>"id"</code>.
+If the resource type does not need separate <code>createTags</code>, <code>listTags</code>, or <code>updateTags</code> functions, do not specify an <code>identifierAttribute</code>.</p>
+<p>Once the annotation has been added to the resource's code, run <code>make gen</code> to register the resource for transparent tagging.
+This will add an entry to the <code>service_package_gen.go</code> file located in the service package folder.</p>
+<h4 id="resource-create-operation">Resource Create Operation<a class="headerlink" href="#resource-create-operation" title="Permanent link">#</a></h4>
+<p>When creating a resource, some AWS APIs support passing tags in the Create call
+while others require setting the tags after the initial creation.</p>
+<p>If the API supports tagging on creation (e.g., the <code>Input</code> struct accepts a <code>Tags</code> field),
+use the <code>getTagsIn</code> function to get any configured tags.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_3_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nx">input</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">service</span><span class="p">.</span><span class="nx">CreateExampleInput</span><span class="p">{</span>
+<span class="w">  </span><span class="cm">/* ... other configuration ... */</span>
+<span class="w">  </span><span class="nx">Tags</span><span class="p">:</span><span class="w"> </span><span class="nx">getTagsIn</span><span class="p">(</span><span class="nx">ctx</span><span class="p">),</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nx">input</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">service</span><span class="p">.</span><span class="nx">CreateExampleInput</span><span class="p">{</span>
+<span class="w">  </span><span class="cm">/* ... other configuration ... */</span>
+<span class="w">  </span><span class="nx">Tags</span><span class="p">:</span><span class="w"> </span><span class="nx">getTagsIn</span><span class="p">(</span><span class="nx">ctx</span><span class="p">),</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>Otherwise, if the API does not support tagging on creation, call <code>createTags</code> after the resource has been created.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_4_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">createTags</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">ValueString</span><span class="p">(),</span><span class="w"> </span><span class="nx">getTagsIn</span><span class="p">(</span><span class="nx">ctx</span><span class="p">));</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">Service</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionCreating</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameExample</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="kc">nil</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">createTags</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">getTagsIn</span><span class="p">(</span><span class="nx">ctx</span><span class="p">));</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">sdkdiag</span><span class="p">.</span><span class="nx">AppendErrorf</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;setting Service Example (%s) tags: %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h4 id="resource-read-operation">Resource Read Operation<a class="headerlink" href="#resource-read-operation" title="Permanent link">#</a></h4>
+<p>In the resource <code>Read</code> operation, use the <code>setTagsOut</code> function to signal to the transparent tagging mechanism that the resource has tags that should be saved into Terraform state.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:2"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_5_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nx">setTagsOut</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">out</span><span class="p">.</span><span class="nx">Tags</span><span class="p">)</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nx">setTagsOut</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">out</span><span class="p">.</span><span class="nx">Tags</span><span class="p">)</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>If the service API does not return the tags directly from reading the resource and requires use of the generated <code>listTags</code> function, do nothing and the transparent tagging mechanism will make the <code>listTags</code> call and save any tags into the Terraform state.</p>
+<h4 id="resource-update-operation">Resource Update Operation<a class="headerlink" href="#resource-update-operation" title="Permanent link">#</a></h4>
+<p>In the resource <code>Update</code> operation, only non-<code>tags</code> updates need to be done as the transparent tagging mechanism makes the <code>updateTags</code> call.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="6:2"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="__tabbed_6_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_6_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">!</span><span class="nx">plan</span><span class="p">.</span><span class="nx">Name</span><span class="p">.</span><span class="nx">Equal</span><span class="p">(</span><span class="nx">state</span><span class="p">.</span><span class="nx">Name</span><span class="p">)</span><span class="w"> </span><span class="o">||</span>
+<span class="w">    </span><span class="p">!</span><span class="nx">plan</span><span class="p">.</span><span class="nx">Description</span><span class="p">.</span><span class="nx">Equal</span><span class="p">(</span><span class="nx">state</span><span class="p">.</span><span class="nx">Description</span><span class="p">)</span><span class="w"> </span><span class="o">||</span>
+<span class="w">    </span><span class="c1">// etc.</span>
+<span class="w">    </span><span class="c1">// Do NOT check for tags changes here.</span>
+<span class="w">    </span><span class="p">!</span><span class="nx">plan</span><span class="p">.</span><span class="nx">OtherField</span><span class="p">.</span><span class="nx">Equal</span><span class="p">(</span><span class="nx">state</span><span class="p">.</span><span class="nx">OtherField</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">HasChangesExcept</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrTags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrTagsAll</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="o">...</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>For Terraform Plugin SDK V2 based resources, ensure that the <code>Update</code> operation always calls the resource <code>Read</code> operation before returning so that the transparent tagging mechanism correctly saves any tags into the Terraform state.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="7:1"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><div class="tabbed-labels"><label for="__tabbed_7_1">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">resourceAnalyzerUpdate</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">ResourceData</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="w"> </span><span class="kd">interface</span><span class="p">{})</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">var</span><span class="w"> </span><span class="nx">diags</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span>
+<span class="w">  </span><span class="c1">// Tags only.</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceAnalyzerRead</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="p">)</span><span class="o">...</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="explicit-tagging">Explicit Tagging<a class="headerlink" href="#explicit-tagging" title="Permanent link">#</a></h3>
+<p>If the resource cannot opt-in to transparent tagging, more boilerplate code must be explicitly added to the resource CRUD handler functions.
+This section describes how to do this.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There are currently no Terraform Plugin Framework based resources which use explicit tagging. As such, the remaining examples in this section will reference legacy Terraform Plugin SDK V2 patterns.</p>
+</div>
+<h4 id="resource-create-operation_1">Resource Create Operation<a class="headerlink" href="#resource-create-operation_1" title="Permanent link">#</a></h4>
+<p>When creating a resource, some AWS APIs support passing tags in the Create call
+while others require setting the tags after the initial creation.</p>
+<p>If the API supports tagging on creation (e.g., the <code>Input</code> struct accepts a <code>Tags</code> field),
+implement the logic to convert the configuration tags into the service tags, e.g., with EKS Clusters:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="8:1"><input checked="checked" id="__tabbed_8_1" name="__tabbed_8" type="radio" /><div class="tabbed-labels"><label for="__tabbed_8_1">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1">// Typically declared near conn := /*...*/</span>
+<span class="nx">defaultTagsConfig</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">conns</span><span class="p">.</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">DefaultTagsConfig</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span>
+<span class="nx">tags</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">defaultTagsConfig</span><span class="p">.</span><span class="nx">MergeTags</span><span class="p">(</span><span class="nx">tftags</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;tags&quot;</span><span class="p">).(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{})))</span>
+
+<span class="nx">input</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">eks</span><span class="p">.</span><span class="nx">CreateClusterInput</span><span class="p">{</span>
+<span class="w">  </span><span class="cm">/* ... other configuration ... */</span>
+<span class="w">  </span><span class="nx">Tags</span><span class="p">:</span><span class="w"> </span><span class="nx">svcTags</span><span class="p">(</span><span class="nx">tags</span><span class="p">.</span><span class="nx">IgnoreAWS</span><span class="p">()),</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>If the service API does not allow passing an empty list, the logic can be adjusted similarly to:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="9:1"><input checked="checked" id="__tabbed_9_1" name="__tabbed_9" type="radio" /><div class="tabbed-labels"><label for="__tabbed_9_1">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1">// Typically declared near conn := /*...*/</span>
+<span class="nx">defaultTagsConfig</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">conns</span><span class="p">.</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">DefaultTagsConfig</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span>
+<span class="nx">tags</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">defaultTagsConfig</span><span class="p">.</span><span class="nx">MergeTags</span><span class="p">(</span><span class="nx">tftags</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;tags&quot;</span><span class="p">).(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{})))</span>
+
+<span class="nx">input</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">eks</span><span class="p">.</span><span class="nx">CreateClusterInput</span><span class="p">{</span>
+<span class="w">  </span><span class="cm">/* ...other configuration... */</span>
+<span class="p">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">tags</span><span class="p">)</span><span class="w"> </span><span class="p">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">input</span><span class="p">.</span><span class="nx">Tags</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">svcTags</span><span class="p">(</span><span class="nx">tags</span><span class="p">.</span><span class="nx">IgnoreAWS</span><span class="p">())</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>Otherwise, if the API does not support tagging on creation,
+implement the logic to convert the configuration tags into the service API call to tag a resource, e.g., with Device Farm device pools:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="10:1"><input checked="checked" id="__tabbed_10_1" name="__tabbed_10" type="radio" /><div class="tabbed-labels"><label for="__tabbed_10_1">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1">// Typically declared near conn := /*...*/</span>
+<span class="nx">defaultTagsConfig</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">conns</span><span class="p">.</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">DefaultTagsConfig</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span>
+<span class="nx">tags</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">defaultTagsConfig</span><span class="p">.</span><span class="nx">MergeTags</span><span class="p">(</span><span class="nx">tftags</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;tags&quot;</span><span class="p">).(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{})))</span>
+
+<span class="cm">/* ... creation steps ... */</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">tags</span><span class="p">)</span><span class="w"> </span><span class="p">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">updateTags</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">tags</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;adding DeviceFarm Device Pool (%s) tags: %w&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>Some EC2 resources (e.g., <a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ec2_fleet"><code>aws_ec2_fleet</code></a>) have a <code>TagSpecifications</code> field in the <code>InputStruct</code> instead of a <code>Tags</code> field.
+In these cases the <code>tagSpecificationsFromKeyValue()</code> helper function should be used.
+This example shows using <code>TagSpecifications</code>:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="11:1"><input checked="checked" id="__tabbed_11_1" name="__tabbed_11" type="radio" /><div class="tabbed-labels"><label for="__tabbed_11_1">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1">// Typically declared near conn := /*...*/</span>
+<span class="nx">defaultTagsConfig</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">conns</span><span class="p">.</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">DefaultTagsConfig</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span>
+<span class="nx">tags</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">defaultTagsConfig</span><span class="p">.</span><span class="nx">MergeTags</span><span class="p">(</span><span class="nx">tftags</span><span class="p">.</span><span class="nx">New</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;tags&quot;</span><span class="p">).(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kd">interface</span><span class="p">{})))</span>
+
+<span class="nx">input</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">ec2</span><span class="p">.</span><span class="nx">CreateFleetInput</span><span class="p">{</span>
+<span class="w">    </span><span class="cm">/* ... other configuration ... */</span>
+<span class="w">    </span><span class="nx">TagSpecifications</span><span class="p">:</span><span class="w"> </span><span class="nx">tagSpecificationsFromKeyValue</span><span class="p">(</span><span class="nx">tags</span><span class="p">,</span><span class="w"> </span><span class="nx">ec2</span><span class="p">.</span><span class="nx">ResourceTypeFleet</span><span class="p">),</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h4 id="resource-read-operation_1">Resource Read Operation<a class="headerlink" href="#resource-read-operation_1" title="Permanent link">#</a></h4>
+<p>In the resource <code>Read</code> operation, implement the logic to convert the service tags to save them into the Terraform state for drift detection, e.g., with EKS Clusters:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="12:1"><input checked="checked" id="__tabbed_12_1" name="__tabbed_12" type="radio" /><div class="tabbed-labels"><label for="__tabbed_12_1">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1">// Typically declared near conn := /*...*/</span>
+<span class="nx">defaultTagsConfig</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">conns</span><span class="p">.</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">DefaultTagsConfig</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span>
+<span class="nx">ignoreTagsConfig</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">conns</span><span class="p">.</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">IgnoreTagsConfig</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span>
+
+<span class="cm">/* ... other d.Set(...) logic ... */</span>
+
+<span class="nx">tags</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">keyValueTags</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">cluster</span><span class="p">.</span><span class="nx">Tags</span><span class="p">).</span><span class="nx">IgnoreAWS</span><span class="p">().</span><span class="nx">IgnoreConfig</span><span class="p">(</span><span class="nx">ignoreTagsConfig</span><span class="p">)</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;tags&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">tags</span><span class="p">.</span><span class="nx">RemoveDefaultConfig</span><span class="p">(</span><span class="nx">defaultTagsConfig</span><span class="p">).</span><span class="nx">Map</span><span class="p">());</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;setting tags: %w&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;tags_all&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">tags</span><span class="p">.</span><span class="nx">Map</span><span class="p">());</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;setting tags_all: %w&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>If the service API does not return the tags directly from reading the resource and requires a separate API call,
+use the generated <code>listTags</code> function, e.g., with Athena Workgroups:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="13:1"><input checked="checked" id="__tabbed_13_1" name="__tabbed_13" type="radio" /><div class="tabbed-labels"><label for="__tabbed_13_1">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1">// Typically declared near conn := /*...*/</span>
+<span class="nx">defaultTagsConfig</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">conns</span><span class="p">.</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">DefaultTagsConfig</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span>
+<span class="nx">ignoreTagsConfig</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">conns</span><span class="p">.</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">IgnoreTagsConfig</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span>
+
+<span class="cm">/* ... other d.Set(...) logic ... */</span>
+
+<span class="nx">tags</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">listTags</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">arn</span><span class="p">.</span><span class="nx">String</span><span class="p">())</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;listing tags for resource (%s): %w&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">arn</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nx">tags</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">tags</span><span class="p">.</span><span class="nx">IgnoreAWS</span><span class="p">().</span><span class="nx">IgnoreConfig</span><span class="p">(</span><span class="nx">ignoreTagsConfig</span><span class="p">)</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;tags&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">tags</span><span class="p">.</span><span class="nx">RemoveDefaultConfig</span><span class="p">(</span><span class="nx">defaultTagsConfig</span><span class="p">).</span><span class="nx">Map</span><span class="p">());</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;setting tags: %w&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;tags_all&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">tags</span><span class="p">.</span><span class="nx">Map</span><span class="p">());</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;setting tags_all: %w&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h4 id="resource-update-operation_1">Resource Update Operation<a class="headerlink" href="#resource-update-operation_1" title="Permanent link">#</a></h4>
+<p>In the resource <code>Update</code> operation, implement the logic to handle tagging updates, e.g., with EKS Clusters:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="14:1"><input checked="checked" id="__tabbed_14_1" name="__tabbed_14" type="radio" /><div class="tabbed-labels"><label for="__tabbed_14_1">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">HasChange</span><span class="p">(</span><span class="s">&quot;tags_all&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">o</span><span class="p">,</span><span class="w"> </span><span class="nx">n</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">GetChange</span><span class="p">(</span><span class="s">&quot;tags_all&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">updateTags</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;arn&quot;</span><span class="p">).(</span><span class="kt">string</span><span class="p">),</span><span class="w"> </span><span class="nx">o</span><span class="p">,</span><span class="w"> </span><span class="nx">n</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;updating tags: %w&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>If the resource <code>Update</code> function applies specific updates to attributes regardless of changes to tags, implement the following e.g., with IAM Policy:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="15:1"><input checked="checked" id="__tabbed_15_1" name="__tabbed_15" type="radio" /><div class="tabbed-labels"><label for="__tabbed_15_1">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">HasChangesExcept</span><span class="p">(</span><span class="s">&quot;tags&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tags_all&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="cm">/* ... other logic ...*/</span>
+<span class="w">  </span><span class="nx">request</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">iam</span><span class="p">.</span><span class="nx">CreatePolicyVersionInput</span><span class="p">{</span>
+<span class="w">    </span><span class="nx">PolicyArn</span><span class="p">:</span><span class="w">      </span><span class="nx">aws</span><span class="p">.</span><span class="nx">String</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">()),</span>
+<span class="w">    </span><span class="nx">PolicyDocument</span><span class="p">:</span><span class="w"> </span><span class="nx">aws</span><span class="p">.</span><span class="nx">String</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;policy&quot;</span><span class="p">).(</span><span class="kt">string</span><span class="p">)),</span>
+<span class="w">    </span><span class="nx">SetAsDefault</span><span class="p">:</span><span class="w">   </span><span class="nx">aws</span><span class="p">.</span><span class="nx">Bool</span><span class="p">(</span><span class="kc">true</span><span class="p">),</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">CreatePolicyVersionWithContext</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">request</span><span class="p">);</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;updating IAM policy (%s): %w&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h2 id="resource-acceptance-tests">Resource Acceptance Tests<a class="headerlink" href="#resource-acceptance-tests" title="Permanent link">#</a></h2>
+<p>Some services, and some resource or data source types within services, have generated acceptance tests for tagging support.
+These tests cover a broad set of tagging behaviors.
+New services should use the generated acceptance tests.</p>
+<h3 id="generated-acceptance-tests">Generated Acceptance Tests<a class="headerlink" href="#generated-acceptance-tests" title="Permanent link">#</a></h3>
+<p>To enable generated acceptance tests for a service, add the following line to the service's <code>generate.go</code> file:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">//go:generate go run ../../generate/tagstests/main.go</span>
+</code></pre></div>
+<h4 id="controlling-test-generation">Controlling Test Generation<a class="headerlink" href="#controlling-test-generation" title="Permanent link">#</a></h4>
+<p>By default, all resource or data source types which support transparent tagging will have tagging tests generated.
+Individual resource or data source types can be excluded from generated acceptance tests by adding the annotation <code>@Testing(tagsTest=false)</code> to the resource type declaration.
+If a resource or data source type supports tags but does not use transparent tagging, generate the tests by adding the annotion <code>@Testing(tagsTest=true)</code></p>
+<p>Additional <code>@Testing(...)</code> parameters can be used to control the generated tests.</p>
+<h5 id="precheck-parameters">PreCheck parameters<a class="headerlink" href="#precheck-parameters" title="Permanent link">#</a></h5>
+<p>All generated tagging tests include the standard <code>acctest.PreCheck</code> PreCheck function.
+In some cases, acceptance tests will require additional PreCheck functions.
+Specify them with the annotation <code>@Testing(preCheck=&lt;reference&gt;)</code>.
+The reference optionally contains a Go package path and package alias, using the format
+<code>[&lt;package path&gt;;[&lt;package alias&gt;;]]&lt;function name&gt;</code>.
+The function is assumed to have the signature <code>func(ctx context.Context, t *testing.T)</code>.
+Multiple <code>@Testing(preCheck)</code> annotations are allowed.</p>
+<h5 id="required-argument-parameters">Required Argument parameters<a class="headerlink" href="#required-argument-parameters" title="Permanent link">#</a></h5>
+<p>Most testing configurations take a single parameter, often a name or a domain name.
+The most common case is parameter <code>rName</code> with a value generated by <code>sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)</code>, so this is the default.
+If no <code>rName</code> is required, add the annotation <code>@Testing(generator=false)</code>.
+Other values can be used by setting the <code>generator</code> to a reference to a function call.
+The reference optionally contains a Go package path and package alias, using the format
+<code>[&lt;package path&gt;;[&lt;package alias&gt;;]]&lt;function call&gt;</code>.
+For example, the Service Catalog Portfolio uses a five-character long random string</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// @Testing(generator=&quot;github.com/hashicorp/terraform-plugin-testing/helper/acctest;sdkacctest;sdkacctest.RandString(5)&quot;)</span>
+</code></pre></div>
+<p>Some acceptance tests also require a TLS key and certificate.
+This can be included by setting the annotation <code>@Testing(tlsKey=true)</code>,
+which will add the Terraform variables <code>certificate_pem</code> and <code>private_key_pem</code> to the configuration.
+By default, the common name for the certificate is <code>example.com</code>.
+To override the common name, set the annotation <code>@Testing(tlsKeyDomain=&lt;reference&gt;)</code> to reference an existing variable.
+For example, the API Gateway v2 Domain Name sets the variable <code>rName</code> to <code>acctest.RandomSubdomain()</code>
+and sets the annotation <code>@Testing(tlsKeyDomain=rName)</code> to reference it.</p>
+<p>Some acceptance tests require a TLS ECDSA public key PEM.
+This can be included by setting the annotation <code>@Testing(tlsEcdsaPublicKeyPem=true)</code>.
+The Terraform variable name will be <code>rTlsEcdsaPublicKeyPem</code>.</p>
+<p>Some acceptance tests related to networking require a random BGP ASN value.
+This can be included by setting the annotation <code>@Testing(randomBsgAsn="&lt;low end&gt;;&lt;high end&gt;)</code>,
+where <code>&lt;low end&gt;</code> and <code>&lt;high end&gt;</code> are the upper and lower bounds for the randomly-generated ASN value.
+The Terraform variable name will be <code>rBgpAsn</code>.</p>
+<p>Some acceptance tests related to networking require a random IPv4 address.
+This can be included by setting the annotation <code>@Testing(randomIPv4Address="&lt;CIDR range&gt;)</code>.
+The randomly-generated IPv4 address value will be contained within the <code>&lt;CIDR range&gt;</code>.
+The Terraform variable name will be <code>rIPv4Address</code>.</p>
+<p>No additional parameters can be defined currently.
+If additional parameters are required, and cannot be derived from <code>rName</code>, the resource type must use manually created acceptance tests as described below.</p>
+<h5 id="exists-and-destroy-parameters">Exists and Destroy parameters<a class="headerlink" href="#exists-and-destroy-parameters" title="Permanent link">#</a></h5>
+<p>Most <code>Exists</code> functions used in acceptance tests take a pointer to the returned API object.
+To specify the type of this parameter, use the annotion <code>@Testing(existsType=&lt;reference&gt;)</code>.
+This references a Go type and package path with optional package alias, using the format
+<code>&lt;package path&gt;;[&lt;package alias&gt;;]&lt;function call&gt;</code>.
+For example, the S3 Object uses</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// @Testing(existsType=&quot;github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput&quot;)</span>
+</code></pre></div>
+<p>Some services or resource types are using a new variant of the standard <code>Exists</code> and <code>DestroyCheck</code> functions that use <code>acctest.ProviderMeta</code> internally, and thus take a <code>testing.T</code> as a parameter.
+In that case, add the annotations <code>@Testing(existsTakesT=true)</code> and <code>@Testing(destroyTakesT=true)</code>, respectively.</p>
+<p>Some resource types use the no-op <code>CheckDestroy</code> function <code>acctest.CheckDestroyNoop</code>.
+Use the annotation <code>@Testing(checkDestroyNoop=true)</code>.</p>
+<h5 id="import-parameters">Import parameters<a class="headerlink" href="#import-parameters" title="Permanent link">#</a></h5>
+<p>The generated acceptance tests use <code>ImportState</code> steps.
+In most cases, these will work as-is.
+To ignore the values of certain parameters when importing, set the annotation <code>@Testing(importIgnore="...")</code> to a list of the parameter names separated by semi-colons (<code>;</code>).
+There are multiple methods for overriding the import ID, if needed.
+To use the value of an existing variable, use the annotation <code>@Testing(importStateId=&lt;var name&gt;)</code>.
+If the identifier can be retrieved from a specific resource attribute, use the annotation <code>@Testing(importStateIdAttribute=&lt;attribute name&gt;)</code>.
+If the identifier can be retrieved from a <code>resource.ImportStateIdFunc</code>, use the annotation <code>@Testing(importStateIdFunc=&lt;func name&gt;)</code>.
+If the resource type does not support importing, use the annotation <code>@Testing(noImport=true)</code>.</p>
+<h5 id="serialization-parameters">Serialization parameters<a class="headerlink" href="#serialization-parameters" title="Permanent link">#</a></h5>
+<p>If the tests need to be serialized, use the annotation <code>@Testing(serialize=true)</code>.
+If a delay is needed between serialized tests, also use the annotation <code>@Testing(serializeDelay=&lt;duration&gt;)</code> with a duration in the format used by <a href="https://pkg.go.dev/time#ParseDuration"><code>time.ParseDuration()</code></a>.
+For example, 3 minutes and 30 seconds is <code>3m30s</code>.</p>
+<h5 id="empty-and-null-tag-parameters">Empty and Null Tag parameters<a class="headerlink" href="#empty-and-null-tag-parameters" title="Permanent link">#</a></h5>
+<p>Some services do not support tags with an empty string value.
+In that case, use the annotation <code>@Testing(skipEmptyTags=true)</code>.</p>
+<p>Some services do not support tags with a null string value.
+In that case, use the annotation <code>@Testing(skipNullTags=true)</code>.</p>
+<h5 id="tag-update-parameters">Tag Update parameters<a class="headerlink" href="#tag-update-parameters" title="Permanent link">#</a></h5>
+<p>For some resource types, tags cannot be modified without recreating the resource.
+Use the annotation <code>@Testing(tagsUpdateForceNew=true)</code>.</p>
+<p>Resource types which pass the result of <code>getTagsIn</code> directly onto their Update Input may have an error where ignored tags are not correctly excluded from the update.
+Use the annotation <code>@Testing(tagsUpdateGetTagsIn=true)</code>.</p>
+<h5 id="resource-identifier-parameters">Resource Identifier parameters<a class="headerlink" href="#resource-identifier-parameters" title="Permanent link">#</a></h5>
+<p>Some tests read the tag values directly from the AWS API.
+If the resource type does not specify <code>identifierAttribute</code> in its <code>@Tags</code> annotation, specify a <code>@Testing(tagsIdentifierAttribute=&lt;attribute name&gt;)</code> annotation to identify which attribute value should be used by the <code>listTags</code> function.
+If a resource type is also needed for the <code>listTags</code> function, also specify the <code>tagsResourceType</code> annotation.</p>
+<h5 id="tag-removal-parameters">Tag Removal parameters<a class="headerlink" href="#tag-removal-parameters" title="Permanent link">#</a></h5>
+<p>At least one resource type, the Service Catalog Provisioned Product, does not support removing tags.
+This is likely an error on the AWS side.
+Add the annotation <code>@Testing(noRemoveTags=true)</code> as a workaround.</p>
+<h4 id="test-terraform-configurations">Test Terraform Configurations<a class="headerlink" href="#test-terraform-configurations" title="Permanent link">#</a></h4>
+<p>The generated acceptance tests use <code>ConfigDirectory</code> to specify the test configurations in a directory of Terraform <code>.tf</code> files.
+The configuration files are generated from a <a href="https://pkg.go.dev/text/template">Go template</a> file located in <code>testdata/tmpl/&lt;name&gt;_tags.gtpl</code>,
+where <code>name</code> is the name of the resource type's implementation file wihtout the <code>.go</code> extension.
+For example, the ELB v2 Load Balancer's implementation file is <code>load_balancer.go</code>, so the template is <code>testdata/tmpl/load_balancer_tags.gtpl</code>.</p>
+<p>To generate a configuration for a data source test, the generator reuses the configuration for the corresponding resource type.
+Add an additional file <code>testdata/tmpl/&lt;name&gt;_data_source.gtpl</code> which contains only the data source block populated with the parameters needed to associate it with the resource.
+For example, the ELB v2 Load Balancer's data source template is <code>testdata/tmpl/load_balancer_data_source.gtpl</code>.</p>
+<p>Replace the <code>tags</code> attribute with the Go template directive <code>{{- template "tags" . }}</code>.
+When the configurations are generated, this will be replaced with the appropriate assignment to the <code>tags</code> attribute.</p>
+<p>Tags should only be applied to the resource that is being tested.</p>
+<h3 id="manually-created-acceptance-tests">Manually Created Acceptance Tests<a class="headerlink" href="#manually-created-acceptance-tests" title="Permanent link">#</a></h3>
+<p>In the resource acceptance tests (e.g., <code>internal/service/eks/cluster_test.go</code>), verify that existing resources without tagging are unaffected and do not have tags saved into their Terraform state. This should be done in the <code>_basic</code> acceptance test by adding one line similar to <code>resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),</code> and one similar to <code>resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),</code></p>
+<p>Add a new test named <code>_tags</code> with associated configurations, that verifies creating the resource with tags and updating tags. E.g., EKS Clusters:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">TestAccEKSCluster_tags</span><span class="p">(</span><span class="nx">t</span><span class="w"> </span><span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">ctx</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">Context</span><span class="p">(</span><span class="nx">t</span><span class="p">)</span>
+<span class="w">  </span><span class="kd">var</span><span class="w"> </span><span class="nx">cluster1</span><span class="p">,</span><span class="w"> </span><span class="nx">cluster2</span><span class="p">,</span><span class="w"> </span><span class="nx">cluster3</span><span class="w"> </span><span class="nx">eks</span><span class="p">.</span><span class="nx">Cluster</span>
+<span class="w">  </span><span class="nx">rName</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">sdkacctest</span><span class="p">.</span><span class="nx">RandomWithPrefix</span><span class="p">(</span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ResourcePrefix</span><span class="p">)</span>
+<span class="w">  </span><span class="nx">resourceName</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="s">&quot;aws_eks_cluster.test&quot;</span>
+
+<span class="w">  </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ParallelTest</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCase</span><span class="p">{</span>
+<span class="w">    </span><span class="nx">PreCheck</span><span class="p">:</span><span class="w">                 </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">PreCheck</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">t</span><span class="p">);</span><span class="w"> </span><span class="nx">testAccPreCheck</span><span class="p">(</span><span class="nx">t</span><span class="p">)</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">ErrorCheck</span><span class="p">:</span><span class="w">               </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ErrorCheck</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">EKSServiceID</span><span class="p">),</span>
+<span class="w">    </span><span class="nx">ProtoV5ProviderFactories</span><span class="p">:</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ProtoV5ProviderFactories</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">CheckDestroy</span><span class="p">:</span><span class="w">             </span><span class="nx">testAccCheckClusterDestroy</span><span class="p">(</span><span class="nx">ctx</span><span class="p">),</span>
+<span class="w">    </span><span class="nx">Steps</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestStep</span><span class="p">{</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">Config</span><span class="p">:</span><span class="w"> </span><span class="nx">testAccClusterConfig_tags1</span><span class="p">(</span><span class="nx">rName</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;key1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value1&quot;</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">Check</span><span class="p">:</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ComposeTestCheckFunc</span><span class="p">(</span>
+<span class="w">          </span><span class="nx">testAccCheckClusterExists</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">cluster1</span><span class="p">),</span>
+<span class="w">          </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCheckResourceAttr</span><span class="p">(</span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tags.%&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="p">),</span>
+<span class="w">          </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCheckResourceAttr</span><span class="p">(</span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tags.key1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value1&quot;</span><span class="p">),</span>
+<span class="w">        </span><span class="p">),</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">ResourceName</span><span class="p">:</span><span class="w">      </span><span class="nx">resourceName</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">ImportState</span><span class="p">:</span><span class="w">       </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">ImportStateVerify</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">Config</span><span class="p">:</span><span class="w"> </span><span class="nx">testAccClusterConfig_tags2</span><span class="p">(</span><span class="nx">rName</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;key1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value1updated&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;key2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value2&quot;</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">Check</span><span class="p">:</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ComposeTestCheckFunc</span><span class="p">(</span>
+<span class="w">          </span><span class="nx">testAccCheckClusterExists</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">cluster2</span><span class="p">),</span>
+<span class="w">          </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCheckResourceAttr</span><span class="p">(</span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tags.%&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2&quot;</span><span class="p">),</span>
+<span class="w">          </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCheckResourceAttr</span><span class="p">(</span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tags.key1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value1updated&quot;</span><span class="p">),</span>
+<span class="w">          </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCheckResourceAttr</span><span class="p">(</span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tags.key2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value2&quot;</span><span class="p">),</span>
+<span class="w">        </span><span class="p">),</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">Config</span><span class="p">:</span><span class="w"> </span><span class="nx">testAccClusterConfig_tags1</span><span class="p">(</span><span class="nx">rName</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;key2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value2&quot;</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">Check</span><span class="p">:</span><span class="w"> </span><span class="nx">resource</span><span class="p">.</span><span class="nx">ComposeTestCheckFunc</span><span class="p">(</span>
+<span class="w">          </span><span class="nx">testAccCheckClusterExists</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">cluster3</span><span class="p">),</span>
+<span class="w">          </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCheckResourceAttr</span><span class="p">(</span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tags.%&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="p">),</span>
+<span class="w">          </span><span class="nx">resource</span><span class="p">.</span><span class="nx">TestCheckResourceAttr</span><span class="p">(</span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tags.key2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;value2&quot;</span><span class="p">),</span>
+<span class="w">        </span><span class="p">),</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">testAccClusterConfig_tags1</span><span class="p">(</span><span class="nx">rName</span><span class="p">,</span><span class="w"> </span><span class="nx">tagKey1</span><span class="p">,</span><span class="w"> </span><span class="nx">tagValue1</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ConfigCompose</span><span class="p">(</span><span class="nx">testAccClusterConfig_base</span><span class="p">(</span><span class="nx">rName</span><span class="p">),</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">`</span>
+<span class="s">resource &quot;aws_eks_cluster&quot; &quot;test&quot; {</span>
+<span class="s">  name     = %[1]q</span>
+<span class="s">  role_arn = aws_iam_role.test.arn</span>
+
+<span class="s">  tags = {</span>
+<span class="s">    %[2]q = %[3]q</span>
+<span class="s">  }</span>
+
+<span class="s">  vpc_config {</span>
+<span class="s">    subnet_ids = aws_subnet.test[*].id</span>
+<span class="s">  }</span>
+
+<span class="s">  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]</span>
+<span class="s">}</span>
+<span class="s">`</span><span class="p">,</span><span class="w"> </span><span class="nx">rName</span><span class="p">,</span><span class="w"> </span><span class="nx">tagKey1</span><span class="p">,</span><span class="w"> </span><span class="nx">tagValue1</span><span class="p">))</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">testAccClusterConfig_tags2</span><span class="p">(</span><span class="nx">rName</span><span class="p">,</span><span class="w"> </span><span class="nx">tagKey1</span><span class="p">,</span><span class="w"> </span><span class="nx">tagValue1</span><span class="p">,</span><span class="w"> </span><span class="nx">tagKey2</span><span class="p">,</span><span class="w"> </span><span class="nx">tagValue2</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">ConfigCompose</span><span class="p">(</span><span class="nx">testAccClusterConfig_base</span><span class="p">(</span><span class="nx">rName</span><span class="p">),</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">`</span>
+<span class="s">resource &quot;aws_eks_cluster&quot; &quot;test&quot; {</span>
+<span class="s">  name     = %[1]q</span>
+<span class="s">  role_arn = aws_iam_role.test.arn</span>
+
+<span class="s">  tags = {</span>
+<span class="s">    %[2]q = %[3]q</span>
+<span class="s">    %[4]q = %[5]q</span>
+<span class="s">  }</span>
+
+<span class="s">  vpc_config {</span>
+<span class="s">    subnet_ids = aws_subnet.test[*].id</span>
+<span class="s">  }</span>
+
+<span class="s">  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]</span>
+<span class="s">}</span>
+<span class="s">`</span><span class="p">,</span><span class="w"> </span><span class="nx">rName</span><span class="p">,</span><span class="w"> </span><span class="nx">tagKey1</span><span class="p">,</span><span class="w"> </span><span class="nx">tagValue1</span><span class="p">,</span><span class="w"> </span><span class="nx">tagKey2</span><span class="p">,</span><span class="w"> </span><span class="nx">tagValue2</span><span class="p">))</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Verify all acceptance testing passes for the resource (e.g., <code>make testacc TESTS=TestAccEKSCluster_ PKG=eks</code>)</p>
+<h2 id="resource-documentation">Resource Documentation<a class="headerlink" href="#resource-documentation" title="Permanent link">#</a></h2>
+<p>In the resource documentation (e.g., <code>website/docs/r/service_example.html.markdown</code>), add the following to the arguments reference:</p>
+<div class="highlight"><pre><span></span><code><span class="k">*</span><span class="w"> </span><span class="sb">`tags`</span> - (Optional) Map of tags assigned to the resource. If configured with a provider [<span class="sb">`default_tags`</span> configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+</code></pre></div>
+<p>In the resource documentation (e.g., <code>website/docs/r/service_example.html.markdown</code>), add the following to the attribute reference:</p>
+<div class="highlight"><pre><span></span><code><span class="k">*</span><span class="w"> </span><span class="sb">`tags_all`</span> - Map of tags assigned to the resource, including those inherited from the provider [<span class="sb">`default_tags`</span> configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+</code></pre></div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      HashiCorp
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
