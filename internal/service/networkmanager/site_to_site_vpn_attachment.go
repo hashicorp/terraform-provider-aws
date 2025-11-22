@@ -82,6 +82,12 @@ func resourceSiteToSiteVPNAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"routing_policy_label": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
 			"segment_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -112,6 +118,10 @@ func resourceSiteToSiteVPNAttachmentCreate(ctx context.Context, d *schema.Resour
 		CoreNetworkId:    aws.String(coreNetworkID),
 		Tags:             getTagsIn(ctx),
 		VpnConnectionArn: aws.String(vpnConnectionARN),
+	}
+
+	if v, ok := d.GetOk("routing_policy_label"); ok {
+		input.RoutingPolicyLabel = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateSiteToSiteVpnAttachment(ctx, input)

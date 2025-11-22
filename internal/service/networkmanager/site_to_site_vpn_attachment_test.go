@@ -96,6 +96,78 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 	})
 }
 
+func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.SiteToSiteVpnAttachment
+	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bgpASN := sdkacctest.RandIntRange(64512, 65534)
+	vpnIP, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	if err != nil {
+		t.Fatal(err)
+	}
+	label := "test-label"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName, bgpASN, vpnIP, label),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState, "routing_policy_label"},
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabelUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.SiteToSiteVpnAttachment
+	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bgpASN := sdkacctest.RandIntRange(64512, 65534)
+	vpnIP, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	if err != nil {
+		t.Fatal(err)
+	}
+	label1 := "test-label-1"
+	label2 := "test-label-2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName, bgpASN, vpnIP, label1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label1),
+				),
+			},
+			{
+				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName, bgpASN, vpnIP, label2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSiteToSiteVPNAttachmentExists(ctx context.Context, n string, v *awstypes.SiteToSiteVpnAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -245,4 +317,23 @@ resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_type = aws_networkmanager_site_to_site_vpn_attachment.test.attachment_type
 }
 `)
+}
+
+func testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName string, bgpASN int, vpnIP, label string) string {
+	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
+resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
+  core_network_id       = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  vpn_connection_arn    = aws_vpn_connection.test.arn
+  routing_policy_label  = %[1]q
+
+  tags = {
+    segment = "shared"
+  }
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_site_to_site_vpn_attachment.test.id
+  attachment_type = aws_networkmanager_site_to_site_vpn_attachment.test.attachment_type
+}
+`, label))
 }
