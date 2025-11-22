@@ -80,6 +80,68 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_disappears(t *testi
 	})
 }
 
+func TestAccNetworkManagerTransitGatewayRouteTableAttachment_routingPolicyLabel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.TransitGatewayRouteTableAttachment
+	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	label := "test-label"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayRouteTableAttachmentConfig_routingPolicyLabel(rName, label),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"routing_policy_label"},
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerTransitGatewayRouteTableAttachment_routingPolicyLabelUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.TransitGatewayRouteTableAttachment
+	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	label1 := "test-label-1"
+	label2 := "test-label-2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayRouteTableAttachmentConfig_routingPolicyLabel(rName, label1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label1),
+				),
+			},
+			{
+				Config: testAccTransitGatewayRouteTableAttachmentConfig_routingPolicyLabel(rName, label2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTransitGatewayRouteTableAttachmentExists(ctx context.Context, n string, v *awstypes.TransitGatewayRouteTableAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -169,4 +231,21 @@ resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
 }
 `)
+}
+
+func testAccTransitGatewayRouteTableAttachmentConfig_routingPolicyLabel(rName, label string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayRouteTableAttachmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_networkmanager_transit_gateway_route_table_attachment" "test" {
+  peering_id                      = aws_networkmanager_transit_gateway_peering.test.id
+  transit_gateway_route_table_arn = aws_ec2_transit_gateway_route_table.test.arn
+  routing_policy_label            = %[1]q
+
+  depends_on = [aws_ec2_transit_gateway_policy_table_association.test]
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_transit_gateway_route_table_attachment.test.id
+  attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
+}
+`, label))
 }
