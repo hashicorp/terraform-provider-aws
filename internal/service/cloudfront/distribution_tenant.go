@@ -1,0 +1,1233 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package cloudfront
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	ret "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @FrameworkResource("aws_cloudfront_distribution_tenant", name="Distribution Tenant")
+// @Tags(identifierAttribute="arn")
+func newDistributionTenantResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &distributionTenantResource{}
+
+	r.SetDefaultCreateTimeout(15 * time.Minute)
+	r.SetDefaultUpdateTimeout(15 * time.Minute)
+	r.SetDefaultDeleteTimeout(15 * time.Minute)
+
+	return r, nil
+}
+
+const (
+	ResNameDistributionTenant      = "Distribution Tenant"
+	distributionTenantPollInterval = 30 * time.Second
+)
+
+type distributionTenantResource struct {
+	framework.ResourceWithModel[distributionTenantResourceModel]
+	framework.WithImportByID
+	framework.WithTimeouts
+}
+
+func (r *distributionTenantResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"connection_group_id": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			"distribution_id": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrEnabled: schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
+			"etag": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrID: framework.IDAttribute(),
+			"last_modified_time": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+			},
+			names.AttrStatus: schema.StringAttribute{
+				Computed: true,
+			},
+			"wait_for_deployment": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+			"customizations": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customizationsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"geo_restriction": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[geoRestrictionCustomizationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"locations": schema.SetAttribute{
+										ElementType: types.StringType,
+										Optional:    true,
+										Computed:    true,
+									},
+									"restriction_type": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GeoRestrictionType](),
+									},
+								},
+							},
+						},
+						names.AttrCertificate: schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[certificateModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrARN: schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.ARNType,
+									},
+								},
+							},
+						},
+						"web_acl": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[webAclCustomizationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrAction: schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.CustomizationActionType](),
+									},
+									names.AttrARN: schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.ARNType,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"managed_certificate_request": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[managedCertificateRequestModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"certificate_transparency_logging_preference": schema.StringAttribute{
+							Optional:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.CertificateTransparencyLoggingPreference](),
+						},
+						"primary_domain_name": schema.StringAttribute{
+							Optional: true,
+						},
+						"validation_token_host": schema.StringAttribute{
+							Optional:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.ValidationTokenHost](),
+						},
+					},
+				},
+			},
+			"domains": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[domainItemModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"domain": schema.StringAttribute{
+							Required: true,
+						},
+					},
+				},
+			},
+			names.AttrParameters: schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[parameterModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrName: schema.StringAttribute{
+							Required: true,
+						},
+						names.AttrValue: schema.StringAttribute{
+							Required: true,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+type distributionTenantResourceModel struct {
+	ARN                       types.String                                                    `tfsdk:"arn"`
+	ConnectionGroupID         types.String                                                    `tfsdk:"connection_group_id"`
+	Customizations            fwtypes.ListNestedObjectValueOf[customizationsModel]            `tfsdk:"customizations"`
+	DistributionID            types.String                                                    `tfsdk:"distribution_id"`
+	Domains                   fwtypes.SetNestedObjectValueOf[domainItemModel]                 `tfsdk:"domains"`
+	Enabled                   types.Bool                                                      `tfsdk:"enabled"`
+	ETag                      types.String                                                    `tfsdk:"etag"`
+	ID                        types.String                                                    `tfsdk:"id"`
+	LastModifiedTime          timetypes.RFC3339                                               `tfsdk:"last_modified_time"`
+	ManagedCertificateRequest fwtypes.ListNestedObjectValueOf[managedCertificateRequestModel] `tfsdk:"managed_certificate_request"`
+	Name                      types.String                                                    `tfsdk:"name"`
+	Parameters                fwtypes.SetNestedObjectValueOf[parameterModel]                  `tfsdk:"parameters"`
+	Status                    types.String                                                    `tfsdk:"status"`
+	Tags                      tftags.Map                                                      `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                      `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                                                  `tfsdk:"timeouts"`
+	WaitForDeployment         types.Bool                                                      `tfsdk:"wait_for_deployment"`
+}
+
+type customizationsModel struct {
+	GeoRestriction fwtypes.ListNestedObjectValueOf[geoRestrictionCustomizationModel] `tfsdk:"geo_restriction"`
+	Certificate    fwtypes.ListNestedObjectValueOf[certificateModel]                 `tfsdk:"certificate"`
+	WebAcl         fwtypes.ListNestedObjectValueOf[webAclCustomizationModel]         `tfsdk:"web_acl"`
+}
+
+// Implement fwflex.Flattener interface
+var (
+	_ fwflex.Flattener = &customizationsModel{}
+	_ fwflex.Flattener = &geoRestrictionCustomizationModel{}
+	_ fwflex.Flattener = &certificateModel{}
+	_ fwflex.Flattener = &webAclCustomizationModel{}
+	_ fwflex.Flattener = &managedCertificateRequestModel{}
+)
+
+type domainItemModel struct {
+	Domain types.String `tfsdk:"domain"`
+}
+
+type geoRestrictionCustomizationModel struct {
+	Locations       fwtypes.SetOfString                             `tfsdk:"locations"`
+	RestrictionType fwtypes.StringEnum[awstypes.GeoRestrictionType] `tfsdk:"restriction_type"`
+}
+
+type certificateModel struct {
+	ARN fwtypes.ARN `tfsdk:"arn"`
+}
+
+type webAclCustomizationModel struct {
+	Action fwtypes.StringEnum[awstypes.CustomizationActionType] `tfsdk:"action"`
+	ARN    fwtypes.ARN                                          `tfsdk:"arn"`
+}
+
+type managedCertificateRequestModel struct {
+	CertificateTransparencyLoggingPreference fwtypes.StringEnum[awstypes.CertificateTransparencyLoggingPreference] `tfsdk:"certificate_transparency_logging_preference"`
+	PrimaryDomainName                        types.String                                                          `tfsdk:"primary_domain_name"`
+	ValidationTokenHost                      fwtypes.StringEnum[awstypes.ValidationTokenHost]                      `tfsdk:"validation_token_host"`
+}
+
+type parameterModel struct {
+	Name  types.String `tfsdk:"name"`
+	Value types.String `tfsdk:"value"`
+}
+
+func (r *distributionTenantResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data distributionTenantResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	input := &cloudfront.CreateDistributionTenantInput{}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		input.Tags = &awstypes.Tags{
+			Items: tags,
+		}
+	}
+
+	output, err := conn.CreateDistributionTenant(ctx, input)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionCreating, ResNameDistributionTenant, data.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Use create response directly - no extra read needed
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output.DistributionTenant, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Manually flatten domains and parameters
+	var d diag.Diagnostics
+	data.Domains, d = flattenDomains(ctx, output.DistributionTenant.Domains)
+	resp.Diagnostics.Append(d...)
+	data.Parameters, d = flattenParameters(ctx, output.DistributionTenant.Parameters)
+	resp.Diagnostics.Append(d...)
+	data.Customizations, d = flattenCustomizations(ctx, output.DistributionTenant.Customizations)
+	resp.Diagnostics.Append(d...)
+
+	// Set fields that fwflex.Flatten might not handle correctly
+	data.ID = fwflex.StringToFramework(ctx, output.DistributionTenant.Id)
+	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.DistributionTenant.LastModifiedTime)
+	data.ARN = fwflex.StringToFramework(ctx, output.DistributionTenant.Arn)
+	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
+
+	if data.WaitForDeployment.ValueBool() {
+		if _, err := waitDistributionTenantDeployed(ctx, conn, data.ID.ValueString()); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForCreation, ResNameDistributionTenant, data.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		// Wait for managed certificate if specified
+		if !data.ManagedCertificateRequest.IsNull() && !data.ManagedCertificateRequest.IsUnknown() {
+			var managedCertRequest *awstypes.ManagedCertificateRequest
+			resp.Diagnostics.Append(fwflex.Expand(ctx, data.ManagedCertificateRequest, &managedCertRequest)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			if err := waitManagedCertificateReady(ctx, conn, data.ID.ValueString(), managedCertRequest); err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForCreation, ResNameDistributionTenant, data.ID.String(), err),
+					err.Error(),
+				)
+				return
+			}
+
+			// Refresh the distribution tenant data after managed certificate processing
+			refreshedOutput, err := findDistributionTenantByIdentifier(ctx, conn, data.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, ResNameDistributionTenant, data.ID.String(), err),
+					err.Error(),
+				)
+				return
+			}
+
+			// Update the data model with refreshed information
+			resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &data)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			// Manually flatten domains and parameters
+			data.Domains, d = flattenDomains(ctx, refreshedOutput.DistributionTenant.Domains)
+			resp.Diagnostics.Append(d...)
+			data.Parameters, d = flattenParameters(ctx, refreshedOutput.DistributionTenant.Parameters)
+			resp.Diagnostics.Append(d...)
+			data.Customizations, d = flattenCustomizations(ctx, refreshedOutput.DistributionTenant.Customizations)
+			resp.Diagnostics.Append(d...)
+
+			data.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
+			data.LastModifiedTime = fwflex.TimeToFramework(ctx, refreshedOutput.DistributionTenant.LastModifiedTime)
+		}
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *distributionTenantResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data distributionTenantResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	output, err := findDistributionTenantByIdentifier(ctx, conn, data.ID.ValueString())
+	if ret.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, ResNameDistributionTenant, data.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	tenant := output.DistributionTenant
+
+	// Flatten the distribution tenant data into the model
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, tenant, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Manually flatten domains and parameters
+	var d diag.Diagnostics
+	data.Domains, d = flattenDomains(ctx, tenant.Domains)
+	resp.Diagnostics.Append(d...)
+	data.Parameters, d = flattenParameters(ctx, tenant.Parameters)
+	resp.Diagnostics.Append(d...)
+	data.Customizations, d = flattenCustomizations(ctx, tenant.Customizations)
+	resp.Diagnostics.Append(d...)
+
+	// Set computed fields that need special handling
+	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
+	data.LastModifiedTime = fwflex.TimeToFramework(ctx, tenant.LastModifiedTime)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *distributionTenantResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new distributionTenantResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	var output *cloudfront.UpdateDistributionTenantOutput
+
+	// Check if configuration changed (excluding tags)
+	if !new.ConnectionGroupID.Equal(old.ConnectionGroupID) ||
+		!new.Customizations.Equal(old.Customizations) ||
+		!new.DistributionID.Equal(old.DistributionID) ||
+		!new.Domains.Equal(old.Domains) ||
+		!new.Enabled.Equal(old.Enabled) ||
+		!new.ManagedCertificateRequest.Equal(old.ManagedCertificateRequest) ||
+		!new.Parameters.Equal(old.Parameters) {
+
+		input := &cloudfront.UpdateDistributionTenantInput{}
+		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Handle special fields manually
+		input.Id = fwflex.StringFromFramework(ctx, new.ID)
+		input.IfMatch = fwflex.StringFromFramework(ctx, old.ETag)
+
+		output, err := conn.UpdateDistributionTenant(ctx, input)
+
+		// Refresh our ETag if it is out of date and attempt update again.
+		if errs.IsA[*awstypes.PreconditionFailed](err) {
+			var etag string
+			etag, err = distributionTenantETag(ctx, conn, new.ID.ValueString())
+
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.CloudFront, create.ErrActionUpdating, ResNameDistributionTenant, new.ID.String(), err),
+					err.Error(),
+				)
+				return
+			}
+
+			input.IfMatch = aws.String(etag)
+			output, err = conn.UpdateDistributionTenant(ctx, input)
+		}
+
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CloudFront, create.ErrActionUpdating, ResNameDistributionTenant, new.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		if new.WaitForDeployment.ValueBool() {
+			if _, err := waitDistributionTenantDeployed(ctx, conn, new.ID.ValueString()); err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForUpdate, ResNameDistributionTenant, new.ID.String(), err),
+					err.Error(),
+				)
+				return
+			}
+
+			// Wait for managed certificate if specified
+			if !new.ManagedCertificateRequest.IsNull() && !new.ManagedCertificateRequest.IsUnknown() {
+				var managedCertRequest *awstypes.ManagedCertificateRequest
+				resp.Diagnostics.Append(fwflex.Expand(ctx, new.ManagedCertificateRequest, &managedCertRequest)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+
+				if err := waitManagedCertificateReady(ctx, conn, new.ID.ValueString(), managedCertRequest); err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForUpdate, ResNameDistributionTenant, new.ID.String(), err),
+						err.Error(),
+					)
+					return
+				}
+
+				// Refresh the distribution tenant data after managed certificate processing
+				refreshedOutput, err := findDistributionTenantByIdentifier(ctx, conn, new.ID.ValueString())
+				if err != nil {
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, ResNameDistributionTenant, new.ID.String(), err),
+						err.Error(),
+					)
+					return
+				}
+
+				// Update the model with refreshed information
+				resp.Diagnostics.Append(fwflex.Flatten(ctx, refreshedOutput.DistributionTenant, &new)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+
+				// Manually flatten domains and parameters
+				var d diag.Diagnostics
+				new.Domains, d = flattenDomains(ctx, refreshedOutput.DistributionTenant.Domains)
+				resp.Diagnostics.Append(d...)
+				new.Parameters, d = flattenParameters(ctx, refreshedOutput.DistributionTenant.Parameters)
+				resp.Diagnostics.Append(d...)
+				new.Customizations, d = flattenCustomizations(ctx, refreshedOutput.DistributionTenant.Customizations)
+				resp.Diagnostics.Append(d...)
+
+				new.ETag = fwflex.StringToFramework(ctx, refreshedOutput.ETag)
+				new.LastModifiedTime = fwflex.TimeToFramework(ctx, refreshedOutput.DistributionTenant.LastModifiedTime)
+			}
+		}
+
+		new.LastModifiedTime = fwflex.TimeToFramework(ctx, output.DistributionTenant.LastModifiedTime)
+	} else {
+		new.LastModifiedTime = old.LastModifiedTime
+	}
+
+	// Flatten the distribution tenant data into the model
+	if output != nil {
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, output.DistributionTenant, &new)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Manually flatten domains and parameters
+		var d diag.Diagnostics
+		new.Domains, d = flattenDomains(ctx, output.DistributionTenant.Domains)
+		resp.Diagnostics.Append(d...)
+		new.Parameters, d = flattenParameters(ctx, output.DistributionTenant.Parameters)
+		resp.Diagnostics.Append(d...)
+		new.Customizations, d = flattenCustomizations(ctx, output.DistributionTenant.Customizations)
+		resp.Diagnostics.Append(d...)
+
+		new.ETag = fwflex.StringToFramework(ctx, output.ETag)
+	} else {
+		// If no update was performed (e.g., tag-only changes), we still need to refresh the distribution tenant data
+		// to ensure all computed fields are properly set
+		getOutput, err := conn.GetDistributionTenant(ctx, &cloudfront.GetDistributionTenantInput{
+			Identifier: fwflex.StringFromFramework(ctx, new.ID),
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, ResNameDistributionTenant, new.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, getOutput.DistributionTenant, &new)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Manually flatten domains and parameters
+		var d diag.Diagnostics
+		new.Domains, d = flattenDomains(ctx, getOutput.DistributionTenant.Domains)
+		resp.Diagnostics.Append(d...)
+		new.Parameters, d = flattenParameters(ctx, getOutput.DistributionTenant.Parameters)
+		resp.Diagnostics.Append(d...)
+		new.Customizations, d = flattenCustomizations(ctx, getOutput.DistributionTenant.Customizations)
+		resp.Diagnostics.Append(d...)
+
+		new.ETag = fwflex.StringToFramework(ctx, getOutput.ETag)
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
+}
+
+func (r *distributionTenantResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data distributionTenantResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CloudFrontClient(ctx)
+	id := data.ID.ValueString()
+
+	if err := disableDistributionTenant(ctx, conn, id); err != nil {
+		if ret.NotFound(err) {
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameDistributionTenant, data.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	err := deleteDistributionTenant(ctx, conn, id)
+
+	if err == nil || ret.NotFound(err) || errs.IsA[*awstypes.EntityNotFound](err) {
+		return
+	}
+
+	// Disable distribution tenant if it is not yet disabled and attempt deletion again.
+	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
+		if err := disableDistributionTenant(ctx, conn, id); err != nil {
+			if ret.NotFound(err) {
+				return
+			}
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameDistributionTenant, data.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceNotDisabled](ctx, distributionTenantPollInterval, func(ctx context.Context) (any, error) {
+			return nil, deleteDistributionTenant(ctx, conn, id)
+		})
+	}
+
+	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
+		_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, distributionTenantPollInterval, func(ctx context.Context) (any, error) {
+			return nil, deleteDistributionTenant(ctx, conn, id)
+		})
+	}
+
+	if errs.IsA[*awstypes.ResourceNotDisabled](err) {
+		if err := disableDistributionTenant(ctx, conn, id); err != nil {
+			if ret.NotFound(err) {
+				return
+			}
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameDistributionTenant, data.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		err = deleteDistributionTenant(ctx, conn, id)
+	}
+
+	if errs.IsA[*awstypes.EntityNotFound](err) {
+		return
+	}
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameDistributionTenant, data.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+func findDistributionTenantByIdentifier(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
+	input := &cloudfront.GetDistributionTenantInput{
+		Identifier: aws.String(id),
+	}
+
+	output, err := conn.GetDistributionTenant(ctx, input)
+
+	if errs.IsA[*awstypes.EntityNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DistributionTenant == nil || output.DistributionTenant.Domains == nil || output.DistributionTenant.DistributionId == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func disableDistributionTenant(ctx context.Context, conn *cloudfront.Client, id string) error {
+	output, err := findDistributionTenantByIdentifier(ctx, conn, id)
+
+	if err != nil {
+		return fmt.Errorf("reading CloudFront Distribution Tenant (%s): %w", id, err)
+	}
+
+	if aws.ToString(output.DistributionTenant.Status) == distributionTenantStatusInProgress {
+		output, err = waitDistributionTenantDeployed(ctx, conn, id)
+
+		if err != nil {
+			return fmt.Errorf("waiting for CloudFront Distribution Tenant (%s) deploy: %w", id, err)
+		}
+	}
+
+	if !aws.ToBool(output.DistributionTenant.Enabled) {
+		return nil
+	}
+
+	input := cloudfront.UpdateDistributionTenantInput{
+		Id:                aws.String(id),
+		IfMatch:           output.ETag,
+		ConnectionGroupId: output.DistributionTenant.ConnectionGroupId,
+		Customizations:    output.DistributionTenant.Customizations,
+		DistributionId:    output.DistributionTenant.DistributionId,
+		Domains:           convertDomainResultsToDomainItems(output.DistributionTenant.Domains),
+		Parameters:        output.DistributionTenant.Parameters,
+	}
+
+	input.Enabled = aws.Bool(false)
+
+	_, err = conn.UpdateDistributionTenant(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("updating CloudFront Distribution Tenant (%s): %w", id, err)
+	}
+
+	if _, err := waitDistributionTenantDeployed(ctx, conn, id); err != nil {
+		return fmt.Errorf("waiting for CloudFront Distribution Tenant (%s) deploy: %w", id, err)
+	}
+
+	return nil
+}
+
+func deleteDistributionTenant(ctx context.Context, conn *cloudfront.Client, id string) error {
+	etag, err := distributionTenantETag(ctx, conn, id)
+
+	if err != nil {
+		return err
+	}
+
+	input := cloudfront.DeleteDistributionTenantInput{
+		Id:      aws.String(id),
+		IfMatch: aws.String(etag),
+	}
+
+	_, err = conn.DeleteDistributionTenant(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("deleting CloudFront Distribution Tenant (%s): %w", id, err)
+	}
+
+	if _, err := waitDistributionTenantDeleted(ctx, conn, id); err != nil {
+		return fmt.Errorf("waiting for CloudFront Distribution Tenant (%s) delete: %w", id, err)
+	}
+
+	return nil
+}
+
+func waitDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{distributionTenantStatusInProgress},
+		Target:     []string{distributionTenantStatusDeployed},
+		Refresh:    statusDistributionTenant(ctx, conn, id),
+		Timeout:    30 * time.Minute,
+		MinTimeout: 15 * time.Second,
+		Delay:      15 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudfront.GetDistributionTenantOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDistributionTenantDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{distributionTenantStatusInProgress, distributionTenantStatusDeployed},
+		Target:     []string{},
+		Refresh:    statusDistributionTenant(ctx, conn, id),
+		Timeout:    30 * time.Minute,
+		MinTimeout: 15 * time.Second,
+		Delay:      15 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudfront.GetDistributionTenantOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusDistributionTenant(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findDistributionTenantByIdentifier(ctx, conn, id)
+
+		if ret.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
+		}
+
+		return output, aws.ToString(output.DistributionTenant.Status), nil
+	}
+}
+
+func distributionTenantETag(ctx context.Context, conn *cloudfront.Client, id string) (string, error) {
+	output, err := findDistributionTenantByIdentifier(ctx, conn, id)
+
+	if err != nil {
+		return "", fmt.Errorf("reading CloudFront Distribution Tenant (%s): %w", id, err)
+	}
+
+	return aws.ToString(output.ETag), nil
+}
+
+func waitManagedCertificateReady(ctx context.Context, conn *cloudfront.Client, id string, managedCertRequest *awstypes.ManagedCertificateRequest) error {
+	if managedCertRequest == nil {
+		// No managed certificate request, nothing to wait for
+		return nil
+	}
+
+	// Wait for distribution tenant to be deployed first
+	dtOutput, err := waitForDistributionTenantDeployed(ctx, conn, id)
+	if err != nil {
+		return fmt.Errorf("waiting for CloudFront Distribution Tenant (%s) deploy: %w", id, err)
+	}
+
+	// Step 1: Wait for DNS configuration to be valid (15 minutes max)
+	if err := waitForDNSConfiguration(ctx, conn, dtOutput); err != nil {
+		return fmt.Errorf("CloudFront Distribution Tenant (%s) DNS configuration failed: %w", id, err)
+	}
+
+	// Step 2: Wait for managed certificate to be issued (3 hours max)
+	mcOutput, err := waitForManagedCertificateIssued(ctx, conn, id)
+	if err != nil {
+		return fmt.Errorf("CloudFront Distribution Tenant (%s) managed certificate issuance failed: %w", id, err)
+	}
+
+	// Step 3: Update distribution tenant with the issued certificate
+	return updateDistributionTenantWithManagedCertificate(ctx, conn, dtOutput, mcOutput)
+}
+
+func waitForDistributionTenantDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionTenantOutput, error) {
+	// Simple loop to wait for deployment - reuse existing logic if needed
+	for {
+		dtOutput, err := findDistributionTenantByIdentifier(ctx, conn, id)
+		if err != nil {
+			return nil, fmt.Errorf("failed reading CloudFront Distribution Tenant (%s): %w", id, err)
+		}
+
+		if aws.ToString(dtOutput.DistributionTenant.Status) == distributionTenantStatusDeployed {
+			return dtOutput, nil
+		}
+
+		time.Sleep(30 * time.Second)
+	}
+}
+
+func waitForDNSConfiguration(ctx context.Context, conn *cloudfront.Client, dtOutput *cloudfront.GetDistributionTenantOutput) error {
+	timeout := 15 * time.Minute
+	deadline := time.Now().Add(timeout)
+
+	for time.Now().Before(deadline) {
+		if err := verifyDNSConfiguration(ctx, conn, dtOutput); err == nil {
+			return nil // DNS is valid
+		}
+		time.Sleep(30 * time.Second)
+	}
+
+	return fmt.Errorf("CloudFront Distribution Tenant (%s) timeout after 15 minutes waiting for expected DNS configuration", aws.ToString(dtOutput.DistributionTenant.Id))
+}
+
+func waitForManagedCertificateIssued(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetManagedCertificateDetailsOutput, error) {
+	timeout := 3 * time.Hour
+	deadline := time.Now().Add(timeout)
+
+	for time.Now().Before(deadline) {
+		mcInput := &cloudfront.GetManagedCertificateDetailsInput{
+			Identifier: aws.String(id),
+		}
+
+		mcOutput, err := conn.GetManagedCertificateDetails(ctx, mcInput)
+		if errs.IsA[*awstypes.EntityNotFound](err) {
+			// No managed certificate found - domains are covered by existing certs
+			return nil, nil
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed getting CloudFront Distribution Tenant (%s) managed certificate details: %w", id, err)
+		}
+
+		// Check certificate status
+		switch mcOutput.ManagedCertificateDetails.CertificateStatus {
+		case awstypes.ManagedCertificateStatusIssued:
+			return mcOutput, nil
+
+		case awstypes.ManagedCertificateStatusPendingValidation:
+			// Certificate still being validated, continue waiting
+			time.Sleep(1 * time.Minute) // Longer sleep for certificate issuance
+			continue
+
+		default:
+			return nil, fmt.Errorf("CloudFront Distribution Tenant (%s) managed certificate failed with status: %s", id, mcOutput.ManagedCertificateDetails.CertificateStatus)
+		}
+	}
+
+	return nil, fmt.Errorf("CloudFront Distribution Tenant (%s) timeout after 3 hours waiting for managed certificate to be issued", id)
+}
+
+func updateDistributionTenantWithManagedCertificate(ctx context.Context, conn *cloudfront.Client, dtOutput *cloudfront.GetDistributionTenantOutput, mcOutput *cloudfront.GetManagedCertificateDetailsOutput) error {
+	// Check if we need to update the certificate ARN
+	if !needToUpdateCertificateARN(dtOutput.DistributionTenant, aws.ToString(mcOutput.ManagedCertificateDetails.CertificateArn)) {
+		// Certificate ARN already matches, nothing to do
+		return nil
+	}
+
+	// Get fresh ETag before update
+	freshOutput, err := findDistributionTenantByIdentifier(ctx, conn, aws.ToString(dtOutput.DistributionTenant.Id))
+	if err != nil {
+		return fmt.Errorf("failed reading CloudFront Distribution Tenant (%s): %w", aws.ToString(dtOutput.DistributionTenant.Id), err)
+	}
+
+	// Update distribution tenant with managed certificate ARN
+	updateInput := &cloudfront.UpdateDistributionTenantInput{
+		Id:      dtOutput.DistributionTenant.Id,
+		IfMatch: freshOutput.ETag,
+		Customizations: &awstypes.Customizations{
+			Certificate: &awstypes.Certificate{
+				Arn: mcOutput.ManagedCertificateDetails.CertificateArn,
+			},
+		},
+	}
+
+	// Copy other required fields from current distribution tenant
+	updateInput.ConnectionGroupId = dtOutput.DistributionTenant.ConnectionGroupId
+	updateInput.DistributionId = dtOutput.DistributionTenant.DistributionId
+	updateInput.Domains = convertDomainResultsToDomainItems(dtOutput.DistributionTenant.Domains)
+	updateInput.Enabled = dtOutput.DistributionTenant.Enabled
+	updateInput.Parameters = dtOutput.DistributionTenant.Parameters
+
+	_, err = conn.UpdateDistributionTenant(ctx, updateInput)
+	if err != nil {
+		return fmt.Errorf("updating CloudFront Distribution Tenant (%s) with managed certificate: %w", aws.ToString(dtOutput.DistributionTenant.Id), err)
+	}
+
+	// Wait for the distribution tenant update to be deployed
+	_, err = waitForDistributionTenantDeployed(ctx, conn, aws.ToString(dtOutput.DistributionTenant.Id))
+	if err != nil {
+		return fmt.Errorf("failed waiting for CloudFront Distribution Tenant (%s) deploy: %w", aws.ToString(dtOutput.DistributionTenant.Id), err)
+	}
+
+	return nil
+}
+
+func needToUpdateCertificateARN(dt *awstypes.DistributionTenant, certArn string) bool {
+	if dt.Customizations == nil || dt.Customizations.Certificate == nil {
+		return true
+	}
+	return certArn != aws.ToString(dt.Customizations.Certificate.Arn)
+}
+
+func verifyDNSConfiguration(ctx context.Context, conn *cloudfront.Client, dtOutput *cloudfront.GetDistributionTenantOutput) error {
+	for _, domain := range dtOutput.DistributionTenant.Domains {
+		verifyInput := &cloudfront.VerifyDnsConfigurationInput{
+			Domain:     domain.Domain,
+			Identifier: dtOutput.DistributionTenant.Id,
+		}
+
+		verifyOutput, err := conn.VerifyDnsConfiguration(ctx, verifyInput)
+		if err != nil {
+			return fmt.Errorf("verifying CloudFront Distribution Tenant (%s) DNS configuration for domain %s: %w", aws.ToString(dtOutput.DistributionTenant.Id), aws.ToString(domain.Domain), err)
+		}
+
+		for _, dnsConfig := range verifyOutput.DnsConfigurationList {
+			switch dnsConfig.Status {
+			case awstypes.DnsConfigurationStatusValid:
+				// DNS is properly configured, continue
+				continue
+			case awstypes.DnsConfigurationStatusInvalid, awstypes.DnsConfigurationStatusUnknown:
+				// DNS not ready yet, return error to continue waiting
+				return fmt.Errorf("CloudFront Distribution Tenant (%s) DNS configuration not ready for domain %s: %s", aws.ToString(dtOutput.DistributionTenant.Id), aws.ToString(domain.Domain), dnsConfig.Status)
+			default:
+				return fmt.Errorf("CloudFront Distribution Tenant (%s) unknown DNS configuration status for domain %s: %s", aws.ToString(dtOutput.DistributionTenant.Id), aws.ToString(domain.Domain), dnsConfig.Status)
+			}
+		}
+	}
+
+	return nil
+}
+
+func convertDomainResultsToDomainItems(domainResults []awstypes.DomainResult) []awstypes.DomainItem {
+	if len(domainResults) == 0 {
+		return nil
+	}
+
+	domainItems := make([]awstypes.DomainItem, len(domainResults))
+	for i, domainResult := range domainResults {
+		domainItems[i] = awstypes.DomainItem{
+			Domain: domainResult.Domain,
+		}
+	}
+
+	return domainItems
+}
+
+// Implement fwflex.Flattener interface methods
+func (m *customizationsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.Customizations); ok {
+		if t.GeoRestrictions != nil {
+			var geoModel geoRestrictionCustomizationModel
+			diags.Append(geoModel.Flatten(ctx, t.GeoRestrictions)...)
+			if diags.HasError() {
+				return diags
+			}
+			geoList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &geoModel)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			m.GeoRestriction = geoList
+		} else {
+			m.GeoRestriction = fwtypes.NewListNestedObjectValueOfNull[geoRestrictionCustomizationModel](ctx)
+		}
+
+		if t.Certificate != nil {
+			var certModel certificateModel
+			diags.Append(certModel.Flatten(ctx, t.Certificate)...)
+			if diags.HasError() {
+				return diags
+			}
+			certList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &certModel)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			m.Certificate = certList
+		} else {
+			m.Certificate = fwtypes.NewListNestedObjectValueOfNull[certificateModel](ctx)
+		}
+
+		if t.WebAcl != nil {
+			var webAclModel webAclCustomizationModel
+			diags.Append(webAclModel.Flatten(ctx, t.WebAcl)...)
+			if diags.HasError() {
+				return diags
+			}
+			webAclList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &webAclModel)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+			m.WebAcl = webAclList
+		} else {
+			m.WebAcl = fwtypes.NewListNestedObjectValueOfNull[webAclCustomizationModel](ctx)
+		}
+	}
+
+	return diags
+}
+
+func (m *geoRestrictionCustomizationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.GeoRestrictionCustomization); ok {
+		m.RestrictionType = fwtypes.StringEnumValue(t.RestrictionType)
+
+		// Convert locations slice to SetOfString
+		if len(t.Locations) > 0 {
+			// Filter out empty strings
+			filteredLocations := make([]string, 0, len(t.Locations))
+			for _, location := range t.Locations {
+				if location != "" {
+					filteredLocations = append(filteredLocations, location)
+				}
+			}
+
+			if len(filteredLocations) > 0 {
+				// Convert strings to attr.Value slice
+				elements := make([]attr.Value, len(filteredLocations))
+				for i, location := range filteredLocations {
+					elements[i] = basetypes.NewStringValue(location)
+				}
+				setVal, d := fwtypes.NewSetValueOf[basetypes.StringValue](ctx, elements)
+				diags.Append(d...)
+				m.Locations = setVal
+			} else {
+				m.Locations = fwtypes.NewSetValueOfNull[basetypes.StringValue](ctx)
+			}
+		} else {
+			m.Locations = fwtypes.NewSetValueOfNull[basetypes.StringValue](ctx)
+		}
+	}
+
+	return diags
+}
+
+func (m *certificateModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.Certificate); ok {
+		m.ARN = fwtypes.ARNValue(aws.ToString(t.Arn))
+	}
+
+	return diags
+}
+
+func (m *webAclCustomizationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.WebAclCustomization); ok {
+		m.Action = fwtypes.StringEnumValue(t.Action)
+		m.ARN = fwtypes.ARNValue(aws.ToString(t.Arn))
+	}
+
+	return diags
+}
+
+func (m *managedCertificateRequestModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v == nil {
+		return diags
+	}
+
+	if t, ok := v.(*awstypes.ManagedCertificateRequest); ok {
+		m.CertificateTransparencyLoggingPreference = fwtypes.StringEnumValue(t.CertificateTransparencyLoggingPreference)
+		m.PrimaryDomainName = fwflex.StringToFramework(ctx, t.PrimaryDomainName)
+		m.ValidationTokenHost = fwtypes.StringEnumValue(t.ValidationTokenHost)
+	}
+
+	return diags
+}
+
+// flattenDomains converts AWS SDK DomainResult slice to framework ListNestedObjectValueOf
+func flattenDomains(ctx context.Context, domains []awstypes.DomainResult) (fwtypes.SetNestedObjectValueOf[domainItemModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	domainModels := make([]*domainItemModel, 0, len(domains))
+	for _, domainResult := range domains {
+		domainModels = append(domainModels, &domainItemModel{
+			Domain: fwflex.StringToFramework(ctx, domainResult.Domain),
+		})
+	}
+
+	domainsSet, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, domainModels, nil)
+	diags.Append(d...)
+
+	return domainsSet, diags
+}
+
+// flattenParameters converts AWS SDK Parameter slice to framework ListNestedObjectValueOf
+func flattenParameters(ctx context.Context, parameters []awstypes.Parameter) (fwtypes.SetNestedObjectValueOf[parameterModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	parameterModels := make([]*parameterModel, 0, len(parameters))
+	for _, param := range parameters {
+		parameterModels = append(parameterModels, &parameterModel{
+			Name:  fwflex.StringToFramework(ctx, param.Name),
+			Value: fwflex.StringToFramework(ctx, param.Value),
+		})
+	}
+
+	parametersSet, d := fwtypes.NewSetNestedObjectValueOfSlice(ctx, parameterModels, nil)
+	diags.Append(d...)
+
+	return parametersSet, diags
+}
+
+// flattenCustomizations converts AWS SDK Customizations to framework ListNestedObjectValueOf
+func flattenCustomizations(ctx context.Context, customizations *awstypes.Customizations) (fwtypes.ListNestedObjectValueOf[customizationsModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if customizations == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[customizationsModel](ctx), diags
+	}
+
+	var customModel customizationsModel
+	diags.Append(customModel.Flatten(ctx, customizations)...)
+	if diags.HasError() {
+		return fwtypes.NewListNestedObjectValueOfNull[customizationsModel](ctx), diags
+	}
+
+	customList, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &customModel)
+	diags.Append(d...)
+
+	return customList, diags
+}
