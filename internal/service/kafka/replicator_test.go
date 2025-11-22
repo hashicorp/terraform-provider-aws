@@ -307,7 +307,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_msk_cluster" "source" {
   cluster_name           = %[1]q
-  kafka_version          = "2.8.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -471,7 +471,7 @@ func testAccReplicatorConfig_target(rName string) string {
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "target" {
   cluster_name           = %[1]q
-  kafka_version          = "2.8.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
