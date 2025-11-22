@@ -121,6 +121,7 @@ var (
 	ResourceVPCRouteServerPeer                            = newVPCRouteServerPeerResource
 	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
 	ResourceVPCRouteServerVPCAssociation                  = newVPCRouteServerVPCAssociationResource
+	ResourceVPNConcentrator                               = newVPNConcentratorResource
 	ResourceVPNConnection                                 = resourceVPNConnection
 	ResourceVPNConnectionRoute                            = resourceVPNConnectionRoute
 	ResourceVPNGateway                                    = resourceVPNGateway
@@ -254,6 +255,7 @@ var (
 	FindVPCEndpointSubnetAssociationExists                      = findVPCEndpointSubnetAssociationExists
 	FindVPCIPv6CIDRBlockAssociationByID                         = findVPCIPv6CIDRBlockAssociationByID
 	FindVPCPeeringConnectionByID                                = findVPCPeeringConnectionByID
+	FindVPNConcentratorByID                                     = findVPNConcentratorByID
 	FindVPNConnectionByID                                       = findVPNConnectionByID
 	FindVPNConnectionRouteByTwoPartKey                          = findVPNConnectionRouteByTwoPartKey
 	FindVPNGatewayByID                                          = findVPNGatewayByID

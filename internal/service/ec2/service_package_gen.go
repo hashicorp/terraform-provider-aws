@@ -265,6 +265,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				ImportID:      securityGroupVPCAssociationImportID{},
 			},
 		},
+		{
+			Factory:  newVPNConcentratorResource,
+			TypeName: "aws_vpn_concentrator",
+			Name:     "VPN Concentrator",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 

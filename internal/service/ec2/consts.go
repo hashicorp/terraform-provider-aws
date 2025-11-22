@@ -117,6 +117,14 @@ func managedPrefixListAddressFamily_Values() []string {
 	}
 }
 
+// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VpnConcentrator.html.
+const (
+	vpnConcentratorStateAvailable = "available"
+	vpnConcentratorStateDeleted   = "deleted"
+	vpnConcentratorStateDeleting  = "deleting"
+	vpnConcentratorStatePending   = "pending"
+)
+
 const (
 	vpnTunnelOptionsDPDTimeoutActionClear   = "clear"
 	vpnTunnelOptionsDPDTimeoutActionNone    = "none"
