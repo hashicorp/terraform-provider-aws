@@ -1,0 +1,38 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testStructItemModel]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testXMLWrapperStruct"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testStructItemModel]",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testXMLWrapperStruct"
+  },
+  {
+    "@level": "debug",
+    "@message": "No corresponding field",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Name",
+    "autoflex.source.path": "[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testStructItemModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testXMLWrapperStruct"
+  },
+  {
+    "@level": "debug",
+    "@message": "No corresponding field",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Value",
+    "autoflex.source.path": "[0]",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testStructItemModel",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testXMLWrapperStruct"
+  }
+]
