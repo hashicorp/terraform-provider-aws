@@ -10,7 +10,7 @@ description: |-
 
 Manages an AWS IAM (Identity & Access Management) Outbound Web Identity Federation.
 
-~> **NOTE:** This resource will enable IAM Outbound Web Identity Federation on the account when created and disable when destroyed. 
+~> **NOTE:** This resource will enable IAM Outbound Web Identity Federation on the account when created and disable when destroyed.
 
 ## Example Usage
 
@@ -20,13 +20,13 @@ resource "aws_iam_outbound_web_identity_federation" "example" {}
 
 ## Argument Reference
 
-This resource does not accept any argument. 
+This resource does not accept any argument.
 
 ## Attribute Reference
 
 This resource exports the following attributes:
 
-* `issuer_identifier` - A unique issuer URL for your AWS account that hosts the OpenID Connect (OIDC) discovery endpoints 
+* `issuer_identifier` - A unique issuer URL for your AWS account that hosts the OpenID Connect (OIDC) discovery endpoints.
 * `jwt_vending_enabled` - Indicates whether outbound identity federation is currently enabled for your AWS account.
 
 ## Import
