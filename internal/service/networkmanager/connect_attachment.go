@@ -108,6 +108,12 @@ func resourceConnectAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"routing_policy_label": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
 			"segment_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -149,6 +155,10 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 		Options:               options,
 		Tags:                  getTagsIn(ctx),
 		TransportAttachmentId: aws.String(transportAttachmentID),
+	}
+
+	if v, ok := d.GetOk("routing_policy_label"); ok {
+		input.RoutingPolicyLabel = aws.String(v.(string))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
@@ -226,6 +236,8 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
+	// routing_policy_label is not returned by the API, so we don't set it here
+	// The value is maintained in state from what was set during create
 	d.Set("segment_name", attachment.SegmentName)
 	d.Set(names.AttrState, attachment.State)
 	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)

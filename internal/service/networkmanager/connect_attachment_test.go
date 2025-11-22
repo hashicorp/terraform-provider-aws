@@ -155,6 +155,75 @@ func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
 	})
 }
 
+func TestAccNetworkManagerConnectAttachment_routingPolicyLabel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ConnectAttachment
+	resourceName := "aws_networkmanager_connect_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "test-label"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "test-label"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerConnectAttachment_routingPolicyLabelUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.ConnectAttachment
+	resourceName := "aws_networkmanager_connect_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "label-v1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "label-v1"),
+				),
+			},
+			{
+				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "label-v2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "label-v2"),
+					testAccCheckConnectAttachmentRecreated(&v1, &v2),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckConnectAttachmentRecreated(before, after *awstypes.ConnectAttachment) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before.Attachment.AttachmentId == after.Attachment.AttachmentId {
+			return fmt.Errorf("Connect Attachment was not recreated")
+		}
+		return nil
+	}
+}
+
 func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *awstypes.ConnectAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -374,4 +443,43 @@ resource "aws_networkmanager_attachment_accepter" "test2" {
   attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
 }
 `)
+}
+
+func testAccConnectAttachmentConfig_routingPolicyLabel(rName, label string) string {
+	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_networkmanager_vpc_attachment" "test" {
+  subnet_arns     = aws_subnet.test[*].arn
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  vpc_arn         = aws_vpc.test.arn
+  tags = {
+    segment = "shared"
+  }
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_vpc_attachment.test.id
+  attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
+}
+
+resource "aws_networkmanager_connect_attachment" "test" {
+  core_network_id         = aws_networkmanager_core_network.test.id
+  transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
+  edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
+  routing_policy_label    = %[1]q
+  options {
+    protocol = "GRE"
+  }
+  tags = {
+    segment = "shared"
+  }
+  depends_on = [
+    "aws_networkmanager_attachment_accepter.test"
+  ]
+}
+
+resource "aws_networkmanager_attachment_accepter" "test2" {
+  attachment_id   = aws_networkmanager_connect_attachment.test.id
+  attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
+}
+`, label))
 }
