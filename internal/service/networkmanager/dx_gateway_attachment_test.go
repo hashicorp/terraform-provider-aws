@@ -214,6 +214,68 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_accepted(t *testing.T) 
 	})
 }
 
+func TestAccNetworkManagerDirectConnectGatewayAttachment_routingPolicyLabel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
+	label := "test-label"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectConnectGatewayAttachmentConfig_routingPolicyLabel(rName, label),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"routing_policy_label"},
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerDirectConnectGatewayAttachment_routingPolicyLabelUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
+	label1 := "test-label-1"
+	label2 := "test-label-2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectConnectGatewayAttachmentConfig_routingPolicyLabel(rName, label1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label1),
+				),
+			},
+			{
+				Config: testAccDirectConnectGatewayAttachmentConfig_routingPolicyLabel(rName, label2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDirectConnectGatewayAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -442,4 +504,15 @@ resource "aws_networkmanager_dx_gateway_attachment" "test" {
   edge_locations             = [%[1]q, %[2]q]
 }
 `, edgeLocation1, edgeLocation2))
+}
+
+func testAccDirectConnectGatewayAttachmentConfig_routingPolicyLabel(rName, label string) string {
+	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_base(rName, false), fmt.Sprintf(`
+resource "aws_networkmanager_dx_gateway_attachment" "test" {
+  core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  direct_connect_gateway_arn = aws_dx_gateway.test.arn
+  edge_locations             = [data.aws_region.current.region]
+  routing_policy_label       = %[1]q
+}
+`, label))
 }
