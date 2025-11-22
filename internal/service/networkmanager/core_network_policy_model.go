@@ -11,12 +11,14 @@ import (
 )
 
 type coreNetworkPolicyDocument struct {
-	Version                  string                                     `json:"version,omitempty"`
-	CoreNetworkConfiguration *coreNetworkPolicyCoreNetworkConfiguration `json:"core-network-configuration"`
-	Segments                 []*coreNetworkPolicySegment                `json:"segments"`
-	NetworkFunctionGroups    []*coreNetworkPolicyNetworkFunctionGroup   `json:"network-function-groups,omitempty"`
-	SegmentActions           []*coreNetworkPolicySegmentAction          `json:"segment-actions,omitempty"`
-	AttachmentPolicies       []*coreNetworkPolicyAttachmentPolicy       `json:"attachment-policies,omitempty"`
+	Version                      string                                          `json:"version,omitempty"`
+	CoreNetworkConfiguration     *coreNetworkPolicyCoreNetworkConfiguration      `json:"core-network-configuration"`
+	Segments                     []*coreNetworkPolicySegment                     `json:"segments"`
+	RoutingPolicies              []*coreNetworkPolicyRoutingPolicy               `json:"routing-policies,omitempty"`
+	NetworkFunctionGroups        []*coreNetworkPolicyNetworkFunctionGroup        `json:"network-function-groups,omitempty"`
+	SegmentActions               []*coreNetworkPolicySegmentAction               `json:"segment-actions,omitempty"`
+	AttachmentPolicies           []*coreNetworkPolicyAttachmentPolicy            `json:"attachment-policies,omitempty"`
+	AttachmentRoutingPolicyRules []*coreNetworkPolicyAttachmentRoutingPolicyRule `json:"attachment-routing-policy-rules,omitempty"`
 }
 
 type coreNetworkPolicyCoreNetworkConfiguration struct {
@@ -44,6 +46,35 @@ type coreNetworkPolicySegment struct {
 	AllowFilter                 any    `json:"allow-filter,omitempty"`
 }
 
+type coreNetworkPolicyRoutingPolicy struct {
+	RoutingPolicyName        string                                `json:"routing-policy-name,omitempty"`
+	RoutingPolicyDescription string                                `json:"routing-policy-description,omitempty"`
+	RoutingPolicyDirection   string                                `json:"routing-policy-direction,omitempty"`
+	RoutingPolicyNumber      int                                   `json:"routing-policy-number,omitempty"`
+	RoutingPolicyRules       []*coreNetworkPolicyRoutingPolicyRule `json:"routing-policy-rules,omitempty"`
+}
+
+type coreNetworkPolicyRoutingPolicyRule struct {
+	RuleNumber     int                                           `json:"rule-number,omitempty"`
+	RuleDefinition *coreNetworkPolicyRoutingPolicyRuleDefinition `json:"rule-definition,omitempty"`
+}
+
+type coreNetworkPolicyRoutingPolicyRuleDefinition struct {
+	ConditionLogic  string                                              `json:"condition-logic,omitempty"`
+	MatchConditions []*coreNetworkPolicyRoutingPolicyRuleMatchCondition `json:"match-conditions,omitempty"`
+	Actions         []*coreNetworkPolicyRoutingPolicyRuleAction         `json:"actions,omitempty"`
+}
+
+type coreNetworkPolicyRoutingPolicyRuleMatchCondition struct {
+	ConditionType string `json:"condition-type,omitempty"`
+	Value         string `json:"value,omitempty"`
+}
+
+type coreNetworkPolicyRoutingPolicyRuleAction struct {
+	ActionType string `json:"action-type,omitempty"`
+	Value      string `json:"value,omitempty"`
+}
+
 type coreNetworkPolicyNetworkFunctionGroup struct {
 	Name                        string `json:"name"`
 	Description                 string `json:"description,omitempty"`
@@ -51,16 +82,17 @@ type coreNetworkPolicyNetworkFunctionGroup struct {
 }
 
 type coreNetworkPolicySegmentAction struct {
-	Action                string                                    `json:"action"`
-	Segment               string                                    `json:"segment,omitempty"`
-	Mode                  string                                    `json:"mode,omitempty"`
-	ShareWith             any                                       `json:"share-with,omitempty"`
-	ShareWithExcept       any                                       `json:",omitempty"`
-	DestinationCidrBlocks any                                       `json:"destination-cidr-blocks,omitempty"`
-	Destinations          any                                       `json:"destinations,omitempty"`
-	Description           string                                    `json:"description,omitempty"`
-	WhenSentTo            *coreNetworkPolicySegmentActionWhenSentTo `json:"when-sent-to,omitempty"`
-	Via                   *coreNetworkPolicySegmentActionVia        `json:"via,omitempty"`
+	Action                  string                                                 `json:"action"`
+	Segment                 string                                                 `json:"segment,omitempty"`
+	Mode                    string                                                 `json:"mode,omitempty"`
+	ShareWith               any                                                    `json:"share-with,omitempty"`
+	ShareWithExcept         any                                                    `json:",omitempty"`
+	DestinationCidrBlocks   any                                                    `json:"destination-cidr-blocks,omitempty"`
+	Destinations            any                                                    `json:"destinations,omitempty"`
+	Description             string                                                 `json:"description,omitempty"`
+	WhenSentTo              *coreNetworkPolicySegmentActionWhenSentTo              `json:"when-sent-to,omitempty"`
+	Via                     *coreNetworkPolicySegmentActionVia                     `json:"via,omitempty"`
+	EdgeLocationAssociation *coreNetworkPolicySegmentActionEdgeLocationAssociation `json:"edge-location-association,omitempty"`
 }
 
 type coreNetworkPolicySegmentActionWhenSentTo struct {
@@ -74,6 +106,12 @@ type coreNetworkPolicySegmentActionVia struct {
 type coreNetworkPolicySegmentActionViaEdgeOverride struct {
 	EdgeSets        [][]string `json:"edge-sets,omitempty"`
 	UseEdgeLocation string     `json:"use-edge-location,omitempty"`
+}
+
+type coreNetworkPolicySegmentActionEdgeLocationAssociation struct {
+	EdgeLocation       string `json:"edge-location,omitempty"`
+	PeerEdgeLocation   string `json:"peer-edge-location,omitempty"`
+	RoutingPolicyNames any    `json:"routing-policy-names,omitempty"`
 }
 
 type coreNetworkPolicyAttachmentPolicy struct {
@@ -97,6 +135,23 @@ type coreNetworkPolicyAttachmentPolicyAction struct {
 	TagValueOfKey             string `json:"tag-value-of-key,omitempty"`
 	RequireAcceptance         bool   `json:"require-acceptance,omitempty"`
 	AddToNetworkFunctionGroup string `json:"add-to-network-function-group,omitempty"`
+}
+
+type coreNetworkPolicyAttachmentRoutingPolicyRule struct {
+	RuleNumber    int                                                      `json:"rule-number,omitempty"`
+	Description   string                                                   `json:"description,omitempty"`
+	EdgeLocations any                                                      `json:"edge-locations,omitempty"`
+	Conditions    []*coreNetworkPolicyAttachmentRoutingPolicyRuleCondition `json:"conditions"`
+	Action        *coreNetworkPolicyAttachmentRoutingPolicyRuleAction      `json:"action"`
+}
+
+type coreNetworkPolicyAttachmentRoutingPolicyRuleCondition struct {
+	Type  string `json:"type,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
+type coreNetworkPolicyAttachmentRoutingPolicyRuleAction struct {
+	AssociateRoutingPolicies any `json:"associate-routing-policies,omitempty"`
 }
 
 func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
@@ -129,14 +184,16 @@ func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&Alias{
-		Action:                c.Action,
-		Mode:                  c.Mode,
-		Destinations:          c.Destinations,
-		DestinationCidrBlocks: c.DestinationCidrBlocks,
-		Segment:               c.Segment,
-		ShareWith:             share,
-		Via:                   c.Via,
-		WhenSentTo:            whenSentTo,
+		Action:                  c.Action,
+		Mode:                    c.Mode,
+		Destinations:            c.Destinations,
+		DestinationCidrBlocks:   c.DestinationCidrBlocks,
+		Segment:                 c.Segment,
+		ShareWith:               share,
+		Via:                     c.Via,
+		WhenSentTo:              whenSentTo,
+		Description:             c.Description,
+		EdgeLocationAssociation: c.EdgeLocationAssociation,
 	})
 }
 
