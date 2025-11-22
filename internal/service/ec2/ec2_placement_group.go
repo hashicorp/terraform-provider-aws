@@ -53,7 +53,7 @@ func resourcePlacementGroup() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#placement-groups-limitations-partition.
-				ValidateFunc: validation.IntBetween(0, 7),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"placement_group_id": {
 				Type:     schema.TypeString,
