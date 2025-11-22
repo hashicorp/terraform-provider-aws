@@ -123,6 +123,9 @@ func (r *resourceOutboundWebIdentityFederation) Delete(ctx context.Context, req 
 	}
 
 	_, err := conn.DisableOutboundWebIdentityFederation(ctx, &iam.DisableOutboundWebIdentityFederationInput{})
+	if errs.IsA[*awstypes.FeatureDisabledException](err) {
+		return
+	}
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID)
 		return
