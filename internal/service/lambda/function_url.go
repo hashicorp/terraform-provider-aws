@@ -172,6 +172,28 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 				return sdkdiag.AppendErrorf(diags, "adding Lambda Function URL (%s) permission %s", d.Id(), err)
 			}
 		}
+
+		input = &lambda.AddPermissionInput{
+			Action:                aws.String("lambda:InvokeFunction"),
+			FunctionName:          aws.String(name),
+			InvokedViaFunctionUrl: aws.Bool(true),
+			Principal:             aws.String("*"),
+			StatementId:           aws.String("FunctionURLAllowInvokeAction"),
+		}
+
+		if qualifier != "" {
+			input.Qualifier = aws.String(qualifier)
+		}
+
+		_, err = conn.AddPermission(ctx, input)
+
+		if err != nil {
+			if errs.IsAErrorMessageContains[*awstypes.ResourceConflictException](err, "The statement id (FunctionURLAllowInvokeAction) provided already exists") {
+				log.Printf("[DEBUG] function permission statement 'FunctionURLAllowInvokeAction' already exists.")
+			} else {
+				return sdkdiag.AppendErrorf(diags, "adding Lambda Function URL (%s) permission %s", d.Id(), err)
+			}
+		}
 	}
 
 	return append(diags, resourceFunctionURLRead(ctx, d, meta)...)
