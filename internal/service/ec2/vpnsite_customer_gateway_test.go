@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSiteCustomerGateway_basic(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -56,7 +56,7 @@ func TestAccSiteCustomerGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccSiteCustomerGateway_bgpASNExtended(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_bgpASNExtended(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
 	rBgpAsnExtended := sdkacctest.RandIntRange(2147483648, 4294967295)
@@ -90,7 +90,7 @@ func TestAccSiteCustomerGateway_bgpASNExtended(t *testing.T) {
 	})
 }
 
-func TestAccSiteCustomerGateway_disappears(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -114,7 +114,7 @@ func TestAccSiteCustomerGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSiteCustomerGateway_tags(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -157,7 +157,7 @@ func TestAccSiteCustomerGateway_tags(t *testing.T) {
 	})
 }
 
-func TestAccSiteCustomerGateway_deviceName(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_deviceName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -186,7 +186,7 @@ func TestAccSiteCustomerGateway_deviceName(t *testing.T) {
 	})
 }
 
-func TestAccSiteCustomerGateway_4ByteASN(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_4ByteASN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
 	rBgpAsn := strconv.FormatInt(int64(sdkacctest.RandIntRange(64512, 65534))*10000, 10)
@@ -215,7 +215,7 @@ func TestAccSiteCustomerGateway_4ByteASN(t *testing.T) {
 	})
 }
 
-func TestAccSiteCustomerGateway_certificate(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
 	var caRoot acmpca_types.CertificateAuthority

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSiteCustomerGatewayDataSource_filter(t *testing.T) {
+func TestAccSiteVPNCustomerGatewayDataSource_filter(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
@@ -43,7 +43,7 @@ func TestAccSiteCustomerGatewayDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccSiteCustomerGatewayDataSource_id(t *testing.T) {
+func TestAccSiteVPNCustomerGatewayDataSource_id(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
