@@ -169,7 +169,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_basic(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
@@ -269,7 +269,7 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_withoutTGWorVGW(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_withoutTGWorVGW(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
@@ -364,7 +364,7 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_cloudWatchLogOptions(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_cloudWatchLogOptions(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
@@ -384,7 +384,7 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_cloudWatchLogOptionsUpdated(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_cloudWatchLogOptionsUpdated(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
@@ -415,7 +415,7 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_transitGateway(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_transitGateway(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestMatchResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, regexache.MustCompile(`tgw-attach-.+`)),
@@ -447,10 +447,10 @@ func TestAccSiteVPNConnection_vpnConcentratorID(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_vpnConcentrator(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_vpnConcentrator(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_concentrator_id", vpnConcentratorResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_concentrator_id", vpnConcentratorResourceName, "vpn_concentrator_id"),
 				),
 			},
 			{
@@ -477,7 +477,7 @@ func TestAccSiteVPNConnection_tunnel1InsideCIDR(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_tunnel1InsideCIDR(rName, rBgpAsn, "169.254.8.0/30", "169.254.9.0/30"),
+				Config: testAccVPNConnectionConfig_tunnel1InsideCIDR(rName, rBgpAsn, "169.254.8.0/30", "169.254.9.0/30"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
@@ -507,15 +507,15 @@ func TestAccSiteVPNConnection_tunnel1InsideIPv6CIDR(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8::1:0/125", "fd00:2001:db8::2:0/125"),
+				Config:      testAccVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8::1:0/125", "fd00:2001:db8::2:0/125"),
 				ExpectError: regexache.MustCompile(`expected "\w+" to contain a network Value with between 126 and 126 significant bits`),
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fcff:2001:db8:2:2d1:81ff:fe41:d200/126", "fcff:2001:db8:2:2d1:81ff:fe41:0/126"),
+				Config:      testAccVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fcff:2001:db8:2:2d1:81ff:fe41:d200/126", "fcff:2001:db8:2:2d1:81ff:fe41:0/126"),
 				ExpectError: regexache.MustCompile(`must be within fd00::/8`),
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fdff:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				Config: testAccVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fdff:2001:db8:2:2d1:81ff:fe41:d204/126"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126"),
@@ -545,7 +545,7 @@ func TestAccSiteVPNConnection_tunnel1PreSharedKey(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_tunnel1PresharedKey(rName, rBgpAsn, "tunnel1presharedkey", "tunnel2presharedkey"),
+				Config: testAccVPNConnectionConfig_tunnel1PresharedKey(rName, rBgpAsn, "tunnel1presharedkey", "tunnel2presharedkey"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "tunnel1presharedkey"),
@@ -618,63 +618,63 @@ func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "not-a-cidr"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "not-a-cidr"),
 				ExpectError: regexache.MustCompile(`invalid CIDR address: not-a-cidr`),
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.254.0/31"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.254.0/31"),
 				ExpectError: regexache.MustCompile(`expected "\w+" to contain a network Value with between 30 and 30 significant bits`),
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "172.16.0.0/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "172.16.0.0/30"),
 				ExpectError: regexache.MustCompile(`must be within 169.254.0.0/16`),
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.0.0/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.0.0/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.1.0/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.1.0/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.2.0/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.2.0/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.3.0/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.3.0/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.4.0/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.4.0/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.5.0/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.5.0/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.169.252/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.169.252/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "1234567", "169.254.254.0/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "1234567", "169.254.254.0/30"),
 				ExpectError: regexache.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, sdkacctest.RandStringFromCharSet(65, sdkacctest.CharSetAlpha), "169.254.254.0/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, sdkacctest.RandStringFromCharSet(65, sdkacctest.CharSetAlpha), "169.254.254.0/30"),
 				ExpectError: regexache.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "01234567", "169.254.254.0/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "01234567", "169.254.254.0/30"),
 				ExpectError: regexache.MustCompile(`cannot start with zero character`),
 			},
 			{
-				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "1234567!", "169.254.254.0/30"),
+				Config:      testAccVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "1234567!", "169.254.254.0/30"),
 				ExpectError: regexache.MustCompile(`can only contain alphanumeric, period and underscore characters`),
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
+				Config: testAccVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "static_routes_only", acctest.CtFalse),
@@ -759,7 +759,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
+				Config: testAccVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
@@ -867,7 +867,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 			},
 			// Update just tunnel1.
 			{
-				Config: testAccSiteVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1Updated, tunnel2),
+				Config: testAccVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1Updated, tunnel2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
@@ -976,7 +976,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 			},
 			// Update just tunnel2.
 			{
-				Config: testAccSiteVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1Updated, tunnel2Updated),
+				Config: testAccVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1Updated, tunnel2Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn3),
 					testAccCheckVPNConnectionNotRecreated(&vpn2, &vpn3),
@@ -1085,7 +1085,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 			},
 			// Update tunnel1 and tunnel2.
 			{
-				Config: testAccSiteVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
+				Config: testAccVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn4),
 					testAccCheckVPNConnectionNotRecreated(&vpn3, &vpn4),
@@ -1195,7 +1195,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 			// Test resetting to defaults.
 			// [local|remote]_ipv[4|6]_network_cidr, tunnel[1|2]_inside_[ipv6_]cidr and tunnel[1|2]_preshared_key are Computed so no diffs will be detected.
 			{
-				Config: testAccSiteVPNConnectionConfig_basic(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn5),
 					testAccCheckVPNConnectionNotRecreated(&vpn4, &vpn5),
@@ -1269,7 +1269,7 @@ func TestAccSiteVPNConnection_staticRoutes(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_staticRoutes(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_staticRoutes(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "static_routes_only", acctest.CtTrue),
@@ -1299,7 +1299,7 @@ func TestAccSiteVPNConnection_outsideAddressTypePrivate(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_outsideAddressTypePrivate(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_outsideAddressTypePrivate(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "outside_ip_address_type", "PrivateIpv4"),
@@ -1329,7 +1329,7 @@ func TestAccSiteVPNConnection_outsideAddressTypePublic(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_outsideAddressTypePublic(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_outsideAddressTypePublic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "outside_ip_address_type", "PublicIpv4"),
@@ -1359,7 +1359,7 @@ func TestAccSiteVPNConnection_enableAcceleration(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_enableAcceleration(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_enableAcceleration(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", acctest.CtTrue),
@@ -1389,7 +1389,7 @@ func TestAccSiteVPNConnection_ipv6(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_ipv6(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d201/128", "fd00:2001:db8:2:2d1:81ff:fe41:d202/128", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				Config: testAccVPNConnectionConfig_ipv6(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d201/128", "fd00:2001:db8:2:2d1:81ff:fe41:d202/128", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 				),
@@ -1419,7 +1419,7 @@ func TestAccSiteVPNConnection_largeBandwidthTunnel_TGW(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_largeBandwidth_TGW(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_largeBandwidth_TGW(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_bandwidth", "large"),
@@ -1451,7 +1451,7 @@ func TestAccSiteVPNConnection_largeBandwidthTunnel_withoutTGWorVGW(t *testing.T)
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_largeBandwidth_WithoutTGWorVGW(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_largeBandwidth_WithoutTGWorVGW(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_bandwidth", "large"),
@@ -1483,7 +1483,7 @@ func TestAccSiteVPNConnection_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_tags1(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPNConnectionConfig_tags1(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -1497,7 +1497,7 @@ func TestAccSiteVPNConnection_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_tags2(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPNConnectionConfig_tags2(rName, rBgpAsn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -1506,7 +1506,7 @@ func TestAccSiteVPNConnection_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_tags1(rName, rBgpAsn, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPNConnectionConfig_tags1(rName, rBgpAsn, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -1531,7 +1531,7 @@ func TestAccSiteVPNConnection_specifyIPv4(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_localRemoteIPv4CIDRs(rName, rBgpAsn, "10.111.0.0/16", "10.222.33.0/24"),
+				Config: testAccVPNConnectionConfig_localRemoteIPv4CIDRs(rName, rBgpAsn, "10.111.0.0/16", "10.222.33.0/24"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv4_network_cidr", "10.111.0.0/16"),
@@ -1545,7 +1545,7 @@ func TestAccSiteVPNConnection_specifyIPv4(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_localRemoteIPv4CIDRs(rName, rBgpAsn, "10.112.0.0/16", "10.222.32.0/24"),
+				Config: testAccVPNConnectionConfig_localRemoteIPv4CIDRs(rName, rBgpAsn, "10.112.0.0/16", "10.222.32.0/24"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv4_network_cidr", "10.112.0.0/16"),
@@ -1570,7 +1570,7 @@ func TestAccSiteVPNConnection_specifyIPv6(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_ipv6(rName, rBgpAsn, "1111:2222:3333:4444::/64", "5555:6666:7777::/48", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				Config: testAccVPNConnectionConfig_ipv6(rName, rBgpAsn, "1111:2222:3333:4444::/64", "5555:6666:7777::/48", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv6_network_cidr", "1111:2222:3333:4444::/64"),
@@ -1595,7 +1595,7 @@ func TestAccSiteVPNConnection_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_basic(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNConnection(), resourceName),
@@ -1621,7 +1621,7 @@ func TestAccSiteVPNConnection_updateCustomerGatewayID(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_customerGatewayID(rName, rBgpAsn1, rBgpAsn2),
+				Config: testAccVPNConnectionConfig_customerGatewayID(rName, rBgpAsn1, rBgpAsn2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_gateway_id", "aws_customer_gateway.test1", names.AttrID),
@@ -1634,7 +1634,7 @@ func TestAccSiteVPNConnection_updateCustomerGatewayID(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_customerGatewayIDUpdated(rName, rBgpAsn1, rBgpAsn2),
+				Config: testAccVPNConnectionConfig_customerGatewayIDUpdated(rName, rBgpAsn1, rBgpAsn2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
@@ -1659,7 +1659,7 @@ func TestAccSiteVPNConnection_updateVPNGatewayID(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_vpnGatewayID(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_vpnGatewayID(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test1", names.AttrID),
@@ -1672,7 +1672,7 @@ func TestAccSiteVPNConnection_updateVPNGatewayID(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_vpnGatewayIDUpdated(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_vpnGatewayIDUpdated(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
@@ -1697,7 +1697,7 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_transitGatewayID(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_transitGatewayID(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
@@ -1711,7 +1711,7 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_transitGatewayIDUpdated(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_transitGatewayIDUpdated(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
@@ -1737,7 +1737,7 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, false),
+				Config: testAccVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
@@ -1751,7 +1751,7 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, true),
+				Config: testAccVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
@@ -1777,7 +1777,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, true),
+				Config: testAccVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test", names.AttrID),
@@ -1791,7 +1791,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, false),
+				Config: testAccVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
@@ -1817,7 +1817,7 @@ func TestAccSiteVPNConnection_preSharedKeyStorage(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_preSharedKeyStorage(rName, rBgpAsn, "SecretsManager"),
+				Config: testAccVPNConnectionConfig_preSharedKeyStorage(rName, rBgpAsn, "SecretsManager"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "SecretsManager"),
@@ -1833,7 +1833,7 @@ func TestAccSiteVPNConnection_preSharedKeyStorage(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_preSharedKeyStorage(rName, rBgpAsn, "Standard"),
+				Config: testAccVPNConnectionConfig_preSharedKeyStorage(rName, rBgpAsn, "Standard"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "Standard"),
@@ -1842,7 +1842,7 @@ func TestAccSiteVPNConnection_preSharedKeyStorage(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_preSharedKeyStorage(rName, rBgpAsn, "SecretsManager"),
+				Config: testAccVPNConnectionConfig_preSharedKeyStorage(rName, rBgpAsn, "SecretsManager"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "SecretsManager"),
@@ -1852,7 +1852,7 @@ func TestAccSiteVPNConnection_preSharedKeyStorage(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSiteVPNConnectionConfig_basic(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "SecretsManager"),
@@ -1935,7 +1935,7 @@ func testAccCheckResourceAttrNotContains(name, key, substr string) resource.Test
 	})
 }
 
-func testAccSiteVPNConnectionConfig_basic(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_basic(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -1961,7 +1961,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_withoutTGWorVGW(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_withoutTGWorVGW(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]d
@@ -1980,7 +1980,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_cloudWatchLogOptions(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_cloudWatchLogOptions(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2018,7 +2018,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_cloudWatchLogOptionsUpdated(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_cloudWatchLogOptionsUpdated(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2062,7 +2062,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_customerGatewayID(rName string, rBgpAsn1, rBgpAsn2 int) string {
+func testAccVPNConnectionConfig_customerGatewayID(rName string, rBgpAsn1, rBgpAsn2 int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2098,7 +2098,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn1, rBgpAsn2)
 }
 
-func testAccSiteVPNConnectionConfig_customerGatewayIDUpdated(rName string, rBgpAsn1, rBgpAsn2 int) string {
+func testAccVPNConnectionConfig_customerGatewayIDUpdated(rName string, rBgpAsn1, rBgpAsn2 int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2134,7 +2134,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn1, rBgpAsn2)
 }
 
-func testAccSiteVPNConnectionConfig_vpnGatewayID(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_vpnGatewayID(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test1" {
   tags = {
@@ -2166,7 +2166,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_vpnGatewayIDUpdated(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_vpnGatewayIDUpdated(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test1" {
   tags = {
@@ -2198,7 +2198,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_outsideAddressTypePrivate(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_outsideAddressTypePrivate(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
@@ -2255,7 +2255,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_outsideAddressTypePublic(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_outsideAddressTypePublic(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2286,7 +2286,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_staticRoutes(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_staticRoutes(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2317,7 +2317,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_enableAcceleration(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_enableAcceleration(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   description = %[1]q
@@ -2347,7 +2347,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_ipv6(rName string, rBgpAsn int, localIpv6NetworkCidr string, remoteIpv6NetworkCidr string, tunnel1InsideIpv6Cidr string, tunnel2InsideIpv6Cidr string) string {
+func testAccVPNConnectionConfig_ipv6(rName string, rBgpAsn int, localIpv6NetworkCidr string, remoteIpv6NetworkCidr string, tunnel1InsideIpv6Cidr string, tunnel2InsideIpv6Cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   description = %[1]q
@@ -2384,7 +2384,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, localIpv6NetworkCidr, remoteIpv6NetworkCidr, tunnel1InsideIpv6Cidr, tunnel2InsideIpv6Cidr)
 }
 
-func testAccSiteVPNConnectionConfig_singleTunnelOptions(rName string, rBgpAsn int, psk string, tunnelCidr string) string {
+func testAccVPNConnectionConfig_singleTunnelOptions(rName string, rBgpAsn int, psk string, tunnelCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2418,7 +2418,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tunnelCidr, psk)
 }
 
-func testAccSiteVPNConnectionConfig_transitGateway(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_transitGateway(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   description = %[1]q
@@ -2446,7 +2446,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_transitGatewayID(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_transitGatewayID(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test1" {
   description = "%[1]s-1"
@@ -2478,7 +2478,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_transitGatewayIDUpdated(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_transitGatewayIDUpdated(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test1" {
   description = "%[1]s-1"
@@ -2510,7 +2510,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_tunnel1InsideCIDR(rName string, rBgpAsn int, tunnel1InsideCidr string, tunnel2InsideCidr string) string {
+func testAccVPNConnectionConfig_tunnel1InsideCIDR(rName string, rBgpAsn int, tunnel1InsideCidr string, tunnel2InsideCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2542,7 +2542,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tunnel1InsideCidr, tunnel2InsideCidr)
 }
 
-func testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName string, rBgpAsn int, tunnel1InsideIpv6Cidr string, tunnel2InsideIpv6Cidr string) string {
+func testAccVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName string, rBgpAsn int, tunnel1InsideIpv6Cidr string, tunnel2InsideIpv6Cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]d
@@ -2568,7 +2568,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tunnel1InsideIpv6Cidr, tunnel2InsideIpv6Cidr)
 }
 
-func testAccSiteVPNConnectionConfig_tunnel1PresharedKey(rName string, rBgpAsn int, tunnel1PresharedKey string, tunnel2PresharedKey string) string {
+func testAccVPNConnectionConfig_tunnel1PresharedKey(rName string, rBgpAsn int, tunnel1PresharedKey string, tunnel2PresharedKey string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2600,7 +2600,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tunnel1PresharedKey, tunnel2PresharedKey)
 }
 
-func testAccSiteVPNConnectionConfig_tunnelOptions(
+func testAccVPNConnectionConfig_tunnelOptions(
 	rName string,
 	rBgpAsn int,
 	localIpv4NetworkCidr string,
@@ -2718,7 +2718,7 @@ resource "aws_vpn_connection" "test" {
 		tunnel2.startupAction)
 }
 
-func testAccSiteVPNConnectionConfig_tags1(rName string, rBgpAsn int, tagKey1, tagValue1 string) string {
+func testAccVPNConnectionConfig_tags1(rName string, rBgpAsn int, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2749,7 +2749,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tagKey1, tagValue1)
 }
 
-func testAccSiteVPNConnectionConfig_tags2(rName string, rBgpAsn int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPNConnectionConfig_tags2(rName string, rBgpAsn int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2781,7 +2781,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccSiteVPNConnectionConfig_localRemoteIPv4CIDRs(rName string, rBgpAsn int, localIpv4Cidr string, remoteIpv4Cidr string) string {
+func testAccVPNConnectionConfig_localRemoteIPv4CIDRs(rName string, rBgpAsn int, localIpv4Cidr string, remoteIpv4Cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2815,7 +2815,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, localIpv4Cidr, remoteIpv4Cidr)
 }
 
-func testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName string, rBgpAsn int, useTransitGateway bool) string {
+func testAccVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName string, rBgpAsn int, useTransitGateway bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2850,7 +2850,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, useTransitGateway)
 }
 
-func testAccSiteVPNConnectionConfig_preSharedKeyStorage(rName string, rBgpAsn int, preSharedKeyStorage string) string {
+func testAccVPNConnectionConfig_preSharedKeyStorage(rName string, rBgpAsn int, preSharedKeyStorage string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2941,7 +2941,7 @@ const testAccVPNTunnelInfoXML = `
 </vpn_connection>
 `
 
-func testAccSiteVPNConnectionConfig_largeBandwidth_TGW(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_largeBandwidth_TGW(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]d
@@ -2966,7 +2966,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_largeBandwidth_WithoutTGWorVGW(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_largeBandwidth_WithoutTGWorVGW(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]d
@@ -2986,7 +2986,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccSiteVPNConnectionConfig_vpnConcentrator(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_vpnConcentrator(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   description = %[1]q
@@ -3013,7 +3013,7 @@ resource "aws_customer_gateway" "test" {
 
 resource "aws_vpn_connection" "test" {
   customer_gateway_id = aws_customer_gateway.test.id
-  vpn_concentrator_id = aws_vpn_concentrator.test.id
+  vpn_concentrator_id = aws_vpn_concentrator.test.vpn_concentrator_id
   type                = aws_customer_gateway.test.type
 
   tags = {

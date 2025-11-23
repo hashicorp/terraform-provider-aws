@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2VPNConcentrator_basic(t *testing.T) {
+func TestAccSiteVPNConcentrator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpn_concentrator.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -60,7 +60,7 @@ func TestAccEC2VPNConcentrator_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConcentrator_disappears(t *testing.T) {
+func TestAccSiteVPNConcentrator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpn_concentrator.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -91,7 +91,7 @@ func TestAccEC2VPNConcentrator_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPNConcentrator_tags(t *testing.T) {
+func TestAccSiteVPNConcentrator_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpn_concentrator.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
