@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/go-changelog v0.0.0-20250127101332-effe3832fb0b
 	github.com/katbyte/terrafmt v0.5.5
 	github.com/pavius/impi v0.0.3
-	github.com/rhysd/actionlint v1.7.8
+	github.com/rhysd/actionlint v1.7.9
 	github.com/terraform-linters/tflint v0.58.1
 	golang.org/x/tools v0.39.0
 	mvdan.cc/gofumpt v0.9.2
@@ -375,8 +375,8 @@ require (
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
-	golang.org/x/crypto v0.44.0 // indirect
+	go.yaml.in/yaml/v4 v4.0.0-rc.3 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20251023183803-a4bb9ffd2546 // indirect
 	golang.org/x/mod v0.30.0 // indirect

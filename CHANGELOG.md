@@ -1,4 +1,20 @@
-## 6.22.0 (Unreleased)
+## 6.23.0 (Unreleased)
+
+## 6.22.1 (November 21, 2025)
+
+ENHANCEMENTS:
+
+* resource/aws_fsx_openzfs_file_system: Support `INTELLIGENT_TIERING` storage type and add `read_cache_configuration` argument ([#45159](https://github.com/hashicorp/terraform-provider-aws/issues/45159))
+* resource/aws_msk_cluster: Add `rebalancing` configuration block to support intelligent rebalancing for Express broker clusters ([#45073](https://github.com/hashicorp/terraform-provider-aws/issues/45073))
+
+BUG FIXES:
+
+* provider: Fix crash in required tag validation interceptor when tag values are unknown. This addresses a regression introduced in [v6.22.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6220-november-20-2025). ([#45201](https://github.com/hashicorp/terraform-provider-aws/issues/45201))
+* provider: Fix early return logic in the required tag validation interceptor. This addresses a performance regression introduced in [v6.22.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6220-november-20-2025). ([#45201](https://github.com/hashicorp/terraform-provider-aws/issues/45201))
+* resource/aws_accessanalyzer_analyzer: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `configuration.unused_access.analysis_rule.exclusion.resource_tags` contains `null` values ([#45202](https://github.com/hashicorp/terraform-provider-aws/issues/45202))
+* resource/aws_odb_cloud_vm_cluster: Fix incorrect validation error when arguments are configured using variables. This addresses a regression introduced in [v6.22.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6220-november-20-2025) ([#45205](https://github.com/hashicorp/terraform-provider-aws/issues/45205))
+
+## 6.22.0 (November 20, 2025)
 
 NOTES:
 
@@ -7,6 +23,8 @@ NOTES:
 FEATURES:
 
 * **New Ephemeral Resource:** `aws_ecr_authorization_token` ([#44949](https://github.com/hashicorp/terraform-provider-aws/issues/44949))
+* **New Guide:** `Tag Policy Compliance` ([#45143](https://github.com/hashicorp/terraform-provider-aws/issues/45143))
+* **New Resource:** `aws_billing_view` ([#45097](https://github.com/hashicorp/terraform-provider-aws/issues/45097))
 * **New Resource:** `aws_vpclattice_domain_verification` ([#45085](https://github.com/hashicorp/terraform-provider-aws/issues/45085))
 
 ENHANCEMENTS:
@@ -14,7 +32,9 @@ ENHANCEMENTS:
 * data-source/aws_lb_listener: Add `default_action.jwt_validation` attribute ([#45089](https://github.com/hashicorp/terraform-provider-aws/issues/45089))
 * data-source/aws_lb_listener_rule: Add `action.jwt_validation` attribute ([#45089](https://github.com/hashicorp/terraform-provider-aws/issues/45089))
 * data-source/aws_route53_zone: Support filtering by `tags` only or by `vpc_id` only ([#39671](https://github.com/hashicorp/terraform-provider-aws/issues/39671))
+* provider: Add support for enforcing tag policy compliance. This opt-in feature can be enabled via the new `tag_policy_compliance` provider argument, or the `TF_AWS_TAG_POLICY_COMPLIANCE` environment variable. When enabled, the principal executing Terraform must have the `tags:ListRequiredTags` IAM permission. ([#45143](https://github.com/hashicorp/terraform-provider-aws/issues/45143))
 * resource/aws_backup_logically_air_gapped_vault: Add `encryption_key_arn` argument ([#45020](https://github.com/hashicorp/terraform-provider-aws/issues/45020))
+* resource/aws_bedrock_guardrail: Add `input_action`, `input_enabled`, `input_modalities`, `output_action`, `output_enabled`, and `output_modalities` arguments to the `content_policy_config.filters_config` block ([#45104](https://github.com/hashicorp/terraform-provider-aws/issues/45104))
 * resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.rds_configuration.field_mapping.custom_metadata_field` argument ([#45075](https://github.com/hashicorp/terraform-provider-aws/issues/45075))
 * resource/aws_bedrockagentcore_agent_runtime: Add `agent_runtime_artifact.code_configuration` block ([#45091](https://github.com/hashicorp/terraform-provider-aws/issues/45091))
 * resource/aws_bedrockagentcore_agent_runtime: Make `agent_runtime_artifact.container_configuration` block optional ([#45091](https://github.com/hashicorp/terraform-provider-aws/issues/45091))

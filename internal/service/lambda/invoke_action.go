@@ -43,6 +43,7 @@ type invokeActionModel struct {
 	InvocationType fwtypes.StringEnum[awstypes.InvocationType] `tfsdk:"invocation_type"`
 	LogType        fwtypes.StringEnum[awstypes.LogType]        `tfsdk:"log_type"`
 	ClientContext  types.String                                `tfsdk:"client_context"`
+	TenantId       types.String                                `tfsdk:"tenant_id"`
 }
 
 func (a *invokeAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
@@ -76,6 +77,10 @@ func (a *invokeAction) Schema(ctx context.Context, req action.SchemaRequest, res
 			},
 			"client_context": schema.StringAttribute{
 				Description: "Up to 3,583 bytes of base64-encoded data about the invoking client to pass to the function in the context object. This is only used for mobile applications.",
+				Optional:    true,
+			},
+			"tenant_id": schema.StringAttribute{
+				Description: "The Tenant Id for lambda function invocation. This is mandatory, if tenancy_config is enabled in lambda function",
 				Optional:    true,
 			},
 		},
@@ -133,6 +138,10 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 	// Set optional parameters
 	if !config.Qualifier.IsNull() {
 		input.Qualifier = config.Qualifier.ValueStringPointer()
+	}
+	// Set optional parameters
+	if !config.TenantId.IsNull() {
+		input.TenantId = config.TenantId.ValueStringPointer()
 	}
 
 	if !config.ClientContext.IsNull() {
