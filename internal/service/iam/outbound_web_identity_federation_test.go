@@ -33,7 +33,7 @@ func TestAccIAMOutboundWebIdentityFederation_basic(t *testing.T) {
 			{
 				Config: testAccOutboundWebIdentityFederationConfig_basic(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "issuer_identifier"),
 				),
 			},
@@ -45,7 +45,7 @@ func TestAccIAMOutboundWebIdentityFederation_basic(t *testing.T) {
 			{
 				Config: testAccOutboundWebIdentityFederationConfig_basic(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 		},

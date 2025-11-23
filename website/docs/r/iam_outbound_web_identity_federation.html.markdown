@@ -22,6 +22,8 @@ resource "aws_iam_outbound_web_identity_federation" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `enabled` - (Optional) Whether or not Outbound Web Identity Federation is enabled. Valid values are `true` or `false`. Defaults to `true`.
 
 ## Attribute Reference
