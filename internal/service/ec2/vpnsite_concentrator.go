@@ -28,7 +28,7 @@ import (
 )
 
 // @FrameworkResource("aws_vpn_concentrator",name="VPN Concentrator")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="vpn_concentrator_id")
 func newVPNConcentratorResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &vpnConcentratorResource{}, nil
 }

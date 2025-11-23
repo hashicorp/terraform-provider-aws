@@ -270,7 +270,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_vpn_concentrator",
 			Name:     "VPN Concentrator",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "vpn_concentrator_id",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
