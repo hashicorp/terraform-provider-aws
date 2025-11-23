@@ -3838,7 +3838,7 @@ func findVPNConcentratorByID(ctx context.Context, conn *ec2.Client, id string) (
 
 	if state := aws.ToString(output.State); state == vpnConcentratorStateDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(state),
+			Message:     state,
 			LastRequest: &input,
 		}
 	}
