@@ -28,9 +28,8 @@ resource "aws_iam_outbound_web_identity_federation" "example" {
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier for the account registration. Since registration is applied globaly, this will be the Account ID.
+* `id` - Unique identifier for the account registration. Since registration is applied globally, this will be the Account ID.
 * `issuer_identifier` - A unique issuer URL for your AWS account that hosts the OpenID Connect (OIDC) discovery endpoints.
-
 
 ## Import
 
