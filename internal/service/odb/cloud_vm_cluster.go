@@ -880,17 +880,17 @@ type cloudVMCDbIormConfigResourceModel struct {
 }
 
 func (r cloudVmClusterResourceModel) isNetworkIdAndExadataInfraIdPresent() bool {
-	return !r.OdbNetworkId.IsNull() && !r.OdbNetworkId.IsUnknown() && !r.CloudExadataInfrastructureId.IsNull() && !r.CloudExadataInfrastructureId.IsUnknown()
+	return !r.OdbNetworkId.IsNull() && !r.CloudExadataInfrastructureId.IsNull()
 }
 
 func (r cloudVmClusterResourceModel) isNetworkARNAndExadataInfraARNPresent() bool {
-	return !r.OdbNetworkArn.IsNull() && !r.OdbNetworkArn.IsUnknown() && !r.CloudExadataInfrastructureArn.IsNull() && !r.CloudExadataInfrastructureArn.IsUnknown()
+	return !r.OdbNetworkArn.IsNull() && !r.CloudExadataInfrastructureArn.IsNull()
 }
 
 func (r cloudVmClusterResourceModel) isNetworkARNAndIdPresent() bool {
-	return (!r.OdbNetworkId.IsNull() && !r.OdbNetworkId.IsUnknown()) && (!r.OdbNetworkArn.IsNull() && !r.OdbNetworkArn.IsUnknown())
+	return !r.OdbNetworkId.IsNull() && !r.OdbNetworkArn.IsNull()
 }
 
 func (r cloudVmClusterResourceModel) isExadataInfraARNAndIdPresent() bool {
-	return (!r.CloudExadataInfrastructureId.IsNull() && !r.CloudExadataInfrastructureId.IsUnknown()) && (!r.CloudExadataInfrastructureArn.IsNull() && !r.CloudExadataInfrastructureArn.IsUnknown())
+	return !r.CloudExadataInfrastructureId.IsNull() && !r.CloudExadataInfrastructureArn.IsNull()
 }

@@ -493,6 +493,12 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
     - [`aws_waf_web_acl` resource](/docs/providers/aws/r/waf_web_acl.html)
     - [`aws_waf_xss_match_set` resource](/docs/providers/aws/r/waf_xss_match_set.html)
 * `sts_region` - (Optional) AWS Region for STS. If unset, AWS will use the same Region for STS as other non-STS operations.
+* `tag_policy_compliance` - (Optional) The severity with which to enforce organizational tagging policies on resources managed by this provider instance.
+  At this time this only includes compliance with required tag keys by resource type.
+  Valid values are `error`, `warning`, and `disabled`.
+  When unset or `disabled`, tag policy compliance will not be enforced by the provider.
+  Can also be configured with the `TF_AWS_TAG_POLICY_COMPLIANCE` environment variable.
+  See the [Tag Policy Compliance user guide](./guides/tag-policy-compliance.html.markdown) for additional details.
 * `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterward, not the 6 digit MFA code used to get temporary credentials.  Can also be set with the `AWS_SESSION_TOKEN` environment variable.
 * `token_bucket_rate_limiter_capacity` - (Optional) The capacity of the AWS SDK's token bucket retry rate limiter. If no value is specified then client-side rate limiting is disabled. If a value is specified there is a greater likelihood of `retry quota exceeded` errors being raised.
 * `use_dualstack_endpoint` - (Optional) Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`use_dualstack_endpoint`).

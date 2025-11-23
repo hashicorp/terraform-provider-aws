@@ -62,7 +62,7 @@ func (e expectFullTagsCheck) CheckState(ctx context.Context, req statecheck.Chec
 		return
 	}
 
-	ctx = tftags.NewContext(ctx, nil, nil)
+	ctx = tftags.NewContext(ctx, nil, nil, nil)
 
 	var err error
 	if v, ok := sp.(tftags.ServiceTagLister); ok {

@@ -629,7 +629,7 @@ class MyConvertedCode extends TerraformStack {
 </p>
 </details>
 
-## Non–region-aware resources
+## Non–region-aware resources {#nonregion-aware-resources}
 
 This section lists resources that are not Region-aware—meaning `region` has not been added to them.
 

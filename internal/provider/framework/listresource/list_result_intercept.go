@@ -58,7 +58,7 @@ func TagsInterceptor(tags unique.Handle[inttypes.ServicePackageResourceTags]) ta
 func (r tagsInterceptor) Read(ctx context.Context, params InterceptorParams) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
+	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
 	if !ok {
 		return diags
 	}
