@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -17,18 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMOutboundWebIdentityFederation_serial(t *testing.T) {
-	t.Helper()
-
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccIAMOutboundWebIdentityFederation_basic,
-		"alreadyEnabled": testAccIAMOutboundWebIdentityFederation_alreadyEnabled,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
-func testAccIAMOutboundWebIdentityFederation_basic(t *testing.T) {
+func TestAccIAMOutboundWebIdentityFederation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iam_outbound_web_identity_federation.test"
@@ -43,43 +31,21 @@ func testAccIAMOutboundWebIdentityFederation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckOutboundWebIdentityFederationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutboundWebIdentityFederationConfig_basic(),
+				Config: testAccOutboundWebIdentityFederationConfig_basic(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "jwt_vending_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "issuer_identifier"),
 				),
 			},
-		},
-	})
-}
-
-func testAccIAMOutboundWebIdentityFederation_alreadyEnabled(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	resourceName := "aws_iam_outbound_web_identity_federation.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOutboundWebIdentityFederationDestroy(ctx),
-		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
-
-					_, err := conn.EnableOutboundWebIdentityFederation(ctx, &iam.EnableOutboundWebIdentityFederationInput{})
-					if err != nil {
-						t.Fatalf("error enabling outbound web identity federation: %s", err)
-					}
-				},
-				Config: testAccOutboundWebIdentityFederationConfig_basic(),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOutboundWebIdentityFederationConfig_basic(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "jwt_vending_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, "issuer_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -125,9 +91,10 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccOutboundWebIdentityFederationConfig_basic() string {
-	return `
+func testAccOutboundWebIdentityFederationConfig_basic(enabled bool) string {
+	return fmt.Sprintf(`
 resource "aws_iam_outbound_web_identity_federation" "test" {
+  enabled = %[1]t
 }
-`
+`, enabled)
 }

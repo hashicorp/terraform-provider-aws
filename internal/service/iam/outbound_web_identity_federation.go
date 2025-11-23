@@ -11,11 +11,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_iam_outbound_web_identity_federation", name="Outbound Web Identity Federation")
@@ -31,16 +33,19 @@ const (
 
 type resourceOutboundWebIdentityFederation struct {
 	framework.ResourceWithModel[resourceOutboundWebIdentityFederationModel]
-	framework.WithNoUpdate
+	framework.WithImportByID
 }
 
 func (r *resourceOutboundWebIdentityFederation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"issuer_identifier": schema.StringAttribute{
+			names.AttrEnabled: schema.BoolAttribute{
+				Optional: true,
 				Computed: true,
+				Default:  booldefault.StaticBool(true),
 			},
-			"jwt_vending_enabled": schema.BoolAttribute{
+			names.AttrID: framework.IDAttribute(),
+			"issuer_identifier": schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -55,24 +60,8 @@ func (r *resourceOutboundWebIdentityFederation) Create(ctx context.Context, req 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	out, err := conn.EnableOutboundWebIdentityFederation(ctx, &iam.EnableOutboundWebIdentityFederationInput{})
-	if errs.IsA[*awstypes.FeatureEnabledException](err) {
-		// Feature is already enabled, adopt existing state
-		outAlreadyEnabled, err := getOutboundWebIdentityFederation(ctx, conn)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err)
-			return
-		}
-		if outAlreadyEnabled == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("expected non-nil response from GetOutboundWebIdentityFederationInfo"))
-			return
-		}
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outAlreadyEnabled, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	} else {
+	if plan.Enabled.ValueBool() {
+		out, err := conn.EnableOutboundWebIdentityFederation(ctx, &iam.EnableOutboundWebIdentityFederationInput{})
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err)
 			return
@@ -81,12 +70,15 @@ func (r *resourceOutboundWebIdentityFederation) Create(ctx context.Context, req 
 			smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("expected non-nil response from EnableOutboundWebIdentityFederation"))
 			return
 		}
-		plan.JwtVendingEnabled = types.BoolValue(true)
+		plan.Enabled = types.BoolValue(true)
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		plan.Enabled = types.BoolValue(false)
 	}
+	plan.AccountId = types.StringValue(r.Meta().AccountID(ctx))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -104,13 +96,52 @@ func (r *resourceOutboundWebIdentityFederation) Read(ctx context.Context, req re
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID)
 		return
 	}
+	if out != nil {
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+	if state.Enabled.IsNull() || state.Enabled.IsUnknown() {
+		state.Enabled = types.BoolValue(out != nil)
+	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+}
+
+func (r *resourceOutboundWebIdentityFederation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().IAMClient(ctx)
+
+	var plan resourceOutboundWebIdentityFederationModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	var state resourceOutboundWebIdentityFederationModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if plan.Enabled.ValueBool() != state.Enabled.ValueBool() {
+		if plan.Enabled.ValueBool() {
+			_, err := conn.EnableOutboundWebIdentityFederation(ctx, &iam.EnableOutboundWebIdentityFederationInput{})
+			if err != nil && !errs.IsA[*awstypes.FeatureEnabledException](err) {
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID)
+				return
+			}
+		} else {
+			_, err := conn.DisableOutboundWebIdentityFederation(ctx, &iam.DisableOutboundWebIdentityFederationInput{})
+			if err != nil && !errs.IsA[*awstypes.FeatureDisabledException](err) {
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID)
+				return
+			}
+			plan.IssuerIdentifier = types.StringNull()
+		}
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resourceOutboundWebIdentityFederation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -133,8 +164,9 @@ func (r *resourceOutboundWebIdentityFederation) Delete(ctx context.Context, req 
 }
 
 type resourceOutboundWebIdentityFederationModel struct {
-	JwtVendingEnabled types.Bool   `tfsdk:"jwt_vending_enabled"`
-	IssuerIdentifier  types.String `tfsdk:"issuer_identifier"`
+	Enabled          types.Bool   `tfsdk:"enabled"`
+	AccountId        types.String `tfsdk:"id"`
+	IssuerIdentifier types.String `tfsdk:"issuer_identifier"`
 }
 
 func getOutboundWebIdentityFederation(ctx context.Context, conn *iam.Client) (*iam.GetOutboundWebIdentityFederationInfoOutput, error) {
