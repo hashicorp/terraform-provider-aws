@@ -626,6 +626,54 @@ func TestAccEKSCluster_ComputeConfig_AddARN(t *testing.T) {
 	})
 }
 
+func TestAccEKSCluster_controlPlaneScalingConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2, cluster3 types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_controlPlaneScalingConfig(rName, "tier-xl"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.0.tier", "tier-xl"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_controlPlaneScalingConfig(rName, "tier-2xl"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.0.tier", "tier-2xl"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_controlPlaneScalingConfig(rName, "standard"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster3),
+					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
+					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.0.tier", "standard"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEKSCluster_Encryption_create(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.Cluster
@@ -2646,4 +2694,24 @@ resource "aws_eks_cluster" "test" {
   depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, deletionProtection))
+}
+
+
+func testAccClusterConfig_controlPlaneScalingConfig(rName, tier string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  control_plane_scaling_config {
+    tier = %[2]q
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
+}
+`, rName, tier))
 }
