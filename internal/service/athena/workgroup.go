@@ -749,7 +749,7 @@ func flattenWorkGroupManagedQueryResultsConfiguration(managedQueryResultsConfigu
 	}
 
 	m := map[string]any{
-		names.AttrEnabled:                  aws.ToBool(&managedQueryResultsConfiguration.Enabled),
+		names.AttrEnabled:                 aws.ToBool(&managedQueryResultsConfiguration.Enabled),
 		names.AttrEncryptionConfiguration: flattenWorkGroupManagedQueryResultsEncryptionConfiguration(managedQueryResultsConfiguration.EncryptionConfiguration),
 	}
 
