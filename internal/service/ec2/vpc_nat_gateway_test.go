@@ -767,6 +767,7 @@ func TestAccVPCNATGateway_availabilityModeRegionalManual3(t *testing.T) {
 			0: {0},
 		},
 		// Add one EIP in a new AZ and remove one in the existing AZ
+		// availability_zone_id is used instead of availability_zone
 		{
 			1: {1},
 		},
