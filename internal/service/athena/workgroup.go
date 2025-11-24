@@ -112,18 +112,18 @@ func resourceWorkGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  false,
 									},
-									"encryption_configuration": {
+									names.AttrEncryptionConfiguration: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"kms_key": {
+												names.AttrKMSKey: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -602,11 +602,11 @@ func expandWorkGroupManagedQueryResultsConfiguration(l []any) *types.ManagedQuer
 
 	managedQueryResultsConfiguration := &types.ManagedQueryResultsConfiguration{}
 
-	if v, ok := m["enabled"].(bool); ok {
-		managedQueryResultsConfiguration.Enabled = *aws.Bool(v)
+	if v, ok := m[names.AttrEnabled].(bool); ok {
+		managedQueryResultsConfiguration.Enabled = v
 	}
 
-	if v, ok := m["encryption_configuration"]; ok {
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
 		managedQueryResultsConfiguration.EncryptionConfiguration = expandManagedQueryResultsEncryptionConfiguration(v.([]any))
 	}
 
@@ -622,7 +622,7 @@ func expandManagedQueryResultsEncryptionConfiguration(l []any) *types.ManagedQue
 
 	managedQueryResultsEncryptionConfiguration := &types.ManagedQueryResultsEncryptionConfiguration{}
 
-	if v, ok := m["kms_key"].(string); ok && v != "" {
+	if v, ok := m[names.AttrKMSKey].(string); ok && v != "" {
 		managedQueryResultsEncryptionConfiguration.KmsKey = aws.String(v)
 	}
 
@@ -638,11 +638,11 @@ func expandWorkGroupManagedQueryResultsConfigurationUpdates(l []any) *types.Mana
 
 	managedQueryResultsConfigurationUpdates := &types.ManagedQueryResultsConfigurationUpdates{}
 
-	if v, ok := m["enabled"].(bool); ok {
+	if v, ok := m[names.AttrEnabled].(bool); ok {
 		managedQueryResultsConfigurationUpdates.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := m["encryption_configuration"]; ok {
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
 		managedQueryResultsConfigurationUpdates.EncryptionConfiguration = expandManagedQueryResultsEncryptionConfiguration(v.([]any))
 	} else {
 		managedQueryResultsConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
@@ -749,8 +749,8 @@ func flattenWorkGroupManagedQueryResultsConfiguration(managedQueryResultsConfigu
 	}
 
 	m := map[string]any{
-		"enabled":                  aws.ToBool(&managedQueryResultsConfiguration.Enabled),
-		"encryption_configuration": flattenWorkGroupManagedQueryResultsEncryptionConfiguration(managedQueryResultsConfiguration.EncryptionConfiguration),
+		names.AttrEnabled:                  aws.ToBool(&managedQueryResultsConfiguration.Enabled),
+		names.AttrEncryptionConfiguration: flattenWorkGroupManagedQueryResultsEncryptionConfiguration(managedQueryResultsConfiguration.EncryptionConfiguration),
 	}
 
 	return []any{m}
@@ -762,7 +762,7 @@ func flattenWorkGroupManagedQueryResultsEncryptionConfiguration(managedQueryResu
 	}
 
 	m := map[string]any{
-		"kms_key": managedQueryResultsEncryptionConfiguration.KmsKey,
+		names.AttrKMSKey: managedQueryResultsEncryptionConfiguration.KmsKey,
 	}
 
 	return []any{m}
