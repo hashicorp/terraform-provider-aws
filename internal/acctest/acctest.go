@@ -36,6 +36,7 @@ import (
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	"github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -1284,6 +1285,23 @@ func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
 	}
 }
 
+func PreCheckResourceGroupsTaggingAPIRequiredTags(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).ResourceGroupsTaggingAPIClient(ctx)
+	input := resourcegroupstaggingapi.ListRequiredTagsInput{}
+
+	output, err := conn.ListRequiredTags(ctx, &input)
+	if err != nil {
+		t.Skipf("listing required tags: %s", err)
+	}
+
+	// Ensure some required tags are configured
+	if output == nil || len(output.RequiredTags) == 0 {
+		t.Skip("no required tags found")
+	}
+}
+
 func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 	PreCheckSSOAdminInstancesWithRegion(ctx, t, Region())
 }
@@ -1292,7 +1310,7 @@ func PreCheckSSOAdminInstancesWithRegion(ctx context.Context, t *testing.T, regi
 	t.Helper()
 
 	// Push region into Context.
-	ctx = conns.NewResourceContext(ctx, "", "", region)
+	ctx = conns.NewResourceContext(ctx, "", "", "", region)
 	conn := Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 	input := ssoadmin.ListInstancesInput{}
 	var instances []ssoadmintypes.InstanceMetadata
@@ -1898,19 +1916,19 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
-		arn := aws.ToString(certificateAuthority.Arn)
+		caARN := aws.ToString(certificateAuthority.Arn)
 
 		getCSRInput := acmpca.GetCertificateAuthorityCsrInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 		}
 		getCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, &getCSRInput)
 
 		if err != nil {
-			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
+			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", caARN, err)
 		}
 
 		issueCertInput := acmpca.IssueCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
 			IdempotencyToken:        aws.String(id.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
@@ -1922,26 +1940,28 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 		}
 		issueCertOutput, err := conn.IssueCertificate(ctx, &issueCertInput)
 		if err != nil {
-			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Root CA certificate from CSR: %w", arn, err)
+			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Root CA certificate from CSR: %w", caARN, err)
 		}
+
+		caCertARN := aws.ToString(issueCertOutput.CertificateArn)
 
 		// Wait for certificate status to become ISSUED.
 		getCertOutput, err := tfresource.RetryWhenIsA[*acmpca.GetCertificateOutput, *acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func(ctx context.Context) (*acmpca.GetCertificateOutput, error) {
-			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, arn, aws.ToString(issueCertOutput.CertificateArn))
+			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, caCertARN, caARN)
 		})
 
 		if err != nil {
-			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate to become ISSUED: %w", arn, err)
+			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate (%s) to become ISSUED: %w", caARN, caCertARN, err)
 		}
 
 		importCACertificateInput := acmpca.ImportCertificateAuthorityCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 			Certificate:             []byte(aws.ToString(getCertOutput.Certificate)),
 		}
 		_, err = conn.ImportCertificateAuthorityCertificate(ctx, &importCACertificateInput)
 
 		if err != nil {
-			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Root CA certificate: %w", arn, err)
+			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Root CA certificate: %w", caARN, err)
 		}
 
 		return err
@@ -1956,21 +1976,21 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
-		arn := aws.ToString(certificateAuthority.Arn)
+		caARN := aws.ToString(certificateAuthority.Arn)
 
 		getCSRInput := acmpca.GetCertificateAuthorityCsrInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 		}
 		getCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, &getCSRInput)
 
 		if err != nil {
-			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
+			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", caARN, err)
 		}
 
-		rootCertificateAuthorityArn := aws.ToString(rootCertificateAuthority.Arn)
+		rootCAARN := aws.ToString(rootCertificateAuthority.Arn)
 
 		issueCertInput := acmpca.IssueCertificateInput{
-			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
+			CertificateAuthorityArn: aws.String(rootCAARN),
 			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
 			IdempotencyToken:        aws.String(id.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
@@ -1982,27 +2002,29 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		}
 		issueCertOutput, err := conn.IssueCertificate(ctx, &issueCertInput)
 		if err != nil {
-			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Subordinate CA certificate from CSR: %w", arn, err)
+			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Subordinate CA certificate from CSR: %w", caARN, err)
 		}
+
+		caCertARN := aws.ToString(issueCertOutput.CertificateArn)
 
 		// Wait for certificate status to become ISSUED.
 		getCertOutput, err := tfresource.RetryWhenIsA[*acmpca.GetCertificateOutput, *acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func(ctx context.Context) (*acmpca.GetCertificateOutput, error) {
-			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, rootCertificateAuthorityArn, aws.ToString(issueCertOutput.CertificateArn))
+			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, caCertARN, rootCAARN)
 		})
 
 		if err != nil {
-			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate (%s) to become ISSUED: %w", arn, aws.ToString(issueCertOutput.CertificateArn), err)
+			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate (%s) to become ISSUED: %w", caARN, caCertARN, err)
 		}
 
 		importCACertificateInput := acmpca.ImportCertificateAuthorityCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 			Certificate:             []byte(aws.ToString(getCertOutput.Certificate)),
 			CertificateChain:        []byte(aws.ToString(getCertOutput.CertificateChain)),
 		}
 		_, err = conn.ImportCertificateAuthorityCertificate(ctx, &importCACertificateInput)
 
 		if err != nil {
-			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Subordinate CA certificate: %w", arn, err)
+			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Subordinate CA certificate: %w", caARN, err)
 		}
 
 		return err

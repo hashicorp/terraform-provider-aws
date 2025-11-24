@@ -576,7 +576,7 @@ func (r jobQueueResource) List(ctx context.Context, request list.ListRequest, st
 				return
 			}
 
-			ctx = tftags.NewContext(ctx, awsClient.DefaultTagsConfig(ctx), awsClient.IgnoreTagsConfig(ctx))
+			ctx = tftags.NewContext(ctx, awsClient.DefaultTagsConfig(ctx), awsClient.IgnoreTagsConfig(ctx), awsClient.TagPolicyConfig(ctx))
 
 			var data jobQueueResourceModel
 

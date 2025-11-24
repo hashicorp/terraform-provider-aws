@@ -182,6 +182,33 @@ provider "aws" {
 `, key1)
 }
 
+// ConfigTagPolicyCompliance enables tag policy enforcement with the provided severity
+func ConfigTagPolicyCompliance(severity string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  tag_policy_compliance = %[1]q
+}
+`, severity)
+}
+
+// ConfigTagPolicyComplianceAndDefaultTags1 enables tag policy enforcement with the
+// provided severity and a default tag
+func ConfigTagPolicyComplianceAndDefaultTags1(severity, key1, value1 string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  tag_policy_compliance = %[1]q
+
+  default_tags {
+    tags = {
+      %[2]s = %[3]q
+    }
+  }
+}
+`, severity, key1, value1)
+}
+
 func ConfigWithEchoProvider(ephemeralResourceData string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
