@@ -311,7 +311,7 @@ func (r *resourceCapacityProvider) ValidateConfig(ctx context.Context, request r
 		return
 	}
 
-	if !data.InstanceRequirements.IsNull() || !data.InstanceRequirements.IsUnknown() {
+	if !data.InstanceRequirements.IsNull() {
 		ir, d := data.InstanceRequirements.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &response.Diagnostics, d)
 		if response.Diagnostics.HasError() {
@@ -326,7 +326,7 @@ func (r *resourceCapacityProvider) ValidateConfig(ctx context.Context, request r
 		}
 	}
 
-	if !data.CapacityProviderScalingConfig.IsNull() || !data.CapacityProviderScalingConfig.IsUnknown() {
+	if !data.CapacityProviderScalingConfig.IsNull() {
 		sc, d := data.CapacityProviderScalingConfig.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &response.Diagnostics, d)
 		if response.Diagnostics.HasError() {
