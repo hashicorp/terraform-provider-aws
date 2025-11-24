@@ -456,6 +456,13 @@ resource "aws_ecs_express_gateway_service" "test" {
   primary_container {
     image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
   }
+
+	scaling_target {
+		min_task_count             = 0
+		max_task_count             = 1
+		auto_scaling_metric        = "AVERAGE_CPU"
+		auto_scaling_target_value  = 60
+	}
 }
 `, rName, waitForSteadyStateConfig))
 }
@@ -475,6 +482,13 @@ resource "aws_ecs_express_gateway_service" "test" {
   primary_container {
     image = "public.ecr.aws/nginx/nginx:latest"
   }
+
+	scaling_target {
+		min_task_count             = 0
+		max_task_count             = 1
+		auto_scaling_metric        = "AVERAGE_CPU"
+		auto_scaling_target_value  = 60
+	}
 }
 `, rName, waitForSteadyStateConfig))
 }

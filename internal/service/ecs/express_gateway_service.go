@@ -45,8 +45,8 @@ import (
 func newResourceExpressGatewayService(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceExpressGatewayService{}
 
-	r.SetDefaultCreateTimeout(20 * time.Minute)
-	r.SetDefaultUpdateTimeout(20 * time.Minute)
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(20 * time.Minute)
 
 	return r, nil
@@ -998,7 +998,8 @@ func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, inp
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
-				errs.IsAErrorMessageContains[*awstypes.ClientException](err, "AWS was not able to validate the provided access credentials") {
+				errs.IsAErrorMessageContains[*awstypes.ClientException](err, "AWS was not able to validate the provided access credentials") ||
+				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform: sts:AssumeRole") {
 				return true, err
 			}
 			return false, err
@@ -1020,7 +1021,9 @@ func retryExpressGatewayServiceUpdate(ctx context.Context, conn *ecs.Client, inp
 			return conn.UpdateExpressGatewayService(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") {
+			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
+				errs.IsAErrorMessageContains[*awstypes.ClientException](err, "AWS was not able to validate the provided access credentials") ||
+				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform: sts:AssumeRole") {
 				return true, err
 			}
 			return false, err
