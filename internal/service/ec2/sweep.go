@@ -1783,7 +1783,14 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 	var sweepResources []sweep.Sweepable
 
 	r := resourceSubnet()
-	input := ec2.DescribeSubnetsInput{}
+	input := ec2.DescribeSubnetsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("default-for-az"),
+				Values: []string{"false"},
+			},
+		},
+	}
 	pages := ec2.NewDescribeSubnetsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
@@ -1792,11 +1799,6 @@ func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		}
 
 		for _, v := range page.Subnets {
-			// Skip default subnets.
-			if aws.ToBool(v.DefaultForAz) {
-				continue
-			}
-
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.SubnetId))
 
@@ -2472,9 +2474,16 @@ func sweepVPCs(region string) error {
 	}
 
 	conn := client.EC2Client(ctx)
-	input := ec2.DescribeVpcsInput{}
 	var sweepResources []sweep.Sweepable
 
+	input := ec2.DescribeVpcsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("is-default"),
+				Values: []string{"false"},
+			},
+		},
+	}
 	pages := ec2.NewDescribeVpcsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
@@ -2489,11 +2498,6 @@ func sweepVPCs(region string) error {
 		}
 
 		for _, v := range page.Vpcs {
-			// Skip default VPCs.
-			if aws.ToBool(v.IsDefault) {
-				continue
-			}
-
 			r := resourceVPC()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VpcId))

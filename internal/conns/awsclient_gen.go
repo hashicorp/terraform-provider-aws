@@ -151,7 +151,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/location"
-	"github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconnect"
@@ -168,11 +167,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	"github.com/aws/aws-sdk-go-v2/service/networkflowmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
+	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
@@ -852,10 +853,6 @@ func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs.Client {
 	return errs.Must(client[*cloudwatchlogs.Client](ctx, c, names.Logs, make(map[string]any)))
 }
 
-func (c *AWSClient) LookoutMetricsClient(ctx context.Context) *lookoutmetrics.Client {
-	return errs.Must(client[*lookoutmetrics.Client](ctx, c, names.LookoutMetrics, make(map[string]any)))
-}
-
 func (c *AWSClient) M2Client(ctx context.Context) *m2.Client {
 	return errs.Must(client[*m2.Client](ctx, c, names.M2, make(map[string]any)))
 }
@@ -920,6 +917,10 @@ func (c *AWSClient) NetworkFirewallClient(ctx context.Context) *networkfirewall.
 	return errs.Must(client[*networkfirewall.Client](ctx, c, names.NetworkFirewall, make(map[string]any)))
 }
 
+func (c *AWSClient) NetworkFlowMonitorClient(ctx context.Context) *networkflowmonitor.Client {
+	return errs.Must(client[*networkflowmonitor.Client](ctx, c, names.NetworkFlowMonitor, make(map[string]any)))
+}
+
 func (c *AWSClient) NetworkManagerClient(ctx context.Context) *networkmanager.Client {
 	return errs.Must(client[*networkmanager.Client](ctx, c, names.NetworkManager, make(map[string]any)))
 }
@@ -942,6 +943,10 @@ func (c *AWSClient) ODBClient(ctx context.Context) *odb.Client {
 
 func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam.Client {
 	return errs.Must(client[*oam.Client](ctx, c, names.ObservabilityAccessManager, make(map[string]any)))
+}
+
+func (c *AWSClient) ObservabilityAdminClient(ctx context.Context) *observabilityadmin.Client {
+	return errs.Must(client[*observabilityadmin.Client](ctx, c, names.ObservabilityAdmin, make(map[string]any)))
 }
 
 func (c *AWSClient) OpenSearchClient(ctx context.Context) *opensearch.Client {

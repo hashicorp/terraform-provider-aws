@@ -82,9 +82,13 @@ func resourceLaunchTemplate() *schema.Resource {
 										Optional: true,
 									},
 									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidKMSKeyID,
+										Type:     schema.TypeString,
+										Optional: true,
+										// Allow empty string for backwards compatibility with verify.ValidARN.
+										ValidateFunc: validation.Any( // nosemgrep:ci.avoid-string-is-empty-validation
+											validation.StringIsEmpty,
+											verify.ValidKMSKeyID,
+										),
 									},
 									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
@@ -94,7 +98,7 @@ func resourceLaunchTemplate() *schema.Resource {
 										Type:         schema.TypeInt,
 										Computed:     true,
 										Optional:     true,
-										ValidateFunc: validation.IntBetween(125, 1000),
+										ValidateFunc: validation.IntBetween(125, 2000),
 									},
 									"volume_initialization_rate": {
 										Type:         schema.TypeInt,

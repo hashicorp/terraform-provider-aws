@@ -103,7 +103,7 @@ import (
 	{{- if .OverrideIdentifier }}
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tf{{ .ProviderPackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	{{- end }}
 	{{ range .GoImports -}}
 	{{ if .Alias }}{{ .Alias }} {{ end }}"{{ .Path }}"
@@ -3037,7 +3037,7 @@ func testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(
 
 {{ if .OverrideIdentifier }}
 func {{ template "expectFullResourceTags" . }}(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: {{ .OverrideIdentifierAttribute }},
 		{{ if ne .OverrideResourceType "" -}}
 		ResourceType:        "{{ .OverrideResourceType }}",

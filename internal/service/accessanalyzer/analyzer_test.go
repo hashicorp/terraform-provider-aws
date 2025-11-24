@@ -8,34 +8,33 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfaccessanalyzer "github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccAnalyzer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "analyzer_name", rName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
@@ -55,19 +54,19 @@ func testAccAnalyzer_basic(t *testing.T) {
 func testAccAnalyzer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfaccessanalyzer.ResourceAnalyzer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,10 +78,10 @@ func testAccAnalyzer_disappears(t *testing.T) {
 func testAccAnalyzer_typeOrganization(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -90,12 +89,12 @@ func testAccAnalyzer_typeOrganization(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerConfig_typeOrganization(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.TypeOrganization)),
 				),
 			},
@@ -111,20 +110,20 @@ func testAccAnalyzer_typeOrganization(t *testing.T) {
 func testAccAnalyzer_accountInternalAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerConfig_accountInternalAccess_resourceARNs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ACCOUNT_INTERNAL_ACCESS"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.#", "1"),
@@ -144,7 +143,7 @@ func testAccAnalyzer_accountInternalAccess(t *testing.T) {
 			{
 				Config: testAccAnalyzerConfig_accountInternalAccess_resourceTypes(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ACCOUNT_INTERNAL_ACCESS"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.#", "1"),
@@ -170,19 +169,19 @@ func testAccAnalyzer_accountInternalAccess(t *testing.T) {
 func testAccAnalyzer_accountUnusedAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerConfig_accountUnusedAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ACCOUNT_UNUSED_ACCESS"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.#", "1"),
@@ -202,11 +201,11 @@ func testAccAnalyzer_accountUnusedAccess(t *testing.T) {
 func testAccAnalyzer_organizationInternalAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -214,12 +213,12 @@ func testAccAnalyzer_organizationInternalAccess(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerConfig_organizationInternalAccess_resourceARNs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ORGANIZATION_INTERNAL_ACCESS"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.#", "1"),
@@ -240,7 +239,7 @@ func testAccAnalyzer_organizationInternalAccess(t *testing.T) {
 			{
 				Config: testAccAnalyzerConfig_organizationInternalAccess_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ORGANIZATION_INTERNAL_ACCESS"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.internal_access.#", "1"),
@@ -271,10 +270,10 @@ func testAccAnalyzer_organizationInternalAccess(t *testing.T) {
 func testAccAnalyzer_organizationUnusedAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -282,12 +281,12 @@ func testAccAnalyzer_organizationUnusedAccess(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerConfig_organizationUnusedAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ORGANIZATION_UNUSED_ACCESS"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.unused_access_age", "180"),
@@ -313,13 +312,13 @@ func testAccAnalyzer_organizationUnusedAccess(t *testing.T) {
 func testAccAnalyzer_upgradeV5_95_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer types.AnalyzerSummary
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
-		CheckDestroy: testAccCheckAnalyzerDestroy(ctx),
+		CheckDestroy: testAccCheckAnalyzerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -330,7 +329,7 @@ func testAccAnalyzer_upgradeV5_95_0(t *testing.T) {
 				},
 				Config: testAccAnalyzerConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -342,7 +341,7 @@ func testAccAnalyzer_upgradeV5_95_0(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccAnalyzerConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, t, resourceName, &analyzer),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -360,9 +359,32 @@ func testAccAnalyzer_upgradeV5_95_0(t *testing.T) {
 	})
 }
 
-func testAccCheckAnalyzerDestroy(ctx context.Context) resource.TestCheckFunc {
+// https://github.com/hashicorp/terraform-provider-aws/issues/45136.
+func testAccAnalyzer_nullInResourceTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyzerConfig_nullInResourceTags(rName),
+				// Error, but no crash.
+				ExpectError: regexache.MustCompile(`External Access analyzers cannot be created with the configuration`),
+			},
+		},
+	})
+}
+
+func testAccCheckAnalyzerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AccessAnalyzerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_accessanalyzer_analyzer" {
@@ -371,7 +393,7 @@ func testAccCheckAnalyzerDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfaccessanalyzer.FindAnalyzerByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -386,14 +408,14 @@ func testAccCheckAnalyzerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAnalyzerExists(ctx context.Context, n string, v *types.AnalyzerSummary) resource.TestCheckFunc {
+func testAccCheckAnalyzerExists(ctx context.Context, t *testing.T, n string, v *types.AnalyzerSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AccessAnalyzerClient(ctx)
 
 		output, err := tfaccessanalyzer.FindAnalyzerByName(ctx, conn, rs.Primary.ID)
 
@@ -597,6 +619,33 @@ resource "aws_accessanalyzer_analyzer" "test" {
           resource_tags = [
             { key1 = "value1" },
             { key2 = "value2" },
+          ]
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAnalyzerConfig_nullInResourceTags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_accessanalyzer_analyzer" "test" {
+  analyzer_name = %[1]q
+
+  configuration {
+    unused_access {
+      unused_access_age = 180
+      analysis_rule {
+        exclusion {
+          account_ids = [
+            "123456789012",
+            "234567890123",
+          ]
+        }
+        exclusion {
+          resource_tags = [
+            { key1 = null },
           ]
         }
       }

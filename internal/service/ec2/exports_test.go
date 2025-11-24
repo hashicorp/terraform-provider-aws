@@ -5,6 +5,7 @@ package ec2
 
 // Exports for use in tests only.
 var (
+	ResourceAllowedImagesSettings                         = newAllowedImagesSettingsResource
 	ResourceAMICopy                                       = resourceAMICopy
 	ResourceAMIFromInstance                               = resourceAMIFromInstance
 	ResourceAMILaunchPermission                           = resourceAMILaunchPermission
@@ -140,6 +141,7 @@ var (
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone         = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
 	ErrCodeInvalidSpotDatafeedNotFound                          = errCodeInvalidSpotDatafeedNotFound
 	ExpandIPPerms                                               = expandIPPerms
+	FindAllowedImagesSettings                                   = findAllowedImagesSettings
 	FindAvailabilityZones                                       = findAvailabilityZones
 	FindCapacityReservationByID                                 = findCapacityReservationByID
 	FindCarrierGatewayByID                                      = findCarrierGatewayByID
@@ -210,6 +212,7 @@ var (
 	FindSecurityGroupEgressRuleByID                             = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                            = findSecurityGroupIngressRuleByID
 	FindSecurityGroupVPCAssociationByTwoPartKey                 = findSecurityGroupVPCAssociationByTwoPartKey
+	FindSerialConsoleAccessStatus                               = findSerialConsoleAccessStatus
 	FindSnapshot                                                = findSnapshot
 	FindSnapshotByID                                            = findSnapshotByID
 	FindSpotDatafeedSubscription                                = findSpotDatafeedSubscription

@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -205,7 +205,7 @@ func TestAccServiceCatalogPortfolioDataSource_tags_IgnoreTags_Overlap_ResourceTa
 }
 
 func expectFullPortfolioDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Portfolio",
 	}), knownValue)

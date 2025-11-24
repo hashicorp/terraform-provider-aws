@@ -51,7 +51,9 @@ CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
 CloudWatch Network Monitor
+CloudWatch NetworkFlow Monitor
 CloudWatch Observability Access Manager
+CloudWatch Observability Admin
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
@@ -159,7 +161,6 @@ Lex V2 Models
 License Manager
 Lightsail
 Location
-Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
 Macie

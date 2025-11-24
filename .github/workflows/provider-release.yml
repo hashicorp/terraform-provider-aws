@@ -34,10 +34,10 @@ on:
         default: "staging"
 
 env:
-  slack_channel: "CN0G9S7M4" # #feed-tf-aws
+  slack_channel: "C09L3G3V55J" # #feed-tf-aws
   product_name: "terraform-provider-aws"
   repo_name: "terraform-provider-aws"
-  deployment_environment_name: "terraform-aws-repos-oss"
+  deployment_environment_name: "tf-provider-aws-oss"
 
 jobs:
   release:

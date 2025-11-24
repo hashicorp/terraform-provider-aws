@@ -218,11 +218,11 @@ func findBackupVaultByName(ctx context.Context, conn *backup.Client, name string
 }
 
 func findVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) {
-	input := &backup.DescribeBackupVaultInput{
+	input := backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(name),
 	}
 
-	output, err := findVault(ctx, conn, input)
+	output, err := findVault(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err

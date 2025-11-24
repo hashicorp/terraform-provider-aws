@@ -22,7 +22,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -351,7 +351,7 @@ func findWorkspaceByID(ctx context.Context, conn *workspaces.Client, id string) 
 		return nil, err
 	}
 
-	if itypes.IsZero(output) {
+	if inttypes.IsZero(output) {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

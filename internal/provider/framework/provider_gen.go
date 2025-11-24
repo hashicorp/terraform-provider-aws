@@ -1209,13 +1209,6 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
-				// lookoutmetrics
-
-				"lookoutmetrics": schema.StringAttribute{
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
 				// m2
 
 				"m2": schema.StringAttribute{
@@ -1328,6 +1321,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// networkflowmonitor
+
+				"networkflowmonitor": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// networkmanager
 
 				"networkmanager": schema.StringAttribute{
@@ -1364,6 +1364,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				},
 
 				"cloudwatchobservabilityaccessmanager": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// observabilityadmin
+
+				"observabilityadmin": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},
