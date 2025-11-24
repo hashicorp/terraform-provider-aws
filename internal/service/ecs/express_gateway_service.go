@@ -453,7 +453,8 @@ func (r *resourceExpressGatewayService) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	if out.Status != nil && out.Status.StatusCode == awstypes.ExpressGatewayServiceStatusCodeInactive {
+	if out.Status != nil && (out.Status.StatusCode == awstypes.ExpressGatewayServiceStatusCodeInactive ||
+		out.Status.StatusCode == awstypes.ExpressGatewayServiceStatusCodeDraining) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -636,26 +637,18 @@ func (r *resourceExpressGatewayService) Delete(ctx context.Context, req resource
 	}
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 
-	_, err := tfresource.RetryWhen(ctx, deleteTimeout,
-		func(ctx context.Context) (any, error) {
-			return conn.DeleteExpressGatewayService(ctx, &input)
-		},
-		func(err error) (bool, error) {
-			if errs.IsA[*awstypes.InvalidParameterException](err) || errs.IsA[*awstypes.ServiceNotActiveException](err) {
-				return false, err
-			}
-			return false, err
-		},
-	)
+	// Try to delete the service once
+	_, err := conn.DeleteExpressGatewayService(ctx, &input)
 	if err != nil {
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Resource not found") ||
-			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") {
-			// Service was already deleted/inactive
+			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") ||
+			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Service is in DRAINING status") {
+			// Service was already deleted/inactive/draining - deletion is already in progress or complete
+		} else {
+			// Real error occurred
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 			return
 		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
 	}
 
 	_, err = waitExpressGatewayServiceInactive(ctx, conn, state.ServiceArn.ValueString(), deleteTimeout)
@@ -1004,7 +997,8 @@ func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, inp
 			return conn.CreateExpressGatewayService(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") {
+			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Cannot assume role") ||
+				errs.IsAErrorMessageContains[*awstypes.ClientException](err, "AWS was not able to validate the provided access credentials") {
 				return true, err
 			}
 			return false, err
