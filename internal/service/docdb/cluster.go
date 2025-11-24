@@ -857,6 +857,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
+		if d.HasChange("network_type") {
+			input.NetworkType = aws.String(d.Get("network_type").(string))
+		}
+
 		if d.HasChange("preferred_backup_window") {
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		}
