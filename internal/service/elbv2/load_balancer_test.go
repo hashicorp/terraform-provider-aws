@@ -2403,7 +2403,7 @@ func testAccCheckLoadBalancerDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			ctx = conns.NewResourceContext(ctx, "", "", rs.Primary.Attributes[names.AttrRegion])
+			ctx = conns.NewResourceContext(ctx, "", "", "", rs.Primary.Attributes[names.AttrRegion])
 			conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 			_, err := tfelbv2.FindLoadBalancerByARN(ctx, conn, rs.Primary.ID)

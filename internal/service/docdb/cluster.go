@@ -29,7 +29,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -1142,7 +1142,7 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 		}
 
 		for _, v := range page.DBClusters {
-			if !itypes.IsZero(&v) && filter(&v) {
+			if !inttypes.IsZero(&v) && filter(&v) {
 				output = append(output, v)
 			}
 		}

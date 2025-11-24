@@ -209,6 +209,18 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"tenancy_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tenant_isolation_mode": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"tracing_config": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -365,6 +377,15 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("source_code_size", function.CodeSize)
 	d.Set("source_kms_key_arn", functionCode.SourceKMSKeyArn)
 	d.Set(names.AttrTimeout, function.Timeout)
+	if function.TenancyConfig != nil {
+		if err := d.Set("tenancy_config", []any{
+			map[string]any{
+				"tenant_isolation_mode": string(function.TenancyConfig.TenantIsolationMode),
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tenancy_config: %s", err)
+		}
+	}
 	tracingConfigMode := awstypes.TracingModePassThrough
 	if function.TracingConfig != nil {
 		tracingConfigMode = function.TracingConfig.Mode
