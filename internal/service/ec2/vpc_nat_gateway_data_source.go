@@ -249,7 +249,6 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "setting regional_nat_gateway_address: %s", err)
 		}
 		d.Set("route_table_id", ngw.RouteTableId)
-
 	}
 
 	if err := d.Set(names.AttrTags, keyValueTags(ctx, ngw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

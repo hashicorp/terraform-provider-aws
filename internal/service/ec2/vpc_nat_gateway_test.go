@@ -597,8 +597,8 @@ func TestAccVPCNATGateway_availabilityModeRegionalAuto(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
-					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", "enabled"),
-					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", names.AttrEnabled),
 					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
 				),
 			},

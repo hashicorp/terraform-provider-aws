@@ -457,14 +457,8 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				return sdkdiag.AppendErrorf(diags, "retrieving availability zone ID to name map: %s", err)
 			}
 
-			oldMap, err := processAZAddressSet(d.GetRawState(), azIDtoNameMap)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "processing old availability_zone_address set: %s", err)
-			}
-			newMap, err := processAZAddressSet(d.GetRawConfig(), azIDtoNameMap)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "processing new availability_zone_address set: %s", err)
-			}
+			oldMap := processAZAddressSet(d.GetRawState(), azIDtoNameMap)
+			newMap := processAZAddressSet(d.GetRawConfig(), azIDtoNameMap)
 
 			// Collect all unique AZ keys
 			allKeys := make(map[string]bool)
@@ -644,7 +638,7 @@ func expandNATGatewayAvailabilityZoneAddresses(vs []any, d *schema.ResourceData)
 			}
 		}
 
-		if v := d.GetRawConfig().GetAttr("availability_zone_address").AsValueSlice()[index].GetAttr("availability_zone"); v.IsKnown() && !v.IsNull() {
+		if v := d.GetRawConfig().GetAttr("availability_zone_address").AsValueSlice()[index].GetAttr(names.AttrAvailabilityZone); v.IsKnown() && !v.IsNull() {
 			address.AvailabilityZone = aws.String(m[names.AttrAvailabilityZone].(string))
 		} else if v := d.GetRawConfig().GetAttr("availability_zone_address").AsValueSlice()[index].GetAttr("availability_zone_id"); v.IsKnown() && !v.IsNull() {
 			address.AvailabilityZoneId = aws.String(m["availability_zone_id"].(string))
@@ -752,7 +746,7 @@ func retrieveAZListFromRawAttr(raw cty.Value, azIDtoNameMap map[string]string) (
 	return azList, nil
 }
 
-func processAZAddressSet(raw cty.Value, azIDtoNameMap map[string]string) (map[string]*schema.Set, error) {
+func processAZAddressSet(raw cty.Value, azIDtoNameMap map[string]string) map[string]*schema.Set {
 	availabilityZoneAddressLen := len(raw.GetAttr("availability_zone_address").AsValueSlice())
 	result := make(map[string]*schema.Set)
 	for i := 0; i < availabilityZoneAddressLen; i++ {
@@ -780,7 +774,7 @@ func processAZAddressSet(raw cty.Value, azIDtoNameMap map[string]string) (map[st
 			result[az] = schema.NewSet(schema.HashString, ids)
 		}
 	}
-	return result, nil
+	return result
 }
 
 // Associates allocation IDs to a regional NAT Gateway for a specific availability zone
