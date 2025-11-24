@@ -542,6 +542,39 @@ func TestAccRoute53Zone_escapedSpace(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Zone_nameUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone1, zone2 route53.GetHostedZoneOutput
+	resourceName := "aws_route53_zone.test"
+	zoneName1 := acctest.RandomDomainName()
+	zoneName2 := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneConfig_basic(zoneName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName1),
+				),
+			},
+			{
+				Config: testAccZoneConfig_basic(zoneName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName2),
+					// Verify that a new zone was created (different zone ID)
+					testAccCheckZoneRecreated(&zone1, &zone2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckZoneDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
@@ -663,6 +696,20 @@ func testAccCheckDomainName(zone *route53.GetHostedZoneOutput, domain string) re
 		}
 
 		return fmt.Errorf("Invalid domain name. Expected %s is %s", domain, *zone.HostedZone.Name)
+	}
+}
+
+func testAccCheckZoneRecreated(before, after *route53.GetHostedZoneOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before.HostedZone.Id == nil || after.HostedZone.Id == nil {
+			return fmt.Errorf("Missing hosted zone ID")
+		}
+
+		if aws.ToString(before.HostedZone.Id) == aws.ToString(after.HostedZone.Id) {
+			return fmt.Errorf("Expected zone to be recreated, but zone ID remained the same: %s", aws.ToString(before.HostedZone.Id))
+		}
+
+		return nil
 	}
 }
 
