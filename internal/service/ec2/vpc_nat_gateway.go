@@ -452,24 +452,17 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	case awstypes.AvailabilityModeRegional:
 		if d.HasChanges("availability_zone_address") {
-			azIDtoNameMap, err := makeAZIDtoNameMap(ctx, conn)
+			oldMap, azListOld, err := processAZAddressSet(ctx, conn, d.GetRawState())
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "retrieving availability zone ID to name map: %s", err)
+				return sdkdiag.AppendErrorf(diags, "processing old availability zone address set: %s", err)
 			}
-
-			oldMap := processAZAddressSet(d.GetRawState(), azIDtoNameMap)
-			newMap := processAZAddressSet(d.GetRawConfig(), azIDtoNameMap)
+			newMap, azListNew, err := processAZAddressSet(ctx, conn, d.GetRawConfig())
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "processing new availability zone address set: %s", err)
+			}
 
 			// Collect all unique AZ keys
 			allKeys := make(map[string]bool)
-			azListOld, err := retrieveAZListFromRawAttr(d.GetRawState(), azIDtoNameMap)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "retrieving old availability zone list: %s", err)
-			}
-			azListNew, err := retrieveAZListFromRawAttr(d.GetRawConfig(), azIDtoNameMap)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "retrieving new availability zone list: %s", err)
-			}
 			for _, az := range azListOld {
 				allKeys[az] = true
 			}
@@ -625,7 +618,7 @@ func expandNATGatewayAvailabilityZoneAddresses(vs []any, d *schema.ResourceData)
 
 	var addresses []awstypes.AvailabilityZoneAddress
 
-	for index, v := range vs {
+	for _, v := range vs {
 		m, ok := v.(map[string]any)
 		if !ok {
 			continue
@@ -638,10 +631,12 @@ func expandNATGatewayAvailabilityZoneAddresses(vs []any, d *schema.ResourceData)
 			}
 		}
 
-		if v := d.GetRawConfig().GetAttr("availability_zone_address").AsValueSlice()[index].GetAttr(names.AttrAvailabilityZone); v.IsKnown() && !v.IsNull() {
-			address.AvailabilityZone = aws.String(m[names.AttrAvailabilityZone].(string))
-		} else if v := d.GetRawConfig().GetAttr("availability_zone_address").AsValueSlice()[index].GetAttr("availability_zone_id"); v.IsKnown() && !v.IsNull() {
-			address.AvailabilityZoneId = aws.String(m["availability_zone_id"].(string))
+		// This function is called only during resource creation.
+		// Therefore, m is purely config value (not affected by the prior state),
+		if v, ok := m[names.AttrAvailabilityZone]; ok {
+			address.AvailabilityZone = aws.String(v.(string))
+		} else if v, ok := m["availability_zone_id"]; ok {
+			address.AvailabilityZoneId = aws.String(v.(string))
 		}
 
 		addresses = append(addresses, address)
@@ -718,38 +713,11 @@ func makeAZIDtoNameMap(ctx context.Context, conn *ec2.Client) (map[string]string
 	return azIDtoNameMap, nil
 }
 
-func retrieveAZListFromRawAttr(raw cty.Value, azIDtoNameMap map[string]string) ([]string, error) {
-	attrSize := len(raw.GetAttr("availability_zone_address").AsValueSlice())
-	azList := make([]string, 0, attrSize)
-	for index := 0; index < attrSize; index++ {
-		var az string
-		var azID string
-		if v := raw.GetAttr("availability_zone_address").AsValueSlice()[index].GetAttr(names.AttrAvailabilityZone); !v.IsNull() && v.IsKnown() {
-			az = v.AsString()
-		}
-		if v := raw.GetAttr("availability_zone_address").AsValueSlice()[index].GetAttr("availability_zone_id"); !v.IsNull() && v.IsKnown() {
-			azID = v.AsString()
-		}
-
-		if az == "" && azID != "" {
-			var exists bool
-			az, exists = azIDtoNameMap[azID]
-			if !exists {
-				return nil, fmt.Errorf("availability zone ID %q not found", azID)
-			}
-		}
-		if az == "" {
-			return nil, fmt.Errorf("either availability_zone or availability_zone_id must be specified")
-		}
-		azList = append(azList, az)
-	}
-	return azList, nil
-}
-
-func processAZAddressSet(raw cty.Value, azIDtoNameMap map[string]string) map[string]*schema.Set {
+func processAZAddressSet(ctx context.Context, conn *ec2.Client, raw cty.Value) (map[string]*schema.Set, []string, error) {
 	availabilityZoneAddressLen := len(raw.GetAttr("availability_zone_address").AsValueSlice())
 	result := make(map[string]*schema.Set)
-	for i := 0; i < availabilityZoneAddressLen; i++ {
+	azList := make([]string, 0, availabilityZoneAddressLen)
+	for i := range availabilityZoneAddressLen {
 		var az string
 		var azID string
 		if v := raw.GetAttr("availability_zone_address").AsValueSlice()[i].GetAttr(names.AttrAvailabilityZone); !v.IsNull() && v.IsKnown() {
@@ -760,7 +728,19 @@ func processAZAddressSet(raw cty.Value, azIDtoNameMap map[string]string) map[str
 		}
 
 		if az == "" && azID != "" {
-			az = azIDtoNameMap[azID]
+			var exists bool
+			azIDtoNameMap, err := makeAZIDtoNameMap(ctx, conn)
+			if err != nil {
+				return nil, nil, fmt.Errorf("retrieving availability zone ID to name map: %s", err)
+			}
+			az, exists = azIDtoNameMap[azID]
+			if !exists {
+				return nil, nil, fmt.Errorf("availability zone ID %q not found", azID)
+			}
+		}
+
+		if az == "" {
+			return nil, nil, fmt.Errorf("either availability_zone or availability_zone_id must be specified")
 		}
 
 		if v := raw.GetAttr("availability_zone_address").AsValueSlice()[i].GetAttr("allocation_ids"); !v.IsNull() && v.IsKnown() {
@@ -773,8 +753,9 @@ func processAZAddressSet(raw cty.Value, azIDtoNameMap map[string]string) map[str
 			}
 			result[az] = schema.NewSet(schema.HashString, ids)
 		}
+		azList = append(azList, az)
 	}
-	return result
+	return result, azList, nil
 }
 
 // Associates allocation IDs to a regional NAT Gateway for a specific availability zone
