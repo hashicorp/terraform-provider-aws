@@ -627,6 +627,9 @@ func TestAccEKSCluster_ComputeConfig_AddARN(t *testing.T) {
 }
 
 func TestAccEKSCluster_controlPlaneScalingConfig(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 	ctx := acctest.Context(t)
 	var cluster1, cluster2, cluster3 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2695,7 +2698,6 @@ resource "aws_eks_cluster" "test" {
 }
 `, rName, deletionProtection))
 }
-
 
 func testAccClusterConfig_controlPlaneScalingConfig(rName, tier string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
