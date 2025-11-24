@@ -5292,6 +5292,7 @@ service "lookoutmetrics" {
   provider_package_correct = "lookoutmetrics"
   doc_prefix               = ["lookoutmetrics_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "lookoutvision" {
