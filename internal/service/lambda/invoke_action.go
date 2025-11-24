@@ -140,9 +140,9 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 		input.Qualifier = config.Qualifier.ValueStringPointer()
 	}
 	// Set optional parameters
-	if !config.TenantId.IsNull() {
-		input.TenantId = config.TenantId.ValueStringPointer()
-	}
+	//if !config.TenantId.IsNull() {
+	//	input.TenantId = config.TenantId.ValueStringPointer()
+	//}
 
 	if !config.ClientContext.IsNull() {
 		clientContext := config.ClientContext.ValueString()

@@ -65,9 +65,9 @@ func dataSourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta 
 		Qualifier:      aws.String(qualifier),
 	}
 
-	if v, ok := d.GetOk("tenant_id"); ok {
-		input.TenantId = aws.String(v.(string))
-	}
+	//if v, ok := d.GetOk("tenant_id"); ok {
+	//	input.TenantId = aws.String(v.(string))
+	//}
 
 	output, err := conn.Invoke(ctx, input)
 
