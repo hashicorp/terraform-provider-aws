@@ -35,6 +35,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.VpcEncryptionControl")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importIgnore="egress_only_internet_gateway_exclusion;internet_gateway_exclusion;nat_gateway_exclusion;virtual_private_gateway_exclusion;vpc_peering_exclusion")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func newResourceVPCEncryptionControl(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceVPCEncryptionControl{}
 

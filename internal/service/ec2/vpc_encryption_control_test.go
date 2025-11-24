@@ -11,7 +11,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	set "github.com/hashicorp/go-set/v3"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,8 +29,10 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,18 +42,18 @@ func TestAccVPCVPCEncryptionControl_basic(t *testing.T) {
 	var v awstypes.VpcEncryptionControl
 	resourceName := "aws_vpc_encryption_control.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeMonitor),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -94,18 +100,18 @@ func TestAccVPCVPCEncryptionControl_disappears(t *testing.T) {
 	var v awstypes.VpcEncryptionControl
 	resourceName := "aws_vpc_encryption_control.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeMonitor),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEncryptionControl, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -125,18 +131,18 @@ func TestAccVPCVPCEncryptionControl_enforce(t *testing.T) {
 	var v awstypes.VpcEncryptionControl
 	resourceName := "aws_vpc_encryption_control.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeEnforce),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -204,18 +210,18 @@ func TestAccVPCVPCEncryptionControl_enforce_ImplicitExclusions(t *testing.T) {
 	var v awstypes.VpcEncryptionControl
 	resourceName := "aws_vpc_encryption_control.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEncryptionControlConfig_enforce_ImplicitExclusions("egress_only_internet_gateway_exclusion", "nat_gateway_exclusion", "vpc_peering_exclusion"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("egress_only_internet_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputEnable)),
@@ -271,18 +277,18 @@ func TestAccVPCVPCEncryptionControl_enforce_ExplicitExclusions(t *testing.T) {
 	var v awstypes.VpcEncryptionControl
 	resourceName := "aws_vpc_encryption_control.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEncryptionControlConfig_enforce_ExplicitExclusions("internet_gateway_exclusion", "virtual_private_gateway_exclusion"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -333,18 +339,18 @@ func TestAccVPCVPCEncryptionControl_update_monitorToEnforce(t *testing.T) {
 	var v awstypes.VpcEncryptionControl
 	resourceName := "aws_vpc_encryption_control.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeMonitor),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -357,7 +363,7 @@ func TestAccVPCVPCEncryptionControl_update_monitorToEnforce(t *testing.T) {
 			{
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeEnforce),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -396,18 +402,18 @@ func TestAccVPCVPCEncryptionControl_update_monitorToEnforce_ImplicitExclusions(t
 	var v awstypes.VpcEncryptionControl
 	resourceName := "aws_vpc_encryption_control.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeMonitor),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -420,7 +426,7 @@ func TestAccVPCVPCEncryptionControl_update_monitorToEnforce_ImplicitExclusions(t
 			{
 				Config: testAccVPCEncryptionControlConfig_enforce_ImplicitExclusions("egress_only_internet_gateway_exclusion", "nat_gateway_exclusion", "vpc_peering_exclusion"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -471,18 +477,18 @@ func TestAccVPCVPCEncryptionControl_update_enforce_ExplictDisableExclusions(t *t
 	var v awstypes.VpcEncryptionControl
 	resourceName := "aws_vpc_encryption_control.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeEnforce),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -521,7 +527,7 @@ func TestAccVPCVPCEncryptionControl_update_enforce_ExplictDisableExclusions(t *t
 			{
 				Config: testAccVPCEncryptionControlConfig_enforce_ExplictDisableExclusion(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -539,18 +545,18 @@ func TestAccVPCVPCEncryptionControl_update_enforce_ImplicitExclusions(t *testing
 	var v awstypes.VpcEncryptionControl
 	resourceName := "aws_vpc_encryption_control.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeEnforce),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -589,7 +595,7 @@ func TestAccVPCVPCEncryptionControl_update_enforce_ImplicitExclusions(t *testing
 			{
 				Config: testAccVPCEncryptionControlConfig_enforce_ImplicitExclusions("egress_only_internet_gateway_exclusion", "nat_gateway_exclusion", "vpc_peering_exclusion"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -648,18 +654,18 @@ func TestAccVPCVPCEncryptionControl_update_enforceToMonitor(t *testing.T) {
 	var v awstypes.VpcEncryptionControl
 	resourceName := "aws_vpc_encryption_control.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeEnforce),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -675,7 +681,7 @@ func TestAccVPCVPCEncryptionControl_update_enforceToMonitor(t *testing.T) {
 			{
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeMonitor),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -724,14 +730,14 @@ func TestAccVPCVPCEncryptionControl_Identity_Enforce(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
 				Config: testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeEnforce),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEncryptionControlExists(ctx, resourceName, &v),
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -786,9 +792,9 @@ func TestAccVPCVPCEncryptionControl_Identity_Enforce(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCEncryptionControlDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCEncryptionControlDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_encryption_control" {
@@ -810,7 +816,7 @@ func testAccCheckVPCEncryptionControlDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckVPCEncryptionControlExists(ctx context.Context, name string, vpcencryptioncontrol *awstypes.VpcEncryptionControl) resource.TestCheckFunc {
+func testAccCheckVPCEncryptionControlExists(ctx context.Context, t *testing.T, name string, vpcencryptioncontrol *awstypes.VpcEncryptionControl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -821,7 +827,7 @@ func testAccCheckVPCEncryptionControlExists(ctx context.Context, name string, vp
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCEncryptionControl, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		resp, err := tfec2.FindVPCEncryptionControlByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
