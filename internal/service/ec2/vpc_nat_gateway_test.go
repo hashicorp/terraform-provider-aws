@@ -911,7 +911,7 @@ func testAccCheckNATGatewayRegionalManualModeWithConfig(_ context.Context, n str
 		if availableZoneAddressCount != len(expectedConfig) {
 			return fmt.Errorf("expected %d availability_zone_address blocks, got %d", len(expectedConfig), availableZoneAddressCount)
 		}
-		for i := 0; i < availableZoneAddressCount; i++ {
+		for i := range availableZoneAddressCount {
 			az, azExists := rs.Primary.Attributes[fmt.Sprintf("availability_zone_address.%d.availability_zone", i)]
 			allocationIDsCountStr, allocationIDsExists := rs.Primary.Attributes[fmt.Sprintf("availability_zone_address.%d.allocation_ids.#", i)]
 
@@ -929,7 +929,7 @@ func testAccCheckNATGatewayRegionalManualModeWithConfig(_ context.Context, n str
 				return fmt.Errorf("unexpected AZ %s found in availability_zone_address", az)
 			}
 			actualAllocationIDs := make([]string, 0, allocationIDsCount)
-			for j := 0; j < allocationIDsCount; j++ {
+			for j := range allocationIDsCount {
 				allocationID := rs.Primary.Attributes[fmt.Sprintf("availability_zone_address.%d.allocation_ids.%d", i, j)]
 				actualAllocationIDs = append(actualAllocationIDs, allocationID)
 			}
@@ -952,7 +952,7 @@ func testAccCheckNATGatewayRegionalManualModeWithConfig(_ context.Context, n str
 		if regionalNATGatewayAddressCount != expectedRegionalNATGatewayAddressCount {
 			return fmt.Errorf("expected %d regional_nat_gateway_address blocks, got %d", expectedRegionalNATGatewayAddressCount, regionalNATGatewayAddressCount)
 		}
-		for i := 0; i < regionalNATGatewayAddressCount; i++ {
+		for i := range regionalNATGatewayAddressCount {
 			az, azExists := rs.Primary.Attributes[fmt.Sprintf("regional_nat_gateway_address.%d.availability_zone", i)]
 
 			if !azExists {
