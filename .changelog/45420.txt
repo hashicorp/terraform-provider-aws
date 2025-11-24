@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_vpc_nat_gateway: Add `availability_mode`, availability_zone_address`, and `vpc_id` arguments, and `regional_nat_gateway_address` and `route_table_id` attributes to support regional NAT Gateways
+```
+
+```release-note:enhancement
+resource/aws_vpc_nat_gateway: Make `subnet_id` argument optional
+```
+
+```release-note:enhancement
+data-source/aws_vpc_nat_gateway: Add `availability_mode`, availability_zone_address`, `regional_nat_gateway_address`, and `route_table_id` attributes
+```
