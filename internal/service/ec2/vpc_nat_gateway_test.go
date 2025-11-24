@@ -1252,8 +1252,8 @@ resource "aws_nat_gateway" "test" {
   dynamic "availability_zone_address" {
     for_each = local.config
     content {
-        allocation_ids    = [for i in availability_zone_address.value.eip : aws_eip.test[i].id]
-        availability_zone = data.aws_availability_zones.available.names[availability_zone_address.value.az]
+      allocation_ids    = [for i in availability_zone_address.value.eip : aws_eip.test[i].id]
+      availability_zone = data.aws_availability_zones.available.names[availability_zone_address.value.az]
     }
   }
 
@@ -1285,8 +1285,8 @@ resource "aws_nat_gateway" "test" {
   dynamic "availability_zone_address" {
     for_each = local.config
     content {
-        allocation_ids       = [for i in availability_zone_address.value.eip : aws_eip.test[i].id]
-        availability_zone_id = data.aws_availability_zones.available.zone_ids[availability_zone_address.value.az]
+      allocation_ids       = [for i in availability_zone_address.value.eip : aws_eip.test[i].id]
+      availability_zone_id = data.aws_availability_zones.available.zone_ids[availability_zone_address.value.az]
     }
   }
 
