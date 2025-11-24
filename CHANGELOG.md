@@ -1,5 +1,13 @@
 ## 6.23.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* action/aws_lambda_invoke: Add `tenant_id` argument ([#45170](https://github.com/hashicorp/terraform-provider-aws/issues/45170))
+* data-source/aws_lambda_function: Add `tenancy_config` attribute ([#45170](https://github.com/hashicorp/terraform-provider-aws/issues/45170))
+* data-source/aws_lambda_invocation: Add `tenant_id` argument ([#45170](https://github.com/hashicorp/terraform-provider-aws/issues/45170))
+* resource/aws_lambda_function: Add `tenancy_config` argument ([#45170](https://github.com/hashicorp/terraform-provider-aws/issues/45170))
+* resource/aws_lambda_invocation: Add `tenant_id` argument ([#45170](https://github.com/hashicorp/terraform-provider-aws/issues/45170))
+
 ## 6.22.1 (November 21, 2025)
 
 ENHANCEMENTS:
