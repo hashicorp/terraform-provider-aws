@@ -177,7 +177,6 @@ const (
 	AttrSecretKey                  = "secret_key"
 	AttrSecurityGroupIDs           = "security_group_ids"
 	AttrSecurityGroups             = "security_groups"
-	AttrServiceARN                 = "service_arn"
 	AttrServiceName                = "service_name"
 	AttrServiceRole                = "service_role"
 	AttrServiceRoleARN             = "service_role_arn"

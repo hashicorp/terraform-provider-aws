@@ -45,17 +45,17 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrServiceARN),
+					resource.TestCheckResourceAttrSet(resourceName, "service_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrServiceName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrServiceARN, "ecs", regexache.MustCompile(`service/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "service_arn", "ecs", regexache.MustCompile(`service/.+$`)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrServiceARN),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -118,16 +118,16 @@ func TestAccECSExpressGatewayService_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExpressGatewayServiceConfig_tags1(rName, "key1", "value1"),
+				Config: testAccExpressGatewayServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrServiceARN),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -136,7 +136,7 @@ func TestAccECSExpressGatewayService_tags(t *testing.T) {
 					"active_configurations", // not entirely returned immediately in Create response, so may show as diff in Import
 					"primary_container",     // top-level create-only attribute that will show as null in Import
 					"execution_role",
-					"network_configuration",
+					names.AttrNetworkConfiguration,
 				},
 			},
 		},
@@ -248,7 +248,7 @@ func TestAccECSExpressGatewayService_networkConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "network_configuration.0.subnets.1"),
 					resource.TestCheckResourceAttrSet(resourceName, "network_configuration.0.security_groups.0"),
 					// Verify additional attributes are set correctly
-					resource.TestCheckResourceAttr(resourceName, "service_name", rName+"-service"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, rName+"-service"),
 					resource.TestCheckResourceAttr(resourceName, "cpu", "512"),
 					resource.TestCheckResourceAttr(resourceName, "memory", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
@@ -352,6 +352,8 @@ func testAccCheckExpressGatewayServiceExists(ctx context.Context, name string, s
 
 func testAccExpressGatewayServiceConfig_base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_vpc" "default" {
   default = true
 }
@@ -375,7 +377,7 @@ data "aws_security_group" "default" {
 }
 
 resource "aws_iam_role" "execution" {
-  name = "%[1]s-execution"
+  name               = "%[1]s-execution"
   assume_role_policy = <<POLICY
 {
   "Version": "2008-10-17",
@@ -396,7 +398,7 @@ POLICY
 
 resource "aws_iam_role_policy_attachment" "execution" {
   role       = aws_iam_role.execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 resource "aws_iam_role_policy" "execution_logs" {
@@ -413,7 +415,7 @@ resource "aws_iam_role_policy" "execution_logs" {
 }
 
 resource "aws_iam_role" "infrastructure" {
-  name = "%[1]s-infra"
+  name               = "%[1]s-infra"
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -434,7 +436,7 @@ POLICY
 
 resource "aws_iam_role_policy_attachment" "infrastructure" {
   role       = aws_iam_role.infrastructure.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices"
 }
 `, rName)
 }
@@ -515,9 +517,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test_subnet1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = false
   tags = {
     Name = "%[1]s-subnet-1"
@@ -525,9 +527,9 @@ resource "aws_subnet" "test_subnet1" {
 }
 
 resource "aws_subnet" "test_subnet2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[1]
   map_public_ip_on_launch = false
   tags = {
     Name = "%[1]s-subnet-2"
@@ -566,7 +568,7 @@ resource "aws_iam_role" "task_role" {
 
 resource "aws_iam_role_policy_attachment" "task_role" {
   role       = aws_iam_role.task_role.name
-  policy_arn = "arn:aws:iam::aws:policy/CloudWatchFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/CloudWatchFullAccess"
 }
 
 resource "aws_ecs_express_gateway_service" "test" {
@@ -604,7 +606,7 @@ resource "aws_ecs_express_gateway_service" "test" {
 }
 
 func testAccExpressGatewayServiceConfig_duplicate(rName string) string {
-	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), `
 resource "aws_ecs_express_gateway_service" "test" {
   execution_role_arn      = aws_iam_role.execution.arn
   infrastructure_role_arn = aws_iam_role.infrastructure.arn
@@ -627,5 +629,5 @@ resource "aws_ecs_express_gateway_service" "duplicate" {
     aws_ecs_express_gateway_service.test
   ]
 }
-`))
+`)
 }

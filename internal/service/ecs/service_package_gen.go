@@ -35,7 +35,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_ecs_express_gateway_service",
 			Name:     "Express Gateway Service",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "service_arn",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},

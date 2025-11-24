@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -28,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -61,6 +59,7 @@ const (
 type resourceExpressGatewayService struct {
 	framework.ResourceWithModel[resourceExpressGatewayServiceModel]
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -71,18 +70,18 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 				Computed:   true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"service_revision_arn": types.StringType,
-						"execution_role_arn":   types.StringType,
-						"task_role_arn":        types.StringType,
-						"cpu":                  types.StringType,
-						"memory":               types.StringType,
-						"health_check_path":    types.StringType,
-						"created_at":           types.StringType,
-						"network_configuration": types.ListType{
+						"service_revision_arn":     types.StringType,
+						names.AttrExecutionRoleARN: types.StringType,
+						"task_role_arn":            types.StringType,
+						"cpu":                      types.StringType,
+						"memory":                   types.StringType,
+						"health_check_path":        types.StringType,
+						names.AttrCreatedAt:        types.StringType,
+						names.AttrNetworkConfiguration: types.ListType{
 							ElemType: types.ObjectType{
 								AttrTypes: map[string]attr.Type{
-									"security_groups": types.SetType{ElemType: types.StringType},
-									"subnets":         types.SetType{ElemType: types.StringType},
+									names.AttrSecurityGroups: types.SetType{ElemType: types.StringType},
+									names.AttrSubnets:        types.SetType{ElemType: types.StringType},
 								},
 							},
 						},
@@ -107,8 +106,8 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 						"ingress_paths": types.ListType{
 							ElemType: types.ObjectType{
 								AttrTypes: map[string]attr.Type{
-									"access_type": types.StringType,
-									"endpoint":    types.StringType,
+									"access_type":      types.StringType,
+									names.AttrEndpoint: types.StringType,
 								},
 							},
 						},
@@ -125,7 +124,7 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 			"cpu": schema.StringAttribute{
 				Optional: true,
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -139,7 +138,7 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 				},
 			},
 
-			"execution_role_arn": schema.StringAttribute{
+			names.AttrExecutionRoleARN: schema.StringAttribute{
 				Required: true,
 			},
 			"health_check_path": schema.StringAttribute{
@@ -155,7 +154,7 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 			"memory": schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrServiceARN: framework.ARNAttributeComputedOnly(),
+			"service_arn": framework.ARNAttributeComputedOnly(),
 			names.AttrServiceName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -164,7 +163,7 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"status": schema.ListAttribute{
+			names.AttrStatus: schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[statusModel](ctx),
 				Computed:   true,
 				PlanModifiers: []planmodifier.List{
@@ -172,8 +171,8 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 				},
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"status_code":   types.StringType,
-						"status_reason": types.StringType,
+						names.AttrStatusCode:   types.StringType,
+						names.AttrStatusReason: types.StringType,
 					},
 				},
 			},
@@ -196,7 +195,7 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"network_configuration": schema.ListNestedBlock{
+			names.AttrNetworkConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -261,7 +260,7 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 								},
 							},
 						},
-						"environment": schema.ListNestedBlock{
+						names.AttrEnvironment: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[environmentModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -344,7 +343,7 @@ func (r *resourceExpressGatewayService) Create(ctx context.Context, req resource
 	conn := r.Meta().ECSClient(ctx)
 
 	var plan resourceExpressGatewayServiceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -355,7 +354,7 @@ func (r *resourceExpressGatewayService) Create(ctx context.Context, req resource
 	}
 
 	var input ecs.CreateExpressGatewayServiceInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -382,7 +381,7 @@ func (r *resourceExpressGatewayService) Create(ctx context.Context, req resource
 	var waitOut *awstypes.ECSExpressGatewayService
 
 	if plan.WaitForSteadyState.ValueBool() {
-		waitOut, err = waitExpressGatewayServiceStable(ctx, conn, *out.Service.ServiceArn, *out.Service.Cluster, operationTime, createTimeout)
+		waitOut, err = waitExpressGatewayServiceStable(ctx, conn, *out.Service.ServiceArn, operationTime, createTimeout)
 	} else {
 		waitOut, err = waitExpressGatewayServiceActive(ctx, conn, plan.ServiceArn.ValueString(), createTimeout)
 	}
@@ -391,7 +390,7 @@ func (r *resourceExpressGatewayService) Create(ctx context.Context, req resource
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
 
 	// Set Optional+Computed attributes from API response
 	if waitOut.Cluster != nil {
@@ -424,17 +423,17 @@ func (r *resourceExpressGatewayService) Create(ctx context.Context, req resource
 	}
 
 	if waitOut.Status != nil {
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *resourceExpressGatewayService) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().ECSClient(ctx)
 
 	var state resourceExpressGatewayServiceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -463,7 +462,7 @@ func (r *resourceExpressGatewayService) Read(ctx context.Context, req resource.R
 	state.ID = flex.StringToFramework(ctx, out.ServiceArn)
 
 	if len(out.ActiveConfigurations) > 0 {
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.ActiveConfigurations, &state.ActiveConfigurations))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.ActiveConfigurations, &state.ActiveConfigurations))
 	}
 
 	if out.CreatedAt != nil {
@@ -508,20 +507,20 @@ func (r *resourceExpressGatewayService) Read(ctx context.Context, req resource.R
 	}
 
 	if out.Status != nil {
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*out.Status}, &state.Status))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*out.Status}, &state.Status))
 	}
 
 	setTagsOut(ctx, out.Tags)
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().ECSClient(ctx)
 
 	var plan, state resourceExpressGatewayServiceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -529,7 +528,7 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 	diff, d := flex.Diff(ctx, plan, state, flex.WithIgnoredField("active_configurations"), flex.WithIgnoredField("current_deployment"),
 		flex.WithIgnoredField("scaling_target"), flex.WithIgnoredField(names.AttrTags), flex.WithIgnoredField(names.AttrTags),
 		flex.WithIgnoredField(names.AttrTagsAll))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -543,7 +542,7 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 		// ServiceArn is required for the update operation
 		input.ServiceArn = plan.ServiceArn.ValueStringPointer()
 
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -560,7 +559,7 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 			return
 		}
 
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -568,7 +567,7 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 
 		if plan.WaitForSteadyState.ValueBool() {
-			waitOut, err = waitExpressGatewayServiceStable(ctx, conn, plan.ServiceArn.ValueString(), plan.Cluster.ValueString(), operationTime, updateTimeout)
+			waitOut, err = waitExpressGatewayServiceStable(ctx, conn, plan.ServiceArn.ValueString(), operationTime, updateTimeout)
 		} else {
 			waitOut, err = waitExpressGatewayServiceActive(ctx, conn, plan.ServiceArn.ValueString(), updateTimeout)
 		}
@@ -587,7 +586,7 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 	}
 
 	// Set Computed attributes from updated service state
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
 	if waitOut.CreatedAt != nil {
 		plan.CreatedAt = timetypes.NewRFC3339TimeValue(*waitOut.CreatedAt)
 	}
@@ -617,17 +616,17 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 	}
 
 	if waitOut.Status != nil {
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resourceExpressGatewayService) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ECSClient(ctx)
 
 	var state resourceExpressGatewayServiceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -666,10 +665,6 @@ func (r *resourceExpressGatewayService) Delete(ctx context.Context, req resource
 	}
 }
 
-func (r *resourceExpressGatewayService) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 const (
 	gatewayServiceStatusActive   = string(awstypes.ExpressGatewayServiceStatusCodeActive)
 	gatewayServiceStatusDraining = string(awstypes.ExpressGatewayServiceStatusCodeDraining)
@@ -696,11 +691,11 @@ func waitExpressGatewayServiceActive(ctx context.Context, conn *ecs.Client, ARN 
 	return nil, smarterr.NewError(err)
 }
 
-func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN, clusterNameOrARN string, operationTime time.Time, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) { //nolint:unparam
+func waitExpressGatewayServiceStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN string, operationTime time.Time, timeout time.Duration) (*awstypes.ECSExpressGatewayService, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{gatewayServiceStatusInactive, gatewayServiceStatusDraining, gatewayServiceStatusPending},
 		Target:  []string{gatewayServiceStatusActive, gatewayServiceStatusStable},
-		Refresh: statusExpressGatewayServiceWaitForStable(ctx, conn, gatewayServiceARN, clusterNameOrARN, operationTime),
+		Refresh: statusExpressGatewayServiceWaitForStable(ctx, conn, gatewayServiceARN, operationTime),
 		Timeout: timeout,
 	}
 
@@ -842,7 +837,7 @@ func checkExpressGatewayServiceExists(ctx context.Context, conn *ecs.Client, ser
 	return err
 }
 
-func statusExpressGatewayServiceWaitForStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN, clusterNameOrARN string, operationTime time.Time) retry.StateRefreshFunc {
+func statusExpressGatewayServiceWaitForStable(ctx context.Context, conn *ecs.Client, gatewayServiceARN string, operationTime time.Time) retry.StateRefreshFunc {
 	var deploymentArn *string
 
 	return func() (any, string, error) {

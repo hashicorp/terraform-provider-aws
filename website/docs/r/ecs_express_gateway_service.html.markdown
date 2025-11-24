@@ -8,8 +8,6 @@ description: |-
 
 # Resource: aws_ecs_express_gateway_service
 
--> **Note:** When creating IAM roles for the Express Gateway Service in the same Terraform configuration, you should add a `time_sleep` resource to ensure proper role propagation. See the [IAM Role Timing](#iam-role-timing) section below for details.
-
 Manages an ECS Express service. The Express service provides a simplified way to deploy containerized applications with automatic provisioning and management of AWS infrastructure including Application Load Balancers (ALBs), target groups, security groups, and auto-scaling policies. This service offers built-in load balancing, auto-scaling, and networking capabilities with zero-downtime deployments.
 
 Express services automatically handle infrastructure provisioning and updates through rolling deployments, ensuring high availability during service modifications. When you update an Express service, a new service revision is created and deployed with zero downtime.
@@ -26,8 +24,6 @@ resource "aws_ecs_express_gateway_service" "example" {
   primary_container {
     image = "nginx:latest"
   }
-
-  depends_on = [time_sleep.wait_for_iam]
 }
 ```
 
@@ -51,8 +47,6 @@ resource "aws_ecs_express_gateway_service" "example" {
     subnets         = [aws_subnet.private_a.id, aws_subnet.private_b.id]
     security_groups = [aws_security_group.app.id]
   }
-
-  depends_on = [time_sleep.wait_for_iam]
 }
 ```
 
@@ -88,8 +82,6 @@ resource "aws_ecs_express_gateway_service" "example" {
       value_from = aws_secretsmanager_secret.db_password.arn
     }
   }
-
-  depends_on = [time_sleep.wait_for_iam]
 }
 ```
 
@@ -105,35 +97,11 @@ resource "aws_ecs_express_gateway_service" "example" {
   }
 
   scaling_target {
-    min_task_count             = 2
-    max_task_count             = 10
-    auto_scaling_metric        = "CPU"
-    auto_scaling_target_value  = 70
+    min_task_count            = 2
+    max_task_count            = 10
+    auto_scaling_metric       = "CPU"
+    auto_scaling_target_value = 70
   }
-
-  depends_on = [time_sleep.wait_for_iam]
-}
-```
-
-### IAM Role Timing
-
-When creating IAM roles in the same Terraform configuration, add a `time_sleep` resource to ensure proper role propagation:
-
-```terraform
-resource "time_sleep" "wait_for_iam" {
-  depends_on      = [aws_iam_role_policy_attachment.infrastructure]
-  create_duration = "7s"
-}
-
-resource "aws_ecs_express_gateway_service" "example" {
-  execution_role_arn      = aws_iam_role.execution.arn
-  infrastructure_role_arn = aws_iam_role.infrastructure.arn
-
-  primary_container {
-    image = "nginx:latest"
-  }
-
-  depends_on = [time_sleep.wait_for_iam]
 }
 ```
 
@@ -150,6 +118,7 @@ The following arguments are optional:
 * `cpu` - (Optional) Number of CPU units used by the task. Valid values are powers of 2 between 256 and 4096.
 * `health_check_path` - (Optional) Path for health check requests. Defaults to `/ping`.
 * `memory` - (Optional) Amount of memory (in MiB) used by the task. Valid values are between 512 and 8192.
+* `region` - (Optional) AWS region where the service will be created. If not specified, the region configured in the provider will be used.
 * `service_name` - (Optional) Name of the service. If not specified, a name will be generated. Changing this forces a new resource to be created.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_role_arn` - (Optional) ARN of the IAM role that allows your Amazon ECS container task to make calls to other AWS services.
@@ -219,28 +188,28 @@ The `timeouts` configuration block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `active_configurations` - List of active service configurations. Each configuration contains:
-  * `auto_scaling_metric` - Auto-scaling metric being used.
-  * `auto_scaling_target_value` - Target value for auto-scaling.
-  * `cpu` - CPU units allocated to the service.
-  * `created_at` - Time when the configuration was created.
-  * `execution_role_arn` - Execution role ARN.
-  * `health_check_path` - Health check path.
-  * `ingress_paths` - List of ingress paths with access type and endpoint information.
-  * `max_task_count` - Maximum number of tasks.
-  * `memory` - Memory allocated to the service.
-  * `min_task_count` - Minimum number of tasks.
-  * `network_configuration` - Network configuration details.
-  * `primary_container` - Primary container configuration.
-  * `scaling_target` - Scaling target configuration.
-  * `service_revision_arn` - ARN of the service revision.
-  * `task_role_arn` - Task role ARN.
+    * `auto_scaling_metric` - Auto-scaling metric being used.
+    * `auto_scaling_target_value` - Target value for auto-scaling.
+    * `cpu` - CPU units allocated to the service.
+    * `created_at` - Time when the configuration was created.
+    * `execution_role_arn` - Execution role ARN.
+    * `health_check_path` - Health check path.
+    * `ingress_paths` - List of ingress paths with access type and endpoint information.
+    * `max_task_count` - Maximum number of tasks.
+    * `memory` - Memory allocated to the service.
+    * `min_task_count` - Minimum number of tasks.
+    * `network_configuration` - Network configuration details.
+    * `primary_container` - Primary container configuration.
+    * `scaling_target` - Scaling target configuration.
+    * `service_revision_arn` - ARN of the service revision.
+    * `task_role_arn` - Task role ARN.
 * `created_at` - Time when the service was created.
 * `current_deployment` - ARN of the current deployment.
 * `id` - ARN of the Express Gateway Service.
 * `service_arn` - ARN of the Express Gateway Service.
 * `status` - Current status of the service. Contains:
-  * `status_code` - Status code of the service.
-  * `status_reason` - Reason for the current status.
+    * `status_code` - Status code of the service.
+    * `status_reason` - Reason for the current status.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `updated_at` - Time when the service was last updated.
 
@@ -255,9 +224,11 @@ This resource exports the following attributes in addition to the arguments abov
 ## Service Updates and Deletion
 
 ### Updates
+
 When you update an Express service configuration, a new service revision is created and deployed using a rolling deployment strategy with zero downtime. The service automatically manages the transition from the old configuration to the new one, ensuring continuous availability.
 
 ### Deletion
+
 When an Express service is deleted, it enters a `DRAINING` state where existing tasks are allowed to complete gracefully before termination. The deletion process is irreversible - once initiated, the service and all its associated AWS infrastructure (load balancers, target groups, etc.) will be permanently removed. During the draining process, no new tasks are started, and the service becomes unavailable once all tasks have completed.
 
 ## Import
