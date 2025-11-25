@@ -5,7 +5,6 @@ package ecs_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -54,10 +52,11 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: "service_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_steady_state",
 					"current_deployment",    // not returned immediately in Create response, so will show as diff in Import
@@ -126,10 +125,11 @@ func TestAccECSExpressGatewayService_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: "service_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_steady_state",
 					"current_deployment",    // not returned immediately in Create response, so will show as diff in Import
@@ -268,12 +268,14 @@ func testAccCheckExpressGatewayServiceDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			output, err := tfecs.FindExpressGatewayServiceByARN(ctx, conn, rs.Primary.ID)
+			output, err := tfecs.FindExpressGatewayServiceByARN(ctx, conn, rs.Primary.Attributes["service_arn"])
+
 			if tfresource.NotFound(err) {
 				return nil
 			}
+
 			if err != nil {
-				return create.Error(names.ECS, create.ErrActionCheckingDestroyed, tfecs.ResNameExpressGatewayService, rs.Primary.ID, err)
+				return err
 			}
 
 			if string(output.Status.StatusCode) == string(awstypes.ExpressGatewayServiceStatusCodeInactive) ||
@@ -281,32 +283,29 @@ func testAccCheckExpressGatewayServiceDestroy(ctx context.Context) resource.Test
 				return nil
 			}
 
-			return create.Error(names.ECS, create.ErrActionCheckingDestroyed, tfecs.ResNameExpressGatewayService, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("ECS Express Gateway Service %s still exists", rs.Primary.Attributes["service_arn"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckExpressGatewayServiceExists(ctx context.Context, name string, service *awstypes.ECSExpressGatewayService) resource.TestCheckFunc {
+func testAccCheckExpressGatewayServiceExists(ctx context.Context, n string, v *awstypes.ECSExpressGatewayService) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.ECS, create.ErrActionCheckingExistence, tfecs.ResNameExpressGatewayService, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.ECS, create.ErrActionCheckingExistence, tfecs.ResNameExpressGatewayService, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
-		resp, err := tfecs.FindExpressGatewayServiceByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfecs.FindExpressGatewayServiceByARN(ctx, conn, rs.Primary.Attributes["service_arn"])
+
 		if err != nil {
-			return create.Error(names.ECS, create.ErrActionCheckingExistence, tfecs.ResNameExpressGatewayService, rs.Primary.ID, err)
+			return err
 		}
 
-		*service = *resp
+		*v = *output
 
 		return nil
 	}

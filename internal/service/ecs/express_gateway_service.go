@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -32,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -55,7 +56,6 @@ func newExpressGatewayServiceResource(_ context.Context) (resource.ResourceWithC
 type expressGatewayServiceResource struct {
 	framework.ResourceWithModel[expressGatewayServiceResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
 }
 
 func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -140,7 +140,6 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 			"health_check_path": schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: framework.IDAttribute(),
 			"infrastructure_role_arn": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -336,13 +335,13 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 }
 
 func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().ECSClient(ctx)
-
 	var plan expressGatewayServiceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().ECSClient(ctx)
 
 	if err := checkExpressGatewayServiceExists(ctx, conn, plan.ServiceName, plan.Cluster); err != nil {
 		resp.Diagnostics.AddError("Resource Already Exists", err.Error())
@@ -350,7 +349,7 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 	}
 
 	var input ecs.CreateExpressGatewayServiceInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -369,33 +368,33 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 		return
 	}
 
-	plan.ServiceArn = flex.StringToFramework(ctx, out.Service.ServiceArn)
-	plan.ID = flex.StringToFramework(ctx, out.Service.ServiceArn)
+	serviceARN := aws.ToString(out.Service.ServiceArn)
+	plan.ServiceArn = fwflex.StringValueToFramework(ctx, serviceARN)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 
 	var waitOut *awstypes.ECSExpressGatewayService
 
 	if plan.WaitForSteadyState.ValueBool() {
-		waitOut, err = waitExpressGatewayServiceStable(ctx, conn, *out.Service.ServiceArn, operationTime, createTimeout)
+		waitOut, err = waitExpressGatewayServiceStable(ctx, conn, serviceARN, operationTime, createTimeout)
 	} else {
-		waitOut, err = waitExpressGatewayServiceActive(ctx, conn, plan.ServiceArn.ValueString(), createTimeout)
+		waitOut, err = waitExpressGatewayServiceActive(ctx, conn, serviceARN, createTimeout)
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ServiceArn.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceARN)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
 
 	// Set Optional+Computed attributes from API response
 	if waitOut.Cluster != nil {
 		// Preserve cluster format from state (name vs ARN)
 		cluster := plan.Cluster.ValueString()
 		if arn.IsARN(cluster) {
-			plan.Cluster = flex.StringToFramework(ctx, waitOut.Cluster)
+			plan.Cluster = fwflex.StringToFramework(ctx, waitOut.Cluster)
 		} else {
-			plan.Cluster = flex.StringToFramework(ctx, aws.String(clusterNameFromARN(aws.ToString(waitOut.Cluster))))
+			plan.Cluster = fwflex.StringToFramework(ctx, aws.String(clusterNameFromARN(aws.ToString(waitOut.Cluster))))
 		}
 	}
 
@@ -407,7 +406,7 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 	}
 
 	if waitOut.CurrentDeployment != nil {
-		plan.CurrentDeployment = flex.StringToFramework(ctx, waitOut.CurrentDeployment)
+		plan.CurrentDeployment = fwflex.StringToFramework(ctx, waitOut.CurrentDeployment)
 	} else {
 		plan.CurrentDeployment = types.StringNull()
 	}
@@ -415,37 +414,34 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 	plan.Region = types.StringValue(r.Meta().Region(ctx))
 
 	if waitOut.ServiceName != nil {
-		plan.ServiceName = flex.StringToFramework(ctx, waitOut.ServiceName)
+		plan.ServiceName = fwflex.StringToFramework(ctx, waitOut.ServiceName)
 	}
 
 	if waitOut.Status != nil {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().ECSClient(ctx)
-
 	var state expressGatewayServiceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	serviceArn := state.ServiceArn.ValueString()
-	if serviceArn == "" {
-		serviceArn = state.ID.ValueString()
-	}
-	out, err := findExpressGatewayServiceByARN(ctx, conn, serviceArn)
+	conn := r.Meta().ECSClient(ctx)
+
+	serviceARN := fwflex.StringValueFromFramework(ctx, state.ServiceArn)
+	out, err := findExpressGatewayServiceByARN(ctx, conn, serviceARN)
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceARN)
 		return
 	}
 
@@ -455,11 +451,8 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	state.ServiceArn = flex.StringToFramework(ctx, out.ServiceArn)
-	state.ID = flex.StringToFramework(ctx, out.ServiceArn)
-
 	if len(out.ActiveConfigurations) > 0 {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.ActiveConfigurations, &state.ActiveConfigurations))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.ActiveConfigurations, &state.ActiveConfigurations))
 	}
 
 	if out.CreatedAt != nil {
@@ -477,10 +470,10 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 			// If state cluster is empty, use default cluster name
 			state.Cluster = types.StringValue("default")
 		} else if arn.IsARN(cluster) {
-			state.Cluster = flex.StringToFramework(ctx, out.Cluster)
+			state.Cluster = fwflex.StringToFramework(ctx, out.Cluster)
 		} else {
 			// Always preserve the cluster name format from state
-			state.Cluster = flex.StringToFramework(ctx, aws.String(clusterNameFromARN(aws.ToString(out.Cluster))))
+			state.Cluster = fwflex.StringToFramework(ctx, aws.String(clusterNameFromARN(aws.ToString(out.Cluster))))
 		}
 	} else {
 		// If API doesn't return cluster, preserve existing state value
@@ -490,21 +483,21 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 	}
 
 	if out.CurrentDeployment != nil {
-		state.CurrentDeployment = flex.StringToFramework(ctx, out.CurrentDeployment)
+		state.CurrentDeployment = fwflex.StringToFramework(ctx, out.CurrentDeployment)
 	} else {
 		state.CurrentDeployment = types.StringNull()
 	}
 
 	if out.InfrastructureRoleArn != nil {
-		state.InfrastructureRoleArn = flex.StringToFramework(ctx, out.InfrastructureRoleArn)
+		state.InfrastructureRoleArn = fwflex.StringToFramework(ctx, out.InfrastructureRoleArn)
 	}
 
 	if out.ServiceName != nil {
-		state.ServiceName = flex.StringToFramework(ctx, out.ServiceName)
+		state.ServiceName = fwflex.StringToFramework(ctx, out.ServiceName)
 	}
 
 	if out.Status != nil {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*out.Status}, &state.Status))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*out.Status}, &state.Status))
 	}
 
 	setTagsOut(ctx, out.Tags)
@@ -513,8 +506,6 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 }
 
 func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().ECSClient(ctx)
-
 	var plan, state expressGatewayServiceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -522,14 +513,17 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state, flex.WithIgnoredField("active_configurations"), flex.WithIgnoredField("current_deployment"),
-		flex.WithIgnoredField("scaling_target"), flex.WithIgnoredField(names.AttrTags), flex.WithIgnoredField(names.AttrTags),
-		flex.WithIgnoredField(names.AttrTagsAll))
+	conn := r.Meta().ECSClient(ctx)
+
+	diff, d := fwflex.Diff(ctx, plan, state, fwflex.WithIgnoredField("active_configurations"), fwflex.WithIgnoredField("current_deployment"),
+		fwflex.WithIgnoredField("scaling_target"), fwflex.WithIgnoredField(names.AttrTags), fwflex.WithIgnoredField(names.AttrTags),
+		fwflex.WithIgnoredField(names.AttrTagsAll))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	serviceARN := fwflex.StringValueFromFramework(ctx, plan.ServiceArn)
 	var operationTime time.Time
 	var waitOut *awstypes.ECSExpressGatewayService
 
@@ -537,9 +531,9 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		var input ecs.UpdateExpressGatewayServiceInput
 
 		// ServiceArn is required for the update operation
-		input.ServiceArn = plan.ServiceArn.ValueStringPointer()
+		input.ServiceArn = aws.String(serviceARN)
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -548,15 +542,15 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 
 		out, err := retryExpressGatewayServiceUpdate(ctx, conn, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ServiceArn.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceARN)
 			return
 		}
 		if out == nil || out.Service == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ServiceArn.String())
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, serviceARN)
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -564,26 +558,26 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 
 		if plan.WaitForSteadyState.ValueBool() {
-			waitOut, err = waitExpressGatewayServiceStable(ctx, conn, plan.ServiceArn.ValueString(), operationTime, updateTimeout)
+			waitOut, err = waitExpressGatewayServiceStable(ctx, conn, serviceARN, operationTime, updateTimeout)
 		} else {
-			waitOut, err = waitExpressGatewayServiceActive(ctx, conn, plan.ServiceArn.ValueString(), updateTimeout)
+			waitOut, err = waitExpressGatewayServiceActive(ctx, conn, serviceARN, updateTimeout)
 		}
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ServiceArn.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceARN)
 			return
 		}
 	} else {
 		// No changes, just read current state
 		var err error
-		waitOut, err = findExpressGatewayServiceNoTagsByARN(ctx, conn, plan.ServiceArn.ValueString())
+		waitOut, err = findExpressGatewayServiceNoTagsByARN(ctx, conn, serviceARN)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ServiceArn.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceARN)
 			return
 		}
 	}
 
 	// Set Computed attributes from updated service state
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
 	if waitOut.CreatedAt != nil {
 		plan.CreatedAt = timetypes.NewRFC3339TimeValue(*waitOut.CreatedAt)
 	}
@@ -596,40 +590,41 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		// Preserve cluster format from state (name vs ARN)
 		cluster := plan.Cluster.ValueString()
 		if arn.IsARN(cluster) {
-			plan.Cluster = flex.StringToFramework(ctx, waitOut.Cluster)
+			plan.Cluster = fwflex.StringToFramework(ctx, waitOut.Cluster)
 		} else {
-			plan.Cluster = flex.StringToFramework(ctx, aws.String(clusterNameFromARN(aws.ToString(waitOut.Cluster))))
+			plan.Cluster = fwflex.StringToFramework(ctx, aws.String(clusterNameFromARN(aws.ToString(waitOut.Cluster))))
 		}
 	}
 
 	if waitOut.CurrentDeployment != nil {
-		plan.CurrentDeployment = flex.StringToFramework(ctx, waitOut.CurrentDeployment)
+		plan.CurrentDeployment = fwflex.StringToFramework(ctx, waitOut.CurrentDeployment)
 	} else {
 		plan.CurrentDeployment = types.StringNull()
 	}
 
 	if waitOut.ServiceName != nil {
-		plan.ServiceName = flex.StringToFramework(ctx, waitOut.ServiceName)
+		plan.ServiceName = fwflex.StringToFramework(ctx, waitOut.ServiceName)
 	}
 
 	if waitOut.Status != nil {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *expressGatewayServiceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().ECSClient(ctx)
-
 	var state expressGatewayServiceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().ECSClient(ctx)
+
+	serviceARN := fwflex.StringValueFromFramework(ctx, state.ServiceArn)
 	input := ecs.DeleteExpressGatewayServiceInput{
-		ServiceArn: state.ServiceArn.ValueStringPointer(),
+		ServiceArn: aws.String(serviceARN),
 	}
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 
@@ -642,16 +637,20 @@ func (r *expressGatewayServiceResource) Delete(ctx context.Context, req resource
 			// Service was already deleted/inactive/draining - deletion is already in progress or complete
 		} else {
 			// Real error occurred
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceARN)
 			return
 		}
 	}
 
-	_, err = waitExpressGatewayServiceInactive(ctx, conn, state.ServiceArn.ValueString(), deleteTimeout)
+	_, err = waitExpressGatewayServiceInactive(ctx, conn, serviceARN, deleteTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceARN)
 		return
 	}
+}
+
+func (r *expressGatewayServiceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("service_arn"), req, resp)
 }
 
 const (
@@ -884,7 +883,6 @@ type expressGatewayServiceResourceModel struct {
 
 	ExecutionRoleArn      types.String                                               `tfsdk:"execution_role_arn"`
 	HealthCheckPath       types.String                                               `tfsdk:"health_check_path"`
-	ID                    types.String                                               `tfsdk:"id"`
 	InfrastructureRoleArn types.String                                               `tfsdk:"infrastructure_role_arn"`
 	Memory                types.String                                               `tfsdk:"memory"`
 	NetworkConfiguration  fwtypes.ListNestedObjectValueOf[networkConfigurationModel] `tfsdk:"network_configuration"`

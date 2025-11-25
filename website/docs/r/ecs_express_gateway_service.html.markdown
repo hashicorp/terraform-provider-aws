@@ -205,7 +205,6 @@ This resource exports the following attributes in addition to the arguments abov
     * `task_role_arn` - Task role ARN.
 * `created_at` - Time when the service was created.
 * `current_deployment` - ARN of the current deployment.
-* `id` - ARN of the Express Gateway Service.
 * `service_arn` - ARN of the Express Gateway Service.
 * `status` - Current status of the service. Contains:
     * `status_code` - Status code of the service.
