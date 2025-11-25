@@ -225,13 +225,13 @@ func TestAccLogsTransformer_addKeys(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.0.key", acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.0.value", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.0.overwrite_if_exists", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.1.key", acctest.CtKey2),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.1.value", acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entries.1.overwrite_if_exists", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entry.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entry.0.key", acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entry.0.value", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entry.0.overwrite_if_exists", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entry.1.key", acctest.CtKey2),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entry.1.value", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.0.entry.1.overwrite_if_exists", acctest.CtTrue),
 				),
 			},
 			{
@@ -270,13 +270,13 @@ func TestAccLogsTransformer_copyValue(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entries.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entries.0.source", "source1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entries.0.target", "target1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entries.0.overwrite_if_exists", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entries.1.source", "source2"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entries.1.target", "target2"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entries.1.overwrite_if_exists", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entry.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entry.0.source", "source1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entry.0.target", "target1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entry.0.overwrite_if_exists", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entry.1.source", "source2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entry.1.target", "target2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.0.entry.1.overwrite_if_exists", acctest.CtTrue),
 				),
 			},
 			{
@@ -622,13 +622,13 @@ func TestAccLogsTransformer_moveKeys(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entries.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entries.0.source", "source1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entries.0.target", "target1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entries.0.overwrite_if_exists", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entries.1.source", "source2"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entries.1.target", "target2"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entries.1.overwrite_if_exists", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entry.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entry.0.source", "source1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entry.0.target", "target1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entry.0.overwrite_if_exists", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entry.1.source", "source2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entry.1.target", "target2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.0.entry.1.overwrite_if_exists", acctest.CtTrue),
 				),
 			},
 			{
@@ -1207,13 +1207,13 @@ func TestAccLogsTransformer_renameKeys(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entries.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entries.0.key", acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entries.0.rename_to", "renamedKey1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entries.0.overwrite_if_exists", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entries.1.key", acctest.CtKey2),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entries.1.rename_to", "renamedKey2"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entries.1.overwrite_if_exists", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entry.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entry.0.key", acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entry.0.rename_to", "renamedKey1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entry.0.overwrite_if_exists", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entry.1.key", acctest.CtKey2),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entry.1.rename_to", "renamedKey2"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.0.entry.1.overwrite_if_exists", acctest.CtTrue),
 				),
 			},
 			{
@@ -1252,9 +1252,9 @@ func TestAccLogsTransformer_splitString(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.split_string.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.split_string.0.entries.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.split_string.0.entries.0.delimiter", ":"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.split_string.0.entries.0.source", "source1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.split_string.0.entry.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.split_string.0.entry.0.delimiter", ":"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.split_string.0.entry.0.source", "source1"),
 				),
 			},
 			{
@@ -1293,10 +1293,10 @@ func TestAccLogsTransformer_substituteString(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.substitute_string.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.substitute_string.0.entries.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.substitute_string.0.entries.0.from", "from1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.substitute_string.0.entries.0.to", "to1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.substitute_string.0.entries.0.source", "source1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.substitute_string.0.entry.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.substitute_string.0.entry.0.from", "from1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.substitute_string.0.entry.0.to", "to1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.substitute_string.0.entry.0.source", "source1"),
 				),
 			},
 			{
@@ -1376,9 +1376,9 @@ func TestAccLogsTransformer_typeConverter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.type_converter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.type_converter.0.entries.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.type_converter.0.entries.0.key", acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.type_converter.0.entries.0.type", "boolean"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.type_converter.0.entry.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.type_converter.0.entry.0.key", acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.type_converter.0.entry.0.type", "boolean"),
 				),
 			},
 			{
@@ -1522,11 +1522,11 @@ resource "aws_cloudwatch_log_transformer" "test" {
 
   transformer_config {
     add_keys {
-      entries {
+      entry {
         key   = "key1"
         value = "value1"
       }
-      entries {
+      entry {
         key                 = "key2"
         value               = "value2"
         overwrite_if_exists = true
@@ -1552,11 +1552,11 @@ resource "aws_cloudwatch_log_transformer" "test" {
 
   transformer_config {
     copy_value {
-      entries {
+      entry {
         source = "source1"
         target = "target1"
       }
-      entries {
+      entry {
         source              = "source2"
         target              = "target2"
         overwrite_if_exists = true
@@ -1758,11 +1758,11 @@ resource "aws_cloudwatch_log_transformer" "test" {
 
   transformer_config {
     move_keys {
-      entries {
+      entry {
         source = "source1"
         target = "target1"
       }
-      entries {
+      entry {
         source              = "source2"
         target              = "target2"
         overwrite_if_exists = true
@@ -2048,11 +2048,11 @@ resource "aws_cloudwatch_log_transformer" "test" {
 
   transformer_config {
     rename_keys {
-      entries {
+      entry {
         key       = "key1"
         rename_to = "renamedKey1"
       }
-      entries {
+      entry {
         key                 = "key2"
         rename_to           = "renamedKey2"
         overwrite_if_exists = true
@@ -2078,7 +2078,7 @@ resource "aws_cloudwatch_log_transformer" "test" {
 
   transformer_config {
     split_string {
-      entries {
+      entry {
         delimiter = ":"
         source    = "source1"
       }
@@ -2103,7 +2103,7 @@ resource "aws_cloudwatch_log_transformer" "test" {
 
   transformer_config {
     substitute_string {
-      entries {
+      entry {
         from   = "from1"
         source = "source1"
         to     = "to1"
@@ -2151,7 +2151,7 @@ resource "aws_cloudwatch_log_transformer" "test" {
 
   transformer_config {
     type_converter {
-      entries {
+      entry {
         key  = "key1"
         type = "boolean"
       }

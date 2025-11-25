@@ -45,7 +45,7 @@ Each `transformer_config` supports the following arguments:
 * `copy_value` - (Optional) Copies values within a log event. See [`copy_value`](#copy_value-block) below for details.
 * `csv` - (Optional) Parses comma-separated values (CSV) from the log events into columns. See [`csv`](#csv-block) below for details.
 * `date_time_converter` - (Optional) Converts a datetime string into a format that you specify. See [`date_time_converter`](#date_time_converter-block) below for details.
-* `delete_keys` - (Optional) Deletes entries from a log event. See [`delete_keys`](#delete_keys-block) below for details.
+* `delete_keys` - (Optional) Deletes entry from a log event. See [`delete_keys`](#delete_keys-block) below for details.
 * `grok` - (Optional) Parses and structures unstructured data by using pattern matching. See [`grok`](#grok-block) below for details.
 * `list_to_map` - (Optional) Converts list of objects that contain key fields into a map of target keys. See [`list_to_map`](#list_to_map-block) below for details.
 * `lower_case_string` - (Optional) Converts a string to lowercase. See [`lower_case_string`](#lower_case_string-block) below for details.
@@ -71,11 +71,11 @@ Each `transformer_config` supports the following arguments:
 
 The `add_keys` block supports the following arguments:
 
-* `entries` - (Required) Objects containing the information about the keys to add to the log event. You must include at least one entry, and five at most. See [`add_keys` `entries`](#add_keys-entries-block) below for details.
+* `entry` - (Required) Objects containing the information about the keys to add to the log event. You must include at least one entry, and five at most. See [`add_keys` `entry`](#add_keys-entry-block) below for details.
 
-### `add_keys` `entries` Block
+### `add_keys` `entry` Block
 
-Each `entries` block supports the following arguments:
+Each `entry` block supports the following arguments:
 
 * `key` - (Required) Specifies the key of the new entry to be added to the log event.
 * `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the key already exists in the log event. Defaults to `false`.
@@ -87,11 +87,11 @@ Each `entries` block supports the following arguments:
 
 The `copy_value` block supports the following arguments:
 
-* `entries` - (Required) Objects containing the information about the values to copy to the log event. You must include at least one entry, and five at most. See [`copy_value` `entries`](#copy_value-entries-block) below for details.
+* `entry` - (Required) Objects containing the information about the values to copy to the log event. You must include at least one entry, and five at most. See [`copy_value` `entry`](#copy_value-entry-block) below for details.
 
-### `copy_value` `entries` Block
+### `copy_value` `entry` Block
 
-Each `entries` block supports the following arguments:
+Each `entry` block supports the following arguments:
 
 * `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the destination key already exists. Defaults to `false`.
 * `source` - (Required) Specifies the key to copy.
@@ -154,11 +154,11 @@ Each `lower_case_string` block supports the following arguments:
 
 Each `move_keys` block supports the following arguments:
 
-* `entries` - (Required) Objects containing the information about the keys to move to the log event. You must include at least one entry, and five at most. See [`move_keys` `entries`](#move_keys-entries-block) below for details.
+* `entry` - (Required) Objects containing the information about the keys to move to the log event. You must include at least one entry, and five at most. See [`move_keys` `entry`](#move_keys-entry-block) below for details.
 
-### `move_keys` `entries` Block
+### `move_keys` `entry` Block
 
-Each `entries` block supports the following arguments:
+Each `entry` block supports the following arguments:
 
 * `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the destination key already exists. Defaults to `false`.
 * `source` - (Required) Specifies the key to move.
@@ -237,11 +237,11 @@ The `parse_waf` block supports the following arguments:
 
 Each `rename_keys` block supports the following arguments:
 
-* `entries` - (Required) Objects containing the information about the keys to rename. You must include at least one entry, and five at most. See [`rename_keys` `entries`](#rename_keys-entries-block) below for details.
+* `entry` - (Required) Objects containing the information about the keys to rename. You must include at least one entry, and five at most. See [`rename_keys` `entry`](#rename_keys-entry-block) below for details.
 
-### `rename_keys` `entries` Block
+### `rename_keys` `entry` Block
 
-Each `entries` block supports the following arguments:
+Each `entry` block supports the following arguments:
 
 * `key` - (Required) Specifies the key to rename.
 * `overwrite_if_exists` - (Optional) Specifies whether to overwrite the value if the destination key already exists. Defaults to `false`.
@@ -251,11 +251,11 @@ Each `entries` block supports the following arguments:
 
 Each `split_string` block supports the following arguments:
 
-* `entries` - (Required) Objects containing the information about the fields to split. You must include at least one entry, and ten at most. See [`split_string` `entries`](#split_string-entries-block) below for details.
+* `entry` - (Required) Objects containing the information about the fields to split. You must include at least one entry, and ten at most. See [`split_string` `entry`](#split_string-entry-block) below for details.
 
-### `split_string` `entries` Block
+### `split_string` `entry` Block
 
-Each `entries` block supports the following arguments:
+Each `entry` block supports the following arguments:
 
 * `delimiter` - (Required) Specifies the separator characters to split the string entry on.
 * `source` - (Required) Specifies the key of the field to split.
@@ -264,11 +264,11 @@ Each `entries` block supports the following arguments:
 
 Each `substitute_string` block supports the following arguments:
 
-* `entries` - (Required) Objects containing the information about the fields to substitute. You must include at least one entry, and ten at most. See [`substitute_string` `entries`](#substitute_string-entries-block) below for details.
+* `entry` - (Required) Objects containing the information about the fields to substitute. You must include at least one entry, and ten at most. See [`substitute_string` `entry`](#substitute_string-entry-block) below for details.
 
-### `substitute_string` `entries` Block
+### `substitute_string` `entry` Block
 
-Each `entries` block supports the following arguments:
+Each `entry` block supports the following arguments:
 
 * `from` - (Required) Specifies the regular expression string to be replaced.
 * `source` - (Required) Specifies the key to modify.
@@ -284,11 +284,11 @@ Each `trim_string` block supports the following arguments:
 
 Each `type_converter` block supports the following arguments:
 
-* `entries` - (Required) Objects containing the information about the fields to change the type of. You must include at least one entry, and five at most. See [`type_converter` `entries`](#type_converter-entries-block) below for details.
+* `entry` - (Required) Objects containing the information about the fields to change the type of. You must include at least one entry, and five at most. See [`type_converter` `entry`](#type_converter-entry-block) below for details.
 
-### `type_converter` `entries` Block
+### `type_converter` `entry` Block
 
-Each `entries` block supports the following arguments:
+Each `entry` block supports the following arguments:
 
 * `key` - (Required) Specifies the key with the value that will be converted to a different type.
 * `type` - (Required) Specifies the type to convert the field value to. Allowed values are: `integer`, `double`, `string` and `boolean`.

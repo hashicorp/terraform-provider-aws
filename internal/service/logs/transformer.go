@@ -72,7 +72,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"entries": schema.ListNestedBlock{
+									"entry": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[addKeysEntryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -109,7 +109,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"entries": schema.ListNestedBlock{
+									"entry": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[copyValueEntryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -352,7 +352,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"entries": schema.ListNestedBlock{
+									"entry": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[moveKeysEntryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -579,7 +579,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"entries": schema.ListNestedBlock{
+									"entry": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[renameKeysEntryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -616,7 +616,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"entries": schema.ListNestedBlock{
+									"entry": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[splitStringEntryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -649,7 +649,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"entries": schema.ListNestedBlock{
+									"entry": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[substituteStringEntryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -707,7 +707,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"entries": schema.ListNestedBlock{
+									"entry": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[typeConverterEntryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -972,7 +972,7 @@ type processorModel struct {
 }
 
 type addKeysModel struct {
-	Entries fwtypes.ListNestedObjectValueOf[addKeysEntryModel] `tfsdk:"entries"`
+	Entries fwtypes.ListNestedObjectValueOf[addKeysEntryModel] `tfsdk:"entry"`
 }
 
 type addKeysEntryModel struct {
@@ -982,7 +982,7 @@ type addKeysEntryModel struct {
 }
 
 type copyValueModel struct {
-	Entries fwtypes.ListNestedObjectValueOf[copyValueEntryModel] `tfsdk:"entries"`
+	Entries fwtypes.ListNestedObjectValueOf[copyValueEntryModel] `tfsdk:"entry"`
 }
 
 type copyValueEntryModel struct {
@@ -1031,7 +1031,7 @@ type lowerCaseStringModel struct {
 }
 
 type moveKeysModel struct {
-	Entries fwtypes.ListNestedObjectValueOf[moveKeysEntryModel] `tfsdk:"entries"`
+	Entries fwtypes.ListNestedObjectValueOf[moveKeysEntryModel] `tfsdk:"entry"`
 }
 
 type moveKeysEntryModel struct {
@@ -1082,7 +1082,7 @@ type parseWAFModel struct {
 }
 
 type renameKeysModel struct {
-	Entries fwtypes.ListNestedObjectValueOf[renameKeysEntryModel] `tfsdk:"entries"`
+	Entries fwtypes.ListNestedObjectValueOf[renameKeysEntryModel] `tfsdk:"entry"`
 }
 
 type renameKeysEntryModel struct {
@@ -1092,7 +1092,7 @@ type renameKeysEntryModel struct {
 }
 
 type splitStringModel struct {
-	Entries fwtypes.ListNestedObjectValueOf[splitStringEntryModel] `tfsdk:"entries"`
+	Entries fwtypes.ListNestedObjectValueOf[splitStringEntryModel] `tfsdk:"entry"`
 }
 
 type splitStringEntryModel struct {
@@ -1101,7 +1101,7 @@ type splitStringEntryModel struct {
 }
 
 type substituteStringModel struct {
-	Entries fwtypes.ListNestedObjectValueOf[substituteStringEntryModel] `tfsdk:"entries"`
+	Entries fwtypes.ListNestedObjectValueOf[substituteStringEntryModel] `tfsdk:"entry"`
 }
 
 type substituteStringEntryModel struct {
@@ -1115,7 +1115,7 @@ type trimStringModel struct {
 }
 
 type typeConverterModel struct {
-	Entries fwtypes.ListNestedObjectValueOf[typeConverterEntryModel] `tfsdk:"entries"`
+	Entries fwtypes.ListNestedObjectValueOf[typeConverterEntryModel] `tfsdk:"entry"`
 }
 
 type typeConverterEntryModel struct {
