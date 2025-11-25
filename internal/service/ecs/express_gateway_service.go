@@ -93,7 +93,7 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"ingress_paths": framework.ResourceComputedListOfObjectsAttribute[ingressPathSummaryModel](ctx, listplanmodifier.UseStateForUnknown()),
+			"ingress_paths": framework.ResourceComputedListOfObjectsAttribute[ingressPathSummaryModel](ctx),
 			"memory": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
