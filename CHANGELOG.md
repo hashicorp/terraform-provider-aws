@@ -61,7 +61,6 @@ ENHANCEMENTS:
 * resource/aws_fis_experiment_template: Add support for `Functions` to `action.*.target` ([#41209](https://github.com/hashicorp/terraform-provider-aws/issues/41209))
 * resource/aws_lambda_invocation: Add import support ([#41240](https://github.com/hashicorp/terraform-provider-aws/issues/41240))
 * resource/aws_lb_listener: Support `jwt-validation` as a valid `default_action.type` and add `default_action.jwt_validation` configuration block ([#45089](https://github.com/hashicorp/terraform-provider-aws/issues/45089))
-* resource/aws_opensearch_domain: Remove hardcoded 10-minute delay before polling domain state during creation and deletion ([#45244](https://github.com/hashicorp/terraform-provider-aws/issues/45244))
 * resource/aws_lb_listener_rule: Support `jwt-validation` as a valid `action.type` and add `action.jwt_validation` configuration block ([#45089](https://github.com/hashicorp/terraform-provider-aws/issues/45089))
 * resource/aws_odb_cloud_vm_cluster: vm cluster creation using odb network ARN and exadata infrastructure ARN for resource sharing model. ([#45003](https://github.com/hashicorp/terraform-provider-aws/issues/45003))
 * resource/aws_organizations_organization: Add `SECURITYHUB_POLICY` as a valid value for `enabled_policy_types` argument ([#45135](https://github.com/hashicorp/terraform-provider-aws/issues/45135))
