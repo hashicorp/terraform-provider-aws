@@ -106,7 +106,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabel(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	label := "test-label"
+	label := "testlabel"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -125,7 +125,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabel(t *testing.
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrState, "routing_policy_label"},
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 		},
 	})
@@ -141,8 +141,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabelUpdate(t *te
 	if err != nil {
 		t.Fatal(err)
 	}
-	label1 := "test-label-1"
-	label2 := "test-label-2"
+	label1 := "testlabel1"
+	label2 := "testlabel2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -320,7 +320,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 func testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName string, bgpASN int, vpnIP, label string) string {
-	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_baseWithRoutingPolicy(rName, bgpASN, vpnIP, label), fmt.Sprintf(`
 resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
   core_network_id       = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpn_connection_arn    = aws_vpn_connection.test.arn
@@ -336,4 +336,115 @@ resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_type = aws_networkmanager_site_to_site_vpn_attachment.test.attachment_type
 }
 `, label))
+}
+
+func testAccSiteToSiteVPNAttachmentConfig_baseWithRoutingPolicy(rName string, bgpASN int, vpnIP, label string) string {
+	return fmt.Sprintf(`
+resource "aws_customer_gateway" "test" {
+  bgp_asn     = %[2]d
+  ip_address  = %[3]q
+  type        = "ipsec.1"
+  device_name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id = aws_customer_gateway.test.id
+  type                = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+
+data "aws_region" "current" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["64512-64555"]
+
+    edge_locations {
+      location = data.aws_region.current.region
+    }
+  }
+
+  segments {
+    name                          = "shared"
+    require_attachment_acceptance = false
+  }
+
+  attachment_policies {
+    rule_number     = 100
+    condition_logic = "or"
+
+    conditions {
+      type = "tag-exists"
+      key  = "segment"
+    }
+
+    action {
+      association_method = "tag"
+      tag_value_of_key   = "segment"
+    }
+  }
+
+  routing_policies {
+    routing_policy_name      = "policy1"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
+        }
+
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+
+  attachment_routing_policy_rules {
+    rule_number = 1
+
+    conditions {
+      type  = "routing-policy-label"
+      value = %[4]q
+    }
+
+    action {
+      associate_routing_policies = ["policy1"]
+    }
+  }
+}
+`, rName, bgpASN, vpnIP, label)
 }

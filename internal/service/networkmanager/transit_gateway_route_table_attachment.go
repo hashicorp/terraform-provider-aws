@@ -167,6 +167,14 @@ func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *sche
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set("peering_id", transitGatewayRouteTableAttachment.PeeringId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
+
+	// Get routing policy label from ListAttachmentRoutingPolicyAssociations API
+	routingPolicyLabel, err := findRoutingPolicyLabelByAttachmentID(ctx, conn, d.Id(), aws.ToString(attachment.CoreNetworkId))
+	if err != nil && !tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Transit Gateway Route Table Attachment (%s) routing policy label: %s", d.Id(), err)
+	}
+	d.Set("routing_policy_label", routingPolicyLabel)
+
 	d.Set("segment_name", attachment.SegmentName)
 	d.Set(names.AttrState, attachment.State)
 	d.Set("transit_gateway_route_table_arn", transitGatewayRouteTableAttachment.TransitGatewayRouteTableArn)
@@ -268,7 +276,7 @@ func waitTransitGatewayRouteTableAttachmentCreated(ctx context.Context, conn *ne
 
 func waitTransitGatewayRouteTableAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayRouteTableAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
+		Pending:        enum.Slice(awstypes.AttachmentStateDeleting, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusTransitGatewayRouteTableAttachment(ctx, conn, id),

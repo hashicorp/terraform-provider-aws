@@ -301,20 +301,20 @@ The following arguments are available:
 
 * `condition_logic` (Optional) - Logic to apply when multiple match conditions are present. Valid values: `and`, `or`.
 * `match_conditions` (Optional) - List of conditions to match against routes. Detailed below.
-* `actions` (Required) - List of actions to take when conditions match. Must have at least one action. Detailed below.
+* `action` (Required) - Block defining the action to take when conditions match. Detailed below.
 
 ### `match_conditions`
 
 The following arguments are available:
 
-* `condition_type` (Required) - Type of condition to match. Valid values: `prefix-equals`, `prefix-in-cidr`, `prefix-in-prefix-list`, `asn-in-as-path`, `community-in-list`, `med-equals`.
+* `type` (Required) - Type of condition to match. Valid values: `prefix-equals`, `prefix-in-cidr`, `prefix-in-prefix-list`, `asn-in-as-path`, `community-in-list`, `med-equals`.
 * `value` (Required) - Value to match against, depending on the condition type.
 
-### `actions` (routing policy)
+### `action` (routing policy)
 
 The following arguments are available:
 
-* `action_type` (Required) - Type of action to perform. Valid values: `drop`, `allow`, `summarize`, `prepend-asn-list`, `remove-asn-list`, `replace-asn-list`, `add-community`, `remove-community`, `set-med`, `set-local-preference`.
+* `type` (Required) - Type of action to perform. Valid values: `drop`, `allow`, `summarize`, `prepend-asn-list`, `remove-asn-list`, `replace-asn-list`, `add-community`, `remove-community`, `set-med`, `set-local-preference`.
 * `value` (Optional) - Value for the action, required for certain action types.
 
 ## Attribute Reference

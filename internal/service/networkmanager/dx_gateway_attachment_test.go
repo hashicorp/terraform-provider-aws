@@ -219,7 +219,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_routingPolicyLabel(t *t
 	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
-	label := "test-label"
+	label := "testlabel"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -235,10 +235,9 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_routingPolicyLabel(t *t
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"routing_policy_label"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -249,8 +248,8 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_routingPolicyLabelUpdat
 	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
-	label1 := "test-label-1"
-	label2 := "test-label-2"
+	label1 := "testlabel1"
+	label2 := "testlabel2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -506,8 +505,111 @@ resource "aws_networkmanager_dx_gateway_attachment" "test" {
 `, edgeLocation1, edgeLocation2))
 }
 
+func testAccDirectConnectGatewayAttachmentConfig_baseWithRoutingPolicy(rName, label string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_dx_gateway" "test" {
+  name            = %[1]q
+  amazon_side_asn = 65000
+}
+
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+
+data "aws_region" "current" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    vpn_ecmp_support = false
+    asn_ranges       = ["64512-64555"]
+    edge_locations {
+      location = data.aws_region.current.region
+      asn      = 64512
+    }
+  }
+
+  segments {
+    name                          = "shared"
+    description                   = "SegmentForSharedServices"
+    require_attachment_acceptance = false
+  }
+
+  segment_actions {
+    action     = "share"
+    mode       = "attachment-route"
+    segment    = "shared"
+    share_with = ["*"]
+  }
+
+  routing_policies {
+    routing_policy_name      = "policy1"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
+        }
+
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+
+  attachment_routing_policy_rules {
+    rule_number = 1
+
+    conditions {
+      type  = "routing-policy-label"
+      value = %[2]q
+    }
+
+    action {
+      associate_routing_policies = ["policy1"]
+    }
+  }
+
+  attachment_policies {
+    rule_number = 1
+
+    conditions {
+      type = "any"
+    }
+
+    action {
+      association_method = "constant"
+      segment            = "shared"
+    }
+  }
+}
+`, rName, label))
+}
+
 func testAccDirectConnectGatewayAttachmentConfig_routingPolicyLabel(rName, label string) string {
-	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_base(rName, false), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_baseWithRoutingPolicy(rName, label), fmt.Sprintf(`
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
   core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   direct_connect_gateway_arn = aws_dx_gateway.test.arn

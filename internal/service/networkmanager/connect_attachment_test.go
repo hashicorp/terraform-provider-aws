@@ -168,10 +168,10 @@ func TestAccNetworkManagerConnectAttachment_routingPolicyLabel(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "test-label"),
+				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "testlabel"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "test-label"),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "testlabel"),
 				),
 			},
 			{
@@ -197,17 +197,17 @@ func TestAccNetworkManagerConnectAttachment_routingPolicyLabelUpdate(t *testing.
 		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "label-v1"),
+				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "labelv1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "label-v1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "labelv1"),
 				),
 			},
 			{
-				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "label-v2"),
+				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "labelv2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "label-v2"),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "labelv2"),
 					testAccCheckConnectAttachmentRecreated(&v1, &v2),
 				),
 			},
@@ -445,8 +445,108 @@ resource "aws_networkmanager_attachment_accepter" "test2" {
 `)
 }
 
+func testAccConnectAttachmentConfig_baseWithRoutingPolicy(rName, label string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+
+data "aws_region" "current" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    vpn_ecmp_support = false
+    asn_ranges       = ["64512-64555"]
+    edge_locations {
+      location = data.aws_region.current.region
+      asn      = 64512
+    }
+  }
+  segments {
+    name                          = "shared"
+    description                   = "SegmentForSharedServices"
+    require_attachment_acceptance = true
+  }
+  segment_actions {
+    action     = "share"
+    mode       = "attachment-route"
+    segment    = "shared"
+    share_with = ["*"]
+  }
+
+  routing_policies {
+    routing_policy_name      = "policy1"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
+        }
+
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+
+  attachment_routing_policy_rules {
+    rule_number = 1
+
+    conditions {
+      type  = "routing-policy-label"
+      value = %[2]q
+    }
+
+    action {
+      associate_routing_policies = ["policy1"]
+    }
+  }
+
+  attachment_policies {
+    rule_number     = 1
+    condition_logic = "or"
+    conditions {
+      type     = "tag-value"
+      operator = "equals"
+      key      = "segment"
+      value    = "shared"
+    }
+    action {
+      association_method = "constant"
+      segment            = "shared"
+    }
+  }
+}
+`, rName, label))
+}
+
 func testAccConnectAttachmentConfig_routingPolicyLabel(rName, label string) string {
-	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccConnectAttachmentConfig_baseWithRoutingPolicy(rName, label), fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test[*].arn
   core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id

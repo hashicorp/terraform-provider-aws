@@ -275,6 +275,14 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
+
+	// Get routing policy label from ListAttachmentRoutingPolicyAssociations API
+	routingPolicyLabel, err := findRoutingPolicyLabelByAttachmentID(ctx, conn, d.Id(), aws.ToString(attachment.CoreNetworkId))
+	if err != nil && !tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager VPC Attachment (%s) routing policy label: %s", d.Id(), err)
+	}
+	d.Set("routing_policy_label", routingPolicyLabel)
+
 	d.Set("segment_name", attachment.SegmentName)
 	d.Set(names.AttrState, attachment.State)
 	d.Set("subnet_arns", vpcAttachment.SubnetArns)
@@ -412,6 +420,33 @@ func findVPCAttachmentByID(ctx context.Context, conn *networkmanager.Client, id 
 	return output.VpcAttachment, nil
 }
 
+func findRoutingPolicyLabelByAttachmentID(ctx context.Context, conn *networkmanager.Client, id string, coreNetworkId string) (*string, error) {
+	input := &networkmanager.ListAttachmentRoutingPolicyAssociationsInput{
+		AttachmentId:  aws.String(id),
+		CoreNetworkId: aws.String(coreNetworkId),
+	}
+
+	output, err := conn.ListAttachmentRoutingPolicyAssociations(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.AttachmentRoutingPolicyAssociations) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	// Return the routing policy label from the first association
+	return output.AttachmentRoutingPolicyAssociations[0].RoutingPolicyLabel, nil
+}
+
 func statusVPCAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCAttachmentByID(ctx, conn, id)
@@ -488,7 +523,7 @@ func waitVPCAttachmenRejected(ctx context.Context, conn *networkmanager.Client, 
 
 func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.VpcAttachment, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
+		Pending:        enum.Slice(awstypes.AttachmentStateDeleting, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusVPCAttachment(ctx, conn, id),

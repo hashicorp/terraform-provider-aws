@@ -164,6 +164,14 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	d.Set("edge_location", attachment.EdgeLocation)
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
+
+	// Get routing policy label from ListAttachmentRoutingPolicyAssociations API
+	routingPolicyLabel, err := findRoutingPolicyLabelByAttachmentID(ctx, conn, d.Id(), aws.ToString(attachment.CoreNetworkId))
+	if err != nil && !tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Site To Site VPN Attachment (%s) routing policy label: %s", d.Id(), err)
+	}
+	d.Set("routing_policy_label", routingPolicyLabel)
+
 	d.Set("segment_name", attachment.SegmentName)
 	d.Set(names.AttrState, attachment.State)
 	d.Set("vpn_connection_arn", attachment.ResourceArn)
@@ -281,7 +289,7 @@ func waitSiteToSiteVPNAttachmentCreated(ctx context.Context, conn *networkmanage
 
 func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.SiteToSiteVpnAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
+		Pending:        enum.Slice(awstypes.AttachmentStateDeleting, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusSiteToSiteVPNAttachment(ctx, conn, id),

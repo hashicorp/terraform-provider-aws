@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/YakDriver/regexache"
@@ -223,7 +224,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"condition_type": {
+															names.AttrType: {
 																Type:     schema.TypeString,
 																Required: true,
 																ValidateFunc: validation.StringInSlice([]string{
@@ -242,13 +243,13 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 														},
 													},
 												},
-												"actions": {
+												names.AttrAction: {
 													Type:     schema.TypeList,
 													Required: true,
-													MinItems: 1,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"action_type": {
+															names.AttrType: {
 																Type:     schema.TypeString,
 																Required: true,
 																ValidateFunc: validation.StringInSlice([]string{
@@ -671,6 +672,9 @@ func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.Reso
 	}
 	jsonString := string(jsonDoc)
 
+	// Debug: Print the generated JSON policy document
+	log.Printf("[DEBUG] Generated Core Network Policy Document JSON:\n%s", jsonString)
+
 	d.Set(names.AttrJSON, jsonString)
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
@@ -908,28 +912,28 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []any) ([]*c
 		case "any":
 			for _, key := range k {
 				if key {
-					return nil, fmt.Errorf("Conditions %d: You cannot set \"operator\", \"key\", or \"value\" if type = \"any\".", i)
+					return nil, fmt.Errorf("conditions %d: cannot set \"operator\", \"key\", or \"value\" if type = \"any\"", i)
 				}
 			}
 
 		case "tag-exists", "tag-name":
 			if !k[names.AttrKey] || k["operator"] || k[names.AttrValue] {
-				return nil, fmt.Errorf("Conditions %d: You must set \"key\" and cannot set \"operator\" or \"value\" if type = \"tag-exists\" or \"tag-name\".", i)
+				return nil, fmt.Errorf("conditions %d: must set \"key\" and cannot set \"operator\" or \"value\" if type = \"tag-exists\" or \"tag-name\"", i)
 			}
 
 		case "tag-value":
 			if !k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
-				return nil, fmt.Errorf("Conditions %d: You must set \"key\", \"operator\", and \"value\" if type = \"tag-value\".", i)
+				return nil, fmt.Errorf("conditions %d: must set \"key\", \"operator\", and \"value\" if type = \"tag-value\"", i)
 			}
 
 		case names.AttrRegion, "resource-id", "account":
 			if k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
-				return nil, fmt.Errorf("Conditions %d: You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account\".", i)
+				return nil, fmt.Errorf("conditions %d: must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account\"", i)
 			}
 
 		case "attachment-type":
 			if k[names.AttrKey] || !k[names.AttrValue] || tfMap["operator"].(string) != "equals" {
-				return nil, fmt.Errorf("Conditions %d: You must set \"value\", cannot set \"key\" and \"operator\" must be \"equals\" if type = \"attachment-type\".", i)
+				return nil, fmt.Errorf("conditions %d: must set \"value\", cannot set \"key\" and \"operator\" must be \"equals\" if type = \"attachment-type\"", i)
 			}
 		}
 
@@ -1004,17 +1008,9 @@ func expandCoreNetworkPolicyAttachmentRoutingPolicyRules(tfList []any, version s
 			apiObject.EdgeLocations = coreNetworkPolicyExpandStringList(v)
 		}
 
-		conditions, err := expandCoreNetworkPolicyAttachmentRoutingPolicyRulesConditions(tfMap["conditions"].([]any))
-		if err != nil {
-			return nil, err
-		}
-		apiObject.Conditions = conditions
+		apiObject.Conditions = expandCoreNetworkPolicyAttachmentRoutingPolicyRulesConditions(tfMap["conditions"].([]any))
 
-		action, err := expandCoreNetworkPolicyAttachmentRoutingPolicyRulesAction(tfMap[names.AttrAction].([]any))
-		if err != nil {
-			return nil, err
-		}
-		apiObject.Action = action
+		apiObject.Action = expandCoreNetworkPolicyAttachmentRoutingPolicyRulesAction(tfMap[names.AttrAction].([]any))
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -1022,7 +1018,7 @@ func expandCoreNetworkPolicyAttachmentRoutingPolicyRules(tfList []any, version s
 	return apiObjects, nil
 }
 
-func expandCoreNetworkPolicyAttachmentRoutingPolicyRulesConditions(tfList []any) ([]*coreNetworkPolicyAttachmentRoutingPolicyRuleCondition, error) {
+func expandCoreNetworkPolicyAttachmentRoutingPolicyRulesConditions(tfList []any) []*coreNetworkPolicyAttachmentRoutingPolicyRuleCondition {
 	apiObjects := make([]*coreNetworkPolicyAttachmentRoutingPolicyRuleCondition, 0)
 
 	for _, tfMapRaw := range tfList {
@@ -1044,10 +1040,10 @@ func expandCoreNetworkPolicyAttachmentRoutingPolicyRulesConditions(tfList []any)
 		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return apiObjects, nil
+	return apiObjects
 }
 
-func expandCoreNetworkPolicyAttachmentRoutingPolicyRulesAction(tfList []any) (*coreNetworkPolicyAttachmentRoutingPolicyRuleAction, error) {
+func expandCoreNetworkPolicyAttachmentRoutingPolicyRulesAction(tfList []any) *coreNetworkPolicyAttachmentRoutingPolicyRuleAction {
 	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &coreNetworkPolicyAttachmentRoutingPolicyRuleAction{}
@@ -1056,7 +1052,7 @@ func expandCoreNetworkPolicyAttachmentRoutingPolicyRulesAction(tfList []any) (*c
 		apiObject.AssociateRoutingPolicies = coreNetworkPolicyExpandStringList(v)
 	}
 
-	return apiObject, nil
+	return apiObject
 }
 
 func expandCoreNetworkPolicySegments(tfList []any) ([]*coreNetworkPolicySegment, error) {
@@ -1182,11 +1178,7 @@ func expandCoreNetworkPolicyRoutingPolicyRules(tfList []any) ([]*coreNetworkPoli
 		}
 
 		if v, ok := tfMap["rule_definition"].([]any); ok && len(v) > 0 && v[0] != nil {
-			definition, err := expandCoreNetworkPolicyRoutingPolicyRuleDefinition(v)
-			if err != nil {
-				return nil, err
-			}
-			apiObject.RuleDefinition = definition
+			apiObject.RuleDefinition = expandCoreNetworkPolicyRoutingPolicyRuleDefinition(v)
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -1195,35 +1187,30 @@ func expandCoreNetworkPolicyRoutingPolicyRules(tfList []any) ([]*coreNetworkPoli
 	return apiObjects, nil
 }
 
-func expandCoreNetworkPolicyRoutingPolicyRuleDefinition(tfList []any) (*coreNetworkPolicyRoutingPolicyRuleDefinition, error) {
+func expandCoreNetworkPolicyRoutingPolicyRuleDefinition(tfList []any) *coreNetworkPolicyRoutingPolicyRuleDefinition {
 	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &coreNetworkPolicyRoutingPolicyRuleDefinition{}
 
+	// AWS requires condition-logic to always be present, default to "and"
 	if v, ok := tfMap["condition_logic"].(string); ok && v != "" {
 		apiObject.ConditionLogic = v
+	} else {
+		apiObject.ConditionLogic = "and"
 	}
 
 	if v, ok := tfMap["match_conditions"].([]any); ok && len(v) > 0 {
-		conditions, err := expandCoreNetworkPolicyRoutingPolicyRuleMatchConditions(v)
-		if err != nil {
-			return nil, err
-		}
-		apiObject.MatchConditions = conditions
+		apiObject.MatchConditions = expandCoreNetworkPolicyRoutingPolicyRuleMatchConditions(v)
 	}
 
-	if v, ok := tfMap["actions"].([]any); ok && len(v) > 0 {
-		actions, err := expandCoreNetworkPolicyRoutingPolicyRuleActions(v)
-		if err != nil {
-			return nil, err
-		}
-		apiObject.Actions = actions
+	if v, ok := tfMap[names.AttrAction].([]any); ok && len(v) > 0 {
+		apiObject.Action = expandCoreNetworkPolicyRoutingPolicyRuleAction(v)
 	}
 
-	return apiObject, nil
+	return apiObject
 }
 
-func expandCoreNetworkPolicyRoutingPolicyRuleMatchConditions(tfList []any) ([]*coreNetworkPolicyRoutingPolicyRuleMatchCondition, error) {
+func expandCoreNetworkPolicyRoutingPolicyRuleMatchConditions(tfList []any) []*coreNetworkPolicyRoutingPolicyRuleMatchCondition {
 	apiObjects := make([]*coreNetworkPolicyRoutingPolicyRuleMatchCondition, 0)
 
 	for _, tfMapRaw := range tfList {
@@ -1234,8 +1221,8 @@ func expandCoreNetworkPolicyRoutingPolicyRuleMatchConditions(tfList []any) ([]*c
 
 		apiObject := &coreNetworkPolicyRoutingPolicyRuleMatchCondition{}
 
-		if v, ok := tfMap["condition_type"].(string); ok {
-			apiObject.ConditionType = v
+		if v, ok := tfMap[names.AttrType].(string); ok {
+			apiObject.Type = v
 		}
 
 		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
@@ -1245,32 +1232,30 @@ func expandCoreNetworkPolicyRoutingPolicyRuleMatchConditions(tfList []any) ([]*c
 		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return apiObjects, nil
+	return apiObjects
 }
 
-func expandCoreNetworkPolicyRoutingPolicyRuleActions(tfList []any) ([]*coreNetworkPolicyRoutingPolicyRuleAction, error) {
-	apiObjects := make([]*coreNetworkPolicyRoutingPolicyRuleAction, 0)
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]any)
-		if !ok {
-			continue
-		}
-
-		apiObject := &coreNetworkPolicyRoutingPolicyRuleAction{}
-
-		if v, ok := tfMap["action_type"].(string); ok {
-			apiObject.ActionType = v
-		}
-
-		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
-			apiObject.Value = v
-		}
-
-		apiObjects = append(apiObjects, apiObject)
+func expandCoreNetworkPolicyRoutingPolicyRuleAction(tfList []any) *coreNetworkPolicyRoutingPolicyRuleAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
 	}
 
-	return apiObjects, nil
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &coreNetworkPolicyRoutingPolicyRuleAction{}
+
+	if v, ok := tfMap[names.AttrType].(string); ok {
+		apiObject.Type = v
+	}
+
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+		apiObject.Value = v
+	}
+
+	return apiObject
 }
 
 func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []any) (*coreNetworkPolicyCoreNetworkConfiguration, error) {

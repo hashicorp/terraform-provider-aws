@@ -6,8 +6,10 @@ package networkmanager
 import (
 	"encoding/json"
 	"slices"
+	"strconv"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type coreNetworkPolicyDocument struct {
@@ -60,19 +62,19 @@ type coreNetworkPolicyRoutingPolicyRule struct {
 }
 
 type coreNetworkPolicyRoutingPolicyRuleDefinition struct {
-	ConditionLogic  string                                              `json:"condition-logic,omitempty"`
+	ConditionLogic  string                                              `json:"condition-logic"`
 	MatchConditions []*coreNetworkPolicyRoutingPolicyRuleMatchCondition `json:"match-conditions,omitempty"`
-	Actions         []*coreNetworkPolicyRoutingPolicyRuleAction         `json:"actions,omitempty"`
+	Action          *coreNetworkPolicyRoutingPolicyRuleAction           `json:"action,omitempty"`
 }
 
 type coreNetworkPolicyRoutingPolicyRuleMatchCondition struct {
-	ConditionType string `json:"condition-type,omitempty"`
-	Value         string `json:"value,omitempty"`
+	Type  string `json:"type,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
 type coreNetworkPolicyRoutingPolicyRuleAction struct {
-	ActionType string `json:"action-type,omitempty"`
-	Value      string `json:"value,omitempty"`
+	Type  string `json:"type,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
 type coreNetworkPolicyNetworkFunctionGroup struct {
@@ -195,6 +197,30 @@ func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 		Description:             c.Description,
 		EdgeLocationAssociation: c.EdgeLocationAssociation,
 	})
+}
+
+// MarshalJSON implements custom JSON marshaling for match conditions.
+// Some condition types (asn-in-as-path, med-equals) require the value to be a number, not a string.
+func (c coreNetworkPolicyRoutingPolicyRuleMatchCondition) MarshalJSON() ([]byte, error) {
+	// Types that require numeric values
+	numericTypes := map[string]bool{
+		"asn-in-as-path": true,
+		"med-equals":     true,
+	}
+
+	if numericTypes[c.Type] && c.Value != "" {
+		// Try to parse the value as an integer
+		if numVal, err := strconv.ParseInt(c.Value, 10, 64); err == nil {
+			return json.Marshal(map[string]any{
+				names.AttrType:  c.Type,
+				names.AttrValue: numVal,
+			})
+		}
+	}
+
+	// Default: marshal as strings
+	type Alias coreNetworkPolicyRoutingPolicyRuleMatchCondition
+	return json.Marshal((*Alias)(&c))
 }
 
 func coreNetworkPolicyExpandStringList(configured []any) any {

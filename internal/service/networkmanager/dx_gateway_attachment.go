@@ -216,6 +216,14 @@ func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, reque
 	data.ARN = fwflex.StringValueToFramework(ctx, attachmentARN(ctx, r.Meta(), data.ID.ValueString()))
 	data.DirectConnectGatewayARN = fwflex.StringToFrameworkARN(ctx, dxgwAttachment.DirectConnectGatewayArn)
 
+	// Get routing policy label from ListAttachmentRoutingPolicyAssociations API
+	routingPolicyLabel, err := findRoutingPolicyLabelByAttachmentID(ctx, conn, data.ID.ValueString(), data.CoreNetworkID.ValueString())
+	if err != nil && !tfresource.NotFound(err) {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s) routing policy label", data.ID.ValueString()), err.Error())
+		return
+	}
+	data.RoutingPolicyLabel = fwflex.StringToFramework(ctx, routingPolicyLabel)
+
 	setTagsOut(ctx, dxgwAttachment.Attachment.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -408,7 +416,7 @@ func waitDirectConnectGatewayAttachmentUpdated(ctx context.Context, conn *networ
 
 func waitDirectConnectGatewayAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
+		Pending:        enum.Slice(awstypes.AttachmentStateDeleting, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:         []string{},
 		Refresh:        statusDirectConnectGatewayAttachment(ctx, conn, id),
 		Timeout:        timeout,
