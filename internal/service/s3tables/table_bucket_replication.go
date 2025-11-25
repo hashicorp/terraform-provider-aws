@@ -33,6 +33,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableBucketReplicationOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importIgnore="version_token")
 func newTableBucketReplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableBucketReplicationResource{}, nil
 }
@@ -77,7 +78,7 @@ func (r *tableBucketReplicationResource) Schema(ctx context.Context, request res
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"destination_bucket_arn": schema.StringAttribute{
+									"destination_table_bucket_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
@@ -100,13 +101,16 @@ func (r *tableBucketReplicationResource) Create(ctx context.Context, request res
 
 	conn := r.Meta().S3TablesClient(ctx)
 
-	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
-	input := s3tables.PutTableBucketReplicationInput{
-		TableBucketARN: aws.String(tableBucketARN),
-	}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input.Configuration)...)
+	var configuration awstypes.TableBucketReplicationConfiguration
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &configuration)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
+	input := s3tables.PutTableBucketReplicationInput{
+		Configuration:  &configuration,
+		TableBucketARN: aws.String(tableBucketARN),
 	}
 
 	output, err := conn.PutTableBucketReplication(ctx, &input)
@@ -170,14 +174,17 @@ func (r *tableBucketReplicationResource) Update(ctx context.Context, request res
 
 	conn := r.Meta().S3TablesClient(ctx)
 
-	tableBucketARN := fwflex.StringValueFromFramework(ctx, new.TableBucketARN)
-	input := s3tables.PutTableBucketReplicationInput{
-		TableBucketARN: aws.String(tableBucketARN),
-		VersionToken:   fwflex.StringFromFramework(ctx, old.VersionToken),
-	}
-	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input.Configuration)...)
+	var configuration awstypes.TableBucketReplicationConfiguration
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &configuration)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	tableBucketARN := fwflex.StringValueFromFramework(ctx, new.TableBucketARN)
+	input := s3tables.PutTableBucketReplicationInput{
+		Configuration:  &configuration,
+		TableBucketARN: aws.String(tableBucketARN),
+		VersionToken:   fwflex.StringFromFramework(ctx, old.VersionToken),
 	}
 
 	output, err := conn.PutTableBucketReplication(ctx, &input)
@@ -262,9 +269,5 @@ type bucketReplicationRuleModel struct {
 }
 
 type replicationDestinationModel struct {
-	DestinationBucketARN fwtypes.ARN `tfsdk:"destination_bucket_arn"`
-}
-
-type sourceSelectionModel struct {
-	TablePattern types.String `tfsdk:"table_pattern"`
+	DestinationTableBucketARN fwtypes.ARN `tfsdk:"destination_table_bucket_arn"`
 }

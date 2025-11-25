@@ -52,6 +52,7 @@ func TestAccS3TablesTableBucketReplication_basic(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "table_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "table_bucket_arn",
+				ImportStateVerifyIgnore:              []string{"version_token"},
 			},
 		},
 	})
@@ -166,16 +167,12 @@ resource "aws_iam_role" "test" {
 POLICY
 }
 
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-
-  versioning {
-    enabled = true
-  }
+resource "aws_s3tables_table_bucket" "source" {
+  name = "%[1]s-source"
 }
 
-resource "aws_s3tables_table_bucket" "test" {
-  name = %[1]q
+resource "aws_s3tables_table_bucket" "target" {
+  name = "%[1]s-target"
 }
 `, rName)
 }
@@ -183,12 +180,12 @@ resource "aws_s3tables_table_bucket" "test" {
 func testAccTableBucketReplicationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccTableBucketReplicationConfig_base(rName), `
 resource "aws_s3tables_table_bucket_replication" "test" {
-  table_bucket_arn = aws_s3tables_table_bucket.test.arn
+  table_bucket_arn = aws_s3tables_table_bucket.source.arn
   role             = aws_iam_role.test.arn
 
   rule {
     destination {
-      destination_bucket_arn = aws_s3_bucket.test.arn
+      destination_table_bucket_arn = aws_s3tables_table_bucket.target.arn
     }
   }
 }

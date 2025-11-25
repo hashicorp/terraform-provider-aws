@@ -66,6 +66,9 @@ func TestAccS3TablesTableBucketReplication_Identity_Basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "table_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					"version_token",
+				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -80,10 +83,12 @@ func TestAccS3TablesTableBucketReplication_Identity_Basic(t *testing.T) {
 				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "table_bucket_arn"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("table_bucket_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 4: Import block with Resource Identity
@@ -97,10 +102,12 @@ func TestAccS3TablesTableBucketReplication_Identity_Basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("table_bucket_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -153,6 +160,9 @@ func TestAccS3TablesTableBucketReplication_Identity_RegionOverride(t *testing.T)
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "table_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					"version_token",
+				},
 			},
 
 			// Step 3: Import command without appended "@<region>"
@@ -168,6 +178,9 @@ func TestAccS3TablesTableBucketReplication_Identity_RegionOverride(t *testing.T)
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "table_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					"version_token",
+				},
 			},
 
 			// Step 4: Import block with Import ID and appended "@<region>"
@@ -183,10 +196,12 @@ func TestAccS3TablesTableBucketReplication_Identity_RegionOverride(t *testing.T)
 				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, "table_bucket_arn"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("table_bucket_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 5: Import block with Import ID and no appended "@<region>"
@@ -202,10 +217,12 @@ func TestAccS3TablesTableBucketReplication_Identity_RegionOverride(t *testing.T)
 				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "table_bucket_arn"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("table_bucket_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 6: Import block with Resource Identity
@@ -220,10 +237,12 @@ func TestAccS3TablesTableBucketReplication_Identity_RegionOverride(t *testing.T)
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("table_bucket_arn"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
