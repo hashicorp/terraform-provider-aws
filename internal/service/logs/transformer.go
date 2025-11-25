@@ -6,7 +6,7 @@ package logs
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -38,10 +37,6 @@ func newTransformerResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 	return r, nil
 }
-
-const (
-	ResNameTransformer = "Transformer"
-)
 
 type transformerResource struct {
 	framework.ResourceWithModel[transformerResourceModel]
@@ -63,7 +58,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 		},
 		Blocks: map[string]schema.Block{
 			"transformer_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[transformerConfigModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[processorModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeBetween(1, 20),
@@ -762,173 +757,158 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *transformerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().LogsClient(ctx)
-
-	var plan transformerResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *transformerResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data transformerResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().LogsClient(ctx)
+
+	logGroupID := fwflex.StringValueFromFramework(ctx, data.LogGroupIdentifier)
 	var input cloudwatchlogs.PutTransformerInput
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := conn.PutTransformer(ctx, &input)
+	_, err := conn.PutTransformer(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameTransformer, plan.LogGroupIdentifier.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameTransformer, plan.LogGroupIdentifier.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Transformer (%s)", logGroupID), err.Error())
+
 		return
 	}
 
-	transformer, err := findTransformerByLogGroupIdentifier(ctx, conn, plan.LogGroupIdentifier.ValueString())
+	out, err := findTransformerByLogGroupIdentifier(ctx, conn, logGroupID)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionReading, ResNameTransformer, plan.LogGroupIdentifier.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Transformer (%s)", logGroupID), err.Error())
+
 		return
 	}
 
-	// Set values for unknowns
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, transformer, &plan)...)
-	if resp.Diagnostics.HasError() {
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *transformerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().LogsClient(ctx)
-
-	var state transformerResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *transformerResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data transformerResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findTransformerByLogGroupIdentifier(ctx, conn, state.LogGroupIdentifier.ValueString())
+	conn := r.Meta().LogsClient(ctx)
+
+	logGroupID := fwflex.StringValueFromFramework(ctx, data.LogGroupIdentifier)
+	out, err := findTransformerByLogGroupIdentifier(ctx, conn, logGroupID)
+
 	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionReading, ResNameTransformer, state.LogGroupIdentifier.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Transformer (%s)", logGroupID), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *transformerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *transformerResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old transformerResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().LogsClient(ctx)
 
-	var plan, state transformerResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := fwflex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	logGroupID := fwflex.StringValueFromFramework(ctx, new.LogGroupIdentifier)
 
 	if diff.HasChanges() {
 		var input cloudwatchlogs.PutTransformerInput
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.PutTransformer(ctx, &input)
+		_, err := conn.PutTransformer(ctx, &input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameTransformer, plan.LogGroupIdentifier.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameTransformer, plan.LogGroupIdentifier.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Transformer (%s)", logGroupID), err.Error())
+
 			return
 		}
 	}
 
-	transformer, err := findTransformerByLogGroupIdentifier(ctx, conn, plan.LogGroupIdentifier.ValueString())
+	out, err := findTransformerByLogGroupIdentifier(ctx, conn, logGroupID)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionReading, ResNameTransformer, plan.LogGroupIdentifier.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Transformer (%s)", logGroupID), err.Error())
+
 		return
 	}
 
-	// Set values for unknowns
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, transformer, &plan)...)
-	if resp.Diagnostics.HasError() {
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *transformerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *transformerResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data transformerResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().LogsClient(ctx)
 
-	var state transformerResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	logGroupID := fwflex.StringValueFromFramework(ctx, data.LogGroupIdentifier)
+	input := cloudwatchlogs.DeleteTransformerInput{
+		LogGroupIdentifier: aws.String(logGroupID),
+	}
+	_, err := conn.DeleteTransformer(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	input := cloudwatchlogs.DeleteTransformerInput{
-		LogGroupIdentifier: state.LogGroupIdentifier.ValueStringPointer(),
-	}
-
-	_, err := conn.DeleteTransformer(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Transformer (%s)", logGroupID), err.Error())
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionDeleting, ResNameTransformer, state.LogGroupIdentifier.String(), err),
-			err.Error(),
-		)
 		return
 	}
 }
 
-func (r *transformerResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("log_group_identifier"), req, resp)
+func (r *transformerResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("log_group_identifier"), request, response)
 }
 
 func findTransformerByLogGroupIdentifier(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string) (*cloudwatchlogs.GetTransformerOutput, error) {
@@ -936,31 +916,36 @@ func findTransformerByLogGroupIdentifier(ctx context.Context, conn *cloudwatchlo
 		LogGroupIdentifier: aws.String(logGroupIdentifier),
 	}
 
-	out, err := conn.GetTransformer(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
+	return findTransformer(ctx, conn, &input)
+}
 
+func findTransformer(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.GetTransformerInput) (*cloudwatchlogs.GetTransformerOutput, error) {
+	output, err := conn.GetTransformer(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
 type transformerResourceModel struct {
 	framework.WithRegionModel
-	LogGroupIdentifier types.String                                            `tfsdk:"log_group_identifier"`
-	TransformerConfig  fwtypes.ListNestedObjectValueOf[transformerConfigModel] `tfsdk:"transformer_config"`
+	LogGroupIdentifier types.String                                    `tfsdk:"log_group_identifier"`
+	TransformerConfig  fwtypes.ListNestedObjectValueOf[processorModel] `tfsdk:"transformer_config"`
 }
 
-type transformerConfigModel struct {
+type processorModel struct {
 	AddKeys           fwtypes.ListNestedObjectValueOf[addKeysModel]           `tfsdk:"add_keys"`
 	CopyValue         fwtypes.ListNestedObjectValueOf[copyValueModel]         `tfsdk:"copy_value"`
 	CSV               fwtypes.ListNestedObjectValueOf[csvModel]               `tfsdk:"csv"`

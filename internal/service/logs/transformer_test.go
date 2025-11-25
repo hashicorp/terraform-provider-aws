@@ -6,7 +6,6 @@ package logs_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1455,36 +1453,39 @@ func testAccCheckTransformerDestroy(ctx context.Context, t *testing.T) resource.
 				continue
 			}
 
-			_, err := tflogs.FindTransformerByLogGroupIdentifier(ctx, conn, rs.Primary.ID)
+			_, err := tflogs.FindTransformerByLogGroupIdentifier(ctx, conn, rs.Primary.Attributes["log_group_identifier"])
+
 			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Logs, create.ErrActionCheckingDestroyed, tflogs.ResNameTransformer, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.Logs, create.ErrActionCheckingDestroyed, tflogs.ResNameTransformer, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudWatch Logs Transformer still exists: %s", rs.Primary.Attributes["log_group_identifier"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTransformerExists(ctx context.Context, t *testing.T, name string, transformer *cloudwatchlogs.GetTransformerOutput) resource.TestCheckFunc {
+func testAccCheckTransformerExists(ctx context.Context, t *testing.T, n string, v *cloudwatchlogs.GetTransformerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameTransformer, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
-		resp, err := tflogs.FindTransformerByLogGroupIdentifier(ctx, conn, rs.Primary.Attributes["log_group_identifier"])
+		output, err := tflogs.FindTransformerByLogGroupIdentifier(ctx, conn, rs.Primary.Attributes["log_group_identifier"])
+
 		if err != nil {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameTransformer, rs.Primary.Attributes["log_group_identifier"], err)
+			return err
 		}
 
-		*transformer = *resp
+		*v = *output
 
 		return nil
 	}
