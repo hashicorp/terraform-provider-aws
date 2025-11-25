@@ -139,14 +139,58 @@ func testAccCheckTableBucketReplicationExists(ctx context.Context, n string, v *
 	}
 }
 
-func testAccTableBucketReplicationConfig_basic(rName string) string {
+func testAccTableBucketReplicationConfig_base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3tables_table_bucket_replication" "test" {
-  table_bucket_arn = aws_s3tables_table_bucket.test.arn
+data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "${data.aws_service_principal.current.name}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  versioning {
+    enabled = true
+  }
 }
 
 resource "aws_s3tables_table_bucket" "test" {
   name = %[1]q
 }
 `, rName)
+}
+
+func testAccTableBucketReplicationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccTableBucketReplicationConfig_base(rName), `
+resource "aws_s3tables_table_bucket_replication" "test" {
+  table_bucket_arn = aws_s3tables_table_bucket.test.arn
+  role             = aws_iam_role.test.arn
+
+  rule {
+    destination {
+      destination_bucket_arn = aws_s3_bucket.test.arn
+    }
+  }
+}
+`)
 }
