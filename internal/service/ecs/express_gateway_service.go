@@ -463,6 +463,7 @@ func (r *expressGatewayServiceResource) Delete(ctx context.Context, req resource
 			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Cannot perform this operation on a service in INACTIVE status") ||
 			errs.IsAErrorMessageContains[*awstypes.ServiceNotActiveException](err, "Service is in DRAINING status") {
 			// Service was already deleted/inactive/draining - deletion is already in progress or complete
+			return
 		} else {
 			// Real error occurred
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, serviceARN)

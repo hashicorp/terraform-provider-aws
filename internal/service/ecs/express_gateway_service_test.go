@@ -238,6 +238,45 @@ func TestAccECSExpressGatewayService_update(t *testing.T) {
 	})
 }
 
+func TestAccECSExpressGatewayService_waitForSteadyState(t *testing.T) {
+	acctest.Skip(t, "Times out when running with full suite")
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service awstypes.ECSExpressGatewayService
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExpressGatewayServiceConfig_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"),
+				),
+			},
+			{
+				Config: testAccExpressGatewayServiceConfig_updated(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:latest"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSExpressGatewayService_networkConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
