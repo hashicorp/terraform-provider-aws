@@ -123,8 +123,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.29.4 h1:GiSgorIElOwkVHjt9fr
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.29.4/go.mod h1:XyQgviAJh0ix9AEoEQd1txAgMNWhjHwmH9GaPKRhpGg=
 github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.0 h1:waVr7mqef4+goGzqrodFZmQp/QI6p31wBHHFXV5FZtI=
 github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.0/go.mod h1:AIfiLeQfCO8suB3zxZp155Sv9KfiDhPyF+SSIRLEUYk=
-github.com/aws/aws-sdk-go-v2/service/cloudfront v1.57.0 h1:e8fNhNWwv/qIGFjK4eV4TE2yrf56yFCDkZ9cSyuewnA=
-github.com/aws/aws-sdk-go-v2/service/cloudfront v1.57.0/go.mod h1:BeF/zsF5v8suyEFqg9h230PtSBJAL2PWSCCULD4/H5g=
+github.com/aws/aws-sdk-go-v2/service/cloudfront v1.58.0 h1:NcVhOkyIcFRl6QH/vvYpWI35kOpoI2HcdWrevmN9Hw4=
+github.com/aws/aws-sdk-go-v2/service/cloudfront v1.58.0/go.mod h1:BeF/zsF5v8suyEFqg9h230PtSBJAL2PWSCCULD4/H5g=
 github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.12.15 h1:ZyUTATfJJZi5cQ43t8lUaBVxye+fAtaMHKojWtNJcRA=
 github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.12.15/go.mod h1:AFWVoaDjzkPtx0y8CdSel9wjNoJCgdcL3E2b1f/iaxo=
 github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.12 h1:SZlIVdXH6bALHm+S9E3A8AyusETBj6Ac8vhp8Rul90w=
@@ -135,8 +135,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.0 h1:6Sv/xMZqb4koEQQYF3Osq
 github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.0/go.mod h1:XSNDmicqamWtX6yg5lisFAiFaf56PErQo/cMQvUQWX0=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.52.4 h1:ljiDPeMJhk9lvTHvmEk7mHOuk5rtdS618fdIr2vquSw=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.52.4/go.mod h1:vta+WQPKfEzTigLRCnlWbrsv8sLj3/imAQ2fjySEA4k=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.60.1 h1:ZVEs9ZPzCsX9n1/Pr+x+ms1f6UZOPjuj9evCmwHceA4=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.60.1/go.mod h1:WXcA3mYRgWVIzjD+kxzap0axltmt4zBVDZaRX0S86gk=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.61.0 h1:vtcmI0+6P7m0e+KIz2HZusUVvWShA+1ciwQpkTBpAII=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.61.0/go.mod h1:WXcA3mYRgWVIzjD+kxzap0axltmt4zBVDZaRX0S86gk=
 github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.13 h1:tBzK9wUdcAzJelHFFHZ3Zmq/xMYfreX4KL7dJenAAiM=
 github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.13/go.mod h1:htMVJ4Hvxuzw3znlz/difZJ63D7qW7pj8qsvIaJy92k=
 github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.5 h1:T6YofQNDDRCRjrXGbISm7NAfWrkiTulVRJJvlRGxZZ8=
@@ -589,8 +589,6 @@ github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dlclark/regexp2 v1.11.5 h1:Q/sSnsKerHeCkc/jSTNq1oCm7KiVgUMZRDUoRu0JQZQ=
-github.com/dlclark/regexp2 v1.11.5/go.mod h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
 github.com/evanphx/json-patch v0.5.2 h1:xVCHIVMUu1wtM/VkR9jVZ45N3FhZfYMMYGorLCR8P3k=
