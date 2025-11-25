@@ -82,7 +82,7 @@ func waitForDomainUpdate(ctx context.Context, conn *opensearch.Client, domainNam
 
 		return tfresource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", domainName))
-	}, tfresource.WithDelay(1*time.Minute), tfresource.WithPollInterval(10*time.Second))
+	}, tfresource.WithPollInterval(10*time.Second))
 
 	if err != nil {
 		return fmt.Errorf("waiting for OpenSearch Domain changes to be processed: %w", err)
