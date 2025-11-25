@@ -21,7 +21,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_abac" "example" {
-  bucket = aws_s3_bucket.test.bucket
+  bucket = aws_s3_bucket.example.bucket
 
   abac_status {
     status = "Enabled"
