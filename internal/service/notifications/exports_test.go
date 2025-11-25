@@ -9,9 +9,15 @@ var (
 	ResourceEventRule                 = newEventRuleResource
 	ResourceNotificationConfiguration = newNotificationConfigurationResource
 	ResourceNotificationHub           = newNotificationHubResource
+	ResourceTrustedAccess             = newTrustedAccessResource
 
 	FindChannelAssociationByTwoPartKey = findChannelAssociationByTwoPartKey
 	FindEventRuleByARN                 = findEventRuleByARN
 	FindNotificationConfigurationByARN = findNotificationConfigurationByARN
 	FindNotificationHubByRegion        = findNotificationHubByRegion
+	WaitTrustedAccessDisabled          = waitTrustedAccessDisabled
+	WaitTrustedAccessEnabled           = waitTrustedAccessEnabled
+	WaitTrustedAccessStable            = waitTrustedAccessStable
+
+	TrustedAccessStableTimeout = trustedAccessStableTimeout
 )

@@ -51,6 +51,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Notification Hub",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
+		{
+			Factory:  newTrustedAccessResource,
+			TypeName: "aws_notifications_trusted_access",
+			Name:     "Trusted Access",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
 	}
 }
 
