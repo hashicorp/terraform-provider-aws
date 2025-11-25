@@ -641,7 +641,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	if err := d.Set("control_plane_scaling_config", flattenControlPlaneScalingConfig(cluster.ControlPlaneScalingConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting control_plane_scaling_config: %s", err)
-	}	
+	}
 	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrDeletionProtection, cluster.DeletionProtection)
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
@@ -763,12 +763,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.HasChange("control_plane_scaling_config") {
-		input := &eks.UpdateClusterConfigInput{
+		input := eks.UpdateClusterConfigInput{
 			Name:                      aws.String(d.Id()),
 			ControlPlaneScalingConfig: expandControlPlaneScalingConfig(d.Get("control_plane_scaling_config").([]any)),
 		}
 
-		output, err := conn.UpdateClusterConfig(ctx, input)
+		output, err := conn.UpdateClusterConfig(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) control plane scaling config: %s", d.Id(), err)
