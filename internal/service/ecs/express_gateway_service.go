@@ -15,21 +15,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -61,55 +58,6 @@ type expressGatewayServiceResource struct {
 func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"active_configurations": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[activeConfigurationModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"service_revision_arn":     types.StringType,
-						names.AttrExecutionRoleARN: types.StringType,
-						"task_role_arn":            types.StringType,
-						"cpu":                      types.StringType,
-						"memory":                   types.StringType,
-						"health_check_path":        types.StringType,
-						names.AttrCreatedAt:        types.StringType,
-						names.AttrNetworkConfiguration: types.ListType{
-							ElemType: types.ObjectType{
-								AttrTypes: map[string]attr.Type{
-									names.AttrSecurityGroups: types.SetType{ElemType: types.StringType},
-									names.AttrSubnets:        types.SetType{ElemType: types.StringType},
-								},
-							},
-						},
-						"primary_container": types.ListType{
-							ElemType: types.ObjectType{
-								AttrTypes: map[string]attr.Type{
-									"image":          types.StringType,
-									"container_port": types.Int64Type,
-								},
-							},
-						},
-						"scaling_target": types.ListType{
-							ElemType: types.ObjectType{
-								AttrTypes: map[string]attr.Type{
-									"min_task_count":            types.Int64Type,
-									"max_task_count":            types.Int64Type,
-									"auto_scaling_metric":       types.StringType,
-									"auto_scaling_target_value": types.Int64Type,
-								},
-							},
-						},
-						"ingress_paths": types.ListType{
-							ElemType: types.ObjectType{
-								AttrTypes: map[string]attr.Type{
-									"access_type":      types.StringType,
-									names.AttrEndpoint: types.StringType,
-								},
-							},
-						},
-					},
-				},
-			},
 			"cluster": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -119,10 +67,7 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 			},
 			"cpu": schema.StringAttribute{
 				Optional: true,
-			},
-			names.AttrCreatedAt: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -133,55 +78,47 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-
 			names.AttrExecutionRoleARN: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
 			"health_check_path": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 			},
 			"infrastructure_role_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"ingress_paths": framework.ResourceComputedListOfObjectsAttribute[ingressPathSummaryModel](ctx, listplanmodifier.UseStateForUnknown()),
 			"memory": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"service_arn": framework.ARNAttributeComputedOnly(),
+			names.AttrNetworkConfiguration: framework.ResourceOptionalComputedListOfObjectsAttribute[expressGatewayServiceNetworkConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"service_arn":                  framework.ARNAttributeComputedOnly(),
 			names.AttrServiceName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
-			names.AttrStatus: schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[statusModel](ctx),
-				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						names.AttrStatusCode:   types.StringType,
-						names.AttrStatusReason: types.StringType,
-					},
-				},
+			"service_revision_arn": schema.StringAttribute{
+				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"task_role_arn": schema.StringAttribute{
-				Optional: true,
-			},
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 			},
 			"wait_for_steady_state": schema.BoolAttribute{
 				Optional: true,
@@ -190,73 +127,35 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrNetworkConfiguration: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrSecurityGroups: schema.SetAttribute{
-							ElementType: types.StringType,
-							Optional:    true,
-							Computed:    true,
-							PlanModifiers: []planmodifier.Set{
-								setplanmodifier.UseStateForUnknown(),
-							},
-						},
-						names.AttrSubnets: schema.SetAttribute{
-							ElementType: types.StringType,
-							Optional:    true,
-							Computed:    true,
-							PlanModifiers: []planmodifier.Set{
-								setplanmodifier.UseStateForUnknown(),
-							},
-						},
-					},
-				},
-			},
 			"primary_container": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[primaryContainerModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[expressGatewayContainerModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
+					listvalidator.IsRequired(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
+						"aws_logs_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[expressGatewayServiceAWSLogsConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 						"command": schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
 							ElementType: types.StringType,
 							Optional:    true,
 						},
 						"container_port": schema.Int64Attribute{
 							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.UseStateForUnknown(),
+							},
 						},
 						"image": schema.StringAttribute{
 							Required: true,
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"aws_logs_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[awsLogsConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"log_group": schema.StringAttribute{
-										Required: true,
-									},
-									"log_stream_prefix": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
 						names.AttrEnvironment: schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[environmentModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[keyValuePairModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrName: schema.StringAttribute{
@@ -269,19 +168,20 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 							},
 						},
 						"repository_credentials": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[repositoryCredentialsModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[expressGatewayRepositoryCredentialsModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"credentials_parameter": schema.StringAttribute{
-										Required: true,
+										CustomType: fwtypes.ARNType,
+										Required:   true,
 									},
 								},
 							},
 						},
-						"secrets": schema.ListNestedBlock{
+						"secret": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[secretModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -289,7 +189,8 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 										Required: true,
 									},
 									"value_from": schema.StringAttribute{
-										Required: true,
+										CustomType: fwtypes.ARNType,
+										Required:   true,
 									},
 								},
 							},
@@ -298,20 +199,15 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 				},
 			},
 			"scaling_target": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[scalingTargetModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[expressGatewayScalingTargetModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"auto_scaling_metric": schema.StringAttribute{
-							Optional: true,
-							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.ExpressGatewayServiceScalingMetric](),
-							},
+							CustomType: fwtypes.StringEnumType[awstypes.ExpressGatewayServiceScalingMetric](),
+							Optional:   true,
 						},
 						"auto_scaling_target_value": schema.Int64Attribute{
 							Optional: true,
@@ -354,6 +250,7 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 		return
 	}
 
+	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
 	operationTime := time.Now().UTC()
@@ -369,10 +266,7 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 	}
 
 	serviceARN := aws.ToString(out.Service.ServiceArn)
-	plan.ServiceArn = fwflex.StringValueToFramework(ctx, serviceARN)
-
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-
 	var waitOut *awstypes.ECSExpressGatewayService
 
 	if plan.WaitForSteadyState.ValueBool() {
@@ -385,41 +279,29 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
-
-	// Set Optional+Computed attributes from API response
+	var cluster string
+	// Preserve cluster format from state (name vs ARN)
 	if waitOut.Cluster != nil {
-		// Preserve cluster format from state (name vs ARN)
-		cluster := plan.Cluster.ValueString()
+		cluster = fwflex.StringValueFromFramework(ctx, plan.Cluster)
 		if arn.IsARN(cluster) {
-			plan.Cluster = fwflex.StringToFramework(ctx, waitOut.Cluster)
+			cluster = aws.ToString(waitOut.Cluster)
 		} else {
-			plan.Cluster = fwflex.StringToFramework(ctx, aws.String(clusterNameFromARN(aws.ToString(waitOut.Cluster))))
+			cluster = clusterNameFromARN(aws.ToString(waitOut.Cluster))
 		}
 	}
 
-	if waitOut.CreatedAt != nil {
-		plan.CreatedAt = timetypes.NewRFC3339TimeValue(*waitOut.CreatedAt)
-	}
-	if waitOut.UpdatedAt != nil {
-		plan.UpdatedAt = timetypes.NewRFC3339TimeValue(*waitOut.UpdatedAt)
-	}
-
-	if waitOut.CurrentDeployment != nil {
-		plan.CurrentDeployment = fwflex.StringToFramework(ctx, waitOut.CurrentDeployment)
-	} else {
-		plan.CurrentDeployment = types.StringNull()
+	// Set values for unknowns.
+	if len(waitOut.ActiveConfigurations) > 0 {
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
-	plan.Region = types.StringValue(r.Meta().Region(ctx))
-
-	if waitOut.ServiceName != nil {
-		plan.ServiceName = fwflex.StringToFramework(ctx, waitOut.ServiceName)
-	}
-
-	if waitOut.Status != nil {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
-	}
+	plan.Cluster = fwflex.StringValueToFramework(ctx, cluster)
+	plan.CurrentDeployment = fwflex.StringToFramework(ctx, waitOut.CurrentDeployment)
+	plan.ServiceARN = fwflex.StringValueToFramework(ctx, serviceARN)
+	plan.ServiceName = fwflex.StringToFramework(ctx, waitOut.ServiceName)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -433,7 +315,7 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 
 	conn := r.Meta().ECSClient(ctx)
 
-	serviceARN := fwflex.StringValueFromFramework(ctx, state.ServiceArn)
+	serviceARN := fwflex.StringValueFromFramework(ctx, state.ServiceARN)
 	out, err := findExpressGatewayServiceByARN(ctx, conn, serviceARN)
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -452,14 +334,10 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 	}
 
 	if len(out.ActiveConfigurations) > 0 {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.ActiveConfigurations, &state.ActiveConfigurations))
-	}
-
-	if out.CreatedAt != nil {
-		state.CreatedAt = timetypes.NewRFC3339TimeValue(*out.CreatedAt)
-	}
-	if out.UpdatedAt != nil {
-		state.UpdatedAt = timetypes.NewRFC3339TimeValue(*out.UpdatedAt)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.ActiveConfigurations[0], &state))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	// Set Optional+Computed attributes from API response
@@ -481,24 +359,9 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 			state.Cluster = types.StringValue("default")
 		}
 	}
-
-	if out.CurrentDeployment != nil {
-		state.CurrentDeployment = fwflex.StringToFramework(ctx, out.CurrentDeployment)
-	} else {
-		state.CurrentDeployment = types.StringNull()
-	}
-
-	if out.InfrastructureRoleArn != nil {
-		state.InfrastructureRoleArn = fwflex.StringToFramework(ctx, out.InfrastructureRoleArn)
-	}
-
-	if out.ServiceName != nil {
-		state.ServiceName = fwflex.StringToFramework(ctx, out.ServiceName)
-	}
-
-	if out.Status != nil {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*out.Status}, &state.Status))
-	}
+	state.CurrentDeployment = fwflex.StringToFramework(ctx, out.CurrentDeployment)
+	state.InfrastructureRoleARN = fwflex.StringToFrameworkARN(ctx, out.InfrastructureRoleArn)
+	state.ServiceName = fwflex.StringToFramework(ctx, out.ServiceName)
 
 	setTagsOut(ctx, out.Tags)
 
@@ -523,7 +386,7 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		return
 	}
 
-	serviceARN := fwflex.StringValueFromFramework(ctx, plan.ServiceArn)
+	serviceARN := fwflex.StringValueFromFramework(ctx, plan.ServiceARN)
 	var operationTime time.Time
 	var waitOut *awstypes.ECSExpressGatewayService
 
@@ -576,13 +439,12 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		}
 	}
 
-	// Set Computed attributes from updated service state
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations, &plan.ActiveConfigurations))
-	if waitOut.CreatedAt != nil {
-		plan.CreatedAt = timetypes.NewRFC3339TimeValue(*waitOut.CreatedAt)
-	}
-	if waitOut.UpdatedAt != nil {
-		plan.UpdatedAt = timetypes.NewRFC3339TimeValue(*waitOut.UpdatedAt)
+	// Set values for unknowns.
+	if len(waitOut.ActiveConfigurations) > 0 {
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	// Set Optional+Computed attributes from API response
@@ -596,19 +458,7 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		}
 	}
 
-	if waitOut.CurrentDeployment != nil {
-		plan.CurrentDeployment = fwflex.StringToFramework(ctx, waitOut.CurrentDeployment)
-	} else {
-		plan.CurrentDeployment = types.StringNull()
-	}
-
-	if waitOut.ServiceName != nil {
-		plan.ServiceName = fwflex.StringToFramework(ctx, waitOut.ServiceName)
-	}
-
-	if waitOut.Status != nil {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, []awstypes.ExpressGatewayServiceStatus{*waitOut.Status}, &plan.Status))
-	}
+	plan.CurrentDeployment = fwflex.StringToFramework(ctx, waitOut.CurrentDeployment)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -622,7 +472,7 @@ func (r *expressGatewayServiceResource) Delete(ctx context.Context, req resource
 
 	conn := r.Meta().ECSClient(ctx)
 
-	serviceARN := fwflex.StringValueFromFramework(ctx, state.ServiceArn)
+	serviceARN := fwflex.StringValueFromFramework(ctx, state.ServiceARN)
 	input := ecs.DeleteExpressGatewayServiceInput{
 		ServiceArn: aws.String(serviceARN),
 	}
@@ -875,110 +725,71 @@ func statusExpressGatewayServiceWaitForStable(ctx context.Context, conn *ecs.Cli
 
 type expressGatewayServiceResourceModel struct {
 	framework.WithRegionModel
-	ActiveConfigurations fwtypes.ListNestedObjectValueOf[activeConfigurationModel] `tfsdk:"active_configurations"`
-	Cluster              types.String                                              `tfsdk:"cluster"`
-	CPU                  types.String                                              `tfsdk:"cpu"`
-	CreatedAt            timetypes.RFC3339                                         `tfsdk:"created_at"`
-	CurrentDeployment    types.String                                              `tfsdk:"current_deployment"`
-
-	ExecutionRoleArn      types.String                                               `tfsdk:"execution_role_arn"`
-	HealthCheckPath       types.String                                               `tfsdk:"health_check_path"`
-	InfrastructureRoleArn types.String                                               `tfsdk:"infrastructure_role_arn"`
-	Memory                types.String                                               `tfsdk:"memory"`
-	NetworkConfiguration  fwtypes.ListNestedObjectValueOf[networkConfigurationModel] `tfsdk:"network_configuration"`
-	PrimaryContainer      fwtypes.ListNestedObjectValueOf[primaryContainerModel]     `tfsdk:"primary_container"`
-	ScalingTarget         fwtypes.ListNestedObjectValueOf[scalingTargetModel]        `tfsdk:"scaling_target"`
-	ServiceArn            types.String                                               `tfsdk:"service_arn"`
-	ServiceName           types.String                                               `tfsdk:"service_name"`
-	Status                fwtypes.ListNestedObjectValueOf[statusModel]               `tfsdk:"status"`
-	Tags                  tftags.Map                                                 `tfsdk:"tags"`
-	TagsAll               tftags.Map                                                 `tfsdk:"tags_all"`
-	TaskRoleArn           types.String                                               `tfsdk:"task_role_arn"`
-	Timeouts              timeouts.Value                                             `tfsdk:"timeouts"`
-	UpdatedAt             timetypes.RFC3339                                          `tfsdk:"updated_at"`
-	WaitForSteadyState    types.Bool                                                 `tfsdk:"wait_for_steady_state"`
+	Cluster               types.String                                                                    `tfsdk:"cluster"`
+	CPU                   types.String                                                                    `tfsdk:"cpu"`
+	CurrentDeployment     types.String                                                                    `tfsdk:"current_deployment"`
+	ExecutionRoleARN      fwtypes.ARN                                                                     `tfsdk:"execution_role_arn"`
+	HealthCheckPath       types.String                                                                    `tfsdk:"health_check_path"`
+	InfrastructureRoleARN fwtypes.ARN                                                                     `tfsdk:"infrastructure_role_arn"`
+	IngressPaths          fwtypes.ListNestedObjectValueOf[ingressPathSummaryModel]                        `tfsdk:"ingress_paths"`
+	Memory                types.String                                                                    `tfsdk:"memory"`
+	NetworkConfiguration  fwtypes.ListNestedObjectValueOf[expressGatewayServiceNetworkConfigurationModel] `tfsdk:"network_configuration"`
+	PrimaryContainer      fwtypes.ListNestedObjectValueOf[expressGatewayContainerModel]                   `tfsdk:"primary_container"`
+	ScalingTarget         fwtypes.ListNestedObjectValueOf[expressGatewayScalingTargetModel]               `tfsdk:"scaling_target"`
+	ServiceARN            types.String                                                                    `tfsdk:"service_arn"`
+	ServiceName           types.String                                                                    `tfsdk:"service_name"`
+	ServiceRevisionARN    types.String                                                                    `tfsdk:"service_revision_arn"`
+	Tags                  tftags.Map                                                                      `tfsdk:"tags"`
+	TagsAll               tftags.Map                                                                      `tfsdk:"tags_all"`
+	TaskRoleARN           fwtypes.ARN                                                                     `tfsdk:"task_role_arn"`
+	Timeouts              timeouts.Value                                                                  `tfsdk:"timeouts"`
+	WaitForSteadyState    types.Bool                                                                      `tfsdk:"wait_for_steady_state"`
 }
 
-type networkConfigurationModel struct {
-	SecurityGroups fwtypes.SetValueOf[types.String] `tfsdk:"security_groups"`
-	Subnets        fwtypes.SetValueOf[types.String] `tfsdk:"subnets"`
+type expressGatewayServiceNetworkConfigurationModel struct {
+	SecurityGroups fwtypes.SetOfString `tfsdk:"security_groups"`
+	Subnets        fwtypes.SetOfString `tfsdk:"subnets"`
 }
 
-type primaryContainerModel struct {
-	AwsLogsConfiguration  fwtypes.ListNestedObjectValueOf[awsLogsConfigurationModel]  `tfsdk:"aws_logs_configuration"`
-	Command               fwtypes.ListValueOf[types.String]                           `tfsdk:"command"`
-	ContainerPort         types.Int64                                                 `tfsdk:"container_port"`
-	Environment           fwtypes.ListNestedObjectValueOf[environmentModel]           `tfsdk:"environment"`
-	Image                 types.String                                                `tfsdk:"image"`
-	RepositoryCredentials fwtypes.ListNestedObjectValueOf[repositoryCredentialsModel] `tfsdk:"repository_credentials"`
-	Secrets               fwtypes.ListNestedObjectValueOf[secretModel]                `tfsdk:"secrets"`
+type expressGatewayContainerModel struct {
+	AWSLogsConfiguration  fwtypes.ListNestedObjectValueOf[expressGatewayServiceAWSLogsConfigurationModel] `tfsdk:"aws_logs_configuration"`
+	Command               fwtypes.ListOfString                                                            `tfsdk:"command"`
+	ContainerPort         types.Int64                                                                     `tfsdk:"container_port"`
+	Environment           fwtypes.ListNestedObjectValueOf[keyValuePairModel]                              `tfsdk:"environment"`
+	Image                 types.String                                                                    `tfsdk:"image"`
+	RepositoryCredentials fwtypes.ListNestedObjectValueOf[expressGatewayRepositoryCredentialsModel]       `tfsdk:"repository_credentials"`
+	Secrets               fwtypes.ListNestedObjectValueOf[secretModel]                                    `tfsdk:"secret"`
 }
 
-type awsLogsConfigurationModel struct {
+type expressGatewayServiceAWSLogsConfigurationModel struct {
 	LogGroup        types.String `tfsdk:"log_group"`
 	LogStreamPrefix types.String `tfsdk:"log_stream_prefix"`
 }
 
-type environmentModel struct {
+type keyValuePairModel struct {
 	Name  types.String `tfsdk:"name"`
 	Value types.String `tfsdk:"value"`
 }
 
-type repositoryCredentialsModel struct {
-	CredentialsParameter types.String `tfsdk:"credentials_parameter"`
+type expressGatewayRepositoryCredentialsModel struct {
+	CredentialsParameter fwtypes.ARN `tfsdk:"credentials_parameter"`
 }
 
 type secretModel struct {
 	Name      types.String `tfsdk:"name"`
-	ValueFrom types.String `tfsdk:"value_from"`
+	ValueFrom fwtypes.ARN  `tfsdk:"value_from"`
 }
 
-type scalingTargetModel struct {
-	AutoScalingMetric      types.String `tfsdk:"auto_scaling_metric"`
-	AutoScalingTargetValue types.Int64  `tfsdk:"auto_scaling_target_value"`
-	MaxTaskCount           types.Int64  `tfsdk:"max_task_count"`
-	MinTaskCount           types.Int64  `tfsdk:"min_task_count"`
+type expressGatewayScalingTargetModel struct {
+	AutoScalingMetric      fwtypes.StringEnum[awstypes.ExpressGatewayServiceScalingMetric] `tfsdk:"auto_scaling_metric"`
+	AutoScalingTargetValue types.Int64                                                     `tfsdk:"auto_scaling_target_value"`
+	MaxTaskCount           types.Int64                                                     `tfsdk:"max_task_count"`
+	MinTaskCount           types.Int64                                                     `tfsdk:"min_task_count"`
 }
 
-type activeConfigurationModel struct {
-	ServiceRevisionArn   types.String                                                     `tfsdk:"service_revision_arn"`
-	ExecutionRoleArn     types.String                                                     `tfsdk:"execution_role_arn"`
-	TaskRoleArn          types.String                                                     `tfsdk:"task_role_arn"`
-	Cpu                  types.String                                                     `tfsdk:"cpu"`
-	Memory               types.String                                                     `tfsdk:"memory"`
-	HealthCheckPath      types.String                                                     `tfsdk:"health_check_path"`
-	CreatedAt            timetypes.RFC3339                                                `tfsdk:"created_at"`
-	NetworkConfiguration fwtypes.ListNestedObjectValueOf[configNetworkConfigurationModel] `tfsdk:"network_configuration"`
-	PrimaryContainer     fwtypes.ListNestedObjectValueOf[configPrimaryContainerModel]     `tfsdk:"primary_container"`
-	ScalingTarget        fwtypes.ListNestedObjectValueOf[configScalingTargetModel]        `tfsdk:"scaling_target"`
-	IngressPaths         fwtypes.ListNestedObjectValueOf[ingressPathModel]                `tfsdk:"ingress_paths"`
-}
-
-type configNetworkConfigurationModel struct {
-	SecurityGroups fwtypes.SetValueOf[types.String] `tfsdk:"security_groups"`
-	Subnets        fwtypes.SetValueOf[types.String] `tfsdk:"subnets"`
-}
-
-type configPrimaryContainerModel struct {
-	Image         types.String `tfsdk:"image"`
-	ContainerPort types.Int64  `tfsdk:"container_port"`
-}
-
-type configScalingTargetModel struct {
-	MinTaskCount           types.Int64  `tfsdk:"min_task_count"`
-	MaxTaskCount           types.Int64  `tfsdk:"max_task_count"`
-	AutoScalingMetric      types.String `tfsdk:"auto_scaling_metric"`
-	AutoScalingTargetValue types.Int64  `tfsdk:"auto_scaling_target_value"`
-}
-
-type ingressPathModel struct {
-	AccessType types.String `tfsdk:"access_type"`
-	Endpoint   types.String `tfsdk:"endpoint"`
-}
-
-type statusModel struct {
-	StatusCode   types.String `tfsdk:"status_code"`
-	StatusReason types.String `tfsdk:"status_reason"`
+type ingressPathSummaryModel struct {
+	AccessType fwtypes.StringEnum[awstypes.AccessType] `tfsdk:"access_type"`
+	Endpoint   types.String                            `tfsdk:"endpoint"`
 }
 
 func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, input *ecs.CreateExpressGatewayServiceInput) (*ecs.CreateExpressGatewayServiceOutput, error) {

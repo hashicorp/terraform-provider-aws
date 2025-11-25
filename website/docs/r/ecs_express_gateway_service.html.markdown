@@ -77,7 +77,7 @@ resource "aws_ecs_express_gateway_service" "example" {
       value = "8080"
     }
 
-    secrets {
+    secret {
       name       = "DB_PASSWORD"
       value_from = aws_secretsmanager_secret.db_password.arn
     }
@@ -175,49 +175,22 @@ The `scaling_target` configuration block supports the following:
 * `max_task_count` - (Optional) Maximum number of tasks to run.
 * `min_task_count` - (Optional) Minimum number of tasks to run.
 
-### timeouts
-
-The `timeouts` configuration block supports the following:
-
-* `create` - (Optional) Maximum time to wait for the service to be created. Defaults to `20m`.
-* `delete` - (Optional) Maximum time to wait for the service to be deleted. Defaults to `20m`.
-* `update` - (Optional) Maximum time to wait for the service to be updated. Defaults to `20m`.
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `active_configurations` - List of active service configurations. Each configuration contains:
-    * `auto_scaling_metric` - Auto-scaling metric being used.
-    * `auto_scaling_target_value` - Target value for auto-scaling.
-    * `cpu` - CPU units allocated to the service.
-    * `created_at` - Time when the configuration was created.
-    * `execution_role_arn` - Execution role ARN.
-    * `health_check_path` - Health check path.
-    * `ingress_paths` - List of ingress paths with access type and endpoint information.
-    * `max_task_count` - Maximum number of tasks.
-    * `memory` - Memory allocated to the service.
-    * `min_task_count` - Minimum number of tasks.
-    * `network_configuration` - Network configuration details.
-    * `primary_container` - Primary container configuration.
-    * `scaling_target` - Scaling target configuration.
-    * `service_revision_arn` - ARN of the service revision.
-    * `task_role_arn` - Task role ARN.
-* `created_at` - Time when the service was created.
 * `current_deployment` - ARN of the current deployment.
+* `ingress_paths` - List of ingress paths with access type and endpoint information.
 * `service_arn` - ARN of the Express Gateway Service.
-* `status` - Current status of the service. Contains:
-    * `status_code` - Status code of the service.
-    * `status_reason` - Reason for the current status.
+* `service_revision_arn` - ARN of the service revision.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `updated_at` - Time when the service was last updated.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `20m`)
-* `delete` - (Default `20m`)
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
 * `update` - (Default `20m`)
 
 ## Service Updates and Deletion
