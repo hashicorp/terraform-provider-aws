@@ -93,6 +93,47 @@ func TestAccS3TablesTableReplication_disappears(t *testing.T) {
 	})
 }
 
+func TestAccS3TablesTableReplication_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v s3tables.GetTableReplicationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3tables_table_replication.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableReplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableReplicationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccTableReplicationConfig_updated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckTableReplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
@@ -206,4 +247,23 @@ resource "aws_s3tables_table_replication" "test" {
   }
 }
 `)
+}
+
+func testAccTableReplicationConfig_updated(rName string) string {
+	return acctest.ConfigCompose(testAccTableReplicationConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3tables_table_bucket" "target2" {
+  name = "%[1]s-target2"
+}
+
+resource "aws_s3tables_table_replication" "test" {
+  table_arn = aws_s3tables_table.test.arn
+  role      = aws_iam_role.test.arn
+
+  rule {
+    destination {
+      destination_table_bucket_arn = aws_s3tables_table_bucket.target2.arn
+    }
+  }
+}
+`, rName))
 }
