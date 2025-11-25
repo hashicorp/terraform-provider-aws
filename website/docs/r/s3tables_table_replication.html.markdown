@@ -21,7 +21,7 @@ resource "aws_s3tables_table_replication" "example" {
 
   rule {
     destination {
-      destination_bucket_arn = aws_s3_bucket.example.arn
+      destination_table_bucket_arn = aws_s3tables_table_bucket.target.arn
     }
   }
 }
@@ -46,7 +46,7 @@ The `rule` block supports the following:
 
 The `destination` block supports the following:
 
-* `destination_bucket_arn` (Required) ARN of destination bucket to replicate source tables to.
+* `destination_table_bucket_arn` (Required) ARN of destination table bucket to replicate source tables to.
 
 ## Attribute Reference
 

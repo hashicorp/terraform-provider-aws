@@ -33,6 +33,8 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableReplicationOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importIgnore="version_token")
+// @Testing(plannableImportAction="NoOp")
 func newTableReplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableReplicationResource{}, nil
 }
@@ -77,7 +79,7 @@ func (r *tableReplicationResource) Schema(ctx context.Context, request resource.
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"destination_bucket_arn": schema.StringAttribute{
+									"destination_table_bucket_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
@@ -100,13 +102,16 @@ func (r *tableReplicationResource) Create(ctx context.Context, request resource.
 
 	conn := r.Meta().S3TablesClient(ctx)
 
-	tableARN := fwflex.StringValueFromFramework(ctx, data.TableARN)
-	input := s3tables.PutTableReplicationInput{
-		TableArn: aws.String(tableARN),
-	}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input.Configuration)...)
+	var configuration awstypes.TableReplicationConfiguration
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &configuration)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	tableARN := fwflex.StringValueFromFramework(ctx, data.TableARN)
+	input := s3tables.PutTableReplicationInput{
+		Configuration: &configuration,
+		TableArn:      aws.String(tableARN),
 	}
 
 	output, err := conn.PutTableReplication(ctx, &input)
@@ -170,14 +175,17 @@ func (r *tableReplicationResource) Update(ctx context.Context, request resource.
 
 	conn := r.Meta().S3TablesClient(ctx)
 
-	tableARN := fwflex.StringValueFromFramework(ctx, new.TableARN)
-	input := s3tables.PutTableReplicationInput{
-		TableArn:     aws.String(tableARN),
-		VersionToken: fwflex.StringFromFramework(ctx, old.VersionToken),
-	}
-	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input.Configuration)...)
+	var configuration awstypes.TableReplicationConfiguration
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &configuration)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	tableARN := fwflex.StringValueFromFramework(ctx, new.TableARN)
+	input := s3tables.PutTableReplicationInput{
+		Configuration: &configuration,
+		TableArn:      aws.String(tableARN),
+		VersionToken:  fwflex.StringFromFramework(ctx, old.VersionToken),
 	}
 
 	output, err := conn.PutTableReplication(ctx, &input)

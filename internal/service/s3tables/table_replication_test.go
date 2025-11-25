@@ -49,9 +49,10 @@ func TestAccS3TablesTableReplication_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "table_bucket_arn"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "table_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "table_bucket_arn",
+				ImportStateVerifyIdentifierAttribute: "table_arn",
+				ImportStateVerifyIgnore:              []string{"version_token"},
 			},
 		},
 	})
@@ -101,7 +102,7 @@ func testAccCheckTableReplicationDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfs3tables.FindTableReplicationByARN(ctx, conn, rs.Primary.Attributes["table_bucket_arn"])
+			_, err := tfs3tables.FindTableReplicationByARN(ctx, conn, rs.Primary.Attributes["table_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -139,30 +140,70 @@ func testAccCheckTableReplicationExists(ctx context.Context, n string, v *s3tabl
 	}
 }
 
-func testAccTableReplicationConfig_basic(rName string) string {
+func testAccTableReplicationConfig_base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3tables_table_replication" "test" {
-  table_arn = aws_s3tables_table.test.arn
+data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "${data.aws_service_principal.current.name}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_s3tables_table_bucket" "source" {
+  name = "%[1]s-source"
+}
+
+resource "aws_s3tables_table_bucket" "target" {
+  name = "%[1]s-target"
 }
 
 resource "aws_s3tables_table" "test" {
-  name             = %[1]q
+  name             = replace(%[1]q, "-", "_")
   namespace        = aws_s3tables_namespace.test.namespace
   table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
   format           = "ICEBERG"
 }
 
 resource "aws_s3tables_namespace" "test" {
-  namespace        = %[1]q
-  table_bucket_arn = aws_s3tables_table_bucket.test.arn
+  namespace        = replace(%[1]q, "-", "_")
+  table_bucket_arn = aws_s3tables_table_bucket.source.arn
 
   lifecycle {
     create_before_destroy = true
   }
 }
-
-resource "aws_s3tables_table_bucket" "test" {
-  name = %[1]q
-}
 `, rName)
+}
+
+func testAccTableReplicationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccTableReplicationConfig_base(rName), `
+resource "aws_s3tables_table_replication" "test" {
+  table_arn = aws_s3tables_table.test.arn
+  role      = aws_iam_role.test.arn
+
+  rule {
+    destination {
+      destination_table_bucket_arn = aws_s3tables_table_bucket.target.arn
+    }
+  }
+}
+`)
 }

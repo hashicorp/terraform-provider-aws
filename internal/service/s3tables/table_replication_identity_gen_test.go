@@ -66,6 +66,9 @@ func TestAccS3TablesTableReplication_Identity_Basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "table_arn",
+				ImportStateVerifyIgnore: []string{
+					"version_token",
+				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -153,6 +156,9 @@ func TestAccS3TablesTableReplication_Identity_RegionOverride(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "table_arn",
+				ImportStateVerifyIgnore: []string{
+					"version_token",
+				},
 			},
 
 			// Step 3: Import command without appended "@<region>"
@@ -168,6 +174,9 @@ func TestAccS3TablesTableReplication_Identity_RegionOverride(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "table_arn",
+				ImportStateVerifyIgnore: []string{
+					"version_token",
+				},
 			},
 
 			// Step 4: Import block with Import ID and appended "@<region>"
