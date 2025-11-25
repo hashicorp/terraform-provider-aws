@@ -156,6 +156,7 @@ val services = mapOf(
     "mgn" to ServiceSpec("Application Migration (Mgn)"),
     "mq" to ServiceSpec("MQ", vpcLock = true),
     "mwaa" to ServiceSpec("MWAA (Managed Workflows for Apache Airflow)", vpcLock = true),
+    "mwaaserverless" to ServiceSpec("MWAA (Managed Workflows for Apache Airflow) Serverless"),
     "neptune" to ServiceSpec("Neptune"),
     "neptunegraph" to ServiceSpec("Neptune Analytics"),
     "networkfirewall" to ServiceSpec("Network Firewall", vpcLock = true),
