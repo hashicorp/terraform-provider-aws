@@ -667,6 +667,23 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 				}
 			}
 		}
+		n := diff.Get("availability_zone_address").(*schema.Set)
+		for _, v := range n.List() {
+			m, ok := v.(map[string]any)
+			if !ok {
+				continue
+			}
+			var az, azid string
+			if v, ok := m[names.AttrAvailabilityZone]; ok {
+				az = v.(string)
+			}
+			if v, ok := m["availability_zone_id"]; ok {
+				azid = v.(string)
+			}
+			if (az != "" && azid != "") || (az == "" && azid == "") {
+				return fmt.Errorf("Exactly one of availability_zone or availability_zone_id can be specified: availability_zone=%q availability_zone_id=%q", az, azid)
+			}
+		}
 	}
 
 	return nil
