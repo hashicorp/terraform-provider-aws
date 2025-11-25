@@ -770,22 +770,29 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// Tag on create requires the s3:TagResource IAM permission
 	tagOnCreate := true
-	input.CreateBucketConfiguration.Tags = getTagsIn(ctx)
+	if input.CreateBucketConfiguration == nil {
+		input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
+			Tags: getTagsIn(ctx),
+		}
+	} else {
+		input.CreateBucketConfiguration.Tags = getTagsIn(ctx)
+	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateBucket(ctx, input)
 	}, errCodeOperationAborted)
 
-	if err != nil {
-		if errs.Contains(err, "is not authorized to perform: s3:TagResource") {
-			// Remove tags and try again
-			input.CreateBucketConfiguration.Tags = nil
-			tagOnCreate = false
+	if errs.Contains(err, "is not authorized to perform: s3:TagResource") {
+		// Remove tags and try again
+		input.CreateBucketConfiguration.Tags = nil
+		tagOnCreate = false
 
-			_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
-				return conn.CreateBucket(ctx, input)
-			}, errCodeOperationAborted)
-		}
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+			return conn.CreateBucket(ctx, input)
+		}, errCodeOperationAborted)
+	}
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s): %s", bucket, err)
 	}
 
