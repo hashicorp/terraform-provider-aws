@@ -273,6 +273,7 @@ provider "aws" {
 |RAM (Resource Access Manager)|`ram`|`AWS_ENDPOINT_URL_RAM`|`ram`|
 |Recycle Bin (RBin)|`rbin`(or `recyclebin`)|`AWS_ENDPOINT_URL_RBIN`|`rbin`|
 |RDS (Relational Database)|`rds`|`AWS_ENDPOINT_URL_RDS`|`rds`|
+|RDS Data|`rdsdata`(or `rdsdataservice`)|`AWS_ENDPOINT_URL_RDS_DATA`|`rds_data`|
 |Redshift|`redshift`|`AWS_ENDPOINT_URL_REDSHIFT`|`redshift`|
 |Redshift Data|`redshiftdata`(or `redshiftdataapiservice`)|`AWS_ENDPOINT_URL_REDSHIFT_DATA`|`redshift_data`|
 |Redshift Serverless|`redshiftserverless`|`AWS_ENDPOINT_URL_REDSHIFT_SERVERLESS`|`redshift_serverless`|

@@ -1767,6 +1767,20 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// rdsdata
+
+				"rdsdata": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				"rdsdataservice": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// redshift
 
 				"redshift": {
@@ -3087,6 +3101,30 @@ func expandEndpoints(_ context.Context, tfList []any) (map[string]string, diag.D
 			case "rbin", "recyclebin":
 				const pkg = "rbin"
 				attrs := []string{"rbin", "recyclebin"}
+				for _, v := range attrs {
+					seen[v] = true
+				}
+				count := 0
+				for _, attr := range attrs {
+					if v := tfMap[attr].(string); v != "" {
+						count++
+					}
+				}
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
+				if endpoints[pkg] == "" {
+					for _, attr := range attrs {
+						if v := tfMap[attr].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
+				}
+
+			case "rdsdata", "rdsdataservice":
+				const pkg = "rdsdata"
+				attrs := []string{"rdsdata", "rdsdataservice"}
 				for _, v := range attrs {
 					seen[v] = true
 				}

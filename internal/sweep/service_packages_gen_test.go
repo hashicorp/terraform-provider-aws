@@ -198,6 +198,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rbin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rdsdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
@@ -459,6 +460,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		ram.ServicePackage(ctx),
 		rbin.ServicePackage(ctx),
 		rds.ServicePackage(ctx),
+		rdsdata.ServicePackage(ctx),
 		redshift.ServicePackage(ctx),
 		redshiftdata.ServicePackage(ctx),
 		redshiftserverless.ServicePackage(ctx),
