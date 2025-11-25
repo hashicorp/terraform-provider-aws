@@ -132,13 +132,13 @@ This resource supports the following arguments:
 
 ### `availability_zone_address`
 
-~> **NOTE:** Once `availability_zone_address` blocks are specified (i.e., when using manual mode), switching to auto mode is not possible without recreating the NAT Gateway. Removing all of these blocks does not trigger resource recreation and results in an error.
+~> **NOTE:** Once `availability_zone_address` blocks are specified (i.e., when using manual mode), removing `availability_zone_address` triggers recreation of the regional NAT Gateway in auto mode. Conversely, when operating in auto mode (i.e., without specifying `availability_zone_address`), adding these blocks triggers resource recreation to create a manual-mode regional NAT Gateway.
 
 ~> **NOTE:** Moving an `allocation_id` from one availability zone to another within `availability_zone_address` is not supported, because newly added EIPs are associated first, and only then are removed EIPs disassociated. To move it, remove the `allocation_id` from the source availability zone and apply the configuration. Then add it to the destination availability zone and apply again.
 
 * `allocation_ids` - (Required) List of allocation IDs of the Elastic IP addresses (EIPs) to be used for handling outbound NAT traffic in this specific Availability Zone.
-* `availability_zone` - (Optional) Availability Zone (e.g. `us-west-2a`) where this specific NAT gateway configuration will be active. If both `availability_zone` and `availability_zone_id` are specified, `availability_zone` will be used.
-* `availability_zone_id` - (Optional) Availability Zone ID (e.g. `usw2-az2`) where this specific NAT gateway configuration will be active. If both `availability_zone` and `availability_zone_id` are specified, `availability_zone` will be used.
+* `availability_zone` - (Optional) Availability Zone (e.g. `us-west-2a`) where this specific NAT gateway configuration will be active. Exactly one of `availability_zone` or `availability_zone_id` must be specified.
+* `availability_zone_id` - (Optional) Availability Zone ID (e.g. `usw2-az2`) where this specific NAT gateway configuration will be active. Exactly one of `availability_zone` or `availability_zone_id` must be specified.
 
 ## Attribute Reference
 
