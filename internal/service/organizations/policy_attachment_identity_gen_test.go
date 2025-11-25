@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -23,8 +22,9 @@ func testAccOrganizationsPolicyAttachment_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccOrganizationsPolicyAttachment_Identity_Basic,
-		"ExistingResource": testAccOrganizationsPolicyAttachment_Identity_ExistingResource,
+		acctest.CtBasic:             testAccOrganizationsPolicyAttachment_Identity_Basic,
+		"ExistingResource":          testAccOrganizationsPolicyAttachment_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccOrganizationsPolicyAttachment_Identity_ExistingResource_NoRefresh_NoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -34,7 +34,7 @@ func testAccOrganizationsPolicyAttachment_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_organizations_policy_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -122,7 +122,7 @@ func testAccOrganizationsPolicyAttachment_Identity_ExistingResource(t *testing.T
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_organizations_policy_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -172,6 +172,66 @@ func testAccOrganizationsPolicyAttachment_Identity_ExistingResource(t *testing.T
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("policy_id")),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("target_id")),
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity was added after v6.4.0
+func testAccOrganizationsPolicyAttachment_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_organizations_policy_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		CheckDestroy: testAccCheckPolicyAttachmentDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/PolicyAttachment/basic_v6.4.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyAttachmentExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/PolicyAttachment/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
 				},
 			},
 		},

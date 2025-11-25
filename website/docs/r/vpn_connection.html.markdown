@@ -127,6 +127,7 @@ This resource supports the following arguments:
 * `customer_gateway_id` - (Required) The ID of the customer gateway.
 * `type` - (Required) The type of VPN connection. The only type AWS supports at this time is "ipsec.1".
 * `transit_gateway_id` - (Optional) The ID of the EC2 Transit Gateway.
+* `vpn_concentrator_id` - (Optional) ID of the VPN concentrator to associate with the VPN connection.
 * `vpn_gateway_id` - (Optional) The ID of the Virtual Private Gateway.
 * `static_routes_only` - (Optional, Default `false`) Whether the VPN connection uses static routes exclusively. Static routes must be used for devices that don't support BGP.
 * `enable_acceleration` - (Optional, Default `false`) Indicate whether to enable acceleration for the VPN connection. Supports only EC2 Transit Gateway.
@@ -138,6 +139,7 @@ This resource supports the following arguments:
 * `remote_ipv4_network_cidr` - (Optional, Default `0.0.0.0/0`) The IPv4 CIDR on the AWS side of the VPN connection.
 * `remote_ipv6_network_cidr` - (Optional, Default `::/0`) The IPv6 CIDR on the AWS side of the VPN connection.
 * `transport_transit_gateway_attachment_id` - (Required when outside_ip_address_type is set to `PrivateIpv4`). The attachment ID of the Transit Gateway attachment to Direct Connect Gateway. The ID is obtained through a data source only.
+* `tunnel_bandwidth` - (Optional, Default `standard`) Desired bandwidth specification for the VPN tunnel. Valid values are `standard | large`. `standard` supports up to 1.25 Gbps per tunnel, while `large` supports up to 5 Gbps per tunnel. Not supported when `vpn_gateway_id` is specified, or `enable_acceleration` is `true`.
 * `tunnel_inside_ip_version` - (Optional, Default `ipv4`) Indicate whether the VPN tunnels process IPv4 or IPv6 traffic. Valid values are `ipv4 | ipv6`. `ipv6` Supports only EC2 Transit Gateway.
 * `tunnel1_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the first VPN tunnel. Valid value is a size /30 CIDR block from the 169.254.0.0/16 range.
 * `tunnel2_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the second VPN tunnel. Valid value is a size /30 CIDR block from the 169.254.0.0/16 range.

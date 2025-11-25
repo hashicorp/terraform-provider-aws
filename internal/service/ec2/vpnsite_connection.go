@@ -148,11 +148,20 @@ func resourceVPNConnection() *schema.Resource {
 			names.AttrTransitGatewayID: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"vpn_gateway_id"},
+				ConflictsWith: []string{"vpn_gateway_id", "vpn_concentrator_id"},
 			},
 			"transport_transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"tunnel_bandwidth": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.VpnTunnelBandwidth](),
+				// Not supported on VGW
+				ConflictsWith: []string{"vpn_gateway_id"},
 			},
 			"tunnel_inside_ip_version": {
 				Type:             schema.TypeString,
@@ -634,7 +643,13 @@ func resourceVPNConnection() *schema.Resource {
 			"vpn_gateway_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrTransitGatewayID},
+				ConflictsWith: []string{names.AttrTransitGatewayID, "vpn_concentrator_id"},
+			},
+			"vpn_concentrator_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrTransitGatewayID, "vpn_gateway_id"},
 			},
 		},
 
@@ -705,6 +720,10 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VpnGatewayId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("vpn_concentrator_id"); ok {
+		input.VpnConcentratorId = aws.String(v.(string))
+	}
+
 	output, err := conn.CreateVpnConnection(ctx, &input)
 
 	if err != nil {
@@ -744,6 +763,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("customer_gateway_id", vpnConnection.CustomerGatewayId)
 	d.Set("preshared_key_arn", vpnConnection.PreSharedKeyArn)
 	d.Set(names.AttrType, vpnConnection.Type)
+	d.Set("vpn_concentrator_id", vpnConnection.VpnConcentratorId)
 	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
 
 	if v := vpnConnection.TransitGatewayId; v != nil {
@@ -787,6 +807,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("remote_ipv6_network_cidr", v.RemoteIpv6NetworkCidr)
 		d.Set("static_routes_only", v.StaticRoutesOnly)
 		d.Set("transport_transit_gateway_attachment_id", v.TransportTransitGatewayAttachmentId)
+		d.Set("tunnel_bandwidth", v.TunnelBandwidth)
 		d.Set("tunnel_inside_ip_version", v.TunnelInsideIpVersion)
 
 		for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
@@ -863,7 +884,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChanges("customer_gateway_id", names.AttrTransitGatewayID, "vpn_gateway_id") {
+	if d.HasChanges("customer_gateway_id", names.AttrTransitGatewayID, "vpn_concentrator_id", "vpn_gateway_id") {
 		input := ec2.ModifyVpnConnectionInput{
 			VpnConnectionId: aws.String(d.Id()),
 		}
@@ -1017,6 +1038,10 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *awstypes.V
 
 	if v, ok := d.GetOk("static_routes_only"); ok {
 		apiObject.StaticRoutesOnly = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.Get("tunnel_bandwidth").(string); ok {
+		apiObject.TunnelBandwidth = awstypes.VpnTunnelBandwidth(v)
 	}
 
 	if v, ok := d.GetOk("transport_transit_gateway_attachment_id"); ok {

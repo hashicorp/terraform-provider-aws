@@ -230,7 +230,6 @@ provider "aws" {
 |Lightsail|`lightsail`|`AWS_ENDPOINT_URL_LIGHTSAIL`|`lightsail`|
 |Location|`location`(or `locationservice`)|`AWS_ENDPOINT_URL_LOCATION`|`location`|
 |CloudWatch Logs|`logs`(or `cloudwatchlog` or `cloudwatchlogs`)|`AWS_ENDPOINT_URL_CLOUDWATCH_LOGS`|`cloudwatch_logs`|
-|Lookout for Metrics|`lookoutmetrics`|`AWS_ENDPOINT_URL_LOOKOUTMETRICS`|`lookoutmetrics`|
 |Mainframe Modernization|`m2`|`AWS_ENDPOINT_URL_M2`|`m2`|
 |Macie|`macie2`|`AWS_ENDPOINT_URL_MACIE2`|`macie2`|
 |Elemental MediaConnect|`mediaconnect`|`AWS_ENDPOINT_URL_MEDIACONNECT`|`mediaconnect`|
@@ -247,11 +246,13 @@ provider "aws" {
 |Neptune|`neptune`|`AWS_ENDPOINT_URL_NEPTUNE`|`neptune`|
 |Neptune Analytics|`neptunegraph`|`AWS_ENDPOINT_URL_NEPTUNE_GRAPH`|`neptune_graph`|
 |Network Firewall|`networkfirewall`|`AWS_ENDPOINT_URL_NETWORK_FIREWALL`|`network_firewall`|
+|CloudWatch NetworkFlow Monitor|`networkflowmonitor`|`AWS_ENDPOINT_URL_NETWORKFLOWMONITOR`|`networkflowmonitor`|
 |Network Manager|`networkmanager`|`AWS_ENDPOINT_URL_NETWORKMANAGER`|`networkmanager`|
 |CloudWatch Network Monitor|`networkmonitor`|`AWS_ENDPOINT_URL_NETWORKMONITOR`|`networkmonitor`|
 |User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|
 |User Notifications Contacts|`notificationscontacts`|`AWS_ENDPOINT_URL_NOTIFICATIONSCONTACTS`|`notificationscontacts`|
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|
+|CloudWatch Observability Admin|`observabilityadmin`|`AWS_ENDPOINT_URL_OBSERVABILITYADMIN`|`observabilityadmin`|
 |Oracle Database@AWS|`odb`|`AWS_ENDPOINT_URL_ODB`|`odb`|
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|

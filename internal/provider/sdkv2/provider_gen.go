@@ -1399,14 +1399,6 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
-				// lookoutmetrics
-
-				"lookoutmetrics": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
 				// m2
 
 				"m2": {
@@ -1535,6 +1527,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// networkflowmonitor
+
+				"networkflowmonitor": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// networkmanager
 
 				"networkmanager": {
@@ -1576,6 +1576,14 @@ func endpointsSchema() *schema.Schema {
 				},
 
 				"cloudwatchobservabilityaccessmanager": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// observabilityadmin
+
+				"observabilityadmin": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

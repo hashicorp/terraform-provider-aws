@@ -23,11 +23,15 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	frameworkdiag "github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
@@ -35,12 +39,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -869,7 +876,7 @@ func resourceInstance() *schema.Resource {
 							return sdkdiag.AppendErrorf(diags, "expected type to be string")
 						}
 
-						if _, err := itypes.Base64Decode(v); err == nil {
+						if _, err := inttypes.Base64Decode(v); err == nil {
 							// value is a base46 encoded string
 							return diag.Diagnostics{
 								diag.Diagnostic{
@@ -1063,6 +1070,14 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 	return strings.ToLower(v) != string(awstypes.VolumeTypeGp3) && new == "0"
 }
 
+// @SDKListResource("aws_instance")
+func instanceResourceAsListResource() inttypes.ListResourceForSDK {
+	l := instanceListResource{}
+	l.SetResourceSchema(resourceInstance())
+
+	return &l
+}
+
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -1216,393 +1231,24 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	return append(diags, resourceInstanceUpdate(ctx, d, meta)...)
 }
 
-func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceInstanceRead(ctx context.Context, rd *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	c := meta.(*conns.AWSClient)
 	conn := c.EC2Client(ctx)
 
-	instance, err := findInstanceByID(ctx, conn, d.Id())
+	instance, err := findInstanceByID(ctx, conn, rd.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EC2 Instance %s not found, removing from state", d.Id())
-		d.SetId("")
+	if !rd.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Instance %s not found, removing from state", rd.Id())
+		rd.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
 	}
 
-	instanceType := string(instance.InstanceType)
-	instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Type (%s): %s", instanceType, err)
-	}
-
-	d.Set("instance_state", instance.State.Name)
-
-	if v := instance.Placement; v != nil {
-		d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
-		d.Set("host_id", v.HostId)
-		if v := v.HostResourceGroupArn; v != nil {
-			d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
-		}
-		d.Set("placement_group", v.GroupName)
-		d.Set("placement_group_id", v.GroupId)
-		d.Set("placement_partition_number", v.PartitionNumber)
-		d.Set("tenancy", v.Tenancy)
-	}
-
-	if err := d.Set("cpu_options", flattenCPUOptions(instance.CpuOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting cpu_options: %s", err)
-	}
-
-	if v := instance.HibernationOptions; v != nil {
-		d.Set("hibernation", v.Configured)
-	}
-
-	if err := d.Set("enclave_options", flattenEnclaveOptions(instance.EnclaveOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting enclave_options: %s", err)
-	}
-
-	if instance.MaintenanceOptions != nil {
-		if err := d.Set("maintenance_options", []any{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting maintenance_options: %s", err)
-		}
-	} else {
-		d.Set("maintenance_options", nil)
-	}
-
-	if err := d.Set("metadata_options", flattenInstanceMetadataOptions(instance.MetadataOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting metadata_options: %s", err)
-	}
-
-	if instance.PrivateDnsNameOptions != nil {
-		if err := d.Set("private_dns_name_options", []any{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting private_dns_name_options: %s", err)
-		}
-	} else {
-		d.Set("private_dns_name_options", nil)
-	}
-
-	d.Set("ami", instance.ImageId)
-	d.Set(names.AttrInstanceType, instanceType)
-	d.Set("key_name", instance.KeyName)
-	d.Set("public_dns", instance.PublicDnsName)
-	d.Set("public_ip", instance.PublicIpAddress)
-	d.Set("private_dns", instance.PrivateDnsName)
-	d.Set("private_ip", instance.PrivateIpAddress)
-	d.Set("outpost_arn", instance.OutpostArn)
-
-	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
-		name, err := instanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting iam_instance_profile: %s", err)
-		}
-
-		d.Set("iam_instance_profile", name)
-	} else {
-		d.Set("iam_instance_profile", nil)
-	}
-
-	{
-		launchTemplate, err := flattenInstanceLaunchTemplate(ctx, conn, d.Id(), d.Get("launch_template.0.version").(string))
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s) launch template: %s", d.Id(), err)
-		}
-
-		if err := d.Set(names.AttrLaunchTemplate, launchTemplate); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
-		}
-	}
-
-	// Set configured Network Interface Device Index Slice
-	// We only want to read, and populate state for the configured network_interface attachments. Otherwise, other
-	// resources have the potential to attach network interfaces to the instance, and cause a perpetual create/destroy
-	// diff. We should only read on changes configured for this specific resource because of this.
-	var configuredDeviceIndexes []int
-	if v, ok := d.GetOk("network_interface"); ok {
-		vL := v.(*schema.Set).List()
-		for _, vi := range vL {
-			mVi := vi.(map[string]any)
-			configuredDeviceIndexes = append(configuredDeviceIndexes, mVi["device_index"].(int))
-		}
-	}
-
-	var secondaryPrivateIPs []string
-	var ipv6Addresses []string
-	if len(instance.NetworkInterfaces) > 0 {
-		var primaryNetworkInterface awstypes.InstanceNetworkInterface
-		var networkInterfaces []map[string]any
-		for _, iNi := range instance.NetworkInterfaces {
-			ni := make(map[string]any)
-			if aws.ToInt32(iNi.Attachment.DeviceIndex) == 0 {
-				primaryNetworkInterface = iNi
-			}
-			// If the attached network device is inside our configuration, refresh state with values found.
-			// Otherwise, assume the network device was attached via an outside resource.
-			for _, index := range configuredDeviceIndexes {
-				if index == int(aws.ToInt32(iNi.Attachment.DeviceIndex)) {
-					ni[names.AttrDeleteOnTermination] = aws.ToBool(iNi.Attachment.DeleteOnTermination)
-					ni["device_index"] = aws.ToInt32(iNi.Attachment.DeviceIndex)
-					ni["network_card_index"] = aws.ToInt32(iNi.Attachment.NetworkCardIndex)
-					ni[names.AttrNetworkInterfaceID] = aws.ToString(iNi.NetworkInterfaceId)
-				}
-			}
-			// Don't add empty network interfaces to schema
-			if len(ni) == 0 {
-				continue
-			}
-			networkInterfaces = append(networkInterfaces, ni)
-		}
-		if err := d.Set("network_interface", networkInterfaces); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting network_interfaces: %v", err)
-		}
-
-		// Set primary network interface details
-		// If an instance is shutting down, network interfaces are detached, and attributes may be nil,
-		// need to protect against nil pointer dereferences
-		if primaryNetworkInterface.NetworkInterfaceId != nil {
-			pni := map[string]any{
-				names.AttrNetworkInterfaceID:  aws.ToString(primaryNetworkInterface.NetworkInterfaceId),
-				names.AttrDeleteOnTermination: aws.ToBool(primaryNetworkInterface.Attachment.DeleteOnTermination),
-			}
-			if err := d.Set("primary_network_interface", []any{pni}); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting primary_network_interface for AWS Instance (%s): %s", d.Id(), err)
-			}
-
-			d.Set("primary_network_interface_id", primaryNetworkInterface.NetworkInterfaceId)
-			if primaryNetworkInterface.SubnetId != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-				d.Set(names.AttrSubnetID, primaryNetworkInterface.SubnetId)
-			}
-			d.Set("ipv6_address_count", len(primaryNetworkInterface.Ipv6Addresses))
-			if primaryNetworkInterface.SourceDestCheck != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-				d.Set("source_dest_check", primaryNetworkInterface.SourceDestCheck)
-			}
-
-			d.Set("associate_public_ip_address", primaryNetworkInterface.Association != nil)
-
-			for _, address := range primaryNetworkInterface.PrivateIpAddresses {
-				if !aws.ToBool(address.Primary) {
-					secondaryPrivateIPs = append(secondaryPrivateIPs, aws.ToString(address.PrivateIpAddress))
-				}
-			}
-
-			for _, address := range primaryNetworkInterface.Ipv6Addresses {
-				ipv6Addresses = append(ipv6Addresses, aws.ToString(address.Ipv6Address))
-			}
-
-			if len(primaryNetworkInterface.Ipv6Addresses) > 0 {
-				if err := d.Set("enable_primary_ipv6", primaryNetworkInterface.Ipv6Addresses[0].IsPrimaryIpv6); err != nil {
-					return sdkdiag.AppendErrorf(diags, "setting enable_primary_ipv6: %s", err)
-				}
-			}
-		}
-	} else {
-		d.Set("associate_public_ip_address", instance.PublicIpAddress != nil)
-		d.Set("ipv6_address_count", 0)
-		d.Set("primary_network_interface_id", "")
-		d.Set(names.AttrSubnetID, instance.SubnetId)
-	}
-
-	if err := d.Set("secondary_private_ips", secondaryPrivateIPs); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting private_ips for AWS Instance (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
-		log.Printf("[WARN] Error setting ipv6_addresses for AWS Instance (%s): %s", d.Id(), err)
-	}
-
-	d.Set("ebs_optimized", instance.EbsOptimized)
-	if aws.ToString(instance.SubnetId) != "" {
-		d.Set("source_dest_check", instance.SourceDestCheck)
-	}
-
-	if instance.Monitoring != nil && instance.Monitoring.State != "" {
-		monitoringState := instance.Monitoring.State
-		d.Set("monitoring", monitoringState == awstypes.MonitoringStateEnabled || monitoringState == awstypes.MonitoringStatePending)
-	}
-
-	setTagsOut(ctx, instance.Tags)
-
-	if _, ok := d.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(d) {
-		volumeTags, err := readVolumeTags(ctx, conn, d.Id())
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
-		}
-
-		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-		tags := keyValueTags(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		if err := d.Set("volume_tags", tags.ResolveDuplicates(ctx, defaultTagsConfig, ignoreTagsConfig, d, "volume_tags", nil).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting volume_tags: %s", err)
-		}
-	}
-
-	if err := readSecurityGroups(ctx, d, instance, conn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
-	}
-
-	// Retrieve instance shutdown behavior
-	if err := readInstanceShutdownBehavior(ctx, d, conn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
-	}
-
-	if err := readBlockDevices(ctx, d, meta, instance, false); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
-	}
-
-	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
-		d.Set("ephemeral_block_device", []any{})
-	}
-
-	// ARN
-
-	d.Set(names.AttrARN, instanceARN(ctx, c, d.Id()))
-
-	// Instance attributes
-	{
-		input := ec2.DescribeInstanceAttributeInput{
-			Attribute:  awstypes.InstanceAttributeNameDisableApiStop,
-			InstanceId: aws.String(d.Id()),
-		}
-		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
-		if err != nil && !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
-			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiStop, err)
-		}
-		if !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
-			d.Set("disable_api_stop", attr.DisableApiStop.Value)
-		}
-	}
-	{
-		if isSnowballEdgeInstance(d.Id()) {
-			log.Printf("[INFO] Determined deploying to Snowball Edge based off Instance ID %s. Skip setting the 'disable_api_termination' attribute.", d.Id())
-		} else {
-			input := ec2.DescribeInstanceAttributeInput{
-				Attribute:  awstypes.InstanceAttributeNameDisableApiTermination,
-				InstanceId: aws.String(d.Id()),
-			}
-			output, err := conn.DescribeInstanceAttribute(ctx, &input)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiTermination, err)
-			}
-
-			d.Set("disable_api_termination", output.DisableApiTermination.Value)
-		}
-	}
-	{
-		input := ec2.DescribeInstanceAttributeInput{
-			Attribute:  awstypes.InstanceAttributeNameUserData,
-			InstanceId: aws.String(d.Id()),
-		}
-		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameUserData, err)
-		}
-		if attr.UserData != nil && attr.UserData.Value != nil {
-			// Since user_data and user_data_base64 conflict with each other,
-			// we'll only set one or the other here to avoid a perma-diff.
-			// Since user_data_base64 was added later, we'll prefer to set
-			// user_data.
-			_, b64 := d.GetOk("user_data_base64")
-			if b64 {
-				d.Set("user_data_base64", attr.UserData.Value)
-			} else {
-				data, err := itypes.Base64Decode(aws.ToString(attr.UserData.Value))
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "decoding user_data: %s", err)
-				}
-				d.Set("user_data", string(data))
-			}
-		}
-	}
-
-	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8055
-	if aws.ToBool(instanceTypeInfo.BurstablePerformanceSupported) {
-		instanceCreditSpecification, err := findInstanceCreditSpecificationByID(ctx, conn, d.Id())
-
-		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
-		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
-		if tfawserr.ErrCodeEquals(err, errCodeUnsupportedOperation) {
-			err = nil
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s) credit specification: %s", d.Id(), err)
-		}
-
-		if instanceCreditSpecification != nil {
-			if err := d.Set("credit_specification", []any{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting credit_specification: %s", err)
-			}
-		} else {
-			d.Set("credit_specification", nil)
-		}
-	}
-
-	if d.Get("get_password_data").(bool) {
-		passwordData, err := getInstancePasswordData(ctx, aws.ToString(instance.InstanceId), conn, d.Timeout(schema.TimeoutRead))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
-		}
-		d.Set("password_data", passwordData)
-	} else {
-		d.Set("get_password_data", false)
-		d.Set("password_data", nil)
-	}
-
-	if instance.CapacityReservationSpecification != nil {
-		if err := d.Set("capacity_reservation_specification", []any{flattenCapacityReservationSpecificationResponse(instance.CapacityReservationSpecification)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting capacity_reservation_specification: %s", err)
-		}
-	} else {
-		d.Set("capacity_reservation_specification", nil)
-	}
-
-	if spotInstanceRequestID := aws.ToString(instance.SpotInstanceRequestId); spotInstanceRequestID != "" && instance.InstanceLifecycle != "" {
-		d.Set("instance_lifecycle", instance.InstanceLifecycle)
-		d.Set("spot_instance_request_id", spotInstanceRequestID)
-
-		input := ec2.DescribeSpotInstanceRequestsInput{
-			SpotInstanceRequestIds: []string{spotInstanceRequestID},
-		}
-
-		apiObject, err := findSpotInstanceRequest(ctx, conn, &input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", spotInstanceRequestID, err)
-		}
-
-		tfMap := map[string]any{
-			"instance_interruption_behavior": apiObject.InstanceInterruptionBehavior,
-			"spot_instance_type":             apiObject.Type,
-		}
-
-		if v := apiObject.SpotPrice; v != nil {
-			tfMap["max_price"] = aws.ToString(v)
-		}
-
-		if v := apiObject.ValidUntil; v != nil {
-			tfMap["valid_until"] = aws.ToTime(v).Format(time.RFC3339)
-		}
-
-		if err := d.Set("instance_market_options", []any{map[string]any{
-			"market_type":  awstypes.MarketTypeSpot,
-			"spot_options": []any{tfMap},
-		}}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting instance_market_options: %s", err)
-		}
-	} else {
-		d.Set("instance_lifecycle", nil)
-		d.Set("instance_market_options", nil)
-		d.Set("spot_instance_request_id", nil)
-	}
+	diags = append(diags, resourceInstanceFlatten(ctx, c, instance, rd)...)
 
 	return diags
 }
@@ -1935,7 +1581,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if d.HasChange("user_data") {
 			// Decode so the AWS SDK doesn't double encode.
-			v, err := itypes.Base64Decode(d.Get("user_data").(string))
+			v, err := inttypes.Base64Decode(d.Get("user_data").(string))
 			if err != nil {
 				v = []byte(d.Get("user_data").(string))
 			}
@@ -1955,7 +1601,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		if d.HasChange("user_data_base64") {
 			// Schema validation technically ensures the data is Base64 encoded.
 			// Decode so the AWS SDK doesn't double encode.
-			v, err := itypes.Base64Decode(d.Get("user_data_base64").(string))
+			v, err := inttypes.Base64Decode(d.Get("user_data_base64").(string))
 			if err != nil {
 				v = []byte(d.Get("user_data_base64").(string))
 			}
@@ -2375,7 +2021,7 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client,
 	return nil
 }
 
-func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta any, instance *awstypes.Instance, ds bool) error {
+func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta *conns.AWSClient, instance *awstypes.Instance, ds bool) error {
 	ibds, err := readBlockDevicesFromInstance(ctx, d, meta, instance, ds)
 	if err != nil {
 		return fmt.Errorf("reading block devices: %w", err)
@@ -2425,7 +2071,7 @@ func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta any, ins
 	return nil
 }
 
-func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, meta any, instance *awstypes.Instance, ds bool) (map[string]any, error) {
+func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, meta *conns.AWSClient, instance *awstypes.Instance, ds bool) (map[string]any, error) {
 	blockDevices := make(map[string]any)
 	blockDevices["ebs"] = make([]map[string]any, 0)
 	blockDevices["root"] = nil
@@ -2449,7 +2095,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 
 	// Need to call DescribeVolumes to get volume_size and volume_type for each
 	// EBS block device
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	conn := meta.EC2Client(ctx)
 	input := ec2.DescribeVolumesInput{
 		VolumeIds: volIDs,
 	}
@@ -2458,8 +2104,8 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 		return nil, err
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
+	defaultTagsConfig := meta.DefaultTagsConfig(ctx)
+	ignoreTagsConfig := meta.IgnoreTagsConfig(ctx)
 
 	for _, vol := range volResp.Volumes {
 		instanceBd := instanceBlockDevices[aws.ToString(vol.VolumeId)]
@@ -3363,137 +3009,11 @@ func terminateInstance(ctx context.Context, conn *ec2.Client, id string, timeout
 	return nil
 }
 
-func waitInstanceCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.InstanceStateNamePending),
-		Target:     enum.Slice(awstypes.InstanceStateNameRunning),
-		Refresh:    statusInstance(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitInstanceDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(
-			awstypes.InstanceStateNamePending,
-			awstypes.InstanceStateNameRunning,
-			awstypes.InstanceStateNameShuttingDown,
-			awstypes.InstanceStateNameStopping,
-			awstypes.InstanceStateNameStopped,
-		),
-		Target:     enum.Slice(awstypes.InstanceStateNameTerminated),
-		Refresh:    statusInstance(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitInstanceReady(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.InstanceStateNamePending, awstypes.InstanceStateNameStopping),
-		Target:     enum.Slice(awstypes.InstanceStateNameRunning, awstypes.InstanceStateNameStopped),
-		Refresh:    statusInstance(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitInstanceStarted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.InstanceStateNamePending, awstypes.InstanceStateNameStopped),
-		Target:     enum.Slice(awstypes.InstanceStateNameRunning),
-		Refresh:    statusInstance(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitInstanceStopped(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(
-			awstypes.InstanceStateNamePending,
-			awstypes.InstanceStateNameRunning,
-			awstypes.InstanceStateNameShuttingDown,
-			awstypes.InstanceStateNameStopping,
-		),
-		Target:     enum.Slice(awstypes.InstanceStateNameStopped),
-		Refresh:    statusInstance(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
 func userDataHashSum(userData string) string {
 	// Check whether the user_data is not Base64 encoded.
 	// Always calculate hash of base64 decoded value since we
 	// check against double-encoding when setting it.
-	v, err := itypes.Base64Decode(userData)
+	v, err := inttypes.Base64Decode(userData)
 	if err != nil {
 		v = []byte(userData)
 	}
@@ -3572,6 +3092,384 @@ func blockDeviceTagsDefined(d *schema.ResourceData) bool {
 	}
 
 	return false
+}
+
+func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, instance *awstypes.Instance, rd *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := client.EC2Client(ctx)
+
+	instanceType := string(instance.InstanceType)
+	instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Type (%s): %s", instanceType, err)
+	}
+
+	rd.Set("instance_state", instance.State.Name)
+
+	if v := instance.Placement; v != nil {
+		rd.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
+		rd.Set("host_id", v.HostId)
+		if v := v.HostResourceGroupArn; v != nil {
+			rd.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
+		}
+		rd.Set("placement_group", v.GroupName)
+		rd.Set("placement_group_id", v.GroupId)
+		rd.Set("placement_partition_number", v.PartitionNumber)
+		rd.Set("tenancy", v.Tenancy)
+	}
+
+	if err := rd.Set("cpu_options", flattenCPUOptions(instance.CpuOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cpu_options: %s", err)
+	}
+
+	if v := instance.HibernationOptions; v != nil {
+		rd.Set("hibernation", v.Configured)
+	}
+
+	if err := rd.Set("enclave_options", flattenEnclaveOptions(instance.EnclaveOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting enclave_options: %s", err)
+	}
+
+	if instance.MaintenanceOptions != nil {
+		if err := rd.Set("maintenance_options", []any{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting maintenance_options: %s", err)
+		}
+	} else {
+		rd.Set("maintenance_options", nil)
+	}
+
+	if err := rd.Set("metadata_options", flattenInstanceMetadataOptions(instance.MetadataOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting metadata_options: %s", err)
+	}
+
+	if instance.PrivateDnsNameOptions != nil {
+		if err := rd.Set("private_dns_name_options", []any{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting private_dns_name_options: %s", err)
+		}
+	} else {
+		rd.Set("private_dns_name_options", nil)
+	}
+
+	rd.Set("ami", instance.ImageId)
+	rd.Set(names.AttrInstanceType, instanceType)
+	rd.Set("key_name", instance.KeyName)
+	rd.Set("public_dns", instance.PublicDnsName)
+	rd.Set("public_ip", instance.PublicIpAddress)
+	rd.Set("private_dns", instance.PrivateDnsName)
+	rd.Set("private_ip", instance.PrivateIpAddress)
+	rd.Set("outpost_arn", instance.OutpostArn)
+
+	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
+		name, err := instanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting iam_instance_profile: %s", err)
+		}
+
+		rd.Set("iam_instance_profile", name)
+	} else {
+		rd.Set("iam_instance_profile", nil)
+	}
+
+	{
+		launchTemplate, err := flattenInstanceLaunchTemplate(ctx, conn, rd.Id(), rd.Get("launch_template.0.version").(string))
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s) launch template: %s", rd.Id(), err)
+		}
+
+		if err := rd.Set(names.AttrLaunchTemplate, launchTemplate); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
+		}
+	}
+
+	// Set configured Network Interface Device Index Slice
+	// We only want to read, and populate state for the configured network_interface attachments. Otherwise, other
+	// resources have the potential to attach network interfaces to the instance, and cause a perpetual create/destroy
+	// diff. We should only read on changes configured for this specific resource because of this.
+	var configuredDeviceIndexes []int
+	if v, ok := rd.GetOk("network_interface"); ok {
+		vL := v.(*schema.Set).List()
+		for _, vi := range vL {
+			mVi := vi.(map[string]any)
+			configuredDeviceIndexes = append(configuredDeviceIndexes, mVi["device_index"].(int))
+		}
+	}
+
+	var secondaryPrivateIPs []string
+	var ipv6Addresses []string
+	if len(instance.NetworkInterfaces) > 0 {
+		var primaryNetworkInterface awstypes.InstanceNetworkInterface
+		var networkInterfaces []map[string]any
+		for _, iNi := range instance.NetworkInterfaces {
+			ni := make(map[string]any)
+			if aws.ToInt32(iNi.Attachment.DeviceIndex) == 0 {
+				primaryNetworkInterface = iNi
+			}
+			// If the attached network device is inside our configuration, refresh state with values found.
+			// Otherwise, assume the network device was attached via an outside resource.
+			for _, index := range configuredDeviceIndexes {
+				if index == int(aws.ToInt32(iNi.Attachment.DeviceIndex)) {
+					ni[names.AttrDeleteOnTermination] = aws.ToBool(iNi.Attachment.DeleteOnTermination)
+					ni["device_index"] = aws.ToInt32(iNi.Attachment.DeviceIndex)
+					ni["network_card_index"] = aws.ToInt32(iNi.Attachment.NetworkCardIndex)
+					ni[names.AttrNetworkInterfaceID] = aws.ToString(iNi.NetworkInterfaceId)
+				}
+			}
+			// Don't add empty network interfaces to schema
+			if len(ni) == 0 {
+				continue
+			}
+			networkInterfaces = append(networkInterfaces, ni)
+		}
+		if err := rd.Set("network_interface", networkInterfaces); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting network_interfaces: %v", err)
+		}
+
+		// Set primary network interface details
+		// If an instance is shutting down, network interfaces are detached, and attributes may be nil,
+		// need to protect against nil pointer dereferences
+		if primaryNetworkInterface.NetworkInterfaceId != nil {
+			pni := map[string]any{
+				names.AttrNetworkInterfaceID:  aws.ToString(primaryNetworkInterface.NetworkInterfaceId),
+				names.AttrDeleteOnTermination: aws.ToBool(primaryNetworkInterface.Attachment.DeleteOnTermination),
+			}
+			if err := rd.Set("primary_network_interface", []any{pni}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting primary_network_interface for AWS Instance (%s): %s", rd.Id(), err)
+			}
+
+			rd.Set("primary_network_interface_id", primaryNetworkInterface.NetworkInterfaceId)
+			if primaryNetworkInterface.SubnetId != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+				rd.Set(names.AttrSubnetID, primaryNetworkInterface.SubnetId)
+			}
+			rd.Set("ipv6_address_count", len(primaryNetworkInterface.Ipv6Addresses))
+			if primaryNetworkInterface.SourceDestCheck != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+				rd.Set("source_dest_check", primaryNetworkInterface.SourceDestCheck)
+			}
+
+			rd.Set("associate_public_ip_address", primaryNetworkInterface.Association != nil)
+
+			for _, address := range primaryNetworkInterface.PrivateIpAddresses {
+				if !aws.ToBool(address.Primary) {
+					secondaryPrivateIPs = append(secondaryPrivateIPs, aws.ToString(address.PrivateIpAddress))
+				}
+			}
+
+			for _, address := range primaryNetworkInterface.Ipv6Addresses {
+				ipv6Addresses = append(ipv6Addresses, aws.ToString(address.Ipv6Address))
+			}
+
+			if len(primaryNetworkInterface.Ipv6Addresses) > 0 {
+				if err := rd.Set("enable_primary_ipv6", primaryNetworkInterface.Ipv6Addresses[0].IsPrimaryIpv6); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting enable_primary_ipv6: %s", err)
+				}
+			}
+		}
+	} else {
+		rd.Set("associate_public_ip_address", instance.PublicIpAddress != nil)
+		rd.Set("ipv6_address_count", 0)
+		rd.Set("primary_network_interface_id", "")
+		rd.Set(names.AttrSubnetID, instance.SubnetId)
+	}
+
+	if err := rd.Set("secondary_private_ips", secondaryPrivateIPs); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting private_ips for AWS Instance (%s): %s", rd.Id(), err)
+	}
+
+	if err := rd.Set("ipv6_addresses", ipv6Addresses); err != nil {
+		log.Printf("[WARN] Error setting ipv6_addresses for AWS Instance (%s): %s", rd.Id(), err)
+	}
+
+	rd.Set("ebs_optimized", instance.EbsOptimized)
+	if aws.ToString(instance.SubnetId) != "" {
+		rd.Set("source_dest_check", instance.SourceDestCheck)
+	}
+
+	if instance.Monitoring != nil && instance.Monitoring.State != "" {
+		monitoringState := instance.Monitoring.State
+		rd.Set("monitoring", monitoringState == awstypes.MonitoringStateEnabled || monitoringState == awstypes.MonitoringStatePending)
+	}
+
+	setTagsOut(ctx, instance.Tags)
+	if _, ok := rd.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(rd) {
+		volumeTags, err := readVolumeTags(ctx, conn, rd.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
+		}
+
+		defaultTagsConfig := client.DefaultTagsConfig(ctx)
+		ignoreTagsConfig := client.IgnoreTagsConfig(ctx)
+		tags := keyValueTags(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+		if err := rd.Set("volume_tags", tags.ResolveDuplicates(ctx, defaultTagsConfig, ignoreTagsConfig, rd, "volume_tags", nil).Map()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting volume_tags: %s", err)
+		}
+	}
+
+	if err := readSecurityGroups(ctx, rd, instance, conn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
+	}
+
+	// Retrieve instance shutdown behavior
+	if err := readInstanceShutdownBehavior(ctx, rd, conn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
+	}
+
+	if err := readBlockDevices(ctx, rd, client, instance, false); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
+	}
+
+	if _, ok := rd.GetOk("ephemeral_block_device"); !ok {
+		rd.Set("ephemeral_block_device", []any{})
+	}
+
+	// ARN
+
+	rd.Set(names.AttrARN, instanceARN(ctx, client, rd.Id()))
+
+	// Instance attributes
+	{
+		input := ec2.DescribeInstanceAttributeInput{
+			Attribute:  awstypes.InstanceAttributeNameDisableApiStop,
+			InstanceId: aws.String(rd.Id()),
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
+		if err != nil && !errs.IsUnsupportedOperationInPartitionError(client.Partition(ctx), err) {
+			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiStop, err)
+		}
+		if !errs.IsUnsupportedOperationInPartitionError(client.Partition(ctx), err) {
+			rd.Set("disable_api_stop", attr.DisableApiStop.Value)
+		}
+	}
+	{
+		if isSnowballEdgeInstance(rd.Id()) {
+			log.Printf("[INFO] Determined deploying to Snowball Edge based off Instance ID %s. Skip setting the 'disable_api_termination' attribute.", rd.Id())
+		} else {
+			input := ec2.DescribeInstanceAttributeInput{
+				Attribute:  awstypes.InstanceAttributeNameDisableApiTermination,
+				InstanceId: aws.String(rd.Id()),
+			}
+			output, err := conn.DescribeInstanceAttribute(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiTermination, err)
+			}
+
+			rd.Set("disable_api_termination", output.DisableApiTermination.Value)
+		}
+	}
+	{
+		input := ec2.DescribeInstanceAttributeInput{
+			Attribute:  awstypes.InstanceAttributeNameUserData,
+			InstanceId: aws.String(rd.Id()),
+		}
+		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameUserData, err)
+		}
+		if attr.UserData != nil && attr.UserData.Value != nil {
+			// Since user_data and user_data_base64 conflict with each other,
+			// we'll only set one or the other here to avoid a perma-diff.
+			// Since user_data_base64 was added later, we'll prefer to set
+			// user_data.
+			_, b64 := rd.GetOk("user_data_base64")
+			if b64 {
+				rd.Set("user_data_base64", attr.UserData.Value)
+			} else {
+				data, err := inttypes.Base64Decode(aws.ToString(attr.UserData.Value))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "decoding user_data: %s", err)
+				}
+				rd.Set("user_data", string(data))
+			}
+		}
+	}
+
+	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8055
+	if aws.ToBool(instanceTypeInfo.BurstablePerformanceSupported) {
+		instanceCreditSpecification, err := findInstanceCreditSpecificationByID(ctx, conn, rd.Id())
+
+		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
+		if tfawserr.ErrCodeEquals(err, errCodeUnsupportedOperation) {
+			err = nil
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s) credit specification: %s", rd.Id(), err)
+		}
+
+		if instanceCreditSpecification != nil {
+			if err := rd.Set("credit_specification", []any{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting credit_specification: %s", err)
+			}
+		} else {
+			rd.Set("credit_specification", nil)
+		}
+	}
+
+	if rd.Get("get_password_data").(bool) {
+		passwordData, err := getInstancePasswordData(ctx, aws.ToString(instance.InstanceId), conn, rd.Timeout(schema.TimeoutRead))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
+		}
+		rd.Set("password_data", passwordData)
+	} else {
+		rd.Set("get_password_data", false)
+		rd.Set("password_data", nil)
+	}
+
+	if instance.CapacityReservationSpecification != nil {
+		if err := rd.Set("capacity_reservation_specification", []any{flattenCapacityReservationSpecificationResponse(instance.CapacityReservationSpecification)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting capacity_reservation_specification: %s", err)
+		}
+	} else {
+		rd.Set("capacity_reservation_specification", nil)
+	}
+
+	if spotInstanceRequestID := aws.ToString(instance.SpotInstanceRequestId); spotInstanceRequestID != "" && instance.InstanceLifecycle != "" {
+		rd.Set("instance_lifecycle", instance.InstanceLifecycle)
+		rd.Set("spot_instance_request_id", spotInstanceRequestID)
+
+		input := ec2.DescribeSpotInstanceRequestsInput{
+			SpotInstanceRequestIds: []string{spotInstanceRequestID},
+		}
+
+		apiObject, err := findSpotInstanceRequest(ctx, conn, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", spotInstanceRequestID, err)
+		}
+
+		tfMap := map[string]any{
+			"instance_interruption_behavior": apiObject.InstanceInterruptionBehavior,
+			"spot_instance_type":             apiObject.Type,
+		}
+
+		if v := apiObject.SpotPrice; v != nil {
+			tfMap["max_price"] = aws.ToString(v)
+		}
+
+		if v := apiObject.ValidUntil; v != nil {
+			tfMap["valid_until"] = aws.ToTime(v).Format(time.RFC3339)
+		}
+
+		if err := rd.Set("instance_market_options", []any{map[string]any{
+			"market_type":  awstypes.MarketTypeSpot,
+			"spot_options": []any{tfMap},
+		}}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting instance_market_options: %s", err)
+		}
+	} else {
+		rd.Set("instance_lifecycle", nil)
+		rd.Set("instance_market_options", nil)
+		rd.Set("spot_instance_request_id", nil)
+	}
+
+	return diags
 }
 
 func expandInstanceMetadataOptions(l []any) *awstypes.InstanceMetadataOptionsRequest {
@@ -3718,7 +3616,7 @@ func expandCapacityReservationSpecification(tfMap map[string]any) *awstypes.Capa
 		apiObject.CapacityReservationPreference = awstypes.CapacityReservationPreference(v)
 	}
 
-	if v, ok := tfMap["capacity_reservation_target"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap["capacity_reservation_target"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]any))
 	}
 
@@ -4065,43 +3963,6 @@ func findInstanceLaunchTemplateVersion(ctx context.Context, conn *ec2.Client, id
 	return launchTemplateVersion, nil
 }
 
-func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplateSpecification *awstypes.LaunchTemplateSpecification) (*awstypes.ResponseLaunchTemplateData, error) {
-	input := ec2.DescribeLaunchTemplateVersionsInput{}
-
-	if v := aws.ToString(launchTemplateSpecification.LaunchTemplateId); v != "" {
-		input.LaunchTemplateId = aws.String(v)
-	} else if v := aws.ToString(launchTemplateSpecification.LaunchTemplateName); v != "" {
-		input.LaunchTemplateName = aws.String(v)
-	}
-
-	var latestVersion bool
-
-	if v := aws.ToString(launchTemplateSpecification.Version); v != "" {
-		switch v {
-		case launchTemplateVersionDefault:
-			input.Filters = newAttributeFilterList(map[string]string{
-				"is-default-version": "true",
-			})
-		case launchTemplateVersionLatest:
-			latestVersion = true
-		default:
-			input.Versions = []string{v}
-		}
-	}
-
-	output, err := findLaunchTemplateVersions(ctx, conn, &input)
-
-	if err != nil {
-		return nil, fmt.Errorf("reading EC2 Launch Template versions: %w", err)
-	}
-
-	if latestVersion {
-		return output[len(output)-1].LaunchTemplateData, nil
-	}
-
-	return output[0].LaunchTemplateData, nil
-}
-
 // findLaunchTemplateNameAndVersions returns the specified launch template's name, default version and latest version.
 func findLaunchTemplateNameAndVersions(ctx context.Context, conn *ec2.Client, id string) (string, string, string, error) {
 	lt, err := findLaunchTemplateByID(ctx, conn, id)
@@ -4110,31 +3971,7 @@ func findLaunchTemplateNameAndVersions(ctx context.Context, conn *ec2.Client, id
 		return "", "", "", err
 	}
 
-	return aws.ToString(lt.LaunchTemplateName), strconv.FormatInt(aws.ToInt64(lt.DefaultVersionNumber), 10), strconv.FormatInt(aws.ToInt64(lt.LatestVersionNumber), 10), nil
-}
-
-func findInstanceTagValue(ctx context.Context, conn *ec2.Client, instanceID, tagKey string) (string, error) {
-	input := ec2.DescribeTagsInput{
-		Filters: newAttributeFilterList(map[string]string{
-			"resource-id": instanceID,
-			names.AttrKey: tagKey,
-		}),
-	}
-
-	output, err := conn.DescribeTags(ctx, &input)
-
-	if err != nil {
-		return "", err
-	}
-
-	switch count := len(output.Tags); count {
-	case 0:
-		return "", nil
-	case 1:
-		return aws.ToString(output.Tags[0].Value), nil
-	default:
-		return "", tfresource.NewTooManyResultsError(count, input)
-	}
+	return aws.ToString(lt.LaunchTemplateName), flex.Int64ToStringValue(lt.DefaultVersionNumber), flex.Int64ToStringValue(lt.LatestVersionNumber), nil
 }
 
 // isSnowballEdgeInstance returns whether or not the specified instance ID indicates an SBE instance.
@@ -4186,6 +4023,177 @@ func hasCommonElement(slice1 []awstypes.ArchitectureType, slice2 []awstypes.Arch
 	}
 	return false
 }
+
 func instanceARN(ctx context.Context, c *conns.AWSClient, instanceID string) string {
 	return c.RegionalARN(ctx, names.EC2, "instance/"+instanceID)
+}
+
+var _ list.ListResourceWithRawV5Schemas = &instanceListResource{}
+
+type instanceListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+	framework.ListResourceWithSDKv2Tags
+}
+
+type instanceListResourceModel struct {
+	framework.WithRegionModel
+	Filters           customListFilters `tfsdk:"filter"`
+	IncludeAutoScaled types.Bool        `tfsdk:"include_auto_scaled"`
+}
+
+func (l *instanceListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			"include_auto_scaled": listschema.BoolAttribute{
+				Description: "Whether to include instances that are part of an Auto Scaling group. Auto scaled instances are excluded by default.",
+				Optional:    true,
+			},
+		},
+		Blocks: map[string]listschema.Block{
+			names.AttrFilter: customListFiltersBlock(ctx),
+		},
+	}
+}
+
+func (l *instanceListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.EC2Client(ctx)
+
+	var query instanceListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	var input ec2.DescribeInstancesInput
+	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
+	}
+
+	// If no instance-state filter is set, default to all states except terminated and shutting-down
+	if !slices.ContainsFunc(input.Filters, func(i awstypes.Filter) bool {
+		return aws.ToString(i.Name) == "instance-state-name" || aws.ToString(i.Name) == "instance-state-code"
+	}) {
+		states := enum.Slice(slices.DeleteFunc(enum.EnumValues[awstypes.InstanceStateName](), func(s awstypes.InstanceStateName) bool {
+			return s == awstypes.InstanceStateNameTerminated || s == awstypes.InstanceStateNameShuttingDown
+		})...)
+		input.Filters = append(input.Filters, awstypes.Filter{
+			Name:   aws.String("instance-state-name"),
+			Values: states,
+		})
+	}
+
+	includeAutoScaled := query.IncludeAutoScaled.ValueBool()
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		result := request.NewListResult(ctx)
+
+		for instance, err := range listInstances(ctx, conn, &input) {
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			tags := keyValueTags(ctx, instance.Tags)
+
+			if !includeAutoScaled {
+				// Exclude Auto Scaled Instances
+				if v, ok := tags["aws:autoscaling:groupName"]; ok && v.ValueString() != "" {
+					continue
+				}
+			}
+
+			rd := l.ResourceData()
+			rd.SetId(aws.ToString(instance.InstanceId))
+			result.Diagnostics.Append(translateDiags(resourceInstanceFlatten(ctx, awsClient, &instance, rd))...)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
+
+			// set tags
+			err = l.SetTags(ctx, awsClient, rd)
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			if v, ok := tags["Name"]; ok {
+				result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(instance.InstanceId))
+			} else {
+				result.DisplayName = aws.ToString(instance.InstanceId)
+			}
+
+			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
+
+			if !yield(result) {
+				return
+			}
+		}
+	}
+}
+
+func translateDiags(in diag.Diagnostics) frameworkdiag.Diagnostics {
+	out := make(frameworkdiag.Diagnostics, len(in))
+	for i, diagIn := range in {
+		var diagOut frameworkdiag.Diagnostic
+		if diagIn.Severity == diag.Error {
+			if len(diagIn.AttributePath) == 0 {
+				diagOut = frameworkdiag.NewErrorDiagnostic(diagIn.Summary, diagIn.Detail)
+			} else {
+				diagOut = frameworkdiag.NewAttributeErrorDiagnostic(translatePath(diagIn.AttributePath), diagIn.Summary, diagIn.Detail)
+			}
+		} else {
+			if len(diagIn.AttributePath) == 0 {
+				diagOut = frameworkdiag.NewWarningDiagnostic(diagIn.Summary, diagIn.Detail)
+			} else {
+				diagOut = frameworkdiag.NewAttributeWarningDiagnostic(translatePath(diagIn.AttributePath), diagIn.Summary, diagIn.Detail)
+			}
+		}
+		out[i] = diagOut
+	}
+	return out
+}
+
+func translatePath(in cty.Path) path.Path {
+	var out path.Path
+
+	if len(in) == 0 {
+		return out
+	}
+
+	step := in[0]
+	switch v := step.(type) {
+	case cty.GetAttrStep:
+		out = path.Root(v.Name)
+	}
+
+	for i := 1; i < len(in); i++ {
+		step := in[i]
+		switch v := step.(type) {
+		case cty.GetAttrStep:
+			out = out.AtName(v.Name)
+
+		case cty.IndexStep:
+			switch v.Key.Type() {
+			case cty.Number:
+				v, _ := v.Key.AsBigFloat().Int64()
+				out = out.AtListIndex(int(v))
+			case cty.String:
+				out = out.AtMapKey(v.Key.AsString())
+			}
+		}
+	}
+
+	return out
 }

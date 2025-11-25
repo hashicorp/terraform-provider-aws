@@ -123,6 +123,8 @@ const (
 	errCodeInvalidVPCEndpointServiceNotFound                       = "InvalidVpcEndpointService.NotFound"
 	errCodeInvalidVPCIDNotFound                                    = "InvalidVpcID.NotFound"
 	errCodeInvalidVPCPeeringConnectionIDNotFound                   = "InvalidVpcPeeringConnectionID.NotFound"
+	errCodeInvalidVPNConcentratorIDNotFound                        = "InvalidVpnConcentratorID.NotFound"
+	errCodeInvalidVPNConcentratorIdNotFound                        = "InvalidVpnConcentratorId.NotFound"
 	errCodeInvalidVPNConnectionIDNotFound                          = "InvalidVpnConnectionID.NotFound"
 	errCodeInvalidVPNGatewayAttachmentNotFound                     = "InvalidVpnGatewayAttachment.NotFound"
 	errCodeInvalidVPNGatewayIDNotFound                             = "InvalidVpnGatewayID.NotFound"

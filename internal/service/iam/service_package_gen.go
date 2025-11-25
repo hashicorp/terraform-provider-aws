@@ -4,6 +4,8 @@ package iam
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -427,6 +429,43 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  policyResourceAsListResource,
+			TypeName: "aws_iam_policy",
+			Name:     "Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "Policy",
+			}),
+			Identity: inttypes.GlobalARNIdentity(),
+		},
+		{
+			Factory:  roleResourceAsListResource,
+			TypeName: "aws_iam_role",
+			Name:     "Role",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrName,
+				ResourceType:        "Role",
+			}),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+		},
+		{
+			Factory:  rolePolicyAttachmentResourceAsListResource,
+			TypeName: "aws_iam_role_policy_attachment",
+			Name:     "Role Policy Attachment",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrRole, true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {

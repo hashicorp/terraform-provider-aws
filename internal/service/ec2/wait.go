@@ -652,6 +652,132 @@ func waitImageDeleted(ctx context.Context, conn *ec2.Client, id string, timeout 
 	return nil, err
 }
 
+func waitInstanceCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.InstanceStateNamePending),
+		Target:     enum.Slice(awstypes.InstanceStateNameRunning),
+		Refresh:    statusInstance(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.InstanceStateNamePending,
+			awstypes.InstanceStateNameRunning,
+			awstypes.InstanceStateNameShuttingDown,
+			awstypes.InstanceStateNameStopping,
+			awstypes.InstanceStateNameStopped,
+		),
+		Target:     enum.Slice(awstypes.InstanceStateNameTerminated),
+		Refresh:    statusInstance(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceReady(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.InstanceStateNamePending, awstypes.InstanceStateNameStopping),
+		Target:     enum.Slice(awstypes.InstanceStateNameRunning, awstypes.InstanceStateNameStopped),
+		Refresh:    statusInstance(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceStarted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.InstanceStateNamePending, awstypes.InstanceStateNameStopped),
+		Target:     enum.Slice(awstypes.InstanceStateNameRunning),
+		Refresh:    statusInstance(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceStopped(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.InstanceStateNamePending,
+			awstypes.InstanceStateNameRunning,
+			awstypes.InstanceStateNameShuttingDown,
+			awstypes.InstanceStateNameStopping,
+		),
+		Target:     enum.Slice(awstypes.InstanceStateNameStopped),
+		Refresh:    statusInstance(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitInstanceCapacityReservationSpecificationUpdated(ctx context.Context, conn *ec2.Client, instanceID string, expectedValue *awstypes.CapacityReservationSpecification) (*awstypes.Instance, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:     enum.Slice(strconv.FormatBool(true)),
@@ -1123,6 +1249,22 @@ func waitIPAMUpdated(ctx context.Context, conn *ec2.Client, id string, timeout t
 	}
 
 	return nil, err
+}
+
+func waitLaunchTemplateReady(ctx context.Context, conn *ec2.Client, id string, idIsName bool, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{""},
+		Target:                    enum.Slice(launchTemplateFoundStatus),
+		Refresh:                   statusLaunchTemplate(ctx, conn, id, idIsName),
+		Timeout:                   timeout,
+		Delay:                     5 * time.Second,
+		NotFoundChecks:            5,
+		ContinuousTargetOccurence: 3,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }
 
 func waitLocalGatewayRouteDeleted(ctx context.Context, conn *ec2.Client, localGatewayRouteTableID, destinationCIDRBlock string) (*awstypes.LocalGatewayRoute, error) {
@@ -2174,6 +2316,26 @@ func waitTransitGatewayCreated(ctx context.Context, conn *ec2.Client, id string,
 	return nil, err
 }
 
+func waitTransitGatewayDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:        enum.Slice(awstypes.TransitGatewayStateAvailable, awstypes.TransitGatewayStateDeleting),
+		Target:         []string{},
+		Refresh:        statusTransitGateway(ctx, conn, id),
+		Timeout:        timeout,
+		Delay:          2 * time.Minute,
+		MinTimeout:     10 * time.Second,
+		NotFoundChecks: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitTransitGatewayMulticastDomainCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayMulticastDomain, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayMulticastDomainStatePending),
@@ -2712,6 +2874,76 @@ func waitVolumeAttachmentCreated(ctx context.Context, conn *ec2.Client, volumeID
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VolumeAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVolumeAttachmentDeleted(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string, timeout time.Duration) (*awstypes.VolumeAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.VolumeAttachmentStateDetaching),
+		Target:     []string{},
+		Refresh:    statusVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VolumeAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVolumeAttachmentInstanceReady(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.InstanceStateNamePending, awstypes.InstanceStateNameStopping),
+		Target:     enum.Slice(awstypes.InstanceStateNameRunning, awstypes.InstanceStateNameStopped),
+		Refresh:    statusVolumeAttachmentInstanceState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVolumeAttachmentInstanceStopped(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.InstanceStateNamePending,
+			awstypes.InstanceStateNameRunning,
+			awstypes.InstanceStateNameShuttingDown,
+			awstypes.InstanceStateNameStopping,
+		),
+		Target:     enum.Slice(awstypes.InstanceStateNameStopped),
+		Refresh:    statusVolumeAttachmentInstanceState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+		}
+
 		return output, err
 	}
 
@@ -3312,6 +3544,50 @@ func waitVPNGatewayVPCAttachmentDetached(ctx context.Context, conn *ec2.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPNConcentratorAvailable(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnConcentrator, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{vpnConcentratorStatePending},
+		Target:     []string{vpnConcentratorStateAvailable},
+		Refresh:    statusVPNConcentrator(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpnConcentrator); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPNConcentratorDeleted(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnConcentrator, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{vpnConcentratorStateAvailable, vpnConcentratorStateDeleting},
+		Target:     []string{},
+		Refresh:    statusVPNConcentrator(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpnConcentrator); ok {
 		return output, err
 	}
 

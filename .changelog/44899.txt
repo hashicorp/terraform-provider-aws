@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_timestreaminfluxdb_db_cluster: Make `allocated_storage`, `bucket`, `organization`, `username`, and `password` optional to support InfluxDB V3 clusters
+```
+
+```release-note:enhancement
+resource/aws_timestreaminfluxdb_db_cluster: Add `engine_type` attribute
+```
+
+```release-note:enhancement
+resource/aws_timestreaminfluxdb_db_cluster: Add validation to ensure InfluxDB V2 clusters have required fields and InfluxDB V3 clusters (when using V3 parameter groups) do not have forbidden V2 fields. This functionality requires the `timestream-influxdb:GetDbParameterGroup` IAM permission
+```

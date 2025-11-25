@@ -35,16 +35,15 @@ import (
 
 // @SDKResource("aws_sfn_state_machine", name="State Machine")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sfn;sfn.DescribeStateMachineOutput")
+// @Testing(preIdentityVersion="v6.13.0")
 func resourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStateMachineCreate,
 		ReadWithoutTimeout:   resourceStateMachineRead,
 		UpdateWithoutTimeout: resourceStateMachineUpdate,
 		DeleteWithoutTimeout: resourceStateMachineDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -114,6 +113,10 @@ func resourceStateMachine() *schema.Resource {
 						"log_destination": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.All(
+								verify.ValidARN,
+								validation.StringMatch(regexache.MustCompile(`:\*$`), "ARN must end with `:*`"),
+							),
 						},
 					},
 				},

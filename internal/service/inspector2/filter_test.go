@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccInspector2Filter_basic(t *testing.T) {
+func TestAccInspector2Filter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -71,7 +71,7 @@ func testAccInspector2Filter_basic(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_update(t *testing.T) {
+func TestAccInspector2Filter_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -147,7 +147,7 @@ func testAccInspector2Filter_update(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_stringFilters(t *testing.T) {
+func TestAccInspector2Filter_stringFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -243,7 +243,7 @@ func testAccInspector2Filter_stringFilters(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_numberFilters(t *testing.T) {
+func TestAccInspector2Filter_numberFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -329,7 +329,7 @@ func testAccInspector2Filter_numberFilters(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_dateFilters(t *testing.T) {
+func TestAccInspector2Filter_dateFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -415,7 +415,7 @@ func testAccInspector2Filter_dateFilters(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_mapFilters(t *testing.T) {
+func TestAccInspector2Filter_mapFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	comparison := string(awstypes.MapComparisonEquals)
 	action_1 := string(awstypes.FilterActionNone)
@@ -494,7 +494,7 @@ func testAccInspector2Filter_mapFilters(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_portRangeFilters(t *testing.T) {
+func TestAccInspector2Filter_portRangeFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"
@@ -566,7 +566,7 @@ func testAccInspector2Filter_portRangeFilters(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_packageFilters(t *testing.T) {
+func TestAccInspector2Filter_packageFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	comparison := string(awstypes.MapComparisonEquals)
 	action_1 := string(awstypes.FilterActionNone)
@@ -728,7 +728,7 @@ func testAccInspector2Filter_packageFilters(t *testing.T) {
 	})
 }
 
-func testAccInspector2Filter_disappears(t *testing.T) {
+func TestAccInspector2Filter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
 	description_1 := "TestDescription_1"

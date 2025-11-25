@@ -30,6 +30,22 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newResourceIdentityCenterConfiguration,
+			TypeName: "aws_lakeformation_identity_center_configuration",
+			Name:     "Identity Center Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrCatalogID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newLFTagExpressionResource,
+			TypeName: "aws_lakeformation_lf_tag_expression",
+			Name:     "LF Tag Expression",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newOptInResource,
 			TypeName: "aws_lakeformation_opt_in",
 			Name:     "Opt In",

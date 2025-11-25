@@ -173,7 +173,7 @@ The `ebs` block supports the following:
   Cannot be used with `snapshot_id`.
 * `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
   This must be set with a `volume_type` of `"io1/io2/gp3"`.
-* `kms_key_id` - (Optional) The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
+* `kms_key_id` - (Optional) Identifier (key ID, key alias, key ARN, or alias ARN) of the customer managed KMS key to use for EBS encryption.
   `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - (Optional) The Snapshot ID to mount.
 * `throughput` - (Optional) The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g., 500), with a maximum of 1,000 MiB/s.

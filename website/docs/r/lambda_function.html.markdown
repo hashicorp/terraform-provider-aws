@@ -524,6 +524,7 @@ The following arguments are optional:
 * `source_kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package. Conflicts with `image_uri`.
 * `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
+* `tenancy_config` - (Optional) Configuration block for Tenancy. [See below](#tenancy_config-configuration-block).
 * `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-configuration-block).
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-configuration-block).
 
@@ -561,11 +562,17 @@ The following arguments are optional:
 
 * `apply_on` - (Required) When to apply snap start optimization. Valid value: `PublishedVersions`.
 
+### tenancy_config Configuration Block
+
+* `tenant_isolation_mode` - (Required) Tenant Isolation Mode. Valid values: `PER_TENANT`.
+
 ### tracing_config Configuration Block
 
 * `mode` - (Required) X-Ray tracing mode. Valid values: `Active`, `PassThrough`.
 
 ### vpc_config Configuration Block
+
+~> **NOTE:** If `subnet_ids`, `security_group_ids` and `ipv6_allowed_for_dual_stack` are empty then `vpc_config` is considered to be empty or unset.
 
 * `ipv6_allowed_for_dual_stack` - (Optional) Whether to allow outbound IPv6 traffic on VPC functions connected to dual-stack subnets. Default: `false`.
 * `security_group_ids` - (Required) List of security group IDs associated with the Lambda function.
@@ -622,8 +629,8 @@ resource "aws_lambda_function" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Functions using the `function_name`. For example:
 

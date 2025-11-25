@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -83,9 +82,13 @@ func resourceLaunchTemplate() *schema.Resource {
 										Optional: true,
 									},
 									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+										Type:     schema.TypeString,
+										Optional: true,
+										// Allow empty string for backwards compatibility with verify.ValidARN.
+										ValidateFunc: validation.Any( // nosemgrep:ci.avoid-string-is-empty-validation
+											validation.StringIsEmpty,
+											verify.ValidKMSKeyID,
+										),
 									},
 									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
@@ -95,7 +98,7 @@ func resourceLaunchTemplate() *schema.Resource {
 										Type:         schema.TypeInt,
 										Computed:     true,
 										Optional:     true,
-										ValidateFunc: validation.IntBetween(125, 1000),
+										ValidateFunc: validation.IntBetween(125, 2000),
 									},
 									"volume_initialization_rate": {
 										Type:         schema.TypeInt,
@@ -1214,48 +1217,6 @@ func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
-}
-
-const (
-	LaunchTemplateFound = "Found"
-)
-
-func statusLaunchTemplate(ctx context.Context, conn *ec2.Client, id string, idIsName bool) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		var output *awstypes.LaunchTemplate
-		var err error
-		if idIsName {
-			output, err = findLaunchTemplateByName(ctx, conn, id)
-		} else {
-			output, err = findLaunchTemplateByID(ctx, conn, id)
-		}
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, LaunchTemplateFound, nil
-	}
-}
-
-func waitLaunchTemplateReady(ctx context.Context, conn *ec2.Client, id string, idIsName bool, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{""},
-		Target:                    enum.Slice(LaunchTemplateFound),
-		Refresh:                   statusLaunchTemplate(ctx, conn, id, idIsName),
-		Timeout:                   timeout,
-		Delay:                     5 * time.Second,
-		NotFoundChecks:            5,
-		ContinuousTargetOccurence: 3,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
 }
 
 func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *schema.ResourceData) (*awstypes.RequestLaunchTemplateData, error) {

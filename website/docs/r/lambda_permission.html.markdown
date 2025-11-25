@@ -261,10 +261,9 @@ resource "aws_lambda_permission" "example" {
 
 #### Optional
 
+* `account_id` (String) AWS Account where this resource is managed.
 * `qualifier` (String) Qualifier for the function version or alias.
-
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda permission statements using function_name/statement_id with an optional qualifier. For example:
 

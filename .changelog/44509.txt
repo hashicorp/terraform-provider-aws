@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ecs_capacity_provider: Make `auto_scaling_group_provider` optional
+```
+
+```release-note:enhancement
+resource/aws_ecs_capacity_provider: Add `cluster` and `managed_instances_provider` arguments
+```
