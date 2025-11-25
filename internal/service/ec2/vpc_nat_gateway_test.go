@@ -1020,7 +1020,6 @@ func TestAccVPCNATGateway_availabilityModeRegionalSwitchMode(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccCheckNATGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
