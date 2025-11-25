@@ -21,24 +21,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_cloudwatch_log_transformer", name="Transformer")
-func newResourceTransformer(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceTransformer{}
+func newTransformerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &transformerResource{}
 
 	return r, nil
 }
@@ -47,11 +43,11 @@ const (
 	ResNameTransformer = "Transformer"
 )
 
-type resourceTransformer struct {
-	framework.ResourceWithModel[resourceTransformerModel]
+type transformerResource struct {
+	framework.ResourceWithModel[transformerResourceModel]
 }
 
-func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"log_group_identifier": schema.StringAttribute{
@@ -766,17 +762,17 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceTransformer) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *transformerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LogsClient(ctx)
 
-	var plan resourceTransformerModel
+	var plan transformerResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var input cloudwatchlogs.PutTransformerInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -807,7 +803,7 @@ func (r *resourceTransformer) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	// Set values for unknowns
-	resp.Diagnostics.Append(flex.Flatten(ctx, transformer, &plan)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, transformer, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -815,10 +811,10 @@ func (r *resourceTransformer) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceTransformer) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *transformerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LogsClient(ctx)
 
-	var state resourceTransformerModel
+	var state transformerResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -838,7 +834,7 @@ func (r *resourceTransformer) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -846,17 +842,17 @@ func (r *resourceTransformer) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceTransformer) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *transformerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LogsClient(ctx)
 
-	var plan, state resourceTransformerModel
+	var plan, state transformerResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -864,7 +860,7 @@ func (r *resourceTransformer) Update(ctx context.Context, req resource.UpdateReq
 
 	if diff.HasChanges() {
 		var input cloudwatchlogs.PutTransformerInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -896,7 +892,7 @@ func (r *resourceTransformer) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	// Set values for unknowns
-	resp.Diagnostics.Append(flex.Flatten(ctx, transformer, &plan)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, transformer, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -904,10 +900,10 @@ func (r *resourceTransformer) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceTransformer) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *transformerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LogsClient(ctx)
 
-	var state resourceTransformerModel
+	var state transformerResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -931,7 +927,7 @@ func (r *resourceTransformer) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceTransformer) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *transformerResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("log_group_identifier"), req, resp)
 }
 
@@ -958,7 +954,7 @@ func findTransformerByLogGroupIdentifier(ctx context.Context, conn *cloudwatchlo
 	return out, nil
 }
 
-type resourceTransformerModel struct {
+type transformerResourceModel struct {
 	framework.WithRegionModel
 	LogGroupIdentifier types.String                                            `tfsdk:"log_group_identifier"`
 	TransformerConfig  fwtypes.ListNestedObjectValueOf[transformerConfigModel] `tfsdk:"transformer_config"`
@@ -1144,37 +1140,4 @@ type typeConverterEntryModel struct {
 
 type upperCaseStringModel struct {
 	WithKeys fwtypes.ListOfString `tfsdk:"with_keys"`
-}
-
-func sweepTransformers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	conn := client.LogsClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, &cloudwatchlogs.DescribeLogGroupsInput{})
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.LogGroups {
-			input := cloudwatchlogs.GetTransformerInput{
-				LogGroupIdentifier: v.LogGroupName,
-			}
-			transformer, err := conn.GetTransformer(ctx, &input)
-			if err != nil {
-				return nil, err
-			}
-
-			if transformer == nil || len(transformer.TransformerConfig) == 0 {
-				continue
-			}
-
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceTransformer, client,
-				sweepfw.NewAttribute("log_group_identifier", aws.ToString(transformer.LogGroupIdentifier))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }

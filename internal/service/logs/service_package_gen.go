@@ -74,7 +74,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceTransformer,
+			Factory:  newTransformerResource,
 			TypeName: "aws_cloudwatch_log_transformer",
 			Name:     "Transformer",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
