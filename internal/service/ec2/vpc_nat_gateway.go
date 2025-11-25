@@ -731,7 +731,7 @@ func processAZAddressSet(ctx context.Context, conn *ec2.Client, raw cty.Value) (
 			var exists bool
 			azIDtoNameMap, err := makeAZIDtoNameMap(ctx, conn)
 			if err != nil {
-				return nil, nil, fmt.Errorf("retrieving availability zone ID to name map: %s", err)
+				return nil, nil, fmt.Errorf("retrieving availability zone ID to name map: %w", err)
 			}
 			az, exists = azIDtoNameMap[azID]
 			if !exists {
