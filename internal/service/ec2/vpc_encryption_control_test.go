@@ -36,6 +36,40 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	exclusionAttributes = []string{
+		"egress_only_internet_gateway_exclusion",
+		"elastic_file_system_exclusion",
+		"internet_gateway_exclusion",
+		"lambda_exclusion",
+		"nat_gateway_exclusion",
+		"virtual_private_gateway_exclusion",
+		"vpc_lattice_exclusion",
+		"vpc_peering_exclusion",
+	}
+
+	defaultMonitorExclusionsImportStateCheck = acctest.ComposeAggregateImportStateCheckFunc(
+		acctest.ImportCheckNoResourceAttr("egress_only_internet_gateway_exclusion"),
+		acctest.ImportCheckNoResourceAttr("elastic_file_system_exclusion"),
+		acctest.ImportCheckNoResourceAttr("internet_gateway_exclusion"),
+		acctest.ImportCheckNoResourceAttr("lambda_exclusion"),
+		acctest.ImportCheckNoResourceAttr("nat_gateway_exclusion"),
+		acctest.ImportCheckNoResourceAttr("virtual_private_gateway_exclusion"),
+		acctest.ImportCheckNoResourceAttr("vpc_lattice_exclusion"),
+		acctest.ImportCheckNoResourceAttr("vpc_peering_exclusion"),
+	)
+	defaultEnforceExclusionsImportStateCheck = acctest.ComposeAggregateImportStateCheckFunc(
+		acctest.ImportCheckResourceAttr("egress_only_internet_gateway_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+		acctest.ImportCheckResourceAttr("elastic_file_system_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+		acctest.ImportCheckResourceAttr("internet_gateway_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+		acctest.ImportCheckResourceAttr("lambda_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+		acctest.ImportCheckResourceAttr("nat_gateway_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+		acctest.ImportCheckResourceAttr("virtual_private_gateway_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+		acctest.ImportCheckResourceAttr("vpc_lattice_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+		acctest.ImportCheckResourceAttr("vpc_peering_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+	)
+)
+
 func TestAccVPCVPCEncryptionControl_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -63,32 +97,23 @@ func TestAccVPCVPCEncryptionControl_basic(t *testing.T) {
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrVPCID), "aws_vpc.test", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("egress_only_internet_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("elastic_file_system_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("lambda_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("nat_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("virtual_private_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_lattice_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_peering_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_exclusions"), knownvalue.Null()),
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"egress_only_internet_gateway_exclusion",
-					"internet_gateway_exclusion",
-					"nat_gateway_exclusion",
-					"virtual_private_gateway_exclusion",
-					"vpc_peering_exclusion",
-				},
-				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
-					acctest.ImportCheckNoResourceAttr("egress_only_internet_gateway_exclusion"),
-					acctest.ImportCheckNoResourceAttr("internet_gateway_exclusion"),
-					acctest.ImportCheckNoResourceAttr("nat_gateway_exclusion"),
-					acctest.ImportCheckNoResourceAttr("virtual_private_gateway_exclusion"),
-					acctest.ImportCheckNoResourceAttr("vpc_peering_exclusion"),
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: exclusionAttributes,
+				ImportStateCheck:        defaultMonitorExclusionsImportStateCheck,
 			},
 		},
 	})
@@ -152,9 +177,12 @@ func TestAccVPCVPCEncryptionControl_enforce(t *testing.T) {
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrVPCID), "aws_vpc.test", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("egress_only_internet_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("elastic_file_system_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("lambda_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("nat_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("virtual_private_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_lattice_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_peering_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_exclusions"), knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -162,7 +190,15 @@ func TestAccVPCVPCEncryptionControl_enforce(t *testing.T) {
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
+						"elastic_file_system": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
 						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"lambda": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
@@ -174,6 +210,10 @@ func TestAccVPCVPCEncryptionControl_enforce(t *testing.T) {
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
+						"vpc_lattice": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
 						"vpc_peering": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
@@ -182,23 +222,11 @@ func TestAccVPCVPCEncryptionControl_enforce(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"egress_only_internet_gateway_exclusion",
-					"internet_gateway_exclusion",
-					"nat_gateway_exclusion",
-					"virtual_private_gateway_exclusion",
-					"vpc_peering_exclusion",
-				},
-				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
-					acctest.ImportCheckResourceAttr("egress_only_internet_gateway_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
-					acctest.ImportCheckResourceAttr("internet_gateway_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
-					acctest.ImportCheckResourceAttr("nat_gateway_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
-					acctest.ImportCheckResourceAttr("virtual_private_gateway_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
-					acctest.ImportCheckResourceAttr("vpc_peering_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: exclusionAttributes,
+				ImportStateCheck:        defaultEnforceExclusionsImportStateCheck,
 			},
 		},
 	})
@@ -219,7 +247,7 @@ func TestAccVPCVPCEncryptionControl_enforce_ImplicitExclusions(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEncryptionControlConfig_enforce_ImplicitExclusions("egress_only_internet_gateway_exclusion", "nat_gateway_exclusion", "vpc_peering_exclusion"),
+				Config: testAccVPCEncryptionControlConfig_enforce_ImplicitExclusions("egress_only_internet_gateway_exclusion", "lambda_exclusion", "nat_gateway_exclusion", "vpc_peering_exclusion"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
@@ -235,8 +263,16 @@ func TestAccVPCVPCEncryptionControl_enforce_ImplicitExclusions(t *testing.T) {
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
+						"elastic_file_system": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
 						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"lambda": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"nat_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -244,6 +280,10 @@ func TestAccVPCVPCEncryptionControl_enforce_ImplicitExclusions(t *testing.T) {
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"virtual_private_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"vpc_lattice": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
@@ -286,7 +326,7 @@ func TestAccVPCVPCEncryptionControl_enforce_ExplicitExclusions(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEncryptionControlConfig_enforce_ExplicitExclusions("internet_gateway_exclusion", "virtual_private_gateway_exclusion"),
+				Config: testAccVPCEncryptionControlConfig_enforce_ExplicitExclusions("internet_gateway_exclusion", "lambda_exclusion", "virtual_private_gateway_exclusion"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
@@ -305,7 +345,15 @@ func TestAccVPCVPCEncryptionControl_enforce_ExplicitExclusions(t *testing.T) {
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
+						"elastic_file_system": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
 						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"lambda": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
@@ -315,6 +363,10 @@ func TestAccVPCVPCEncryptionControl_enforce_ExplicitExclusions(t *testing.T) {
 						}),
 						"virtual_private_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"vpc_lattice": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"vpc_peering": knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -374,23 +426,11 @@ func TestAccVPCVPCEncryptionControl_update_monitorToEnforce(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"egress_only_internet_gateway_exclusion",
-					"internet_gateway_exclusion",
-					"nat_gateway_exclusion",
-					"virtual_private_gateway_exclusion",
-					"vpc_peering_exclusion",
-				},
-				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
-					acctest.ImportCheckResourceAttr("egress_only_internet_gateway_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
-					acctest.ImportCheckResourceAttr("internet_gateway_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
-					acctest.ImportCheckResourceAttr("nat_gateway_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
-					acctest.ImportCheckResourceAttr("virtual_private_gateway_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
-					acctest.ImportCheckResourceAttr("vpc_peering_exclusion", string(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: exclusionAttributes,
+				ImportStateCheck:        defaultEnforceExclusionsImportStateCheck,
 			},
 		},
 	})
@@ -424,7 +464,7 @@ func TestAccVPCVPCEncryptionControl_update_monitorToEnforce_ImplicitExclusions(t
 				},
 			},
 			{
-				Config: testAccVPCEncryptionControlConfig_enforce_ImplicitExclusions("egress_only_internet_gateway_exclusion", "nat_gateway_exclusion", "vpc_peering_exclusion"),
+				Config: testAccVPCEncryptionControlConfig_enforce_ImplicitExclusions("egress_only_internet_gateway_exclusion", "lambda_exclusion", "nat_gateway_exclusion", "vpc_peering_exclusion"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
@@ -443,8 +483,16 @@ func TestAccVPCVPCEncryptionControl_update_monitorToEnforce_ImplicitExclusions(t
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
+						"elastic_file_system": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
 						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"lambda": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"nat_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -452,6 +500,10 @@ func TestAccVPCVPCEncryptionControl_update_monitorToEnforce_ImplicitExclusions(t
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"virtual_private_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"vpc_lattice": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
@@ -505,7 +557,15 @@ func TestAccVPCVPCEncryptionControl_update_enforce_ExplictDisableExclusions(t *t
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
+						"elastic_file_system": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
 						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"lambda": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
@@ -514,6 +574,10 @@ func TestAccVPCVPCEncryptionControl_update_enforce_ExplictDisableExclusions(t *t
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"virtual_private_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"vpc_lattice": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
@@ -573,7 +637,15 @@ func TestAccVPCVPCEncryptionControl_update_enforce_ImplicitExclusions(t *testing
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
+						"elastic_file_system": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
 						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"lambda": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
@@ -585,6 +657,10 @@ func TestAccVPCVPCEncryptionControl_update_enforce_ImplicitExclusions(t *testing
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
+						"vpc_lattice": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
 						"vpc_peering": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
@@ -593,7 +669,7 @@ func TestAccVPCVPCEncryptionControl_update_enforce_ImplicitExclusions(t *testing
 				},
 			},
 			{
-				Config: testAccVPCEncryptionControlConfig_enforce_ImplicitExclusions("egress_only_internet_gateway_exclusion", "nat_gateway_exclusion", "vpc_peering_exclusion"),
+				Config: testAccVPCEncryptionControlConfig_enforce_ImplicitExclusions("egress_only_internet_gateway_exclusion", "lambda_exclusion", "nat_gateway_exclusion", "vpc_peering_exclusion"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
@@ -612,8 +688,16 @@ func TestAccVPCVPCEncryptionControl_update_enforce_ImplicitExclusions(t *testing
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
+						"elastic_file_system": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
 						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"lambda": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"nat_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -621,6 +705,10 @@ func TestAccVPCVPCEncryptionControl_update_enforce_ImplicitExclusions(t *testing
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
 						"virtual_private_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"vpc_lattice": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
 							"state_message": tfknownvalue.StringExact("succeeded"),
 						}),
@@ -695,23 +783,11 @@ func TestAccVPCVPCEncryptionControl_update_enforceToMonitor(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"egress_only_internet_gateway_exclusion",
-					"internet_gateway_exclusion",
-					"nat_gateway_exclusion",
-					"virtual_private_gateway_exclusion",
-					"vpc_peering_exclusion",
-				},
-				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
-					acctest.ImportCheckNoResourceAttr("egress_only_internet_gateway_exclusion"),
-					acctest.ImportCheckNoResourceAttr("internet_gateway_exclusion"),
-					acctest.ImportCheckNoResourceAttr("nat_gateway_exclusion"),
-					acctest.ImportCheckNoResourceAttr("virtual_private_gateway_exclusion"),
-					acctest.ImportCheckNoResourceAttr("vpc_peering_exclusion"),
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: exclusionAttributes,
+				ImportStateCheck:        defaultMonitorExclusionsImportStateCheck,
 			},
 		},
 	})
@@ -752,11 +828,13 @@ func TestAccVPCVPCEncryptionControl_Identity_Enforce(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				Config:            testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeEnforce),
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config:                  testAccVPCEncryptionControlConfig_enable(awstypes.VpcEncryptionControlModeEnforce),
+				ImportStateKind:         resource.ImportCommandWithID,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: exclusionAttributes,
+				ImportStateCheck:        defaultEnforceExclusionsImportStateCheck,
 			},
 
 			// Step 3: Import block with Import ID
@@ -873,23 +951,6 @@ resource "aws_vpc" "test" {
 }
 
 func testAccVPCEncryptionControlConfig_enforce_ExplicitExclusions(keys ...string) string {
-	allKeys := set.From([]string{
-		"egress_only_internet_gateway_exclusion",
-		"internet_gateway_exclusion",
-		"nat_gateway_exclusion",
-		"virtual_private_gateway_exclusion",
-		"vpc_peering_exclusion",
-	})
-	var buf strings.Builder
-	for key := range allKeys.Items() {
-		var v string
-		if slices.Contains(keys, key) {
-			v = "enable"
-		} else {
-			v = "disable"
-		}
-		fmt.Fprintf(&buf, `%[1]s = %[2]q`+"\n", key, v)
-	}
 	return fmt.Sprintf(`
 resource "aws_vpc_encryption_control" "test" {
   vpc_id = aws_vpc.test.id
@@ -901,24 +962,23 @@ resource "aws_vpc_encryption_control" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
-`, awstypes.VpcEncryptionControlModeEnforce, buf.String())
+`, awstypes.VpcEncryptionControlModeEnforce, testAccVPCEncryptionControlConfig_explicitExclusions(keys...))
 }
 
 func testAccVPCEncryptionControlConfig_enforce_ExplictDisableExclusion() string {
-	return fmt.Sprintf(`
-resource "aws_vpc_encryption_control" "test" {
-  vpc_id = aws_vpc.test.id
-  mode   = %[1]q
-
-  egress_only_internet_gateway_exclusion = "disable"
-  internet_gateway_exclusion             = "disable"
-  nat_gateway_exclusion                  = "disable"
-  virtual_private_gateway_exclusion      = "disable"
-  vpc_peering_exclusion                  = "disable"
+	return testAccVPCEncryptionControlConfig_enforce_ExplicitExclusions()
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-`, awstypes.VpcEncryptionControlModeEnforce)
+func testAccVPCEncryptionControlConfig_explicitExclusions(keys ...string) string {
+	var buf strings.Builder
+	for _, key := range exclusionAttributes {
+		var v string
+		if slices.Contains(keys, key) {
+			v = "enable"
+		} else {
+			v = "disable"
+		}
+		fmt.Fprintf(&buf, `%[1]s = %[2]q`+"\n", key, v)
+	}
+	return buf.String()
 }

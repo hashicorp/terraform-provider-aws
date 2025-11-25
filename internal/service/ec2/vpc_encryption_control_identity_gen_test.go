@@ -65,7 +65,7 @@ func TestAccVPCVPCEncryptionControl_Identity_Basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"egress_only_internet_gateway_exclusion", "internet_gateway_exclusion", "nat_gateway_exclusion", "virtual_private_gateway_exclusion", "vpc_peering_exclusion",
+					"egress_only_internet_gateway_exclusion", "elastic_file_system_exclusion", "internet_gateway_exclusion", "lambda_exclusion", "nat_gateway_exclusion", "virtual_private_gateway_exclusion", "vpc_lattice_exclusion", "vpc_peering_exclusion",
 				},
 			},
 
@@ -156,7 +156,7 @@ func TestAccVPCVPCEncryptionControl_Identity_RegionOverride(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"egress_only_internet_gateway_exclusion", "internet_gateway_exclusion", "nat_gateway_exclusion", "virtual_private_gateway_exclusion", "vpc_peering_exclusion",
+					"egress_only_internet_gateway_exclusion", "elastic_file_system_exclusion", "internet_gateway_exclusion", "lambda_exclusion", "nat_gateway_exclusion", "virtual_private_gateway_exclusion", "vpc_lattice_exclusion", "vpc_peering_exclusion",
 				},
 			},
 

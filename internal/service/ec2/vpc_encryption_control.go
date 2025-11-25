@@ -34,7 +34,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.VpcEncryptionControl")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(importIgnore="egress_only_internet_gateway_exclusion;internet_gateway_exclusion;nat_gateway_exclusion;virtual_private_gateway_exclusion;vpc_peering_exclusion")
+// @Testing(importIgnore="egress_only_internet_gateway_exclusion;elastic_file_system_exclusion;internet_gateway_exclusion;lambda_exclusion;nat_gateway_exclusion;virtual_private_gateway_exclusion;vpc_lattice_exclusion;vpc_peering_exclusion")
 // @Testing(existsTakesT=true, destroyTakesT=true)
 func newResourceVPCEncryptionControl(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceVPCEncryptionControl{}
@@ -71,8 +71,10 @@ func (r *resourceVPCEncryptionControl) Schema(ctx context.Context, req resource.
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"egress_only_internet_gateway_exclusion": vpcEncryptionControlExclusionStateInputAttribute,
+			"elastic_file_system_exclusion":          vpcEncryptionControlExclusionStateInputAttribute,
 			names.AttrID:                             framework.IDAttribute(),
 			"internet_gateway_exclusion":             vpcEncryptionControlExclusionStateInputAttribute,
+			"lambda_exclusion":                       vpcEncryptionControlExclusionStateInputAttribute,
 			names.AttrMode: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.VpcEncryptionControlMode](),
 				Required:   true,
@@ -92,6 +94,7 @@ func (r *resourceVPCEncryptionControl) Schema(ctx context.Context, req resource.
 			names.AttrVPCID: schema.StringAttribute{
 				Required: true,
 			},
+			"vpc_lattice_exclusion": vpcEncryptionControlExclusionStateInputAttribute,
 			"vpc_peering_exclusion": vpcEncryptionControlExclusionStateInputAttribute,
 		},
 		Blocks: map[string]schema.Block{
@@ -298,13 +301,22 @@ func waitVPCEncryptionControlExclusionsApplied(ctx context.Context, conn *ec2.Cl
 		if isExclusionPending(exclusions.EgressOnlyInternetGateway) {
 			return false, nil
 		}
+		if isExclusionPending(exclusions.ElasticFileSystem) {
+			return false, nil
+		}
 		if isExclusionPending(exclusions.InternetGateway) {
+			return false, nil
+		}
+		if isExclusionPending(exclusions.Lambda) {
 			return false, nil
 		}
 		if isExclusionPending(exclusions.NatGateway) {
 			return false, nil
 		}
 		if isExclusionPending(exclusions.VirtualPrivateGateway) {
+			return false, nil
+		}
+		if isExclusionPending(exclusions.VpcLattice) {
 			return false, nil
 		}
 		if isExclusionPending(exclusions.VpcPeering) {
@@ -418,9 +430,12 @@ func flattenForModify(_ context.Context, plan resourceVPCEncryptionControlModel,
 
 	if plan.Mode.ValueEnum() == awstypes.VpcEncryptionControlModeEnforce {
 		apiObject.EgressOnlyInternetGatewayExclusion = plan.EgressOnlyInternetGatewayExclusion.ValueEnum()
+		apiObject.ElasticFileSystemExclusion = plan.ElasticFileSystemExclusion.ValueEnum()
 		apiObject.InternetGatewayExclusion = plan.InternetGatewayExclusion.ValueEnum()
+		apiObject.LambdaExclusion = plan.LambdaExclusion.ValueEnum()
 		apiObject.NatGatewayExclusion = plan.NatGatewayExclusion.ValueEnum()
 		apiObject.VirtualPrivateGatewayExclusion = plan.VirtualPrivateGatewayExclusion.ValueEnum()
+		apiObject.VpcLatticeExclusion = plan.VpcLatticeExclusion.ValueEnum()
 		apiObject.VpcPeeringExclusion = plan.VpcPeeringExclusion.ValueEnum()
 	}
 
@@ -436,11 +451,17 @@ func flattenExclusionInputs(ctx context.Context, apiObject awstypes.VpcEncryptio
 
 	diags.Append(flattenExclusionInput(ctx, exclusions.EgressOnlyInternetGateway, &tfObject.EgressOnlyInternetGatewayExclusion)...)
 
+	diags.Append(flattenExclusionInput(ctx, exclusions.ElasticFileSystem, &tfObject.ElasticFileSystemExclusion)...)
+
 	diags.Append(flattenExclusionInput(ctx, exclusions.InternetGateway, &tfObject.InternetGatewayExclusion)...)
+
+	diags.Append(flattenExclusionInput(ctx, exclusions.Lambda, &tfObject.LambdaExclusion)...)
 
 	diags.Append(flattenExclusionInput(ctx, exclusions.NatGateway, &tfObject.NatGatewayExclusion)...)
 
 	diags.Append(flattenExclusionInput(ctx, exclusions.VirtualPrivateGateway, &tfObject.VirtualPrivateGatewayExclusion)...)
+
+	diags.Append(flattenExclusionInput(ctx, exclusions.VpcLattice, &tfObject.VpcLatticeExclusion)...)
 
 	diags.Append(flattenExclusionInput(ctx, exclusions.VpcPeering, &tfObject.VpcPeeringExclusion)...)
 
@@ -466,8 +487,10 @@ func flattenExclusionInput(_ context.Context, apiObject *awstypes.VpcEncryptionC
 type resourceVPCEncryptionControlModel struct {
 	framework.WithRegionModel
 	EgressOnlyInternetGatewayExclusion fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"egress_only_internet_gateway_exclusion"`
+	ElasticFileSystemExclusion         fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"elastic_file_system_exclusion"`
 	ID                                 types.String                                                         `tfsdk:"id"`
 	InternetGatewayExclusion           fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"internet_gateway_exclusion"`
+	LambdaExclusion                    fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"lambda_exclusion"`
 	Mode                               fwtypes.StringEnum[awstypes.VpcEncryptionControlMode]                `tfsdk:"mode"`
 	NatGatewayExclusion                fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"nat_gateway_exclusion"`
 	ResourceExclusions                 fwtypes.ObjectValueOf[vpcEncryptionControlExclusionsModel]           `tfsdk:"resource_exclusions"`
@@ -476,14 +499,18 @@ type resourceVPCEncryptionControlModel struct {
 	Timeouts                           timeouts.Value                                                       `tfsdk:"timeouts"`
 	VirtualPrivateGatewayExclusion     fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"virtual_private_gateway_exclusion"`
 	VPCID                              types.String                                                         `tfsdk:"vpc_id"`
+	VpcLatticeExclusion                fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"vpc_lattice_exclusion"`
 	VpcPeeringExclusion                fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"vpc_peering_exclusion"`
 }
 
 type vpcEncryptionControlExclusionsModel struct {
 	EgressOnlyInternetGateway fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"egress_only_internet_gateway"`
+	ElasticFileSystem         fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"elastic_file_system"`
 	InternetGateway           fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"internet_gateway"`
+	Lambda                    fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"lambda"`
 	NatGateway                fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"nat_gateway"`
 	VirtualPrivateGateway     fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"virtual_private_gateway"`
+	VpcLattice                fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"vpc_lattice"`
 	VpcPeering                fwtypes.ObjectValueOf[vpcEncryptionControlExclusionModel] `tfsdk:"vpc_peering"`
 }
 
