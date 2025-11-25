@@ -68,13 +68,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.29.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.57.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.58.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.12.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.52.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.60.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.61.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.21.4 // indirect
