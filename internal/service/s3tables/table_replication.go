@@ -39,6 +39,7 @@ func newTableReplicationResource(_ context.Context) (resource.ResourceWithConfig
 
 type tableReplicationResource struct {
 	framework.ResourceWithModel[tableReplicationResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *tableReplicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
