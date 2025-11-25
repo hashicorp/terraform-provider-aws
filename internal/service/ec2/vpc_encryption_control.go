@@ -108,13 +108,13 @@ func (r *resourceVPCEncryptionControl) Create(ctx context.Context, req resource.
 	conn := r.Meta().EC2Client(ctx)
 
 	var plan resourceVPCEncryptionControlModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var input ec2.CreateVpcEncryptionControlInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -130,7 +130,7 @@ func (r *resourceVPCEncryptionControl) Create(ctx context.Context, req resource.
 	}
 
 	plan.ID = flex.StringToFramework(ctx, out.VpcEncryptionControl.VpcEncryptionControlId)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrID), plan.ID))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrID), plan.ID))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -149,19 +149,19 @@ func (r *resourceVPCEncryptionControl) Create(ctx context.Context, req resource.
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, ec, &plan, flex.WithFieldNamePrefix("VpcEncryptionControl")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, ec, &plan, flex.WithFieldNamePrefix("VpcEncryptionControl")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *resourceVPCEncryptionControl) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
 	var state resourceVPCEncryptionControlModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -177,31 +177,31 @@ func (r *resourceVPCEncryptionControl) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flattenExclusionInputs(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenExclusionInputs(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resourceVPCEncryptionControl) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
 	var plan, state resourceVPCEncryptionControlModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	diff, d := flex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -213,20 +213,20 @@ func (r *resourceVPCEncryptionControl) Update(ctx context.Context, req resource.
 			return
 		}
 
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, ec, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, ec, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resourceVPCEncryptionControl) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
 	var state resourceVPCEncryptionControlModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -380,7 +380,7 @@ func findVPCEncryptionControlsByIDs(ctx context.Context, conn *ec2.Client, ids [
 
 func vpcEncryptionControlModify(ctx context.Context, conn *ec2.Client, plan resourceVPCEncryptionControlModel, timeout time.Duration, diags *diag.Diagnostics) *awstypes.VpcEncryptionControl {
 	var modifyInput ec2.ModifyVpcEncryptionControlInput
-	smerr.EnrichAppend(ctx, diags, flattenForModify(ctx, plan, &modifyInput))
+	smerr.AddEnrich(ctx, diags, flattenForModify(ctx, plan, &modifyInput))
 	if diags.HasError() {
 		return nil
 	}
