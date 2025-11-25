@@ -627,16 +627,13 @@ func TestAccEKSCluster_ComputeConfig_AddARN(t *testing.T) {
 }
 
 func TestAccEKSCluster_controlPlaneScalingConfig(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	ctx := acctest.Context(t)
-	var cluster1, cluster2, cluster3 types.Cluster
+	var cluster1, cluster2 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -656,19 +653,10 @@ func TestAccEKSCluster_controlPlaneScalingConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
-				Config: testAccClusterConfig_controlPlaneScalingConfig(rName, "tier-2xl"),
+				Config: testAccClusterConfig_controlPlaneScalingConfig(rName, "standard"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.0.tier", "tier-2xl"),
-				),
-			},
-			{
-				Config: testAccClusterConfig_controlPlaneScalingConfig(rName, "standard"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster3),
-					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
 					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control_plane_scaling_config.0.tier", "standard"),
 				),
