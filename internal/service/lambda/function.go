@@ -398,6 +398,21 @@ func resourceFunction() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tenancy_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tenant_isolation_mode": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TenantIsolationMode](),
+						},
+					},
+				},
+			},
 			names.AttrTimeout: {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -585,6 +600,12 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.Code.SourceKMSKeyArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("tenancy_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TenancyConfig = &awstypes.TenancyConfig{
+			TenantIsolationMode: awstypes.TenantIsolationMode(v.([]any)[0].(map[string]any)["tenant_isolation_mode"].(string)),
+		}
+	}
+
 	if v, ok := d.GetOk("tracing_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.TracingConfig = &awstypes.TracingConfig{
 			Mode: awstypes.TracingMode(v.([]any)[0].(map[string]any)[names.AttrMode].(string)),
@@ -751,6 +772,15 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		},
 	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
+	}
+	if function.TenancyConfig != nil {
+		if err := d.Set("tenancy_config", []any{
+			map[string]any{
+				"tenant_isolation_mode": string(function.TenancyConfig.TenantIsolationMode),
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tenancy_config: %s", err)
+		}
 	}
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(function.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)

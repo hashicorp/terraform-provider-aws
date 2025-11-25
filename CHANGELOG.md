@@ -1,9 +1,35 @@
 ## 6.23.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_vpn_concentrator` ([#45175](https://github.com/hashicorp/terraform-provider-aws/issues/45175))
+
+ENHANCEMENTS:
+
+* action/aws_lambda_invoke: Add `tenant_id` argument ([#45170](https://github.com/hashicorp/terraform-provider-aws/issues/45170))
+* data-source/aws_lambda_function: Add `tenancy_config` attribute ([#45170](https://github.com/hashicorp/terraform-provider-aws/issues/45170))
+* data-source/aws_lambda_invocation: Add `tenant_id` argument ([#45170](https://github.com/hashicorp/terraform-provider-aws/issues/45170))
+* data-source/aws_vpn_connection: Add `vpn_concentrator_id` attribute ([#45175](https://github.com/hashicorp/terraform-provider-aws/issues/45175))
+* resoource/aws_ecs_capacity_provider: Add `managed_instances_provider.infrastructure_optimization` argument ([#45142](https://github.com/hashicorp/terraform-provider-aws/issues/45142))
+* resource/aws_docdb_cluster: Add `network_type` argument ([#45140](https://github.com/hashicorp/terraform-provider-aws/issues/45140))
+* resource/aws_docdb_subnet_group: Add `supported_network_types` attribute ([#45140](https://github.com/hashicorp/terraform-provider-aws/issues/45140))
+* resource/aws_lambda_function: Add `tenancy_config` argument ([#45170](https://github.com/hashicorp/terraform-provider-aws/issues/45170))
+* resource/aws_lambda_invocation: Add `tenant_id` argument ([#45170](https://github.com/hashicorp/terraform-provider-aws/issues/45170))
+* resource/aws_vpn_connection: Add `vpn_concentrator_id` argument to support Site-to-Site VPN Concentrator ([#45175](https://github.com/hashicorp/terraform-provider-aws/issues/45175))
+
+## 6.22.1 (November 21, 2025)
+
 ENHANCEMENTS:
 
 * resource/aws_fsx_openzfs_file_system: Support `INTELLIGENT_TIERING` storage type and add `read_cache_configuration` argument ([#45159](https://github.com/hashicorp/terraform-provider-aws/issues/45159))
 * resource/aws_msk_cluster: Add `rebalancing` configuration block to support intelligent rebalancing for Express broker clusters ([#45073](https://github.com/hashicorp/terraform-provider-aws/issues/45073))
+
+BUG FIXES:
+
+* provider: Fix crash in required tag validation interceptor when tag values are unknown. This addresses a regression introduced in [v6.22.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6220-november-20-2025). ([#45201](https://github.com/hashicorp/terraform-provider-aws/issues/45201))
+* provider: Fix early return logic in the required tag validation interceptor. This addresses a performance regression introduced in [v6.22.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6220-november-20-2025). ([#45201](https://github.com/hashicorp/terraform-provider-aws/issues/45201))
+* resource/aws_accessanalyzer_analyzer: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `configuration.unused_access.analysis_rule.exclusion.resource_tags` contains `null` values ([#45202](https://github.com/hashicorp/terraform-provider-aws/issues/45202))
+* resource/aws_odb_cloud_vm_cluster: Fix incorrect validation error when arguments are configured using variables. This addresses a regression introduced in [v6.22.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6220-november-20-2025) ([#45205](https://github.com/hashicorp/terraform-provider-aws/issues/45205))
 
 ## 6.22.0 (November 20, 2025)
 

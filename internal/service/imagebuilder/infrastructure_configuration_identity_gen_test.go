@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -23,7 +22,7 @@ func TestAccImageBuilderInfrastructureConfiguration_Identity_Basic(t *testing.T)
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -108,7 +107,7 @@ func TestAccImageBuilderInfrastructureConfiguration_Identity_RegionOverride(t *t
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -229,7 +228,7 @@ func TestAccImageBuilderInfrastructureConfiguration_Identity_ExistingResource(t 
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -284,7 +283,7 @@ func TestAccImageBuilderInfrastructureConfiguration_Identity_ExistingResource_No
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

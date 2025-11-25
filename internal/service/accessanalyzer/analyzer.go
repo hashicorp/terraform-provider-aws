@@ -397,25 +397,15 @@ func expandInternalAccessAnalysisRuleCriteria(tfMap map[string]any) *types.Inter
 	apiObject := &types.InternalAccessAnalysisRuleCriteria{}
 
 	if tfList, ok := tfMap["account_ids"].([]any); ok && len(tfList) > 0 {
-		for _, v := range tfList {
-			accountID, ok := v.(string)
-			if !ok {
-				continue
-			}
-			apiObject.AccountIds = append(apiObject.AccountIds, accountID)
-		}
+		apiObject.AccountIds = flex.ExpandStringValueList(tfList)
 	}
 
 	if tfList, ok := tfMap["resource_arns"].([]any); ok && len(tfList) > 0 {
-		for _, v := range tfList {
-			apiObject.ResourceArns = append(apiObject.ResourceArns, v.(string))
-		}
+		apiObject.ResourceArns = flex.ExpandStringValueList(tfList)
 	}
 
 	if tfList, ok := tfMap["resource_types"].([]any); ok && len(tfList) > 0 {
-		for _, v := range tfList {
-			apiObject.ResourceTypes = append(apiObject.ResourceTypes, types.ResourceType(v.(string)))
-		}
+		apiObject.ResourceTypes = flex.ExpandStringyValueList[types.ResourceType](tfList)
 	}
 
 	return apiObject
@@ -478,17 +468,14 @@ func expandAnalysisRuleCriteria(tfMap map[string]any) *types.AnalysisRuleCriteri
 	apiObject := &types.AnalysisRuleCriteria{}
 
 	if tfList, ok := tfMap["account_ids"].([]any); ok && len(tfList) > 0 {
-		for _, v := range tfList {
-			accountID, ok := v.(string)
-			if !ok {
-				continue
-			}
-			apiObject.AccountIds = append(apiObject.AccountIds, accountID)
-		}
+		apiObject.AccountIds = flex.ExpandStringValueList(tfList)
 	}
 
 	if tfList, ok := tfMap[names.AttrResourceTags].([]any); ok && len(tfList) > 0 {
 		for _, v := range tfList {
+			if v == nil {
+				continue
+			}
 			apiObject.ResourceTags = append(apiObject.ResourceTags, flex.ExpandStringValueMap(v.(map[string]any)))
 		}
 	}

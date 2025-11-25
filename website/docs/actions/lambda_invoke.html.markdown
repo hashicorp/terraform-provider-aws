@@ -220,3 +220,4 @@ This action supports the following arguments:
 * `payload` - (Required) JSON payload to send to the Lambda function. This should be a valid JSON string that represents the event data for your function. The payload size limit is 6 MB for synchronous invocations and 256 KB for asynchronous invocations.
 * `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `qualifier` - (Optional) Version or alias of the Lambda function to invoke. If not specified, the `$LATEST` version will be invoked. Can be a version number (e.g., `1`) or an alias (e.g., `PROD`).
+* `tenant_id` - (Optional)  Tenant Id to serve invocations from specified tenant.
