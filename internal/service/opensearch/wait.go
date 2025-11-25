@@ -58,7 +58,7 @@ func waitForDomainCreation(ctx context.Context, conn *opensearch.Client, domainN
 
 		return tfresource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for OpenSearch Domain to be created", domainName))
-	}, tfresource.WithDelay(10*time.Minute), tfresource.WithPollInterval(10*time.Second))
+	}, tfresource.WithPollInterval(10*time.Second))
 
 	if err != nil {
 		return fmt.Errorf("waiting for OpenSearch Domain to be created: %w", err)
@@ -109,7 +109,7 @@ func waitForDomainDelete(ctx context.Context, conn *opensearch.Client, domainNam
 		}
 
 		return tfresource.RetryableError(fmt.Errorf("timeout while waiting for the OpenSearch Domain %q to be deleted", domainName))
-	}, tfresource.WithDelay(10*time.Minute), tfresource.WithPollInterval(10*time.Second))
+	}, tfresource.WithPollInterval(10*time.Second))
 
 	if err != nil {
 		return fmt.Errorf("waiting for OpenSearch Domain to be deleted: %w", err)
