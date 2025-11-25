@@ -34,6 +34,9 @@ func TestAccEKSClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority.0.data", dataSourceResourceName, "certificate_authority.0.data"),
 					resource.TestCheckNoResourceAttr(dataSourceResourceName, "cluster_id"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "control_plane_scaling_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "control_plane_scaling_config.0.tier", dataSourceResourceName, "control_plane_scaling_config.0.tier"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "control_plane_scaling_config.0.tier", "standard"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedAt, dataSourceResourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDeletionProtection, dataSourceResourceName, names.AttrDeletionProtection),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "enabled_cluster_log_types.#", "2"),
@@ -183,6 +186,33 @@ func TestAccEKSClusterDataSource_remoteNetwork(t *testing.T) {
 	})
 }
 
+func TestAccEKSClusterDataSource_controlPlaneScalingConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceResourceName := "data.aws_eks_cluster.test"
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterDataSourceConfig_controlPlaneScalingConfig(rName, "tier-xl"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "control_plane_scaling_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "control_plane_scaling_config.0.tier", dataSourceResourceName, "control_plane_scaling_config.0.tier"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "control_plane_scaling_config.0.tier", "tier-xl"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceResourceName, names.AttrStatus),
+				),
+			},
+		},
+	})
+}
+
 func testAccClusterDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_logging(rName, []string{"api", "audit"}), `
 data "aws_eks_cluster" "test" {
@@ -201,6 +231,14 @@ data "aws_eks_cluster" "test" {
 
 func testAccClusterDataSourceConfig_remoteNetwork(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_remotePodNetwork(rName, "10.90.0.0/22", "10.80.0.0/22"), `
+data "aws_eks_cluster" "test" {
+  name = aws_eks_cluster.test.name
+}
+`)
+}
+
+func testAccClusterDataSourceConfig_controlPlaneScalingConfig(rName, tier string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_controlPlaneScalingConfig(rName, tier), `
 data "aws_eks_cluster" "test" {
   name = aws_eks_cluster.test.name
 }
