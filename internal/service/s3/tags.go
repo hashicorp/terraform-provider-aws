@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
@@ -221,7 +222,12 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, r
 
 	switch resourceType {
 	case "Bucket":
-		return bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
+		// Attempt Tag/UntagResource first, fall back to Put/DeleteBucketTagging
+		err := tfs3control.UpdateTags(ctx, c.S3ControlClient(ctx), newBucketARN(c.Partition(ctx), identifier), c.AccountID(ctx), oldTags, newTags)
+		if errs.Contains(err, "is not authorized to perform: s3:TagResource") || errs.Contains(err, "is not authorized to perform: s3:UntagResource") {
+			return bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
+		}
+		return err
 
 	case "DirectoryBucket":
 		return tfs3control.UpdateTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx), oldTags, newTags)
@@ -254,4 +260,20 @@ func getContextTags(ctx context.Context) tftags.KeyValueTags {
 		return inContext.TagsIn.UnwrapOrDefault()
 	}
 	return nil
+}
+
+// newBucketARN composes a bucket ARN
+//
+// If the bucket parameter is already an ARN, that value is returned unmodified.
+// Used to convert s3 service tag identifiers to those expected by the s3contol
+// tagging APIs.
+func newBucketARN(partition string, bucket string) string {
+	if arn.IsARN(bucket) {
+		return bucket
+	}
+	return arn.ARN{
+		Partition: partition,
+		Service:   "s3",
+		Resource:  bucket,
+	}.String()
 }
