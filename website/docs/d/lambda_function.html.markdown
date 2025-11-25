@@ -145,6 +145,7 @@ This data source exports the following attributes in addition to the arguments a
 * `source_kms_key_arn` - ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package.
 * `tags` - Map of tags assigned to the Lambda Function.
 * `timeout` - Function execution time at which Lambda should terminate the function.
+* `tenancy_config` - Tenancy settings of the function. [See below](#tenancy_config-attribute-reference).
 * `tracing_config` - Tracing settings of the function. [See below](#tracing_config-attribute-reference).
 * `version` - Version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$LATEST`.
 * `vpc_config` - VPC configuration associated with your Lambda function. [See below](#vpc_config-attribute-reference).
@@ -172,6 +173,10 @@ This data source exports the following attributes in addition to the arguments a
 * `log_format` - Format for your function's logs. Valid values: `Text`, `JSON`.
 * `log_group` - CloudWatch log group your function sends logs to.
 * `system_log_level` - Detail level of the Lambda platform event logs sent to CloudWatch.
+
+### tenancy_config
+
+* `tenant_isolation_mode` - (Required) Tenant Isolation Mode. Valid values: `PER_TENANT`.
 
 ### tracing_config
 

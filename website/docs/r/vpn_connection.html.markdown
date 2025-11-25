@@ -127,6 +127,7 @@ This resource supports the following arguments:
 * `customer_gateway_id` - (Required) The ID of the customer gateway.
 * `type` - (Required) The type of VPN connection. The only type AWS supports at this time is "ipsec.1".
 * `transit_gateway_id` - (Optional) The ID of the EC2 Transit Gateway.
+* `vpn_concentrator_id` - (Optional) ID of the VPN concentrator to associate with the VPN connection.
 * `vpn_gateway_id` - (Optional) The ID of the Virtual Private Gateway.
 * `static_routes_only` - (Optional, Default `false`) Whether the VPN connection uses static routes exclusively. Static routes must be used for devices that don't support BGP.
 * `enable_acceleration` - (Optional, Default `false`) Indicate whether to enable acceleration for the VPN connection. Supports only EC2 Transit Gateway.

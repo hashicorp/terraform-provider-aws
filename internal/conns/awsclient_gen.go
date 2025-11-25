@@ -151,7 +151,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/location"
-	"github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconnect"
@@ -851,10 +850,6 @@ func (c *AWSClient) LocationClient(ctx context.Context) *location.Client {
 
 func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs.Client {
 	return errs.Must(client[*cloudwatchlogs.Client](ctx, c, names.Logs, make(map[string]any)))
-}
-
-func (c *AWSClient) LookoutMetricsClient(ctx context.Context) *lookoutmetrics.Client {
-	return errs.Must(client[*lookoutmetrics.Client](ctx, c, names.LookoutMetrics, make(map[string]any)))
 }
 
 func (c *AWSClient) M2Client(ctx context.Context) *m2.Client {

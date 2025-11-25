@@ -104,7 +104,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 
 resource "aws_msk_cluster" "example" {
   cluster_name           = "example"
-  kafka_version          = "3.2.0"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -175,7 +175,7 @@ output "bootstrap_brokers_tls" {
 ```terraform
 resource "aws_msk_cluster" "example" {
   cluster_name           = "example"
-  kafka_version          = "2.7.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -214,6 +214,7 @@ This resource supports the following arguments:
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level. See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
 * `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See [open_monitoring Argument Reference](#open_monitoring-argument-reference) below.
 * `logging_info` - (Optional) Configuration block for streaming broker logs to Cloudwatch/S3/Kinesis Firehose. See [logging_info Argument Reference](#logging_info-argument-reference) below.
+* `rebalancing` - (Optional) Configuration block for intelligent rebalancing. See [rebalancing Argument Reference](#rebalancing-argument-reference) below. Only applicable to MSK Provisioned clusters with Express brokers.
 * `storage_mode` - (Optional) Controls storage mode for supported storage tiers. Valid values are: `LOCAL` or `TIERED`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -335,6 +336,12 @@ This resource supports the following arguments:
 * `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to S3.
 * `bucket` - (Optional) Name of the S3 bucket to deliver logs to.
 * `prefix` - (Optional) Prefix to append to the folder name.
+
+### rebalancing Argument Reference
+
+* `status` - (Required) The status of intelligent rebalancing. Valid values: `ACTIVE`, `PAUSED`. Default is `ACTIVE` for new Express-based clusters.
+
+~> **NOTE:** Intelligent rebalancing is only available for MSK Provisioned clusters with Express brokers. When enabled, you cannot use third-party rebalancing tools such as Cruise Control. See [AWS MSK Intelligent Rebalancing](https://docs.aws.amazon.com/msk/latest/developerguide/intelligent-rebalancing.html) for more information.
 
 ## Attribute Reference
 

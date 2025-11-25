@@ -76,7 +76,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newDataSourceVPNConnection,
+			Factory:  newVPNConnectionDataSource,
 			TypeName: "aws_vpn_connection",
 			Name:     "VPN Connection",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
@@ -264,6 +264,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 				ImportID:      securityGroupVPCAssociationImportID{},
 			},
+		},
+		{
+			Factory:  newVPNConcentratorResource,
+			TypeName: "aws_vpn_concentrator",
+			Name:     "VPN Concentrator",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "vpn_concentrator_id",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }

@@ -285,7 +285,6 @@ provider "aws" {
 |Lightsail|`lightsail`|`AWS_ENDPOINT_URL_LIGHTSAIL`|`lightsail`|
 |Location|`location`(or `locationservice`)|`AWS_ENDPOINT_URL_LOCATION`|`location`|
 |CloudWatch Logs|`logs`(or `cloudwatchlog` or `cloudwatchlogs`)|`AWS_ENDPOINT_URL_CLOUDWATCH_LOGS`|`cloudwatch_logs`|
-|Lookout for Metrics|`lookoutmetrics`|`AWS_ENDPOINT_URL_LOOKOUTMETRICS`|`lookoutmetrics`|
 |Mainframe Modernization|`m2`|`AWS_ENDPOINT_URL_M2`|`m2`|
 |Macie|`macie2`|`AWS_ENDPOINT_URL_MACIE2`|`macie2`|
 |Elemental MediaConnect|`mediaconnect`|`AWS_ENDPOINT_URL_MEDIACONNECT`|`mediaconnect`|

@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -2891,7 +2891,7 @@ func findRouteByIPv4Destination(ctx context.Context, conn *ec2.Client, routeTabl
 	}
 
 	for _, route := range routeTable.Routes {
-		if types.CIDRBlocksEqual(aws.ToString(route.DestinationCidrBlock), destinationCidr) {
+		if inttypes.CIDRBlocksEqual(aws.ToString(route.DestinationCidrBlock), destinationCidr) {
 			return &route, nil
 		}
 	}
@@ -2911,7 +2911,7 @@ func findRouteByIPv6Destination(ctx context.Context, conn *ec2.Client, routeTabl
 	}
 
 	for _, route := range routeTable.Routes {
-		if types.CIDRBlocksEqual(aws.ToString(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
+		if inttypes.CIDRBlocksEqual(aws.ToString(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
 			return &route, nil
 		}
 	}
@@ -3783,6 +3783,68 @@ func findCarrierGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*
 
 	// Eventual consistency check.
 	if aws.ToString(output.CarrierGatewayId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}
+
+func findVPNConcentrator(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnConcentratorsInput) (*awstypes.VpnConcentrator, error) {
+	output, err := findVPNConcentrators(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVPNConcentrators(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnConcentratorsInput) ([]awstypes.VpnConcentrator, error) {
+	var output []awstypes.VpnConcentrator
+
+	pages := ec2.NewDescribeVpnConcentratorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConcentratorIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: &input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.VpnConcentrators...)
+	}
+
+	return output, nil
+}
+
+func findVPNConcentratorByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnConcentrator, error) {
+	input := ec2.DescribeVpnConcentratorsInput{
+		VpnConcentratorIds: []string{id},
+	}
+
+	output, err := findVPNConcentrator(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.ToString(output.State); state == vpnConcentratorStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     state,
+			LastRequest: &input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VpnConcentratorId) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: &input,
 		}
@@ -5288,7 +5350,7 @@ func findTransitGatewayStaticRoute(ctx context.Context, conn *ec2.Client, transi
 	}
 
 	for _, route := range output {
-		if v := aws.ToString(route.DestinationCidrBlock); types.CIDRBlocksEqual(v, destination) {
+		if v := aws.ToString(route.DestinationCidrBlock); inttypes.CIDRBlocksEqual(v, destination) {
 			if state := route.State; state == awstypes.TransitGatewayRouteStateDeleted {
 				return nil, &retry.NotFoundError{
 					Message:     string(state),
@@ -5296,7 +5358,7 @@ func findTransitGatewayStaticRoute(ctx context.Context, conn *ec2.Client, transi
 				}
 			}
 
-			route.DestinationCidrBlock = aws.String(types.CanonicalCIDRBlock(v))
+			route.DestinationCidrBlock = aws.String(inttypes.CanonicalCIDRBlock(v))
 
 			return &route, nil
 		}
