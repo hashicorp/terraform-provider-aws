@@ -31,7 +31,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceExpressGatewayService,
+			Factory:  newExpressGatewayServiceResource,
 			TypeName: "aws_ecs_express_gateway_service",
 			Name:     "Express Gateway Service",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

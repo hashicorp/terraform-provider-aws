@@ -42,8 +42,8 @@ import (
 
 // @FrameworkResource("aws_ecs_express_gateway_service", name="Express Gateway Service")
 // @Tags(identifierAttribute="service_arn")
-func newResourceExpressGatewayService(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceExpressGatewayService{}
+func newExpressGatewayServiceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &expressGatewayServiceResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -52,17 +52,13 @@ func newResourceExpressGatewayService(_ context.Context) (resource.ResourceWithC
 	return r, nil
 }
 
-const (
-	ResNameExpressGatewayService = "Express Gateway Service"
-)
-
-type resourceExpressGatewayService struct {
-	framework.ResourceWithModel[resourceExpressGatewayServiceModel]
+type expressGatewayServiceResource struct {
+	framework.ResourceWithModel[expressGatewayServiceResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"active_configurations": schema.ListAttribute{
@@ -339,10 +335,10 @@ func (r *resourceExpressGatewayService) Schema(ctx context.Context, req resource
 	}
 }
 
-func (r *resourceExpressGatewayService) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ECSClient(ctx)
 
-	var plan resourceExpressGatewayServiceModel
+	var plan expressGatewayServiceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -429,10 +425,10 @@ func (r *resourceExpressGatewayService) Create(ctx context.Context, req resource
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceExpressGatewayService) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().ECSClient(ctx)
 
-	var state resourceExpressGatewayServiceModel
+	var state expressGatewayServiceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -516,10 +512,10 @@ func (r *resourceExpressGatewayService) Read(ctx context.Context, req resource.R
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().ECSClient(ctx)
 
-	var plan, state resourceExpressGatewayServiceModel
+	var plan, state expressGatewayServiceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -623,10 +619,10 @@ func (r *resourceExpressGatewayService) Update(ctx context.Context, req resource
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *resourceExpressGatewayService) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *expressGatewayServiceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ECSClient(ctx)
 
-	var state resourceExpressGatewayServiceModel
+	var state expressGatewayServiceResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -878,7 +874,7 @@ func statusExpressGatewayServiceWaitForStable(ctx context.Context, conn *ecs.Cli
 	}
 }
 
-type resourceExpressGatewayServiceModel struct {
+type expressGatewayServiceResourceModel struct {
 	framework.WithRegionModel
 	ActiveConfigurations fwtypes.ListNestedObjectValueOf[activeConfigurationModel] `tfsdk:"active_configurations"`
 	Cluster              types.String                                              `tfsdk:"cluster"`

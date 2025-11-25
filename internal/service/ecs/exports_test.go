@@ -9,7 +9,7 @@ var (
 	ResourceCapacityProvider         = resourceCapacityProvider
 	ResourceCluster                  = resourceCluster
 	ResourceClusterCapacityProviders = resourceClusterCapacityProviders
-	ResourceExpressGatewayService    = newResourceExpressGatewayService
+	ResourceExpressGatewayService    = newExpressGatewayServiceResource
 	ResourceService                  = resourceService
 	ResourceTag                      = resourceTag
 	ResourceTaskDefinition           = resourceTaskDefinition
