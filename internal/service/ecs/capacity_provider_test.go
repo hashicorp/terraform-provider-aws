@@ -293,6 +293,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_basic(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "managed_instances_provider.0.infrastructure_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.capacity_option_type", "ON_DEMAND"),
 					resource.TestCheckResourceAttrPair(resourceName, "managed_instances_provider.0.instance_launch_template.0.ec2_instance_profile_arn", "aws_iam_instance_profile.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.network_configuration.0.subnets.#", "2"),
@@ -329,6 +330,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withInstanceRequi
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.capacity_option_type", "SPOT"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_requirements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_requirements.0.vcpu_count.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_requirements.0.vcpu_count.0.min", "2"),
@@ -451,6 +453,39 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withInfrastructur
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.0.scale_in_after", "-1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSCapacityProvider_managedInstancesProvider_capacityOptionTypeReplacement(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider1, provider2 awstypes.CapacityProvider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_managedInstancesProvider_capacityOptionType(rName, "ON_DEMAND"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider1),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.capacity_option_type", "ON_DEMAND"),
+				),
+			},
+			{
+				Config: testAccCapacityProviderConfig_managedInstancesProvider_capacityOptionType(rName, "SPOT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider2),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.capacity_option_type", "SPOT"),
+					testAccCheckCapacityProviderRecreated(&provider1, &provider2),
 				),
 			},
 		},
@@ -848,6 +883,7 @@ resource "aws_ecs_capacity_provider" "test" {
     propagate_tags          = "NONE"
 
     instance_launch_template {
+	  capacity_option_type     = "SPOT"
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
@@ -981,4 +1017,52 @@ resource "aws_ecs_capacity_provider" "test" {
   }
 }
 `, rName, scaleInAfter))
+}
+
+func testAccCheckCapacityProviderRecreated(before, after *awstypes.CapacityProvider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before.CapacityProviderArn != nil && after.CapacityProviderArn != nil {
+			if *before.CapacityProviderArn == *after.CapacityProviderArn {
+				return fmt.Errorf("ECS Capacity Provider was not recreated")
+			}
+		}
+		return nil
+	}
+}
+
+func testAccCapacityProviderConfig_managedInstancesProvider_capacityOptionType(rName, capacityOptionType string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  name    = %[2]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+
+    instance_launch_template {
+      capacity_option_type     = %[2]q
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+
+      instance_requirements {
+        vcpu_count {
+          min = 1
+        }
+
+        memory_mib {
+          min = 1024
+        }
+      }
+    }
+  }
+}
+`, rName, capacityOptionType))
 }
