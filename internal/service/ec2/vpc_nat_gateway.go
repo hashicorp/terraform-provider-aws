@@ -155,6 +155,11 @@ func resourceNATGateway() *schema.Resource {
 					},
 				},
 			},
+			// internal attribute to trigger recreation when mode changes between auto and manual
+			"regional_nat_gateway_auto_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"route_table_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -380,6 +385,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta an
 		if err := d.Set("regional_nat_gateway_address", flattenRegionalNATGatewayAddress(natGateway.NatGatewayAddresses)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting regional_nat_gateway_address: %s", err)
 		}
+		d.Set("regional_nat_gateway_auto_mode", natGateway.AutoProvisionZones)
 		d.Set("route_table_id", natGateway.RouteTableId)
 	}
 
@@ -644,28 +650,18 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 	switch availabilityMode := awstypes.AvailabilityMode(diff.Get("availability_mode").(string)); availabilityMode {
 	case awstypes.AvailabilityModeRegional:
 		if diff.Id() != "" && diff.HasChange("availability_zone_address") {
-			var onum, nnum int
-			if v := diff.GetRawState().GetAttr("availability_zone_address"); !v.IsNull() && v.IsKnown() {
-				onum = len(v.AsValueSlice())
-			} else {
-				onum = 0
-			}
-			if v := diff.GetRawConfig().GetAttr("availability_zone_address"); !v.IsNull() && v.IsKnown() {
-				nnum = len(v.AsValueSlice())
-			} else {
-				nnum = 0
-			}
-
-			if (onum > 0 && nnum == 0) || (nnum > 0 && onum == 0) {
-				// ForceNew for a TypeSet (availability_zone_address) does not work.
-				// Raise an error instead when switching between auto mode and manual mode.
-				return fmt.Errorf("Switching between auto mode and manual mode for regional NAT gateways is not supported")
-			}
-
-			// regional_nat_gateway_address should recompute when AZ addresses actually change.
 			o, n := diff.GetChange("availability_zone_address")
 			os, ns := o.(*schema.Set), n.(*schema.Set)
-			if !os.Equal(ns) {
+			if (os.Len() > 0 && ns.Len() == 0) || (ns.Len() > 0 && os.Len() == 0) {
+				if err := diff.SetNewComputed("regional_nat_gateway_auto_mode"); err != nil {
+					return fmt.Errorf("setting regional_nat_gateway_auto_mode to Computed: %w", err)
+				}
+				if err := diff.ForceNew("regional_nat_gateway_auto_mode"); err != nil {
+					return fmt.Errorf("setting regional_nat_gateway_auto_mode to ForceNew: %w", err)
+				}
+			}
+			// regional_nat_gateway_address should recompute when AZ addresses actually change.
+			if !EqualityFuncNATGatewayAvailabilityZoneAddressSet(os, ns) {
 				if err := diff.SetNewComputed("regional_nat_gateway_address"); err != nil {
 					return fmt.Errorf("setting regional_nat_gateway_address to Computed: %w", err)
 				}
