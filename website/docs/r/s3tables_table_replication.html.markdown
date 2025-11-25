@@ -20,8 +20,6 @@ resource "aws_s3tables_table_replication" "example" {
   role      = aws_iam_role.example.arn
 
   rule {
-    status = "ENABLED"
-
     destination {
       destination_bucket_arn = aws_s3_bucket.example.arn
     }
@@ -43,7 +41,6 @@ This resource supports the following arguments:
 The `rule` block supports the following:
 
 * `destination` - (Required) Replication destination. See [Destination](#destination) below for more details.
-* `status` - (Required) Whether rule is enabled or disabled. Valid values: `Enabled`, `Disabled`.
 
 ### Destination
 

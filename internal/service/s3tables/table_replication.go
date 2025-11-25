@@ -66,12 +66,6 @@ func (r *tableReplicationResource) Schema(ctx context.Context, request resource.
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrStatus: schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.SomethingOrOther](),
-							Required:   true,
-						},
-					},
 					Blocks: map[string]schema.Block{
 						names.AttrDestination: schema.SetNestedBlock{
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[replicationDestinationModel](ctx),
@@ -226,14 +220,16 @@ func (r *tableReplicationResource) Delete(ctx context.Context, request resource.
 	}
 }
 
-func findTableReplicationByARN(ctx context.Context, conn *s3tables.Client, tableARN string) (*s3tables.GetTablePolicyOutput, error) {
-	input := s3tables.GetTablePolicyInput{}
+func findTableReplicationByARN(ctx context.Context, conn *s3tables.Client, tableARN string) (*s3tables.GetTableReplicationOutput, error) {
+	input := s3tables.GetTableReplicationInput{
+		TableArn: aws.String(tableARN),
+	}
 
 	return findTableReplication(ctx, conn, &input)
 }
 
-func findTableReplication(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTablePolicyInput) (*s3tables.GetTablePolicyOutput, error) {
-	output, err := conn.GetTablePolicy(ctx, input)
+func findTableReplication(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableReplicationInput) (*s3tables.GetTableReplicationOutput, error) {
+	output, err := conn.GetTableReplication(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -245,7 +241,7 @@ func findTableReplication(ctx context.Context, conn *s3tables.Client, input *s3t
 		return nil, err
 	}
 
-	if output == nil || aws.ToString(output.ResourcePolicy) == "" {
+	if output == nil || output.Configuration == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -262,5 +258,4 @@ type tableReplicationResourceModel struct {
 
 type tableReplicationRuleModel struct {
 	Destinations fwtypes.SetNestedObjectValueOf[replicationDestinationModel] `tfsdk:"destination"`
-	Status       fwtypes.StringEnum[awstypes.SomethingOrOther]               `tfsdk:"status"`
 }

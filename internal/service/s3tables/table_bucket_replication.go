@@ -67,12 +67,6 @@ func (r *tableBucketReplicationResource) Schema(ctx context.Context, request res
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrStatus: schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.SomethingOrOther](),
-							Required:   true,
-						},
-					},
 					Blocks: map[string]schema.Block{
 						names.AttrDestination: schema.SetNestedBlock{
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[replicationDestinationModel](ctx),
@@ -86,21 +80,6 @@ func (r *tableBucketReplicationResource) Schema(ctx context.Context, request res
 									"destination_bucket_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
-									},
-								},
-							},
-						},
-						"source_selection": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[sourceSelectionModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtLeast(1),
-								listvalidator.SizeAtMost(1),
-								listvalidator.IsRequired(),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"table_pattern": schema.StringAttribute{
-										Required: true,
 									},
 								},
 							},
@@ -123,7 +102,7 @@ func (r *tableBucketReplicationResource) Create(ctx context.Context, request res
 
 	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	input := s3tables.PutTableBucketReplicationInput{
-		TableBucketArn: aws.String(tableBucketARN),
+		TableBucketARN: aws.String(tableBucketARN),
 	}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input.Configuration)...)
 	if response.Diagnostics.HasError() {
@@ -193,7 +172,7 @@ func (r *tableBucketReplicationResource) Update(ctx context.Context, request res
 
 	tableBucketARN := fwflex.StringValueFromFramework(ctx, new.TableBucketARN)
 	input := s3tables.PutTableBucketReplicationInput{
-		TableBucketArn: aws.String(tableBucketARN),
+		TableBucketARN: aws.String(tableBucketARN),
 		VersionToken:   fwflex.StringFromFramework(ctx, old.VersionToken),
 	}
 	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input.Configuration)...)
@@ -226,7 +205,7 @@ func (r *tableBucketReplicationResource) Delete(ctx context.Context, request res
 
 	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	input := s3tables.DeleteTableBucketReplicationInput{
-		TableBucketArn: aws.String(tableBucketARN),
+		TableBucketARN: aws.String(tableBucketARN),
 		VersionToken:   fwflex.StringFromFramework(ctx, data.VersionToken),
 	}
 	_, err := conn.DeleteTableBucketReplication(ctx, &input)
@@ -242,16 +221,16 @@ func (r *tableBucketReplicationResource) Delete(ctx context.Context, request res
 	}
 }
 
-func findTableBucketReplicationByARN(ctx context.Context, conn *s3tables.Client, tableBucketARN string) (*s3tables.GetTableBucketPolicyOutput, error) {
-	input := s3tables.GetTableBucketPolicyInput{
+func findTableBucketReplicationByARN(ctx context.Context, conn *s3tables.Client, tableBucketARN string) (*s3tables.GetTableBucketReplicationOutput, error) {
+	input := s3tables.GetTableBucketReplicationInput{
 		TableBucketARN: aws.String(tableBucketARN),
 	}
 
 	return findTableBucketReplication(ctx, conn, &input)
 }
 
-func findTableBucketReplication(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableBucketPolicyInput) (*s3tables.GetTableBucketPolicyOutput, error) {
-	output, err := conn.GetTableBucketPolicy(ctx, input)
+func findTableBucketReplication(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableBucketReplicationInput) (*s3tables.GetTableBucketReplicationOutput, error) {
+	output, err := conn.GetTableBucketReplication(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -263,7 +242,7 @@ func findTableBucketReplication(ctx context.Context, conn *s3tables.Client, inpu
 		return nil, err
 	}
 
-	if output == nil || aws.ToString(output.ResourcePolicy) == "" {
+	if output == nil || output.Configuration == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -279,9 +258,7 @@ type tableBucketReplicationResourceModel struct {
 }
 
 type bucketReplicationRuleModel struct {
-	Destinations    fwtypes.SetNestedObjectValueOf[replicationDestinationModel] `tfsdk:"destination"`
-	SourceSelection fwtypes.ListNestedObjectValueOf[sourceSelectionModel]       `tfsdk:"source_selection"`
-	Status          fwtypes.StringEnum[awstypes.SomethingOrOther]               `tfsdk:"status"`
+	Destinations fwtypes.SetNestedObjectValueOf[replicationDestinationModel] `tfsdk:"destination"`
 }
 
 type replicationDestinationModel struct {
