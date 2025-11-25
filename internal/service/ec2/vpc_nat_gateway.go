@@ -259,6 +259,7 @@ func EqualityFuncNATGatewayAvailabilityZoneAddressSet(os, ns *schema.Set) bool {
 			if !((oaz == naz && nazid == "") || (oazid == nazid && naz == "")) {
 				return false
 			}
+			break
 		}
 		if !found {
 			return false
