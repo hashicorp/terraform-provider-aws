@@ -88,6 +88,10 @@ func resourceInvocation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"terraform_key": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -212,6 +216,9 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 		InvocationType: awstypes.InvocationTypeRequestResponse,
 		Payload:        payload,
 		Qualifier:      aws.String(qualifier),
+	}
+	if v, ok := d.GetOk("tenant_id"); ok {
+		input.TenantId = aws.String(v.(string))
 	}
 
 	output, err := conn.Invoke(ctx, input)

@@ -151,7 +151,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/location"
-	"github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconnect"
@@ -195,6 +194,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rdsdata"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
@@ -853,10 +853,6 @@ func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs.Client {
 	return errs.Must(client[*cloudwatchlogs.Client](ctx, c, names.Logs, make(map[string]any)))
 }
 
-func (c *AWSClient) LookoutMetricsClient(ctx context.Context) *lookoutmetrics.Client {
-	return errs.Must(client[*lookoutmetrics.Client](ctx, c, names.LookoutMetrics, make(map[string]any)))
-}
-
 func (c *AWSClient) M2Client(ctx context.Context) *m2.Client {
 	return errs.Must(client[*m2.Client](ctx, c, names.M2, make(map[string]any)))
 }
@@ -1027,6 +1023,10 @@ func (c *AWSClient) RBinClient(ctx context.Context) *rbin.Client {
 
 func (c *AWSClient) RDSClient(ctx context.Context) *rds.Client {
 	return errs.Must(client[*rds.Client](ctx, c, names.RDS, make(map[string]any)))
+}
+
+func (c *AWSClient) RDSDataClient(ctx context.Context) *rdsdata.Client {
+	return errs.Must(client[*rdsdata.Client](ctx, c, names.RDSData, make(map[string]any)))
 }
 
 func (c *AWSClient) RUMClient(ctx context.Context) *rum.Client {

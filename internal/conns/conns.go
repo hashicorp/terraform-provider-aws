@@ -57,6 +57,7 @@ var (
 type InContext struct {
 	overrideRegion     string // Any currently in effect per-resource Region override.
 	resourceName       string // Friendly resource name, e.g. "Subnet"
+	typeName           string // Resource type name, e.g. "aws_iam_role"
 	servicePackageName string // Canonical name defined as a constant in names package
 	vcrEnabled         bool   // Whether VCR testing is enabled
 }
@@ -71,6 +72,11 @@ func (c *InContext) ResourceName() string {
 	return c.resourceName
 }
 
+// TypeName returns the resource type name, e.g. "aws_iam_role".
+func (c *InContext) TypeName() string {
+	return c.typeName
+}
+
 // ServicePackageName returns the canonical service name defined as a constant in the `names` package.
 func (c *InContext) ServicePackageName() string {
 	return c.servicePackageName
@@ -81,10 +87,11 @@ func (c *InContext) VCREnabled() bool {
 	return c.vcrEnabled
 }
 
-func NewResourceContext(ctx context.Context, servicePackageName, resourceName, overrideRegion string) context.Context {
+func NewResourceContext(ctx context.Context, servicePackageName, resourceName, typeName, overrideRegion string) context.Context {
 	v := InContext{
 		overrideRegion:     overrideRegion,
 		resourceName:       resourceName,
+		typeName:           typeName,
 		servicePackageName: servicePackageName,
 		vcrEnabled:         vcr.IsEnabled(),
 	}
