@@ -202,6 +202,10 @@ func resourceNATGateway() *schema.Resource {
 	}
 }
 
+// Compares old and new sets of availability_zone_address configurations for equality.
+// Two sets are considered equal if they contain the same availability_zone or availability_zone_id
+// and the same allocation IDs, even when either availability_zone or availability_zone_id
+// is absent in the new set.
 func EqualityFuncNATGatewayAvailabilityZoneAddressSet(os, ns *schema.Set) bool {
 	if os.Len() != ns.Len() {
 		return false
