@@ -121,9 +121,6 @@ This resource supports the following arguments:
 * `allocation_id` - (Optional, zonal NAT gateways only) The Allocation ID of the Elastic IP address for the NAT Gateway. Required when `connectivity_type` is set to `public` and `availability_mode` is set to `zonal`. When `availability_mode` is set to `regional`, this must not be set; instead, use the `availability_zone_address` block to specify EIPs for each AZ.
 * `availability_mode` - (Optional) Specifies whether to create a zonal (single-AZ) or regional (multi-AZ) NAT gateway. Valid values are `zonal` and `regional`. Defaults to `zonal`.
 * `availability_zone_address` - (Optional, regional NAT gateways only) Repeatable configuration block for the Elastic IP addresses (EIPs) and availability zones for the regional NAT gateway. When not specified, the regional NAT gateway will automatically expand to new AZs and associate EIPs upon detection of an elastic network interface (auto mode). When specified, auto-expansion is disabled (manual mode). See [`availability_zone_address`](#availability_zone_address) below for details.
-
-* **NOTE:** Once `availability_zone_address` blocks are specified (i.e., when using manual mode), switching to auto mode is not possible without recreating the NAT Gateway. Removing all of these blocks does not trigger resource recreation and results in an error.
-* **NOTE:** Moving an `allocation_id` from one availability zone to another within `availability_zone_address` is not supported, because newly added EIPs are associated first, and only then are removed EIPs disassociated. To move it, remove the `allocation_id` from the source availability zone and apply the configuration. Then add it to the destination availability zone and apply again.
 * `connectivity_type` - (Optional) Connectivity type for the NAT Gateway. Valid values are `private` and `public`. When `availability_mode` is set to `regional`, this must be set to `public`. Defaults to `public`.
 * `private_ip` - (Optional, zonal NAT gateways only) The private IPv4 address to assign to the NAT Gateway. If you don't provide an address, a private IPv4 address will be automatically assigned.
 * `subnet_id` - (Optional, zonal NAT gateways only) The Subnet ID of the subnet in which to place the NAT Gateway. Required when `availability_mode` is set to `zonal`. Must not be set when `availability_mode` is set to `regional`.
@@ -134,6 +131,10 @@ This resource supports the following arguments:
 * `vpc_id` - (Optional, regional NAT gateways only) VPC ID where this NAT Gateway will be created. Required when `availability_mode` is set to `regional`.
 
 ### `availability_zone_address`
+
+~> **NOTE:** Once `availability_zone_address` blocks are specified (i.e., when using manual mode), switching to auto mode is not possible without recreating the NAT Gateway. Removing all of these blocks does not trigger resource recreation and results in an error.
+
+~> **NOTE:** Moving an `allocation_id` from one availability zone to another within `availability_zone_address` is not supported, because newly added EIPs are associated first, and only then are removed EIPs disassociated. To move it, remove the `allocation_id` from the source availability zone and apply the configuration. Then add it to the destination availability zone and apply again.
 
 * `allocation_ids` - (Required) List of allocation IDs of the Elastic IP addresses (EIPs) to be used for handling outbound NAT traffic in this specific Availability Zone.
 * `availability_zone` - (Optional) Availability Zone (e.g. `us-west-2a`) where this specific NAT gateway configuration will be active. If both `availability_zone` and `availability_zone_id` are specified, `availability_zone` will be used.
