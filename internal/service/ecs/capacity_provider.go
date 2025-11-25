@@ -180,6 +180,13 @@ func resourceCapacityProvider() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"capacity_option_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										Default:          awstypes.CapacityOptionTypeOnDemand,
+										ValidateDiagFunc: enum.Validate[awstypes.CapacityOptionType](),
+									},
 									"ec2_instance_profile_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -1006,6 +1013,10 @@ func expandInstanceLaunchTemplateCreate(tfList []any) *awstypes.InstanceLaunchTe
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.InstanceLaunchTemplate{}
 
+	if v, ok := tfMap["capacity_option_type"].(string); ok && v != "" {
+		apiObject.CapacityOptionType = awstypes.CapacityOptionType(v)
+	}
+
 	if v, ok := tfMap["ec2_instance_profile_arn"].(string); ok && v != "" {
 		apiObject.Ec2InstanceProfileArn = aws.String(v)
 	}
@@ -1413,6 +1424,7 @@ func flattenInstanceLaunchTemplate(template *awstypes.InstanceLaunchTemplate) []
 	tfMap := map[string]any{
 		"ec2_instance_profile_arn": aws.ToString(template.Ec2InstanceProfileArn),
 		"monitoring":               template.Monitoring,
+		"capacity_option_type":     template.CapacityOptionType,
 	}
 
 	if template.InstanceRequirements != nil {
