@@ -102,6 +102,7 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 				},
 			},
 			names.AttrNetworkConfiguration: framework.ResourceOptionalComputedListOfObjectsAttribute[expressGatewayServiceNetworkConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"scaling_target":               framework.ResourceOptionalComputedListOfObjectsAttribute[expressGatewayScalingTargetModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			"service_arn":                  framework.ARNAttributeComputedOnly(),
 			names.AttrServiceName: schema.StringAttribute{
 				Optional: true,
@@ -194,29 +195,6 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 									},
 								},
 							},
-						},
-					},
-				},
-			},
-			"scaling_target": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[expressGatewayScalingTargetModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"auto_scaling_metric": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.ExpressGatewayServiceScalingMetric](),
-							Optional:   true,
-						},
-						"auto_scaling_target_value": schema.Int64Attribute{
-							Optional: true,
-						},
-						"max_task_count": schema.Int64Attribute{
-							Optional: true,
-						},
-						"min_task_count": schema.Int64Attribute{
-							Optional: true,
 						},
 					},
 				},

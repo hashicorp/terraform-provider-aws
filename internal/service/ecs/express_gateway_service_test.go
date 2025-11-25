@@ -58,7 +58,10 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("current_deployment"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("health_check_path"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ingress_paths"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNetworkConfiguration), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_target"), knownvalue.ListSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_arn"), tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`service/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_revision_arn"), tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`service-revision/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -72,10 +75,7 @@ func TestAccECSExpressGatewayService_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_steady_state",
-					"current_deployment",    // not returned immediately in Create response, so will show as diff in Import
-					"active_configurations", // not entirely returned immediately in Create response, so may show as diff in Import
-					"primary_container",     // top-level create-only attribute that will show as null in Import
-					"execution_role",        // top-level create-only attribute that will show as null in Import
+					"current_deployment", // not returned immediately in Create response, so will show as diff in Import
 				},
 			},
 		},
@@ -105,6 +105,14 @@ func TestAccECSExpressGatewayService_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfecs.ResourceExpressGatewayService, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -133,9 +141,17 @@ func TestAccECSExpressGatewayService_tags(t *testing.T) {
 				Config: testAccExpressGatewayServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -145,11 +161,40 @@ func TestAccECSExpressGatewayService_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIgnore: []string{
 					"wait_for_steady_state",
-					"current_deployment",    // not returned immediately in Create response, so will show as diff in Import
-					"active_configurations", // not entirely returned immediately in Create response, so may show as diff in Import
-					"primary_container",     // top-level create-only attribute that will show as null in Import
-					"execution_role",
-					names.AttrNetworkConfiguration,
+					"current_deployment",
+				},
+			},
+			{
+				Config: testAccExpressGatewayServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccExpressGatewayServiceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
 				},
 			},
 		},
@@ -430,13 +475,6 @@ resource "aws_ecs_express_gateway_service" "test" {
   primary_container {
     image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
   }
-
-	scaling_target {
-		min_task_count             = 0
-		max_task_count             = 1
-		auto_scaling_metric        = "AVERAGE_CPU"
-		auto_scaling_target_value  = 60
-	}
 }
 `, rName, waitForSteadyStateConfig))
 }
@@ -477,16 +515,29 @@ resource "aws_ecs_express_gateway_service" "test" {
     image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
   }
 
-  network_configuration {
-    subnets         = data.aws_subnets.default.ids
-    security_groups = [data.aws_security_group.default.id]
-  }
-
   tags = {
     %[2]q = %[3]q
   }
 }
 `, rName, tagKey1, tagValue1))
+}
+
+func testAccExpressGatewayServiceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), fmt.Sprintf(`
+resource "aws_ecs_express_gateway_service" "test" {
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccExpressGatewayServiceConfig_networkConfiguration(rName string) string {
