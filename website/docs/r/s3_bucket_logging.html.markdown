@@ -18,6 +18,57 @@ to decide which method meets your requirements.
 
 ## Example Usage
 
+### Grant permission by using bucket policy
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket" "logging" {
+  bucket = "access-logging-bucket"
+}
+
+data "aws_iam_policy_document" "logging_bucket_policy" {
+  statement {
+    principals {
+      identifiers = ["logging.s3.amazonaws.com"]
+      type        = "Service"
+    }
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.logging.arn}/*"]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "logging" {
+  bucket = aws_s3_bucket.logging.bucket
+  policy = data.aws_iam_policy_document.logging_bucket_policy.json
+}
+
+resource "aws_s3_bucket" "example" {
+  bucket = "example-bucket"
+}
+
+resource "aws_s3_bucket_logging" "example" {
+  bucket = aws_s3_bucket.example.bucket
+
+  target_bucket = aws_s3_bucket.logging.bucket
+  target_prefix = "log/"
+  target_object_key_format {
+    partitioned_prefix {
+      partition_date_source = "EventTime"
+    }
+  }
+}
+```
+
+### Grant permission by using bucket ACL
+
+The [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/enable-server-access-logging.html) does not recommend using the ACL.
+
 ```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "my-tf-example-bucket"
@@ -49,6 +100,7 @@ resource "aws_s3_bucket_logging" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 * `target_bucket` - (Required) Name of the bucket where you want Amazon S3 to store server access logs.
@@ -76,8 +128,8 @@ The `grantee` configuration block supports the following arguments:
 
 The `target_object_key_format` configuration block supports the following arguments:
 
-* `partitioned_prefix` - (Optional) Partitioned S3 key for log objects. [See below](#partitioned_prefix).
-* `simple_prefix` - (Optional) Use the simple format for S3 keys for log objects. To use, set `simple_prefix {}`.
+* `partitioned_prefix` - (Optional) Partitioned S3 key for log objects, in the form `[target_prefix][SourceAccountId]/[SourceRegion]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString]`. Conflicts with `simple_prefix`. [See below](#partitioned_prefix).
+* `simple_prefix` - (Optional) Use the simple format for S3 keys for log objects, in the form `[target_prefix][YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString]`. To use, set `simple_prefix {}`. Conflicts with `partitioned_prefix`.
 
 ### partitioned_prefix
 
@@ -92,6 +144,33 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_logging.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_logging" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `expected_bucket_owner` (String) Account ID of the expected bucket owner.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket logging using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 

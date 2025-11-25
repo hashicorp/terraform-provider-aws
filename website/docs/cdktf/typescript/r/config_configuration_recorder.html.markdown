@@ -135,6 +135,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) The name of the recorder. Defaults to `default`. Changing it recreates the resource.
 * `roleArn` - (Required) Amazon Resource Name (ARN) of the IAM role. Used to make read or write requests to the delivery channel and to describe the AWS resources associated with the account. See [AWS Docs](http://docs.aws.amazon.com/config/latest/developerguide/iamrole-permissions.html) for more details.
 * `recordingGroup` - (Optional) Recording group - see below.
@@ -201,4 +202,4 @@ Using `terraform import`, import Configuration Recorder using the name. For exam
 % terraform import aws_config_configuration_recorder.foo example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-09ce3c3636c91a57da17e3f28fb9289f2bb752eda6f2b3cf9ecdfc3655979cba -->
+<!-- cache-key: cdktf-0.20.8 input-4d0f1f2ff7c38393935a84d15f28a04080641b2e41b0dc649230947c95bf3888 -->

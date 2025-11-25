@@ -51,8 +51,9 @@ resource "aws_s3control_directory_bucket_access_point_scope" "example" {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The name of the access point that you want to apply the scope to.
 * `account_id` - (Required) The AWS account ID that owns the specified access point.
+* `name` - (Required) The name of the access point that you want to apply the scope to.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `scope` - (Optional). Scope is used to restrict access to specific prefixes, API operations, or a combination of both. To remove the `scope`, set it to `{permissions=[] prefixes=[]}`. The default scope is `{permissions=[] prefixes=[]}`.
 
 ### Scope Configuration block

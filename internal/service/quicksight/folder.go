@@ -55,13 +55,7 @@ func resourceFolder() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrAWSAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
 			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,

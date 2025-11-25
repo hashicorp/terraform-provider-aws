@@ -60,6 +60,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/YakDriver/smarterr"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 {{- if .IncludeTags }}
@@ -106,7 +108,7 @@ const (
 )
 
 type resource{{ .Resource }} struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resource{{ .Resource }}Model]
 	framework.WithTimeouts
 }
 
@@ -262,7 +264,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
 	var plan resource{{ .Resource }}Model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -274,7 +276,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments -}}
 	// TIP: Using a field name prefix allows mapping fields such as `ID` to `{{ .Resource }}Id`
 	{{- end }}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("{{ .Resource }}"))...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("{{ .Resource }}")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -291,24 +293,18 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
 		// in error messages at this point.
 		{{- end }}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionCreating, ResName{{ .Resource }}, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 	if out == nil || out.{{ .Resource }} == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionCreating, ResName{{ .Resource }}, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
 
 	{{ if .IncludeComments -}}
 	// TIP: -- 5. Using the output from the create function, set attributes
 	{{- end }}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -319,16 +315,13 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = wait{{ .Resource }}Created(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionWaitingForCreation, ResName{{ .Resource }}, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 7. Save the request plan to response state
 	{{- end }}
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -353,7 +346,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	// TIP: -- 2. Fetch the state
 	{{- end }}
 	var state resource{{ .Resource }}Model
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -371,23 +364,20 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionReading, ResName{{ .Resource }}, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 5. Set the arguments and attributes
 	{{- end }}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 6. Set the state
 	{{- end }}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -422,8 +412,8 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
 	var plan, state resource{{ .Resource }}Model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -431,14 +421,14 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	// TIP: -- 3. Get the difference between the plan and state, if any
 	{{- end }}
 	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var input {{ .SDKPackage }}.Update{{ .Resource }}Input
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -447,23 +437,17 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		{{- end }}
 		out, err := conn.Update{{ .Resource }}(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionUpdating, ResName{{ .Resource }}, plan.ID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
 		if out == nil || out.{{ .Resource }} == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionUpdating, ResName{{ .Resource }}, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
 			return
 		}
 		{{ if .IncludeComments }}
 		// TIP: Using the output from the update function, re-set any computed attributes
 		{{- end }}
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -475,17 +459,14 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	_, err := wait{{ .Resource }}Updated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionWaitingForUpdate, ResName{{ .Resource }}, plan.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 		return
 	}
 
 	{{ if .IncludeComments -}}
 	// TIP: -- 6. Save the request plan to response state
 	{{- end }}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -515,7 +496,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	// TIP: -- 2. Fetch the state
 	{{- end }}
 	var state resource{{ .Resource }}Model
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -538,10 +519,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 			return
 		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
 	{{ if .IncludeComments }}
@@ -550,10 +528,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = wait{{ .Resource }}Deleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionWaitingForDeletion, ResName{{ .Resource }}, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
 }
@@ -609,10 +584,10 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.C
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 {{ if .IncludeComments }}
 // TIP: It is easier to determine whether a resource is updated for some
@@ -632,10 +607,10 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.C
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 {{ if .IncludeComments }}
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
@@ -651,10 +626,10 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.C
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 {{ if .IncludeComments }}
 // TIP: ==== STATUS ====
@@ -673,7 +648,7 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return out, aws.ToString(out.Status), nil
@@ -694,17 +669,17 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 	out, err := conn.Get{{ .Resource }}(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
-			}
+			})
 		}
 
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil || out.{{ .Resource }} == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
 	}
 
 	return out.{{ .Resource }}, nil
@@ -724,6 +699,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 {{- end }}
 type resource{{ .Resource }}Model struct {
+	framework.WithRegionModel
 	ARN             types.String                                          `tfsdk:"arn"`
 	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
 	Description     types.String                                          `tfsdk:"description"`
@@ -770,7 +746,7 @@ func sweep{{ .Resource }}s(ctx context.Context, client *conns.AWSClient) ([]swee
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 
 		for _, v := range page.{{ .Resource }}s {

@@ -87,6 +87,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `contentHandling` - (Optional) How to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the response payload will be passed through from the integration response to the method response without modification.
 * `responseParameters` - (Optional) Map of response parameters that can be read from the backend response. For example: `response_parameters = { "method.response.header.X-Some-Header" = "integration.response.header.X-Some-Other-Header" }`.
 * `responseTemplates` - (Optional) Map of templates used to transform the integration response body.
@@ -128,4 +129,4 @@ Using `terraform import`, import `aws_api_gateway_integration_response` using `R
 % terraform import aws_api_gateway_integration_response.example 12345abcde/67890fghij/GET/200
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-97c39e121698d07126a2f35c245570b6347a512d3549856ca8d5c2fc0f8be7e7 -->
+<!-- cache-key: cdktf-0.20.8 input-1ef0bc562cd4c51dfef81f8ef1846ba5bb3563b91c68673a871e4d7ac108ebf8 -->

@@ -77,6 +77,7 @@ func testAccKnowledgeBase_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.text_field", "chunks"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.metadata_field", "metadata"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.primary_key_field", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.custom_metadata_field", "custom_metadata"),
 				),
 			},
 			{
@@ -108,6 +109,7 @@ func testAccKnowledgeBase_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.text_field", "chunks"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.metadata_field", "metadata"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.primary_key_field", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.custom_metadata_field", "custom_metadata"),
 				),
 			},
 		},
@@ -502,7 +504,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
@@ -515,10 +517,11 @@ resource "aws_bedrockagent_knowledge_base" "test" {
       database_name          = aws_rds_cluster.test.database_name
       table_name             = "bedrock_integration.bedrock_kb"
       field_mapping {
-        vector_field      = "embedding"
-        text_field        = "chunks"
-        metadata_field    = "metadata"
-        primary_key_field = "id"
+        vector_field          = "embedding"
+        text_field            = "chunks"
+        metadata_field        = "metadata"
+        primary_key_field     = "id"
+        custom_metadata_field = "custom_metadata"
       }
     }
   }
@@ -538,7 +541,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
@@ -551,10 +554,11 @@ resource "aws_bedrockagent_knowledge_base" "test" {
       database_name          = aws_rds_cluster.test.database_name
       table_name             = "bedrock_integration.bedrock_kb"
       field_mapping {
-        vector_field      = "embedding"
-        text_field        = "chunks"
-        metadata_field    = "metadata"
-        primary_key_field = "id"
+        vector_field          = "embedding"
+        text_field            = "chunks"
+        metadata_field        = "metadata"
+        primary_key_field     = "id"
+        custom_metadata_field = "custom_metadata"
       }
     }
   }
@@ -572,7 +576,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
@@ -585,10 +589,11 @@ resource "aws_bedrockagent_knowledge_base" "test" {
       database_name          = aws_rds_cluster.test.database_name
       table_name             = "bedrock_integration.bedrock_kb"
       field_mapping {
-        vector_field      = "embedding"
-        text_field        = "chunks"
-        metadata_field    = "metadata"
-        primary_key_field = "id"
+        vector_field          = "embedding"
+        text_field            = "chunks"
+        metadata_field        = "metadata"
+        primary_key_field     = "id"
+        custom_metadata_field = "custom_metadata"
       }
     }
   }
@@ -610,7 +615,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
@@ -623,10 +628,11 @@ resource "aws_bedrockagent_knowledge_base" "test" {
       database_name          = aws_rds_cluster.test.database_name
       table_name             = "bedrock_integration.bedrock_kb"
       field_mapping {
-        vector_field      = "embedding"
-        text_field        = "chunks"
-        metadata_field    = "metadata"
-        primary_key_field = "id"
+        vector_field          = "embedding"
+        text_field            = "chunks"
+        metadata_field        = "metadata"
+        primary_key_field     = "id"
+        custom_metadata_field = "custom_metadata"
       }
     }
   }
@@ -680,7 +686,7 @@ data "aws_iam_policy_document" "test_trust" {
       test     = "ArnLike"
       variable = "aws:SourceArn"
       values = [
-        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:knowledge-base/*"
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:knowledge-base/*"
       ]
     }
   }
@@ -704,7 +710,7 @@ data "aws_iam_policy_document" "test" {
       "bedrock:InvokeModel",
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:foundation-model/%[3]s",
+      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:foundation-model/%[3]s",
     ]
   }
 
@@ -794,7 +800,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
@@ -831,7 +837,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
@@ -907,7 +913,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   knowledge_base_configuration {
     type = "VECTOR"
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
       embedding_model_configuration {
         bedrock_embedding_model_configuration {
           dimensions          = 1024

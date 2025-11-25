@@ -20,19 +20,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_opensearchserverless_access_policy", name="Access Policy")
-func newDataSourceAccessPolicy(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceAccessPolicy{}, nil
+func newAccessPolicyDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &accessPolicyDataSource{}, nil
 }
 
 const (
 	DSNameAccessPolicy = "Access Policy Data Source"
 )
 
-type dataSourceAccessPolicy struct {
-	framework.DataSourceWithConfigure
+type accessPolicyDataSource struct {
+	framework.DataSourceWithModel[accessPolicyDataSourceModel]
 }
 
-func (d *dataSourceAccessPolicy) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *accessPolicyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
@@ -65,10 +65,10 @@ func (d *dataSourceAccessPolicy) Schema(_ context.Context, _ datasource.SchemaRe
 		},
 	}
 }
-func (d *dataSourceAccessPolicy) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *accessPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
-	var data dataSourceAccessPolicyData
+	var data accessPolicyDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -93,7 +93,8 @@ func (d *dataSourceAccessPolicy) Read(ctx context.Context, req datasource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceAccessPolicyData struct {
+type accessPolicyDataSourceModel struct {
+	framework.WithRegionModel
 	Description   types.String `tfsdk:"description"`
 	ID            types.String `tfsdk:"id"`
 	Name          types.String `tfsdk:"name"`

@@ -24,6 +24,7 @@ data "aws_cloudwatch_event_buses" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name_prefix` - (Optional) Specifying this limits the results to only those event buses with names that start with the specified prefix.
 
 ## Attribute Reference

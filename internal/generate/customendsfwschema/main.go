@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -27,7 +26,7 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename = `../../../internal/provider/fwprovider/provider_gen.go`
+		filename = `../../../internal/provider/framework/provider_gen.go`
 	)
 	g := common.NewGenerator()
 

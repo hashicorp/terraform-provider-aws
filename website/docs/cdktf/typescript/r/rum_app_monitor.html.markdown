@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the log stream.
 * `appMonitorConfiguration` - (Optional) configuration data for the app monitor. See [app_monitor_configuration](#app_monitor_configuration) below.
 * `cwLogEnabled` - (Optional) Data collected by RUM is kept by RUM for 30 days and then deleted. This parameter specifies whether RUM sends a copy of this telemetry data to Amazon CloudWatch Logs in your account. This enables you to keep the telemetry data for more than 30 days, but it does incur Amazon CloudWatch Logs charges. Default value is `false`.
@@ -48,8 +49,8 @@ This resource supports the following arguments:
 ### app_monitor_configuration
 
 * `allowCookies` - (Optional) If you set this to `true`, RUM web client sets two cookies, a session cookie and a user cookie. The cookies allow the RUM web client to collect data relating to the number of users an application has and the behavior of the application across a sequence of events. Cookies are stored in the top-level domain of the current page.
-* `domain` - (Optional) The top-level internet domain name for which your application has administrative authority. Exactly one of `domain` or `domain_list` must be specified.
-* `domain_list` - (Optional) A list of internet domain names for which your application has administrative authority. Exactly one of `domain` or `domain_list` must be specified.
+* `domain` - (Optional) The top-level internet domain name for which your application has administrative authority. Exactly one of `domain` or `domainList` must be specified.
+* `domainList` - (Optional) A list of internet domain names for which your application has administrative authority. Exactly one of `domain` or `domainList` must be specified.
 * `enableXray` - (Optional) If you set this to `true`, RUM enables X-Ray tracing for the user sessions that RUM samples. RUM adds an X-Ray trace header to allowed HTTP requests. It also records an X-Ray segment for allowed HTTP requests.
 * `excludedPages` - (Optional) A list of URLs in your website or application to exclude from RUM data collection.
 * `favoritePages` - (Optional) A list of pages in the CloudWatch RUM console that are to be displayed with a "favorite" icon.
@@ -101,4 +102,4 @@ Using `terraform import`, import Cloudwatch RUM App Monitor using the `name`. Fo
 % terraform import aws_rum_app_monitor.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-be323fb51125940eba1e5a0c538f0e5c74b3fc700bfe2e3f70e2e386422a3d52 -->
+<!-- cache-key: cdktf-0.20.8 input-b79cc3763c3e90bb4872796d248f7220a9871eaa19f8fdfb9dd75fca3b2e1748 -->

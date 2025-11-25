@@ -23,6 +23,7 @@ data "aws_eks_node_group" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_name` - (Required) Name of the cluster.
 * `node_group_name` - (Required) Name of the node group.
 
@@ -41,8 +42,8 @@ This data source exports the following attributes in addition to the arguments a
     * `id` - The ID of the launch template.
     * `name` - The name of the launch template.
     * `version` - The version number of the launch template.
-* `node_role_arn` – ARN of the IAM Role that provides permissions for the EKS Node Group.
-* `release_version` – AMI version of the EKS Node Group.
+* `node_role_arn` - ARN of the IAM Role that provides permissions for the EKS Node Group.
+* `release_version` - AMI version of the EKS Node Group.
 * `remote_access` - Configuration block with remote access settings.
     * `ec2_ssh_key` - EC2 Key Pair name that provides access for SSH communication with the worker nodes in the EKS Node Group.
     * `source_security_group_ids` - Set of EC2 Security Group IDs to allow SSH access (port 22) from on the worker nodes.
@@ -55,10 +56,10 @@ This data source exports the following attributes in addition to the arguments a
     * `max_size` - Maximum number of worker nodes.
     * `min_size` - Minimum number of worker nodes.
 * `status` - Status of the EKS Node Group.
-* `subnet_ids` – Identifiers of EC2 Subnets to associate with the EKS Node Group.
+* `subnet_ids` - Identifiers of EC2 Subnets to associate with the EKS Node Group.
 * `taints` - List of objects containing information about taints applied to the nodes in the EKS Node Group.
     * `key` - The key of the taint.
     * `value` - The value of the taint.
     * `effect` - The effect of the taint.
 * `tags` - Key-value map of resource tags.
-* `version` – Kubernetes version.
+* `version` - Kubernetes version.

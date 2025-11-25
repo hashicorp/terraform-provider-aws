@@ -27,6 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
@@ -118,6 +120,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptunegraph"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/networkflowmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
@@ -159,12 +162,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/signer"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmquicksetup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
@@ -207,6 +210,8 @@ func registerSweepers() {
 	batch.RegisterSweepers()
 	bcmdataexports.RegisterSweepers()
 	bedrockagent.RegisterSweepers()
+	bedrockagentcore.RegisterSweepers()
+	billing.RegisterSweepers()
 	budgets.RegisterSweepers()
 	chime.RegisterSweepers()
 	cleanrooms.RegisterSweepers()
@@ -298,6 +303,7 @@ func registerSweepers() {
 	neptune.RegisterSweepers()
 	neptunegraph.RegisterSweepers()
 	networkfirewall.RegisterSweepers()
+	networkflowmonitor.RegisterSweepers()
 	networkmanager.RegisterSweepers()
 	notifications.RegisterSweepers()
 	notificationscontacts.RegisterSweepers()
@@ -339,12 +345,12 @@ func registerSweepers() {
 	sfn.RegisterSweepers()
 	shield.RegisterSweepers()
 	signer.RegisterSweepers()
-	simpledb.RegisterSweepers()
 	sns.RegisterSweepers()
 	sqs.RegisterSweepers()
 	ssm.RegisterSweepers()
 	ssmcontacts.RegisterSweepers()
 	ssmincidents.RegisterSweepers()
+	ssmquicksetup.RegisterSweepers()
 	ssoadmin.RegisterSweepers()
 	storagegateway.RegisterSweepers()
 	swf.RegisterSweepers()

@@ -46,6 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `actions_enabled` - (Optional, Forces new resource) Indicates whether actions should be executed during any changes to the alarm state of the composite alarm. Defaults to `true`.
 * `actions_suppressor` - (Optional) Actions will be suppressed if the suppressor alarm is in the ALARM state.
     * `alarm` - (Required) Can be an AlarmName or an Amazon Resource Name (ARN) from an existing alarm.
@@ -92,4 +93,4 @@ Using `terraform import`, import a CloudWatch Composite Alarm using the `alarm_n
 % terraform import aws_cloudwatch_composite_alarm.test my-alarm
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-11e511da39cccb9f45f74346aa6ed7600f7dd76d003230622b87c4c871be0386 -->
+<!-- cache-key: cdktf-0.20.8 input-6893936b5a1c605d417dd7b6878efef6829245a42ca6e86ca613dd013c141e8b -->

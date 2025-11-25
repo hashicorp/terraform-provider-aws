@@ -18,14 +18,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccXRayEncryptionConfig_basic(t *testing.T) {
+func TestAccXRayEncryptionConfig_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic: testAccXRayEncryptionConfig_basic,
+		"Identity":      testAccXRayEncryptionConfig_IdentitySerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccXRayEncryptionConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.EncryptionConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_xray_encryption_config.test"
 	keyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -100,6 +111,7 @@ func testAccEncryptionConfigConfig_key(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {

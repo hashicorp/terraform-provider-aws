@@ -26,6 +26,7 @@ data "aws_ec2_local_gateway" "selected" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 * `id` - (Optional) Id of the specific Local Gateway to retrieve.
 * `state` - (Optional) Current state of the desired Local Gateway.

@@ -23,6 +23,7 @@ resource "aws_redshiftserverless_endpoint_access" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpoint_name` - (Required) The name of the endpoint.
 * `owner_account` - (Optional) The owner Amazon Web Services account for the Amazon Redshift Serverless workgroup.
 * `subnet_ids` - (Required) An array of VPC subnet IDs to associate with the endpoint.

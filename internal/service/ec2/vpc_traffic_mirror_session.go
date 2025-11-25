@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -126,7 +125,8 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	session, err := findTrafficMirrorSessionByID(ctx, conn, d.Id())
 
@@ -141,14 +141,7 @@ func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	ownerID := aws.ToString(session.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  "traffic-mirror-session/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, trafficMirrorSessionARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrDescription, session.Description)
 	d.Set(names.AttrNetworkInterfaceID, session.NetworkInterfaceId)
 	d.Set(names.AttrOwnerID, ownerID)
@@ -243,4 +236,8 @@ func resourceTrafficMirrorSessionDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	return diags
+}
+
+func trafficMirrorSessionARN(ctx context.Context, c *conns.AWSClient, accountID, trafficMirrorSessionID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "traffic-mirror-session/"+trafficMirrorSessionID)
 }

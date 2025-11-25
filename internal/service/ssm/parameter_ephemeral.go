@@ -16,20 +16,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @EphemeralResource(aws_ssm_parameter, name="Parameter")
+func newParameterEphemeralResource(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &parameterEphemeralResource{}, nil
+}
+
 const (
 	ERNameParameter = "Ephemeral Resource Parameter"
 )
 
-// @EphemeralResource(aws_ssm_parameter, name="Parameter")
-func newEphemeralParameter(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeralParameter{}, nil
+type parameterEphemeralResource struct {
+	framework.EphemeralResourceWithModel[parameterEphemeralResourceModel]
 }
 
-type ephemeralParameter struct {
-	framework.EphemeralResourceWithConfigure
-}
-
-func (e *ephemeralParameter) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
+func (e *parameterEphemeralResource) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -57,8 +57,8 @@ func (e *ephemeralParameter) Schema(ctx context.Context, _ ephemeral.SchemaReque
 	}
 }
 
-func (e *ephemeralParameter) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
-	var data epParameterData
+func (e *parameterEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
+	var data parameterEphemeralResourceModel
 	conn := e.Meta().SSMClient(ctx)
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
@@ -93,7 +93,8 @@ func (e *ephemeralParameter) Open(ctx context.Context, request ephemeral.OpenReq
 	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 }
 
-type epParameterData struct {
+type parameterEphemeralResourceModel struct {
+	framework.WithRegionModel
 	ARN            fwtypes.ARN  `tfsdk:"arn"`
 	Name           types.String `tfsdk:"name"`
 	Type           types.String `tfsdk:"type"`

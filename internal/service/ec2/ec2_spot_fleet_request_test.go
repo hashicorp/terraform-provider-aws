@@ -3114,7 +3114,7 @@ func testAccSpotFleetRequestConfig_launchSpecificationEBSBlockDeviceKMSKeyID(rNa
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
-
+  enable_key_rotation     = true
   tags = {
     Name = %[1]q
   }
@@ -3160,7 +3160,7 @@ func testAccSpotFleetRequestConfig_launchSpecificationRootBlockDeviceKMSKeyID(rN
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
-
+  enable_key_rotation     = true
   tags = {
     Name = %[1]q
   }

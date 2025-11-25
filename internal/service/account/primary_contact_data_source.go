@@ -20,7 +20,7 @@ func newPrimaryContactDataSource(context.Context) (datasource.DataSourceWithConf
 }
 
 type primaryContactDataSOurce struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[primaryContactDataSourceModel]
 }
 
 func (d *primaryContactDataSOurce) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

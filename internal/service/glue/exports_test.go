@@ -7,7 +7,7 @@ package glue
 var (
 	ResourceCatalogDatabase               = resourceCatalogDatabase
 	ResourceCatalogTable                  = resourceCatalogTable
-	ResourceCatalogTableOptimizer         = newResourceCatalogTableOptimizer
+	ResourceCatalogTableOptimizer         = newCatalogTableOptimizerResource
 	ResourceClassifier                    = resourceClassifier
 	ResourceConnection                    = resourceConnection
 	ResourceCrawler                       = resourceCrawler
@@ -37,6 +37,7 @@ var (
 	FindPartitionByValues        = findPartitionByValues
 	FindPartitionIndexByName     = findPartitionIndexByName
 	FindRegistryByID             = findRegistryByID
+	FindResourcePolicy           = findResourcePolicy
 	FindSchemaByID               = findSchemaByID
 	FindTableByName              = findTableByName
 	FindTriggerByName            = findTriggerByName

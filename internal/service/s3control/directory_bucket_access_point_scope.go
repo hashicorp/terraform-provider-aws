@@ -40,7 +40,7 @@ func newDirectoryBucketAccessPointScopeResource(_ context.Context) (resource.Res
 }
 
 type directoryBucketAccessPointScopeResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[directoryBucketAccessPointScopeModel]
 }
 
 const (
@@ -279,6 +279,7 @@ func (d *directoryBucketAccessPointScopeModel) setID() (string, error) {
 }
 
 type directoryBucketAccessPointScopeModel struct {
+	framework.WithRegionModel
 	AccountID types.String                                `tfsdk:"account_id"`
 	Name      types.String                                `tfsdk:"name"`
 	Scope     fwtypes.ListNestedObjectValueOf[scopeModel] `tfsdk:"scope"`

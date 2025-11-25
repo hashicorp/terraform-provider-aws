@@ -39,7 +39,7 @@ func newUserAccessLoggingSettingsResource(_ context.Context) (resource.ResourceW
 }
 
 type userAccessLoggingSettingsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[userAccessLoggingSettingsResourceModel]
 }
 
 func (r *userAccessLoggingSettingsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -228,6 +228,7 @@ func findUserAccessLoggingSettingsByARN(ctx context.Context, conn *workspacesweb
 }
 
 type userAccessLoggingSettingsResourceModel struct {
+	framework.WithRegionModel
 	AssociatedPortalARNs         fwtypes.ListOfString `tfsdk:"associated_portal_arns"`
 	KinesisStreamARN             fwtypes.ARN          `tfsdk:"kinesis_stream_arn"`
 	Tags                         tftags.Map           `tfsdk:"tags"`

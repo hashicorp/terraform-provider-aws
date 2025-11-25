@@ -50,6 +50,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `default_view` - (Optional) Specifies whether the view is the [_default view_](https://docs.aws.amazon.com/resource-explorer/latest/userguide/manage-views-about.html#manage-views-about-default) for the AWS Region. Default: `false`.
 * `filters` - (Optional) Specifies which resources are included in the results of queries made using this view. See [Filters](#filters) below for more details.
 * `included_property` - (Optional) Optional fields to be included in search results from this view. See [Included Properties](#included-properties) below for more details.
@@ -78,6 +79,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_resourceexplorer2_view.example
+  identity = {
+    "arn" = "arn:aws:resource-explorer-2:us-east-1:123456789012:view/example-view/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111"
+  }
+}
+
+resource "aws_resourceexplorer2_view" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Resource Explorer view.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Resource Explorer views using the `arn`. For example:
 
 ```python
@@ -101,4 +123,4 @@ Using `terraform import`, import Resource Explorer views using the `arn`. For ex
 % terraform import aws_resourceexplorer2_view.example arn:aws:resource-explorer-2:us-west-2:123456789012:view/exampleview/e0914f6c-6c27-4b47-b5d4-6b28381a2421
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5550d5ace208cf35cd165738fe8334e9b544c475dee09aeaa7f3db074dadc0ae -->
+<!-- cache-key: cdktf-0.20.8 input-942d40c3ea8c06cb0cd59757324d4be3cccf00b3d33b7560b14292fce5dfc7ca -->

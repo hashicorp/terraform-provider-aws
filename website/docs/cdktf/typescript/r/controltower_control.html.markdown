@@ -44,7 +44,7 @@ class MyConvertedCode extends TerraformStack {
       {
         controlIdentifier:
           "arn:aws:controltower:${" +
-          current.name +
+          current.region +
           "}::control/AWS-GR_EC2_VOLUME_INUSE_CHECK",
         parameters: [
           {
@@ -78,6 +78,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `parameters` - (Optional) Parameter values which are specified to configure the control when you enable it. See [Parameters](#parameters) for more details.
 
 ### Parameters
@@ -124,4 +125,4 @@ Using `terraform import`, import Control Tower Controls using their `organizatio
 % terraform import aws_controltower_control.example arn:aws:organizations::123456789101:ou/o-qqaejywet/ou-qg5o-ufbhdtv3,arn:aws:controltower:us-east-1::control/WTDSMKDKDNLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0612c8987cd5debeccdd627664089c646994d6dc46886a5897905773198c57f7 -->
+<!-- cache-key: cdktf-0.20.8 input-99f2dc97ffce7147a933e420c5b996d742c6d4b37110b3de09ef8f78c33f86a0 -->

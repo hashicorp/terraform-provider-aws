@@ -69,6 +69,11 @@ func resourceSubnetGroup() *schema.Resource {
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"supported_network_types": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -123,6 +128,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 		subnetIDs = append(subnetIDs, aws.ToString(v.SubnetIdentifier))
 	}
 	d.Set(names.AttrSubnetIDs, subnetIDs)
+	d.Set("supported_network_types", subnetGroup.SupportedNetworkTypes)
 
 	return diags
 }
@@ -166,7 +172,7 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func(ctx context.Context) (any, error) {
 		return findDBSubnetGroupByName(ctx, conn, d.Id())
 	})
 

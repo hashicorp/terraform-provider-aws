@@ -29,13 +29,55 @@ resource "aws_s3_bucket" "b" {
   }
 }
 
-resource "aws_s3_bucket_acl" "b_acl" {
-  bucket = aws_s3_bucket.b.id
-  acl    = "private"
+# See https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
+data "aws_iam_policy_document" "origin_bucket_policy" {
+  statement {
+    sid    = "AllowCloudFrontServicePrincipalReadWrite"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+    ]
+
+    resources = [
+      "${aws_s3_bucket.b.arn}/*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [aws_cloudfront_distribution.s3_distribution.arn]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "b" {
+  bucket = aws_s3_bucket.b.bucket
+  policy = data.aws_iam_policy_document.origin_bucket_policy.json
 }
 
 locals {
   s3_origin_id = "myS3Origin"
+  my_domain    = "mydomain.com"
+}
+
+data "aws_acm_certificate" "my_domain" {
+  region   = "us-east-1"
+  domain   = "*.${local.my_domain}"
+  statuses = ["ISSUED"]
+}
+
+resource "aws_cloudfront_origin_access_control" "default" {
+  name                              = "default-oac"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
@@ -50,13 +92,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   comment             = "Some comment"
   default_root_object = "index.html"
 
-  logging_config {
-    include_cookies = false
-    bucket          = "mylogs.s3.amazonaws.com"
-    prefix          = "myprefix"
-  }
-
-  aliases = ["mysite.example.com", "yoursite.example.com"]
+  aliases = ["mysite.${local.my_domain}", "yoursite.${local.my_domain}"]
 
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
@@ -136,7 +172,26 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn = data.aws_acm_certificate.my_domain.arn
+    ssl_support_method  = "sni-only"
+  }
+}
+
+# Create Route53 records for the CloudFront distribution aliases
+data "aws_route53_zone" "my_domain" {
+  name = local.my_domain
+}
+
+resource "aws_route53_record" "cloudfront" {
+  for_each = aws_cloudfront_distribution.s3_distribution.aliases
+  zone_id  = data.aws_route53_zone.my_domain.zone_id
+  name     = each.value
+  type     = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.s3_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.s3_distribution.hosted_zone_id
+    evaluate_target_health = false
   }
 }
 ```
@@ -216,9 +271,11 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   # AWS Managed Caching Policy (CachingDisabled)
   default_cache_behavior {
     # Using the CachingDisabled managed policy ID:
-    cache_policy_id  = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = local.s3_origin_id
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = local.s3_origin_id
+    viewer_protocol_policy = "allow-all"
   }
 
   restrictions {
@@ -241,23 +298,12 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 The example below creates a CloudFront distribution with [standard logging V2 to S3](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#enable-access-logging-api).
 
 ```terraform
-provider "aws" {
-  region = var.region
-}
-
-provider "aws" {
-  region = "us-east-1"
-  alias  = "us_east_1"
-}
-
 resource "aws_cloudfront_distribution" "example" {
-  provider = aws.us_east_1
-
   # other config...
 }
 
 resource "aws_cloudwatch_log_delivery_source" "example" {
-  provider = aws.us_east_1
+  region = "us-east-1"
 
   name         = "example"
   log_type     = "ACCESS_LOGS"
@@ -270,7 +316,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_cloudwatch_log_delivery_destination" "example" {
-  provider = aws.us_east_1
+  region = "us-east-1"
 
   name          = "s3-destination"
   output_format = "parquet"
@@ -281,7 +327,7 @@ resource "aws_cloudwatch_log_delivery_destination" "example" {
 }
 
 resource "aws_cloudwatch_log_delivery" "example" {
-  provider = aws.us_east_1
+  region = "us-east-1"
 
   delivery_source_name     = aws_cloudwatch_log_delivery_source.example.name
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.example.arn
@@ -292,11 +338,58 @@ resource "aws_cloudwatch_log_delivery" "example" {
 }
 ```
 
+### With V2 logging to Data Firehose
+
+The example below creates a CloudFront distribution with [standard logging V2 to Data Firehose](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#enable-access-logging-api).
+
+```terraform
+resource "aws_cloudfront_distribution" "example" {
+  # other config
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "cloudfront_logs" {
+  region = "us-east-1"
+  # The tag named "LogDeliveryEnabled" must be set to "true" to allow the service-linked role "AWSServiceRoleForLogDelivery"
+  # to perform permitted actions on your behalf.
+  # See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AWS-logs-and-resource-policy.html#AWS-logs-infrastructure-Firehose
+  tags = {
+    LogDeliveryEnabled = "true"
+  }
+
+  # other config
+}
+
+resource "aws_cloudwatch_log_delivery_source" "example" {
+  region = "us-east-1"
+
+  name         = "cloudfront-logs-source"
+  log_type     = "ACCESS_LOGS"
+  resource_arn = aws_cloudfront_distribution.example.arn
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "example" {
+  region = "us-east-1"
+
+  name          = "firehose-destination"
+  output_format = "json"
+  delivery_destination_configuration {
+    destination_resource_arn = aws_kinesis_firehose_delivery_stream.cloudfront_logs.arn
+  }
+}
+resource "aws_cloudwatch_log_delivery" "example" {
+  region = "us-east-1"
+
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.example.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.example.arn
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
+* `anycast_ip_list_id` (Optional) - ID of the Anycast static IP list that is associated with the distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
 * `continuous_deployment_policy_id` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
 * `custom_error_response` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
@@ -418,6 +511,8 @@ resource "aws_cloudfront_distribution" "example" {
 
 #### Custom Error Response Arguments
 
+~> **NOTE:** When specifying either `response_page_path` or `response_code`, **both** must be set.
+
 * `error_caching_min_ttl` (Optional) - Minimum amount of time you want HTTP error codes to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated.
 * `error_code` (Required) - 4xx or 5xx HTTP status code that you want to customize.
 * `response_code` (Optional) - HTTP status code that you want CloudFront to return with the custom error page to the viewer.
@@ -431,9 +526,9 @@ argument should not be specified.
 
 #### Logging Config Arguments
 
-* `bucket` (Required) - Amazon S3 bucket to store the access logs in, for example, `myawslogbucket.s3.amazonaws.com`. The bucket must have correct ACL attached with "FULL_CONTROL" permission for "awslogsdelivery" account (Canonical ID: "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0") for log transfer to work.
-* `include_cookies` (Optional) - Whether to include cookies in access logs (default: `false`).
-* `prefix` (Optional) - Prefix to the access log filenames for this distribution, for example, `myprefix/`.
+* `bucket` (Optional) - Amazon S3 bucket for V1 logging where access logs are stored, for example, `myawslogbucket.s3.amazonaws.com`. V1 logging is enabled when this argument is specified. The bucket must have correct ACL attached with "FULL_CONTROL" permission for "awslogsdelivery" account (Canonical ID: "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0") for log transfer to work.
+* `include_cookies` (Optional) - Whether to include cookies in access logs (default: `false`). This argument applies to both V1 and V2 logging.
+* `prefix` (Optional) - Prefix added to the access log file names for V1 logging, for example, `myprefix/`. This argument is effective only when V1 logging is enabled.
 
 #### Origin Arguments
 
@@ -446,13 +541,15 @@ argument should not be specified.
 * `origin_id` (Required) - Unique identifier for the origin.
 * `origin_path` (Optional) - Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `origin_shield` - (Optional) [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
+* `response_completion_timeout` - (Optional) Time (in seconds) that a request from CloudFront to the origin can stay open and wait for a response. Must be integer greater than or equal to the value of `origin_read_timeout`. If omitted or explicitly set to `0`, no maximum value is enforced.
 * `s3_origin_config` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `custom_origin_config` instead.
-* `vpc_origin_config` - (Optional) The VPC origin configuration.
+* `vpc_origin_config` - (Optional) The [VPC origin configuration](#vpc-origin-config-arguments).
 
 ##### Custom Origin Config Arguments
 
 * `http_port` (Required) - HTTP port the custom origin listens on.
 * `https_port` (Required) - HTTPS port the custom origin listens on.
+* `ip_address_type` (Optional) - IP protocol CloudFront uses when connecting to your origin. Valid values: `ipv4`, `ipv6`, `dualstack`.
 * `origin_protocol_policy` (Required) - Origin protocol policy to apply to your origin. One of `http-only`, `https-only`, or `match-viewer`.
 * `origin_ssl_protocols` (Required) - List of SSL/TLS protocols that CloudFront can use when connecting to your origin over HTTPS. Valid values: `SSLv3`, `TLSv1`, `TLSv1.1`, `TLSv1.2`. For more information, see [Minimum Origin SSL Protocol](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginSSLProtocols) in the Amazon CloudFront Developer Guide.
 * `origin_keepalive_timeout` - (Optional) The Custom KeepAlive timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `5`.
@@ -511,6 +608,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 * `arn` - ARN for the distribution. For example: `arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5`, where `123456789012` is your AWS account ID.
 * `caller_reference` - Internal value used by CloudFront to allow future updates to the distribution configuration.
+* `logging_v1_enabled` - Whether V1 logging is enabled for the distribution.
 * `status` - Current status of the distribution. `Deployed` if the distribution's information is fully propagated throughout the Amazon CloudFront system.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `trusted_key_groups` - List of nested attributes for active trusted key groups, if the distribution is set up to serve private content with signed URLs.

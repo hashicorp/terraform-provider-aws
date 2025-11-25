@@ -44,7 +44,7 @@ func newIPAccessSettingsResource(_ context.Context) (resource.ResourceWithConfig
 }
 
 type ipAccessSettingsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[ipAccessSettingsResourceModel]
 }
 
 func (r *ipAccessSettingsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -282,6 +282,7 @@ func findIPAccessSettingsByARN(ctx context.Context, conn *workspacesweb.Client, 
 }
 
 type ipAccessSettingsResourceModel struct {
+	framework.WithRegionModel
 	AdditionalEncryptionContext fwtypes.MapOfString                          `tfsdk:"additional_encryption_context"`
 	AssociatedPortalARNs        fwtypes.ListOfString                         `tfsdk:"associated_portal_arns"`
 	CustomerManagedKey          fwtypes.ARN                                  `tfsdk:"customer_managed_key"`

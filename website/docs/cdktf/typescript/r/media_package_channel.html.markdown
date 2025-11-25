@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `channelId` - (Required) A unique identifier describing the channel
 * `description` - (Optional) A description of the channel
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -88,4 +89,4 @@ Using `terraform import`, import Media Package Channels using the channel ID. Fo
 % terraform import aws_media_package_channel.kittens kittens-channel
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-749270ff3fa0c6f15341b2b41f6c3363f04071edc7478cee4ebbc36cb5e14a07 -->
+<!-- cache-key: cdktf-0.20.8 input-f66892f2825c4535f7cac4172fe5a9a52bd28d872759b5ed9f6e89c5ef824891 -->

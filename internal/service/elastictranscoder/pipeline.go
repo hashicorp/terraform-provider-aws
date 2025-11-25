@@ -34,6 +34,8 @@ func ResourcePipeline() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		DeprecationMessage: "This resource is deprecated. Use AWS Elemental MediaConvert instead.",
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,

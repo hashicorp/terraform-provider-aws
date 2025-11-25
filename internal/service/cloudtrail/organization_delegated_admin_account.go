@@ -27,12 +27,13 @@ import (
 )
 
 // @FrameworkResource("aws_cloudtrail_organization_delegated_admin_account", name="Organization Delegated Admin Account")
+// @Region(global=true)
 func newOrganizationDelegatedAdminAccountResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &organizationDelegatedAdminAccountResource{}, nil
 }
 
 type organizationDelegatedAdminAccountResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[organizationDelegatedAdminAccountResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 }

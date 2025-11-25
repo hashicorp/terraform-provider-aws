@@ -123,6 +123,10 @@ func resourceBranch() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"enable_skew_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"environment_variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -219,6 +223,10 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.EnablePullRequestPreview = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("enable_skew_protection"); ok {
+		input.EnableSkewProtection = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("environment_variables"); ok && len(v.(map[string]any)) > 0 {
 		input.EnvironmentVariables = flex.ExpandStringValueMap(v.(map[string]any))
 	}
@@ -286,6 +294,7 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("enable_notification", branch.EnableNotification)
 	d.Set("enable_performance_mode", branch.EnablePerformanceMode)
 	d.Set("enable_pull_request_preview", branch.EnablePullRequestPreview)
+	d.Set("enable_skew_protection", branch.EnableSkewProtection)
 	d.Set("environment_variables", branch.EnvironmentVariables)
 	d.Set("framework", branch.Framework)
 	d.Set("pull_request_environment_name", branch.PullRequestEnvironmentName)
@@ -347,6 +356,10 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("enable_pull_request_preview") {
 			input.EnablePullRequestPreview = aws.Bool(d.Get("enable_pull_request_preview").(bool))
+		}
+
+		if d.HasChange("enable_skew_protection") {
+			input.EnableSkewProtection = aws.Bool(d.Get("enable_skew_protection").(bool))
 		}
 
 		if d.HasChange("environment_variables") {

@@ -25,7 +25,6 @@ import (
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -59,14 +58,8 @@ func resourceDataSource() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ForceNew:     true,
-					ValidateFunc: verify.ValidAccountID,
-				},
-				"credentials": quicksightschema.DataSourceCredentialsSchema(),
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
+				"credentials":          quicksightschema.DataSourceCredentialsSchema(),
 				"data_source_id": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -133,7 +126,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateDataSource(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -246,7 +239,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateDataSource(ctx, input)
 			},
 			func(err error) (bool, error) {

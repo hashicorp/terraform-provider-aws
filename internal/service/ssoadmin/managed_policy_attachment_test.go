@@ -190,7 +190,7 @@ func testAccCheckManagedPolicyAttachmentDestroy(ctx context.Context) resource.Te
 				return err
 			}
 
-			_, err = tfssoadmin.FindManagedPolicy(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
+			_, err = tfssoadmin.FindManagedPolicyByThreePartKey(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -221,7 +221,7 @@ func testAccCheckManagedPolicyAttachmentExists(ctx context.Context, n string) re
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 
-		_, err = tfssoadmin.FindManagedPolicy(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
+		_, err = tfssoadmin.FindManagedPolicyByThreePartKey(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
 
 		return err
 	}

@@ -27,7 +27,7 @@ func newAcceleratorDataSource(context.Context) (datasource.DataSourceWithConfigu
 }
 
 type acceleratorDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[acceleratorDataSourceModel]
 }
 
 func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -58,7 +58,6 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 			},
 			names.AttrIPAddressType: schema.StringAttribute{

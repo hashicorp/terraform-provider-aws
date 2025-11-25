@@ -46,9 +46,8 @@ func newVPCRouteServerPeerResource(_ context.Context) (resource.ResourceWithConf
 }
 
 type vpcRouteServerPeerResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcRouteServerPeerResourceModel]
 	framework.WithTimeouts
-	framework.WithNoOpUpdate[vpcRouteServerPeerResourceModel]
 }
 
 func (r *vpcRouteServerPeerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -269,6 +268,7 @@ func (r *vpcRouteServerPeerResource) routeServerPeerARN(ctx context.Context, id 
 }
 
 type vpcRouteServerPeerResourceModel struct {
+	framework.WithRegionModel
 	ARN                   types.String                                                `tfsdk:"arn"`
 	BGPOptions            fwtypes.ListNestedObjectValueOf[routeServerBGPOptionsModel] `tfsdk:"bgp_options"`
 	EndpointEniAddress    types.String                                                `tfsdk:"endpoint_eni_address"`

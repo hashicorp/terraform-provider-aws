@@ -34,6 +34,7 @@ resource "aws_route" "route" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block. Detailed below.
 * `gateway_id` - (Optional) ID of an Internet Gateway or Virtual Private Gateway which is connected to the Route Table (not exported if not passed as a parameter).
 * `route_table_id` - (Optional) ID of the specific Route Table to retrieve.
@@ -54,6 +55,7 @@ The following arguments are required:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `id` – The ID of the route table.
 * `arn` - ARN of the route table.
 * `associations` - List of associations with attributes detailed below.
 * `owner_id` - ID of the AWS account that owns the route table.

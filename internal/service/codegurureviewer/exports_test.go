@@ -7,5 +7,5 @@ package codegurureviewer
 var (
 	ResourceRepositoryAssociation = resourceRepositoryAssociation
 
-	FindRepositoryAssociationByID = findRepositoryAssociationByID
+	FindRepositoryAssociationByID = findRepositoryAssociationByARN
 )

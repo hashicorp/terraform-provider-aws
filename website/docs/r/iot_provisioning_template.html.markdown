@@ -82,6 +82,7 @@ resource "aws_iot_provisioning_template" "fleet" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the fleet provisioning template.
 * `description` - (Optional) The description of the fleet provisioning template.
 * `enabled` - (Optional) True to enable the fleet provisioning template, otherwise false.

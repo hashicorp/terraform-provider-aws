@@ -43,6 +43,7 @@ resource "aws_signer_signing_job" "build_signing_job" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `profile_name` - (Required) The name of the profile to initiate the signing operation.
 * `source` - (Required) The S3 bucket that contains the object to sign. See [Source](#source) below for details.
 * `destination` - (Required) The S3 bucket in which to save your signed object. See [Destination](#destination) below for details.

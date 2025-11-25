@@ -381,7 +381,7 @@ resource "aws_route53_zone" "test" {
 
   vpc {
     vpc_id     = aws_vpc.test.id
-    vpc_region = data.aws_region.current.name
+    vpc_region = data.aws_region.current.region
   }
 
   lifecycle {
@@ -391,7 +391,7 @@ resource "aws_route53_zone" "test" {
 
 resource "aws_route53_zone_association" "test" {
   vpc_id     = aws_vpc.alternate.id
-  vpc_region = data.aws_region.alternate.name
+  vpc_region = data.aws_region.alternate.region
   zone_id    = aws_route53_zone.test.id
 }
 `, rName, domainName))
@@ -409,7 +409,7 @@ resource "aws_route53_vpc_association_authorization" "test" {
 
   vpc_id     = aws_vpc.test.id
   zone_id    = aws_route53_zone.test.id
-  vpc_region = data.aws_region.current.name
+  vpc_region = data.aws_region.current.region
 }
 
 data "aws_region" "current" {}

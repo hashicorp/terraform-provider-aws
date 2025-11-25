@@ -39,12 +39,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `cluster_name` – (Required) Name of the EKS Cluster.
-* `policy_arn` – (Required) The ARN of the access policy that you're associating.
-* `principal_arn` – (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
-* `access_scope` – (Required) The configuration block to determine the scope of the access. See [`access_scope` Block](#access_scope-block) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `cluster_name` - (Required) Name of the EKS Cluster.
+* `policy_arn` - (Required) The ARN of the access policy that you're associating.
+* `principal_arn` - (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
+* `access_scope` - (Required) The configuration block to determine the scope of the access. See [`access_scope` Block](#access_scope-block) below.
 
 ### `access_scope` Block
 
@@ -99,4 +100,4 @@ Using `terraform import`, import EKS access entry using the `cluster_name` `prin
 % terraform import aws_eks_access_policy_association.my_eks_access_entry my_cluster_name#my_principal_arn#my_policy_arn
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ecd9ef51995252da25c6cdb41abe4d6bd4454a736eb2237934c32885db8f00f1 -->
+<!-- cache-key: cdktf-0.20.8 input-d2b4280cd293788b0f38d656ad4c7aeddfb7b78b462d6f75a40a3f1f4602dd69 -->

@@ -51,6 +51,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `capacity_providers` - (Optional) Set of names of one or more capacity providers to associate with the cluster. Valid values also include `FARGATE` and `FARGATE_SPOT`.
 * `cluster_name` - (Required, Forces new resource) Name of the ECS cluster to manage capacity providers for.
 * `default_capacity_provider_strategy` - (Optional) Set of capacity provider strategies to use by default for the cluster. Detailed below.
@@ -92,4 +93,4 @@ Using `terraform import`, import ECS cluster capacity providers using the `clust
 % terraform import aws_ecs_cluster_capacity_providers.example my-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-07d58c0c07d75ffbdc73f076ed8b48e2079c33284e6a34a1e4cdf792f6d41841 -->
+<!-- cache-key: cdktf-0.20.8 input-5bbbe116af6a98c305510a9897091da246386dbdc19086d974906f80d6485dc7 -->

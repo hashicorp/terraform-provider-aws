@@ -64,3 +64,13 @@ type valueWithElements interface {
 
 	Elements() []attr.Value
 }
+
+type NestedCollectionValue[T any] interface {
+	NestedObjectCollectionValue
+
+	// ToSlice returns the value as a slice of pointers to the nested objects.
+	ToSlice(context.Context) ([]*T, diag.Diagnostics)
+
+	// ToPtr returns a pointer to the single element of the nested object.
+	ToPtr(ctx context.Context) (*T, diag.Diagnostics)
+}

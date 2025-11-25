@@ -47,7 +47,7 @@ func newRestoreTestingSelectionResource(_ context.Context) (resource.ResourceWit
 }
 
 type restoreTestingSelectionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[restoreTestingSelectionResourceModel]
 }
 
 func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -392,6 +392,7 @@ func findRestoreTestingSelection(ctx context.Context, conn *backup.Client, input
 }
 
 type restoreTestingSelectionResourceModel struct {
+	framework.WithRegionModel
 	IAMRoleARN                  fwtypes.ARN                                                       `tfsdk:"iam_role_arn"`
 	ProtectedResourceARNs       fwtypes.SetOfString                                               `tfsdk:"protected_resource_arns"`
 	ProtectedResourceConditions fwtypes.ListNestedObjectValueOf[protectedResourceConditionsModel] `tfsdk:"protected_resource_conditions"`

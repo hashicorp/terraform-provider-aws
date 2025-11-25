@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,8 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,6 +40,8 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types;types.AnalyzerSummary", serialize="true")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceAnalyzer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalyzerCreate,
@@ -71,11 +74,69 @@ func resourceAnalyzer() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"internal_access": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							ForceNew:      true,
+							MaxItems:      1,
+							ConflictsWith: []string{"configuration.0.unused_access"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"analysis_rule": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"inclusion": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"account_ids": {
+																Type:     schema.TypeList,
+																Optional: true,
+																ForceNew: true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: verify.ValidAccountID,
+																},
+															},
+															"resource_arns": {
+																Type:     schema.TypeList,
+																Optional: true,
+																ForceNew: true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: verify.ValidARN,
+																},
+															},
+															"resource_types": {
+																Type:     schema.TypeList,
+																Optional: true,
+																ForceNew: true,
+																Elem: &schema.Schema{
+																	Type:             schema.TypeString,
+																	ValidateDiagFunc: enum.Validate[types.ResourceType](),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"unused_access": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
+							Type:          schema.TypeList,
+							Optional:      true,
+							ForceNew:      true,
+							MaxItems:      1,
+							ConflictsWith: []string{"configuration.0.internal_access"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"analysis_rule": {
@@ -98,7 +159,7 @@ func resourceAnalyzer() *schema.Resource {
 																MaxItems: 2000,
 																Elem: &schema.Schema{
 																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\d{12}$`), "Must be a 12-digit account ID"),
+																	ValidateFunc: verify.ValidAccountID,
 																},
 															},
 															names.AttrResourceTags: {
@@ -160,8 +221,8 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	// Handle Organizations eventual consistency.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ValidationException](ctx, organizationCreationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.ValidationException](ctx, organizationCreationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.CreateAnalyzer(ctx, &input)
 		},
 		"You must create an organization",
@@ -182,7 +243,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	analyzer, err := findAnalyzerByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Access Analyzer Analyzer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -247,8 +308,7 @@ func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name s
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -268,10 +328,84 @@ func expandAnalyzerConfiguration(tfMap map[string]any) types.AnalyzerConfigurati
 		return nil
 	}
 
-	apiObject := &types.AnalyzerConfigurationMemberUnusedAccess{}
+	var apiObject types.AnalyzerConfiguration
 
+	if v, ok := tfMap["internal_access"].([]any); ok && len(v) > 0 && v[0] != nil {
+		internalAccess := &types.AnalyzerConfigurationMemberInternalAccess{}
+		internalAccess.Value = expandInternalAccessConfiguration(v[0].(map[string]any))
+		apiObject = internalAccess
+	}
 	if v, ok := tfMap["unused_access"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Value = expandUnusedAccessConfiguration(v[0].(map[string]any))
+		unusedAccess := &types.AnalyzerConfigurationMemberUnusedAccess{}
+		unusedAccess.Value = expandUnusedAccessConfiguration(v[0].(map[string]any))
+		apiObject = unusedAccess
+	}
+
+	return apiObject
+}
+
+func expandInternalAccessConfiguration(tfMap map[string]any) types.InternalAccessConfiguration {
+	apiObject := types.InternalAccessConfiguration{}
+
+	if v, ok := tfMap["analysis_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AnalysisRule = expandInternalAccessAnalysisRule(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandInternalAccessAnalysisRule(tfMap map[string]any) *types.InternalAccessAnalysisRule {
+	apiObject := &types.InternalAccessAnalysisRule{}
+
+	if v, ok := tfMap["inclusion"].([]any); ok && len(v) > 0 {
+		apiObject.Inclusions = expandInternalAccessAnalysisRuleCriterias(v)
+	}
+
+	return apiObject
+}
+
+func expandInternalAccessAnalysisRuleCriterias(tfList []any) []types.InternalAccessAnalysisRuleCriteria {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.InternalAccessAnalysisRuleCriteria
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := expandInternalAccessAnalysisRuleCriteria(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandInternalAccessAnalysisRuleCriteria(tfMap map[string]any) *types.InternalAccessAnalysisRuleCriteria {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.InternalAccessAnalysisRuleCriteria{}
+
+	if tfList, ok := tfMap["account_ids"].([]any); ok && len(tfList) > 0 {
+		apiObject.AccountIds = flex.ExpandStringValueList(tfList)
+	}
+
+	if tfList, ok := tfMap["resource_arns"].([]any); ok && len(tfList) > 0 {
+		apiObject.ResourceArns = flex.ExpandStringValueList(tfList)
+	}
+
+	if tfList, ok := tfMap["resource_types"].([]any); ok && len(tfList) > 0 {
+		apiObject.ResourceTypes = flex.ExpandStringyValueList[types.ResourceType](tfList)
 	}
 
 	return apiObject
@@ -334,17 +468,14 @@ func expandAnalysisRuleCriteria(tfMap map[string]any) *types.AnalysisRuleCriteri
 	apiObject := &types.AnalysisRuleCriteria{}
 
 	if tfList, ok := tfMap["account_ids"].([]any); ok && len(tfList) > 0 {
-		for _, v := range tfList {
-			accountID, ok := v.(string)
-			if !ok {
-				continue
-			}
-			apiObject.AccountIds = append(apiObject.AccountIds, accountID)
-		}
+		apiObject.AccountIds = flex.ExpandStringValueList(tfList)
 	}
 
 	if tfList, ok := tfMap[names.AttrResourceTags].([]any); ok && len(tfList) > 0 {
 		for _, v := range tfList {
+			if v == nil {
+				continue
+			}
 			apiObject.ResourceTags = append(apiObject.ResourceTags, flex.ExpandStringValueMap(v.(map[string]any)))
 		}
 	}
@@ -360,8 +491,77 @@ func flattenAnalyzerConfiguration(apiObject types.AnalyzerConfiguration) map[str
 	tfMap := map[string]any{}
 
 	switch v := apiObject.(type) {
+	case *types.AnalyzerConfigurationMemberInternalAccess:
+		tfMap["internal_access"] = []any{flattenInternalAccessConfiguration(&v.Value)}
 	case *types.AnalyzerConfigurationMemberUnusedAccess:
 		tfMap["unused_access"] = []any{flattenUnusedAccessConfiguration(&v.Value)}
+	}
+
+	return tfMap
+}
+
+func flattenInternalAccessConfiguration(apiObject *types.InternalAccessConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.AnalysisRule; v != nil {
+		tfMap["analysis_rule"] = []any{flattenInternalAccessAnalysisRule(v)}
+	}
+
+	return tfMap
+}
+
+func flattenInternalAccessAnalysisRule(apiObject *types.InternalAccessAnalysisRule) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Inclusions; v != nil {
+		tfMap["inclusion"] = flattenInternalAccessAnalysisRuleCriterias(v)
+	}
+
+	return tfMap
+}
+
+func flattenInternalAccessAnalysisRuleCriterias(apiObjects []types.InternalAccessAnalysisRuleCriteria) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := flattenInternalAccessAnalysisRuleCriteria(&apiObject)
+		if tfMap != nil {
+			tfList = append(tfList, tfMap)
+		}
+	}
+
+	return tfList
+}
+
+func flattenInternalAccessAnalysisRuleCriteria(apiObject *types.InternalAccessAnalysisRuleCriteria) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.AccountIds; len(v) > 0 {
+		tfMap["account_ids"] = v
+	}
+
+	if v := apiObject.ResourceArns; len(v) > 0 {
+		tfMap["resource_arns"] = v
+	}
+
+	if v := apiObject.ResourceTypes; len(v) > 0 {
+		tfMap["resource_types"] = v
 	}
 
 	return tfMap

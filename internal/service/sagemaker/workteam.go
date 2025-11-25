@@ -206,7 +206,7 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.WorkforceName = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.CreateWorkteam(ctx, input)
 	}, ErrCodeValidationException)
 

@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -208,7 +208,7 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func(ctx context.Context) (any, error) {
 		return findDBClusterParameterGroupByName(ctx, conn, d.Id())
 	})
 
@@ -289,7 +289,7 @@ func findDBClusterParameterGroups(ctx context.Context, conn *docdb.Client, input
 		}
 
 		for _, v := range page.DBClusterParameterGroups {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}
@@ -317,7 +317,7 @@ func findDBClusterParameters(ctx context.Context, conn *docdb.Client, input *doc
 		}
 
 		for _, v := range page.Parameters {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}

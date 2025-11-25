@@ -109,7 +109,7 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 		parsedARN, err := arn.Parse(value)
 
 		if err != nil {
-			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
+			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %w", k, value, err))
 			return ws, errors
 		}
 
@@ -224,7 +224,7 @@ func ValidIAMPolicyJSON(v any, k string) (ws []string, errors []error) {
 	}
 
 	if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
-		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %s", k, err))
+		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %w", k, err))
 		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
@@ -330,7 +330,7 @@ func ValidLaunchTemplateID(v any, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 255 characters", k))
 	} else if !regexache.MustCompile(`^lt\-[0-9a-z]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q must begin with 'lt-' and be comprised of only alphanumeric characters: %v", k, value))
+			"%q must begin with 'lt-' and only contain alphanumeric characters: %v", k, value))
 	}
 	return
 }
@@ -411,33 +411,13 @@ func ValidRegionName(v any, k string) (ws []string, errors []error) {
 func ValidStringIsJSONOrYAML(v any, k string) (ws []string, errors []error) {
 	if looksLikeJSONString(v) {
 		if _, err := structure.NormalizeJsonString(v); err != nil {
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %w", k, err))
 		}
 	} else {
 		if _, err := checkYAMLString(v); err != nil {
-			errors = append(errors, fmt.Errorf("%q contains an invalid YAML: %s", k, err))
+			errors = append(errors, fmt.Errorf("%q contains an invalid YAML: %w", k, err))
 		}
 	}
-	return
-}
-
-// ValidTypeStringNullableFloat provides custom error messaging for TypeString floats
-// Some arguments require a floating point value or an unspecified, empty field.
-func ValidTypeStringNullableFloat(v any, k string) (ws []string, es []error) {
-	value, ok := v.(string)
-	if !ok {
-		es = append(es, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	if value == "" {
-		return
-	}
-
-	if _, err := strconv.ParseFloat(value, 64); err != nil {
-		es = append(es, fmt.Errorf("%s: cannot parse '%s' as float: %s", k, value, err))
-	}
-
 	return
 }
 
@@ -465,7 +445,7 @@ func ValidDuration(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	duration, err := time.ParseDuration(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("%q cannot be parsed as a duration: %s", k, err))
+		errors = append(errors, fmt.Errorf("%q cannot be parsed as a duration: %w", k, err))
 	}
 	if duration < 0 {
 		errors = append(errors, fmt.Errorf("%q must be greater than zero", k))
@@ -599,6 +579,35 @@ func MapSizeBetween(min, max int) schema.SchemaValidateDiagFunc {
 				Detail:        fmt.Sprintf("Map must contain at least %d elements and at most %d elements: length=%d", min, max, l),
 				AttributePath: path,
 			})
+		}
+
+		return diags
+	}
+}
+
+// CaseInsensitiveMatchDeprecation returns a warning diagnostic if the argument value
+// matches a valid value using unicode case-folding, but is not an exact match
+//
+// This validator can be used to deprecate case insensitive value matching in favor
+// of exact matching. A value which is an exact match or does not match any valid
+// value will return with empty diagnostics.
+func CaseInsensitiveMatchDeprecation(valid []string) schema.SchemaValidateDiagFunc {
+	return func(v any, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		s := v.(string)
+
+		for _, item := range valid {
+			if s != item && strings.EqualFold(s, item) {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Case Insensitive Matching Deprecated",
+					Detail: fmt.Sprintf("Expected an exact match to %q, got %q. ", item, v) +
+						"Case insensitive matching is deprecated for this argument. Update the value " +
+						"to an exact match to suppress this warning and avoid breaking changes " +
+						"in a future major version.",
+					AttributePath: path,
+				})
+			}
 		}
 
 		return diags

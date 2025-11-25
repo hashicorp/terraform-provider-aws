@@ -64,6 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the account setting. One of: `BASIC_SCAN_TYPE_VERSION`, `REGISTRY_POLICY_SCOPE`.
 * `value` - (Required) Setting value that is specified. Valid values are:
     * If `name` is specified as `BASIC_SCAN_TYPE_VERSION`, one of: `AWS_NATIVE`, `CLAIR`.
@@ -107,4 +108,4 @@ Using `terraform import`, import EMR Security Configurations using the account s
 % terraform import aws_ecr_account_setting.foo BASIC_SCAN_TYPE_VERSION
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f1bee23001c13e354ea83ba7a40e9ef7d1f2db9e11f4e63281a1c79c60aaf76a -->
+<!-- cache-key: cdktf-0.20.8 input-081f8f9a360063b97b5382db4f0f9c4a0127d49447eb40643093687adf2a7282 -->

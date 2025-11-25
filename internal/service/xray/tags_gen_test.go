@@ -11,6 +11,6 @@ import (
 	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
 
-func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTags(tfxray.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfxray.ServicePackage(ctx), resourceAddress, knownValue)
 }

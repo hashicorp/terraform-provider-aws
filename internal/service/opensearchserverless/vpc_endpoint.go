@@ -51,7 +51,7 @@ const (
 )
 
 type vpcEndpointResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcEndpointResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
@@ -347,12 +347,13 @@ func (r *vpcEndpointResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 type vpcEndpointResourceModel struct {
-	ID               types.String                     `tfsdk:"id"`
-	Name             types.String                     `tfsdk:"name"`
-	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
-	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
-	Timeouts         timeouts.Value                   `tfsdk:"timeouts"`
-	VPCID            types.String                     `tfsdk:"vpc_id"`
+	framework.WithRegionModel
+	ID               types.String        `tfsdk:"id"`
+	Name             types.String        `tfsdk:"name"`
+	SecurityGroupIDs fwtypes.SetOfString `tfsdk:"security_group_ids"`
+	SubnetIDs        fwtypes.SetOfString `tfsdk:"subnet_ids"`
+	Timeouts         timeouts.Value      `tfsdk:"timeouts"`
+	VPCID            types.String        `tfsdk:"vpc_id"`
 }
 
 func findVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*awstypes.VpcEndpointDetail, error) {

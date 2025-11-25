@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
@@ -31,7 +30,9 @@ import (
 
 // @FrameworkResource("aws_redshift_integration", name="Integration")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.Integration")
+// @Testing(preIdentityVersion="6.19.0")
 func newIntegrationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &integrationResource{}
 
@@ -43,8 +44,9 @@ func newIntegrationResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type integrationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[integrationResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *integrationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -255,23 +257,20 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *integrationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
-}
-
 func integrationError(v awstypes.IntegrationError) error {
 	return fmt.Errorf("%s: %s", aws.ToString(v.ErrorCode), aws.ToString(v.ErrorMessage))
 }
 
 type integrationResourceModel struct {
-	AdditionalEncryptionContext fwtypes.MapValueOf[types.String] `tfsdk:"additional_encryption_context"`
-	Description                 types.String                     `tfsdk:"description"`
-	IntegrationARN              types.String                     `tfsdk:"arn"`
-	IntegrationName             types.String                     `tfsdk:"integration_name"`
-	KMSKeyID                    types.String                     `tfsdk:"kms_key_id"`
-	SourceARN                   fwtypes.ARN                      `tfsdk:"source_arn"`
-	Tags                        tftags.Map                       `tfsdk:"tags"`
-	TagsAll                     tftags.Map                       `tfsdk:"tags_all"`
-	TargetARN                   fwtypes.ARN                      `tfsdk:"target_arn"`
-	Timeouts                    timeouts.Value                   `tfsdk:"timeouts"`
+	framework.WithRegionModel
+	AdditionalEncryptionContext fwtypes.MapOfString `tfsdk:"additional_encryption_context"`
+	Description                 types.String        `tfsdk:"description"`
+	IntegrationARN              types.String        `tfsdk:"arn"`
+	IntegrationName             types.String        `tfsdk:"integration_name"`
+	KMSKeyID                    types.String        `tfsdk:"kms_key_id"`
+	SourceARN                   fwtypes.ARN         `tfsdk:"source_arn"`
+	Tags                        tftags.Map          `tfsdk:"tags"`
+	TagsAll                     tftags.Map          `tfsdk:"tags_all"`
+	TargetARN                   fwtypes.ARN         `tfsdk:"target_arn"`
+	Timeouts                    timeouts.Value      `tfsdk:"timeouts"`
 }

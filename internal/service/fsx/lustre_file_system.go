@@ -108,9 +108,8 @@ func resourceLustreFileSystem() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrSize: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(32, 131072),
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"sizing_mode": {
 							Type:             schema.TypeString,
@@ -343,6 +342,7 @@ func resourceLustreFileSystem() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			resourceLustreFileSystemStorageCapacityCustomizeDiff,
 			resourceLustreFileSystemMetadataConfigCustomizeDiff,
+			resourceLustreFileSystemDataReadCacheConfigurationCustomizeDiff,
 		),
 	}
 }
@@ -396,6 +396,34 @@ func resourceLustreFileSystemMetadataConfigCustomizeDiff(_ context.Context, d *s
 						if err := d.ForceNew("metadata_configuration.0.iops"); err != nil {
 							return err
 						}
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func resourceLustreFileSystemDataReadCacheConfigurationCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	if v, ok := d.Get(names.AttrStorageType).(string); ok && v == string(awstypes.StorageTypeIntelligentTiering) {
+		var throughputCapacity int
+		if v, ok := d.Get("throughput_capacity").(int); ok && v != 0 {
+			throughputCapacity = v
+		} else {
+			return fmt.Errorf("Validation Error: ThroughputCapacity is a required parameter for Lustre file systems with StorageType  %s", awstypes.StorageTypeIntelligentTiering)
+		}
+
+		if v, ok := d.Get("data_read_cache_configuration").([]any); ok && len(v) > 0 && v[0] != nil {
+			config := v[0].(map[string]any)
+
+			if sizingMode, ok := config["sizing_mode"].(string); ok && sizingMode == string(awstypes.LustreReadCacheSizingModeUserProvisioned) {
+				if size, ok := config[names.AttrSize].(int); ok && size > 0 {
+					factor := throughputCapacity / 4000
+					minSize := 32 * factor
+					maxSize := 131072 * factor
+					if size < minSize || size > maxSize {
+						return fmt.Errorf("File systems with throughput capacity of %d MB/s support a minimum read cache size of %d GiB and maximum read cache size of %d GiB", throughputCapacity, minSize, maxSize)
 					}
 				}
 			}
@@ -632,9 +660,35 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
+	updated := false
+	// First, update the metadata configuration if it has changed.
+	// Sometimes it is necessary to increase IOPS before increasing storage_capacity.
+	if d.HasChange("metadata_configuration") {
+		input := &fsx.UpdateFileSystemInput{
+			ClientRequestToken: aws.String(id.UniqueId()),
+			FileSystemId:       aws.String(d.Id()),
+			LustreConfiguration: &awstypes.UpdateFileSystemLustreConfiguration{
+				MetadataConfiguration: expandLustreMetadataUpdateConfiguration(d.Get("metadata_configuration").([]any)),
+			},
+		}
+
+		startTime := time.Now()
+		_, err := conn.UpdateFileSystem(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating FSX for Lustre File System (%s) metadata_configuration: %s", d.Id(), err)
+		}
+
+		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) metadata_configuration update: %s", d.Id(), err)
+		}
+		updated = true
+	}
+
 	if d.HasChangesExcept(
 		"final_backup_tags",
 		"skip_final_backup",
+		"metadata_configuration",
 		names.AttrTags,
 		names.AttrTagsAll,
 	) {
@@ -668,10 +722,6 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 			input.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(d.Get("log_configuration").([]any))
 		}
 
-		if d.HasChange("metadata_configuration") {
-			input.LustreConfiguration.MetadataConfiguration = expandLustreMetadataUpdateConfiguration(d.Get("metadata_configuration").([]any))
-		}
-
 		if d.HasChange("per_unit_storage_throughput") {
 			input.LustreConfiguration.PerUnitStorageThroughput = aws.Int32(int32(d.Get("per_unit_storage_throughput").(int)))
 		}
@@ -702,7 +752,10 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) update: %s", d.Id(), err)
 		}
+		updated = true
+	}
 
+	if updated {
 		if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), awstypes.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) administrative action (%s) complete: %s", d.Id(), awstypes.AdministrativeActionTypeFileSystemUpdate, err)
 		}

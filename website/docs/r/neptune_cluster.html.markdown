@@ -46,6 +46,7 @@ This resource supports the following arguments:
 * `cluster_identifier` - (Optional, Forces new resources) Cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `copy_tags_to_snapshot` - (Optional) If set to true, tags are copied to any snapshot of the DB cluster that is created.
+* `deletion_protection` - (Optional) Value that indicates whether the DB cluster has deletion protection enabled.The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
 * `enable_cloudwatch_logs_exports` - (Optional) List of the log types this DB cluster is configured to export to Cloudwatch Logs. Currently only supports `audit` and `slowquery`.
 * `engine` - (Optional) Name of the database engine to be used for this Neptune cluster. Defaults to `neptune`.
 * `engine_version` - (Optional) Database engine version.
@@ -54,21 +55,21 @@ This resource supports the following arguments:
 * `iam_roles` - (Optional) List of ARNs for the IAM roles to associate to the Neptune Cluster.
 * `iam_database_authentication_enabled` - (Optional) Whether or not mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
 * `kms_key_arn` - (Optional) ARN for the KMS encryption key. When specifying `kms_key_arn`, `storage_encrypted` needs to be set to true.
-* `neptune_subnet_group_name` - (Optional) Neptune subnet group to associate with this Neptune instance.
 * `neptune_cluster_parameter_group_name` - (Optional) Cluster parameter group to associate with the cluster.
 * `neptune_instance_parameter_group_name` – (Optional) Name of DB parameter group to apply to all instances in the cluster. When upgrading, AWS does not return this value, so do not reference it in other arguments—either leave it unset, configure each instance directly, or ensure it matches the `engine_version`.
-* `storage_type` - (Optional) Storage type associated with the cluster `standard/iopt1`. Default: `standard`
+* `neptune_subnet_group_name` - (Optional) Neptune subnet group to associate with this Neptune instance.
+* `port` - (Optional) Port on which the Neptune accepts connections. Default is `8182`.
 * `preferred_backup_window` - (Optional) Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter. Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
 * `preferred_maintenance_window` - (Optional) Weekly time range during which system maintenance can occur, in (UTC) e.g., wed:04:00-wed:04:30
-* `port` - (Optional) Port on which the Neptune accepts connections. Default is `8182`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replication_source_identifier` - (Optional) ARN of a source Neptune cluster or Neptune instance if this Neptune cluster is to be created as a Read Replica.
+* `serverless_v2_scaling_configuration` - (Optional) If set, create the Neptune cluster as a serverless one. See [Serverless](#serverless) for example block attributes.
 * `skip_final_snapshot` - (Optional) Whether a final Neptune snapshot is created before the Neptune cluster is deleted. If true is specified, no Neptune snapshot is created. If false is specified, a Neptune snapshot is created before the Neptune cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
 * `snapshot_identifier` - (Optional) Whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a Neptune cluster snapshot, or the ARN when specifying a Neptune snapshot. Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
 * `storage_encrypted` - (Optional) Whether the Neptune cluster is encrypted. The default is `false` if not specified.
+* `storage_type` - (Optional) Storage type associated with the cluster `standard/iopt1`. Default: `standard`.
 * `tags` - (Optional) Map of tags to assign to the Neptune cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate with the Cluster
-* `deletion_protection` - (Optional) Value that indicates whether the DB cluster has deletion protection enabled.The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
-* `serverless_v2_scaling_configuration` - (Optional) If set, create the Neptune cluster as a serverless one. See [Serverless](#serverless) for example block attributes.
 
 ### Serverless
 

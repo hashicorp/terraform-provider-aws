@@ -112,6 +112,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the MSK cluster.
 * `secret_arn_list` - (Required) List of AWS Secrets Manager secret ARNs.
 
@@ -146,4 +147,4 @@ Using `terraform import`, import MSK SCRAM Secret Associations using the `id`. F
 % terraform import aws_msk_scram_secret_association.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7cada2fdd943e43d676c04c972d59565150f424bb7230fb974abfdfaf6b7fbc8 -->
+<!-- cache-key: cdktf-0.20.8 input-baef575a490da6f949fcc5b5aa9850768628fd52a7dbf3a63391998adf70bd9e -->

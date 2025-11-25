@@ -49,7 +49,7 @@ func newAgentAliasResource(context.Context) (resource.ResourceWithConfigure, err
 }
 
 type agentAliasResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[agentAliasResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -379,6 +379,7 @@ func waitAgentAliasUpdated(ctx context.Context, conn *bedrockagent.Client, agent
 }
 
 type agentAliasResourceModel struct {
+	framework.WithRegionModel
 	AgentAliasARN        types.String                                                                 `tfsdk:"agent_alias_arn"`
 	AgentAliasID         types.String                                                                 `tfsdk:"agent_alias_id"`
 	AgentAliasName       types.String                                                                 `tfsdk:"agent_alias_name"`

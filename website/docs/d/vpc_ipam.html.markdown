@@ -22,8 +22,9 @@ data "aws_vpc_ipam" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) ID of the IPAM.
 
 ## Attribute Reference
@@ -37,6 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 * `enable_private_gua` - If private GUA is enabled.
 * `id` - ID of the IPAM resource.
 * `ipam_region` - Region that the IPAM exists in.
+* `metered_account` - AWS account that is charged for active IP addresses managed in IPAM.
 * `operating_regions` - Regions that the IPAM is configured to operate in.
 * `owner_id` - ID of the account that owns this IPAM.
 * `private_default_scope_id` - ID of the default private scope.

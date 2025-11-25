@@ -12,7 +12,9 @@ var (
 	ResourceWebACLAssociation          = resourceWebACLAssociation
 	ResourceWebACLLoggingConfiguration = resourceWebACLLoggingConfiguration
 	ResourceAPIKey                     = newAPIKeyResource
+	ResourceWebACLRuleGroupAssociation = newResourceWebACLRuleGroupAssociation
 
+	CloudFrontDistributionIDFromARN   = cloudFrontDistributionIDFromARN
 	FindAPIKeyByTwoPartKey            = findAPIKeyByTwoPartKey
 	FindIPSetByThreePartKey           = findIPSetByThreePartKey
 	FindLoggingConfigurationByARN     = findLoggingConfigurationByARN
@@ -20,6 +22,8 @@ var (
 	FindRuleGroupByThreePartKey       = findRuleGroupByThreePartKey
 	FindWebACLByResourceARN           = findWebACLByResourceARN
 	FindWebACLByThreePartKey          = findWebACLByThreePartKey
+	IsCloudFrontDistributionARN       = isCloudFrontDistributionARN
 	ListRuleGroupsPages               = listRuleGroupsPages
 	ListWebACLsPages                  = listWebACLsPages
+	ParseWebACLARN                    = parseWebACLARN
 )

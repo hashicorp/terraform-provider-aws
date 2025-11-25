@@ -38,7 +38,7 @@ func newCIDRCollectionResource(context.Context) (resource.ResourceWithConfigure,
 }
 
 type cidrCollectionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[cidrCollectionResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 }
@@ -83,7 +83,7 @@ func (r *cidrCollectionResource) Create(ctx context.Context, request resource.Cr
 	const (
 		timeout = 2 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModification](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateCidrCollection(ctx, input)
 	})
 

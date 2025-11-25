@@ -36,6 +36,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) ID of the detector.
 
 ## Attribute Reference
@@ -54,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Current status of the detector.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-b61efde9a82a553e9e55f67e03dfe94b7bd766a31f5940940033eb0c3839e97a -->
+<!-- cache-key: cdktf-0.20.8 input-07552c1d6ed0fc516ba559ff1e6f9f0cf11a273b5542cc8436a77376281c4533 -->

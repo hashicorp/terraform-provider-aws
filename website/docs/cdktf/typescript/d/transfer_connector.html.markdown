@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Unique identifier for connector
 
 ## Attribute Reference
@@ -67,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
     * `value` - Values associated with the tags key.
 * `url` - URL of the partner's AS2 or SFTP endpoint.
 
-<!-- cache-key: cdktf-0.20.8 input-06fd5020624adce5ffe3f3a4ad962daa5dc128fc908995983e61d24737d0f368 -->
+<!-- cache-key: cdktf-0.20.8 input-9fa658facf13ba5a78d1e293e3f0283241cd913346287862d30031f93444d844 -->

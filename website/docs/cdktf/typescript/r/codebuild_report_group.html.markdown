@@ -92,6 +92,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of a Report Group.
 * `type` - (Required) The type of the Report Group. Valid value are `TEST` and `CODE_COVERAGE`.
 * `exportConfig` - (Required) Information about the destination where the raw data of this Report Group is exported. see [Export Config](#export-config) documented below.
@@ -123,6 +124,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codebuild_report_group.example
+  identity = {
+    "arn" = "arn:aws:codebuild:us-west-2:123456789012:report-group/report-group-name"
+  }
+}
+
+resource "aws_codebuild_report_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeBuild report group.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Report Group using the CodeBuild Report Group arn. For example:
 
 ```typescript
@@ -153,4 +175,4 @@ Using `terraform import`, import CodeBuild Report Group using the CodeBuild Repo
 % terraform import aws_codebuild_report_group.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8ad57ea33f51d8c292612a210a7b0152c2dbf1d07a6f6d7699514cc614c46f5d -->
+<!-- cache-key: cdktf-0.20.8 input-2531648929e28bb11aaf1ac92b7cdd6c18298e4882c845a4cf4d26f604cccad3 -->

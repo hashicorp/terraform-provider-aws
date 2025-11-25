@@ -331,6 +331,7 @@ func testAccTableExportConfig_kms(tableName string) string {
 	return acctest.ConfigCompose(testAccTableExportConfig_baseConfig(tableName), `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table_export" "test" {

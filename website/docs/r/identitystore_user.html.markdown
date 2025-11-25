@@ -48,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `addresses` - (Optional) Details about the user's address. At most 1 address is allowed. Detailed below.
 * `emails` - (Optional) Details about the user's email. At most 1 email is allowed. Detailed below.
 * `locale` - (Optional) The user's geographical region or location.
@@ -87,6 +88,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `formatted` - (Optional) The name that is typically displayed when the name is shown for display.
 * `honorific_prefix` - (Optional) The honorific prefix of the user.
 * `honorific_suffix` - (Optional) The honorific suffix of the user.

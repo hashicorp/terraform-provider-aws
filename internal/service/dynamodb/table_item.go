@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -63,7 +63,7 @@ func resourceTableItem() *schema.Resource {
 func validateTableItem(v any, k string) (ws []string, errors []error) {
 	_, err := expandTableItemAttributes(v.(string))
 	if err != nil {
-		errors = append(errors, fmt.Errorf("Invalid format of %q: %s", k, err))
+		errors = append(errors, fmt.Errorf("Invalid format of %q: %w", k, err))
 	}
 	return
 }
@@ -246,7 +246,7 @@ func tableItemCreateResourceID(tableName string, hashKey string, rangeKey string
 	if v, ok := attrs[hashKey]; ok {
 		switch v := v.(type) {
 		case *awstypes.AttributeValueMemberB:
-			id = append(id, itypes.Base64EncodeOnce(v.Value))
+			id = append(id, inttypes.Base64EncodeOnce(v.Value))
 		case *awstypes.AttributeValueMemberN:
 			id = append(id, v.Value)
 		case *awstypes.AttributeValueMemberS:
@@ -257,7 +257,7 @@ func tableItemCreateResourceID(tableName string, hashKey string, rangeKey string
 	if v, ok := attrs[rangeKey]; ok && rangeKey != "" {
 		switch v := v.(type) {
 		case *awstypes.AttributeValueMemberB:
-			id = append(id, itypes.Base64EncodeOnce(v.Value))
+			id = append(id, inttypes.Base64EncodeOnce(v.Value))
 		case *awstypes.AttributeValueMemberN:
 			id = append(id, v.Value)
 		case *awstypes.AttributeValueMemberS:

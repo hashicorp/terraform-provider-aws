@@ -41,9 +41,8 @@ func newVPCRouteServerEndpointResource(_ context.Context) (resource.ResourceWith
 }
 
 type vpcRouteServerEndpointResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcRouteServerEndpointResourceModel]
 	framework.WithTimeouts
-	framework.WithNoOpUpdate[vpcRouteServerEndpointResourceModel]
 }
 
 func (r *vpcRouteServerEndpointResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -220,6 +219,7 @@ func (r *vpcRouteServerEndpointResource) routeServerEndpointARN(ctx context.Cont
 }
 
 type vpcRouteServerEndpointResourceModel struct {
+	framework.WithRegionModel
 	ARN                   types.String   `tfsdk:"arn"`
 	EniAddress            types.String   `tfsdk:"eni_address"`
 	EniID                 types.String   `tfsdk:"eni_id"`

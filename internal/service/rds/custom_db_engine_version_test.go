@@ -356,7 +356,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = %[2]q
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
@@ -375,7 +375,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = %[2]q
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
@@ -390,7 +390,9 @@ resource "aws_rds_custom_db_engine_version" "test" {
 func testAccCustomDBEngineVersionConfig_oracle(rName, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "rdscfo_kms_key" {
-  description = "KMS symmetric key for RDS Custom for Oracle"
+  description             = "KMS symmetric key for RDS Custom for Oracle"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
@@ -410,7 +412,9 @@ resource "aws_rds_custom_db_engine_version" "test" {
 func testAccCustomDBEngineVersionConfig_manifestFile(rName, bucket, filename string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "rdscfo_kms_key" {
-  description = "KMS symmetric key for RDS Custom for Oracle"
+  description             = "KMS symmetric key for RDS Custom for Oracle"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
@@ -432,7 +436,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = %[2]q
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {

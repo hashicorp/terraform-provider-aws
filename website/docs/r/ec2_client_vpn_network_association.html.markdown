@@ -24,6 +24,7 @@ resource "aws_ec2_client_vpn_network_association" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `subnet_id` - (Required) The ID of the subnet to associate with the Client VPN endpoint.
 

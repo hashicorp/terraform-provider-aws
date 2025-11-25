@@ -135,6 +135,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceId` - (Required, ForceNew) The ID of the service instance.
 * `serviceId` - (Required, ForceNew) The ID of the service that you want to use to create the instance.
 * `attributes` - (Required) A map contains the attributes of the instance. Check the [doc](https://docs.aws.amazon.com/cloud-map/latest/api/API_RegisterInstance.html#API_RegisterInstance_RequestSyntax) for the supported attributes and syntax.
@@ -177,4 +178,4 @@ Using `terraform import`, import Service Discovery Instance using the service ID
 % terraform import aws_service_discovery_instance.example 0123456789/i-0123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-81e46074d207df4789822f0bad31c495113362f2fbc8b6456fb894ad88def8b7 -->
+<!-- cache-key: cdktf-0.20.8 input-cefa2a9a09b600d3805132aae0f236da563987be4d88224f7d5a52cdf9b37b57 -->

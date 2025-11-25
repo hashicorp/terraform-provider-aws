@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `humanTaskUiName` - (Required) The name of the Human Task UI.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `uiTemplate` - (Required) The Liquid template for the worker user interface. See [UI Template](#ui-template) below.
@@ -93,4 +94,4 @@ Using `terraform import`, import SageMaker AI Human Task UIs using the `humanTas
 % terraform import aws_sagemaker_human_task_ui.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7bccd7edbedb0d7675b33459b6e76f786e3821d4055c35746b9c235c4cdc6d3d -->
+<!-- cache-key: cdktf-0.20.8 input-3a372a338fa5d7b496257746390a6f4320ea338d75bd0456ba59e21c4a0a0b97 -->

@@ -163,6 +163,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `customDnsConfiguration` - (Optional) List of DNS server name and server IP. This is used to set up Route-53 outbound resolvers. Defined below.
 * `description` - (Optional) Description for the KX environment.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -263,4 +264,4 @@ Using `terraform import`, import an AWS FinSpace Kx Environment using the `id`. 
 % terraform import aws_finspace_kx_environment.example n3ceo7wqxoxcti5tujqwzs
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d97c22abd7224cef7df912e8bd43d2d4e6a61fc878245515c1d2fff4f7189646 -->
+<!-- cache-key: cdktf-0.20.8 input-b2108714a6219ac2ea80a2e10dbbb727bd135b195dff3ec439cc284ae82e2075 -->

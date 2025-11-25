@@ -43,7 +43,7 @@ resource "aws_dynamodb_table" "example" {
 resource "aws_dynamodb_tag" "test" {
   provider = aws.replica
 
-  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.name, data.aws_region.replica.name)
+  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.region, data.aws_region.replica.name)
   key          = "testkey"
   value        = "testvalue"
 }
@@ -53,6 +53,7 @@ resource "aws_dynamodb_tag" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the DynamoDB resource to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.

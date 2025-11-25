@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -24,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -52,16 +51,14 @@ var routeTableValidTargets = []string{
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.RouteTable")
 // @Testing(generator=false)
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.9.0")
 func resourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableCreate,
 		ReadWithoutTimeout:   resourceRouteTableRead,
 		UpdateWithoutTimeout: resourceRouteTableUpdate,
 		DeleteWithoutTimeout: resourceRouteTableDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -213,9 +210,10 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	routeTable, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.RouteTable, error) {
 		return findRouteTableByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -229,16 +227,8 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
 	}
 
-	routeTable := outputRaw.(*awstypes.RouteTable)
 	ownerID := aws.ToString(routeTable.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, routeTableARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrOwnerID, ownerID)
 	propagatingVGWs := make([]string, 0, len(routeTable.PropagatingVgws))
 	for _, v := range routeTable.PropagatingVgws {
@@ -401,7 +391,7 @@ func resourceRouteTableHash(v any) int {
 	}
 
 	if v, ok := m["ipv6_cidr_block"]; ok {
-		fmt.Fprintf(&buf, "%s-", itypes.CanonicalCIDRBlock(v.(string)))
+		fmt.Fprintf(&buf, "%s-", inttypes.CanonicalCIDRBlock(v.(string)))
 	}
 
 	if v, ok := m[names.AttrCIDRBlock]; ok {
@@ -495,7 +485,7 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 		// created by AWS so probably doesn't need a retry but just to be sure
 		// we provide a small one
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, time.Second*15,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return routeFinder(ctx, conn, routeTableID, destination)
 			},
 			errCodeInvalidRouteNotFound,
@@ -513,7 +503,7 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateRoute(ctx, input)
 		},
 		errCodeInvalidParameterException,
@@ -644,7 +634,7 @@ func routeTableEnableVGWRoutePropagation(ctx context.Context, conn *ec2.Client, 
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.EnableVgwRoutePropagation(ctx, input)
 		},
 		errCodeGatewayNotAttached,
@@ -938,4 +928,8 @@ func routeTableRouteTargetAttribute(m map[string]any) (string, string) { //nolin
 	}
 
 	return "", ""
+}
+
+func routeTableARN(ctx context.Context, c *conns.AWSClient, accountID, routeTableID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "route-table/"+routeTableID)
 }

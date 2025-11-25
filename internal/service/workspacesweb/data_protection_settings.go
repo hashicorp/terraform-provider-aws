@@ -45,7 +45,7 @@ func newDataProtectionSettingsResource(_ context.Context) (resource.ResourceWith
 }
 
 type dataProtectionSettingsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[dataProtectionSettingsResourceModel]
 }
 
 func (r *dataProtectionSettingsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -371,6 +371,7 @@ func findDataProtectionSettingsByARN(ctx context.Context, conn *workspacesweb.Cl
 }
 
 type dataProtectionSettingsResourceModel struct {
+	framework.WithRegionModel
 	AdditionalEncryptionContext  fwtypes.MapOfString                                                `tfsdk:"additional_encryption_context"`
 	AssociatedPortalARNs         fwtypes.ListOfString                                               `tfsdk:"associated_portal_arns"`
 	CustomerManagedKey           fwtypes.ARN                                                        `tfsdk:"customer_managed_key"`

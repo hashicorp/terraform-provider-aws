@@ -144,6 +144,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `associate_public_ip_address` - (Optional) Associate a public ip address with an instance in a VPC.
 * `ebs_block_device` - (Optional) Additional EBS block devices to attach to the instance. See [Block Devices](#block-devices) below for details.
 * `ebs_optimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized.

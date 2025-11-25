@@ -51,8 +51,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `group_arn` - (Required) Name or ARN of the resource group to add resources to.
 * `resource_arn` - (Required) ARN of the resource to be added to the group.
 
@@ -95,4 +96,4 @@ Using `terraform import`, import an AWS Resource Groups Resource using `group_ar
 % terraform import aws_resourcegroups_resource.example arn:aws:resource-groups:us-west-2:012345678901:group/example,arn:aws:lambda:us-west-2:012345678901:function:example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2bf07b21b51607b2097c2f017d5888e7424cafdc56578b34ef3be16f0fd4fc77 -->
+<!-- cache-key: cdktf-0.20.8 input-98c9033a036ac37c588b4c8cdda4b8ca55ec2d54cd3bd5fcd379a817799f755a -->

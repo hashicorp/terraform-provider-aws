@@ -61,6 +61,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `latest` - (Optional) Whether the latest version of the runtime should be fetched. Conflicts with `version`. Valid values: `true`.
 * `version` - (Optional) Version of the runtime to be fetched (for example, `9.0`). Conflicts with `latest`.
 
@@ -74,4 +75,4 @@ This data source exports the following attributes in addition to the arguments a
 * `release_date` - Date that the runtime version was released.
 * `version_name` - Name of the runtime version. For a list of valid runtime versions, see [Canary Runtime Versions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html).
 
-<!-- cache-key: cdktf-0.20.8 input-e6a2213fe4ac6a18145c981992f3636cc72cdc909368fb612d8d2484eadbec3d -->
+<!-- cache-key: cdktf-0.20.8 input-d93b084d9e56c7978eba67a4558ceb74ff63ca61b3aa1781256b2a1c607315d4 -->

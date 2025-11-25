@@ -96,6 +96,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the control.
 * `type` - (Required) Type of control. Valid values are `Custom` and `Standard`.
 
@@ -105,4 +106,4 @@ This data source exports the following attributes in addition to the arguments a
 
 See the [`aws_auditmanager_control` resource](/docs/providers/aws/r/auditmanager_control.html) for details on the returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.8 input-1f28e366706a9337f2c1fbfa44e105f4c5ae1ac268594f50a9ca5aa4bbe7528e -->
+<!-- cache-key: cdktf-0.20.8 input-a74be0523108913cc58ef3c07f4c6fba23d784e83b3fec53e84e214d5f73f9cf -->
