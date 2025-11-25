@@ -26,11 +26,13 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_vpc_encryption_control", name="VPC Encryption Control")
+// @Tags(identifierAttribute="id")
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.VpcEncryptionControl")
 // @Testing(hasNoPreExistingResource=true)
@@ -90,6 +92,8 @@ func (r *resourceVPCEncryptionControl) Schema(ctx context.Context, req resource.
 			"state_message": schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrTags:                      tftags.TagsAttribute(),
+			names.AttrTagsAll:                   tftags.TagsAttributeComputedOnly(),
 			"virtual_private_gateway_exclusion": vpcEncryptionControlExclusionStateInputAttribute,
 			names.AttrVPCID: schema.StringAttribute{
 				Required: true,
@@ -121,6 +125,8 @@ func (r *resourceVPCEncryptionControl) Create(ctx context.Context, req resource.
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcEncryptionControl)
 
 	out, err := conn.CreateVpcEncryptionControl(ctx, &input)
 	if err != nil {
@@ -190,6 +196,8 @@ func (r *resourceVPCEncryptionControl) Read(ctx context.Context, req resource.Re
 		return
 	}
 
+	setTagsOut(ctx, out.Tags)
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
@@ -209,17 +217,31 @@ func (r *resourceVPCEncryptionControl) Update(ctx context.Context, req resource.
 		return
 	}
 
+	var ec awstypes.VpcEncryptionControl
 	if diff.HasChanges() {
 		updateTimeout := r.UpdateTimeout(ctx, state.Timeouts)
-		ec := vpcEncryptionControlModify(ctx, conn, plan, updateTimeout, &resp.Diagnostics)
+		out := vpcEncryptionControlModify(ctx, conn, plan, updateTimeout, &resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		ec = *out
+	} else {
+		var err error
+		ec, err = findVPCEncryptionControlByID(ctx, conn, state.ID.ValueString())
+		if retry.NotFound(err) {
+			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+			return
+		}
+	}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, ec, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, ec, &plan))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -496,6 +518,8 @@ type resourceVPCEncryptionControlModel struct {
 	ResourceExclusions                 fwtypes.ObjectValueOf[vpcEncryptionControlExclusionsModel]           `tfsdk:"resource_exclusions"`
 	State                              types.String                                                         `tfsdk:"state"`
 	StateMessage                       types.String                                                         `tfsdk:"state_message"`
+	Tags                               tftags.Map                                                           `tfsdk:"tags"`
+	TagsAll                            tftags.Map                                                           `tfsdk:"tags_all"`
 	Timeouts                           timeouts.Value                                                       `tfsdk:"timeouts"`
 	VirtualPrivateGatewayExclusion     fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput] `tfsdk:"virtual_private_gateway_exclusion"`
 	VPCID                              types.String                                                         `tfsdk:"vpc_id"`

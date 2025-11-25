@@ -106,6 +106,9 @@ func TestAccVPCVPCEncryptionControl_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_peering_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputDisable)),
 
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_exclusions"), knownvalue.Null()),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
 			{

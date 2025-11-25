@@ -178,6 +178,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceVPCEncryptionControl,
 			TypeName: "aws_vpc_encryption_control",
 			Name:     "VPC Encryption Control",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 			Import: inttypes.FrameworkImport{
