@@ -4468,3 +4468,17 @@ rules:
           patterns:
             - pattern-regex: "(?i)ConnectCases"
     severity: WARNING
+  - id: connectcases-in-var-name
+    languages:
+      - go
+    message: Do not use "ConnectCases" in var name inside connectcases package
+    paths:
+      include:
+        - internal/service/connectcases
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConnectCases"
+    severity: WARNING

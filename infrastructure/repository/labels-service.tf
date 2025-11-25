@@ -231,6 +231,7 @@ variable "service_labels" {
     "mq",
     "mturk",
     "mwaa",
+    "mwaaserverless",
     "neptune",
     "neptunegraph",
     "networkfirewall",

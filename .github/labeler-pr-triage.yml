@@ -1547,6 +1547,12 @@ service/mwaa:
           - any-glob-to-any-file:
               - 'internal/service/mwaa/**/*'
               - 'website/**/mwaa_*'
+service/mwaaserverless:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/mwaaserverless/**/*'
+              - 'website/**/mwaaserverless_*'
 service/neptune:
   - any:
       - changed-files:
