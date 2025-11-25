@@ -213,7 +213,7 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("availability_zone_address"); ok {
-		input.AvailabilityZoneAddresses = expandNATGatewayAvailabilityZoneAddresses(v.(*schema.Set).List(), d)
+		input.AvailabilityZoneAddresses = expandNATGatewayAvailabilityZoneAddresses(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("connectivity_type"); ok {
@@ -611,7 +611,7 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 	return nil
 }
 
-func expandNATGatewayAvailabilityZoneAddresses(vs []any, d *schema.ResourceData) []awstypes.AvailabilityZoneAddress {
+func expandNATGatewayAvailabilityZoneAddresses(vs []any) []awstypes.AvailabilityZoneAddress {
 	if len(vs) == 0 {
 		return nil
 	}
