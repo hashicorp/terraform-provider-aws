@@ -193,6 +193,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.38.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.13 // indirect
+	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.43.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.58.1 // indirect
@@ -223,6 +224,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.111.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rdsdata v1.32.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.61.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.38.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.32.0 // indirect

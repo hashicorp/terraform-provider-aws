@@ -176,6 +176,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.38.5
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.11
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.13
+	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.43.4
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.12
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.58.1
@@ -277,7 +278,6 @@ require (
 	github.com/beevik/etree v1.6.0
 	github.com/cedar-policy/cedar-go v1.3.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
-github.com/dlclark/regexp2 v1.11.5
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/goccy/go-yaml v1.18.0
 	github.com/google/go-cmp v0.7.0

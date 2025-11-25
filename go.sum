@@ -373,6 +373,8 @@ github.com/aws/aws-sdk-go-v2/service/mq v1.34.11 h1:D8r2O16aBEH/dG8xYYlhX+Tb0yWs
 github.com/aws/aws-sdk-go-v2/service/mq v1.34.11/go.mod h1:dp1WwnKbfltN4RJ39DIu2HFIif7DoZIQ1EsfB8BGUWA=
 github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.13 h1:wIqi6JVRFEfiN6kTVGWjg7zb3FEVPTvT2tpI3PArORU=
 github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.13/go.mod h1:06+ehiGrk+iaZXv4/BaooFPq8XRvmw4VWnxuNPoX6SM=
+github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.1 h1:AWcrFVyaX6mt6QSmhLZHC0k3ey9IPl8SnNpW7Sc+y3g=
+github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.1/go.mod h1:+FkUp9Aq1PTm+Bj4ONYYw8mbMC1FpeLsgMBQwiBj9KM=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.43.4 h1:SR0OowjSvC8VhRvqvhp8mOTgnulFWdnYJZMbP4jfRfI=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.43.4/go.mod h1:u/db+lzLiyv8jAQe0S6t74UVXhqRGvB5tTkFBzmJ9Eg=
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.12 h1:cnBJ7+jr3h9PTSBu6/bVOGRoZM9hz0+pGDKC5mT7Yi0=
@@ -591,8 +593,6 @@ github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dlclark/regexp2 v1.11.5 h1:Q/sSnsKerHeCkc/jSTNq1oCm7KiVgUMZRDUoRu0JQZQ=
-github.com/dlclark/regexp2 v1.11.5/go.mod h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
 github.com/evanphx/json-patch v0.5.2 h1:xVCHIVMUu1wtM/VkR9jVZ45N3FhZfYMMYGorLCR8P3k=
