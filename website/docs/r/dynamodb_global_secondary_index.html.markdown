@@ -80,8 +80,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN of the GSI
-* `name` - name of the GSI
+* `arn` - name of the GSI
 
 ## Migrating
 

@@ -12,12 +12,12 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	ddbtypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	gocmp "github.com/google/go-cmp/cmp"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -29,13 +29,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+type contextKey int
+
 const (
+	tableKey contextKey = 0
+
 	warmThoughtPutMinReadUnitsPerSecond  = 12000
 	warmThoughtPutMinWriteUnitsPerSecond = 4000
 )
@@ -54,12 +60,12 @@ func newResourceGlobalSecondaryIndex(_ context.Context) (resource.ResourceWithCo
 type resourceGlobalSecondaryIndex struct {
 	framework.ResourceWithModel[resourceGlobalSecondaryIndexModel]
 	framework.WithTimeouts
-	framework.WithImportByID
 }
 
 func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"hash_key": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -67,7 +73,7 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 				},
 			},
 			"hash_key_type": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[ddbtypes.ScalarAttributeType](),
+				CustomType: fwtypes.StringEnumType[awstypes.ScalarAttributeType](),
 				Optional:   true,
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -75,7 +81,6 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -107,12 +112,12 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 							slices.Sort(new)
 						}
 
-						response.RequiresReplace = !gocmp.Equal(old, new)
+						response.RequiresReplace = !slices.Equal(old, new)
 					}, "", ""),
 				},
 			},
 			"projection_type": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[ddbtypes.ProjectionType](),
+				CustomType: fwtypes.StringEnumType[awstypes.ProjectionType](),
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -125,7 +130,7 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 				},
 			},
 			"range_key_type": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[ddbtypes.ScalarAttributeType](),
+				CustomType: fwtypes.StringEnumType[awstypes.ScalarAttributeType](),
 				Optional:   true,
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -170,6 +175,11 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 			"warm_throughput": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[warmThroughputModel](ctx),
 				NestedObject: schema.NestedBlockObject{
@@ -192,19 +202,14 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 				},
 			},
 		},
-		Version: 1,
+		Version: 0,
 	}
-
-	if s.Blocks == nil {
-		s.Blocks = make(map[string]schema.Block)
-	}
-	s.Blocks[names.AttrTimeouts] = timeouts.Block(ctx, timeouts.Opts{
-		Create: true,
-		Update: true,
-		Delete: true,
-	})
 
 	response.Schema = s
+}
+
+func (r *resourceGlobalSecondaryIndex) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
 func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -216,8 +221,11 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		return
 	}
 
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
 	conn := r.Meta().DynamoDBClient(ctx)
-	if _, err := waitAllGSIActive(ctx, conn, data.Table.ValueString(), r.ReadTimeout(ctx, data.Timeouts)); err != nil {
+
+	table, err := waitAllGSIActive(ctx, conn, data.Table.ValueString(), createTimeout)
+	if err != nil {
 		response.Diagnostics.AddError(
 			fmt.Sprintf(`Error while waiting for all GSIs on table "%s" to be active`, data.Table.ValueString()),
 			err.Error(),
@@ -226,22 +234,10 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-
-	table, err := findTableByName(ctx, conn, data.Table.ValueString())
-	if err != nil {
-		response.Diagnostics.AddError(
-			fmt.Sprintf(`Unable to read table "%s"`, data.Table.ValueString()),
-			err.Error(),
-		)
-
-		return
-	}
-
-	knownAttributes := map[string]ddbtypes.ScalarAttributeType{}
+	knownAttributes := map[string]awstypes.ScalarAttributeType{}
 	ut := &dynamodb.UpdateTableInput{
 		TableName:            data.Table.ValueStringPointer(),
-		AttributeDefinitions: []ddbtypes.AttributeDefinition{},
+		AttributeDefinitions: []awstypes.AttributeDefinition{},
 	}
 
 	for _, ad := range table.AttributeDefinitions {
@@ -249,7 +245,7 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		knownAttributes[aws.ToString(ad.AttributeName)] = ad.AttributeType
 	}
 
-	keySchema := []ddbtypes.KeySchemaElement{}
+	keySchema := []awstypes.KeySchemaElement{}
 	hashKey := data.HashKey.ValueString()
 	if hashKey == "" {
 		response.Diagnostics.AddError(
@@ -271,15 +267,15 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 
 			return
 		}
-	} else {
-		ut.AttributeDefinitions = append(ut.AttributeDefinitions, ddbtypes.AttributeDefinition{
+	} else if _, ok := knownAttributes[hashKey]; !ok {
+		ut.AttributeDefinitions = append(ut.AttributeDefinitions, awstypes.AttributeDefinition{
 			AttributeName: aws.String(hashKey),
 			AttributeType: data.HashKeyType.ValueEnum(),
 		})
 	}
-	keySchema = append(keySchema, ddbtypes.KeySchemaElement{
+	keySchema = append(keySchema, awstypes.KeySchemaElement{
 		AttributeName: aws.String(hashKey),
-		KeyType:       ddbtypes.KeyTypeHash,
+		KeyType:       awstypes.KeyTypeHash,
 	})
 
 	rangeKey := data.RangeKey.ValueString()
@@ -295,20 +291,20 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 
 				return
 			}
-		} else {
-			ut.AttributeDefinitions = append(ut.AttributeDefinitions, ddbtypes.AttributeDefinition{
+		} else if _, ok := knownAttributes[rangeKey]; !ok {
+			ut.AttributeDefinitions = append(ut.AttributeDefinitions, awstypes.AttributeDefinition{
 				AttributeName: aws.String(rangeKey),
 				AttributeType: data.RangeKeyType.ValueEnum(),
 			})
 		}
 
-		keySchema = append(keySchema, ddbtypes.KeySchemaElement{
+		keySchema = append(keySchema, awstypes.KeySchemaElement{
 			AttributeName: aws.String(rangeKey),
-			KeyType:       ddbtypes.KeyTypeRange,
+			KeyType:       awstypes.KeyTypeRange,
 		})
 	}
 
-	projection := &ddbtypes.Projection{
+	projection := &awstypes.Projection{
 		ProjectionType: data.ProjectionType.ValueEnum(),
 	}
 
@@ -318,7 +314,7 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		)
 	}
 
-	action := &ddbtypes.CreateGlobalSecondaryIndexAction{
+	action := &awstypes.CreateGlobalSecondaryIndexAction{
 		IndexName:  data.Name.ValueStringPointer(),
 		KeySchema:  keySchema,
 		Projection: projection,
@@ -332,12 +328,12 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		data.WriteCapacity = types.Int64Value(0)
 	}
 
-	billingMode := ddbtypes.BillingModeProvisioned
+	billingMode := awstypes.BillingModeProvisioned
 	if table.BillingModeSummary != nil {
 		billingMode = table.BillingModeSummary.BillingMode
 	}
 
-	if billingMode == ddbtypes.BillingModeProvisioned {
+	if billingMode == awstypes.BillingModeProvisioned {
 		rc := int(data.ReadCapacity.ValueInt64())
 		wc := int(data.WriteCapacity.ValueInt64())
 
@@ -374,14 +370,13 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		})
 	}
 
-	ut.GlobalSecondaryIndexUpdates = []ddbtypes.GlobalSecondaryIndexUpdate{
+	ut.GlobalSecondaryIndexUpdates = []awstypes.GlobalSecondaryIndexUpdate{
 		{
 			Create: action,
 		},
 	}
 
 	response.Diagnostics.Append(validateNewGSIAttributes(data, *table)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -396,7 +391,10 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 	} else {
 		for _, g := range utRes.TableDescription.GlobalSecondaryIndexes {
 			if aws.ToString(g.IndexName) == data.Name.ValueString() {
-				flattenGSI(ctx, *table, g, &data)
+				response.Diagnostics.Append(fwflex.Flatten(context.WithValue(ctx, tableKey, table), g, &data)...)
+				if response.Diagnostics.HasError() {
+					return
+				}
 
 				break
 			}
@@ -412,9 +410,16 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		return
 	}
 
-	if _, err := waitGSIActive(ctx, conn, data.Table.ValueString(), data.Name.ValueString(), r.UpdateTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitGSIActive(ctx, conn, data.Table.ValueString(), data.Name.ValueString(), createTimeout); err != nil {
 		response.Diagnostics.AddError(
 			fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be active`, data.Name.ValueString(), data.Table.ValueString()),
+			err.Error(),
+		)
+	}
+
+	if err = waitGSIWarmThroughputActive(ctx, conn, data.Table.ValueString(), data.Name.ValueString(), createTimeout); err != nil {
+		response.Diagnostics.AddError(
+			fmt.Sprintf(`Error while waiting for warm throughput on GSI "%s" on table "%s" to be active`, data.Name.ValueString(), data.Table.ValueString()),
 			err.Error(),
 		)
 	}
@@ -432,7 +437,7 @@ func (r *resourceGlobalSecondaryIndex) Read(ctx context.Context, request resourc
 	}
 
 	re := regexache.MustCompile(":table/([^\\/]+)/index/(.+)")
-	grps := re.FindStringSubmatch(data.ID.ValueString())
+	grps := re.FindStringSubmatch(data.ARN.ValueString())
 	var tableName string
 	if len(grps) == 3 {
 		tableName = grps[1]
@@ -444,7 +449,7 @@ func (r *resourceGlobalSecondaryIndex) Read(ctx context.Context, request resourc
 
 	table, err := findTableByName(ctx, conn, tableName)
 	if err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 			response.State.RemoveResource(ctx)
 		} else {
@@ -459,10 +464,13 @@ func (r *resourceGlobalSecondaryIndex) Read(ctx context.Context, request resourc
 
 	found := false
 	for _, g := range table.GlobalSecondaryIndexes {
-		if aws.ToString(g.IndexArn) == data.ID.ValueString() {
+		if aws.ToString(g.IndexArn) == data.ARN.ValueString() {
 			found = true
 
-			flattenGSI(ctx, *table, g, &data)
+			response.Diagnostics.Append(fwflex.Flatten(context.WithValue(ctx, tableKey, table), g, &data)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
 
 			break
 		}
@@ -471,25 +479,10 @@ func (r *resourceGlobalSecondaryIndex) Read(ctx context.Context, request resourc
 	if !found {
 		response.Diagnostics.Append(
 			fwdiag.NewResourceNotFoundWarningDiagnostic(
-				fmt.Errorf(`unable to find global secondary index with id "%s", treating it as new`, data.ID.ValueString()),
+				fmt.Errorf(`unable to find global secondary index with id "%s", treating it as new`, data.ARN.ValueString()),
 			),
 		)
 		response.State.RemoveResource(ctx)
-	}
-
-	if !data.WarmThroughputs.IsNull() && !data.WarmThroughputs.IsUnknown() {
-		var wt []warmThroughputModel
-
-		response.Diagnostics.Append(data.WarmThroughputs.ElementsAs(ctx, &wt, false)...)
-
-		if !response.Diagnostics.HasError() && len(wt) > 0 {
-			rups := wt[0].ReadUnitsPerSecond.ValueInt64()
-			wups := wt[0].WriteUnitsPerSecond.ValueInt64()
-
-			if (rups < warmThoughtPutMinReadUnitsPerSecond && wups < warmThoughtPutMinWriteUnitsPerSecond) || (rups == warmThoughtPutMinReadUnitsPerSecond && wups == warmThoughtPutMinWriteUnitsPerSecond) {
-				data.WarmThroughputs = fwtypes.NewListNestedObjectValueOfValueSliceMust[warmThroughputModel](ctx, []warmThroughputModel{})
-			}
-		}
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -511,19 +504,9 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
-	readTimeout := r.ReadTimeout(ctx, new.Timeouts)
 	conn := r.Meta().DynamoDBClient(ctx)
 
-	if _, err := waitAllGSIActive(ctx, conn, new.Table.ValueString(), readTimeout); err != nil {
-		response.Diagnostics.AddError(
-			fmt.Sprintf(`Error while waiting for all GSIs on table "%s" to be active`, new.Table.ValueString()),
-			err.Error(),
-		)
-
-		return
-	}
-
-	table, err := findTableByName(ctx, conn, new.Table.ValueString())
+	table, err := waitAllGSIActive(ctx, conn, new.Table.ValueString(), updateTimeout)
 	if err != nil {
 		if tfresource.NotFound(err) {
 			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -538,26 +521,26 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 		return
 	}
 
-	action := &ddbtypes.UpdateGlobalSecondaryIndexAction{
+	action := &awstypes.UpdateGlobalSecondaryIndexAction{
 		IndexName: new.Name.ValueStringPointer(),
 	}
 
-	billingMode := ddbtypes.BillingModeProvisioned
+	billingMode := awstypes.BillingModeProvisioned
 	if table.BillingModeSummary != nil {
 		billingMode = table.BillingModeSummary.BillingMode
 	}
 
 	hasUpdate := false
 
-	if billingMode == ddbtypes.BillingModeProvisioned {
+	if billingMode == awstypes.BillingModeProvisioned {
 		provisionedThroughputData := map[string]any{
 			"read_capacity":  int(new.ReadCapacity.ValueInt64()),
 			"write_capacity": int(new.WriteCapacity.ValueInt64()),
 		}
 		newProvisionedThroughput := expandProvisionedThroughput(provisionedThroughputData, billingMode)
 
-		filteredGSIs := tfslices.Filter(table.GlobalSecondaryIndexes, func(description ddbtypes.GlobalSecondaryIndexDescription) bool {
-			return aws.ToString(description.IndexArn) == old.ID.ValueString()
+		filteredGSIs := tfslices.Filter(table.GlobalSecondaryIndexes, func(description awstypes.GlobalSecondaryIndexDescription) bool {
+			return aws.ToString(description.IndexArn) == old.ARN.ValueString()
 		})
 
 		if len(filteredGSIs) == 0 {
@@ -566,7 +549,7 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 				fmt.Sprintf(
 					`GSI with name "%s" (arn: "%s") was not found in table "%s"`,
 					new.Name.ValueString(),
-					new.ID.ValueString(),
+					new.ARN.ValueString(),
 					new.Table.ValueString(),
 				),
 			)
@@ -610,7 +593,7 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 
 	ut := &dynamodb.UpdateTableInput{
 		TableName: new.Table.ValueStringPointer(),
-		GlobalSecondaryIndexUpdates: []ddbtypes.GlobalSecondaryIndexUpdate{
+		GlobalSecondaryIndexUpdates: []awstypes.GlobalSecondaryIndexUpdate{
 			{
 				Update: action,
 			},
@@ -630,7 +613,10 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 		} else {
 			for _, g := range utRes.TableDescription.GlobalSecondaryIndexes {
 				if aws.ToString(g.IndexName) == new.Name.ValueString() {
-					flattenGSI(ctx, *table, g, &new)
+					response.Diagnostics.Append(fwflex.Flatten(context.WithValue(ctx, tableKey, table), g, &new)...)
+					if response.Diagnostics.HasError() {
+						return
+					}
 
 					break
 				}
@@ -646,9 +632,16 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 			return
 		}
 
-		if _, err := waitGSIActive(ctx, conn, new.Table.ValueString(), new.Name.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		if _, err := waitGSIActive(ctx, conn, new.Table.ValueString(), new.Name.ValueString(), updateTimeout); err != nil {
 			response.Diagnostics.AddError(
 				fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be active`, new.Name.ValueString(), new.Table.ValueString()),
+				err.Error(),
+			)
+		}
+
+		if err = waitGSIWarmThroughputActive(ctx, conn, new.Table.ValueString(), new.Name.ValueString(), updateTimeout); err != nil {
+			response.Diagnostics.AddError(
+				fmt.Sprintf(`Error while waiting for warm throughput on GSI "%s" on table "%s" to be active`, new.Name.ValueString(), new.Table.ValueString()),
 				err.Error(),
 			)
 		}
@@ -666,19 +659,9 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 		return
 	}
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
-	readTimeout := r.ReadTimeout(ctx, data.Timeouts)
 	conn := r.Meta().DynamoDBClient(ctx)
 
-	if _, err := waitAllGSIActive(ctx, conn, data.Table.ValueString(), readTimeout); err != nil {
-		response.Diagnostics.AddError(
-			fmt.Sprintf(`Error while waiting for all GSIs on table "%s" to be active`, data.Table.ValueString()),
-			err.Error(),
-		)
-
-		return
-	}
-
-	table, err := findTableByName(ctx, conn, data.Table.ValueString())
+	_, err := waitAllGSIActive(ctx, conn, data.Table.ValueString(), deleteTimeout)
 	if err != nil {
 		if tfresource.NotFound(err) {
 			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -693,57 +676,20 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 		return
 	}
 
-	knownAttributes := map[string]int{}
-	for _, l := range table.LocalSecondaryIndexes {
-		for _, ks := range l.KeySchema {
-			knownAttributes[aws.ToString(ks.AttributeName)] = knownAttributes[aws.ToString(ks.AttributeName)] + 1
-		}
-	}
-
-	for _, g := range table.GlobalSecondaryIndexes {
-		if data.ID.ValueString() != aws.ToString(g.IndexArn) {
-			for _, ks := range g.KeySchema {
-				knownAttributes[aws.ToString(ks.AttributeName)] = knownAttributes[aws.ToString(ks.AttributeName)] + 1
-			}
-		}
-	}
-
 	ut := &dynamodb.UpdateTableInput{
-		TableName:            data.Table.ValueStringPointer(),
-		AttributeDefinitions: []ddbtypes.AttributeDefinition{},
-		GlobalSecondaryIndexUpdates: []ddbtypes.GlobalSecondaryIndexUpdate{
+		TableName: data.Table.ValueStringPointer(),
+		GlobalSecondaryIndexUpdates: []awstypes.GlobalSecondaryIndexUpdate{
 			{
-				Delete: &ddbtypes.DeleteGlobalSecondaryIndexAction{
+				Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
 					IndexName: data.Name.ValueStringPointer(),
 				},
 			},
 		},
 	}
 
-	for _, ad := range table.AttributeDefinitions {
-		if knownAttributes[aws.ToString(ad.AttributeName)] > 0 {
-			ut.AttributeDefinitions = append(ut.AttributeDefinitions, ad)
-		}
-	}
-
-	if utRes, err := conn.UpdateTable(ctx, ut); err != nil {
+	if _, err = conn.UpdateTable(ctx, ut); err != nil {
 		response.Diagnostics.AddError(
 			fmt.Sprintf(`Unable to delete index "%s" on table "%s"`, data.Name.ValueString(), data.Table.ValueString()),
-			err.Error(),
-		)
-
-		return
-	} else {
-		for _, gsi := range utRes.TableDescription.GlobalSecondaryIndexes {
-			if aws.ToString(gsi.IndexName) == data.Name.ValueString() {
-				data.ID = types.StringValue(aws.ToString(gsi.IndexArn))
-			}
-		}
-	}
-
-	if _, err = waitTableActive(ctx, conn, data.Table.ValueString(), deleteTimeout); err != nil {
-		response.Diagnostics.AddError(
-			fmt.Sprintf(`Error while waiting for table "%s" to be active`, data.Table.ValueString()),
 			err.Error(),
 		)
 
@@ -761,14 +707,14 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 type resourceGlobalSecondaryIndexModel struct {
 	framework.WithRegionModel
 
+	ARN                 types.String                                             `tfsdk:"arn"`
 	HashKey             types.String                                             `tfsdk:"hash_key"`
-	HashKeyType         fwtypes.StringEnum[ddbtypes.ScalarAttributeType]         `tfsdk:"hash_key_type"`
-	ID                  types.String                                             `tfsdk:"id"`
+	HashKeyType         fwtypes.StringEnum[awstypes.ScalarAttributeType]         `tfsdk:"hash_key_type"`
 	Name                types.String                                             `tfsdk:"name"`
 	NonKeyAttributes    fwtypes.SetOfString                                      `tfsdk:"non_key_attributes"`
-	ProjectionType      fwtypes.StringEnum[ddbtypes.ProjectionType]              `tfsdk:"projection_type"`
+	ProjectionType      fwtypes.StringEnum[awstypes.ProjectionType]              `tfsdk:"projection_type"`
 	RangeKey            types.String                                             `tfsdk:"range_key"`
-	RangeKeyType        fwtypes.StringEnum[ddbtypes.ScalarAttributeType]         `tfsdk:"range_key_type"`
+	RangeKeyType        fwtypes.StringEnum[awstypes.ScalarAttributeType]         `tfsdk:"range_key_type"`
 	ReadCapacity        types.Int64                                              `tfsdk:"read_capacity"`
 	Table               types.String                                             `tfsdk:"table"`
 	WriteCapacity       types.Int64                                              `tfsdk:"write_capacity"`
@@ -778,21 +724,33 @@ type resourceGlobalSecondaryIndexModel struct {
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
-type onDemandThroughputModel struct {
-	MaxReadRequestUnits  types.Int64 `tfsdk:"max_read_request_units"`
-	MaxWriteRequestUnits types.Int64 `tfsdk:"max_write_request_units"`
-}
+func (data *resourceGlobalSecondaryIndexModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-type warmThroughputModel struct {
-	ReadUnitsPerSecond  types.Int64 `tfsdk:"read_units_per_second"`
-	WriteUnitsPerSecond types.Int64 `tfsdk:"write_units_per_second"`
-}
+	g, ok := v.(awstypes.GlobalSecondaryIndexDescription)
+	if !ok {
+		diags.AddError(
+			"Bad argument",
+			"Given parameter is not awstypes.GlobalSecondaryIndexDescription",
+		)
 
-func flattenGSI(ctx context.Context, table ddbtypes.TableDescription, g ddbtypes.GlobalSecondaryIndexDescription, data *resourceGlobalSecondaryIndexModel) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
-	data.ID = types.StringValue(aws.ToString(g.IndexArn))
+		return diags
+	}
 
+	table, ok := ctx.Value(tableKey).(*awstypes.TableDescription)
+	if !ok || table == nil {
+		diags.AddError(
+			"Bad argument",
+			"Context is missing the table description",
+		)
+
+		return diags
+	}
+
+	data.ARN = types.StringValue(aws.ToString(g.IndexArn))
 	data.Name = types.StringValue(aws.ToString(g.IndexName))
 	data.Table = types.StringValue(aws.ToString(table.TableName))
+
 	var nkas []attr.Value
 	if g.Projection != nil {
 		data.ProjectionType = fwtypes.StringEnumValue(g.Projection.ProjectionType)
@@ -843,14 +801,16 @@ func flattenGSI(ctx context.Context, table ddbtypes.TableDescription, g ddbtypes
 		}
 
 		data.WarmThroughputs = fwtypes.NewListNestedObjectValueOfValueSliceMust[warmThroughputModel](ctx, wtms)
+	} else {
+		data.WarmThroughputs = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []warmThroughputModel{})
 	}
 
 	for _, ks := range g.KeySchema {
-		if ks.KeyType == ddbtypes.KeyTypeHash && (data.HashKey.IsNull() || data.HashKey.IsUnknown()) {
+		if ks.KeyType == awstypes.KeyTypeHash && (data.HashKey.IsNull() || data.HashKey.IsUnknown()) {
 			data.HashKey = types.StringValue(aws.ToString(ks.AttributeName))
 		}
 
-		if ks.KeyType == ddbtypes.KeyTypeRange && (data.RangeKey.IsNull() || data.RangeKey.IsUnknown()) {
+		if ks.KeyType == awstypes.KeyTypeRange && (data.RangeKey.IsNull() || data.RangeKey.IsUnknown()) {
 			data.RangeKey = types.StringValue(aws.ToString(ks.AttributeName))
 		}
 	}
@@ -863,9 +823,28 @@ func flattenGSI(ctx context.Context, table ddbtypes.TableDescription, g ddbtypes
 			data.RangeKeyType = fwtypes.StringEnumValue(attr.AttributeType)
 		}
 	}
+
+	if data.RangeKey.IsUnknown() {
+		data.RangeKey = types.StringNull()
+	}
+	if data.RangeKeyType.IsUnknown() {
+		data.RangeKeyType = fwtypes.StringEnumNull[awstypes.ScalarAttributeType]()
+	}
+
+	return diags
 }
 
-func validateNewGSIAttributes(data resourceGlobalSecondaryIndexModel, table ddbtypes.TableDescription) diag.Diagnostics {
+type onDemandThroughputModel struct {
+	MaxReadRequestUnits  types.Int64 `tfsdk:"max_read_request_units"`
+	MaxWriteRequestUnits types.Int64 `tfsdk:"max_write_request_units"`
+}
+
+type warmThroughputModel struct {
+	ReadUnitsPerSecond  types.Int64 `tfsdk:"read_units_per_second"`
+	WriteUnitsPerSecond types.Int64 `tfsdk:"write_units_per_second"`
+}
+
+func validateNewGSIAttributes(data resourceGlobalSecondaryIndexModel, table awstypes.TableDescription) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	counts := map[string]int{}

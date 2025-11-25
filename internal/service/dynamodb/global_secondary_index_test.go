@@ -6,6 +6,7 @@ package dynamodb_test
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -13,10 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,29 +42,29 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
-					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
-					resource.TestCheckResourceAttr(resourceNameGSI, "range_key", rNameGSI),
-					resource.TestCheckResourceAttr(resourceNameGSI, "range_key_type", "S"),
+					func(s *terraform.State) error {
+						return resource.TestCheckResourceAttr(resourceNameGSI, names.AttrARN, aws.ToString(gsi.IndexArn))(s)
+					},
+					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckNoResourceAttr(resourceNameGSI, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "projection_type", "ALL"),
+					resource.TestCheckNoResourceAttr(resourceNameGSI, "range_key"),
+					resource.TestCheckNoResourceAttr(resourceNameGSI, "range_key_type"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "read_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "write_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.#", "0"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "warm_throughput.#", "0"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -105,19 +103,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameGSI, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "write_capacity", "0"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -160,19 +152,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_read_request_units", "1"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_write_request_units", "1"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -211,19 +197,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 					resource.TestCheckResourceAttr(resourceNameGSI, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "write_capacity", "2"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_basic_withCapacity(rNameTable, rNameGSI, 4),
@@ -241,19 +221,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 					resource.TestCheckResourceAttr(resourceNameGSI, "read_capacity", "4"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "write_capacity", "4"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -292,19 +266,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ign
 					resource.TestCheckResourceAttr(resourceNameGSI, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "write_capacity", "2"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_basic_withCapacityAndIgnoreChanges(rNameTable, rNameGSI, 4),
@@ -322,30 +290,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ign
 					resource.TestCheckResourceAttr(resourceNameGSI, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "write_capacity", "2"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
-					acctest.ImportCheckResourceAttr(names.AttrName, rNameGSI),
-					acctest.ImportCheckResourceAttr("table", rNameTable),
-					acctest.ImportCheckResourceAttr("hash_key", rNameTable),
-					acctest.ImportCheckResourceAttr("hash_key_type", "S"),
-					acctest.ImportCheckResourceAttr("range_key", rNameGSI),
-					acctest.ImportCheckResourceAttr("range_key_type", "S"),
-					acctest.ImportCheckResourceAttr("projection_type", "ALL"),
-					acctest.ImportCheckResourceAttr("read_capacity", "2"),
-					acctest.ImportCheckResourceAttr("write_capacity", "2"),
-				),
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -388,19 +339,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_read_request_units", "2"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_write_request_units", "2"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rNameGSI, 4),
@@ -422,19 +367,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_read_request_units", "4"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_write_request_units", "4"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -477,19 +416,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_read_request_units", "2"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_write_request_units", "2"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacityAndIgnoreChanges(rNameTable, rNameGSI, 4),
@@ -511,19 +444,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_read_request_units", "2"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_write_request_units", "2"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -566,19 +493,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput(t *
 					resource.TestCheckResourceAttr(resourceNameGSI, "warm_throughput.0.read_units_per_second", "15000"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "warm_throughput.0.write_units_per_second", "5000"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -653,19 +574,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_read_request_units", "2"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_write_request_units", "2"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_basic_withCapacity(rNameTable, rNameGSI, 2),
@@ -683,19 +598,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 					resource.TestCheckResourceAttr(resourceNameGSI, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "write_capacity", "2"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -734,19 +643,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 					resource.TestCheckResourceAttr(resourceNameGSI, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "write_capacity", "2"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rNameGSI, 2),
@@ -768,22 +671,216 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_read_request_units", "2"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.0.max_write_request_units", "2"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceNameTable, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
 			},
 			{
-				ResourceName:      resourceNameGSI,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceNameGSI := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameGSI := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rHashKey := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rRangeKey := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_differentKeys(rNameTable, rNameGSI, rNameTable, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
+
+					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
+					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
+					func(s *terraform.State) error {
+						return resource.TestCheckResourceAttr(resourceNameGSI, names.AttrARN, aws.ToString(gsi.IndexArn))(s)
+					},
+					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckNoResourceAttr(resourceNameGSI, "non_key_attributes"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "projection_type", "ALL"),
+					resource.TestCheckNoResourceAttr(resourceNameGSI, "range_key"),
+					resource.TestCheckNoResourceAttr(resourceNameGSI, "range_key_type"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "read_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
+					resource.TestCheckResourceAttr(resourceNameGSI, "write_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.#", "0"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "warm_throughput.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceNameTable,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"global_secondary_index",
+				},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr(names.AttrName, rNameTable),
+					acctest.ImportCheckResourceAttr("attribute.#", "1"),
+				),
+			},
+			{
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+			{
+				Config: testAccGlobalSecondaryIndexConfig_differentKeys(rNameTable, rNameGSI, rHashKey, rRangeKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
+
+					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rHashKey),
+					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
+					func(s *terraform.State) error {
+						return resource.TestCheckResourceAttr(resourceNameGSI, names.AttrARN, aws.ToString(gsi.IndexArn))(s)
+					},
+					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckNoResourceAttr(resourceNameGSI, "non_key_attributes"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "projection_type", "ALL"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "range_key", rRangeKey),
+					resource.TestCheckResourceAttr(resourceNameGSI, "range_key_type", "S"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "read_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
+					resource.TestCheckResourceAttr(resourceNameGSI, "write_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.#", "0"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "warm_throughput.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceNameTable,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"attribute",
+					"global_secondary_index",
+				},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr(names.AttrName, rNameTable),
+					acctest.ImportCheckResourceAttr("attribute.#", "3"),
+				),
+			},
+			{
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceNameGSI := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameGSI := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_nonKeyAttributes(rNameTable, rNameGSI, []string{}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
+
+					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
+					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
+					func(s *terraform.State) error {
+						return resource.TestCheckResourceAttr(resourceNameGSI, names.AttrARN, aws.ToString(gsi.IndexArn))(s)
+					},
+					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckNoResourceAttr(resourceNameGSI, "non_key_attributes"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "projection_type", "ALL"),
+					resource.TestCheckNoResourceAttr(resourceNameGSI, "range_key"),
+					resource.TestCheckNoResourceAttr(resourceNameGSI, "range_key_type"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "read_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
+					resource.TestCheckResourceAttr(resourceNameGSI, "write_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.#", "0"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "warm_throughput.#", "0"),
+				),
+			},
+			{
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+			{
+				Config: testAccGlobalSecondaryIndexConfig_nonKeyAttributes(rNameTable, rNameGSI, []string{"test1", "test2"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
+
+					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
+					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
+					func(s *terraform.State) error {
+						return resource.TestCheckResourceAttr(resourceNameGSI, names.AttrARN, aws.ToString(gsi.IndexArn))(s)
+					},
+					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "non_key_attributes.#", "2"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "projection_type", "INCLUDE"),
+					resource.TestCheckNoResourceAttr(resourceNameGSI, "range_key"),
+					resource.TestCheckNoResourceAttr(resourceNameGSI, "range_key_type"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "read_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
+					resource.TestCheckResourceAttr(resourceNameGSI, "write_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "on_demand_throughput.#", "0"),
+					resource.TestCheckResourceAttr(resourceNameGSI, "warm_throughput.#", "0"),
+				),
+			},
+			{
+				ResourceName:                         resourceNameGSI,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+		},
+	})
+}
+
+func testAccGlobalSecondaryIndexImportStateFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes[names.AttrARN], nil
+	}
 }
 
 func testAccCheckInitialGSIExists(n string, tbl *awstypes.TableDescription, gsi *awstypes.GlobalSecondaryIndexDescription) resource.TestCheckFunc {
@@ -827,10 +924,6 @@ resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
   name            = %[2]q
   hash_key        = %[1]q
-  range_key       = %[2]q
-  read_capacity   = 1
-  write_capacity  = 1
-  range_key_type  = "S"
   projection_type = "ALL"
 }
 `, tableName, indexName)
@@ -1136,4 +1229,65 @@ resource "aws_dynamodb_global_secondary_index" "test" {
   }
 }
 `, tableName, indexName, key)
+}
+
+func testAccGlobalSecondaryIndexConfig_nonKeyAttributes(tableName, indexName string, nonKeyAttributes []string) string {
+	nka := ""
+	projectionType := "ALL"
+	if len(nonKeyAttributes) > 0 {
+		nka = strings.Join(nonKeyAttributes, `", "`)
+		nka = fmt.Sprintf(`non_key_attributes = ["%s"]`, nka)
+		projectionType = "INCLUDE"
+	}
+
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  hash_key       = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_global_secondary_index" "test" {
+  table           = aws_dynamodb_table.test.name
+  name            = %[2]q
+  hash_key        = %[1]q
+  projection_type = %[3]q
+  %[4]s
+}
+`, tableName, indexName, projectionType, nka)
+}
+
+func testAccGlobalSecondaryIndexConfig_differentKeys(tableName, indexName, pkGsi, skGsi string) string {
+	if skGsi != "" {
+		skGsi = fmt.Sprintf("range_key = %q\n  range_key_type = \"S\"\n", skGsi)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  hash_key       = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_global_secondary_index" "test" {
+  table           = aws_dynamodb_table.test.name
+  name            = %[2]q
+  hash_key        = %[3]q
+  hash_key_type   = "S"
+  projection_type = "ALL"
+  %[4]s
+}
+`, tableName, indexName, pkGsi, skGsi)
 }
