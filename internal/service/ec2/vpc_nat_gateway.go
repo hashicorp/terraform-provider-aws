@@ -686,7 +686,7 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 				azid = v.(string)
 			}
 			if (az != "" && azid != "") || (az == "" && azid == "") {
-				return fmt.Errorf("Exactly one of availability_zone or availability_zone_id can be specified: availability_zone=%q availability_zone_id=%q", az, azid)
+				return fmt.Errorf("Exactly one of availability_zone or availability_zone_id must be specified: availability_zone=%q availability_zone_id=%q", az, azid)
 			}
 		}
 	}
