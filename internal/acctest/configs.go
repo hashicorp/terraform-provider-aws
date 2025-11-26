@@ -660,7 +660,7 @@ resource "aws_vpc" "test" {
 
 func ConfigVPCWithSubnetsIPv6(rName string, subnetCount int) string {
 	return ConfigCompose(
-		ConfigAvailableAZsNoOptInDefaultExclude(),
+		ConfigSubnetsIPv6(rName, subnetCount),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -671,23 +671,7 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
-
-resource "aws_subnet" "test" {
-  count = %[2]d
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  cidr_block      = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
-
-  assign_ipv6_address_on_creation = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, subnetCount),
+`, rName),
 	)
 }
 
@@ -701,6 +685,29 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, subnetCount),
+	)
+}
+
+func ConfigSubnetsIPv6(rName string, subnetCount int) string {
+	return ConfigCompose(
+		ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_subnet" "test" {
+  count = %[2]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  cidr_block      = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+
+  assign_ipv6_address_on_creation = true
 
   tags = {
     Name = %[1]q
