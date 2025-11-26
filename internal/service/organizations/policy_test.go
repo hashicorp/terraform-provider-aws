@@ -460,6 +460,7 @@ func testAccPolicy_type_Inspector(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
 	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_inspector_syntax.html
+	//lintignore:AWSAT003
 	inspectorPolicyContent := `{
     "inspector" : {
       "enablement" : {
