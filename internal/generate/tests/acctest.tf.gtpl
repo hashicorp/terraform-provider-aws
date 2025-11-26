@@ -34,6 +34,12 @@ resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
 }
 
+{{ template "acctest.ConfigSubnetsIPv6" . }}
+{{- end }}
+
+{{ define "acctest.ConfigSubnetsIPv6" -}}
+# acctest.ConfigSubnetsIPv6(rName, {{ . }})
+
 resource "aws_subnet" "test" {
 {{- template "region" }}
   count = {{ . }}

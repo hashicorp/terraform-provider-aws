@@ -73,6 +73,8 @@ resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
 }
 
+# acctest.ConfigSubnetsIPv6(rName, 2)
+
 resource "aws_subnet" "test" {
   count = 2
 
