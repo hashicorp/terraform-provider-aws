@@ -631,10 +631,9 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		if err := d.Set("connection_logs", []any{flattenLoadBalancerConnectionLogsAttributes(attributes)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connection_logs: %s", err)
 		}
-	}
-
-	if err := d.Set("health_check_logs", []any{flattenLoadBalancerHealthCheckLogsAttributes(attributes)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting health_check_logs: %s", err)
+		if err := d.Set("health_check_logs", []any{flattenLoadBalancerHealthCheckLogsAttributes(attributes)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting health_check_logs: %s", err)
+		}
 	}
 
 	loadBalancerAttributes.flatten(d, attributes)
