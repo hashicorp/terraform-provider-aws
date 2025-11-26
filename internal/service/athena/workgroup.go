@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -41,9 +40,7 @@ func resourceWorkGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: customdiff.All(
-			managedQueryResultsValidation,
-		),
+		CustomizeDiff: managedQueryResultsValidation,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
