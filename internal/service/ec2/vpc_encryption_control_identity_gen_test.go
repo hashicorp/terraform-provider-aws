@@ -23,7 +23,6 @@ func TestAccVPCVPCEncryptionControl_Identity_Basic(t *testing.T) {
 
 	var v awstypes.VpcEncryptionControl
 	resourceName := "aws_vpc_encryption_control.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -37,9 +36,7 @@ func TestAccVPCVPCEncryptionControl_Identity_Basic(t *testing.T) {
 			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VPCEncryptionControl/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
 				),
@@ -56,10 +53,8 @@ func TestAccVPCVPCEncryptionControl_Identity_Basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VPCEncryptionControl/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigDirectory:   config.StaticDirectory("testdata/VPCEncryptionControl/basic/"),
+				ConfigVariables:   config.Variables{},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -72,9 +67,7 @@ func TestAccVPCVPCEncryptionControl_Identity_Basic(t *testing.T) {
 			// Step 3: Import block with Import ID
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VPCEncryptionControl/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithID,
@@ -91,9 +84,7 @@ func TestAccVPCVPCEncryptionControl_Identity_Basic(t *testing.T) {
 			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VPCEncryptionControl/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				ConfigVariables: config.Variables{},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
@@ -114,7 +105,6 @@ func TestAccVPCVPCEncryptionControl_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_encryption_control.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -129,8 +119,7 @@ func TestAccVPCVPCEncryptionControl_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VPCEncryptionControl/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -147,8 +136,7 @@ func TestAccVPCVPCEncryptionControl_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VPCEncryptionControl/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
@@ -164,8 +152,7 @@ func TestAccVPCVPCEncryptionControl_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VPCEncryptionControl/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -185,8 +172,7 @@ func TestAccVPCVPCEncryptionControl_Identity_RegionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VPCEncryptionControl/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
