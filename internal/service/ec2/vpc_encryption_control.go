@@ -7,9 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -20,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -41,8 +45,8 @@ import (
 func newResourceVPCEncryptionControl(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceVPCEncryptionControl{}
 
-	r.SetDefaultCreateTimeout(20 * time.Minute)
-	r.SetDefaultUpdateTimeout(20 * time.Minute)
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
@@ -191,10 +195,7 @@ func (r *resourceVPCEncryptionControl) Read(ctx context.Context, req resource.Re
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenExclusionInputs(ctx, out, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	flattenExclusionInputs(ctx, out, &state)
 
 	setTagsOut(ctx, out.Tags)
 
@@ -217,14 +218,13 @@ func (r *resourceVPCEncryptionControl) Update(ctx context.Context, req resource.
 		return
 	}
 
-	var ec awstypes.VpcEncryptionControl
+	var ec *awstypes.VpcEncryptionControl
 	if diff.HasChanges() {
 		updateTimeout := r.UpdateTimeout(ctx, state.Timeouts)
-		out := vpcEncryptionControlModify(ctx, conn, plan, updateTimeout, &resp.Diagnostics)
+		ec = vpcEncryptionControlModify(ctx, conn, plan, updateTimeout, &resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		ec = *out
 	} else {
 		var err error
 		ec, err = findVPCEncryptionControlByID(ctx, conn, state.ID.ValueString())
@@ -304,7 +304,7 @@ func wrapError[T any](v T, err error) (T, error) {
 }
 
 func waitVPCEncryptionControlExclusionsApplied(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcEncryptionControl, error) {
-	var output awstypes.VpcEncryptionControl
+	var output *awstypes.VpcEncryptionControl
 	err := tfresource.WaitUntil(ctx, timeout, func(ctx context.Context) (bool, error) {
 		var err error
 		output, err = findVPCEncryptionControlByID(ctx, conn, id)
@@ -351,7 +351,7 @@ func waitVPCEncryptionControlExclusionsApplied(ctx context.Context, conn *ec2.Cl
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
-	return &output, nil
+	return output, nil
 }
 
 // Returns `true` if still in progress
@@ -360,6 +360,38 @@ func isExclusionPending(apiObject *awstypes.VpcEncryptionControlExclusion) bool 
 		return false
 	}
 	return apiObject.State == awstypes.VpcEncryptionControlExclusionStateEnabling || apiObject.State == awstypes.VpcEncryptionControlExclusionStateDisabling
+}
+
+func waitVPCEncryptionControlMigratableResourcesMigrated(ctx context.Context, conn *ec2.Client, vpcID string, timeout time.Duration) error {
+	err := tfresource.WaitUntil(ctx, timeout, func(context.Context) (bool, error) {
+		blockers, err := encryptionEnforcementBlockers(ctx, conn, vpcID)
+		if err != nil {
+			return false, err
+		}
+
+		if slices.ContainsFunc(blockers, isResourceMigratable) {
+			return false, nil
+		}
+
+		return true, nil
+	}, tfresource.WaitOpts{})
+
+	if err != nil {
+		return smarterr.NewError(err)
+	}
+	return nil
+}
+
+func isResourceMigratable(v awstypes.VpcEncryptionNonCompliantResource) bool {
+	if aws.ToString(v.Type) == "interface" {
+		if strings.HasPrefix(aws.ToString(v.Description), "ELB app/") {
+			return true
+		}
+		if strings.HasPrefix(aws.ToString(v.Description), "ELB net/") {
+			return true
+		}
+	}
+	return false
 }
 
 func statusVPCEncryptionControl(conn *ec2.Client, id string) retry.StateRefreshFuncOf[*awstypes.VpcEncryptionControl, awstypes.VpcEncryptionControlState] {
@@ -372,19 +404,17 @@ func statusVPCEncryptionControl(conn *ec2.Client, id string) retry.StateRefreshF
 			return nil, "", err
 		}
 
-		return &encryptionControl, encryptionControl.State, nil
+		return encryptionControl, encryptionControl.State, nil
 	}
 }
 
-func findVPCEncryptionControlByID(ctx context.Context, conn *ec2.Client, id string) (awstypes.VpcEncryptionControl, error) {
+func findVPCEncryptionControlByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcEncryptionControl, error) {
 	output, err := findVPCEncryptionControlsByIDs(ctx, conn, []string{id})
 	if err != nil {
-		return awstypes.VpcEncryptionControl{}, err
+		return nil, err
 	}
 
-	result, err := tfresource.AssertSingleValueResult(output)
-
-	return *result, err
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findVPCEncryptionControlsByIDs(ctx context.Context, conn *ec2.Client, ids []string) ([]awstypes.VpcEncryptionControl, error) {
@@ -413,13 +443,32 @@ func findVPCEncryptionControlsByIDs(ctx context.Context, conn *ec2.Client, ids [
 }
 
 func vpcEncryptionControlModify(ctx context.Context, conn *ec2.Client, plan resourceVPCEncryptionControlModel, timeout time.Duration, diags *diag.Diagnostics) *awstypes.VpcEncryptionControl {
-	var modifyInput ec2.ModifyVpcEncryptionControlInput
-	smerr.AddEnrich(ctx, diags, flattenForModify(ctx, plan, &modifyInput))
-	if diags.HasError() {
+	err := waitVPCEncryptionControlMigratableResourcesMigrated(ctx, conn, plan.VPCID.ValueString(), timeout)
+	if err != nil {
+		smerr.AddError(ctx, diags, err, names.AttrVPCID, plan.VPCID.String())
 		return nil
 	}
 
+	var modifyInput ec2.ModifyVpcEncryptionControlInput
+	expandForModify(ctx, plan, &modifyInput)
+
 	out, err := conn.ModifyVpcEncryptionControl(ctx, &modifyInput)
+	if tfawserr.ErrCodeEquals(err, "VpcEncryptionControlStateTransitionFailed") {
+		blockers, _ := encryptionEnforcementBlockers(ctx, conn, plan.VPCID.ValueString())
+		if len(blockers) > 0 {
+			var buf strings.Builder
+			for _, ncr := range blockers {
+				fmt.Fprintf(&buf, "* Type: %q, Id: %q, Description: %q, IsExcludable: %t\n",
+					aws.ToString(ncr.Type),
+					aws.ToString(ncr.Id),
+					aws.ToString(ncr.Description),
+					aws.ToBool(ncr.IsExcludable),
+				)
+			}
+			smerr.AddError(ctx, diags, fmt.Errorf("The following resources prevented enforcement:\n\n%s", buf.String()), names.AttrVPCID, plan.VPCID.String())
+			return nil
+		}
+	}
 	if err != nil {
 		smerr.AddError(ctx, diags, err, names.AttrVPCID, plan.VPCID.String())
 		return nil
@@ -430,6 +479,23 @@ func vpcEncryptionControlModify(ctx context.Context, conn *ec2.Client, plan reso
 	}
 
 	ec, err := waitVPCEncryptionControlAvailable(ctx, conn, plan.ID.ValueString(), timeout)
+	if use, ok := errs.As[*retry.UnexpectedStateError](err); ok && use.State == string(awstypes.VpcEncryptionControlStateEnforceFailed) {
+		// Ignore errors here and fall through to the outer error
+		blockers, _ := encryptionEnforcementBlockers(ctx, conn, plan.VPCID.ValueString())
+		if len(blockers) > 0 {
+			var buf strings.Builder
+			for _, ncr := range blockers {
+				fmt.Fprintf(&buf, "* Type: %q, Id: %q, Description: %q, IsExcludable: %t\n",
+					aws.ToString(ncr.Type),
+					aws.ToString(ncr.Id),
+					aws.ToString(ncr.Description),
+					aws.ToBool(ncr.IsExcludable),
+				)
+			}
+			smerr.AddError(ctx, diags, fmt.Errorf("The following resources prevented enforcement:\n\n%s", buf.String()), names.AttrVPCID, plan.VPCID.String())
+			return nil
+		}
+	}
 	if err != nil {
 		smerr.AddError(ctx, diags, err, names.AttrVPCID, plan.VPCID.String())
 		return nil
@@ -446,7 +512,26 @@ func vpcEncryptionControlModify(ctx context.Context, conn *ec2.Client, plan reso
 	return ec
 }
 
-func flattenForModify(_ context.Context, plan resourceVPCEncryptionControlModel, apiObject *ec2.ModifyVpcEncryptionControlInput) (diags diag.Diagnostics) {
+func encryptionEnforcementBlockers(ctx context.Context, conn *ec2.Client, vpcId string) ([]awstypes.VpcEncryptionNonCompliantResource, error) {
+	var blockers []awstypes.VpcEncryptionNonCompliantResource
+
+	blockersInput := ec2.GetVpcResourcesBlockingEncryptionEnforcementInput{
+		VpcId: aws.String(vpcId),
+	}
+	pages := newGetVpcResourcesBlockingEncryptionEnforcementPaginator(conn, &blockersInput)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		blockers = append(blockers, page.NonCompliantResources...)
+	}
+
+	return blockers, nil
+}
+
+func expandForModify(_ context.Context, plan resourceVPCEncryptionControlModel, apiObject *ec2.ModifyVpcEncryptionControlInput) {
 	apiObject.VpcEncryptionControlId = plan.ID.ValueStringPointer()
 	apiObject.Mode = plan.Mode.ValueEnum()
 
@@ -460,39 +545,35 @@ func flattenForModify(_ context.Context, plan resourceVPCEncryptionControlModel,
 		apiObject.VpcLatticeExclusion = plan.VpcLatticeExclusion.ValueEnum()
 		apiObject.VpcPeeringExclusion = plan.VpcPeeringExclusion.ValueEnum()
 	}
-
-	return diags
 }
 
 // nosemgrep:ci.semgrep.framework.manual-flattener-functions
-func flattenExclusionInputs(ctx context.Context, apiObject awstypes.VpcEncryptionControl, tfObject *resourceVPCEncryptionControlModel) (diags diag.Diagnostics) {
+func flattenExclusionInputs(ctx context.Context, apiObject *awstypes.VpcEncryptionControl, tfObject *resourceVPCEncryptionControlModel) {
 	exclusions := apiObject.ResourceExclusions
 	if exclusions == nil {
-		return diags
+		return
 	}
 
-	diags.Append(flattenExclusionInput(ctx, exclusions.EgressOnlyInternetGateway, &tfObject.EgressOnlyInternetGatewayExclusion)...)
+	flattenExclusionInput(ctx, exclusions.EgressOnlyInternetGateway, &tfObject.EgressOnlyInternetGatewayExclusion)
 
-	diags.Append(flattenExclusionInput(ctx, exclusions.ElasticFileSystem, &tfObject.ElasticFileSystemExclusion)...)
+	flattenExclusionInput(ctx, exclusions.ElasticFileSystem, &tfObject.ElasticFileSystemExclusion)
 
-	diags.Append(flattenExclusionInput(ctx, exclusions.InternetGateway, &tfObject.InternetGatewayExclusion)...)
+	flattenExclusionInput(ctx, exclusions.InternetGateway, &tfObject.InternetGatewayExclusion)
 
-	diags.Append(flattenExclusionInput(ctx, exclusions.Lambda, &tfObject.LambdaExclusion)...)
+	flattenExclusionInput(ctx, exclusions.Lambda, &tfObject.LambdaExclusion)
 
-	diags.Append(flattenExclusionInput(ctx, exclusions.NatGateway, &tfObject.NatGatewayExclusion)...)
+	flattenExclusionInput(ctx, exclusions.NatGateway, &tfObject.NatGatewayExclusion)
 
-	diags.Append(flattenExclusionInput(ctx, exclusions.VirtualPrivateGateway, &tfObject.VirtualPrivateGatewayExclusion)...)
+	flattenExclusionInput(ctx, exclusions.VirtualPrivateGateway, &tfObject.VirtualPrivateGatewayExclusion)
 
-	diags.Append(flattenExclusionInput(ctx, exclusions.VpcLattice, &tfObject.VpcLatticeExclusion)...)
+	flattenExclusionInput(ctx, exclusions.VpcLattice, &tfObject.VpcLatticeExclusion)
 
-	diags.Append(flattenExclusionInput(ctx, exclusions.VpcPeering, &tfObject.VpcPeeringExclusion)...)
-
-	return diags
+	flattenExclusionInput(ctx, exclusions.VpcPeering, &tfObject.VpcPeeringExclusion)
 }
 
-func flattenExclusionInput(_ context.Context, apiObject *awstypes.VpcEncryptionControlExclusion, tfObject *fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput]) (diags diag.Diagnostics) {
+func flattenExclusionInput(_ context.Context, apiObject *awstypes.VpcEncryptionControlExclusion, tfObject *fwtypes.StringEnum[awstypes.VpcEncryptionControlExclusionStateInput]) {
 	if apiObject == nil {
-		return diags
+		return
 	}
 
 	switch apiObject.State {
@@ -502,8 +583,6 @@ func flattenExclusionInput(_ context.Context, apiObject *awstypes.VpcEncryptionC
 	case awstypes.VpcEncryptionControlExclusionStateDisabled:
 		*tfObject = fwtypes.StringEnumValue(awstypes.VpcEncryptionControlExclusionStateInputDisable)
 	}
-
-	return diags
 }
 
 type resourceVPCEncryptionControlModel struct {

@@ -12,11 +12,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
-	elbv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
-	set "github.com/hashicorp/go-set/v3"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -27,12 +23,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -796,6 +790,336 @@ func TestAccVPCVPCEncryptionControl_update_enforceToMonitor(t *testing.T) {
 	})
 }
 
+// Test for associated resources that can be excluded, such as Internet Gateway
+func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Excludable_monitor(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.VpcEncryptionControl
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc_encryption_control.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_setup(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
+				),
+			},
+			{
+				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_enable(awstypes.VpcEncryptionControlModeMonitor),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeMonitor)),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: exclusionAttributes,
+				ImportStateCheck:        defaultMonitorExclusionsImportStateCheck,
+			},
+		},
+	})
+}
+
+// Test for associated resources that can be excluded, such as Internet Gateway
+func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Excludable_enforceWithoutExclusion(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.VpcEncryptionControl
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc_encryption_control.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_setup(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
+				),
+			},
+			{
+				Config:      testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_enable(awstypes.VpcEncryptionControlModeEnforce),
+				ExpectError: regexache.MustCompile(`The following resources prevented enforcement:`),
+			},
+			{
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
+
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMode, string(awstypes.VpcEncryptionControlModeMonitor)),
+				),
+				// RefreshPlanChecks: resource.RefreshPlanChecks{
+				// 	PostRefresh: []plancheck.PlanCheck{
+				// 		plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+				// 	},
+				// },
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// Test for associated resources that can be excluded, such as Internet Gateway
+func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Excludable_enforceWithExclusion(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var vpc awstypes.Vpc
+	var v awstypes.VpcEncryptionControl
+	resourceName := "aws_vpc_encryption_control.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_setup(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
+				),
+			},
+			{
+				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_enableWithExclusions(awstypes.VpcEncryptionControlModeEnforce),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeEnforce)),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion"), tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateInputEnable)),
+
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_exclusions"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"egress_only_internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"elastic_file_system": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"internet_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateEnabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"lambda": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"nat_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"virtual_private_gateway": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"vpc_lattice": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+						"vpc_peering": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrState: tfknownvalue.StringExact(awstypes.VpcEncryptionControlExclusionStateDisabled),
+							"state_message": tfknownvalue.StringExact("succeeded"),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+// Test for associated resources that can be migrated to encrypted hardward, such as load balancer
+func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Migratable_monitor(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.VpcEncryptionControl
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc_encryption_control.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Migratable_setup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
+				),
+			},
+			{
+				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Migratable_enable(rName, awstypes.VpcEncryptionControlModeMonitor),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeMonitor)),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: exclusionAttributes,
+				ImportStateCheck:        defaultMonitorExclusionsImportStateCheck,
+			},
+		},
+	})
+}
+
+// Test for associated resources that can be migrated to encrypted hardward, such as load balancer
+func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Migratable_enforce(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var vpc awstypes.Vpc
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	var v awstypes.VpcEncryptionControl
+	resourceName := "aws_vpc_encryption_control.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Migratable_setup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
+				),
+			},
+			{
+				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Migratable_enable(rName, awstypes.VpcEncryptionControlModeEnforce),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeEnforce)),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: exclusionAttributes,
+				ImportStateCheck:        defaultEnforceExclusionsImportStateCheck,
+			},
+		},
+	})
+}
+
+// Test for associated resources that are not supported, such as RDS
+func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Unsupported_monitor(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.VpcEncryptionControl
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc_encryption_control.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Unsupported_setup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
+				),
+			},
+			{
+				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Unsupported_enable(rName, awstypes.VpcEncryptionControlModeMonitor),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEncryptionControlExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrMode), tfknownvalue.StringExact(awstypes.VpcEncryptionControlModeMonitor)),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: exclusionAttributes,
+				ImportStateCheck:        defaultMonitorExclusionsImportStateCheck,
+			},
+		},
+	})
+}
+
+// Test for associated resources that are not supported, such as RDS
+func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Unsupported_enforce(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var vpc awstypes.Vpc
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpc_encryption_control.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEncryptionControlDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Unsupported_setup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
+				),
+			},
+			{
+				Config:      testAccVPCEncryptionControlConfig_WithAssociatedResources_Unsupported_enable(rName, awstypes.VpcEncryptionControlModeEnforce),
+				ExpectError: regexache.MustCompile(`The following resources prevented enforcement:`),
+			},
+		},
+	})
+}
+
 // When in `enforce` mode, import behavior is different
 func TestAccVPCVPCEncryptionControl_Identity_Enforce(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -915,7 +1239,18 @@ func testAccCheckVPCEncryptionControlExists(ctx context.Context, t *testing.T, n
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCEncryptionControl, rs.Primary.ID, err)
 		}
 
-		*vpcencryptioncontrol = resp
+		*vpcencryptioncontrol = *resp
+
+		return nil
+	}
+}
+
+func testAccCheckVPCEncryptionControlDoesNotExist(_ context.Context, _ *testing.T, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		_, ok := s.RootModule().Resources[name]
+		if ok {
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCEncryptionControl, name, errors.New("found"))
+		}
 
 		return nil
 	}
@@ -984,4 +1319,174 @@ func testAccVPCEncryptionControlConfig_explicitExclusions(keys ...string) string
 		fmt.Fprintf(&buf, `%[1]s = %[2]q`+"\n", key, v)
 	}
 	return buf.String()
+}
+
+// Test for associated resources that can be excluded, such as Internet Gateway
+func testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_setup() string {
+	return `
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+`
+}
+
+// Test for associated resources that can be excluded, such as Internet Gateway
+func testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_enable(mode awstypes.VpcEncryptionControlMode) string {
+	return acctest.ConfigCompose(
+		testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_setup(),
+		fmt.Sprintf(`
+resource "aws_vpc_encryption_control" "test" {
+  vpc_id = aws_vpc.test.id
+  mode   = %[1]q
+
+  depends_on = [
+    aws_internet_gateway.test,
+  ]
+}
+`, mode))
+}
+
+func testAccVPCEncryptionControlConfig_subnetBase(count int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_subnet" "test" {
+  count = %[1]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+`, count))
+}
+
+// Test for associated resources that can be excluded, such as Internet Gateway
+func testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_enableWithExclusions(mode awstypes.VpcEncryptionControlMode) string {
+	return acctest.ConfigCompose(
+		testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_setup(),
+		fmt.Sprintf(`
+resource "aws_vpc_encryption_control" "test" {
+  vpc_id = aws_vpc.test.id
+  mode   = %[1]q
+
+  internet_gateway_exclusion = "enable"
+
+  depends_on = [
+    aws_internet_gateway.test,
+  ]
+}
+`, mode))
+}
+
+// Test for associated resources that can be migrated to encrypted hardward, such as load balancer
+func testAccVPCEncryptionControlConfig_WithAssociatedResources_Migratable_setup(rName string) string {
+	return acctest.ConfigCompose(
+		testAccVPCEncryptionControlConfig_subnetBase(2),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_lb" "test" {
+  name     = %[1]q
+  internal = true
+  subnets  = aws_subnet.test[*].id
+}
+`, rName))
+}
+
+// Test for associated resources that can be migrated to encrypted hardward, such as load balancer
+func testAccVPCEncryptionControlConfig_WithAssociatedResources_Migratable_enable(rName string, mode awstypes.VpcEncryptionControlMode) string {
+	return acctest.ConfigCompose(
+		testAccVPCEncryptionControlConfig_WithAssociatedResources_Migratable_setup(rName),
+		fmt.Sprintf(`
+resource "aws_vpc_encryption_control" "test" {
+  vpc_id = aws_vpc.test.id
+  mode   = %[1]q
+
+  depends_on = [
+    aws_lb.test,
+  ]
+}
+`, mode))
+}
+
+// Test for associated resources that are not supported, such as RDS
+func testAccVPCEncryptionControlConfig_WithAssociatedResources_Unsupported_setup(rName string) string {
+	return acctest.ConfigCompose(
+		testAccVPCEncryptionControlConfig_subnetBase(2),
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassPostgres(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_db_instance" "test" {
+  identifier = %[1]q
+
+  engine         = data.aws_rds_orderable_db_instance.test.engine
+  engine_version = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class = data.aws_rds_orderable_db_instance.test.instance_class
+
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
+  username            = "tfacctest"
+
+  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+
+  allocated_storage   = 10
+  skip_final_snapshot = true
+
+  backup_retention_period = 0
+  apply_immediately       = true
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName))
+}
+
+// Test for associated resources that are not supported, such as RDS
+func testAccVPCEncryptionControlConfig_WithAssociatedResources_Unsupported_enable(rName string, mode awstypes.VpcEncryptionControlMode) string {
+	return acctest.ConfigCompose(
+		testAccVPCEncryptionControlConfig_WithAssociatedResources_Unsupported_setup(rName),
+		fmt.Sprintf(`
+resource "aws_vpc_encryption_control" "test" {
+  vpc_id = aws_vpc.test.id
+  mode   = %[1]q
+
+  depends_on = [
+    aws_db_instance.test,
+  ]
+}
+`, mode))
+}
+
+func testAccInstanceConfig_orderableClassPostgres() string {
+	return testAccInstanceConfig_orderableClass(rds.InstanceEnginePostgres, "postgresql-license", "standard")
+}
+
+func testAccInstanceConfig_orderableClass(engine, license, storage string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = %[2]q
+  storage_type   = %[3]q
+
+  preferred_instance_classes = ["db.t4g.small", "db.t4g.medium", "db.t3.small", "db.t3.medium"]
+}
+`, engine, license, storage)
 }
