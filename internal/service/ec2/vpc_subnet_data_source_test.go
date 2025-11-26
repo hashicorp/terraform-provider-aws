@@ -32,7 +32,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetDataSourceConfig_basic(rName, rInt),

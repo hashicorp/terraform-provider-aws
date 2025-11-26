@@ -54,7 +54,7 @@ func TestAccVPC_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_basic,
@@ -101,7 +101,7 @@ func TestAccVPC_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_basic,
@@ -134,7 +134,7 @@ func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals("localkey", "localvalue"),
@@ -189,7 +189,7 @@ func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_ignoreChangesDynamicTags,
@@ -235,7 +235,7 @@ func TestAccVPC_tags_defaultAndIgnoreTags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
@@ -291,7 +291,7 @@ func TestAccVPC_tags_ignoreTags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
@@ -342,7 +342,7 @@ func TestAccVPC_tenancy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_dedicatedTenancy(rName),
@@ -405,7 +405,7 @@ func TestAccVPC_updateDNSHostnames(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_default(rName),
@@ -436,7 +436,7 @@ func TestAccVPC_bothDNSOptionsSet(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_bothDNSOptions(rName),
@@ -466,7 +466,7 @@ func TestAccVPC_disabledDNSSupport(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_disabledDNSSupport(rName),
@@ -494,7 +494,7 @@ func TestAccVPC_enableNetworkAddressUsageMetrics(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_enableNetworkAddressUsageMetrics(rName),
@@ -522,7 +522,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlock(rName, true),
@@ -581,7 +581,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName, true),
@@ -630,7 +630,7 @@ func TestAccVPC_IPAMIPv4BasicNetmask(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_ipamIPv4(rName, 28),
@@ -658,7 +658,7 @@ func TestAccVPC_IPAMIPv4BasicExplicitCIDR(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_ipamIPv4ExplicitCIDR(rName, cidr),
@@ -686,7 +686,7 @@ func TestAccVPC_IPAMIPv6(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_ipamIPv6(rName, 28),
@@ -713,7 +713,7 @@ func TestAccVPC_upgradeFromV5(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -765,7 +765,7 @@ func TestAccVPC_upgradeFromV5PlanRefreshFalse(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -822,7 +822,7 @@ func TestAccVPC_upgradeFromV5WithUpdatePlanRefreshFalse(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -886,7 +886,7 @@ func TestAccVPC_upgradeFromV5WithDefaultRegionRefreshFalse(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -950,7 +950,7 @@ func TestAccVPC_upgradeFromV5WithNewRegionRefreshFalse(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -1016,7 +1016,7 @@ func TestAccVPC_regionCreateNull(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_region(rName, "null"),
@@ -1099,7 +1099,7 @@ func TestAccVPC_regionCreateNonNull(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_region(rName, acctest.AlternateRegion()),
@@ -1153,7 +1153,7 @@ func TestAccVPC_regionCreateNonNull(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 

@@ -25,7 +25,7 @@ func TestAccVPC_tags(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -199,7 +199,7 @@ func TestAccVPC_tags_null(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -263,7 +263,7 @@ func TestAccVPC_tags_EmptyMap(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -323,7 +323,7 @@ func TestAccVPC_tags_AddOnUpdate(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -401,7 +401,7 @@ func TestAccVPC_tags_EmptyTag_OnCreate(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -486,7 +486,7 @@ func TestAccVPC_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -618,7 +618,7 @@ func TestAccVPC_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -704,7 +704,7 @@ func TestAccVPC_tags_DefaultTags_providerOnly(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -877,7 +877,7 @@ func TestAccVPC_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1031,7 +1031,7 @@ func TestAccVPC_tags_DefaultTags_overlapping(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1201,7 +1201,7 @@ func TestAccVPC_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1288,7 +1288,7 @@ func TestAccVPC_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1374,7 +1374,7 @@ func TestAccVPC_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1437,7 +1437,7 @@ func TestAccVPC_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1492,7 +1492,7 @@ func TestAccVPC_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1552,7 +1552,7 @@ func TestAccVPC_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1612,7 +1612,7 @@ func TestAccVPC_tags_ComputedTag_OnCreate(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1665,7 +1665,7 @@ func TestAccVPC_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1759,7 +1759,7 @@ func TestAccVPC_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1843,7 +1843,7 @@ func TestAccVPC_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2002,7 +2002,7 @@ func TestAccVPC_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{

@@ -89,7 +89,7 @@ func TestAccVPCPeeringConnection_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),

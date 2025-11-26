@@ -445,7 +445,7 @@ func TestAccVPCSubnet_List_Filtered_DefaultForAZ(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckVPCDestroy(ctx),
+		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
