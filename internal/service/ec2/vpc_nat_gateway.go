@@ -714,8 +714,6 @@ func expandNATGatewayAvailabilityZoneAddresses(vs []any) []awstypes.Availability
 			}
 		}
 
-		// This function is called only during resource creation.
-		// Therefore, m is purely config value (not affected by the prior state),
 		if v, ok := m[names.AttrAvailabilityZone]; ok && v.(string) != "" {
 			address.AvailabilityZone = aws.String(v.(string))
 		} else if v, ok := m["availability_zone_id"]; ok && v.(string) != "" {
