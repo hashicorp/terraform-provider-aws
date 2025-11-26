@@ -73,7 +73,8 @@ func (r *organizationsAccessResource) Create(ctx context.Context, request resour
 
 	enabled := fwflex.BoolValueFromFramework(ctx, data.Enabled)
 	if enabled {
-		_, err := conn.EnableNotificationsAccessForOrganization(ctx, &notifications.EnableNotificationsAccessForOrganizationInput{})
+		input := notifications.EnableNotificationsAccessForOrganizationInput{}
+		_, err := conn.EnableNotificationsAccessForOrganization(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError("enabling User Notifications Organizations Access", err.Error())
@@ -87,7 +88,8 @@ func (r *organizationsAccessResource) Create(ctx context.Context, request resour
 			return
 		}
 	} else {
-		_, err := conn.DisableNotificationsAccessForOrganization(ctx, &notifications.DisableNotificationsAccessForOrganizationInput{})
+		input := notifications.DisableNotificationsAccessForOrganizationInput{}
+		_, err := conn.DisableNotificationsAccessForOrganization(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError("disabling User Notifications Organizations Access", err.Error())
@@ -152,7 +154,8 @@ func (r *organizationsAccessResource) Update(ctx context.Context, request resour
 	if !new.Enabled.Equal(old.Enabled) {
 		enabled := fwflex.BoolValueFromFramework(ctx, new.Enabled)
 		if enabled {
-			_, err := conn.EnableNotificationsAccessForOrganization(ctx, &notifications.EnableNotificationsAccessForOrganizationInput{})
+			input := notifications.EnableNotificationsAccessForOrganizationInput{}
+			_, err := conn.EnableNotificationsAccessForOrganization(ctx, &input)
 
 			if err != nil {
 				response.Diagnostics.AddError("enabling User Notifications Organizations Access", err.Error())
@@ -166,7 +169,8 @@ func (r *organizationsAccessResource) Update(ctx context.Context, request resour
 				return
 			}
 		} else {
-			_, err := conn.DisableNotificationsAccessForOrganization(ctx, &notifications.DisableNotificationsAccessForOrganizationInput{})
+			input := notifications.DisableNotificationsAccessForOrganizationInput{}
+			_, err := conn.DisableNotificationsAccessForOrganization(ctx, &input)
 
 			if err != nil {
 				response.Diagnostics.AddError("disabling User Notifications Organizations Access", err.Error())
@@ -195,7 +199,8 @@ func (r *organizationsAccessResource) Delete(ctx context.Context, request resour
 	conn := r.Meta().NotificationsClient(ctx)
 
 	// Always disable on delete
-	_, err := conn.DisableNotificationsAccessForOrganization(ctx, &notifications.DisableNotificationsAccessForOrganizationInput{})
+	input := notifications.DisableNotificationsAccessForOrganizationInput{}
+	_, err := conn.DisableNotificationsAccessForOrganization(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("disabling User Notifications Organizations Access", err.Error())
@@ -269,7 +274,7 @@ func waitOrganizationsAccessStable(ctx context.Context, conn *notifications.Clie
 
 func statusOrganizationsAccess(ctx context.Context, conn *notifications.Client) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := getNotificationsOrganizationsAccess(ctx, conn)
+		output, err := getOrganizationsAccess(ctx, conn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -283,15 +288,15 @@ func statusOrganizationsAccess(ctx context.Context, conn *notifications.Client) 
 	}
 }
 
-func getNotificationsOrganizationsAccess(ctx context.Context, conn *notifications.Client) (*notifications.GetNotificationsAccessForOrganizationOutput, error) {
-	input := &notifications.GetNotificationsAccessForOrganizationInput{}
+func getOrganizationsAccess(ctx context.Context, conn *notifications.Client) (*notifications.GetNotificationsAccessForOrganizationOutput, error) {
+	input := notifications.GetNotificationsAccessForOrganizationInput{}
 
-	output, err := conn.GetNotificationsAccessForOrganization(ctx, input)
+	output, err := conn.GetNotificationsAccessForOrganization(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: input,
+			LastRequest: &input,
 		}
 	}
 
