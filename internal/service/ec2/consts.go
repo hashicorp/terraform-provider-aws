@@ -164,14 +164,14 @@ func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
 }
 
 const (
-	vpnTunnelCloudWatchLogBgpLogOutputFormatJSON = names.AttrJSON
-	vpnTunnelCloudWatchLogBgpLogOutputFormatText = "text"
+	vpnTunnelCloudWatchLogBGPLogOutputFormatJSON = names.AttrJSON
+	vpnTunnelCloudWatchLogBGPLogOutputFormatText = "text"
 )
 
-func vpnTunnelCloudWatchLogBgpLogOutputFormat_Values() []string {
+func vpnTunnelCloudWatchLogBGPLogOutputFormat_Values() []string {
 	return []string{
-		vpnTunnelCloudWatchLogBgpLogOutputFormatJSON,
-		vpnTunnelCloudWatchLogBgpLogOutputFormatText,
+		vpnTunnelCloudWatchLogBGPLogOutputFormatJSON,
+		vpnTunnelCloudWatchLogBGPLogOutputFormatText,
 	}
 }
 

@@ -400,7 +400,7 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 	})
 }
 
-func TestAccSiteVPNConnection_cloudWatchLogOptionsBgpLog(t *testing.T) {
+func TestAccSiteVPNConnection_cloudWatchLogOptionsBGPLog(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -414,7 +414,7 @@ func TestAccSiteVPNConnection_cloudWatchLogOptionsBgpLog(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNConnectionConfig_cloudWatchLogOptionsBgpLog(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_cloudWatchLogOptionsBGPLog(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
@@ -434,7 +434,7 @@ func TestAccSiteVPNConnection_cloudWatchLogOptionsBgpLog(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
-				Config: testAccVPNConnectionConfig_cloudWatchLogOptionsBgpLogUpdated(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig_cloudWatchLogOptionsBGPLogUpdated(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
@@ -2112,7 +2112,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccVPNConnectionConfig_cloudWatchLogOptionsBgpLog(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_cloudWatchLogOptionsBGPLog(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -2150,7 +2150,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccVPNConnectionConfig_cloudWatchLogOptionsBgpLogUpdated(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig_cloudWatchLogOptionsBGPLogUpdated(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {

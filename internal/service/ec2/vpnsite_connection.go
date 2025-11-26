@@ -259,7 +259,7 @@ func resourceVPNConnection() *schema.Resource {
 									"bgp_log_output_format": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogBgpLogOutputFormat_Values(), false),
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogBGPLogOutputFormat_Values(), false),
 									},
 									"log_enabled": {
 										Type:     schema.TypeBool,
@@ -488,7 +488,7 @@ func resourceVPNConnection() *schema.Resource {
 									"bgp_log_output_format": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogBgpLogOutputFormat_Values(), false),
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogBGPLogOutputFormat_Values(), false),
 									},
 									"log_enabled": {
 										Type:     schema.TypeBool,
