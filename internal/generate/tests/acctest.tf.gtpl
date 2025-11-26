@@ -6,6 +6,12 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
+{{ template "acctest.ConfigSubnets" . }}
+{{- end }}
+
+{{ define "acctest.ConfigSubnets" -}}
+# acctest.ConfigSubnets(rName, {{ . }})
+
 resource "aws_subnet" "test" {
 {{- template "region" }}
   count = {{ . }}
