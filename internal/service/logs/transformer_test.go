@@ -1493,10 +1493,6 @@ func testAccCheckTransformerExists(ctx context.Context, t *testing.T, n string, 
 
 func testAccTransformerConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1504,15 +1500,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     parse_json {}
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_addKeys(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1534,15 +1530,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_copyValue(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1564,15 +1560,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_csv(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1589,15 +1585,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_dateTimeConverter(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1625,15 +1621,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_deleteKeys(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1647,15 +1643,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_grok(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1665,15 +1661,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_grokWithSource(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1684,15 +1680,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_listToMap(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1718,15 +1714,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_lowerCaseString(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1740,15 +1736,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_moveKeys(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1770,15 +1766,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parseCloudFront(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1786,15 +1782,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     parse_cloudfront {}
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parseCloudFrontWithSource(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1804,15 +1800,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parseJSON(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1827,15 +1823,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parseKeyValue(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1855,15 +1851,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parsePostgres(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1871,15 +1867,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     parse_postgres {}
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parsePostgresWithSource(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1889,15 +1885,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parseRoute53(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1905,15 +1901,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     parse_route53 {}
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parseRoute53WithSource(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1923,15 +1919,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parseToOCSF(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1942,15 +1938,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parseToOCSFWithSource(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1962,15 +1958,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parseVPC(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1978,15 +1974,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     parse_vpc {}
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parseVPCWithSource(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -1996,15 +1992,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parseWAF(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -2012,15 +2008,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     parse_waf {}
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_parseWAFWithSource(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -2030,15 +2026,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_renameKeys(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -2060,15 +2056,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_splitString(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -2085,15 +2081,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_substituteString(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -2111,15 +2107,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_trimString(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -2133,15 +2129,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_typeConverter(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -2158,15 +2154,15 @@ resource "aws_cloudwatch_log_transformer" "test" {
     }
   }
 }
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
 `, rName)
 }
 
 func testAccTransformerConfig_upperCaseString(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.name
 
@@ -2179,6 +2175,10 @@ resource "aws_cloudwatch_log_transformer" "test" {
       with_keys = ["key1", "key2"]
     }
   }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
 }
 `, rName)
 }
