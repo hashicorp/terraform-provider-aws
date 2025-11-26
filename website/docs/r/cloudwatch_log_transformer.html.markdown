@@ -15,15 +15,15 @@ Terraform resource for managing an AWS CloudWatch Logs Transformer.
 ### Basic Usage
 
 ```terraform
-resource "aws_cloudwatch_log_group" "example" {
-  name = "example"
-}
-
 resource "aws_cloudwatch_log_transformer" "example" {
   log_group_identifier = aws_cloudwatch_log_group.example.name
   transformer_config {
     parse_json {}
   }
+}
+
+resource "aws_cloudwatch_log_group" "example" {
+  name = "example"
 }
 ```
 
