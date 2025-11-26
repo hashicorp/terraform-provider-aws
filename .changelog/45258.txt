@@ -3,4 +3,5 @@ resource/aws_eks_cluster: Add `control_plane_scaling_config` configuration block
 ```
 
 ```release-note:enhancement
-data-source/aws_eks_cluster: Add `control_plane_scaling_config` configuration block to support EKS Provisioned Control Plane
+data-source/aws_eks_cluster: Add `control_plane_scaling_config` attribute
+```
