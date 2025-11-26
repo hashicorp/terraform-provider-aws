@@ -194,6 +194,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rdsdata"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
@@ -1022,6 +1023,10 @@ func (c *AWSClient) RBinClient(ctx context.Context) *rbin.Client {
 
 func (c *AWSClient) RDSClient(ctx context.Context) *rds.Client {
 	return errs.Must(client[*rds.Client](ctx, c, names.RDS, make(map[string]any)))
+}
+
+func (c *AWSClient) RDSDataClient(ctx context.Context) *rdsdata.Client {
+	return errs.Must(client[*rdsdata.Client](ctx, c, names.RDSData, make(map[string]any)))
 }
 
 func (c *AWSClient) RUMClient(ctx context.Context) *rum.Client {

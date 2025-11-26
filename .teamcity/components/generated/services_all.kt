@@ -185,6 +185,7 @@ val services = mapOf(
     "ram" to ServiceSpec("RAM (Resource Access Manager)"),
     "rbin" to ServiceSpec("Recycle Bin (RBin)"),
     "rds" to ServiceSpec("RDS (Relational Database)", vpcLock = true),
+    "rdsdata" to ServiceSpec("RDS Data"),
     "redshift" to ServiceSpec("Redshift", vpcLock = true),
     "redshiftdata" to ServiceSpec("Redshift Data"),
     "redshiftserverless" to ServiceSpec("Redshift Serverless"),
