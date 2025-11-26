@@ -548,14 +548,15 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 			var removedAllAZ []string
 			for az := range allKeys {
-				oldSet := oldMap[az]
-				newSet := newMap[az]
-
-				// Create empty sets if nil to avoid nil pointer issues
-				if oldSet == nil {
+				var oldSet, newSet *schema.Set
+				if v, ok := oldMap[az]; ok {
+					oldSet = v
+				} else {
 					oldSet = schema.NewSet(schema.HashString, []any{})
 				}
-				if newSet == nil {
+				if v, ok := newMap[az]; ok {
+					newSet = v
+				} else {
 					newSet = schema.NewSet(schema.HashString, []any{})
 				}
 
@@ -668,7 +669,7 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 			// regional_nat_gateway_address should recompute when AZ addresses actually change.
 			if !EqualityFuncNATGatewayAvailabilityZoneAddressSet(os, ns) {
 				if err := diff.SetNewComputed("regional_nat_gateway_address"); err != nil {
-					return fmt.Errorf("setting regional_nat_gateway_address to Computed: %w", err)
+					return fmt.Errorf("setting regional_nat_gateway_address to NewComputed: %w", err)
 				}
 			}
 		}
