@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -181,13 +182,6 @@ func TestAccLogsTransformer_update_logGroupIdentifier(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
-			},
-			{
 				Config: testAccTransformerConfig_basic(newRName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
@@ -195,6 +189,18 @@ func TestAccLogsTransformer_update_logGroupIdentifier(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
 		},
 	})
