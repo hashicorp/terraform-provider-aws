@@ -40,7 +40,7 @@ resource "aws_imagebuilder_image_recipe" "example" {
 
   name         = "example"
   parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
-  version      = "1.0.0"
+  version      = "1.0.x"
 }
 ```
 
@@ -51,7 +51,7 @@ The following arguments are required:
 * `component` - (Required) Ordered configuration block(s) with components for the image recipe. Detailed below.
 * `name` - (Required) Name of the image recipe.
 * `parent_image` - (Required) The image recipe uses this image as a base from which to build your customized image. The value can be the base image ARN, an AMI ID, or an SSM Parameter referencing the AMI. For an SSM Parameter, enter the prefix `ssm:`, followed by the parameter name or ARN.
-* `version` - (Required) The semantic version of the image recipe, which specifies the version in the following format, with numeric values in each position to indicate a specific version: major.minor.patch. For example: 1.0.0.
+* `version` - (Required) The semantic version of the image recipe, which specifies the version in the following format, with numeric values in each position to indicate a specific version: major.minor.patch. The version can include at most one `x`, which will increment off the latest version which matches the wildcard. For example, 1.0.x.
 
 The following arguments are optional:
 

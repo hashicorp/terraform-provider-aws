@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_imagebuilder_container_recipe: Update drift logic when the recipe version has an "x"
+```
+
+```release-note:enhancement
+resource/aws_imagebuilder_image_pipeline: Support wildcard recipe ARNs in image pipelines
+```
+
+```release-note:enhancement
+resource/aws_imagebuilder_image_recipe: Update drift logic when the recipe version has an "x"
+```
