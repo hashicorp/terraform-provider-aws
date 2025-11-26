@@ -205,6 +205,13 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	dfe, err := expandDataFilterExpression(ctx, plan.DataFilterExpression)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		return
+	}
+	input.DataFilterExpression = dfe
+
 	input.ResourceTags = getTagsIn(ctx)
 
 	out, err := conn.CreateBillingView(ctx, &input)
@@ -226,6 +233,7 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, view, &plan))
+	plan.DataFilterExpression = flattenDataFilterExpression(ctx, view.DataFilterExpression)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -255,6 +263,9 @@ func (r *resourceView) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+
+	state.DataFilterExpression = flattenDataFilterExpression(ctx, out.DataFilterExpression)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -292,6 +303,13 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 			return
 		}
 
+		dfe, err := expandDataFilterExpression(ctx, plan.DataFilterExpression)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+			return
+		}
+		input.DataFilterExpression = dfe
+
 		out, err := conn.UpdateBillingView(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
@@ -312,6 +330,7 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, view, &plan))
+	plan.DataFilterExpression = flattenDataFilterExpression(ctx, view.DataFilterExpression)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
@@ -461,6 +480,123 @@ func waitViewDeleted(ctx context.Context, conn *billing.Client, arn string, time
 	}
 
 	return nil, err
+}
+
+func expandDataFilterExpression(ctx context.Context, tfList fwtypes.ListNestedObjectValueOf[dataFilterExpressionModel]) (*awstypes.Expression, error) {
+	if tfList.IsNull() || tfList.IsUnknown() {
+		return nil, nil
+	}
+
+	var dataModels []dataFilterExpressionModel
+	diags := tfList.ElementsAs(ctx, &dataModels, false)
+	if diags.HasError() {
+		return nil, errors.New("failed to convert data filter expression")
+	}
+
+	if len(dataModels) == 0 {
+		return nil, nil
+	}
+
+	item := dataModels[0]
+	output := &awstypes.Expression{}
+
+	if !item.Tags.IsNull() && !item.Tags.IsUnknown() {
+		var tagModels []tagValuesModel
+		if d := item.Tags.ElementsAs(ctx, &tagModels, false); !d.HasError() && len(tagModels) > 0 {
+			output.Tags = &awstypes.TagValues{
+				Key:    aws.String(tagModels[0].Key.ValueString()),
+				Values: flex.ExpandFrameworkStringValueList(ctx, tagModels[0].Values),
+			}
+		}
+	}
+
+	if !item.Dimensions.IsNull() && !item.Dimensions.IsUnknown() {
+		var dimModels []dimensionsModel
+		if d := item.Dimensions.ElementsAs(ctx, &dimModels, false); !d.HasError() && len(dimModels) > 0 {
+			output.Dimensions = &awstypes.DimensionValues{
+				Key:    awstypes.Dimension(dimModels[0].Key.ValueString()),
+				Values: flex.ExpandFrameworkStringValueList(ctx, dimModels[0].Values),
+			}
+		}
+	}
+
+	if !item.TimeRange.IsNull() && !item.TimeRange.IsUnknown() {
+		var timeModels []timeRangeModel
+		if d := item.TimeRange.ElementsAs(ctx, &timeModels, false); !d.HasError() && len(timeModels) > 0 {
+			beginPtr, err := parseRFC3339Ptr(timeModels[0].BeginDateInclusive.ValueString())
+			if err != nil {
+				return nil, err
+			}
+			endPtr, err := parseRFC3339Ptr(timeModels[0].EndDateInclusive.ValueString())
+			if err != nil {
+				return nil, err
+			}
+
+			output.TimeRange = &awstypes.TimeRange{
+				BeginDateInclusive: beginPtr,
+				EndDateInclusive:   endPtr,
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func flattenDataFilterExpression(ctx context.Context, input *awstypes.Expression) fwtypes.ListNestedObjectValueOf[dataFilterExpressionModel] {
+	if input == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[dataFilterExpressionModel](ctx)
+	}
+
+	model := dataFilterExpressionModel{
+		Dimensions: fwtypes.NewListNestedObjectValueOfNull[dimensionsModel](ctx),
+		Tags:       fwtypes.NewListNestedObjectValueOfNull[tagValuesModel](ctx),
+		TimeRange:  fwtypes.NewListNestedObjectValueOfNull[timeRangeModel](ctx),
+	}
+
+	if input.Dimensions != nil {
+		dimModel := dimensionsModel{
+			Key:    fwtypes.StringEnumValue(input.Dimensions.Key),
+			Values: flex.FlattenFrameworkStringValueListOfString(ctx, input.Dimensions.Values),
+		}
+		model.Dimensions = fwtypes.NewListNestedObjectValueOfValueSliceMust[dimensionsModel](ctx, []dimensionsModel{dimModel})
+	}
+
+	if input.Tags != nil {
+		tagModel := tagValuesModel{
+			Key:    flex.StringToFramework(ctx, input.Tags.Key),
+			Values: flex.FlattenFrameworkStringValueListOfString(ctx, input.Tags.Values),
+		}
+		model.Tags = fwtypes.NewListNestedObjectValueOfValueSliceMust[tagValuesModel](ctx, []tagValuesModel{tagModel})
+	}
+
+	if input.TimeRange != nil {
+		if input.TimeRange.BeginDateInclusive != nil && input.TimeRange.EndDateInclusive != nil {
+			beginStr := input.TimeRange.BeginDateInclusive.Format(time.RFC3339)
+			endStr := input.TimeRange.EndDateInclusive.Format(time.RFC3339)
+
+			beginVal, _ := timetypes.NewRFC3339Value(beginStr)
+			endVal, _ := timetypes.NewRFC3339Value(endStr)
+
+			trModel := timeRangeModel{
+				BeginDateInclusive: beginVal,
+				EndDateInclusive:   endVal,
+			}
+			model.TimeRange = fwtypes.NewListNestedObjectValueOfValueSliceMust[timeRangeModel](ctx, []timeRangeModel{trModel})
+		}
+	}
+
+	return fwtypes.NewListNestedObjectValueOfValueSliceMust[dataFilterExpressionModel](ctx, []dataFilterExpressionModel{model})
+}
+
+func parseRFC3339Ptr(s string) (*time.Time, error) {
+	if s == "" {
+		return nil, nil
+	}
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		return nil, err
+	}
+	return aws.Time(t), nil
 }
 
 type resourceViewModel struct {
