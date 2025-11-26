@@ -382,10 +382,10 @@ func TestAccELBV2Listener_Forward_ingest(t *testing.T) {
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
-					acctest.ImportCheckResourceAttrSet("default_action.0.target_group_arn", true), // this will cause a change on import
+					acctest.ImportCheckResourceAttrSet("default_action.0.target_group_arn"), // this will cause a change on import
 					acctest.ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.enabled", acctest.CtTrue),
 					acctest.ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.duration", "3600"),
-					acctest.ImportCheckResourceAttrSet("default_action.0.forward.0.target_group.0.arn", true),
+					acctest.ImportCheckResourceAttrSet("default_action.0.forward.0.target_group.0.arn"),
 					acctest.ImportCheckResourceAttr("default_action.0.forward.0.target_group.0.weight", "1"),
 				),
 				ImportStateVerify: true,
@@ -417,7 +417,7 @@ func TestAccELBV2Listener_Forward_ingest(t *testing.T) {
 				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
 					acctest.ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.enabled", acctest.CtTrue),
 					acctest.ImportCheckResourceAttr("default_action.0.forward.0.stickiness.0.duration", "3600"),
-					acctest.ImportCheckResourceAttrSet("default_action.0.forward.0.target_group.0.arn", true),
+					acctest.ImportCheckResourceAttrSet("default_action.0.forward.0.target_group.0.arn"),
 					acctest.ImportCheckResourceAttr("default_action.0.forward.0.target_group.0.weight", "1"),
 				),
 				ImportStateVerify: true,
