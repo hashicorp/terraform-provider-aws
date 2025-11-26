@@ -61,7 +61,7 @@ func resourceConnectPeer() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"peer_asn": {
-							Type:         schema.TypeInt,
+							Type:         schema.TypeInt64,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(1, 4294967295),
 						},
