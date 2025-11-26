@@ -33,7 +33,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -508,7 +507,7 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 
 	table, err := waitAllGSIActive(ctx, conn, new.Table.ValueString(), updateTimeout)
 	if err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 			response.State.RemoveResource(ctx)
 		} else {
@@ -663,7 +662,7 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 
 	_, err := waitAllGSIActive(ctx, conn, data.Table.ValueString(), deleteTimeout)
 	if err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 			response.State.RemoveResource(ctx)
 		} else {
