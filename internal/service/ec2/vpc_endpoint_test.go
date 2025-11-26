@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1139,7 +1140,7 @@ func TestAccVPCEndpoint_crossRegionInterfaceGlobalService(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConfig_crossRegionInterfacePrivateDNS(rName, "us-east-1", "com.amazonaws.route53"), // Global service
+				Config: testAccVPCEndpointConfig_crossRegionInterfacePrivateDNS(rName, endpoints.UsEast1RegionID, "com.amazonaws.route53"), // Global service
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
