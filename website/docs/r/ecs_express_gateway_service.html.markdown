@@ -37,23 +37,6 @@ When you update an Express service configuration, a new service revision is crea
 
 When an Express service is deleted, it enters a `DRAINING` state where existing tasks are allowed to complete gracefully before termination. The deletion process is irreversible - once initiated, the service and all its associated AWS infrastructure (load balancers, target groups, etc.) will be permanently removed. During the draining process, no new tasks are started, and the service becomes unavailable once all tasks have completed.
 
-## Import
-
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Express Gateway Services using the service ARN. For example:
-
-```terraform
-import {
-  to = aws_ecs_express_gateway_service.example
-  id = "arn:aws:ecs:us-west-2:123456789012:service/my-cluster/my-express-gateway-service"
-}
-```
-
-Using `terraform import`, import ECS Express Gateway Services using the service ARN. For example:
-
-```console
-% terraform import aws_ecs_express_gateway_service.example arn:aws:ecs:us-west-2:123456789012:service/my-cluster/my-express-gateway-service
-```
-
 ## Argument Reference
 
 The following arguments are required:
@@ -199,3 +182,20 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
 * `delete` - (Default `20m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Express Gateway Services using the service ARN. For example:
+
+```terraform
+import {
+  to = aws_ecs_express_gateway_service.example
+  id = "arn:aws:ecs:us-west-2:123456789012:service/my-cluster/my-express-gateway-service"
+}
+```
+
+Using `terraform import`, import ECS Express Gateway Services using the service ARN. For example:
+
+```console
+% terraform import aws_ecs_express_gateway_service.example arn:aws:ecs:us-west-2:123456789012:service/my-cluster/my-express-gateway-service
+```
