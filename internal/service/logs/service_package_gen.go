@@ -78,7 +78,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_cloudwatch_log_transformer",
 			Name:     "Transformer",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity("log_group_identifier"),
+			Identity: inttypes.RegionalSingleParameterIdentity("log_group_arn"),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
