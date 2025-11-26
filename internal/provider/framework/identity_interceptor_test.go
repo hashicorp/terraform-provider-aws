@@ -116,6 +116,49 @@ func TestIdentityInterceptor(t *testing.T) {
 	}
 }
 
+func create(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
+	request := resource.CreateRequest{
+		Config:   configFromSchema(ctx, resourceSchema, stateAttrs),
+		Plan:     planFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	response := resource.CreateResponse{
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	opts := interceptorOptions[resource.CreateRequest, resource.CreateResponse]{
+		c:        client,
+		request:  &request,
+		response: &response,
+		when:     After,
+	}
+
+	interceptor.create(ctx, opts)
+
+	return response.Identity, response.Diagnostics
+}
+
+func read(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
+	request := resource.ReadRequest{
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	response := resource.ReadResponse{
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	opts := interceptorOptions[resource.ReadRequest, resource.ReadResponse]{
+		c:        client,
+		request:  &request,
+		response: &response,
+		when:     After,
+	}
+
+	interceptor.read(ctx, opts)
+
+	return response.Identity, response.Diagnostics
+}
+
 func TestIdentityInterceptor_OnError(t *testing.T) {
 	t.Parallel()
 
@@ -144,8 +187,16 @@ func TestIdentityInterceptor_OnError(t *testing.T) {
 		operation  func(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics)
 		stateAttrs map[string]string
 	}{
-		"create_tainted": {
+		"create": {
 			operation: createOnError,
+			stateAttrs: map[string]string{
+				"name":   name,
+				"region": region,
+				"type":   "some_type",
+			},
+		},
+		"update": {
+			operation: updateOnError,
 			stateAttrs: map[string]string{
 				"name":   name,
 				"region": region,
@@ -160,7 +211,6 @@ func TestIdentityInterceptor_OnError(t *testing.T) {
 
 			operation := tc.operation
 			stateAttrs := tc.stateAttrs
-			// expectIdentity := tc.expectIdentity
 
 			testCases := map[string]struct {
 				attrName     string
@@ -188,9 +238,6 @@ func TestIdentityInterceptor_OnError(t *testing.T) {
 					identity := emtpyIdentityFromSchema(ctx, &identitySchema)
 
 					responseIdentity, _ := operation(ctx, interceptor, resourceSchema, stateAttrs, identity, client)
-					// if len(diags) > 0 {
-					// 	t.Fatalf("unexpected diags during interception: %s", diags)
-					// }
 
 					if e, a := accountID, getIdentityAttributeValue(ctx, t, responseIdentity, path.Root("account_id")); e != a {
 						t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
@@ -205,28 +252,6 @@ func TestIdentityInterceptor_OnError(t *testing.T) {
 			}
 		})
 	}
-}
-
-func create(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
-	request := resource.CreateRequest{
-		Config:   configFromSchema(ctx, resourceSchema, stateAttrs),
-		Plan:     planFromSchema(ctx, resourceSchema, stateAttrs),
-		Identity: identity,
-	}
-	response := resource.CreateResponse{
-		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
-		Identity: identity,
-	}
-	opts := interceptorOptions[resource.CreateRequest, resource.CreateResponse]{
-		c:        client,
-		request:  &request,
-		response: &response,
-		when:     After,
-	}
-
-	interceptor.create(ctx, opts)
-
-	return response.Identity, response.Diagnostics
 }
 
 func createOnError(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
@@ -254,23 +279,26 @@ func createOnError(ctx context.Context, interceptor identityInterceptor, resourc
 	return response.Identity, response.Diagnostics
 }
 
-func read(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
-	request := resource.ReadRequest{
+func updateOnError(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
+	request := resource.UpdateRequest{
 		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
 		Identity: identity,
 	}
-	response := resource.ReadResponse{
+	response := resource.UpdateResponse{
 		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
 		Identity: identity,
+		Diagnostics: diag.Diagnostics{
+			diag.NewErrorDiagnostic("summary", "detail"),
+		},
 	}
-	opts := interceptorOptions[resource.ReadRequest, resource.ReadResponse]{
+	opts := interceptorOptions[resource.UpdateRequest, resource.UpdateResponse]{
 		c:        client,
 		request:  &request,
 		response: &response,
-		when:     After,
+		when:     OnError,
 	}
 
-	interceptor.read(ctx, opts)
+	interceptor.update(ctx, opts)
 
 	return response.Identity, response.Diagnostics
 }
