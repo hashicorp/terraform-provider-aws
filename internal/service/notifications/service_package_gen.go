@@ -52,9 +52,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
-			Factory:  newTrustedAccessResource,
-			TypeName: "aws_notifications_trusted_access",
-			Name:     "Trusted Access",
+			Factory:  newOrganizationsAccessResource,
+			TypeName: "aws_notifications_organizations_access",
+			Name:     "Organizations Access",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}

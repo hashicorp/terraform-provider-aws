@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNotificationsTrustedAccess_basic(t *testing.T) {
+func TestAccNotificationsOrganizationsAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_notifications_trusted_access.test"
+	resourceName := "aws_notifications_organizations_access.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -30,26 +30,26 @@ func TestAccNotificationsTrustedAccess_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustedAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationsAccessDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrustedAccessConfig_basic(true),
+				Config: testAccOrganizationsAccessConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustedAccessExists(ctx, resourceName),
+					testAccCheckOrganizationsAccessExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccTrustedAccessConfig_basic(false),
+				Config: testAccOrganizationsAccessConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustedAccessExists(ctx, resourceName),
+					testAccCheckOrganizationsAccessExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccTrustedAccessConfig_basic(true),
+				Config: testAccOrganizationsAccessConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustedAccessExists(ctx, resourceName),
+					testAccCheckOrganizationsAccessExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
@@ -57,23 +57,23 @@ func TestAccNotificationsTrustedAccess_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckTrustedAccessDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOrganizationsAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_notifications_trusted_access" {
+			if rs.Type != "aws_notifications_organizations_access" {
 				continue
 			}
 
-			output, err := tfnotifications.WaitTrustedAccessStable(ctx, conn, tfnotifications.TrustedAccessStableTimeout)
+			output, err := tfnotifications.WaitOrganizationsAccessStable(ctx, conn, tfnotifications.OrganizationsAccessStableTimeout)
 
 			if err != nil {
-				return fmt.Errorf("reading User Notifications Trusted Access (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading User Notifications Organizations Access (%s): %w", rs.Primary.ID, err)
 			}
 
 			if output == "" {
-				return fmt.Errorf("reading User Notifications Trusted Access (%s): empty response", rs.Primary.ID)
+				return fmt.Errorf("reading User Notifications Organizations Access (%s): empty response", rs.Primary.ID)
 			}
 
 			return nil
@@ -83,7 +83,7 @@ func testAccCheckTrustedAccessDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckTrustedAccessExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckOrganizationsAccessExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -93,31 +93,31 @@ func testAccCheckTrustedAccessExists(ctx context.Context, resourceName string) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
 
-		output, err := tfnotifications.WaitTrustedAccessStable(ctx, conn, tfnotifications.TrustedAccessStableTimeout)
+		output, err := tfnotifications.WaitOrganizationsAccessStable(ctx, conn, tfnotifications.OrganizationsAccessStableTimeout)
 
 		if err != nil {
-			return fmt.Errorf("reading User Notifications Trusted Access (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading User Notifications Organizations Access (%s): %w", rs.Primary.ID, err)
 		}
 
 		if output == "" {
-			return fmt.Errorf("reading User Notifications Trusted Access (%s): empty response", rs.Primary.ID)
+			return fmt.Errorf("reading User Notifications Organizations Access (%s): empty response", rs.Primary.ID)
 		}
 
 		if output != string(awstypes.AccessStatusEnabled) && rs.Primary.Attributes[names.AttrEnabled] == acctest.CtTrue {
-			return fmt.Errorf("User Notifications Trusted Access (%s): wrong setting", rs.Primary.ID)
+			return fmt.Errorf("User Notifications Organizations Access (%s): wrong setting", rs.Primary.ID)
 		}
 
 		if output == string(awstypes.AccessStatusEnabled) && rs.Primary.Attributes[names.AttrEnabled] == acctest.CtFalse {
-			return fmt.Errorf("User Notifications Trusted Access (%s): wrong setting", rs.Primary.ID)
+			return fmt.Errorf("User Notifications Organizations Access (%s): wrong setting", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccTrustedAccessConfig_basic(enabled bool) string {
+func testAccOrganizationsAccessConfig_basic(enabled bool) string {
 	return fmt.Sprintf(`
-resource "aws_notifications_trusted_access" "test" {
+resource "aws_notifications_organizations_access" "test" {
   enabled = %[1]t
 }
 `, enabled)

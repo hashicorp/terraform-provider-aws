@@ -19,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_notifications_trusted_access", name="Trusted Access")
-func newTrustedAccessResource(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &trustedAccessResource{}
+// @FrameworkResource("aws_notifications_organizations_access", name="Organizations Access")
+func newOrganizationsAccessResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &organizationsAccessResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultReadTimeout(10 * time.Minute)
@@ -34,12 +35,12 @@ func newTrustedAccessResource(context.Context) (resource.ResourceWithConfigure, 
 	return r, nil
 }
 
-type trustedAccessResource struct {
-	framework.ResourceWithModel[trustedAccessResourceModel]
+type organizationsAccessResource struct {
+	framework.ResourceWithModel[organizationsAccessResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *trustedAccessResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *organizationsAccessResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrEnabled: schema.BoolAttribute{
@@ -58,8 +59,8 @@ func (r *trustedAccessResource) Schema(ctx context.Context, request resource.Sch
 	}
 }
 
-func (r *trustedAccessResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data trustedAccessResourceModel
+func (r *organizationsAccessResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data organizationsAccessResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -75,28 +76,28 @@ func (r *trustedAccessResource) Create(ctx context.Context, request resource.Cre
 		_, err := conn.EnableNotificationsAccessForOrganization(ctx, &notifications.EnableNotificationsAccessForOrganizationInput{})
 
 		if err != nil {
-			response.Diagnostics.AddError("enabling User Notifications Trusted Access", err.Error())
+			response.Diagnostics.AddError("enabling User Notifications Organizations Access", err.Error())
 			return
 		}
 
 		// Wait for enabled state
-		_, err = waitTrustedAccessEnabled(ctx, conn, r.CreateTimeout(ctx, data.Timeouts))
+		_, err = waitOrganizationsAccessEnabled(ctx, conn, r.CreateTimeout(ctx, data.Timeouts))
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Trusted Access (%s) to be enabled", data.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Organizations Access (%s) to be enabled", data.ID.ValueString()), err.Error())
 			return
 		}
 	} else {
 		_, err := conn.DisableNotificationsAccessForOrganization(ctx, &notifications.DisableNotificationsAccessForOrganizationInput{})
 
 		if err != nil {
-			response.Diagnostics.AddError("disabling User Notifications Trusted Access", err.Error())
+			response.Diagnostics.AddError("disabling User Notifications Organizations Access", err.Error())
 			return
 		}
 
 		// Wait for disabled state
-		_, err = waitTrustedAccessDisabled(ctx, conn, r.CreateTimeout(ctx, data.Timeouts))
+		_, err = waitOrganizationsAccessDisabled(ctx, conn, r.CreateTimeout(ctx, data.Timeouts))
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Trusted Access (%s) to be disabled", data.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Organizations Access (%s) to be disabled", data.ID.ValueString()), err.Error())
 			return
 		}
 	}
@@ -104,8 +105,8 @@ func (r *trustedAccessResource) Create(ctx context.Context, request resource.Cre
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *trustedAccessResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data trustedAccessResourceModel
+func (r *organizationsAccessResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data organizationsAccessResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -113,7 +114,7 @@ func (r *trustedAccessResource) Read(ctx context.Context, request resource.ReadR
 
 	conn := r.Meta().NotificationsClient(ctx)
 
-	status, err := waitTrustedAccessStable(ctx, conn, r.ReadTimeout(ctx, data.Timeouts))
+	status, err := waitOrganizationsAccessStable(ctx, conn, r.ReadTimeout(ctx, data.Timeouts))
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		response.State.RemoveResource(ctx)
@@ -121,12 +122,12 @@ func (r *trustedAccessResource) Read(ctx context.Context, request resource.ReadR
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Trusted Access (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Organizations Access (%s)", data.ID.ValueString()), err.Error())
 		return
 	}
 
 	if status == "" {
-		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Trusted Access (%s)", data.ID.ValueString()), "empty response")
+		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Organizations Access (%s)", data.ID.ValueString()), "empty response")
 		return
 	}
 
@@ -135,8 +136,8 @@ func (r *trustedAccessResource) Read(ctx context.Context, request resource.ReadR
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *trustedAccessResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new trustedAccessResourceModel
+func (r *organizationsAccessResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new organizationsAccessResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -154,28 +155,28 @@ func (r *trustedAccessResource) Update(ctx context.Context, request resource.Upd
 			_, err := conn.EnableNotificationsAccessForOrganization(ctx, &notifications.EnableNotificationsAccessForOrganizationInput{})
 
 			if err != nil {
-				response.Diagnostics.AddError("enabling User Notifications Trusted Access", err.Error())
+				response.Diagnostics.AddError("enabling User Notifications Organizations Access", err.Error())
 				return
 			}
 
 			// Wait for enabled state
-			_, err = waitTrustedAccessEnabled(ctx, conn, r.UpdateTimeout(ctx, new.Timeouts))
+			_, err = waitOrganizationsAccessEnabled(ctx, conn, r.UpdateTimeout(ctx, new.Timeouts))
 			if err != nil {
-				response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Trusted Access (%s) to be enabled", new.ID.ValueString()), err.Error())
+				response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Organizations Access (%s) to be enabled", new.ID.ValueString()), err.Error())
 				return
 			}
 		} else {
 			_, err := conn.DisableNotificationsAccessForOrganization(ctx, &notifications.DisableNotificationsAccessForOrganizationInput{})
 
 			if err != nil {
-				response.Diagnostics.AddError("disabling User Notifications Trusted Access", err.Error())
+				response.Diagnostics.AddError("disabling User Notifications Organizations Access", err.Error())
 				return
 			}
 
 			// Wait for disabled state
-			_, err = waitTrustedAccessDisabled(ctx, conn, r.UpdateTimeout(ctx, new.Timeouts))
+			_, err = waitOrganizationsAccessDisabled(ctx, conn, r.UpdateTimeout(ctx, new.Timeouts))
 			if err != nil {
-				response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Trusted Access (%s) to be disabled", new.ID.ValueString()), err.Error())
+				response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Organizations Access (%s) to be disabled", new.ID.ValueString()), err.Error())
 				return
 			}
 		}
@@ -184,8 +185,8 @@ func (r *trustedAccessResource) Update(ctx context.Context, request resource.Upd
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *trustedAccessResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data trustedAccessResourceModel
+func (r *organizationsAccessResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data organizationsAccessResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -197,30 +198,27 @@ func (r *trustedAccessResource) Delete(ctx context.Context, request resource.Del
 	_, err := conn.DisableNotificationsAccessForOrganization(ctx, &notifications.DisableNotificationsAccessForOrganizationInput{})
 
 	if err != nil {
-		response.Diagnostics.AddError("disabling User Notifications Trusted Access", err.Error())
+		response.Diagnostics.AddError("disabling User Notifications Organizations Access", err.Error())
 		return
 	}
 
 	// Wait for disabled state
-	_, err = waitTrustedAccessDisabled(ctx, conn, r.DeleteTimeout(ctx, data.Timeouts))
+	_, err = waitOrganizationsAccessDisabled(ctx, conn, r.DeleteTimeout(ctx, data.Timeouts))
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Trusted Access (%s) to be disabled", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for User Notifications Organizations Access (%s) to be disabled", data.ID.ValueString()), err.Error())
 		return
 	}
 }
 
 const (
-	trustedAccessStableTimeout = 10 * time.Minute
-	statusNotFound             = "NotFound"
-	statusUnavailable          = "Unavailable"
-	trustedAccessStatusError   = "Error"
+	organizationsAccessStableTimeout = 10 * time.Minute
 )
 
-func waitTrustedAccessEnabled(ctx context.Context, conn *notifications.Client, timeout time.Duration) (*notifications.GetNotificationsAccessForOrganizationOutput, error) {
+func waitOrganizationsAccessEnabled(ctx context.Context, conn *notifications.Client, timeout time.Duration) (*notifications.GetNotificationsAccessForOrganizationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AccessStatusDisabled, awstypes.AccessStatusPending, statusNotFound, statusUnavailable),
+		Pending: enum.Slice(awstypes.AccessStatusDisabled, awstypes.AccessStatusPending),
 		Target:  enum.Slice(awstypes.AccessStatusEnabled),
-		Refresh: statusTrustedAccess(ctx, conn),
+		Refresh: statusOrganizationsAccess(ctx, conn),
 		Timeout: timeout,
 	}
 
@@ -233,11 +231,11 @@ func waitTrustedAccessEnabled(ctx context.Context, conn *notifications.Client, t
 	return nil, err
 }
 
-func waitTrustedAccessDisabled(ctx context.Context, conn *notifications.Client, timeout time.Duration) (*notifications.GetNotificationsAccessForOrganizationOutput, error) {
+func waitOrganizationsAccessDisabled(ctx context.Context, conn *notifications.Client, timeout time.Duration) (*notifications.GetNotificationsAccessForOrganizationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AccessStatusEnabled, awstypes.AccessStatusPending, statusNotFound, statusUnavailable),
+		Pending: enum.Slice(awstypes.AccessStatusEnabled, awstypes.AccessStatusPending),
 		Target:  enum.Slice(awstypes.AccessStatusDisabled),
-		Refresh: statusTrustedAccess(ctx, conn),
+		Refresh: statusOrganizationsAccess(ctx, conn),
 		Timeout: timeout,
 	}
 
@@ -250,11 +248,11 @@ func waitTrustedAccessDisabled(ctx context.Context, conn *notifications.Client, 
 	return nil, err
 }
 
-func waitTrustedAccessStable(ctx context.Context, conn *notifications.Client, timeout time.Duration) (string, error) {
+func waitOrganizationsAccessStable(ctx context.Context, conn *notifications.Client, timeout time.Duration) (string, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AccessStatusPending, statusNotFound, statusUnavailable),
+		Pending: enum.Slice(awstypes.AccessStatusPending),
 		Target:  enum.Slice(awstypes.AccessStatusEnabled, awstypes.AccessStatusDisabled),
-		Refresh: statusTrustedAccess(ctx, conn),
+		Refresh: statusOrganizationsAccess(ctx, conn),
 		Timeout: timeout,
 	}
 
@@ -269,29 +267,46 @@ func waitTrustedAccessStable(ctx context.Context, conn *notifications.Client, ti
 	return "", err
 }
 
-func statusTrustedAccess(ctx context.Context, conn *notifications.Client) retry.StateRefreshFunc {
+func statusOrganizationsAccess(ctx context.Context, conn *notifications.Client) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		input := &notifications.GetNotificationsAccessForOrganizationInput{}
+		output, err := getNotificationsOrganizationsAccess(ctx, conn)
 
-		output, err := conn.GetNotificationsAccessForOrganization(ctx, input)
-
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, statusNotFound, err
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, trustedAccessStatusError, fmt.Errorf("getting User Notifications Trusted Access: %w", err)
+			return nil, "", err
 		}
 
-		if output == nil || output.NotificationsAccessForOrganization == nil {
-			return nil, statusUnavailable, fmt.Errorf("getting User Notifications Trusted Access: empty response")
-		}
-
-		return output, string(output.NotificationsAccessForOrganization.AccessStatus), err
+		return output, string(output.NotificationsAccessForOrganization.AccessStatus), nil
 	}
 }
 
-type trustedAccessResourceModel struct {
+func getNotificationsOrganizationsAccess(ctx context.Context, conn *notifications.Client) (*notifications.GetNotificationsAccessForOrganizationOutput, error) {
+	input := &notifications.GetNotificationsAccessForOrganizationInput{}
+
+	output, err := conn.GetNotificationsAccessForOrganization(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.NotificationsAccessForOrganization == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+type organizationsAccessResourceModel struct {
 	Enabled  types.Bool     `tfsdk:"enabled"`
 	ID       types.String   `tfsdk:"id"`
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
