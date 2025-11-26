@@ -764,8 +764,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if d.HasChange("control_plane_scaling_config") {
 		input := eks.UpdateClusterConfigInput{
-			Name:                      aws.String(d.Id()),
 			ControlPlaneScalingConfig: expandControlPlaneScalingConfig(d.Get("control_plane_scaling_config").([]any)),
+			Name:                      aws.String(d.Id()),
 		}
 
 		output, err := conn.UpdateClusterConfig(ctx, &input)
@@ -803,7 +803,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			updateID := aws.ToString(output.Update.Id)
 
 			if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) encryption config association (%s): %s", d.Id(), updateID, err)
+				return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) encryption config update (%s): %s", d.Id(), updateID, err)
 			}
 		}
 	}
