@@ -198,7 +198,6 @@ func (r identityInterceptor) update(ctx context.Context, opts interceptorOptions
 		}
 
 		if identityIsFullyNull(ctx, identity, r.attributes) {
-
 			var diags diag.Diagnostics
 
 		identityLoop:
