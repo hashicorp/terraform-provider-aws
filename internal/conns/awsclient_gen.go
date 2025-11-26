@@ -164,6 +164,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mgn"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mwaa"
+	"github.com/aws/aws-sdk-go-v2/service/mwaaserverless"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
@@ -863,6 +864,10 @@ func (c *AWSClient) MQClient(ctx context.Context) *mq.Client {
 
 func (c *AWSClient) MWAAClient(ctx context.Context) *mwaa.Client {
 	return errs.Must(client[*mwaa.Client](ctx, c, names.MWAA, make(map[string]any)))
+}
+
+func (c *AWSClient) MWAAServerlessClient(ctx context.Context) *mwaaserverless.Client {
+	return errs.Must(client[*mwaaserverless.Client](ctx, c, names.MWAAServerless, make(map[string]any)))
 }
 
 func (c *AWSClient) Macie2Client(ctx context.Context) *macie2.Client {

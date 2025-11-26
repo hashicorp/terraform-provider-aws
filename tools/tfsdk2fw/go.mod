@@ -193,6 +193,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.38.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.14 // indirect
+	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.43.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.59.0 // indirect

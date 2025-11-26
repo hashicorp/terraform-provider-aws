@@ -5862,6 +5862,30 @@ service "mwaa" {
   brand                    = "AWS"
 }
 
+service "mwaaserverless" {
+  sdk {
+    id            = "MWAA Serverless"
+    arn_namespace = "airflow-serverless"
+  }
+
+  names {
+    provider_name_upper = "MWAAServerless"
+    human_friendly      = "MWAA (Managed Workflows for Apache Airflow) Serverless"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListWorkflows"
+  }
+
+  resource_prefix {
+    correct = "aws_mwaaserverless_"
+  }
+
+  provider_package_correct = "mwaaserverless"
+  doc_prefix               = ["mwaaserverless_"]
+  brand                    = "AWS"
+}
+
 service "neptune" {
   sdk {
     id            = "Neptune"
