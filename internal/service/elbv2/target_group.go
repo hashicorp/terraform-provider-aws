@@ -296,6 +296,12 @@ func resourceTargetGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"target_control_port": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(1, 65535),
+			},
 			"target_failover": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -494,6 +500,11 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.HealthCheckProtocol = healthCheckProtocol
 		}
 	}
+	if targetType == awstypes.TargetTypeEnumInstance || targetType == awstypes.TargetTypeEnumIp {
+		if v, ok := d.GetOk("target_control_port"); ok {
+			input.TargetControlPort = aws.Int32(int32(v.(int)))
+		}
+	}
 
 	output, err := conn.CreateTargetGroup(ctx, input)
 
@@ -609,6 +620,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("load_balancer_arns", flex.FlattenStringValueSet(targetGroup.LoadBalancerArns))
 	d.Set(names.AttrName, targetGroup.TargetGroupName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(targetGroup.TargetGroupName)))
+	d.Set("target_control_port", targetGroup.TargetControlPort)
 	targetType := targetGroup.TargetType
 	d.Set("target_type", targetType)
 
