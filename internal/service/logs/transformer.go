@@ -32,6 +32,7 @@ import (
 )
 
 // @FrameworkResource("aws_cloudwatch_log_transformer", name="Transformer")
+// @IdentityAttribute("log_group_identifier")
 func newTransformerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &transformerResource{}
 
