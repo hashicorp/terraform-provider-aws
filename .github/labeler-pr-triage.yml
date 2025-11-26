@@ -2317,6 +2317,7 @@ service/vpc:
               - 'website/**/security_group*'
               - 'website/**/subnet*'
               - 'website/**/vpc_dhcp_*'
+              - 'website/**/vpc_encryption_*'
               - 'website/**/vpc_endpoint*'
               - 'website/**/vpc_ipv*'
               - 'website/**/vpc_network_performance*'
