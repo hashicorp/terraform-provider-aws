@@ -134,13 +134,6 @@ func TestAccLogsTransformer_update_transformerConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
-			},
-			{
 				Config: testAccTransformerConfig_parseCloudFront(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
@@ -148,6 +141,13 @@ func TestAccLogsTransformer_update_transformerConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_cloudfront.#", "1"),
 				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
 		},
 	})
