@@ -206,7 +206,7 @@ func TestAccLogsTransformer_update_logGroupIdentifier(t *testing.T) {
 	})
 }
 
-func TestAccLogsTransformer_logGroupIdentifierArn(t *testing.T) {
+func TestAccLogsTransformer_logGroupIdentifierARN(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var transformer cloudwatchlogs.GetTransformerOutput
@@ -224,7 +224,7 @@ func TestAccLogsTransformer_logGroupIdentifierArn(t *testing.T) {
 		CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransformerConfig_logGroupIdentifierArn(rName),
+				Config: testAccTransformerConfig_logGroupIdentifierARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrARN),
@@ -1550,7 +1550,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rName)
 }
 
-func testAccTransformerConfig_logGroupIdentifierArn(rName string) string {
+func testAccTransformerConfig_logGroupIdentifierARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
   log_group_identifier = aws_cloudwatch_log_group.test.arn
