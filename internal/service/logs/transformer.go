@@ -796,6 +796,9 @@ func (r *transformerResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
+	// If log_group_identifier was an ARN it may have been returned as a name, so reset it to the original value.
+	data.LogGroupIdentifier = fwflex.StringValueToFramework(ctx, logGroupID)
+
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -827,6 +830,9 @@ func (r *transformerResource) Read(ctx context.Context, request resource.ReadReq
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// If log_group_identifier was an ARN it may have been returned as a name, so reset it to the original value.
+	data.LogGroupIdentifier = fwflex.StringValueToFramework(ctx, logGroupID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -878,6 +884,9 @@ func (r *transformerResource) Update(ctx context.Context, request resource.Updat
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// If log_group_identifier was an ARN it may have been returned as a name, so reset it to the original value.
+	new.LogGroupIdentifier = fwflex.StringValueToFramework(ctx, logGroupID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
