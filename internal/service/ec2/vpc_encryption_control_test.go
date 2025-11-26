@@ -809,7 +809,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Excludable_monitor(t
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_setup(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -853,7 +853,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Excludable_enforceWi
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_setup(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -899,7 +899,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Excludable_enforceWi
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Excludable_setup(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -974,7 +974,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Migratable_monitor(t
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Migratable_setup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -1019,7 +1019,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Migratable_enforce(t
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Migratable_setup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -1064,7 +1064,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Unsupported_monitor(
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Unsupported_setup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
@@ -1108,7 +1108,7 @@ func TestAccVPCVPCEncryptionControl_WithAssociatedResources_Unsupported_enforce(
 			{
 				Config: testAccVPCEncryptionControlConfig_WithAssociatedResources_Unsupported_setup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, "aws_vpc.test", &vpc),
+					acctest.CheckVPCExists(ctx, t, "aws_vpc.test", &vpc),
 					testAccCheckVPCEncryptionControlDoesNotExist(ctx, t, resourceName),
 				),
 			},
