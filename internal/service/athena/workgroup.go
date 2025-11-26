@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -39,6 +40,10 @@ func resourceWorkGroup() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: customdiff.All(
+			managedQueryResultsValidation,
+		),
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -115,7 +120,6 @@ func resourceWorkGroup() *schema.Resource {
 									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
-										Default:  false,
 									},
 									names.AttrEncryptionConfiguration: {
 										Type:     schema.TypeList,
@@ -620,11 +624,11 @@ func expandManagedQueryResultsEncryptionConfiguration(l []any) *types.ManagedQue
 
 	m := l[0].(map[string]any)
 
-	managedQueryResultsEncryptionConfiguration := &types.ManagedQueryResultsEncryptionConfiguration{}
-
-	if v, ok := m[names.AttrKMSKey].(string); ok && v != "" {
-		managedQueryResultsEncryptionConfiguration.KmsKey = aws.String(v)
+	if v, ok := m[names.AttrKMSKey].(string); !ok || v == "" {
+		return nil
 	}
+	managedQueryResultsEncryptionConfiguration := &types.ManagedQueryResultsEncryptionConfiguration{}
+	managedQueryResultsEncryptionConfiguration.KmsKey = aws.String(m[names.AttrKMSKey].(string))
 
 	return managedQueryResultsEncryptionConfiguration
 }
@@ -637,15 +641,21 @@ func expandWorkGroupManagedQueryResultsConfigurationUpdates(l []any) *types.Mana
 	m := l[0].(map[string]any)
 
 	managedQueryResultsConfigurationUpdates := &types.ManagedQueryResultsConfigurationUpdates{}
-
 	if v, ok := m[names.AttrEnabled].(bool); ok {
 		managedQueryResultsConfigurationUpdates.Enabled = aws.Bool(v)
+		if !v {
+			managedQueryResultsConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
+			return managedQueryResultsConfigurationUpdates
+		}
 	}
 
 	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
-		managedQueryResultsConfigurationUpdates.EncryptionConfiguration = expandManagedQueryResultsEncryptionConfiguration(v.([]any))
-	} else {
-		managedQueryResultsConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
+		encConfig := expandManagedQueryResultsEncryptionConfiguration(v.([]any))
+		if encConfig != nil {
+			managedQueryResultsConfigurationUpdates.EncryptionConfiguration = encConfig
+		} else {
+			managedQueryResultsConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
+		}
 	}
 
 	return managedQueryResultsConfigurationUpdates
@@ -766,4 +776,45 @@ func flattenWorkGroupManagedQueryResultsEncryptionConfiguration(managedQueryResu
 	}
 
 	return []any{m}
+}
+
+func managedQueryResultsValidation(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+	configRaw, configOk := diff.GetOk(names.AttrConfiguration)
+	if !configOk {
+		return nil
+	}
+
+	configList, ok := configRaw.([]any)
+	if !ok || len(configList) == 0 || configList[0] == nil {
+		return nil
+	}
+
+	config := configList[0].(map[string]any)
+
+	mqrEnabled := false
+	if mqrRaw, mqrOk := config["managed_query_results_configuration"]; mqrOk {
+		if mqrList, ok := mqrRaw.([]any); ok && len(mqrList) > 0 && mqrList[0] != nil {
+			if mqrConfig, ok := mqrList[0].(map[string]any); ok {
+				if enabled, ok := mqrConfig[names.AttrEnabled].(bool); ok {
+					mqrEnabled = enabled
+				}
+			}
+		}
+	}
+
+	if !mqrEnabled {
+		return nil
+	}
+
+	if rcRaw, rcOk := config["result_configuration"]; rcOk {
+		if rcList, ok := rcRaw.([]any); ok && len(rcList) > 0 && rcList[0] != nil {
+			if rcConfig, ok := rcList[0].(map[string]any); ok {
+				if outputLoc, ok := rcConfig["output_location"].(string); ok && outputLoc != "" {
+					return fmt.Errorf("configuration.result_configuration.output_location cannot be specified when configuration.managed_query_results_configuration.enabled is true")
+				}
+			}
+		}
+	}
+
+	return nil
 }

@@ -67,7 +67,7 @@ This resource supports the following arguments:
 
 #### Managed Query Results Configuration
 
-* `enabled` - (Optional) If set to true, allows you to store query results in Athena owned storage. If set to false, workgroup member stores query results in location specified under result_configuration.output_location. The default is false. A workgroup cannot have the result_configuration.output_location parameter when you set this field to true.
+* `enabled` - (Optional) If set to `true`, allows you to store query results in Athena owned storage. If set to `false`, workgroup member stores query results in the location specified under `result_configuration.output_location`. The default is `false`. A workgroup cannot have the `result_configuration.output_location` set when this is `true`.
 * `encryption_configuration` - (Optional) Configuration block with encryption settings. See [Managed Query Results Encryption Configuration](#managed-query-results-encryption-configuration) below.
 
 #### Result Configuration
