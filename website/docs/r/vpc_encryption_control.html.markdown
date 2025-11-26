@@ -55,6 +55,7 @@ The following arguments are optional:
   Valid values are `disable` or `enable`.
   Default is `disable`.
   Only valid when `mode` is `enforce`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `virtual_private_gateway_exclusion` - (Optional) Whether to exclude Virtual Private Gateways from encryption enforcement.
   Valid values are `disable` or `enable`.
