@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -32,11 +33,12 @@ import (
 )
 
 // @FrameworkResource("aws_cloudwatch_log_transformer", name="Transformer")
-// @IdentityAttribute("log_group_arn")
+// @ArnIdentity("log_group_arn")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(destroyTakesT=true)
 // @Testing(existsTakesT=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs;cloudwatchlogs.GetTransformerOutput")
+// @Testing(importStateIdAttribute="log_group_identifier")
 func newTransformerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &transformerResource{}
 
@@ -45,7 +47,6 @@ func newTransformerResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 type transformerResource struct {
 	framework.ResourceWithModel[transformerResourceModel]
-	framework.ImportByIdentityer
 }
 
 func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -805,15 +806,19 @@ func (r *transformerResource) Create(ctx context.Context, request resource.Creat
 	// If log_group_identifier was an ARN it may have been returned as a name, so reset it to the original value.
 	data.LogGroupIdentifier = fwflex.StringValueToFramework(ctx, logGroupID)
 
-	logGroup, err := findLogGroupByName(ctx, conn, logGroupID)
+	if arn.IsARN(logGroupID) {
+		data.LogGroupARN = fwflex.StringValueToFramework(ctx, logGroupID)
+	} else {
+		logGroup, err := findLogGroupByName(ctx, conn, logGroupID)
 
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Log Group (%s)", logGroupID), err.Error())
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Log Group (%s)", logGroupID), err.Error())
 
-		return
+			return
+		}
+
+		data.LogGroupARN = fwflex.StringToFramework(ctx, logGroup.LogGroupArn)
 	}
-
-	data.LogGroupARN = fwflex.StringToFramework(ctx, logGroup.LogGroupArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -850,15 +855,19 @@ func (r *transformerResource) Read(ctx context.Context, request resource.ReadReq
 	// If log_group_identifier was an ARN it may have been returned as a name, so reset it to the original value.
 	data.LogGroupIdentifier = fwflex.StringValueToFramework(ctx, logGroupID)
 
-	logGroup, err := findLogGroupByName(ctx, conn, logGroupID)
+	if arn.IsARN(logGroupID) {
+		data.LogGroupARN = fwflex.StringValueToFramework(ctx, logGroupID)
+	} else {
+		logGroup, err := findLogGroupByName(ctx, conn, logGroupID)
 
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Log Group (%s)", logGroupID), err.Error())
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Log Group (%s)", logGroupID), err.Error())
 
-		return
+			return
+		}
+
+		data.LogGroupARN = fwflex.StringToFramework(ctx, logGroup.LogGroupArn)
 	}
-
-	data.LogGroupARN = fwflex.StringToFramework(ctx, logGroup.LogGroupArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

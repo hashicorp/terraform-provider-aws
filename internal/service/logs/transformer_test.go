@@ -48,7 +48,7 @@ func TestAccLogsTransformer_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -146,7 +146,7 @@ func TestAccLogsTransformer_update_transformerConfig(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -198,7 +198,7 @@ func TestAccLogsTransformer_update_logGroupIdentifier(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -235,7 +235,7 @@ func TestAccLogsTransformer_logGroupIdentifierARN(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -280,7 +280,7 @@ func TestAccLogsTransformer_addKeys(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -325,7 +325,7 @@ func TestAccLogsTransformer_copyValue(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -372,7 +372,7 @@ func TestAccLogsTransformer_csv(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -425,7 +425,7 @@ func TestAccLogsTransformer_dateTimeConverter(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -466,7 +466,7 @@ func TestAccLogsTransformer_deleteKeys(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -504,7 +504,7 @@ func TestAccLogsTransformer_grok(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -543,7 +543,7 @@ func TestAccLogsTransformer_grokWithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -591,7 +591,7 @@ func TestAccLogsTransformer_listToMap(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -632,7 +632,7 @@ func TestAccLogsTransformer_lowerCaseString(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -677,7 +677,7 @@ func TestAccLogsTransformer_moveKeys(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -714,7 +714,7 @@ func TestAccLogsTransformer_parseCloudFront(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -752,7 +752,7 @@ func TestAccLogsTransformer_parseCloudFrontWithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -792,7 +792,7 @@ func TestAccLogsTransformer_parseJSON(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -838,7 +838,7 @@ func TestAccLogsTransformer_parseKeyValue(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -875,7 +875,7 @@ func TestAccLogsTransformer_parsePostgres(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -913,7 +913,7 @@ func TestAccLogsTransformer_parsePostgresWithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -950,7 +950,7 @@ func TestAccLogsTransformer_parseRoute53(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -988,7 +988,7 @@ func TestAccLogsTransformer_parseRoute53WithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -1027,7 +1027,7 @@ func TestAccLogsTransformer_parseToOCSF(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -1067,7 +1067,7 @@ func TestAccLogsTransformer_parseToOCSFWithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -1104,7 +1104,7 @@ func TestAccLogsTransformer_parseVPC(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -1142,7 +1142,7 @@ func TestAccLogsTransformer_parseVPCWithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -1179,7 +1179,7 @@ func TestAccLogsTransformer_parseWAF(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -1217,7 +1217,7 @@ func TestAccLogsTransformer_parseWAFWithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -1262,7 +1262,7 @@ func TestAccLogsTransformer_renameKeys(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -1303,7 +1303,7 @@ func TestAccLogsTransformer_splitString(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -1345,7 +1345,7 @@ func TestAccLogsTransformer_substituteString(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -1386,7 +1386,7 @@ func TestAccLogsTransformer_trimString(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -1427,7 +1427,7 @@ func TestAccLogsTransformer_typeConverter(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
@@ -1468,23 +1468,12 @@ func TestAccLogsTransformer_upperCaseString(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccTransformerImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
 			},
 		},
 	})
-}
-
-func testAccTransformerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["log_group_identifier"], nil
-	}
 }
 
 func testAccCheckTransformerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
