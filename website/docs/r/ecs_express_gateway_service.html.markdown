@@ -27,82 +27,31 @@ resource "aws_ecs_express_gateway_service" "example" {
 }
 ```
 
-### With Network Configuration
+## Service Updates and Deletion
+
+### Updates
+
+When you update an Express service configuration, a new service revision is created and deployed using a rolling deployment strategy with zero downtime. The service automatically manages the transition from the old configuration to the new one, ensuring continuous availability.
+
+### Deletion
+
+When an Express service is deleted, it enters a `DRAINING` state where existing tasks are allowed to complete gracefully before termination. The deletion process is irreversible - once initiated, the service and all its associated AWS infrastructure (load balancers, target groups, etc.) will be permanently removed. During the draining process, no new tasks are started, and the service becomes unavailable once all tasks have completed.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Express Gateway Services using the service ARN. For example:
 
 ```terraform
-resource "aws_ecs_express_gateway_service" "example" {
-  service_name            = "my-express-service"
-  cluster                 = aws_ecs_cluster.main.name
-  execution_role_arn      = aws_iam_role.execution.arn
-  infrastructure_role_arn = aws_iam_role.infrastructure.arn
-  cpu                     = "256"
-  memory                  = "512"
-
-  primary_container {
-    image          = "nginx:latest"
-    container_port = 80
-  }
-
-  network_configuration {
-    subnets         = [aws_subnet.private_a.id, aws_subnet.private_b.id]
-    security_groups = [aws_security_group.app.id]
-  }
+import {
+  to = aws_ecs_express_gateway_service.example
+  id = "arn:aws:ecs:us-west-2:123456789012:service/my-cluster/my-express-gateway-service"
 }
 ```
 
-### With Container Logging and Environment Variables
+Using `terraform import`, import ECS Express Gateway Services using the service ARN. For example:
 
-```terraform
-resource "aws_ecs_express_gateway_service" "example" {
-  execution_role_arn      = aws_iam_role.execution.arn
-  infrastructure_role_arn = aws_iam_role.infrastructure.arn
-  health_check_path       = "/health"
-
-  primary_container {
-    image          = "my-app:latest"
-    container_port = 8080
-    command        = ["./start.sh"]
-
-    aws_logs_configuration {
-      log_group = aws_cloudwatch_log_group.app.name
-    }
-
-    environment {
-      name  = "ENV"
-      value = "production"
-    }
-
-    environment {
-      name  = "PORT"
-      value = "8080"
-    }
-
-    secret {
-      name       = "DB_PASSWORD"
-      value_from = aws_secretsmanager_secret.db_password.arn
-    }
-  }
-}
-```
-
-### With Auto-Scaling
-
-```terraform
-resource "aws_ecs_express_gateway_service" "example" {
-  execution_role_arn      = aws_iam_role.execution.arn
-  infrastructure_role_arn = aws_iam_role.infrastructure.arn
-
-  primary_container {
-    image = "my-app:latest"
-  }
-
-  scaling_target {
-    min_task_count            = 2
-    max_task_count            = 10
-    auto_scaling_metric       = "CPU"
-    auto_scaling_target_value = 70
-  }
-}
+```console
+% terraform import aws_ecs_express_gateway_service.example arn:aws:ecs:us-west-2:123456789012:service/my-cluster/my-express-gateway-service
 ```
 
 ## Argument Reference
@@ -159,12 +108,70 @@ The `secrets` configuration block supports the following:
 * `name` - (Required) Name of the secret.
 * `value_from` - (Required) ARN of the AWS Secrets Manager secret or AWS Systems Manager parameter containing the secret value.
 
+### Example with Container Logging and Environment Variables
+
+```terraform
+resource "aws_ecs_express_gateway_service" "example" {
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+  health_check_path       = "/health"
+
+  primary_container {
+    image          = "my-app:latest"
+    container_port = 8080
+    command        = ["./start.sh"]
+
+    aws_logs_configuration {
+      log_group = aws_cloudwatch_log_group.app.name
+    }
+
+    environment {
+      name  = "ENV"
+      value = "production"
+    }
+
+    environment {
+      name  = "PORT"
+      value = "8080"
+    }
+
+    secret {
+      name       = "DB_PASSWORD"
+      value_from = aws_secretsmanager_secret.db_password.arn
+    }
+  }
+}
+```
+
 ### network_configuration
 
 The `network_configuration` configuration block supports the following:
 
 * `security_groups` - (Optional) Security groups associated with the task. If not specified, the default security group for the VPC is used.
 * `subnets` - (Optional) Subnets associated with the task. At least 2 subnets must be specified when using network configuration. If not specified, default subnets will be used.
+
+### Example
+
+```terraform
+resource "aws_ecs_express_gateway_service" "example" {
+  service_name            = "my-express-service"
+  cluster                 = aws_ecs_cluster.main.name
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+  cpu                     = "256"
+  memory                  = "512"
+
+  primary_container {
+    image          = "nginx:latest"
+    container_port = 80
+  }
+
+  network_configuration {
+    subnets         = [aws_subnet.private_a.id, aws_subnet.private_b.id]
+    security_groups = [aws_security_group.app.id]
+  }
+}
+```
 
 ### scaling_target
 
@@ -192,29 +199,3 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
 * `delete` - (Default `20m`)
-
-## Service Updates and Deletion
-
-### Updates
-
-When you update an Express service configuration, a new service revision is created and deployed using a rolling deployment strategy with zero downtime. The service automatically manages the transition from the old configuration to the new one, ensuring continuous availability.
-
-### Deletion
-
-When an Express service is deleted, it enters a `DRAINING` state where existing tasks are allowed to complete gracefully before termination. The deletion process is irreversible - once initiated, the service and all its associated AWS infrastructure (load balancers, target groups, etc.) will be permanently removed. During the draining process, no new tasks are started, and the service becomes unavailable once all tasks have completed.
-
-## Import
-
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Express Gateway Services using the service ARN. For example:
-
-```terraform
-import {
-  to = aws_ecs_express_gateway_service.example
-  id = "arn:aws:ecs:us-west-2:123456789012:service/my-cluster/my-express-gateway-service"
-}
-```
-
-Using `terraform import`, import ECS Express Gateway Services using the service ARN. For example:
-
-```console
-% terraform import aws_ecs_express_gateway_service.example arn:aws:ecs:us-west-2:123456789012:service/my-cluster/my-express-gateway-service
