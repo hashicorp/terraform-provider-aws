@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -363,7 +363,7 @@ func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string
 	}
 
 	if status := output.EndpointStatus; status == awstypes.EndpointStatusDeleting {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -376,7 +376,7 @@ func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.
 	output, err := conn.DescribeEndpoint(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -393,7 +393,7 @@ func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.
 	return output, nil
 }
 
-func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEndpointByName(ctx, conn, name)
 
@@ -413,7 +413,7 @@ func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name str
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating),
 		Target:  enum.Slice(awstypes.EndpointStatusInService),
 		Refresh: statusEndpoint(ctx, conn, name),
@@ -437,7 +437,7 @@ func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name strin
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStatusDeleting),
 		Target:  []string{},
 		Refresh: statusEndpoint(ctx, conn, name),
