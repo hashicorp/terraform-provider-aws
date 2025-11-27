@@ -167,7 +167,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	if v, ok := d.GetOk("enable_accelerated_recovery"); ok && v.(bool) && len(vpcs) == 0 { // only enable if not private zone
-		err := updateEnabledAcceleratedRecovery(ctx, conn, d.Id(), v.(bool), timeout)
+		err := updateEnableAcceleratedRecovery(ctx, conn, d.Id(), v.(bool), timeout)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "enabling Route53 Zone (%s) accelerated recovery: %s", d.Id(), err)
 		}
@@ -294,7 +294,7 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	if d.HasChange("enable_accelerated_recovery") {
-		err := updateEnabledAcceleratedRecovery(ctx, conn, d.Id(), d.Get("enable_accelerated_recovery").(bool), d.Timeout(schema.TimeoutUpdate))
+		err := updateEnableAcceleratedRecovery(ctx, conn, d.Id(), d.Get("enable_accelerated_recovery").(bool), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Route53 Hosted Zone (%s) accelerated recovery: %s", d.Id(), err)
 		}
@@ -314,7 +314,7 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 	if v := output.HostedZone; v != nil {
 		if v := v.Features; v != nil && v.AcceleratedRecoveryStatus == awstypes.AcceleratedRecoveryStatusEnabled {
-			err := updateEnabledAcceleratedRecovery(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutDelete))
+			err := updateEnableAcceleratedRecovery(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutDelete))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "disabling Route53 Hosted Zone (%s) accelerated recovery: %s", d.Id(), err)
 			}
@@ -328,7 +328,7 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	return diags
 }
 
-func updateEnabledAcceleratedRecovery(ctx context.Context, conn *route53.Client, zoneID string, enabled bool, timeout time.Duration) error {
+func updateEnableAcceleratedRecovery(ctx context.Context, conn *route53.Client, zoneID string, enabled bool, timeout time.Duration) error {
 	input := route53.UpdateHostedZoneFeaturesInput{
 		HostedZoneId:              aws.String(zoneID),
 		EnableAcceleratedRecovery: aws.Bool(enabled),
