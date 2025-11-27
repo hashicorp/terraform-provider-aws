@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafkaconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -594,7 +594,7 @@ func findConnectorByARN(ctx context.Context, conn *kafkaconnect.Client, arn stri
 	output, err := conn.DescribeConnector(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -611,7 +611,7 @@ func findConnectorByARN(ctx context.Context, conn *kafkaconnect.Client, arn stri
 	return output, nil
 }
 
-func statusConnector(ctx context.Context, conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
+func statusConnector(ctx context.Context, conn *kafkaconnect.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findConnectorByARN(ctx, conn, arn)
 
@@ -628,7 +628,7 @@ func statusConnector(ctx context.Context, conn *kafkaconnect.Client, arn string)
 }
 
 func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStateCreating),
 		Target:  enum.Slice(awstypes.ConnectorStateRunning),
 		Refresh: statusConnector(ctx, conn, arn),
@@ -649,7 +649,7 @@ func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.Client, arn st
 }
 
 func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStateUpdating),
 		Target:  enum.Slice(awstypes.ConnectorStateRunning),
 		Refresh: statusConnector(ctx, conn, arn),
@@ -670,7 +670,7 @@ func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.Client, arn st
 }
 
 func waitConnectorDeleted(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStateDeleting),
 		Target:  []string{},
 		Refresh: statusConnector(ctx, conn, arn),

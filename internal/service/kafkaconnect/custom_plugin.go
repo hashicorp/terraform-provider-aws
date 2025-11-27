@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafkaconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -225,7 +225,7 @@ func findCustomPluginByARN(ctx context.Context, conn *kafkaconnect.Client, arn s
 	output, err := conn.DescribeCustomPlugin(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -242,7 +242,7 @@ func findCustomPluginByARN(ctx context.Context, conn *kafkaconnect.Client, arn s
 	return output, nil
 }
 
-func statusCustomPlugin(ctx context.Context, conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
+func statusCustomPlugin(ctx context.Context, conn *kafkaconnect.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCustomPluginByARN(ctx, conn, arn)
 
@@ -259,7 +259,7 @@ func statusCustomPlugin(ctx context.Context, conn *kafkaconnect.Client, arn stri
 }
 
 func waitCustomPluginCreated(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CustomPluginStateCreating),
 		Target:  enum.Slice(awstypes.CustomPluginStateActive),
 		Refresh: statusCustomPlugin(ctx, conn, arn),
@@ -280,7 +280,7 @@ func waitCustomPluginCreated(ctx context.Context, conn *kafkaconnect.Client, arn
 }
 
 func waitCustomPluginDeleted(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CustomPluginStateDeleting),
 		Target:  []string{},
 		Refresh: statusCustomPlugin(ctx, conn, arn),
