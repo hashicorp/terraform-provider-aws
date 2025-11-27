@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -350,7 +350,7 @@ func findAnalysisByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsA
 	}
 
 	if status := output.Status; status == awstypes.ResourceStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -363,7 +363,7 @@ func findAnalysis(ctx context.Context, conn *quicksight.Client, input *quicksigh
 	output, err := conn.DescribeAnalysis(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -393,7 +393,7 @@ func findAnalysisDefinition(ctx context.Context, conn *quicksight.Client, input 
 	output, err := conn.DescribeAnalysisDefinition(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -423,7 +423,7 @@ func findAnalysisPermissions(ctx context.Context, conn *quicksight.Client, input
 	output, err := conn.DescribeAnalysisPermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -440,7 +440,7 @@ func findAnalysisPermissions(ctx context.Context, conn *quicksight.Client, input
 	return output.Permissions, nil
 }
 
-func statusAnalysis(ctx context.Context, conn *quicksight.Client, awsAccountID, analysisID string) retry.StateRefreshFunc {
+func statusAnalysis(ctx context.Context, conn *quicksight.Client, awsAccountID, analysisID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAnalysisByTwoPartKey(ctx, conn, awsAccountID, analysisID)
 
@@ -457,7 +457,7 @@ func statusAnalysis(ctx context.Context, conn *quicksight.Client, awsAccountID, 
 }
 
 func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, analysisID string, timeout time.Duration) (*awstypes.Analysis, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusCreationSuccessful),
 		Refresh: statusAnalysis(ctx, conn, awsAccountID, analysisID),
@@ -478,7 +478,7 @@ func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, awsAccoun
 }
 
 func waitAnalysisUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID, analysisID string, timeout time.Duration) (*awstypes.Analysis, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusUpdateInProgress, awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusUpdateSuccessful, awstypes.ResourceStatusCreationSuccessful),
 		Refresh: statusAnalysis(ctx, conn, awsAccountID, analysisID),
