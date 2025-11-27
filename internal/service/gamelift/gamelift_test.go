@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -70,5 +70,5 @@ func testAccAccountIdByRegion(region string) (string, error) {
 		return accId, nil
 	}
 
-	return "", &retry.NotFoundError{Message: fmt.Sprintf("GameLift Account ID not found for region %q", region)}
+	return "", &sdkretry.NotFoundError{Message: fmt.Sprintf("GameLift Account ID not found for region %q", region)}
 }
