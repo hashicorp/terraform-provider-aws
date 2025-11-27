@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -231,7 +231,7 @@ func findApplicationByName(ctx context.Context, conn *codedeploy.Client, name st
 	output, err := conn.GetApplication(ctx, input)
 
 	if errs.IsA[*types.ApplicationDoesNotExistException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
