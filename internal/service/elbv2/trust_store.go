@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -249,7 +249,7 @@ func findTrustStoreByARN(ctx context.Context, conn *elasticloadbalancingv2.Clien
 
 	// Eventual consistency check.
 	if aws.ToString(output.TrustStoreArn) != arn {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -275,7 +275,7 @@ func findTrustStores(ctx context.Context, conn *elasticloadbalancingv2.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.TrustStoreNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -291,7 +291,7 @@ func findTrustStores(ctx context.Context, conn *elasticloadbalancingv2.Client, i
 	return output, nil
 }
 
-func statusTrustStore(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) retry.StateRefreshFunc {
+func statusTrustStore(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTrustStoreByARN(ctx, conn, arn)
 
@@ -308,7 +308,7 @@ func statusTrustStore(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 }
 
 func waitTrustStoreActive(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string, timeout time.Duration) (*awstypes.TrustStore, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.TrustStoreStatusCreating),
 		Target:     enum.Slice(awstypes.TrustStoreStatusActive),
 		Refresh:    statusTrustStore(ctx, conn, arn),
@@ -334,7 +334,7 @@ func findTrustStoreAssociations(ctx context.Context, conn *elasticloadbalancingv
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.TrustStoreNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
