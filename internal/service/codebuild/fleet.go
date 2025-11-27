@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -462,7 +462,7 @@ func findFleetByARN(ctx context.Context, conn *codebuild.Client, arn string) (*t
 	}
 
 	if statusCode := output.Status.StatusCode; statusCode == types.FleetStatusCodePendingDeletion {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(statusCode),
 			LastRequest: input,
 		}
@@ -497,7 +497,7 @@ func findFleets(ctx context.Context, conn *codebuild.Client, input *codebuild.Ba
 	return output.Fleets, nil
 }
 
-func statusFleet(ctx context.Context, conn *codebuild.Client, arn string) retry.StateRefreshFunc {
+func statusFleet(ctx context.Context, conn *codebuild.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFleetByARN(ctx, conn, arn)
 
@@ -514,7 +514,7 @@ func statusFleet(ctx context.Context, conn *codebuild.Client, arn string) retry.
 }
 
 func waitFleetCreated(ctx context.Context, conn *codebuild.Client, arn string, timeout time.Duration) (*types.Fleet, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.FleetStatusCodeCreating, types.FleetStatusCodeRotating),
 		Target:     enum.Slice(types.FleetStatusCodeActive),
 		Refresh:    statusFleet(ctx, conn, arn),
@@ -535,7 +535,7 @@ func waitFleetCreated(ctx context.Context, conn *codebuild.Client, arn string, t
 }
 
 func waitFleetUpdated(ctx context.Context, conn *codebuild.Client, arn string, timeout time.Duration) (*types.Fleet, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.FleetStatusCodeUpdating, types.FleetStatusCodeRotating),
 		Target:     enum.Slice(types.FleetStatusCodeActive),
 		Refresh:    statusFleet(ctx, conn, arn),
@@ -556,7 +556,7 @@ func waitFleetUpdated(ctx context.Context, conn *codebuild.Client, arn string, t
 }
 
 func waitFleetDeleted(ctx context.Context, conn *codebuild.Client, arn string, timeout time.Duration) (*types.Fleet, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.FleetStatusCodeDeleting),
 		Target:     []string{},
 		Refresh:    statusFleet(ctx, conn, arn),
