@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -952,7 +952,7 @@ func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	output, err := conn.GetDataSource(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -969,7 +969,7 @@ func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	return output.DataSource, nil
 }
 
-func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) retry.StateRefreshFunc {
+func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, dataSourceID, knowledgeBaseID)
 
@@ -986,7 +986,7 @@ func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSource
 }
 
 func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.DataSourceStatusAvailable),
 		Refresh: statusDataSource(ctx, conn, dataSourceID, knowledgeBaseID),
@@ -1005,7 +1005,7 @@ func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataS
 }
 
 func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataSourceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusDataSource(ctx, conn, dataSourceID, knowledgeBaseID),
