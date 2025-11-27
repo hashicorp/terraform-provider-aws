@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -174,7 +174,7 @@ func findRegistryByID(ctx context.Context, conn *glue.Client, id string) (*glue.
 	output, err := conn.GetRegistry(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -187,7 +187,7 @@ func findRegistryByID(ctx context.Context, conn *glue.Client, id string) (*glue.
 	return output, nil
 }
 
-func statusRegistry(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
+func statusRegistry(ctx context.Context, conn *glue.Client, id string) sdkretry.StateRefreshFunc {
 	const (
 		registryStatusUnknown = "Unknown"
 	)
@@ -210,7 +210,7 @@ func waitRegistryDeleted(ctx context.Context, conn *glue.Client, registryID stri
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RegistryStatusDeleting),
 		Target:  []string{},
 		Refresh: statusRegistry(ctx, conn, registryID),
