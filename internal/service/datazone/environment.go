@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -391,7 +391,7 @@ func (r *environmentResource) ImportState(ctx context.Context, req resource.Impo
 }
 
 func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EnvironmentStatusCreating),
 		Target:                    enum.Slice(awstypes.EnvironmentStatusActive),
 		Refresh:                   statusEnvironment(ctx, conn, domainId, id),
@@ -412,7 +412,7 @@ func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId
 }
 
 func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EnvironmentStatusUpdating),
 		Target:                    enum.Slice(awstypes.EnvironmentStatusActive),
 		Refresh:                   statusEnvironment(ctx, conn, domainId, id),
@@ -433,7 +433,7 @@ func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.EnvironmentStatusActive, awstypes.EnvironmentStatusDeleting, awstypes.EnvironmentStatusDeleted),
 		Target:       []string{},
 		Refresh:      statusEnvironment(ctx, conn, domainId, id),
@@ -453,7 +453,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId
 	return nil, err
 }
 
-func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId, id string) retry.StateRefreshFunc {
+func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findEnvironmentByID(ctx, conn, domainId, id)
 		if tfresource.NotFound(err) {
@@ -477,7 +477,7 @@ func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId, i
 	out, err := conn.GetEnvironment(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
