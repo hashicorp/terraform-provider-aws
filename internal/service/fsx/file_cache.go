@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -468,7 +468,7 @@ func findFileCaches(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFi
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.FileCacheNotFound](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -488,7 +488,7 @@ func findFileCaches(ctx context.Context, conn *fsx.Client, input *fsx.DescribeFi
 	return output, nil
 }
 
-func statusFileCache(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
+func statusFileCache(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFileCacheByID(ctx, conn, id)
 
@@ -505,7 +505,7 @@ func statusFileCache(ctx context.Context, conn *fsx.Client, id string) retry.Sta
 }
 
 func waitFileCacheCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileCache, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileCacheLifecycleCreating),
 		Target:  enum.Slice(awstypes.FileCacheLifecycleAvailable),
 		Refresh: statusFileCache(ctx, conn, id),
@@ -526,7 +526,7 @@ func waitFileCacheCreated(ctx context.Context, conn *fsx.Client, id string, time
 }
 
 func waitFileCacheUpdated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileCache, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileCacheLifecycleUpdating),
 		Target:  enum.Slice(awstypes.FileCacheLifecycleAvailable),
 		Refresh: statusFileCache(ctx, conn, id),
@@ -548,7 +548,7 @@ func waitFileCacheUpdated(ctx context.Context, conn *fsx.Client, id string, time
 }
 
 func waitFileCacheDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileCache, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileCacheLifecycleAvailable, awstypes.FileCacheLifecycleDeleting),
 		Target:  []string{},
 		Refresh: statusFileCache(ctx, conn, id),
