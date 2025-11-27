@@ -14,7 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -194,7 +194,7 @@ func findFirewallRuleGroupAssociationByID(ctx context.Context, conn *route53reso
 	output, err := conn.GetFirewallRuleGroupAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -211,7 +211,7 @@ func findFirewallRuleGroupAssociationByID(ctx context.Context, conn *route53reso
 	return output.FirewallRuleGroupAssociation, nil
 }
 
-func statusFirewallRuleGroupAssociation(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+func statusFirewallRuleGroupAssociation(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFirewallRuleGroupAssociationByID(ctx, conn, id)
 
@@ -234,7 +234,7 @@ const (
 )
 
 func waitFirewallRuleGroupAssociationCreated(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.FirewallRuleGroupAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallRuleGroupAssociationStatusUpdating),
 		Target:  enum.Slice(awstypes.FirewallRuleGroupAssociationStatusComplete),
 		Refresh: statusFirewallRuleGroupAssociation(ctx, conn, id),
@@ -253,7 +253,7 @@ func waitFirewallRuleGroupAssociationCreated(ctx context.Context, conn *route53r
 }
 
 func waitFirewallRuleGroupAssociationUpdated(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.FirewallRuleGroupAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallRuleGroupAssociationStatusUpdating),
 		Target:  enum.Slice(awstypes.FirewallRuleGroupAssociationStatusComplete),
 		Refresh: statusFirewallRuleGroupAssociation(ctx, conn, id),
@@ -272,7 +272,7 @@ func waitFirewallRuleGroupAssociationUpdated(ctx context.Context, conn *route53r
 }
 
 func waitFirewallRuleGroupAssociationDeleted(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.FirewallRuleGroupAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallRuleGroupAssociationStatusDeleting),
 		Target:  []string{},
 		Refresh: statusFirewallRuleGroupAssociation(ctx, conn, id),
