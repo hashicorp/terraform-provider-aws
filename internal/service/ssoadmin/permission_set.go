@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -270,7 +270,7 @@ func findPermissionSetByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, p
 	output, err := conn.DescribePermissionSet(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -316,7 +316,7 @@ func findPermissionSetProvisioningStatus(ctx context.Context, conn *ssoadmin.Cli
 	output, err := conn.DescribePermissionSetProvisioningStatus(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -333,7 +333,7 @@ func findPermissionSetProvisioningStatus(ctx context.Context, conn *ssoadmin.Cli
 	return output.PermissionSetProvisioningStatus, nil
 }
 
-func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
+func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findPermissionSetProvisioningStatus(ctx, conn, instanceARN, requestID)
 
@@ -350,7 +350,7 @@ func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.Client,
 }
 
 func waitPermissionSetProvisioned(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string, timeout time.Duration) (*awstypes.PermissionSetProvisioningStatus, error) {
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusValuesInProgress),
 		Target:  enum.Slice(awstypes.StatusValuesSucceeded),
 		Refresh: statusPermissionSetProvisioning(ctx, conn, instanceARN, requestID),
