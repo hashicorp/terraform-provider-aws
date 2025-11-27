@@ -30,6 +30,10 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"deletion_protection_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -65,6 +69,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.SetId(name)
 	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(logGroup.Arn)))
 	d.Set(names.AttrCreationTime, logGroup.CreationTime)
+	d.Set("deletion_protection_enabled", logGroup.DeletionProtectionEnabled)
 	d.Set(names.AttrKMSKeyID, logGroup.KmsKeyId)
 	d.Set("log_group_class", logGroup.LogGroupClass)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
