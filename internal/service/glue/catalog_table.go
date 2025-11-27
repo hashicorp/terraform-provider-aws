@@ -398,6 +398,65 @@ func resourceCatalogTable() *schema.Resource {
 					},
 				},
 			},
+			"view_definition": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"representations": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"dialect": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"REDSHIFT",
+											"ATHENA",
+											"SPARK",
+										}, false),
+									},
+									"dialect_version": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+									"validation_connection": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+									"view_original_text": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 409600),
+									},
+									"view_expanded_text": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 409600),
+									},
+								},
+							},
+						},
+						"is_protected": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"definer": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sub_objects": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 		},
 	}
 }
