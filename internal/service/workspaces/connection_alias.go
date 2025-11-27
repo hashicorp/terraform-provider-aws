@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -221,7 +221,7 @@ func findConnectionAliases(ctx context.Context, conn *workspaces.Client, input *
 	return output, nil
 }
 
-func statusConnectionAlias(ctx context.Context, conn *workspaces.Client, id string) retry.StateRefreshFunc {
+func statusConnectionAlias(ctx context.Context, conn *workspaces.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findConnectionAliasByID(ctx, conn, id)
 
@@ -238,7 +238,7 @@ func statusConnectionAlias(ctx context.Context, conn *workspaces.Client, id stri
 }
 
 func waitConnectionAliasCreated(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*awstypes.ConnectionAlias, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionAliasStateCreating),
 		Target:  enum.Slice(awstypes.ConnectionAliasStateCreated),
 		Refresh: statusConnectionAlias(ctx, conn, id),
@@ -255,7 +255,7 @@ func waitConnectionAliasCreated(ctx context.Context, conn *workspaces.Client, id
 }
 
 func waitConnectionAliasDeleted(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*awstypes.ConnectionAlias, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionAliasStateDeleting),
 		Target:  []string{},
 		Refresh: statusConnectionAlias(ctx, conn, id),
