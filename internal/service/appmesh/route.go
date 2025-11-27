@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appmesh"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -904,7 +904,7 @@ func findRouteByFourPartKey(ctx context.Context, conn *appmesh.Client, meshName,
 	}
 
 	if output.Status.Status == awstypes.RouteStatusCodeDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(output.Status.Status),
 			LastRequest: input,
 		}
@@ -917,7 +917,7 @@ func findRoute(ctx context.Context, conn *appmesh.Client, input *appmesh.Describ
 	output, err := conn.DescribeRoute(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
