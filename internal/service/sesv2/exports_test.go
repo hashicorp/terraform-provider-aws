@@ -9,6 +9,7 @@ var (
 	ResourceConfigurationSet                 = resourceConfigurationSet
 	ResourceConfigurationSetEventDestination = resourceConfigurationSetEventDestination
 	ResourceContactList                      = resourceContactList
+	ResourceContact                          = newResourceContact
 	ResourceDedicatedIPAssignment            = resourceDedicatedIPAssignment
 	ResourceDedicatedIPPool                  = resourceDedicatedIPPool
 	ResourceEmailIdentity                    = resourceEmailIdentity
