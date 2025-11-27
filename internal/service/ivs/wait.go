@@ -9,12 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 func waitPlaybackKeyPairCreated(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.PlaybackKeyPair, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
 		Refresh:                   statusPlaybackKeyPair(ctx, conn, id),
@@ -32,7 +32,7 @@ func waitPlaybackKeyPairCreated(ctx context.Context, conn *ivs.Client, id string
 }
 
 func waitPlaybackKeyPairDeleted(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.PlaybackKeyPair, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{statusNormal},
 		Target:  []string{},
 		Refresh: statusPlaybackKeyPair(ctx, conn, id),
@@ -48,7 +48,7 @@ func waitPlaybackKeyPairDeleted(ctx context.Context, conn *ivs.Client, id string
 }
 
 func waitRecordingConfigurationCreated(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.RecordingConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.RecordingConfigurationStateCreating),
 		Target:                    enum.Slice(awstypes.RecordingConfigurationStateActive),
 		Refresh:                   statusRecordingConfiguration(ctx, conn, id),
@@ -66,7 +66,7 @@ func waitRecordingConfigurationCreated(ctx context.Context, conn *ivs.Client, id
 }
 
 func waitRecordingConfigurationDeleted(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.RecordingConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RecordingConfigurationStateActive),
 		Target:  []string{},
 		Refresh: statusRecordingConfiguration(ctx, conn, id),
@@ -82,7 +82,7 @@ func waitRecordingConfigurationDeleted(ctx context.Context, conn *ivs.Client, id
 }
 
 func waitChannelCreated(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.Channel, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
 		Refresh:                   statusChannel(ctx, conn, id, nil),
@@ -100,7 +100,7 @@ func waitChannelCreated(ctx context.Context, conn *ivs.Client, id string, timeou
 }
 
 func waitChannelUpdated(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration, updateDetails *ivs.UpdateChannelInput) (*awstypes.Channel, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
 		Refresh:                   statusChannel(ctx, conn, id, updateDetails),
@@ -118,7 +118,7 @@ func waitChannelUpdated(ctx context.Context, conn *ivs.Client, id string, timeou
 }
 
 func waitChannelDeleted(ctx context.Context, conn *ivs.Client, id string, timeout time.Duration) (*awstypes.Channel, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{statusNormal},
 		Target:  []string{},
 		Refresh: statusChannel(ctx, conn, id, nil),
