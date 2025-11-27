@@ -80,7 +80,7 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrName: schema.StringAttribute{
+			"index_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -249,7 +249,7 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 	if hashKey == "" {
 		response.Diagnostics.AddError(
 			"Cannot create GSI without a hash key",
-			fmt.Sprintf(`GSI named "%s" is missing a hash key`, data.Name.ValueString()),
+			fmt.Sprintf(`GSI named "%s" is missing a hash key`, data.IndexName.ValueString()),
 		)
 
 		return
@@ -314,7 +314,7 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 	}
 
 	action := &awstypes.CreateGlobalSecondaryIndexAction{
-		IndexName:  data.Name.ValueStringPointer(),
+		IndexName:  data.IndexName.ValueStringPointer(),
 		KeySchema:  keySchema,
 		Projection: projection,
 	}
@@ -382,14 +382,14 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 
 	if utRes, err := conn.UpdateTable(ctx, ut); err != nil {
 		response.Diagnostics.AddError(
-			fmt.Sprintf(`Unable to create index "%s" on table "%s"`, data.Name.ValueString(), data.Table.ValueString()),
+			fmt.Sprintf(`Unable to create index "%s" on table "%s"`, data.IndexName.ValueString(), data.Table.ValueString()),
 			err.Error(),
 		)
 
 		return
 	} else {
 		for _, g := range utRes.TableDescription.GlobalSecondaryIndexes {
-			if aws.ToString(g.IndexName) == data.Name.ValueString() {
+			if aws.ToString(g.IndexName) == data.IndexName.ValueString() {
 				response.Diagnostics.Append(fwflex.Flatten(context.WithValue(ctx, tableKey, table), g, &data)...)
 				if response.Diagnostics.HasError() {
 					return
@@ -409,16 +409,16 @@ func (r *resourceGlobalSecondaryIndex) Create(ctx context.Context, request resou
 		return
 	}
 
-	if _, err := waitGSIActive(ctx, conn, data.Table.ValueString(), data.Name.ValueString(), createTimeout); err != nil {
+	if _, err := waitGSIActive(ctx, conn, data.Table.ValueString(), data.IndexName.ValueString(), createTimeout); err != nil {
 		response.Diagnostics.AddError(
-			fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be active`, data.Name.ValueString(), data.Table.ValueString()),
+			fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be active`, data.IndexName.ValueString(), data.Table.ValueString()),
 			err.Error(),
 		)
 	}
 
-	if err = waitGSIWarmThroughputActive(ctx, conn, data.Table.ValueString(), data.Name.ValueString(), createTimeout); err != nil {
+	if err = waitGSIWarmThroughputActive(ctx, conn, data.Table.ValueString(), data.IndexName.ValueString(), createTimeout); err != nil {
 		response.Diagnostics.AddError(
-			fmt.Sprintf(`Error while waiting for warm throughput on GSI "%s" on table "%s" to be active`, data.Name.ValueString(), data.Table.ValueString()),
+			fmt.Sprintf(`Error while waiting for warm throughput on GSI "%s" on table "%s" to be active`, data.IndexName.ValueString(), data.Table.ValueString()),
 			err.Error(),
 		)
 	}
@@ -521,7 +521,7 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 	}
 
 	action := &awstypes.UpdateGlobalSecondaryIndexAction{
-		IndexName: new.Name.ValueStringPointer(),
+		IndexName: new.IndexName.ValueStringPointer(),
 	}
 
 	billingMode := awstypes.BillingModeProvisioned
@@ -547,7 +547,7 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 				"Unable to find remote GSI to update",
 				fmt.Sprintf(
 					`GSI with name "%s" (arn: "%s") was not found in table "%s"`,
-					new.Name.ValueString(),
+					new.IndexName.ValueString(),
 					new.ARN.ValueString(),
 					new.Table.ValueString(),
 				),
@@ -604,14 +604,14 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 	if hasUpdate && !response.Diagnostics.HasError() {
 		if utRes, err := conn.UpdateTable(ctx, ut); err != nil {
 			response.Diagnostics.AddError(
-				fmt.Sprintf(`Unable to update index "%s" on table "%s"`, new.Name.ValueString(), new.Table.ValueString()),
+				fmt.Sprintf(`Unable to update index "%s" on table "%s"`, new.IndexName.ValueString(), new.Table.ValueString()),
 				err.Error(),
 			)
 
 			return
 		} else {
 			for _, g := range utRes.TableDescription.GlobalSecondaryIndexes {
-				if aws.ToString(g.IndexName) == new.Name.ValueString() {
+				if aws.ToString(g.IndexName) == new.IndexName.ValueString() {
 					response.Diagnostics.Append(fwflex.Flatten(context.WithValue(ctx, tableKey, table), g, &new)...)
 					if response.Diagnostics.HasError() {
 						return
@@ -631,16 +631,16 @@ func (r *resourceGlobalSecondaryIndex) Update(ctx context.Context, request resou
 			return
 		}
 
-		if _, err := waitGSIActive(ctx, conn, new.Table.ValueString(), new.Name.ValueString(), updateTimeout); err != nil {
+		if _, err := waitGSIActive(ctx, conn, new.Table.ValueString(), new.IndexName.ValueString(), updateTimeout); err != nil {
 			response.Diagnostics.AddError(
-				fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be active`, new.Name.ValueString(), new.Table.ValueString()),
+				fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be active`, new.IndexName.ValueString(), new.Table.ValueString()),
 				err.Error(),
 			)
 		}
 
-		if err = waitGSIWarmThroughputActive(ctx, conn, new.Table.ValueString(), new.Name.ValueString(), updateTimeout); err != nil {
+		if err = waitGSIWarmThroughputActive(ctx, conn, new.Table.ValueString(), new.IndexName.ValueString(), updateTimeout); err != nil {
 			response.Diagnostics.AddError(
-				fmt.Sprintf(`Error while waiting for warm throughput on GSI "%s" on table "%s" to be active`, new.Name.ValueString(), new.Table.ValueString()),
+				fmt.Sprintf(`Error while waiting for warm throughput on GSI "%s" on table "%s" to be active`, new.IndexName.ValueString(), new.Table.ValueString()),
 				err.Error(),
 			)
 		}
@@ -680,7 +680,7 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 		GlobalSecondaryIndexUpdates: []awstypes.GlobalSecondaryIndexUpdate{
 			{
 				Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
-					IndexName: data.Name.ValueStringPointer(),
+					IndexName: data.IndexName.ValueStringPointer(),
 				},
 			},
 		},
@@ -688,16 +688,16 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 
 	if _, err = conn.UpdateTable(ctx, ut); err != nil {
 		response.Diagnostics.AddError(
-			fmt.Sprintf(`Unable to delete index "%s" on table "%s"`, data.Name.ValueString(), data.Table.ValueString()),
+			fmt.Sprintf(`Unable to delete index "%s" on table "%s"`, data.IndexName.ValueString(), data.Table.ValueString()),
 			err.Error(),
 		)
 
 		return
 	}
 
-	if _, err := waitGSIDeleted(ctx, conn, data.Table.ValueString(), data.Name.ValueString(), deleteTimeout); err != nil {
+	if _, err := waitGSIDeleted(ctx, conn, data.Table.ValueString(), data.IndexName.ValueString(), deleteTimeout); err != nil {
 		response.Diagnostics.AddError(
-			fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be deleted`, data.Name.ValueString(), data.Table.ValueString()),
+			fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be deleted`, data.IndexName.ValueString(), data.Table.ValueString()),
 			err.Error(),
 		)
 	}
@@ -709,7 +709,7 @@ type resourceGlobalSecondaryIndexModel struct {
 	ARN                 types.String                                             `tfsdk:"arn"`
 	HashKey             types.String                                             `tfsdk:"hash_key"`
 	HashKeyType         fwtypes.StringEnum[awstypes.ScalarAttributeType]         `tfsdk:"hash_key_type"`
-	Name                types.String                                             `tfsdk:"name"`
+	IndexName           types.String                                             `tfsdk:"index_name"`
 	NonKeyAttributes    fwtypes.SetOfString                                      `tfsdk:"non_key_attributes"`
 	ProjectionType      fwtypes.StringEnum[awstypes.ProjectionType]              `tfsdk:"projection_type"`
 	RangeKey            types.String                                             `tfsdk:"range_key"`
@@ -747,7 +747,7 @@ func (data *resourceGlobalSecondaryIndexModel) Flatten(ctx context.Context, v an
 	}
 
 	data.ARN = types.StringValue(aws.ToString(g.IndexArn))
-	data.Name = types.StringValue(aws.ToString(g.IndexName))
+	data.IndexName = types.StringValue(aws.ToString(g.IndexName))
 	data.Table = types.StringValue(aws.ToString(table.TableName))
 
 	var nkas []attr.Value
@@ -858,7 +858,7 @@ func validateNewGSIAttributes(data resourceGlobalSecondaryIndexModel, table awst
 	}
 
 	for _, g := range table.GlobalSecondaryIndexes {
-		if aws.ToString(g.IndexName) == data.Name.ValueString() {
+		if aws.ToString(g.IndexName) == data.IndexName.ValueString() {
 			continue
 		}
 
@@ -898,7 +898,7 @@ func validateNewGSIAttributes(data resourceGlobalSecondaryIndexModel, table awst
 				"Changing already existing attribute",
 				fmt.Sprintf(
 					`creation of index "%s" on table "%s" is attempting to change already existing attribute "%s" from type "%s" to "%s"`,
-					data.Name.ValueString(),
+					data.IndexName.ValueString(),
 					data.Table.ValueString(),
 					name,
 					existing,

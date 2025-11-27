@@ -47,7 +47,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 					func(s *terraform.State) error {
 						return resource.TestCheckResourceAttr(resourceNameGSI, names.AttrARN, aws.ToString(gsi.IndexArn))(s)
 					},
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckNoResourceAttr(resourceNameGSI, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "projection_type", "ALL"),
 					resource.TestCheckNoResourceAttr(resourceNameGSI, "range_key"),
@@ -64,7 +64,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 		},
 	})
@@ -93,7 +93,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -109,7 +109,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest(t *testing.T) {
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 		},
 	})
@@ -138,7 +138,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -158,7 +158,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 		},
 	})
@@ -187,7 +187,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -203,7 +203,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_basic_withCapacity(rNameTable, rNameGSI, 4),
@@ -211,7 +211,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -227,7 +227,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 		},
 	})
@@ -256,7 +256,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ign
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -272,7 +272,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ign
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_basic_withCapacityAndIgnoreChanges(rNameTable, rNameGSI, 4),
@@ -280,7 +280,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ign
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -296,7 +296,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ign
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 		},
 	})
@@ -325,7 +325,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -345,7 +345,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rNameGSI, 4),
@@ -353,7 +353,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -373,7 +373,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 		},
 	})
@@ -402,7 +402,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -422,7 +422,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacityAndIgnoreChanges(rNameTable, rNameGSI, 4),
@@ -430,7 +430,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -450,7 +450,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 		},
 	})
@@ -479,7 +479,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput(t *
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -499,7 +499,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput(t *
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 		},
 	})
@@ -560,7 +560,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -580,7 +580,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_basic_withCapacity(rNameTable, rNameGSI, 2),
@@ -588,7 +588,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -604,7 +604,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 		},
 	})
@@ -633,7 +633,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -649,7 +649,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_billingPayPerRequest_onDemandThroughputWithCapacity(rNameTable, rNameGSI, 2),
@@ -657,7 +657,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckInitialGSIExists(resourceNameGSI, &conf, &gsi),
 
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "table", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key", rNameTable),
 					resource.TestCheckResourceAttr(resourceNameGSI, "hash_key_type", "S"),
@@ -677,7 +677,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 		},
 	})
@@ -713,7 +713,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
 					func(s *terraform.State) error {
 						return resource.TestCheckResourceAttr(resourceNameGSI, names.AttrARN, aws.ToString(gsi.IndexArn))(s)
 					},
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckNoResourceAttr(resourceNameGSI, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "projection_type", "ALL"),
 					resource.TestCheckNoResourceAttr(resourceNameGSI, "range_key"),
@@ -742,7 +742,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_differentKeys(rNameTable, rNameGSI, rHashKey, rRangeKey),
@@ -755,7 +755,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
 					func(s *terraform.State) error {
 						return resource.TestCheckResourceAttr(resourceNameGSI, names.AttrARN, aws.ToString(gsi.IndexArn))(s)
 					},
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckNoResourceAttr(resourceNameGSI, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "range_key", rRangeKey),
@@ -785,7 +785,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 		},
 	})
@@ -819,7 +819,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes(t *testing.T) {
 					func(s *terraform.State) error {
 						return resource.TestCheckResourceAttr(resourceNameGSI, names.AttrARN, aws.ToString(gsi.IndexArn))(s)
 					},
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckNoResourceAttr(resourceNameGSI, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "projection_type", "ALL"),
 					resource.TestCheckNoResourceAttr(resourceNameGSI, "range_key"),
@@ -836,7 +836,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes(t *testing.T) {
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 			{
 				Config: testAccGlobalSecondaryIndexConfig_nonKeyAttributes(rNameTable, rNameGSI, []string{"test1", "test2"}),
@@ -849,7 +849,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes(t *testing.T) {
 					func(s *terraform.State) error {
 						return resource.TestCheckResourceAttr(resourceNameGSI, names.AttrARN, aws.ToString(gsi.IndexArn))(s)
 					},
-					resource.TestCheckResourceAttr(resourceNameGSI, names.AttrName, rNameGSI),
+					resource.TestCheckResourceAttr(resourceNameGSI, "index_name", rNameGSI),
 					resource.TestCheckResourceAttr(resourceNameGSI, "non_key_attributes.#", "2"),
 					resource.TestCheckResourceAttr(resourceNameGSI, "projection_type", "INCLUDE"),
 					resource.TestCheckNoResourceAttr(resourceNameGSI, "range_key"),
@@ -866,7 +866,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes(t *testing.T) {
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccGlobalSecondaryIndexImportStateFunc(resourceNameGSI),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIdentifierAttribute: "index_name",
 			},
 		},
 	})
@@ -895,7 +895,7 @@ func testAccCheckInitialGSIExists(n string, tbl *awstypes.TableDescription, gsi 
 		}
 
 		for _, g := range tbl.GlobalSecondaryIndexes {
-			if rs.Primary.Attributes[names.AttrName] == aws.ToString(g.IndexName) {
+			if rs.Primary.Attributes["index_name"] == aws.ToString(g.IndexName) {
 				*gsi = g
 
 				break
@@ -922,7 +922,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
-  name            = %[2]q
+  index_name      = %[2]q
   hash_key        = %[1]q
   projection_type = "ALL"
 }
@@ -945,7 +945,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
-  name            = %[2]q
+  index_name      = %[2]q
   hash_key        = %[1]q
   range_key       = %[2]q
   range_key_type  = "S"
@@ -979,7 +979,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
-  name            = %[2]q
+  index_name      = %[2]q
   hash_key        = %[1]q
   range_key       = %[2]q
   range_key_type  = "S"
@@ -1012,7 +1012,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
-  name            = %[2]q
+  index_name      = %[2]q
   hash_key        = %[1]q
   range_key       = %[2]q
   range_key_type  = "S"
@@ -1041,7 +1041,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
-  name            = %[2]q
+  index_name      = %[2]q
   hash_key        = %[1]q
   range_key       = %[2]q
   range_key_type  = "S"
@@ -1075,7 +1075,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
-  name            = %[2]q
+  index_name      = %[2]q
   hash_key        = %[1]q
   range_key       = %[2]q
   range_key_type  = "S"
@@ -1115,7 +1115,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
-  name            = %[2]q
+  index_name      = %[2]q
   hash_key        = %[1]q
   range_key       = %[2]q
   range_key_type  = "S"
@@ -1150,7 +1150,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
-  name            = %[2]q
+  index_name      = %[2]q
   hash_key        = %[1]q
   range_key       = %[2]q
   range_key_type  = "S"
@@ -1184,7 +1184,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
-  name            = %[2]q
+  index_name      = %[2]q
   hash_key        = %[1]q
   hash_key_type   = "N"
   range_key       = %[2]q
@@ -1219,7 +1219,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
-  name            = %[2]q
+  index_name      = %[2]q
   %[3]s           = %[2]q
   projection_type = "ALL"
 
@@ -1255,7 +1255,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
-  name            = %[2]q
+  index_name      = %[2]q
   hash_key        = %[1]q
   projection_type = %[3]q
   %[4]s
@@ -1283,7 +1283,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_global_secondary_index" "test" {
   table           = aws_dynamodb_table.test.name
-  name            = %[2]q
+  index_name      = %[2]q
   hash_key        = %[3]q
   hash_key_type   = "S"
   projection_type = "ALL"
