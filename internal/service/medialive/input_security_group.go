@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -188,7 +188,7 @@ func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func waitInputSecurityGroupCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.InputSecurityGroupStateIdle, types.InputSecurityGroupStateInUse),
 		Refresh:                   statusInputSecurityGroup(ctx, conn, id),
@@ -206,7 +206,7 @@ func waitInputSecurityGroupCreated(ctx context.Context, conn *medialive.Client, 
 }
 
 func waitInputSecurityGroupUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.InputSecurityGroupStateUpdating),
 		Target:                    enum.Slice(types.InputSecurityGroupStateIdle, types.InputSecurityGroupStateInUse),
 		Refresh:                   statusInputSecurityGroup(ctx, conn, id),
@@ -224,7 +224,7 @@ func waitInputSecurityGroupUpdated(ctx context.Context, conn *medialive.Client, 
 }
 
 func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(types.InputSecurityGroupStateDeleted),
 		Refresh: statusInputSecurityGroup(ctx, conn, id),
@@ -239,7 +239,7 @@ func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, 
 	return nil, err
 }
 
-func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
+func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findInputSecurityGroupByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -262,7 +262,7 @@ func findInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id 
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
