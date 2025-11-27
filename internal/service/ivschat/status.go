@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,7 +19,7 @@ const (
 	statusUpdated       = "Updated"
 )
 
-func statusLoggingConfiguration(ctx context.Context, conn *ivschat.Client, id string) retry.StateRefreshFunc {
+func statusLoggingConfiguration(ctx context.Context, conn *ivschat.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findLoggingConfigurationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -34,7 +34,7 @@ func statusLoggingConfiguration(ctx context.Context, conn *ivschat.Client, id st
 	}
 }
 
-func statusRoom(ctx context.Context, conn *ivschat.Client, id string, updateDetails *ivschat.UpdateRoomInput) retry.StateRefreshFunc {
+func statusRoom(ctx context.Context, conn *ivschat.Client, id string, updateDetails *ivschat.UpdateRoomInput) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findRoomByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
