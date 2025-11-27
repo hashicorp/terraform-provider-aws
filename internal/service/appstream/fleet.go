@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -589,7 +589,7 @@ func findFleets(ctx context.Context, conn *appstream.Client, input *appstream.De
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -602,7 +602,7 @@ func findFleets(ctx context.Context, conn *appstream.Client, input *appstream.De
 	return output, nil
 }
 
-func statusFleet(ctx context.Context, conn *appstream.Client, id string) retry.StateRefreshFunc {
+func statusFleet(ctx context.Context, conn *appstream.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFleetByID(ctx, conn, id)
 
@@ -622,7 +622,7 @@ func waitFleetRunning(ctx context.Context, conn *appstream.Client, id string) (*
 	const (
 		timeout = 180 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FleetStateStarting),
 		Target:  enum.Slice(awstypes.FleetStateRunning),
 		Refresh: statusFleet(ctx, conn, id),
@@ -644,7 +644,7 @@ func waitFleetStopped(ctx context.Context, conn *appstream.Client, id string) (*
 	const (
 		timeout = 180 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FleetStateStopping),
 		Target:  enum.Slice(awstypes.FleetStateStopped),
 		Refresh: statusFleet(ctx, conn, id),
