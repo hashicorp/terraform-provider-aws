@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/qldb"
 	"github.com/aws/aws-sdk-go-v2/service/qldb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -215,7 +215,7 @@ func findLedgerByName(ctx context.Context, conn *qldb.Client, name string) (*qld
 	output, err := conn.DescribeLedger(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -230,7 +230,7 @@ func findLedgerByName(ctx context.Context, conn *qldb.Client, name string) (*qld
 	}
 
 	if state := output.State; state == types.LedgerStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -239,7 +239,7 @@ func findLedgerByName(ctx context.Context, conn *qldb.Client, name string) (*qld
 	return output, nil
 }
 
-func statusLedgerState(ctx context.Context, conn *qldb.Client, name string) retry.StateRefreshFunc {
+func statusLedgerState(ctx context.Context, conn *qldb.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findLedgerByName(ctx, conn, name)
 
@@ -256,7 +256,7 @@ func statusLedgerState(ctx context.Context, conn *qldb.Client, name string) retr
 }
 
 func waitLedgerCreated(ctx context.Context, conn *qldb.Client, name string, timeout time.Duration) (*qldb.DescribeLedgerOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.LedgerStateCreating),
 		Target:     enum.Slice(types.LedgerStateActive),
 		Refresh:    statusLedgerState(ctx, conn, name),
@@ -274,7 +274,7 @@ func waitLedgerCreated(ctx context.Context, conn *qldb.Client, name string, time
 }
 
 func waitLedgerDeleted(ctx context.Context, conn *qldb.Client, name string, timeout time.Duration) (*qldb.DescribeLedgerOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.LedgerStateActive, types.LedgerStateDeleting),
 		Target:     []string{},
 		Refresh:    statusLedgerState(ctx, conn, name),
