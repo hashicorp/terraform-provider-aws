@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -175,7 +175,7 @@ func findOperations(ctx context.Context, conn *apprunner.Client, input *apprunne
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -195,7 +195,7 @@ func findOperations(ctx context.Context, conn *apprunner.Client, input *apprunne
 	return output, nil
 }
 
-func statusOperation(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string) retry.StateRefreshFunc {
+func statusOperation(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findOperationByTwoPartKey(ctx, conn, serviceARN, operationID)
 
@@ -212,7 +212,7 @@ func statusOperation(ctx context.Context, conn *apprunner.Client, serviceARN, op
 }
 
 func waitDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string, timeout time.Duration) (*awstypes.OperationSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.OperationStatusPending, awstypes.OperationStatusInProgress),
 		Target:         enum.Slice(awstypes.OperationStatusSucceeded),
 		Refresh:        statusOperation(ctx, conn, serviceARN, operationID),
