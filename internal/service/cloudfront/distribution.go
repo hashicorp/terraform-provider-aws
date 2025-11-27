@@ -14,7 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1278,7 +1278,7 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 	output, err := conn.GetDistribution(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchDistribution](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1295,7 +1295,7 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 	return output, nil
 }
 
-func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDistributionByID(ctx, conn, id)
 
@@ -1316,7 +1316,7 @@ func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 }
 
 func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress},
 		Target:     []string{distributionStatusDeployed},
 		Refresh:    statusDistribution(ctx, conn, id),
@@ -1335,7 +1335,7 @@ func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id s
 }
 
 func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress, distributionStatusDeployed},
 		Target:     []string{},
 		Refresh:    statusDistribution(ctx, conn, id),
