@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -577,7 +577,7 @@ func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*
 	output, err := conn.DescribeStreamSummary(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -594,7 +594,7 @@ func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*
 	return output.StreamDescriptionSummary, nil
 }
 
-func streamStatus(ctx context.Context, conn *kinesis.Client, name string) retry.StateRefreshFunc {
+func streamStatus(ctx context.Context, conn *kinesis.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findStreamByName(ctx, conn, name)
 
@@ -611,7 +611,7 @@ func streamStatus(ctx context.Context, conn *kinesis.Client, name string) retry.
 }
 
 func waitStreamCreated(ctx context.Context, conn *kinesis.Client, name string, timeout time.Duration) (*types.StreamDescriptionSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusCreating),
 		Target:     enum.Slice(types.StreamStatusActive),
 		Refresh:    streamStatus(ctx, conn, name),
@@ -630,7 +630,7 @@ func waitStreamCreated(ctx context.Context, conn *kinesis.Client, name string, t
 }
 
 func waitStreamDeleted(ctx context.Context, conn *kinesis.Client, name string, timeout time.Duration) (*types.StreamDescriptionSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusDeleting),
 		Target:     []string{},
 		Refresh:    streamStatus(ctx, conn, name),
@@ -649,7 +649,7 @@ func waitStreamDeleted(ctx context.Context, conn *kinesis.Client, name string, t
 }
 
 func waitStreamUpdated(ctx context.Context, conn *kinesis.Client, name string, timeout time.Duration) (*types.StreamDescriptionSummary, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusUpdating),
 		Target:     enum.Slice(types.StreamStatusActive),
 		Refresh:    streamStatus(ctx, conn, name),
