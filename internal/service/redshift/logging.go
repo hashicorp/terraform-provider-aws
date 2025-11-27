@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -241,7 +241,7 @@ func findLoggingByID(ctx context.Context, conn *redshift.Client, id string) (*re
 	out, err := conn.DescribeLoggingStatus(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -254,7 +254,7 @@ func findLoggingByID(ctx context.Context, conn *redshift.Client, id string) (*re
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 	if !aws.ToBool(out.LoggingEnabled) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   errors.New("logging not enabled"),
 			LastRequest: in,
 		}
