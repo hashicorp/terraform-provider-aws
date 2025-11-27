@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -207,7 +207,7 @@ func findTargets(ctx context.Context, conn *vpclattice.Client, input *vpclattice
 		page, err := paginator.NextPage(ctx)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -223,7 +223,7 @@ func findTargets(ctx context.Context, conn *vpclattice.Client, input *vpclattice
 	return output, nil
 }
 
-func statusTarget(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32) retry.StateRefreshFunc {
+func statusTarget(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTargetByThreePartKey(ctx, conn, targetGroupID, targetID, targetPort)
 
@@ -240,7 +240,7 @@ func statusTarget(ctx context.Context, conn *vpclattice.Client, targetGroupID, t
 }
 
 func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32, timeout time.Duration) (*types.TargetSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.TargetStatusInitial),
 		Target:                    enum.Slice(types.TargetStatusHealthy, types.TargetStatusUnhealthy, types.TargetStatusUnused, types.TargetStatusUnavailable),
 		Refresh:                   statusTarget(ctx, conn, targetGroupID, targetID, targetPort),
@@ -260,7 +260,7 @@ func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Clie
 }
 
 func waitTargetGroupAttachmentDeleted(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32, timeout time.Duration) (*types.TargetSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.TargetStatusDraining, types.TargetStatusInitial),
 		Target:  []string{},
 		Refresh: statusTarget(ctx, conn, targetGroupID, targetID, targetPort),
