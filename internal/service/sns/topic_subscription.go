@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -354,7 +354,7 @@ func findSubscriptionAttributesByARN(ctx context.Context, conn *sns.Client, arn 
 	output, err := conn.GetSubscriptionAttributes(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -380,7 +380,7 @@ func findSubscriptionInTopic(ctx context.Context, conn *sns.Client, topicARN, su
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if errs.IsA[*types.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -397,7 +397,7 @@ func findSubscriptionInTopic(ctx context.Context, conn *sns.Client, topicARN, su
 		}
 	}
 
-	return nil, &retry.NotFoundError{
+	return nil, &sdkretry.NotFoundError{
 		LastRequest: input,
 	}
 }
@@ -419,7 +419,7 @@ func waitForConfirmation(endpointAutoConfirms bool, protocol string) bool {
 	return true
 }
 
-func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.Client, arn string) retry.StateRefreshFunc {
+func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSubscriptionAttributesByARN(ctx, conn, arn)
 
@@ -442,7 +442,7 @@ const (
 )
 
 func waitSubscriptionConfirmed(ctx context.Context, conn *sns.Client, arn string, timeout time.Duration) (map[string]string, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{"false"},
 		Refresh: statusSubscriptionPendingConfirmation(ctx, conn, arn),
@@ -459,7 +459,7 @@ func waitSubscriptionConfirmed(ctx context.Context, conn *sns.Client, arn string
 }
 
 func waitSubscriptionDeleted(ctx context.Context, conn *sns.Client, arn string, timeout time.Duration) (map[string]string, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{"false", "true"},
 		Target:  []string{},
 		Refresh: statusSubscriptionPendingConfirmation(ctx, conn, arn),
