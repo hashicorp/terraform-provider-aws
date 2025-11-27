@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -21,7 +21,7 @@ func waitOperationSucceeded(ctx context.Context, conn *servicediscovery.Client, 
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.OperationStatusSubmitted, awstypes.OperationStatusPending),
 		Target:  enum.Slice(awstypes.OperationStatusSuccess),
 		Refresh: statusOperation(ctx, conn, operationID),
@@ -45,7 +45,7 @@ func waitOperationSucceeded(ctx context.Context, conn *servicediscovery.Client, 
 	return nil, err
 }
 
-func statusOperation(ctx context.Context, conn *servicediscovery.Client, id string) retry.StateRefreshFunc {
+func statusOperation(ctx context.Context, conn *servicediscovery.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findOperationByID(ctx, conn, id)
 
@@ -69,7 +69,7 @@ func findOperationByID(ctx context.Context, conn *servicediscovery.Client, id st
 	output, err := conn.GetOperation(ctx, input)
 
 	if errs.IsA[*awstypes.OperationNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
