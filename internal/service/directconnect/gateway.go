@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -174,7 +174,7 @@ func findGatewayByID(ctx context.Context, conn *directconnect.Client, id string)
 	}
 
 	if state := output.DirectConnectGatewayState; state == awstypes.DirectConnectGatewayStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -217,7 +217,7 @@ func findGateways(ctx context.Context, conn *directconnect.Client, input *direct
 	return output, nil
 }
 
-func statusGateway(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
+func statusGateway(ctx context.Context, conn *directconnect.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findGatewayByID(ctx, conn, id)
 
@@ -234,7 +234,7 @@ func statusGateway(ctx context.Context, conn *directconnect.Client, id string) r
 }
 
 func waitGatewayCreated(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGateway, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayStatePending),
 		Target:  enum.Slice(awstypes.DirectConnectGatewayStateAvailable),
 		Refresh: statusGateway(ctx, conn, id),
@@ -253,7 +253,7 @@ func waitGatewayCreated(ctx context.Context, conn *directconnect.Client, id stri
 }
 
 func waitGatewayDeleted(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGateway, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayStatePending, awstypes.DirectConnectGatewayStateAvailable, awstypes.DirectConnectGatewayStateDeleting),
 		Target:  []string{},
 		Refresh: statusGateway(ctx, conn, id),
