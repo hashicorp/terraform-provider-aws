@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -149,7 +149,7 @@ func findResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Cli
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -162,7 +162,7 @@ func findResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Cli
 		for _, v := range page.ResolverDnssecConfigs {
 			if aws.ToString(v.Id) == id {
 				if validationStatus := v.ValidationStatus; validationStatus == awstypes.ResolverDNSSECValidationStatusDisabled {
-					return nil, &retry.NotFoundError{
+					return nil, &sdkretry.NotFoundError{
 						Message:     string(validationStatus),
 						LastRequest: input,
 					}
@@ -175,7 +175,7 @@ func findResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Cli
 	return nil, tfresource.NewEmptyResultError(input)
 }
 
-func statusDNSSECConfig(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+func statusDNSSECConfig(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findResolverDNSSECConfigByID(ctx, conn, id)
 
@@ -197,7 +197,7 @@ const (
 )
 
 func waitDNSSECConfigCreated(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverDnssecConfig, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverDNSSECValidationStatusEnabling),
 		Target:  enum.Slice(awstypes.ResolverDNSSECValidationStatusEnabled),
 		Refresh: statusDNSSECConfig(ctx, conn, id),
@@ -214,7 +214,7 @@ func waitDNSSECConfigCreated(ctx context.Context, conn *route53resolver.Client, 
 }
 
 func waitDNSSECConfigDeleted(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.ResolverDnssecConfig, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResolverDNSSECValidationStatusDisabling),
 		Target:  []string{},
 		Refresh: statusDNSSECConfig(ctx, conn, id),
