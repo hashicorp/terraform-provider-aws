@@ -16,7 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -249,7 +249,7 @@ func findCachediSCSIVolumeByARN(ctx context.Context, conn *storagegateway.Client
 
 	// Eventual consistency check.
 	if aws.ToString(output.VolumeARN) != arn {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -271,7 +271,7 @@ func findCachediSCSIVolumes(ctx context.Context, conn *storagegateway.Client, in
 	output, err := conn.DescribeCachediSCSIVolumes(ctx, input)
 
 	if isVolumeNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

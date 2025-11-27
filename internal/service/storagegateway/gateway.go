@@ -18,7 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -776,7 +776,7 @@ func findGateway(ctx context.Context, conn *storagegateway.Client, input *storag
 	output, err := conn.DescribeGatewayInformation(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -844,7 +844,7 @@ func findSMBSettings(ctx context.Context, conn *storagegateway.Client, input *st
 	output, err := conn.DescribeSMBSettings(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -873,7 +873,7 @@ func findBandwidthRateLimit(ctx context.Context, conn *storagegateway.Client, in
 	output, err := conn.DescribeBandwidthRateLimit(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -902,7 +902,7 @@ func findMaintenanceStartTime(ctx context.Context, conn *storagegateway.Client, 
 	output, err := conn.DescribeMaintenanceStartTime(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -924,7 +924,7 @@ const (
 	gatewayStatusNotConnected = "GatewayNotConnected"
 )
 
-func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, gatewayARN string) retry.StateRefreshFunc {
+func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, gatewayARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findGatewayByARN(ctx, conn, gatewayARN)
 
@@ -944,7 +944,7 @@ func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, ga
 	}
 }
 
-func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, gatewayARN string) retry.StateRefreshFunc {
+func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, gatewayARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSMBSettingsByARN(ctx, conn, gatewayARN)
 
@@ -961,7 +961,7 @@ func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, g
 }
 
 func waitGatewayConnected(ctx context.Context, conn *storagegateway.Client, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{gatewayStatusNotConnected},
 		Target:                    []string{gatewayStatusConnected},
 		Refresh:                   statusGatewayConnected(ctx, conn, gatewayARN),
@@ -983,7 +983,7 @@ func waitGatewayJoinDomainJoined(ctx context.Context, conn *storagegateway.Clien
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ActiveDirectoryStatusJoining),
 		Target:  enum.Slice(awstypes.ActiveDirectoryStatusJoined),
 		Refresh: statusGatewayJoinDomain(ctx, conn, gatewayARN),
