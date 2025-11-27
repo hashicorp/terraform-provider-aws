@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroups"
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroups/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -177,7 +177,7 @@ func findResourceByTwoPartKey(ctx context.Context, conn *resourcegroups.Client, 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -197,7 +197,7 @@ func findResourceByTwoPartKey(ctx context.Context, conn *resourcegroups.Client, 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func statusResource(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string) retry.StateRefreshFunc {
+func statusResource(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findResourceByTwoPartKey(ctx, conn, groupARN, resourceARN)
 
@@ -218,7 +218,7 @@ func statusResource(ctx context.Context, conn *resourcegroups.Client, groupARN, 
 }
 
 func waitResourceCreated(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string, timeout time.Duration) (*types.ListGroupResourcesItem, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ResourceStatusValuePending),
 		Target:  []string{""},
 		Refresh: statusResource(ctx, conn, groupARN, resourceARN),
@@ -235,7 +235,7 @@ func waitResourceCreated(ctx context.Context, conn *resourcegroups.Client, group
 }
 
 func waitResourceDeleted(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string, timeout time.Duration) (*types.ListGroupResourcesItem, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ResourceStatusValuePending),
 		Target:  []string{},
 		Refresh: statusResource(ctx, conn, groupARN, resourceARN),
