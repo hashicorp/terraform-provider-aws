@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -220,7 +220,7 @@ func (r *resourceAssociationResource) Delete(ctx context.Context, req resource.D
 }
 
 func waitResourceAssociationCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileResourceAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating, awstypes.ProfileStatusUpdating),
 		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
 		Refresh:                   statusResourceAssociation(ctx, conn, id),
@@ -238,7 +238,7 @@ func waitResourceAssociationCreated(ctx context.Context, conn *route53profiles.C
 }
 
 func waitResourceAssociationDeleted(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileResourceAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProfileStatusDeleting),
 		Target:  []string{},
 		Refresh: statusResourceAssociation(ctx, conn, id),
@@ -253,7 +253,7 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *route53profiles.C
 	return nil, err
 }
 
-func statusResourceAssociation(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
+func statusResourceAssociation(ctx context.Context, conn *route53profiles.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findResourceAssociationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -276,7 +276,7 @@ func findResourceAssociationByID(ctx context.Context, conn *route53profiles.Clie
 	out, err := conn.GetProfileResourceAssociation(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
