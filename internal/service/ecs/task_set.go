@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -534,7 +534,7 @@ func findTaskSets(ctx context.Context, conn *ecs.Client, input *ecs.DescribeTask
 	output, err := conn.DescribeTaskSets(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) || errs.IsA[*awstypes.TaskSetNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -585,7 +585,7 @@ func findTaskSetNoTagsByThreePartKey(ctx context.Context, conn *ecs.Client, task
 	return findTaskSet(ctx, conn, input)
 }
 
-func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
+func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTaskSetNoTagsByThreePartKey(ctx, conn, taskSetID, service, cluster)
 
@@ -601,7 +601,7 @@ func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, se
 	}
 }
 
-func statusTaskSet(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
+func statusTaskSet(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTaskSetNoTagsByThreePartKey(ctx, conn, taskSetID, service, cluster)
 
@@ -625,7 +625,7 @@ const (
 
 // Does not return tags.
 func waitTaskSetStable(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string, timeout time.Duration) (*awstypes.TaskSet, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StabilityStatusStabilizing),
 		Target:  enum.Slice(awstypes.StabilityStatusSteadyState),
 		Refresh: statusTaskSetStability(ctx, conn, taskSetID, service, cluster),
@@ -646,7 +646,7 @@ func waitTaskSetDeleted(ctx context.Context, conn *ecs.Client, taskSetID, servic
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{taskSetStatusActive, taskSetStatusPrimary, taskSetStatusDraining},
 		Target:  []string{},
 		Refresh: statusTaskSet(ctx, conn, taskSetID, service, cluster),
