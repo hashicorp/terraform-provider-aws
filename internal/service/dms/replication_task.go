@@ -15,7 +15,7 @@ import (
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -380,7 +380,7 @@ func findReplicationTasks(ctx context.Context, conn *dms.Client, input *dms.Desc
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -396,7 +396,7 @@ func findReplicationTasks(ctx context.Context, conn *dms.Client, input *dms.Desc
 	return output, nil
 }
 
-func statusReplicationTask(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
+func statusReplicationTask(ctx context.Context, conn *dms.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findReplicationTaskByID(ctx, conn, id)
 
@@ -426,7 +426,7 @@ func setLastReplicationTaskError(err error, replication *awstypes.ReplicationTas
 }
 
 func waitReplicationTaskDeleted(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusReplicationTask(ctx, conn, id),
@@ -446,7 +446,7 @@ func waitReplicationTaskDeleted(ctx context.Context, conn *dms.Client, id string
 }
 
 func waitReplicationTaskModified(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
 		Refresh:    statusReplicationTask(ctx, conn, id),
@@ -466,7 +466,7 @@ func waitReplicationTaskModified(ctx context.Context, conn *dms.Client, id strin
 }
 
 func waitReplicationTaskMoved(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying, replicationTaskStatusMoving},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
 		Refresh:    statusReplicationTask(ctx, conn, id),
@@ -486,7 +486,7 @@ func waitReplicationTaskMoved(ctx context.Context, conn *dms.Client, id string, 
 }
 
 func waitReplicationTaskReady(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusCreating},
 		Target:     []string{replicationTaskStatusReady},
 		Refresh:    statusReplicationTask(ctx, conn, id),
@@ -509,7 +509,7 @@ func waitReplicationTaskRunning(ctx context.Context, conn *dms.Client, id string
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusStarting},
 		Target:     []string{replicationTaskStatusRunning},
 		Refresh:    statusReplicationTask(ctx, conn, id),
@@ -532,7 +532,7 @@ func waitReplicationTaskStopped(ctx context.Context, conn *dms.Client, id string
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{replicationTaskStatusStopping, replicationTaskStatusRunning},
 		Target:                    []string{replicationTaskStatusStopped},
 		Refresh:                   statusReplicationTask(ctx, conn, id),
@@ -556,7 +556,7 @@ func waitReplicationTaskSteady(ctx context.Context, conn *dms.Client, id string)
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{replicationTaskStatusCreating, replicationTaskStatusDeleting, replicationTaskStatusModifying, replicationTaskStatusStopping, replicationTaskStatusStarting},
 		Target:                    []string{replicationTaskStatusFailed, replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusRunning},
 		Refresh:                   statusReplicationTask(ctx, conn, id),
