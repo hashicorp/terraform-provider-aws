@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -1635,7 +1635,7 @@ func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...f
 	// For directory buckets that no longer exist it's the CreateSession call invoked by HeadBucket that returns "NoSuchBucket",
 	// and that error code is flattend into HeadBucket's error message -- hence the 'errs.Contains' call.
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) || errs.Contains(err, errCodeNoSuchBucket) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1668,7 +1668,7 @@ func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, op
 	region, err := manager.GetBucketRegion(ctx, c.S3Client(ctx), bucket, optFns...)
 
 	if errs.IsA[manager.BucketNotFound](err) {
-		return "", &retry.NotFoundError{
+		return "", &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: bucket,
 		}
