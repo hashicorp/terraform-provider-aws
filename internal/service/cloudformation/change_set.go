@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,7 +26,7 @@ func findChangeSetByTwoPartKey(ctx context.Context, conn *cloudformation.Client,
 	output, err := conn.DescribeChangeSet(ctx, input)
 
 	if errs.IsA[*awstypes.ChangeSetNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -43,7 +43,7 @@ func findChangeSetByTwoPartKey(ctx context.Context, conn *cloudformation.Client,
 	return output, nil
 }
 
-func statusChangeSet(ctx context.Context, conn *cloudformation.Client, stackID, changeSetName string) retry.StateRefreshFunc {
+func statusChangeSet(ctx context.Context, conn *cloudformation.Client, stackID, changeSetName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findChangeSetByTwoPartKey(ctx, conn, stackID, changeSetName)
 
@@ -63,7 +63,7 @@ func waitChangeSetCreated(ctx context.Context, conn *cloudformation.Client, stac
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ChangeSetStatusCreateInProgress, awstypes.ChangeSetStatusCreatePending),
 		Target:  enum.Slice(awstypes.ChangeSetStatusCreateComplete),
 		Timeout: timeout,
