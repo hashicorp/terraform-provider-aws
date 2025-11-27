@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -237,7 +237,7 @@ func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id st
 	output, err := conn.DescribeWorkspaceConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -254,7 +254,7 @@ func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id st
 	return output.WorkspaceConfiguration, nil
 }
 
-func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
+func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findWorkspaceConfigurationByID(ctx, conn, id)
 
@@ -271,7 +271,7 @@ func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id stri
 }
 
 func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.WorkspaceConfigurationDescription, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceConfigurationStatusCodeUpdating),
 		Target:  enum.Slice(awstypes.WorkspaceConfigurationStatusCodeActive),
 		Refresh: statusWorkspaceConfiguration(ctx, conn, id),
