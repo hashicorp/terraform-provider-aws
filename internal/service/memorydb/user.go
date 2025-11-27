@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -235,7 +235,7 @@ func findUsers(ctx context.Context, conn *memorydb.Client, input *memorydb.Descr
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.UserNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -251,7 +251,7 @@ func findUsers(ctx context.Context, conn *memorydb.Client, input *memorydb.Descr
 	return output, nil
 }
 
-func statusUser(ctx context.Context, conn *memorydb.Client, userName string) retry.StateRefreshFunc {
+func statusUser(ctx context.Context, conn *memorydb.Client, userName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		user, err := findUserByName(ctx, conn, userName)
 
@@ -271,7 +271,7 @@ func waitUserActive(ctx context.Context, conn *memorydb.Client, userName string)
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{userStatusModifying},
 		Target:  []string{userStatusActive},
 		Refresh: statusUser(ctx, conn, userName),
@@ -291,7 +291,7 @@ func waitUserDeleted(ctx context.Context, conn *memorydb.Client, userName string
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{userStatusDeleting},
 		Target:  []string{},
 		Refresh: statusUser(ctx, conn, userName),
