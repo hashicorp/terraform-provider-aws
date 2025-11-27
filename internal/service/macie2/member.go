@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -279,7 +279,7 @@ func findMemberByID(ctx context.Context, conn *macie2.Client, id string) (*macie
 	output, err := conn.GetMember(ctx, &input)
 
 	if isMemberNotFoundError(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -337,7 +337,7 @@ func findMembers(ctx context.Context, conn *macie2.Client, input *macie2.ListMem
 	return output, nil
 }
 
-func statusMemberRelationship(ctx context.Context, conn *macie2.Client, adminAccountID string) retry.StateRefreshFunc {
+func statusMemberRelationship(ctx context.Context, conn *macie2.Client, adminAccountID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findMemberNotAssociated(ctx, conn, adminAccountID)
 
@@ -357,7 +357,7 @@ func waitMemberInvited(ctx context.Context, conn *macie2.Client, adminAccountID 
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RelationshipStatusCreated, awstypes.RelationshipStatusEmailVerificationInProgress),
 		Target:  enum.Slice(awstypes.RelationshipStatusInvited, awstypes.RelationshipStatusEnabled, awstypes.RelationshipStatusPaused),
 		Refresh: statusMemberRelationship(ctx, conn, adminAccountID),
