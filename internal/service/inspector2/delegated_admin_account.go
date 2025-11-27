@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -186,7 +186,7 @@ func findDelegatedAdminAccounts(ctx context.Context, conn *inspector2.Client, in
 	return output, nil
 }
 
-func statusDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) retry.StateRefreshFunc {
+func statusDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDelegatedAdminAccountByID(ctx, conn, accountID)
 
@@ -213,7 +213,7 @@ const (
 )
 
 func waitDelegatedAdminAccountEnabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) (*awstypes.DelegatedAdminAccount, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(delegatedAdminStatusDisableInProgress, delegatedAdminStatusEnableInProgress, delegatedAdminStatusEnabling),
 		Target:  enum.Slice(delegatedAdminStatusEnabled),
 		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
@@ -230,7 +230,7 @@ func waitDelegatedAdminAccountEnabled(ctx context.Context, conn *inspector2.Clie
 }
 
 func waitDelegatedAdminAccountDisabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) (*awstypes.DelegatedAdminAccount, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(delegatedAdminStatusDisableInProgress, delegatedAdminStatusCreated, delegatedAdminStatusEnabled),
 		Target:  []string{},
 		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
