@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -482,7 +482,7 @@ func findTaskByARN(ctx context.Context, conn *datasync.Client, arn string) (*dat
 	output, err := conn.DescribeTask(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -499,7 +499,7 @@ func findTaskByARN(ctx context.Context, conn *datasync.Client, arn string) (*dat
 	return output, nil
 }
 
-func statusTask(ctx context.Context, conn *datasync.Client, arn string) retry.StateRefreshFunc {
+func statusTask(ctx context.Context, conn *datasync.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTaskByARN(ctx, conn, arn)
 
@@ -516,7 +516,7 @@ func statusTask(ctx context.Context, conn *datasync.Client, arn string) retry.St
 }
 
 func waitTaskAvailable(ctx context.Context, conn *datasync.Client, arn string, timeout time.Duration) (*datasync.DescribeTaskOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TaskStatusCreating, awstypes.TaskStatusUnavailable),
 		Target:  enum.Slice(awstypes.TaskStatusAvailable, awstypes.TaskStatusRunning),
 		Refresh: statusTask(ctx, conn, arn),
