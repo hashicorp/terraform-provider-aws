@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -195,7 +195,7 @@ func findDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.Client, a
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBInstanceAutomatedBackupsArn) != arn {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -203,7 +203,7 @@ func findDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.Client, a
 	// AWS flip-flop on the capitalization of status codes. Case-insensitive comparison.
 	if status := aws.ToString(output.Status); strings.EqualFold(status, instanceAutomatedBackupStatusRetained) {
 		// If the automated backup is retained, the replication is stopped.
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -230,7 +230,7 @@ func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.Client, input
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBInstanceAutomatedBackupNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -250,7 +250,7 @@ func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.Client, input
 	return output, nil
 }
 
-func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
+func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBInstanceAutomatedBackupByARN(ctx, conn, arn)
 
@@ -268,7 +268,7 @@ func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.Client, arn 
 }
 
 func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*types.DBInstanceAutomatedBackup, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{instanceAutomatedBackupStatusPending},
 		Target:  []string{instanceAutomatedBackupStatusReplicating},
 		Refresh: statusDBInstanceAutomatedBackup(ctx, conn, arn),

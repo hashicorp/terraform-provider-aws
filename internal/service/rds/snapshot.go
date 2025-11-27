@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -280,7 +280,7 @@ func findDBSnapshotByID(ctx context.Context, conn *rds.Client, id string) (*type
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBSnapshotIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -306,7 +306,7 @@ func findDBSnapshots(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBSnapshotNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -326,7 +326,7 @@ func findDBSnapshots(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 	return output, nil
 }
 
-func statusDBSnapshot(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
+func statusDBSnapshot(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBSnapshotByID(ctx, conn, id)
 
@@ -343,7 +343,7 @@ func statusDBSnapshot(ctx context.Context, conn *rds.Client, id string) retry.St
 }
 
 func waitDBSnapshotCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBSnapshot, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{dbSnapshotCreating},
 		Target:     []string{dbSnapshotAvailable},
 		Refresh:    statusDBSnapshot(ctx, conn, id),
@@ -386,7 +386,7 @@ func findDBSnapshotAttributes(ctx context.Context, conn *rds.Client, input *rds.
 	output, err := conn.DescribeDBSnapshotAttributes(ctx, input)
 
 	if errs.IsA[*types.DBSnapshotNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
