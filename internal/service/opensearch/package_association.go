@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -167,7 +167,7 @@ func findPackageAssociations(ctx context.Context, conn *opensearch.Client, input
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -187,7 +187,7 @@ func findPackageAssociations(ctx context.Context, conn *opensearch.Client, input
 	return output, nil
 }
 
-func statusPackageAssociation(ctx context.Context, conn *opensearch.Client, domainName, packageID string) retry.StateRefreshFunc {
+func statusPackageAssociation(ctx context.Context, conn *opensearch.Client, domainName, packageID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findPackageAssociationByTwoPartKey(ctx, conn, domainName, packageID)
 
@@ -204,7 +204,7 @@ func statusPackageAssociation(ctx context.Context, conn *opensearch.Client, doma
 }
 
 func waitPackageAssociationCreated(ctx context.Context, conn *opensearch.Client, domainName, packageID string, timeout time.Duration) (*awstypes.DomainPackageDetails, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainPackageStatusAssociating),
 		Target:  enum.Slice(awstypes.DomainPackageStatusActive),
 		Refresh: statusPackageAssociation(ctx, conn, domainName, packageID),
@@ -226,7 +226,7 @@ func waitPackageAssociationCreated(ctx context.Context, conn *opensearch.Client,
 }
 
 func waitPackageAssociationDeleted(ctx context.Context, conn *opensearch.Client, domainName, packageID string, timeout time.Duration) (*awstypes.DomainPackageDetails, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainPackageStatusDissociating),
 		Target:  []string{},
 		Refresh: statusPackageAssociation(ctx, conn, domainName, packageID),
