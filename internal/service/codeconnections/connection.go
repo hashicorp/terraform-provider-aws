@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -269,7 +269,7 @@ func (r *connectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func waitConnectionCreated(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ConnectionStatusPending, awstypes.ConnectionStatusAvailable),
 		Refresh:                   statusConnection(ctx, conn, id),
@@ -287,7 +287,7 @@ func waitConnectionCreated(ctx context.Context, conn *codeconnections.Client, id
 }
 
 func waitConnectionDeleted(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStatusPending, awstypes.ConnectionStatusAvailable, awstypes.ConnectionStatusError),
 		Target:  []string{},
 		Refresh: statusConnection(ctx, conn, id),
@@ -302,7 +302,7 @@ func waitConnectionDeleted(ctx context.Context, conn *codeconnections.Client, id
 	return nil, err
 }
 
-func statusConnection(ctx context.Context, conn *codeconnections.Client, arn string) retry.StateRefreshFunc {
+func statusConnection(ctx context.Context, conn *codeconnections.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findConnectionByARN(ctx, conn, arn)
 
@@ -326,7 +326,7 @@ func findConnectionByARN(ctx context.Context, conn *codeconnections.Client, arn 
 	output, err := conn.GetConnection(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
