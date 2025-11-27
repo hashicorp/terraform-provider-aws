@@ -21,7 +21,7 @@ import (
 	smithyjson "github.com/aws/smithy-go/encoding/json"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -1456,13 +1456,13 @@ func findClusterByID(ctx context.Context, conn *emr.Client, id string) (*awstype
 
 	// Eventual consistency check.
 	if aws.ToString(output.Id) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
 
 	if output.Status.State == awstypes.ClusterStateTerminated || output.Status.State == awstypes.ClusterStateTerminatedWithErrors {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(output.Status.State),
 			LastRequest: input,
 		}
@@ -1475,7 +1475,7 @@ func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClust
 	output, err := conn.DescribeCluster(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeClusterNotFound) || errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1492,7 +1492,7 @@ func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClust
 	return output.Cluster, nil
 }
 
-func statusCluster(ctx context.Context, conn *emr.Client, id string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *emr.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &emr.DescribeClusterInput{
 			ClusterId: aws.String(id),
@@ -1515,7 +1515,7 @@ func waitClusterCreated(ctx context.Context, conn *emr.Client, id string) (*awst
 	const (
 		timeout = 75 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ClusterStateBootstrapping, awstypes.ClusterStateStarting),
 		Target:     enum.Slice(awstypes.ClusterStateRunning, awstypes.ClusterStateWaiting),
 		Refresh:    statusCluster(ctx, conn, id),
@@ -1541,7 +1541,7 @@ func waitClusterDeleted(ctx context.Context, conn *emr.Client, id string) (*awst
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ClusterStateTerminating),
 		Target:     enum.Slice(awstypes.ClusterStateTerminated, awstypes.ClusterStateTerminatedWithErrors),
 		Refresh:    statusCluster(ctx, conn, id),
@@ -1579,7 +1579,7 @@ func findBootstrapActions(ctx context.Context, conn *emr.Client, input *emr.List
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1603,7 +1603,7 @@ func findStepSummaries(ctx context.Context, conn *emr.Client, input *emr.ListSte
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1636,7 +1636,7 @@ func findAutoTerminationPolicy(ctx context.Context, conn *emr.Client, input *emr
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") ||
 		tfawserr.ErrMessageContains(err, errCodeUnknownOperationException, "Could not find operation GetAutoTerminationPolicy") ||
 		tfawserr.ErrMessageContains(err, errCodeValidationException, "Auto-termination is not available for this account when using this release of EMR") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

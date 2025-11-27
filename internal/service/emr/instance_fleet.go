@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -370,7 +370,7 @@ func findInstanceFleets(ctx context.Context, conn *emr.Client, input *emr.ListIn
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "is not valid") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -390,7 +390,7 @@ func findInstanceFleets(ctx context.Context, conn *emr.Client, input *emr.ListIn
 	return output, nil
 }
 
-func statusInstanceFleet(ctx context.Context, conn *emr.Client, clusterID, fleetID string) retry.StateRefreshFunc {
+func statusInstanceFleet(ctx context.Context, conn *emr.Client, clusterID, fleetID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findInstanceFleetByTwoPartKey(ctx, conn, clusterID, fleetID)
 
@@ -407,7 +407,7 @@ func statusInstanceFleet(ctx context.Context, conn *emr.Client, clusterID, fleet
 }
 
 func waitInstanceFleetRunning(ctx context.Context, conn *emr.Client, clusterID, fleetID string, timeout time.Duration) (*awstypes.InstanceFleet, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.InstanceFleetStateProvisioning, awstypes.InstanceFleetStateBootstrapping, awstypes.InstanceFleetStateResizing),
 		Target:     enum.Slice(awstypes.InstanceFleetStateRunning),
 		Refresh:    statusInstanceFleet(ctx, conn, clusterID, fleetID),
