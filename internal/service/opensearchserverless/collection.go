@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -316,7 +316,7 @@ func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CollectionStatusCreating),
 		Target:     enum.Slice(awstypes.CollectionStatusActive),
 		Refresh:    statusCollection(ctx, conn, id),
@@ -339,7 +339,7 @@ func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Clien
 }
 
 func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CollectionStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusCollection(ctx, conn, id),
@@ -361,7 +361,7 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 	return nil, err
 }
 
-func statusCollection(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
+func statusCollection(ctx context.Context, conn *opensearchserverless.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCollectionByID(ctx, conn, id)
 
