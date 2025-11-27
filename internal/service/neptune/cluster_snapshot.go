@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -196,7 +196,7 @@ func findClusterSnapshotByID(ctx context.Context, conn *neptune.Client, id strin
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterSnapshotIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -222,7 +222,7 @@ func findClusterSnapshots(ctx context.Context, conn *neptune.Client, input *nept
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBClusterSnapshotNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -238,7 +238,7 @@ func findClusterSnapshots(ctx context.Context, conn *neptune.Client, input *nept
 	return output, nil
 }
 
-func statusClusterSnapshot(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
+func statusClusterSnapshot(ctx context.Context, conn *neptune.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterSnapshotByID(ctx, conn, id)
 
@@ -255,7 +255,7 @@ func statusClusterSnapshot(ctx context.Context, conn *neptune.Client, id string)
 }
 
 func waitClusterSnapshotCreated(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.DBClusterSnapshot, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusCreating},
 		Target:     []string{clusterSnapshotStatusAvailable},
 		Refresh:    statusClusterSnapshot(ctx, conn, id),
