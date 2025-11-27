@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -331,7 +331,7 @@ func findGlobalNetworkByID(ctx context.Context, conn *networkmanager.Client, id 
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -339,7 +339,7 @@ func findGlobalNetworkByID(ctx context.Context, conn *networkmanager.Client, id 
 	return output, nil
 }
 
-func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findGlobalNetworkByID(ctx, conn, id)
 
@@ -356,7 +356,7 @@ func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.Client, 
 }
 
 func waitGlobalNetworkCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.GlobalNetwork, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.GlobalNetworkStatePending),
 		Target:  enum.Slice(awstypes.GlobalNetworkStateAvailable),
 		Timeout: timeout,
@@ -373,7 +373,7 @@ func waitGlobalNetworkCreated(ctx context.Context, conn *networkmanager.Client, 
 }
 
 func waitGlobalNetworkDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.GlobalNetwork, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.GlobalNetworkStateDeleting),
 		Target:         []string{},
 		Timeout:        timeout,
@@ -391,7 +391,7 @@ func waitGlobalNetworkDeleted(ctx context.Context, conn *networkmanager.Client, 
 }
 
 func waitGlobalNetworkUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.GlobalNetwork, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.GlobalNetworkStateUpdating),
 		Target:  enum.Slice(awstypes.GlobalNetworkStateAvailable),
 		Timeout: timeout,
