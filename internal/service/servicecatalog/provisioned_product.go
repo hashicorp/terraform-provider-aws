@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -618,7 +618,7 @@ func findProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, in
 	output, err := conn.DescribeProvisionedProduct(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -653,7 +653,7 @@ func findRecord(ctx context.Context, conn *servicecatalog.Client, input *service
 		page, err := conn.DescribeRecord(ctx, input)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -687,7 +687,7 @@ func findRecord(ctx context.Context, conn *servicecatalog.Client, input *service
 	return output, nil
 }
 
-func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string) retry.StateRefreshFunc {
+func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findProvisionedProductByTwoPartKey(ctx, conn, id, acceptLanguage)
 
@@ -704,7 +704,7 @@ func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, 
 }
 
 func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProvisionedProductStatusUnderChange, awstypes.ProvisionedProductStatusPlanInProgress),
 		Target:                    enum.Slice(awstypes.ProvisionedProductStatusAvailable),
 		Refresh:                   statusProvisionedProduct(ctx, conn, id, acceptLanguage),
@@ -718,7 +718,7 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
 		if detail := output.ProvisionedProductDetail; detail != nil {
-			if errs.IsA[*retry.UnexpectedStateError](err) {
+			if errs.IsA[*sdkretry.UnexpectedStateError](err) {
 				// The statuses `ERROR` and `TAINTED` are equivalent: the application of the requested change has failed.
 				// The difference is that, in the case of `TAINTED`, there is a previous version to roll back to.
 				if status := detail.Status; status == awstypes.ProvisionedProductStatusError || status == awstypes.ProvisionedProductStatusTainted {
@@ -737,7 +737,7 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 }
 
 func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ProvisionedProductStatusAvailable,
 			awstypes.ProvisionedProductStatusUnderChange,
@@ -751,7 +751,7 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
 		if detail := output.ProvisionedProductDetail; detail != nil {
-			if errs.IsA[*retry.UnexpectedStateError](err) {
+			if errs.IsA[*sdkretry.UnexpectedStateError](err) {
 				// If the status is `TAINTED`, we can retry with `IgnoreErrors`
 				if status := detail.Status; status == awstypes.ProvisionedProductStatusTainted {
 					// Create a custom error type that signals state refresh is needed
