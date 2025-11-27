@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -578,7 +578,7 @@ func findGraphQLAPIByID(ctx context.Context, conn *appsync.Client, id string) (*
 	output, err := conn.GetGraphqlApi(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
@@ -600,7 +600,7 @@ func findSchemaCreationStatusByID(ctx context.Context, conn *appsync.Client, id 
 	output, err := conn.GetSchemaCreationStatus(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
@@ -614,7 +614,7 @@ func findSchemaCreationStatusByID(ctx context.Context, conn *appsync.Client, id 
 	return output, nil
 }
 
-func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) retry.StateRefreshFunc {
+func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSchemaCreationStatusByID(ctx, conn, id)
 
@@ -631,7 +631,7 @@ func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) 
 }
 
 func waitSchemaCreated(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*appsync.GetSchemaCreationStatusOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SchemaStatusProcessing),
 		Target:  enum.Slice(awstypes.SchemaStatusActive, awstypes.SchemaStatusSuccess),
 		Refresh: statusSchemaCreation(ctx, conn, id),
