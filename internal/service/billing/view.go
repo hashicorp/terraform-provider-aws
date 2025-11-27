@@ -504,7 +504,7 @@ func expandDataFilterExpression(ctx context.Context, tfList fwtypes.ListNestedOb
 		var tagModels []tagValuesModel
 		if d := item.Tags.ElementsAs(ctx, &tagModels, false); !d.HasError() && len(tagModels) > 0 {
 			output.Tags = &awstypes.TagValues{
-				Key:    aws.String(tagModels[0].Key.ValueString()),
+				Key:    tagModels[0].Key.ValueStringPointer(),
 				Values: flex.ExpandFrameworkStringValueList(ctx, tagModels[0].Values),
 			}
 		}
