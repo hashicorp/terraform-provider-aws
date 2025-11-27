@@ -1977,7 +1977,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnet(t *testing.T) {
 				Config: testAccLoadBalancerConfig_nlbSubnetCount(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
-					testAccCheckLoadBalancerRecreated(&post, &pre),
+					testAccCheckLoadBalancerNotRecreated(&pre, &post),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
 			},
@@ -2050,7 +2050,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing
 				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, false, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
-					testAccCheckLoadBalancerRecreated(&pre, &post),
+					testAccCheckLoadBalancerNotRecreated(&pre, &post),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
 				),
