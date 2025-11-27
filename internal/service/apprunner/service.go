@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -628,7 +628,7 @@ func findServiceByARN(ctx context.Context, conn *apprunner.Client, arn string) (
 	output, err := conn.DescribeService(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -643,7 +643,7 @@ func findServiceByARN(ctx context.Context, conn *apprunner.Client, arn string) (
 	}
 
 	if status := output.Service.Status; status == types.ServiceStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -652,7 +652,7 @@ func findServiceByARN(ctx context.Context, conn *apprunner.Client, arn string) (
 	return output.Service, nil
 }
 
-func statusService(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+func statusService(ctx context.Context, conn *apprunner.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findServiceByARN(ctx, conn, arn)
 
@@ -672,7 +672,7 @@ func waitServiceCreated(ctx context.Context, conn *apprunner.Client, arn string)
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ServiceStatusOperationInProgress),
 		Target:  enum.Slice(types.ServiceStatusRunning),
 		Refresh: statusService(ctx, conn, arn),
@@ -692,7 +692,7 @@ func waitServiceUpdated(ctx context.Context, conn *apprunner.Client, arn string)
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ServiceStatusOperationInProgress),
 		Target:  enum.Slice(types.ServiceStatusRunning),
 		Refresh: statusService(ctx, conn, arn),
@@ -712,7 +712,7 @@ func waitServiceDeleted(ctx context.Context, conn *apprunner.Client, arn string)
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ServiceStatusRunning, types.ServiceStatusOperationInProgress),
 		Target:  []string{},
 		Refresh: statusService(ctx, conn, arn),

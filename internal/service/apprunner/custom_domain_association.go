@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -250,7 +250,7 @@ func forEachCustomDomainPage(ctx context.Context, conn *apprunner.Client, input 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return &retry.NotFoundError{
+			return &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -274,7 +274,7 @@ const (
 	customDomainAssociationStatusPendingCertificateDNSValidation = "pending_certificate_dns_validation"
 )
 
-func statusCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) retry.StateRefreshFunc {
+func statusCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceARN)
 
@@ -294,7 +294,7 @@ func waitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.Cli
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{customDomainAssociationStatusCreating},
 		Target:  []string{customDomainAssociationStatusPendingCertificateDNSValidation, customDomainAssociationStatusBindingCertificate},
 		Refresh: statusCustomDomain(ctx, conn, domainName, serviceARN),
@@ -314,7 +314,7 @@ func waitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.Cli
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{customDomainAssociationStatusActive, customDomainAssociationStatusDeleting},
 		Target:  []string{},
 		Refresh: statusCustomDomain(ctx, conn, domainName, serviceARN),
