@@ -7,11 +7,11 @@ import (
 	"context"
 
 	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusCluster(ctx context.Context, conn *r53rcc.Client, clusterArn string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *r53rcc.Client, clusterArn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findClusterByARN(ctx, conn, clusterArn)
 
@@ -27,7 +27,7 @@ func statusCluster(ctx context.Context, conn *r53rcc.Client, clusterArn string) 
 	}
 }
 
-func statusRoutingControl(ctx context.Context, conn *r53rcc.Client, routingControlArn string) retry.StateRefreshFunc {
+func statusRoutingControl(ctx context.Context, conn *r53rcc.Client, routingControlArn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findRoutingControlByARN(ctx, conn, routingControlArn)
 
@@ -43,7 +43,7 @@ func statusRoutingControl(ctx context.Context, conn *r53rcc.Client, routingContr
 	}
 }
 
-func statusControlPanel(ctx context.Context, conn *r53rcc.Client, controlPanelArn string) retry.StateRefreshFunc {
+func statusControlPanel(ctx context.Context, conn *r53rcc.Client, controlPanelArn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findControlPanelByARN(ctx, conn, controlPanelArn)
 
@@ -59,7 +59,7 @@ func statusControlPanel(ctx context.Context, conn *r53rcc.Client, controlPanelAr
 	}
 }
 
-func statusSafetyRule(ctx context.Context, conn *r53rcc.Client, safetyRuleArn string) retry.StateRefreshFunc {
+func statusSafetyRule(ctx context.Context, conn *r53rcc.Client, safetyRuleArn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSafetyRuleByARN(ctx, conn, safetyRuleArn)
 
