@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -295,7 +295,7 @@ func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func statusQuerySuggestionsBlockList(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
+func statusQuerySuggestionsBlockList(ctx context.Context, conn *kendra.Client, id, indexId string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := FindQuerySuggestionsBlockListByID(ctx, conn, id, indexId)
 		if tfresource.NotFound(err) {
@@ -311,7 +311,7 @@ func statusQuerySuggestionsBlockList(ctx context.Context, conn *kendra.Client, i
 }
 
 func waitQuerySuggestionsBlockListCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeQuerySuggestionsBlockListOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.QuerySuggestionsBlockListStatusCreating),
 		Target:                    enum.Slice(types.QuerySuggestionsBlockListStatusActive),
 		Refresh:                   statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
@@ -332,7 +332,7 @@ func waitQuerySuggestionsBlockListCreated(ctx context.Context, conn *kendra.Clie
 }
 
 func waitQuerySuggestionsBlockListUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeQuerySuggestionsBlockListOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.QuerySuggestionsBlockListStatusUpdating),
 		Target:                    enum.Slice(types.QuerySuggestionsBlockListStatusActive),
 		Refresh:                   statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
@@ -353,7 +353,7 @@ func waitQuerySuggestionsBlockListUpdated(ctx context.Context, conn *kendra.Clie
 }
 
 func waitQuerySuggestionsBlockListDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeQuerySuggestionsBlockListOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.QuerySuggestionsBlockListStatusDeleting),
 		Target:  []string{},
 		Refresh: statusQuerySuggestionsBlockList(ctx, conn, id, indexId),

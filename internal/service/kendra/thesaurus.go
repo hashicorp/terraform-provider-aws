@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -295,7 +295,7 @@ func resourceThesaurusDelete(ctx context.Context, d *schema.ResourceData, meta a
 	return diags
 }
 
-func statusThesaurus(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
+func statusThesaurus(ctx context.Context, conn *kendra.Client, id, indexId string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := FindThesaurusByID(ctx, conn, id, indexId)
 		if tfresource.NotFound(err) {
@@ -311,7 +311,7 @@ func statusThesaurus(ctx context.Context, conn *kendra.Client, id, indexId strin
 }
 
 func waitThesaurusCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeThesaurusOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.ThesaurusStatusCreating),
 		Target:                    enum.Slice(types.ThesaurusStatusActive),
 		Refresh:                   statusThesaurus(ctx, conn, id, indexId),
@@ -332,7 +332,7 @@ func waitThesaurusCreated(ctx context.Context, conn *kendra.Client, id, indexId 
 }
 
 func waitThesaurusUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeThesaurusOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.QuerySuggestionsBlockListStatusUpdating),
 		Target:                    enum.Slice(types.QuerySuggestionsBlockListStatusActive),
 		Refresh:                   statusThesaurus(ctx, conn, id, indexId),
@@ -353,7 +353,7 @@ func waitThesaurusUpdated(ctx context.Context, conn *kendra.Client, id, indexId 
 }
 
 func waitThesaurusDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeThesaurusOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.QuerySuggestionsBlockListStatusDeleting),
 		Target:  []string{},
 		Refresh: statusThesaurus(ctx, conn, id, indexId),
