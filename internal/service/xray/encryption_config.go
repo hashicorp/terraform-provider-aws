@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -115,7 +115,7 @@ func findEncryptionConfig(ctx context.Context, conn *xray.Client) (*types.Encryp
 	return output.EncryptionConfig, nil
 }
 
-func statusEncryptionConfig(ctx context.Context, conn *xray.Client) retry.StateRefreshFunc {
+func statusEncryptionConfig(ctx context.Context, conn *xray.Client) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEncryptionConfig(ctx, conn)
 
@@ -135,7 +135,7 @@ func waitEncryptionConfigAvailable(ctx context.Context, conn *xray.Client) (*typ
 	const (
 		timeout = 15 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EncryptionStatusUpdating),
 		Target:  enum.Slice(types.EncryptionStatusActive),
 		Refresh: statusEncryptionConfig(ctx, conn),
