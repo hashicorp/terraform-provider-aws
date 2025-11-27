@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -302,7 +302,7 @@ func findScope(ctx context.Context, conn *networkflowmonitor.Client, input *netw
 	output, err := conn.GetScope(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -318,7 +318,7 @@ func findScope(ctx context.Context, conn *networkflowmonitor.Client, input *netw
 	return output, nil
 }
 
-func statusScope(ctx context.Context, conn *networkflowmonitor.Client, id string) retry.StateRefreshFunc {
+func statusScope(ctx context.Context, conn *networkflowmonitor.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findScopeByID(ctx, conn, id)
 
@@ -335,7 +335,7 @@ func statusScope(ctx context.Context, conn *networkflowmonitor.Client, id string
 }
 
 func waitScopeCreated(ctx context.Context, conn *networkflowmonitor.Client, id string, timeout time.Duration) (*networkflowmonitor.GetScopeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScopeStatusInProgress),
 		Target:  enum.Slice(awstypes.ScopeStatusSucceeded),
 		Refresh: statusScope(ctx, conn, id),
@@ -352,7 +352,7 @@ func waitScopeCreated(ctx context.Context, conn *networkflowmonitor.Client, id s
 }
 
 func waitScopeUpdated(ctx context.Context, conn *networkflowmonitor.Client, id string, timeout time.Duration) (*networkflowmonitor.GetScopeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScopeStatusInProgress),
 		Target:  enum.Slice(awstypes.ScopeStatusSucceeded),
 		Refresh: statusScope(ctx, conn, id),
@@ -369,7 +369,7 @@ func waitScopeUpdated(ctx context.Context, conn *networkflowmonitor.Client, id s
 }
 
 func waitScopeDeleted(ctx context.Context, conn *networkflowmonitor.Client, id string, timeout time.Duration) (*networkflowmonitor.GetScopeOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScopeStatusDeactivating),
 		Target:  []string{},
 		Refresh: statusScope(ctx, conn, id),
