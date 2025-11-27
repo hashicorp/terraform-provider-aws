@@ -482,6 +482,7 @@ func waitViewDeleted(ctx context.Context, conn *billing.Client, arn string, time
 	return nil, err
 }
 
+// nosemgrep: ci.semgrep.framework.manual-expander-functions
 func expandDataFilterExpression(ctx context.Context, tfList fwtypes.ListNestedObjectValueOf[dataFilterExpressionModel]) (*awstypes.Expression, error) {
 	if tfList.IsNull() || tfList.IsUnknown() {
 		return nil, nil
@@ -542,6 +543,7 @@ func expandDataFilterExpression(ctx context.Context, tfList fwtypes.ListNestedOb
 	return output, nil
 }
 
+// nosemgrep: ci.semgrep.framework.manual-flattener-functions
 func flattenDataFilterExpression(ctx context.Context, input *awstypes.Expression) fwtypes.ListNestedObjectValueOf[dataFilterExpressionModel] {
 	if input == nil {
 		return fwtypes.NewListNestedObjectValueOfNull[dataFilterExpressionModel](ctx)
