@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -182,10 +182,10 @@ func findSnapshotScheduleAssociationByTwoPartKey(ctx context.Context, conn *reds
 		}
 	}
 
-	return nil, &retry.NotFoundError{}
+	return nil, &sdkretry.NotFoundError{}
 }
 
-func statusSnapshotScheduleAssociation(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) retry.StateRefreshFunc {
+func statusSnapshotScheduleAssociation(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 
@@ -205,7 +205,7 @@ func waitSnapshotScheduleAssociationCreated(ctx context.Context, conn *redshift.
 	const (
 		timeout = 75 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ScheduleStateModifying),
 		Target:     enum.Slice(awstypes.ScheduleStateActive),
 		Refresh:    statusSnapshotScheduleAssociation(ctx, conn, clusterIdentifier, scheduleIdentifier),
@@ -227,7 +227,7 @@ func waitSnapshotScheduleAssociationDeleted(ctx context.Context, conn *redshift.
 	const (
 		timeout = 75 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ScheduleStateModifying, awstypes.ScheduleStateActive),
 		Target:     []string{},
 		Refresh:    statusSnapshotScheduleAssociation(ctx, conn, clusterIdentifier, scheduleIdentifier),

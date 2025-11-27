@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -221,7 +221,7 @@ func findSnapshotCopyByID(ctx context.Context, conn *redshift.Client, id string)
 	out, err := conn.DescribeClusters(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -236,13 +236,13 @@ func findSnapshotCopyByID(ctx context.Context, conn *redshift.Client, id string)
 	// API should return a ClusterNotFound fault in this case, but check length for
 	// extra safety
 	if len(out.Clusters) == 0 {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   errors.New("not found"),
 			LastRequest: in,
 		}
 	}
 	if out.Clusters[0].ClusterSnapshotCopyStatus == nil {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   errors.New("snapshot copy not enabled"),
 			LastRequest: in,
 		}
