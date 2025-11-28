@@ -22,11 +22,13 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"updateDisplayName":  testAccContact_updateDisplayName,
 			"tags":               testAccSSMContactsContact_tagsSerial,
 			"updateType":         testAccContact_updateType,
+			"oncallSchedule":     testAccContact_oncallSchedule,
 			"identity":           testAccSSMContactsContact_IdentitySerial,
 		},
 		"ContactDataSource": {
-			acctest.CtBasic: testAccContactDataSource_basic,
-			"tags":          testAccSSMContactsContactDataSource_tagsSerial,
+			acctest.CtBasic:  testAccContactDataSource_basic,
+			"tags":           testAccSSMContactsContactDataSource_tagsSerial,
+			"oncallSchedule": testAccContactDataSource_oncallSchedule,
 		},
 		"ContactChannelResource": {
 			acctest.CtBasic:      testAccContactChannel_basic,
