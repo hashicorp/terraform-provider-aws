@@ -583,7 +583,7 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.C
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
+	if out, ok := outputRaw.(*awstypes.{{ .Resource }}); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -606,7 +606,7 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.C
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
+	if out, ok := outputRaw.(*awstypes.{{ .Resource }}); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -625,7 +625,7 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.C
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
+	if out, ok := outputRaw.(*awstypes.{{ .Resource }}); ok {
 		return out, smarterr.NewError(err)
 	}
 
