@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"iter"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
@@ -35,12 +35,12 @@ func (e *EmptyResultError) Is(err error) bool {
 }
 
 func (e *EmptyResultError) As(target any) bool {
-	t, ok := target.(**retry.NotFoundError)
+	t, ok := target.(**sdkretry.NotFoundError)
 	if !ok {
 		return false
 	}
 
-	*t = &retry.NotFoundError{
+	*t = &sdkretry.NotFoundError{
 		Message:     e.Error(),
 		LastRequest: e.LastRequest,
 	}
@@ -72,12 +72,12 @@ func (e *TooManyResultsError) Is(err error) bool {
 }
 
 func (e *TooManyResultsError) As(target any) bool {
-	t, ok := target.(**retry.NotFoundError)
+	t, ok := target.(**sdkretry.NotFoundError)
 	if !ok {
 		return false
 	}
 
-	*t = &retry.NotFoundError{
+	*t = &sdkretry.NotFoundError{
 		Message:     e.Error(),
 		LastRequest: e.LastRequest,
 	}
