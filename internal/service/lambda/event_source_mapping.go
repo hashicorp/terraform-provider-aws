@@ -281,6 +281,12 @@ func resourceEventSourceMapping() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 200),
 						},
+						"poller_group_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
+						},
 					},
 				},
 			},
@@ -1277,6 +1283,10 @@ func expandProvisionedPollerConfig(tfMap map[string]any) *awstypes.ProvisionedPo
 		apiObject.MinimumPollers = aws.Int32(int32(v))
 	}
 
+	if v, ok := tfMap["poller_group_name"].(string); ok && v != "" {
+		apiObject.PollerGroupName = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -1293,6 +1303,10 @@ func flattenProvisionedPollerConfig(apiObject *awstypes.ProvisionedPollerConfig)
 
 	if v := apiObject.MinimumPollers; v != nil {
 		tfMap["minimum_pollers"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.PollerGroupName; v != nil {
+		tfMap["poller_group_name"] = aws.ToString(v)
 	}
 
 	return tfMap
