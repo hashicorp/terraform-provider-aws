@@ -272,9 +272,9 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments -}}
 	// TIP: -- 3. Populate a Create input structure
 	{{- end }}
-	var input {{ .SDKPackage }}.Create{{ .Resource }}Input
+	var input {{ .SDKPackage }}.Create{{ .ResourceAWS }}Input
 	{{ if .IncludeComments -}}
-	// TIP: Using a field name prefix allows mapping fields such as `ID` to `{{ .Resource }}Id`
+	// TIP: Using a field name prefix allows mapping fields such as `ID` to `{{ .ResourceAWS }}Id`
 	{{- end }}
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("{{ .Resource }}")))
 	if resp.Diagnostics.HasError() {
@@ -287,7 +287,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments -}}
 	// TIP: -- 4. Call the AWS Create function
 	{{- end }}
-	out, err := conn.Create{{ .Resource }}(ctx, &input)
+	out, err := conn.Create{{ .ResourceAWS }}(ctx, &input)
 	if err != nil {
 		{{- if .IncludeComments }}
 		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
@@ -296,7 +296,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
-	if out == nil || out.{{ .Resource }} == nil {
+	if out == nil || out.{{ .ResourceAWS }} == nil {
 		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
@@ -427,7 +427,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	}
 
 	if diff.HasChanges() {
-		var input {{ .SDKPackage }}.Update{{ .Resource }}Input
+		var input {{ .SDKPackage }}.Update{{ .ResourceAWS }}Input
 		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
 		if resp.Diagnostics.HasError() {
 			return
@@ -435,12 +435,12 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		{{ if .IncludeComments }}
 		// TIP: -- 4. Call the AWS modify/update function
 		{{- end }}
-		out, err := conn.Update{{ .Resource }}(ctx, &input)
+		out, err := conn.Update{{ .ResourceAWS }}(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
-		if out == nil || out.{{ .Resource }} == nil {
+		if out == nil || out.{{ .ResourceAWS }} == nil {
 			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
 			return
 		}
@@ -503,13 +503,13 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Populate a delete input structure
 	{{- end }}
-	input := {{ .ServiceLower }}.Delete{{ .Resource }}Input{
-		{{ .Resource }}Id: state.ID.ValueStringPointer(),
+	input := {{ .ServiceLower }}.Delete{{ .ResourceAWS }}Input{
+		{{ .ResourceAWS }}Id: state.ID.ValueStringPointer(),
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Call the AWS delete function
 	{{- end }}
-	_, err := conn.Delete{{ .Resource }}(ctx, &input)
+	_, err := conn.Delete{{ .ResourceAWS }}(ctx, &input)
 	{{- if .IncludeComments }}
 	// TIP: On rare occassions, the API returns a not found error after deleting a
 	// resource. If that happens, we don't want it to show up as an error.
@@ -572,7 +572,7 @@ const (
 //
 // You will need to adjust the parameters and names to fit the service.
 {{- end }}
-func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .Resource }}, error) {
+func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .ResourceAWS }}, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
@@ -583,7 +583,7 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.C
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.{{ .Resource }}); ok {
+	if out, ok := outputRaw.(*awstypes.{{ .ResourceAWS }}); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -595,7 +595,7 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.C
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
 {{- end }}
-func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .Resource }}, error) {
+func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .ResourceAWS }}, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
@@ -606,7 +606,7 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.C
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.{{ .Resource }}); ok {
+	if out, ok := outputRaw.(*awstypes.{{ .ResourceAWS }}); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -616,7 +616,7 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.C
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
 {{- end }}
-func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .Resource }}, error) {
+func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .ResourceAWS }}, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusDeleting, statusNormal},
 		Target:                    []string{},
@@ -625,7 +625,7 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.C
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.{{ .Resource }}); ok {
+	if out, ok := outputRaw.(*awstypes.{{ .ResourceAWS }}); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -661,12 +661,12 @@ func status{{ .Resource }}(conn *{{ .ServiceLower }}.Client, id string) retry.St
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
 {{- end }}
-func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*awstypes.{{ .Resource }}, error) {
-	input := {{ .ServiceLower }}.Get{{ .Resource }}Input{
+func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*awstypes.{{ .ResourceAWS }}, error) {
+	input := {{ .ServiceLower }}.Get{{ .ResourceAWS }}Input{
 		Id: aws.String(id),
 	}
 
-	out, err := conn.Get{{ .Resource }}(ctx, &input)
+	out, err := conn.Get{{ .ResourceAWS }}(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
@@ -677,11 +677,11 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 		return nil, smarterr.NewError(err)
 	}
 
-	if out == nil || out.{{ .Resource }} == nil {
+	if out == nil || out.{{ .ResourceAWS }} == nil {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
 	}
 
-	return out.{{ .Resource }}, nil
+	return out.{{ .ResourceAWS }}, nil
 }
 {{ if .IncludeComments }}
 // TIP: ==== DATA STRUCTURES ====
@@ -737,20 +737,20 @@ type complexArgumentModel struct {
 // https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
 {{- end }}
 func sweep{{ .Resource }}s(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := {{ .ServiceLower }}.List{{ .Resource }}sInput{}
+	input := {{ .ServiceLower }}.List{{ .ResourceAWS }}sInput{}
 	conn := client.{{ .Service }}Client(ctx)
 	var sweepResources []sweep.Sweepable
 
-	pages := {{ .ServiceLower }}.NewList{{ .Resource }}sPaginator(conn, &input)
+	pages := {{ .ServiceLower }}.NewList{{ .ResourceAWS }}sPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
 
-		for _, v := range page.{{ .Resource }}s {
+		for _, v := range page.{{ .ResourceAWS }}s {
 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResource{{ .Resource }}, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.{{ .Resource }}Id))),
+				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.{{ .ResourceAWS }}Id))),
 			)
 		}
 	}

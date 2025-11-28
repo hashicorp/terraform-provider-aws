@@ -30,6 +30,7 @@ var websiteTmpl string
 
 type TemplateData struct {
 	Resource             string
+	ResourceAWS          string
 	ResourceLower        string
 	ResourceSnake        string
 	HumanFriendlyService string
@@ -75,6 +76,7 @@ func Create(resName, snakeName string, comments, force, tags bool) error {
 
 	templateData := TemplateData{
 		Resource:             resName,
+		ResourceAWS:          capitalizeForAWS(resName),
 		ResourceLower:        strings.ToLower(resName),
 		ResourceSnake:        snakeName,
 		HumanFriendlyService: service.HumanFriendly(),
@@ -147,4 +149,9 @@ func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateD
 	}
 
 	return nil
+}
+
+// AWS API structs use different capitalization than the provider standards
+func capitalizeForAWS(s string) string {
+	return strings.ReplaceAll(s, "VPC", "Vpc")
 }
