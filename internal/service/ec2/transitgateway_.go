@@ -196,7 +196,7 @@ func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("encryption_support"); ok && v.(string) != string(awstypes.EncryptionSupportOptionValueDisable) {
+	if v, ok := d.GetOk("encryption_support"); ok && v.(string) == string(awstypes.EncryptionSupportOptionValueEnable) {
 		input := &ec2.ModifyTransitGatewayInput{
 			TransitGatewayId: output.TransitGateway.TransitGatewayId,
 			Options: &awstypes.ModifyTransitGatewayOptions{
