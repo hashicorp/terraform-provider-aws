@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,6 +68,11 @@ func resourceIntegration() *schema.Resource {
 			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"integration_target": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"connection_type": {
 				Type:             schema.TypeString,
@@ -220,6 +226,9 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("tls_config"); ok && len(v.([]any)) > 0 {
 		input.TlsConfig = expandTLSConfig(v.([]any))
 	}
+	if v, ok := d.GetOk("integration_target"); ok {
+		input.IntegrationTarget = aws.String(v.(string))
+	}
 
 	if v, ok := d.GetOk(names.AttrURI); ok {
 		input.Uri = aws.String(v.(string))
@@ -261,6 +270,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("content_handling", integration.ContentHandling)
 	d.Set("credentials", integration.Credentials)
 	d.Set("integration_http_method", integration.HttpMethod)
+	d.Set("integration_target", integration.IntegrationTarget)
 	d.Set("passthrough_behavior", integration.PassthroughBehavior)
 	d.Set("request_parameters", integration.RequestParameters)
 	// We need to explicitly convert key = nil values into key = "", which aws.ToStringMap() removes
@@ -460,6 +470,14 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				Value: aws.String(strconv.FormatBool(m["insecure_skip_verification"].(bool))),
 			})
 		}
+	}
+
+	if d.HasChange("integration_target") {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/integrationTarget"),
+			Value: aws.String(d.Get("integration_target").(string)),
+		})
 	}
 
 	// Updating, Stage 1: Everything except cache key parameters
