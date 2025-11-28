@@ -54,6 +54,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 {{- if .IncludeComments }}
 
@@ -264,7 +265,7 @@ func testAccCheck{{ .Resource }}Destroy(ctx context.Context) resource.TestCheckF
 			// in the `exports_test.go` file.
 			{{- end }}
 			_, err := tf{{ .ServicePackage }}.Find{{ .Resource }}ByID(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
