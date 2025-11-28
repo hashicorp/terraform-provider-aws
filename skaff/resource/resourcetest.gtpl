@@ -166,7 +166,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)
@@ -215,7 +215,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)
