@@ -265,7 +265,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
 	var plan resource{{ .Resource }}Model
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -277,7 +277,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments -}}
 	// TIP: Using a field name prefix allows mapping fields such as `ID` to `{{ .ResourceAWS }}Id`
 	{{- end }}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("{{ .Resource }}")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("{{ .Resource }}")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -305,7 +305,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments -}}
 	// TIP: -- 5. Using the output from the create function, set attributes
 	{{- end }}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -322,7 +322,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments }}
 	// TIP: -- 7. Save the request plan to response state
 	{{- end }}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -347,7 +347,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	// TIP: -- 2. Fetch the state
 	{{- end }}
 	var state resource{{ .Resource }}Model
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -371,14 +371,14 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	{{ if .IncludeComments }}
 	// TIP: -- 5. Set the arguments and attributes
 	{{- end }}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 6. Set the state
 	{{- end }}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -413,8 +413,8 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
 	var plan, state resource{{ .Resource }}Model
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -422,14 +422,14 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	// TIP: -- 3. Get the difference between the plan and state, if any
 	{{- end }}
 	diff, d := flex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var input {{ .SDKPackage }}.Update{{ .ResourceAWS }}Input
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -448,7 +448,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		{{ if .IncludeComments }}
 		// TIP: Using the output from the update function, re-set any computed attributes
 		{{- end }}
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -467,7 +467,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	{{ if .IncludeComments -}}
 	// TIP: -- 6. Save the request plan to response state
 	{{- end }}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -497,7 +497,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	// TIP: -- 2. Fetch the state
 	{{- end }}
 	var state resource{{ .Resource }}Model
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
