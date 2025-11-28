@@ -150,7 +150,7 @@ func Test{{ .Resource }}ExampleUnitTest(t *testing.T) {
 // applicable. We prefix its name with "TestAcc", the service, and the
 // resource name.
 //
-// Acceptance test access AWS and cost money to run.
+// Acceptance tests access AWS and cost money to run.
 {{- end }}
 func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 	ctx := acctest.Context(t)
