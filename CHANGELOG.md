@@ -16,7 +16,6 @@ ENHANCEMENTS:
 * resource/aws_lambda_function: Add `tenancy_config` argument ([#45170](https://github.com/hashicorp/terraform-provider-aws/issues/45170))
 * resource/aws_lambda_invocation: Add `tenant_id` argument ([#45170](https://github.com/hashicorp/terraform-provider-aws/issues/45170))
 * resource/aws_vpn_connection: Add `vpn_concentrator_id` argument to support Site-to-Site VPN Concentrator ([#45175](https://github.com/hashicorp/terraform-provider-aws/issues/45175))
-* resource/aws_api_gateway_integration: Add `integration_target` argument to support VPC Link V2 with Application Load Balancer integrations ([#45230](https://github.com/hashicorp/terraform-provider-aws/issues/45230))
 
 ## 6.22.1 (November 21, 2025)
 
