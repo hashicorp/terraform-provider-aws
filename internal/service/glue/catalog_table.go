@@ -410,8 +410,8 @@ func resourceCatalogTable() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"dialect": {
-										Type:         schema.TypeString,
-										Optional:     true,
+										Type:     schema.TypeString,
+										Optional: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											"REDSHIFT",
 											"ATHENA",
