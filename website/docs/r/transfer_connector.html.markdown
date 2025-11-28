@@ -44,6 +44,24 @@ resource "aws_transfer_connector" "example" {
 }
 ```
 
+### SFTP Connector with VPC Lattice
+
+```terraform
+resource "aws_transfer_connector" "example" {
+  access_role = aws_iam_role.test.arn
+  sftp_config {
+    trusted_host_keys = ["ssh-rsa AAAAB3NYourKeysHere"]
+    user_secret_id    = aws_secretsmanager_secret.example.id
+  }
+  egress_config {
+    vpc_lattice {
+      resource_configuration_arn = "arn:aws:vpc-lattice:us-east-1:123456789012:resourceconfiguration/rcfg-12345678901234567"
+      port_number                = 22
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -51,10 +69,11 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_role` - (Required) The IAM Role which provides read and write access to the parent directory of the file location mentioned in the StartFileTransfer request.
 * `as2_config` - (Optional) Either SFTP or AS2 is configured.The parameters to configure for the connector object. Fields documented below.
+* `egress_config` - (Optional) Specifies the egress configuration for the connector. When set, enables routing through customer VPCs using VPC Lattice for private connectivity. Fields documented below.
 * `logging_role` - (Optional) The IAM Role which is required for allowing the connector to turn on CloudWatch logging for Amazon S3 events.
 * `security_policy_name` - (Optional) Name of the security policy for the connector.
 * `sftp_config` - (Optional) Either SFTP or AS2 is configured.The parameters to configure for the connector object. Fields documented below.
-* `url` - (Required) The URL of the partners AS2 endpoint or SFTP endpoint.
+* `url` - (Optional) The URL of the partners AS2 endpoint or SFTP endpoint. Required for AS2 connectors and service-managed SFTP connectors. Must be null when using VPC Lattice egress configuration.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### As2Config Details
@@ -72,6 +91,15 @@ This resource supports the following arguments:
 
 * `trusted_host_keys` - (Required) A list of public portion of the host key, or keys, that are used to authenticate the user to the external server to which you are connecting.(https://docs.aws.amazon.com/transfer/latest/userguide/API_SftpConnectorConfig.html)
 * `user_secret_id` - (Required) The identifier for the secret (in AWS Secrets Manager) that contains the SFTP user's private key, password, or both. The identifier can be either the Amazon Resource Name (ARN) or the name of the secret.
+
+### EgressConfig Details
+
+* `vpc_lattice` - (Optional) VPC Lattice configuration for routing connector traffic through customer VPCs. Fields documented below.
+
+### VpcLattice Details
+
+* `resource_configuration_arn` - (Required) ARN of the VPC Lattice Resource Configuration that defines the target SFTP server location. Must point to a valid Resource Configuration in a VPC with appropriate network connectivity to the SFTP server.
+* `port_number` - (Optional) Port number for connecting to the SFTP server through VPC Lattice. Defaults to 22 if not specified. Must match the port on which the target SFTP server is listening. Valid values are between 1 and 65535.
 
 ## Attribute Reference
 
