@@ -742,7 +742,7 @@ func TestAccAPIGatewayIntegration_integrationTargetRemoval(t *testing.T) {
 				Config: testAccIntegrationConfig_vpcLinkV2ALB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test", names.AttrARN),
 				),
 			},
 			{
