@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
-//go:embed resourcefw.gtpl
-var resourceFrameworkTmpl string
+//go:embed resource.gtpl
+var resourceTmpl string
 
 //go:embed resourcetest.gtpl
 var resourceTestTmpl string
@@ -91,10 +91,8 @@ func Create(resName, snakeName string, comments, force, tags bool) error {
 		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
-	tmpl := resourceFrameworkTmpl
-
 	f := fmt.Sprintf("%s.go", snakeName)
-	if err = writeTemplate("newres", f, tmpl, force, templateData); err != nil {
+	if err = writeTemplate("newres", f, resourceTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource template: %w", err)
 	}
 
