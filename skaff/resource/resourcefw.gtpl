@@ -3,7 +3,7 @@
 
 package {{ .ServicePackage }}
 
-{{- if .IncludeComments }}
+{{ if .IncludeComments -}}
 // **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
 //
 // TIP: ==== INTRODUCTION ====
@@ -19,7 +19,8 @@ package {{ .ServicePackage }}
 //
 // In other words, as generated, this is a rough outline of the work you will
 // need to do. If something doesn't make sense for your situation, get rid of
-// it.{{- end }}
+// it.
+{{- end }}
 
 import (
 {{- if .IncludeComments }}
@@ -79,8 +80,8 @@ import (
 // 3. Main resource struct with schema method
 // 4. Create, read, update, delete methods (in that order)
 // 5. Other functions (flatteners, expanders, waiters, finders, etc.)
-{{- end }}
 
+{{ end -}}
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("{{ .ProviderResourceName }}", name="{{ .HumanResourceName }}")
 {{- if .IncludeTags }}
@@ -88,7 +89,8 @@ import (
 {{- end }}
 func newResource{{ .Resource }}(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resource{{ .Resource }}{}
-	{{ if .IncludeComments }}
+
+	{{ if .IncludeComments -}}
 	// TIP: ==== CONFIGURABLE TIMEOUTS ====
 	// Users can configure timeout lengths but you need to use the times they
 	// provide. Access the timeout they configure (or the defaults) using,
@@ -164,7 +166,7 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 			{{- if .IncludeComments }}
 			// TIP: ==== "ID" ATTRIBUTE ====
 			// When using the Terraform Plugin Framework, there is no required "id" attribute.
-			// This is different from the Terraform Plugin SDK. 
+			// This is different from the Terraform Plugin SDK.
 			//
 			// Only include an "id" attribute if the AWS API has an "Id" field, such as "{{ .Resource }}Id"
 			{{- end }}
@@ -175,8 +177,8 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 				// TIP: ==== PLAN MODIFIERS ====
 				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
 				// for adjusting planned changes prior to apply. The planmodifier subpackage
-				// provides built-in modifiers for many common use cases such as 
-				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK 
+				// provides built-in modifiers for many common use cases such as
+				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
 				// resources).
 				//
 				// See more:
@@ -203,12 +205,12 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
 				{{- if .IncludeComments }}
 				// TIP: ==== LIST VALIDATORS ====
-				// List and set validators take the place of MaxItems and MinItems in 
+				// List and set validators take the place of MaxItems and MinItems in
 				// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-				// make a nested object required. Similar to Plugin-SDK, complex objects 
+				// make a nested object required. Similar to Plugin-SDK, complex objects
 				// can be represented as lists or sets with listvalidator.SizeAtMost(1).
 				//
-				// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields, 
+				// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
 				// see:
 				// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
 				{{- end }}
@@ -250,7 +252,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	// 4. Call the AWS create/put function
 	// 5. Using the output from the create function, set the minimum arguments
 	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes. 
+	//    only attributes.
 	// 6. Use a waiter to wait for create to complete
 	// 7. Save the request plan to response state
 	{{- end }}
@@ -617,10 +619,10 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.C
 {{- end }}
 func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .ResourceAWS }}, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusDeleting, statusNormal},
-		Target:                    []string{},
-		Refresh:                   status{{ .Resource }}(conn, id),
-		Timeout:                   timeout,
+		Pending: []string{statusDeleting, statusNormal},
+		Target:  []string{},
+		Refresh: status{{ .Resource }}(conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -687,9 +689,9 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 // With Terraform Plugin-Framework configurations are deserialized into
 // Go types, providing type safety without the need for type assertions.
 // These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name. 
+// tag value should match the attribute name.
 //
-// Nested objects are represented in their own data struct. These will 
+// Nested objects are represented in their own data struct. These will
 // also have a corresponding attribute type mapping for use inside flex
 // functions.
 //
@@ -730,7 +732,7 @@ type complexArgumentModel struct {
 // Once the sweeper function is implemented, register it in sweep.go
 // as follows:
 //
-//   awsv2.Register("{{ .ProviderResourceName }}", sweep{{ .Resource }}s)
+//  awsv2.Register("{{ .ProviderResourceName }}", sweep{{ .Resource }}s)
 //
 // See more:
 // https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
