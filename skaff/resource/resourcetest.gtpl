@@ -35,7 +35,7 @@ import (
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
 	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
+	// awstypes.<Type Name>.
 {{- end }}
 	"context"
 	"errors"
@@ -45,7 +45,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
