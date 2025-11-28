@@ -455,7 +455,7 @@ func expandConnectorEgressConfig(tfList []any) awstypes.ConnectorEgressConfig {
 
 	if v, ok := tfMap["vpc_lattice"].([]any); ok && len(v) > 0 {
 		return &awstypes.ConnectorEgressConfigMemberVpcLattice{
-			Value: *expandConnectorVpcLatticeEgressConfig(v),
+			Value: *expandConnectorVPCLatticeEgressConfig(v),
 		}
 	}
 
@@ -471,14 +471,14 @@ func expandUpdateConnectorEgressConfig(tfList []any) awstypes.UpdateConnectorEgr
 
 	if v, ok := tfMap["vpc_lattice"].([]any); ok && len(v) > 0 {
 		return &awstypes.UpdateConnectorEgressConfigMemberVpcLattice{
-			Value: *expandUpdateConnectorVpcLatticeEgressConfig(v),
+			Value: *expandUpdateConnectorVPCLatticeEgressConfig(v),
 		}
 	}
 
 	return nil
 }
 
-func expandConnectorVpcLatticeEgressConfig(tfList []any) *awstypes.ConnectorVpcLatticeEgressConfig {
+func expandConnectorVPCLatticeEgressConfig(tfList []any) *awstypes.ConnectorVpcLatticeEgressConfig {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
@@ -496,7 +496,7 @@ func expandConnectorVpcLatticeEgressConfig(tfList []any) *awstypes.ConnectorVpcL
 	return apiObject
 }
 
-func expandUpdateConnectorVpcLatticeEgressConfig(tfList []any) *awstypes.UpdateConnectorVpcLatticeEgressConfig {
+func expandUpdateConnectorVPCLatticeEgressConfig(tfList []any) *awstypes.UpdateConnectorVpcLatticeEgressConfig {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
@@ -523,7 +523,7 @@ func flattenConnectorEgressConfig(apiObject awstypes.DescribedConnectorEgressCon
 
 	switch v := apiObject.(type) {
 	case *awstypes.DescribedConnectorEgressConfigMemberVpcLattice:
-		tfMap["vpc_lattice"] = flattenConnectorVpcLatticeEgressConfig(&v.Value)
+		tfMap["vpc_lattice"] = flattenDescribedConnectorVPCLatticeEgressConfig(&v.Value)
 	}
 
 	if len(tfMap) == 0 {
@@ -533,7 +533,7 @@ func flattenConnectorEgressConfig(apiObject awstypes.DescribedConnectorEgressCon
 	return []any{tfMap}
 }
 
-func flattenConnectorVpcLatticeEgressConfig(apiObject *awstypes.DescribedConnectorVpcLatticeEgressConfig) []any {
+func flattenDescribedConnectorVPCLatticeEgressConfig(apiObject *awstypes.DescribedConnectorVpcLatticeEgressConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
