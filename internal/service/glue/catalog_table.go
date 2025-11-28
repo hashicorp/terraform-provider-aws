@@ -420,12 +420,12 @@ func resourceCatalogTable() *schema.Resource {
 									},
 									"dialect_version": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 									"validation_connection": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 									"view_original_text": {

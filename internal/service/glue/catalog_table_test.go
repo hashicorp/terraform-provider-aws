@@ -1490,3 +1490,59 @@ resource "aws_glue_catalog_table" "test" {
 }
 `, rName, columnComment)
 }
+func TestAccGlueCatalogTable_viewDefinition(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_viewDefinition(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "SPARK"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "3.0"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCatalogTableConfig_viewDefinition(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  view_definition {
+    representations {
+      dialect               = "SPARK"
+      dialect_version       = "3.0"
+      validation_connection = "test-connection"
+    }
+    is_protected = true
+    definer      = "test-user"
+  }
+}
+`, rName)
+}
