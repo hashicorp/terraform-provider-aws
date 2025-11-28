@@ -681,9 +681,9 @@ func TestAccAPIGatewayIntegration_vpcLinkV2WithALB(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_id", "aws_apigatewayv2_vpc_link.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP_PROXY"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, "aws_apigatewayv2_vpc_link.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
 				),
 			},
 			{
@@ -712,14 +712,14 @@ func TestAccAPIGatewayIntegration_vpcLinkV2Update(t *testing.T) {
 				Config: testAccIntegrationConfig_vpcLinkV2ALB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test", names.AttrARN),
 				),
 			},
 			{
 				Config: testAccIntegrationConfig_vpcLinkV2ALBUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test2", names.AttrARN),
 				),
 			},
 		},
