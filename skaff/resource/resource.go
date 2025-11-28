@@ -19,9 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
-//go:embed resource.gtpl
-var resourceTmpl string
-
 //go:embed resourcefw.gtpl
 var resourceFrameworkTmpl string
 
@@ -43,12 +40,11 @@ type TemplateData struct {
 	Service              string
 	ServiceLower         string
 	AWSServiceName       string
-	PluginFramework      bool
 	HumanResourceName    string
 	ProviderResourceName string
 }
 
-func Create(resName, snakeName string, comments, force, pluginFramework, tags bool) error {
+func Create(resName, snakeName string, comments, force, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -89,15 +85,12 @@ func Create(resName, snakeName string, comments, force, pluginFramework, tags bo
 		Service:              service.ProviderNameUpper(),
 		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),
 		AWSServiceName:       service.FullHumanFriendly(),
-		PluginFramework:      pluginFramework,
 		HumanResourceName:    convert.ToHumanResName(resName),
 		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
-	tmpl := resourceTmpl
-	if pluginFramework {
-		tmpl = resourceFrameworkTmpl
-	}
+	tmpl := resourceFrameworkTmpl
+
 	f := fmt.Sprintf("%s.go", snakeName)
 	if err = writeTemplate("newres", f, tmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource template: %w", err)

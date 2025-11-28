@@ -228,7 +228,6 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheck{{ .Resource }}Exists(ctx, resourceName, &{{ .ResourceLower }}),
-					{{- if .PluginFramework }}
 					{{- if .IncludeComments }}
 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
 					// but expects a new resource factory function as the third argument. To expose this
@@ -238,9 +237,6 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 					//   var Resource{{ .Resource}} = newResource{{ .Resource }}
 					{{- end }}
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tf{{ .ServicePackage }}.Resource{{ .Resource }}, resourceName),
-					{{- else }}
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tf{{ .ServicePackage }}.Resource{{ .Resource }}(), resourceName),
-					{{- end }}
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
