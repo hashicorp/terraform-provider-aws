@@ -28,6 +28,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	sdktypes "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -317,7 +318,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	env, err := findEnvironmentByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Elastic Beanstalk Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -564,7 +565,7 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	// Environment must be Ready before it can be deleted.
 	if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return diags
 		}
 
@@ -701,7 +702,7 @@ func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id st
 	return func() (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
