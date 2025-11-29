@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -108,7 +109,7 @@ func resourcePreparedStatementRead(ctx context.Context, d *schema.ResourceData, 
 
 	preparedStatement, err := findPreparedStatementByTwoPartKey(ctx, conn, workGroupName, statementName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Athena Prepared Statement (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
