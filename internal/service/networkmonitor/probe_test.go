@@ -18,9 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfnetworkmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/networkmonitor"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -171,7 +171,7 @@ func testAccCheckProbeDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfnetworkmonitor.FindProbeByTwoPartKey(ctx, conn, rs.Primary.Attributes["monitor_name"], rs.Primary.Attributes["probe_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -209,7 +209,7 @@ func testAccCheckProbeDeleteSecurityGroup(ctx context.Context, rName string, vpc
 		description := "Created By Amazon CloudWatch Network Monitor for " + rName
 		v, err := tfec2.FindSecurityGroupByDescriptionAndVPCID(ctx, conn, description, aws.ToString(vpc.VpcId))
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			// Already gone.
 			return nil
 		}
