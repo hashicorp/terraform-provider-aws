@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -331,7 +332,7 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 
 	out, err := FindEntityRecognizerByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Comprehend Entity Recognizer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -728,7 +729,7 @@ func waitEntityRecognizerDeleted(ctx context.Context, conn *comprehend.Client, i
 func statusEntityRecognizer(ctx context.Context, conn *comprehend.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := FindEntityRecognizerByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
