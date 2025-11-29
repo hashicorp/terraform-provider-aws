@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -207,7 +208,7 @@ func testAccCheckActivityDestroy(ctx context.Context) resource.TestCheckFunc {
 			err := tfresource.Retry(ctx, 1*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 				_, err := tfsfn.FindActivityByARN(ctx, conn, rs.Primary.ID)
 
-				if tfresource.NotFound(err) {
+				if retry.NotFound(err) {
 					return nil
 				}
 
