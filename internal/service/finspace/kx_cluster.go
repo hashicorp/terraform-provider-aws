@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -528,7 +529,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	out, err := findKxClusterByID(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxCluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -702,7 +703,7 @@ func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	_, err = waitKxClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxCluster, d.Id(), err)
 	}
 
@@ -764,7 +765,7 @@ func waitKxClusterDeleted(ctx context.Context, conn *finspace.Client, id string,
 func statusKxCluster(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findKxClusterByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
