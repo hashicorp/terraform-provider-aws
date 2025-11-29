@@ -576,7 +576,7 @@ func isParameterGroupV3(ctx context.Context, conn *timestreaminfluxdb.Client, pa
 
 	out, err := findDBParameterGroupByID(ctx, conn, parameterGroupID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return false, diags
 	}
 
