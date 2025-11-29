@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -149,7 +150,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	region, err := findRegionByTwoPartKey(ctx, conn, directoryID, regionName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Directory Service Region (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -329,7 +330,7 @@ func statusRegion(ctx context.Context, conn *directoryservice.Client, directoryI
 	return func() (any, string, error) {
 		output, err := findRegionByTwoPartKey(ctx, conn, directoryID, regionName, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

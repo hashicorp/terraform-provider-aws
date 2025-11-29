@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -289,7 +290,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	dir, err := findDirectoryByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Directory Service Directory (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -685,7 +686,7 @@ func statusDirectoryStage(ctx context.Context, conn *directoryservice.Client, id
 	return func() (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -811,7 +812,7 @@ func statusDomainController(ctx context.Context, conn *directoryservice.Client, 
 	return func() (any, string, error) {
 		output, err := findDomainControllerByTwoPartKey(ctx, conn, directoryID, domainControllerID, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

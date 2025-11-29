@@ -33,6 +33,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -211,7 +212,7 @@ func (r *trustResource) Read(ctx context.Context, request resource.ReadRequest, 
 	trustID := data.ID.ValueString()
 	trust, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -473,7 +474,7 @@ func statusTrust(ctx context.Context, conn *directoryservice.Client, directoryID
 	return func() (any, string, error) {
 		output, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
