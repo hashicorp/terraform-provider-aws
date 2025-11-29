@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -114,7 +114,7 @@ func testAccCheckFormTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfdatazone.FindFormTypeByID(ctx, conn, rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["revision"])
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
