@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfchatbot "github.com/hashicorp/terraform-provider-aws/internal/service/chatbot"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -149,7 +149,7 @@ func testAccCheckSlackChannelConfigurationDestroy(ctx context.Context) resource.
 
 			_, err := tfchatbot.FindSlackChannelConfigurationByARN(ctx, conn, rs.Primary.Attributes["chat_configuration_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
