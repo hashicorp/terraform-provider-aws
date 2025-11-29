@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -66,7 +67,7 @@ func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := findAdminAccount(ctx, conn)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading FMS Admin Account (%s): %s", accountID, err)
 	default:
@@ -88,7 +89,7 @@ func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findAdminAccount(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FMS Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -196,7 +197,7 @@ func statusAdminAccount(ctx context.Context, conn *fms.Client) sdkretry.StateRef
 	return func() (any, string, error) {
 		output, err := findAdminAccount(ctx, conn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
