@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -121,7 +121,7 @@ func testAccCheckTransitGatewayConnectPeerAssociationDestroy(ctx context.Context
 
 			_, err = tfnetworkmanager.FindTransitGatewayConnectPeerAssociationByTwoPartKey(ctx, conn, globalNetworkID, connectPeerARN)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
