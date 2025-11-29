@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -277,7 +278,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	endpoint, err := findEndpointByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SageMaker AI Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -397,7 +398,7 @@ func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) sd
 	return func() (any, string, error) {
 		output, err := findEndpointByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

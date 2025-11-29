@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -982,7 +983,7 @@ func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	userProfile, err := findUserProfileByName(ctx, conn, domainID, userProfileName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		d.SetId("")
 		log.Printf("[WARN] Unable to find SageMaker AI User Profile (%s); removing from state", d.Id())
 		return diags
@@ -1124,7 +1125,7 @@ func statusUserProfile(ctx context.Context, conn *sagemaker.Client, domainID, us
 	return func() (any, string, error) {
 		output, err := findUserProfileByName(ctx, conn, domainID, userProfileName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
