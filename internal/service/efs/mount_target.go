@@ -23,6 +23,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -178,7 +179,7 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	mt, err := findMountTargetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EFS Mount Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -347,7 +348,7 @@ func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.Client, id s
 	return func() (any, string, error) {
 		output, err := findMountTargetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
