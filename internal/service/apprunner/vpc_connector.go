@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -108,7 +109,7 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	vpcConnector, err := findVPCConnectorByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] App Runner VPC Connector (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -195,7 +196,7 @@ func statusVPCConnector(ctx context.Context, conn *apprunner.Client, arn string)
 	return func() (any, string, error) {
 		output, err := findVPCConnectorByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
