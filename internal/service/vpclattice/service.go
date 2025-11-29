@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -149,7 +150,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	out, err := findServiceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPCLattice Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -266,7 +267,7 @@ func statusService(ctx context.Context, conn *vpclattice.Client, id string) sdkr
 	return func() (any, string, error) {
 		out, err := findServiceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
