@@ -174,7 +174,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Resource }}Destroy(ctx),
+		CheckDestroy:             testAccCheck{{ .Resource }}Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName),
@@ -223,7 +223,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Resource }}Destroy(ctx),
+		CheckDestroy:             testAccCheck{{ .Resource }}Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),
@@ -250,9 +250,9 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheck{{ .Resource }}Destroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheck{{ .Resource }}Destroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).{{ .Service }}Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}" {
@@ -269,7 +269,7 @@ func testAccCheck{{ .Resource }}Destroy(ctx context.Context) resource.TestCheckF
 				return nil
 			}
 			if err != nil {
-			        return create.Error(names.{{ .Service }}, create.ErrActionCheckingDestroyed, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
+			    return create.Error(names.{{ .Service }}, create.ErrActionCheckingDestroyed, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
 			}
 
 			return create.Error(names.{{ .Service }}, create.ErrActionCheckingDestroyed, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, errors.New("not destroyed"))
