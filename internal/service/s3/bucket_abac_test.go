@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -209,7 +209,7 @@ func testAccCheckBucketABACDestroy(ctx context.Context) resource.TestCheckFunc {
 			expectedBucketOwner := rs.Primary.Attributes[names.AttrExpectedBucketOwner]
 
 			_, err := tfs3.FindBucketABAC(ctx, conn, bucket, expectedBucketOwner)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
