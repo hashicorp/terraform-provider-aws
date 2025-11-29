@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -327,7 +328,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta a
 	ruleSetName := d.Get("rule_set_name").(string)
 	rule, err := findReceiptRuleByTwoPartKey(ctx, conn, d.Id(), ruleSetName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SES Receipt Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
