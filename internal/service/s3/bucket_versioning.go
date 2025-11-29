@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -166,7 +167,7 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 
 	output, err := waitForBucketVersioningStatus(ctx, conn, bucket, expectedBucketOwner)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Versioning (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -343,7 +344,7 @@ func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expect
 	return func() (any, string, error) {
 		output, err := findBucketVersioning(ctx, conn, bucket, expectedBucketOwner)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
