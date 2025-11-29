@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -106,7 +106,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	connection, err := findConnectionByTwoPartKey(ctx, conn, connectionName, catalogID)
 	if err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return sdkdiag.AppendErrorf(diags, "Glue Connection (%s) not found", id)
 		}
 		return sdkdiag.AppendErrorf(diags, "reading Glue Connection (%s): %s", id, err)
