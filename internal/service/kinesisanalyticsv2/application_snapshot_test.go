@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -111,7 +111,7 @@ func testAccCheckApplicationSnapshotDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfkinesisanalyticsv2.FindSnapshotDetailsByTwoPartKey(ctx, conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
