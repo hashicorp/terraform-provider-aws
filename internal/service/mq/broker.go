@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -469,7 +470,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	output, err := findBrokerByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && (tfresource.NotFound(err) || errs.IsA[*types.ForbiddenException](err)) {
+	if !d.IsNewResource() && (retry.NotFound(err) || errs.IsA[*types.ForbiddenException](err)) {
 		log.Printf("[WARN] MQ Broker (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -720,7 +721,7 @@ func statusBrokerState(ctx context.Context, conn *mq.Client, id string) sdkretry
 	return func() (any, string, error) {
 		output, err := findBrokerByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
