@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -122,7 +123,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 			return findEIPByAssociationID(ctx, conn, d.Id())
 		},
 		func(err error) (bool, error) {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return true, err
 			}
 
@@ -152,7 +153,7 @@ func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, met
 
 	address, err := findEIPByAssociationID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 EIP Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

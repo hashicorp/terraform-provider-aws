@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -186,7 +186,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		} else {
 			vpcInfo.enableNetworkAddressUsageMetrics = v
 		}
-	} else if tfresource.NotFound(err) {
+	} else if retry.NotFound(err) {
 		input := &ec2.CreateDefaultVpcInput{}
 
 		output, err := conn.CreateDefaultVpc(ctx, input)

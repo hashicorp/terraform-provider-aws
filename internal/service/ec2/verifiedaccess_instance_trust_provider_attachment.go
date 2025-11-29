@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @SDKResource("aws_verifiedaccess_instance_trust_provider_attachment", name="Verified Access Instance Trust Provider Attachment")
@@ -81,7 +81,7 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentRead(ctx context.Conte
 
 	err = findVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, conn, vaiID, vatpID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Instance Trust Provider Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -95,7 +95,7 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 
 	transitGatewayPropagation, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table Propagation %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -155,7 +155,7 @@ func transitGatewayRouteTablePropagationUpdate(ctx context.Context, conn *ec2.Cl
 	id := transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
 	_, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		if enable {
 			input := &ec2.EnableTransitGatewayRouteTablePropagationInput{
 				TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
