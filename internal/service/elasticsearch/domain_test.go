@@ -25,8 +25,8 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -2117,7 +2117,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
