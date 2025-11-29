@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -106,7 +106,7 @@ func (r *instanceStateResource) Read(ctx context.Context, req resource.ReadReque
 	}
 
 	out, err := findDBInstanceByID(ctx, conn, state.Identifier.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}

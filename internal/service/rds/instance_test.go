@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -7920,7 +7921,7 @@ func testAccCheckDBInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -8063,7 +8064,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 
 			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -8094,7 +8095,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 			_, err := tfrds.FindDBSnapshotByID(ctx, conn, finalSnapshotID)
 
 			if err != nil {
-				if !tfresource.NotFound(err) {
+				if !retry.NotFound(err) {
 					return err
 				}
 			} else {
@@ -8103,7 +8104,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 
 			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
