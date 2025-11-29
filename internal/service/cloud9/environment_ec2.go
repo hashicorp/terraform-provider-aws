@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -165,7 +166,7 @@ func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, met
 
 	env, err := findEnvironmentByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cloud9 EC2 Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -297,7 +298,7 @@ func statusEnvironmentStatus(ctx context.Context, conn *cloud9.Client, id string
 	return func() (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
