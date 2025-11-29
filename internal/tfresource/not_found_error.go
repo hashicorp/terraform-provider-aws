@@ -9,6 +9,7 @@ import (
 	"iter"
 
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
@@ -87,7 +88,7 @@ func (e *TooManyResultsError) As(target any) bool {
 
 // SingularDataSourceFindError returns a standard error message for a singular data source's non-nil resource find error.
 func SingularDataSourceFindError(resourceType string, err error) error {
-	if NotFound(err) {
+	if retry.NotFound(err) {
 		if errors.Is(err, &TooManyResultsError{}) {
 			return fmt.Errorf("multiple %[1]ss matched; use additional constraints to reduce matches to a single %[1]s", resourceType)
 		}

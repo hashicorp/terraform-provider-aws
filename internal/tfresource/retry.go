@@ -141,7 +141,7 @@ func RetryWhenNotFound[T any](ctx context.Context, timeout time.Duration, f func
 // RetryWhenNewResourceNotFound retries the specified function when it returns a retry.NotFoundError and `isNewResource` is true.
 func RetryWhenNewResourceNotFound[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), isNewResource bool) (T, error) {
 	return retry.Op(f).If(func(_ T, err error) (bool, error) {
-		if isNewResource && NotFound(err) {
+		if isNewResource && retry.NotFound(err) {
 			return true, err
 		}
 
