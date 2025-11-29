@@ -117,7 +117,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 	caARN, principal, sourceAccount := parts[0], parts[1], parts[2]
 	permission, err := findPermissionByThreePartKey(ctx, conn, caARN, principal, sourceAccount)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Permission (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

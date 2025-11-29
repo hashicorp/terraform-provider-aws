@@ -78,7 +78,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	policy, err := findPolicyByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

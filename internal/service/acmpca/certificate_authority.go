@@ -391,7 +391,7 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 
 	certificateAuthority, err := findCertificateAuthorityByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -586,7 +586,7 @@ func statusCertificateAuthority(ctx context.Context, conn *acmpca.Client, arn st
 	return func() (any, string, error) {
 		output, err := findCertificateAuthorityByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
