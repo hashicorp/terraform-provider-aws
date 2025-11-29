@@ -254,7 +254,7 @@ func statusEndpoint(conn *s3outposts.Client, arn string) retry.StateRefreshFunc 
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findEndpointByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
