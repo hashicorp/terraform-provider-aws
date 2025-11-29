@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -161,7 +162,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 
 	instanceProfile, err := findInstanceProfileByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Instance Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -176,7 +177,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		_, err := findRoleByName(ctx, conn, roleName)
 
 		if err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				err := instanceProfileRemoveRole(ctx, conn, d.Id(), roleName)
 
 				if err != nil {
@@ -349,7 +350,7 @@ const (
 func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findInstanceProfileByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
