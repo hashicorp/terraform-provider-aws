@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -1072,7 +1073,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	cluster, err := findClusterByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1203,7 +1204,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	autoTerminationPolicy, err := findAutoTerminationPolicyByClusterID(ctx, conn, d.Id())
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		d.Set("auto_termination_policy", nil)
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading EMR Cluster (%s) auto-termination policy: %s", d.Id(), err)
@@ -1499,7 +1500,7 @@ func statusCluster(ctx context.Context, conn *emr.Client, id string) sdkretry.St
 		}
 		output, err := findCluster(ctx, conn, input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
