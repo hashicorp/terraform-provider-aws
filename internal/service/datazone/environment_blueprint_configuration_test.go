@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -313,7 +313,7 @@ func testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx context.Context) r
 
 			_, err := tfdatazone.FindEnvironmentBlueprintConfigurationByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_id"], rs.Primary.Attributes["environment_blueprint_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
