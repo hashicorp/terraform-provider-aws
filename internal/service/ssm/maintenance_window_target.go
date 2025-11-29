@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -136,7 +137,7 @@ func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.Resource
 	windowID := d.Get("window_id").(string)
 	target, err := findMaintenanceWindowTargetByTwoPartKey(ctx, conn, windowID, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Maintenance Window Target %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
