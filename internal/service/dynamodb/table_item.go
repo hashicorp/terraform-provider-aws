@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -112,7 +113,7 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta any
 	key := expandTableItemQueryKey(attributes, hashKey, rangeKey)
 	item, err := findTableItemByTwoPartKey(ctx, conn, tableName, key)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Dynamodb Table Item (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
