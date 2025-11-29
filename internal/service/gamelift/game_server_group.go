@@ -24,6 +24,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -247,7 +248,7 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 
 	gameServerGroup, err := findGameServerGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GameLift Game Server Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -268,7 +269,7 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 		asgPolicy, err := tfautoscaling.FindScalingPolicyByTwoPartKey(ctx, autoscalingConn, asgName, d.Id())
 
 		switch {
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 		case err != nil:
 			return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Policy (%s/%s): %s", asgName, d.Id(), err)
 		}
@@ -389,7 +390,7 @@ func statusGameServerGroup(ctx context.Context, conn *gamelift.Client, name stri
 	return func() (any, string, error) {
 		output, err := findGameServerGroupByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
