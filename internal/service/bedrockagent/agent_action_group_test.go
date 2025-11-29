@@ -20,8 +20,8 @@ import (
 	tfplancheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/plancheck"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -325,7 +325,7 @@ func testAccCheckAgentActionGroupDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfbedrockagent.FindAgentActionGroupByThreePartKey(ctx, conn, rs.Primary.Attributes["action_group_id"], rs.Primary.Attributes["agent_id"], rs.Primary.Attributes["agent_version"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
