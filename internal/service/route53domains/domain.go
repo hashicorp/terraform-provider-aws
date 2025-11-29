@@ -32,9 +32,9 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwplanmodifiers "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -375,7 +375,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	hostedZoneID, err := tfroute53.FindPublicHostedZoneIDByDomainName(ctx, r.Meta().Route53Client(ctx), domainName)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		data.HostedZoneID = types.StringNull()
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Hosted Zone (%s)", domainName), err.Error())
@@ -400,7 +400,7 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 	domainName := fwflex.StringValueFromFramework(ctx, data.DomainName)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -424,7 +424,7 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 	hostedZoneID, err := tfroute53.FindPublicHostedZoneIDByDomainName(ctx, r.Meta().Route53Client(ctx), domainName)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		data.HostedZoneID = types.StringNull()
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Hosted Zone (%s)", domainName), err.Error())
