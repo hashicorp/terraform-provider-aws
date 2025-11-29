@@ -26,6 +26,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -431,7 +432,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 
 	lc, err := findLaunchConfigurationByName(ctx, autoscalingconn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Launch Configuration %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -475,7 +476,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 
 	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		// Don't block a refresh for a bad image.
 		rootDeviceName = ""
 	} else if err != nil {
