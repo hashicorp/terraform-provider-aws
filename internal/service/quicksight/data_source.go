@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -168,7 +169,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	dataSource, err := findDataSourceByTwoPartKey(ctx, conn, awsAccountID, dataSourceID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QuickSight Data Source (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -403,7 +404,7 @@ func statusDataSource(ctx context.Context, conn *quicksight.Client, awsAccountID
 	return func() (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, awsAccountID, dataSourceID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
