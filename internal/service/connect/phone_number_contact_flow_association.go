@@ -22,6 +22,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -103,7 +104,7 @@ func (r *phoneNumberContactFlowAssociationResource) Read(ctx context.Context, re
 	phoneNumberID, instanceID, contactFlowID := fwflex.StringValueFromFramework(ctx, data.PhoneNumberID), fwflex.StringValueFromFramework(ctx, data.InstanceID), fwflex.StringValueFromFramework(ctx, data.ContactFlowID)
 	_, err := findPhoneNumberContactFlowAssociationByThreePartKey(ctx, conn, phoneNumberID, instanceID, contactFlowID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
