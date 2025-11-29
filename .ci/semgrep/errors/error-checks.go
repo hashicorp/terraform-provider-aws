@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -13,7 +14,7 @@ func test1() {
 	_, err := call()
 
 	// ruleid: notfound-without-err-checks
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -24,7 +25,7 @@ func test2() {
 	_, err := call()
 
 	// ok: notfound-without-err-checks
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -40,7 +41,7 @@ func test3() {
 
 	if err != nil {
 		// ok: notfound-without-err-checks
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return
 		}
 		return
@@ -55,7 +56,7 @@ func test4() {
 	if err == nil {
 		return
 		// ok: notfound-without-err-checks
-	} else if tfresource.NotFound(err) {
+	} else if retry.NotFound(err) {
 		return
 	} else {
 		return
@@ -66,7 +67,7 @@ func test5() {
 	_, err := call()
 
 	// ok: notfound-without-err-checks
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	} else if err != nil {
 		return
@@ -79,7 +80,7 @@ func test6() error {
 	_, err := call()
 
 	// ok: notfound-without-err-checks
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -91,7 +92,7 @@ func test7() {
 		_, err := call()
 
 		// ok: notfound-without-err-checks
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			continue
 		}
 	}
@@ -103,7 +104,7 @@ func test8() {
 	_, err := call()
 
 	// ok: notfound-without-err-checks
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -123,7 +124,7 @@ func test9() {
 
 	if err != nil {
 		// ok: notfound-without-err-checks
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return
 		} else {
 			return
@@ -137,7 +138,7 @@ func test10() {
 	_, err := call()
 
 	// ok: notfound-without-err-checks
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	} else if err != nil {
 		return
@@ -151,7 +152,7 @@ func test11() {
 
 	tfresource.RetryWhen(ctx, 1*time.Second, nil, func(err error) (bool error) {
 		// ok: notfound-without-err-checks
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return true, err
 		}
 
@@ -163,7 +164,7 @@ func test12() {
 	_, err := call()
 
 	// ok: notfound-without-err-checks
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
