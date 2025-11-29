@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -98,7 +98,7 @@ func testAccCheckChannelAssociationDestroy(ctx context.Context) resource.TestChe
 
 			err := tfnotifications.FindChannelAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["notification_configuration_arn"], rs.Primary.Attributes[names.AttrARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
