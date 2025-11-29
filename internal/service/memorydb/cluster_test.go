@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1130,7 +1130,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfmemorydb.FindClusterByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1170,7 +1170,7 @@ func testAccCheckSnapshotExistsByName(ctx context.Context, snapshotName string) 
 
 		_, err := tfmemorydb.FindSnapshotByName(ctx, conn, snapshotName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return fmt.Errorf("MemoryDB Snapshot %s not found", snapshotName)
 		}
 
