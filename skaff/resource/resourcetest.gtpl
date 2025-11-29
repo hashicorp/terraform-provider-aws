@@ -179,7 +179,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Resource }}Exists(ctx, resourceName, &{{ .ResourceLower }}),
+					testAccCheck{{ .Resource }}Exists(ctx, t, resourceName, &{{ .ResourceLower }}),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
@@ -228,7 +228,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Resource }}Exists(ctx, resourceName, &{{ .ResourceLower }}),
+					testAccCheck{{ .Resource }}Exists(ctx, t, resourceName, &{{ .ResourceLower }}),
 					{{- if .IncludeComments }}
 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
 					// but expects a new resource factory function as the third argument. To expose this
@@ -279,7 +279,7 @@ func testAccCheck{{ .Resource }}Destroy(ctx context.Context, t *testing.T) resou
 	}
 }
 
-func testAccCheck{{ .Resource }}Exists(ctx context.Context, name string, {{ .ResourceLower }} *{{ .SDKPackage }}.Describe{{ .ResourceAWS }}Response) resource.TestCheckFunc {
+func testAccCheck{{ .Resource }}Exists(ctx context.Context, t *testing.T, name string, {{ .ResourceLower }} *{{ .SDKPackage }}.Describe{{ .ResourceAWS }}Response) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -290,7 +290,7 @@ func testAccCheck{{ .Resource }}Exists(ctx context.Context, name string, {{ .Res
 			return create.Error(names.{{ .Service }}, create.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).{{ .Service }}Client(ctx)
 
 		resp, err := tf{{ .ServicePackage }}.Find{{ .Resource }}ByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
