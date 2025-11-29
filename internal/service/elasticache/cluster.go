@@ -504,7 +504,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	c, err := findCacheClusterWithNodeInfoByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Cache Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
