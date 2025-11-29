@@ -179,7 +179,7 @@ func waitTagsPropagated(ctx context.Context, conn *kms.Client, id string, tags t
 	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := listTags(ctx, conn, id, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
