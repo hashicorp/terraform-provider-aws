@@ -222,18 +222,6 @@ rules:
       include:
         - "**/*.go"
 
-  - id: internal-retry-notfound
-    languages: [go]
-    message: "Use retry.NotFound to replace the deprecated tfresource alias"
-    severity: WARNING
-    pattern: |
-      tfresource.NotFound($ERR)
-    fix: |
-      retry.NotFound($ERR)
-    paths:
-      include:
-        - "**/*.go"
-
   - id: internal-retry-timedout
     languages: [go]
     message: "Use retry.TimedOut to replace the deprecated tfresource alias"
