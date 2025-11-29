@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -121,7 +122,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	resourceARN := parts[1]
 
 	output, err := findResourceByTwoPartKey(ctx, conn, groupARN, resourceARN)
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ResourceGroups Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -201,7 +202,7 @@ func statusResource(ctx context.Context, conn *resourcegroups.Client, groupARN, 
 	return func() (any, string, error) {
 		output, err := findResourceByTwoPartKey(ctx, conn, groupARN, resourceARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
