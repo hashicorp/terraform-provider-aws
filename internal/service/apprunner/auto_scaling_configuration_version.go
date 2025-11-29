@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -137,7 +138,7 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 
 	config, err := findAutoScalingConfigurationByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] App Runner AutoScaling Configuration Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -264,7 +265,7 @@ func statusAutoScalingConfiguration(ctx context.Context, conn *apprunner.Client,
 	return func() (any, string, error) {
 		output, err := findAutoScalingConfigurationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
