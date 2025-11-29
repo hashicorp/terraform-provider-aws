@@ -304,7 +304,7 @@ func testAccCheck{{ .Resource }}Exists(ctx context.Context, t *testing.T, name s
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Client(ctx)
+	conn := acctest.ProviderMeta(ctx, t).{{ .Service }}Client(ctx)
 
 	input := &{{ .SDKPackage }}.List{{ .ResourceAWS }}sInput{}
 
