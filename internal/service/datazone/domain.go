@@ -90,6 +90,12 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"root_domain_unit_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrServiceRole: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
@@ -186,6 +192,16 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 
 		return
 	}
+
+	// CreateDomain does not return root_domain_unit_id.
+	// It must be retrieved via GetDomain.
+	domain, err := findDomainByID(ctx, conn, data.ID.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading DataZone Domain (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+	data.RootDomainUnitId = fwflex.StringToFramework(ctx, domain.RootDomainUnitId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -385,6 +401,7 @@ type domainResourceModel struct {
 	KMSKeyIdentifier    fwtypes.ARN                                        `tfsdk:"kms_key_identifier"`
 	Name                types.String                                       `tfsdk:"name"`
 	PortalURL           types.String                                       `tfsdk:"portal_url"`
+	RootDomainUnitId    types.String                                       `tfsdk:"root_domain_unit_id"`
 	ServiceRole         fwtypes.ARN                                        `tfsdk:"service_role"`
 	SkipDeletionCheck   types.Bool                                         `tfsdk:"skip_deletion_check"`
 	SingleSignOn        fwtypes.ListNestedObjectValueOf[singleSignOnModel] `tfsdk:"single_sign_on"`
