@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -89,7 +90,7 @@ func resourceContainerRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	resp, err := findContainerByName(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		log.Printf("[WARN] No Container found: %s, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -145,7 +146,7 @@ func containerRefreshStatusFunc(ctx context.Context, conn *mediastore.Client, cn
 	return func() (any, string, error) {
 		resp, err := findContainerByName(ctx, conn, cn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
