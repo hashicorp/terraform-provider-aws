@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfauditmanager "github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -185,7 +185,7 @@ func testAccCheckAssessmentDelegationDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfauditmanager.FindAssessmentDelegationByThreePartKey(ctx, conn, rs.Primary.Attributes["assessment_id"], rs.Primary.Attributes[names.AttrRoleARN], rs.Primary.Attributes["control_set_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
