@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -142,7 +143,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 
 	lag, err := findLagByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Direct Connect LAG (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -198,7 +199,7 @@ func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	if d.Get(names.AttrForceDestroy).(bool) {
 		lag, err := findLagByID(ctx, conn, d.Id())
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return diags
 		}
 
@@ -293,7 +294,7 @@ func statusLag(ctx context.Context, conn *directconnect.Client, id string) sdkre
 	return func() (any, string, error) {
 		output, err := findLagByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
