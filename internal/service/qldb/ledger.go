@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -122,7 +123,7 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	ledger, err := findLedgerByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QLDB Ledger %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -243,7 +244,7 @@ func statusLedgerState(ctx context.Context, conn *qldb.Client, name string) sdkr
 	return func() (any, string, error) {
 		output, err := findLedgerByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
