@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -153,7 +154,7 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 
 	out, err := FindLanguageModelByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transcribe LanguageModel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -232,7 +233,7 @@ func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id s
 func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := FindLanguageModelByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
