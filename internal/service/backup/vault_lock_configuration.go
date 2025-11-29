@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @SDKResource("aws_backup_vault_lock_configuration", name="Vault Lock Configuration")
@@ -100,7 +100,7 @@ func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceD
 
 	output, err := findBackupVaultByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Lock Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
