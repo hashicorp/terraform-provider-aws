@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -215,7 +216,7 @@ func (r *multiRegionClusterResource) Read(ctx context.Context, req resource.Read
 	}
 
 	out, err := findMultiRegionClusterByName(ctx, conn, state.MultiRegionClusterName.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -366,7 +367,7 @@ func (r *multiRegionClusterResource) Delete(ctx context.Context, req resource.De
 	// Before deleting the multi-region cluster, ensure it is ready for deletion.
 	// Removing an `aws_memorydb_cluster` from a multi-region cluster may temporarily block deletion.
 	output, err := findMultiRegionClusterByName(ctx, conn, state.MultiRegionClusterName.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 	if err != nil {
@@ -494,7 +495,7 @@ func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name s
 	return func() (any, string, error) {
 		output, err := findMultiRegionClusterByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
