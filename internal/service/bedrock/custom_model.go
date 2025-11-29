@@ -37,6 +37,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -328,7 +329,7 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 	jobARN := data.JobARN.ValueString()
 	outputGJ, err := findModelCustomizationJobByID(ctx, conn, jobARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -369,7 +370,7 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 		customModelARN := aws.ToString(outputGJ.OutputModelArn)
 		outputGM, err := findCustomModelByID(ctx, conn, customModelARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 			response.State.RemoveResource(ctx)
 
@@ -543,7 +544,7 @@ func statusModelCustomizationJob(ctx context.Context, conn *bedrock.Client, id s
 		}
 		output, err := findModelCustomizationJob(ctx, conn, input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
