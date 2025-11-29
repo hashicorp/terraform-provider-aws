@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -343,7 +343,7 @@ func testAccCheckBrowserSettingsDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfworkspacesweb.FindBrowserSettingsByARN(ctx, conn, rs.Primary.Attributes["browser_settings_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
