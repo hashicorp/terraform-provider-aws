@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -77,7 +78,7 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 
 		role, err = findRoleByName(ctx, conn, roleName)
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			return tfresource.RetryableError(err)
 		}
 
