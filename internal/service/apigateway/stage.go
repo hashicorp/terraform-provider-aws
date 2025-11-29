@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -244,7 +245,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	stageName := d.Get("stage_name").(string)
 	stage, err := findStageByTwoPartKey(ctx, conn, apiID, stageName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -459,7 +460,7 @@ func stageCacheStatus(ctx context.Context, conn *apigateway.Client, restApiId, n
 	return func() (any, string, error) {
 		output, err := findStageByTwoPartKey(ctx, conn, restApiId, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
