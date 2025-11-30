@@ -5,6 +5,7 @@ package s3
 
 // Exports for use in tests only.
 var (
+	ResourceBucketABAC                              = newResourceBucketABAC
 	ResourceBucketAccelerateConfiguration           = resourceBucketAccelerateConfiguration
 	ResourceBucketACL                               = resourceBucketACL
 	ResourceBucketAnalyticsConfiguration            = resourceBucketAnalyticsConfiguration
@@ -36,6 +37,7 @@ var (
 	EmptyBucket                                 = emptyBucket
 	FindAnalyticsConfiguration                  = findAnalyticsConfiguration
 	FindBucket                                  = findBucket
+	FindBucketABAC                              = findBucketABAC
 	FindBucketACL                               = findBucketACL
 	FindBucketAccelerateConfiguration           = findBucketAccelerateConfiguration
 	FindBucketLifecycleConfiguration            = findBucketLifecycleConfiguration

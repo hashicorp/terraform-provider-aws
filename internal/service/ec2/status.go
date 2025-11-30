@@ -1083,6 +1083,22 @@ func statusVPNGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, vpnGat
 	}
 }
 
+func statusVPNConcentrator(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findVPNConcentratorByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.State), nil
+	}
+}
+
 func statusCustomerGateway(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCustomerGatewayByID(ctx, conn, id)
