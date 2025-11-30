@@ -167,6 +167,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 This data source supports the following arguments:
 
 * `attachment_policies` (Optional) - In a core network, all attachments use the block argument `attachment_policies` section to map an attachment to a segment. Instead of manually associating a segment to each attachment, attachments use tags, and then the tags are used to associate the attachment to the specified segment. Detailed below.
+* `attachment_routing_policy_rules` (Optional) - Block argument that applies routing policies to attachments. Available in policy version `2025.11` and later. Detailed below.
 * `core_network_configuration` (Required) - The core network configuration section defines the Regions where a core network should operate. For AWS Regions that are defined in the policy, the core network creates a Core Network Edge where you can connect attachments. After it's created, each Core Network Edge is peered with every other defined Region and is configured with consistent segment and routing across all Regions. Regions cannot be removed until the associated attachments are deleted. Detailed below.
 * `network_function_groups` (Optional) - Block argument that defines the service insertion actions you want to include. Detailed below.
 * `routing_policies` (Optional) - Block argument that defines routing policies for controlling route propagation. Routing policies allow you to filter, modify, and control BGP routes advertised to and from your core network. Available in policy version `2025.11` and later. Detailed below.
@@ -204,6 +205,27 @@ The following arguments are available:
 * `operator` (Optional) - Valid values include: `equals`, `not-equals`, `contains`, `begins-with`.
 * `key` (Optional) - string value
 * `value` (Optional) - string value
+
+### `attachment_routing_policy_rules`
+
+Applies routing policies to attachments. Available in policy version `2025.11` and later.
+
+The following arguments are available:
+
+* `rule_number` (Required) - An integer from `1` to `65535` indicating the rule's order number. Rules are processed in order from the lowest numbered rule to the highest. Rules stop processing when a rule is matched.
+* `description` (Optional) - A user-defined description that further helps identify the rule.
+* `edge_locations` (Optional) - A set of AWS Region codes where this rule applies.
+* `conditions` (Required) - A block argument. Detailed below.
+* `action` (Required) - Block defining the action to take when conditions match. Detailed below.
+
+#### `conditions` (attachment routing policy rules)
+
+* `type` (Required) - Must be `routing-policy-label`.
+* `value` (Required) - Routing policy label to match.
+
+#### `action` (attachment routing policy rules)
+
+* `associate_routing_policies` (Required) - Set of routing policy names to associate when the conditions match.
 
 ### `core_network_configuration`
 

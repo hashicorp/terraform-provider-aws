@@ -322,9 +322,9 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 func testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName string, bgpASN int, vpnIP, label string) string {
 	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_baseWithRoutingPolicy(rName, bgpASN, vpnIP, label), fmt.Sprintf(`
 resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
-  core_network_id       = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  vpn_connection_arn    = aws_vpn_connection.test.arn
-  routing_policy_label  = %[1]q
+  core_network_id      = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  vpn_connection_arn   = aws_vpn_connection.test.arn
+  routing_policy_label = %[1]q
 
   tags = {
     segment = "shared"

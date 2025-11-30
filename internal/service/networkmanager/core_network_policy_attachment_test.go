@@ -547,12 +547,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
   }
 
   segments {
-    name = "segment"
+    name                          = "segment"
     require_attachment_acceptance = true
   }
 
   attachment_policies {
-    rule_number = 100
+    rule_number     = 100
     condition_logic = "or"
 
     conditions {
@@ -578,8 +578,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
         condition_logic = "and"
 
         match_conditions {
-          type = "prefix-in-cidr"
-          value          = "10.0.0.0/8"
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
         }
 
         action {
@@ -617,12 +617,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
   }
 
   segments {
-    name = "segment"
+    name                          = "segment"
     require_attachment_acceptance = true
   }
 
   attachment_policies {
-    rule_number = 100
+    rule_number     = 100
     condition_logic = "or"
 
     conditions {
@@ -646,8 +646,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 
       rule_definition {
         match_conditions {
-          type = "prefix-in-cidr"
-          value          = "10.0.0.0/8"
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
         }
 
         action {
@@ -667,8 +667,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 
       rule_definition {
         match_conditions {
-          type = "prefix-in-cidr"
-          value          = "192.168.0.0/16"
+          type  = "prefix-in-cidr"
+          value = "192.168.0.0/16"
         }
 
         action {
@@ -848,8 +848,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 1
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.0.0.0/16"
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
         }
         action {
           type = "allow"
@@ -861,8 +861,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 2
       rule_definition {
         match_conditions {
-          type = "prefix-in-cidr"
-          value          = "192.168.0.0/16"
+          type  = "prefix-in-cidr"
+          value = "192.168.0.0/16"
         }
         action {
           type = "allow"
@@ -874,8 +874,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 3
       rule_definition {
         match_conditions {
-          type = "prefix-in-prefix-list"
-          value          = "pl-12345678"
+          type  = "prefix-in-prefix-list"
+          value = "pl-12345678"
         }
         action {
           type = "allow"
@@ -887,8 +887,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 4
       rule_definition {
         match_conditions {
-          type = "asn-in-as-path"
-          value          = "64512"
+          type  = "asn-in-as-path"
+          value = "64512"
         }
         action {
           type = "allow"
@@ -900,8 +900,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 5
       rule_definition {
         match_conditions {
-          type = "community-in-list"
-          value          = "65000:100"
+          type  = "community-in-list"
+          value = "65000:100"
         }
         action {
           type = "allow"
@@ -913,8 +913,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 6
       rule_definition {
         match_conditions {
-          type = "med-equals"
-          value          = "50"
+          type  = "med-equals"
+          value = "50"
         }
         action {
           type = "allow"
@@ -990,8 +990,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 1
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.0.0.0/16"
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
         }
         action {
           type = "drop"
@@ -1003,8 +1003,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 2
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.1.0.0/16"
+          type  = "prefix-equals"
+          value = "10.1.0.0/16"
         }
         action {
           type = "allow"
@@ -1016,8 +1016,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 3
       rule_definition {
         match_conditions {
-          type = "prefix-in-cidr"
-          value          = "10.2.0.0/16"
+          type  = "prefix-in-cidr"
+          value = "10.2.0.0/16"
         }
         action {
           type = "summarize"
@@ -1029,12 +1029,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 4
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.3.0.0/16"
+          type  = "prefix-equals"
+          value = "10.3.0.0/16"
         }
         action {
-          type = "prepend-asn-list"
-          value       = "65001,65002"
+          type  = "prepend-asn-list"
+          value = "65001,65002"
         }
       }
     }
@@ -1043,12 +1043,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 5
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.4.0.0/16"
+          type  = "prefix-equals"
+          value = "10.4.0.0/16"
         }
         action {
-          type = "remove-asn-list"
-          value       = "65003"
+          type  = "remove-asn-list"
+          value = "65003"
         }
       }
     }
@@ -1057,12 +1057,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 6
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.5.0.0/16"
+          type  = "prefix-equals"
+          value = "10.5.0.0/16"
         }
         action {
-          type = "replace-asn-list"
-          value       = "65004,65005"
+          type  = "replace-asn-list"
+          value = "65004,65005"
         }
       }
     }
@@ -1071,12 +1071,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 7
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.6.0.0/16"
+          type  = "prefix-equals"
+          value = "10.6.0.0/16"
         }
         action {
-          type = "add-community"
-          value       = "65000:200"
+          type  = "add-community"
+          value = "65000:200"
         }
       }
     }
@@ -1085,12 +1085,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 8
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.7.0.0/16"
+          type  = "prefix-equals"
+          value = "10.7.0.0/16"
         }
         action {
-          type = "remove-community"
-          value       = "65000:100"
+          type  = "remove-community"
+          value = "65000:100"
         }
       }
     }
@@ -1099,12 +1099,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 9
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.8.0.0/16"
+          type  = "prefix-equals"
+          value = "10.8.0.0/16"
         }
         action {
-          type = "set-med"
-          value       = "100"
+          type  = "set-med"
+          value = "100"
         }
       }
     }
@@ -1113,12 +1113,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 10
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.9.0.0/16"
+          type  = "prefix-equals"
+          value = "10.9.0.0/16"
         }
         action {
-          type = "set-local-preference"
-          value       = "200"
+          type  = "set-local-preference"
+          value = "200"
         }
       }
     }
@@ -1186,12 +1186,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_definition {
         condition_logic = "and"
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.0.0.0/16"
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
         }
         match_conditions {
-          type = "asn-in-as-path"
-          value          = "64512"
+          type  = "asn-in-as-path"
+          value = "64512"
         }
         action {
           type = "allow"
@@ -1262,12 +1262,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_definition {
         condition_logic = "or"
         match_conditions {
-          type = "community-in-list"
-          value          = "65000:100"
+          type  = "community-in-list"
+          value = "65000:100"
         }
         match_conditions {
-          type = "med-equals"
-          value          = "50"
+          type  = "med-equals"
+          value = "50"
         }
         action {
           type = "allow"
@@ -1503,8 +1503,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 1
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.0.0.0/16"
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
         }
         action {
           type = "allow"
@@ -1570,8 +1570,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 1
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.0.0.0/16"
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
         }
         action {
           type = "allow"
@@ -1589,8 +1589,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 1
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "192.168.0.0/16"
+          type  = "prefix-equals"
+          value = "192.168.0.0/16"
         }
         action {
           type = "allow"
@@ -1656,8 +1656,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 1
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "10.0.0.0/16"
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
         }
         action {
           type = "allow"
@@ -1669,8 +1669,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_number = 1
       rule_definition {
         match_conditions {
-          type = "prefix-equals"
-          value          = "192.168.0.0/16"
+          type  = "prefix-equals"
+          value = "192.168.0.0/16"
         }
         action {
           type = "drop"
