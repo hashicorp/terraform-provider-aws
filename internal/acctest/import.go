@@ -28,6 +28,20 @@ func ComposeAggregateImportStateCheckFunc(fs ...resource.ImportStateCheckFunc) r
 	}
 }
 
+func ImportCheckNoResourceAttr(key string) resource.ImportStateCheckFunc {
+	return func(is []*terraform.InstanceState) error {
+		if len(is) != 1 {
+			return fmt.Errorf("Attribute '%s' expected 1 instance state, got %d", key, len(is))
+		}
+
+		rs := is[0]
+		if v, ok := rs.Attributes[key]; ok {
+			return fmt.Errorf("Attribute '%s' expected no value, got %q", key, v)
+		}
+		return nil
+	}
+}
+
 func ImportCheckResourceAttr(key, expected string) resource.ImportStateCheckFunc {
 	return func(is []*terraform.InstanceState) error {
 		if len(is) != 1 {
@@ -36,7 +50,7 @@ func ImportCheckResourceAttr(key, expected string) resource.ImportStateCheckFunc
 
 		rs := is[0]
 		if rs.Attributes[key] != expected {
-			return fmt.Errorf("Attribute '%s' expected %s, got %s", key, expected, rs.Attributes[key])
+			return fmt.Errorf("Attribute '%s' expected %q, got %q", key, expected, rs.Attributes[key])
 		}
 		return nil
 	}
@@ -56,19 +70,15 @@ func ImportMatchResourceAttr(key string, r *regexp.Regexp) resource.ImportStateC
 	}
 }
 
-func ImportCheckResourceAttrSet(key string, set bool) resource.ImportStateCheckFunc {
+func ImportCheckResourceAttrSet(key string) resource.ImportStateCheckFunc {
 	return func(is []*terraform.InstanceState) error {
 		if len(is) != 1 {
 			return fmt.Errorf("Attribute '%s' expected 1 instance state, got %d", key, len(is))
 		}
 
 		rs := is[0]
-		if set && rs.Attributes[key] == "" {
-			return fmt.Errorf("Attribute '%s' expected to be set, got not set", key)
-		}
-
-		if !set && rs.Attributes[key] != "" {
-			return fmt.Errorf("Attribute '%s' expected to be not set, got set (%s)", key, rs.Attributes[key])
+		if rs.Attributes[key] == "" {
+			return fmt.Errorf("Attribute '%s' expected to be set, had no value", key)
 		}
 
 		return nil

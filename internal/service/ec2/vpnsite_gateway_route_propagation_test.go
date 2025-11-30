@@ -30,7 +30,7 @@ func TestAccSiteVPNGatewayRoutePropagation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayRoutePropagationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayRoutePropagationConfig_basic(rName),
+				Config: testAccVPNGatewayRoutePropagationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayRoutePropagationExists(ctx, resourceName),
 				),
@@ -51,7 +51,7 @@ func TestAccSiteVPNGatewayRoutePropagation_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayRoutePropagationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayRoutePropagationConfig_basic(rName),
+				Config: testAccVPNGatewayRoutePropagationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayRoutePropagationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNGatewayRoutePropagation(), resourceName),
@@ -117,7 +117,7 @@ func testAccCheckVPNGatewayRoutePropagationDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccSiteVPNGatewayRoutePropagationConfig_basic(rName string) string {
+func testAccVPNGatewayRoutePropagationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
