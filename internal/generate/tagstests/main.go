@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build ignore
+//go:build generate
 
 package main
 
@@ -21,7 +21,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/dlclark/regexp2"
+	"github.com/dlclark/regexp2" // Regexps include Perl syntax.
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"

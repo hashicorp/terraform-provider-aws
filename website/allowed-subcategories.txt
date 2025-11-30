@@ -163,6 +163,7 @@ Lightsail
 Location
 MQ
 MWAA (Managed Workflows for Apache Airflow)
+MWAA (Managed Workflows for Apache Airflow) Serverless
 Macie
 Mainframe Modernization
 Managed Grafana
@@ -191,6 +192,7 @@ QLDB (Quantum Ledger Database)
 QuickSight
 RAM (Resource Access Manager)
 RDS (Relational Database)
+RDS Data
 Recycle Bin (RBin)
 Redshift
 Redshift Data

@@ -248,6 +248,19 @@ func resourceVPNConnection() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"bgp_log_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"bgp_log_group_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"bgp_log_output_format": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogBGPLogOutputFormat_Values(), false),
+									},
 									"log_enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -464,6 +477,19 @@ func resourceVPNConnection() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"bgp_log_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"bgp_log_group_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"bgp_log_output_format": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogBGPLogOutputFormat_Values(), false),
+									},
 									"log_enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -1177,6 +1203,21 @@ func expandCloudWatchLogOptionsSpecification(tfMap map[string]any) *awstypes.Clo
 
 	apiObject := &awstypes.CloudWatchLogOptionsSpecification{}
 
+	if v, ok := tfMap["bgp_log_enabled"].(bool); ok {
+		apiObject.BgpLogEnabled = aws.Bool(v)
+	}
+
+	// No ARN or format if not enabled.
+	if aws.ToBool(apiObject.BgpLogEnabled) {
+		if v, ok := tfMap["bgp_log_group_arn"].(string); ok && v != "" {
+			apiObject.BgpLogGroupArn = aws.String(v)
+		}
+
+		if v, ok := tfMap["bgp_log_output_format"].(string); ok && v != "" {
+			apiObject.BgpLogOutputFormat = aws.String(v)
+		}
+	}
+
 	if v, ok := tfMap["log_enabled"].(bool); ok {
 		apiObject.LogEnabled = aws.Bool(v)
 	}
@@ -1524,6 +1565,22 @@ func flattenCloudWatchLogOptions(apiObject *awstypes.CloudWatchLogOptions) map[s
 	}
 
 	tfMap := map[string]any{}
+
+	if v := apiObject.BgpLogEnabled; v != nil {
+		enabled := aws.ToBool(v)
+		tfMap["bgp_log_enabled"] = enabled
+
+		// No ARN or format if not enabled.
+		if enabled {
+			if v := apiObject.BgpLogGroupArn; v != nil {
+				tfMap["bgp_log_group_arn"] = aws.ToString(v)
+			}
+
+			if v := apiObject.BgpLogOutputFormat; v != nil {
+				tfMap["bgp_log_output_format"] = aws.ToString(v)
+			}
+		}
+	}
 
 	if v := apiObject.LogEnabled; v != nil {
 		enabled := aws.ToBool(v)
