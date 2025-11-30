@@ -705,7 +705,7 @@ func TestAccBackupPlan_scheduleExpressionTimezone(t *testing.T) {
 	})
 }
 
-func TestAccBackupPlan_targetLogicallyAirGappedBackupVaultArn(t *testing.T) {
+func TestAccBackupPlan_targetLogicallyAirGappedVaultARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
@@ -718,7 +718,7 @@ func TestAccBackupPlan_targetLogicallyAirGappedBackupVaultArn(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_targetLogicallyAirGappedBackupVaultArn(rName),
+				Config: testAccPlanConfig_targetLogicallyAirGappedVaultARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
@@ -1239,7 +1239,7 @@ resource "aws_backup_plan" "test" {
 `, rName, scheduleExpressionTimezone)
 }
 
-func testAccPlanConfig_targetLogicallyAirGappedBackupVaultArn(rName string) string {
+func testAccPlanConfig_targetLogicallyAirGappedVaultARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = %[1]q
@@ -1255,13 +1255,13 @@ resource "aws_backup_plan" "test" {
   name = %[1]q
 
   rule {
-    rule_name                                       = %[1]q
-    target_vault_name                               = aws_backup_vault.test.name
-    target_logically_air_gapped_backup_vault_arn    = aws_backup_logically_air_gapped_vault.test.arn
-    schedule                                        = "cron(0 12 * * ? *)"
+    rule_name                                    = %[1]q
+    target_vault_name                            = aws_backup_vault.test.name
+    target_logically_air_gapped_backup_vault_arn = aws_backup_logically_air_gapped_vault.test.arn
+    schedule                                     = "cron(0 12 * * ? *)"
     lifecycle {
-     delete_after = 10
-   }
+      delete_after = 10
+    }
   }
 }
 `, rName)
