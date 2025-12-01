@@ -55,7 +55,7 @@ resource "aws_ecs_capacity_provider" "example" {
 
   managed_instances_provider {
     infrastructure_role_arn = aws_iam_role.ecs_infrastructure.arn
-    propagate_tags          = "TASK_DEFINITION"
+    propagate_tags          = "CAPACITY_PROVIDER"
 
     instance_launch_template {
       ec2_instance_profile_arn = aws_iam_instance_profile.ecs_instance.arn
