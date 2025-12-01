@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -91,7 +92,7 @@ func (r *resourceCapacityProvider) Schema(ctx context.Context, _ resource.Schema
 					listvalidator.SizeAtMost(1),
 				},
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplaceIfConfigured(),
+					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -119,10 +120,16 @@ func (r *resourceCapacityProvider) Schema(ctx context.Context, _ resource.Schema
 						names.AttrSubnetIDs: schema.SetAttribute{
 							Required:   true,
 							CustomType: fwtypes.SetOfStringType,
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
 						},
 						names.AttrSecurityGroupIDs: schema.SetAttribute{
 							Required:   true,
 							CustomType: fwtypes.SetOfStringType,
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 				},
@@ -220,7 +227,7 @@ func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state, flex.WithIgnoredField("ForceDestroy"))
+	diff, d := flex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
@@ -342,11 +349,11 @@ func (r *resourceCapacityProvider) ValidateConfig(ctx context.Context, request r
 	}
 }
 
-func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
+func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.CapacityProviderStatePending),
 		Target:                    enum.Slice(awstypes.CapacityProviderStateActive),
-		Refresh:                   statusCapacityProvider(ctx, conn, id),
+		Refresh:                   statusCapacityProvider(ctx, conn, name),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -359,11 +366,11 @@ func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, id str
 	return nil, smarterr.NewError(err)
 }
 
-func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, id string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
+func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.CapacityProviderStatePending, awstypes.CapacityProviderStateDeleting),
 		Target:                    []string{},
-		Refresh:                   statusCapacityProvider(ctx, conn, id),
+		Refresh:                   statusCapacityProvider(ctx, conn, name),
 		Timeout:                   timeout,
 		Delay:                     time.Second * 5,
 		ContinuousTargetOccurence: 2,
@@ -377,9 +384,9 @@ func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, id st
 	return nil, smarterr.NewError(err)
 }
 
-func statusCapacityProvider(ctx context.Context, conn *lambda.Client, id string) sdkretry.StateRefreshFunc {
+func statusCapacityProvider(ctx context.Context, conn *lambda.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := findCapacityProviderByName(ctx, conn, id)
+		out, err := findCapacityProviderByName(ctx, conn, name)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
