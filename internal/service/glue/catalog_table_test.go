@@ -149,6 +149,16 @@ func TestAccGlueCatalogTable_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "view_expanded_text", "view_expanded_text_1"),
 					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "param1_val"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "SPARK"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "3.0"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
 				),
 			},
 			{
@@ -229,6 +239,16 @@ func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "view_expanded_text", "view_expanded_text_1"),
 					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "param1_val"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "SPARK"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "3.0"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
 				),
 			},
 		},
@@ -290,6 +310,16 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "view_expanded_text", "view_expanded_text_1"),
 					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "param1_val"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "SPARK"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "3.0"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
 				),
 			},
 			{
@@ -827,6 +857,17 @@ resource "aws_glue_catalog_table" "test" {
 
   parameters = {
     param1 = "param1_val"
+  }
+
+  view_definition {
+    representations {
+      dialect               = "SPARK"
+      dialect_version       = "3.0"
+      validation_connection = "test-connection"
+    }
+    is_protected = true
+    definer      = "test-user"
+		sub_objects  = ["object_1", "object_2"]
   }
 }
 `, rName, desc)
@@ -1508,10 +1549,13 @@ func TestAccGlueCatalogTable_viewDefinition(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "SPARK"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "3.0"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
 				),
 			},
 			{
@@ -1537,11 +1581,12 @@ resource "aws_glue_catalog_table" "test" {
   view_definition {
     representations {
       dialect               = "SPARK"
-      dialect_version       = "3.0"
+      dialect_version       = "1.0"
       validation_connection = "test-connection"
     }
     is_protected = true
     definer      = "test-user"
+		sub_objects  = ["object_1", "object_2"]
   }
 }
 `, rName)
