@@ -37,6 +37,13 @@ The following arguments are required:
 * `vpc_config` - (Required) Configuration block for VPC settings. See [VPC Config](#vpc_config) below.
 * `permissions_config` - (Required) Configuration block for permissions settings. See [Permissions Config](#permissions_config) below.
 
+The following arguments are optional:
+
+* `capacity_provider_scaling_policy` - (Optional) Configuration block for scaling policy settings. See [Capacity Provider Scaling Policy](#capacity_provider_scaling_policy) below.
+* `instance_requirements` - (Optional) Configuration block for instance requirements settings. See [Instance Requirements](#instance_requirements) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
 ### vpc_config
 
 * `subnet_ids` - (Required) List of subnet IDs for the VPC.
@@ -45,13 +52,6 @@ The following arguments are required:
 ### permissions_config
 
 * `capacity_provider_operator_role_arn` - (Required) The ARN of the IAM role that allows Lambda to manage the Capacity Provider.
-
-The following arguments are optional:
-
-* `capacity_provider_scaling_policy` - (Optional) Configuration block for scaling policy settings. See [Capacity Provider Scaling Policy](#capacity_provider_scaling_policy) below.
-* `instance_requirements` - (Optional) Configuration block for instance requirements settings. See [Instance Requirements](#instance_requirements) below.
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### capacity_provider_scaling_policy
 

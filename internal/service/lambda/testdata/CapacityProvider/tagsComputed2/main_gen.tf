@@ -66,7 +66,8 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
         "ec2:DescribeSubnets",
         "ec2:DescribeInstanceTypeOfferings",
         "ec2:RunInstances",
-		"ec2:TerminateInstances"
+		"ec2:TerminateInstances",
+		"ec2:AttachNetworkInterface"
       ],
       "Resource": [
         "*"
