@@ -664,43 +664,50 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 
 	switch availabilityMode := awstypes.AvailabilityMode(diff.Get("availability_mode").(string)); availabilityMode {
 	case awstypes.AvailabilityModeRegional:
-		if diff.Id() != "" && diff.HasChange("availability_zone_address") {
-			o, n := diff.GetChange("availability_zone_address")
-			os, ns := o.(*schema.Set), n.(*schema.Set)
-			if (os.Len() > 0 && ns.Len() == 0) || (ns.Len() > 0 && os.Len() == 0) {
-				if err := diff.SetNewComputed("regional_nat_gateway_auto_mode"); err != nil {
-					return fmt.Errorf("setting regional_nat_gateway_auto_mode to Computed: %w", err)
-				}
-				if err := diff.ForceNew("regional_nat_gateway_auto_mode"); err != nil {
-					return fmt.Errorf("setting regional_nat_gateway_auto_mode to ForceNew: %w", err)
-				}
-			}
-			// regional_nat_gateway_address should recompute when AZ addresses actually change.
-			if !EqualityFuncNATGatewayAvailabilityZoneAddressSet(os, ns) {
-				if err := diff.SetNewComputed("regional_nat_gateway_address"); err != nil {
-					return fmt.Errorf("setting regional_nat_gateway_address to NewComputed: %w", err)
-				}
-			}
-		}
-		n := diff.Get("availability_zone_address").(*schema.Set)
-		for _, v := range n.List() {
-			m, ok := v.(map[string]any)
-			if !ok {
-				continue
-			}
-			var az, azid string
-			if v, ok := m[names.AttrAvailabilityZone]; ok {
-				az = v.(string)
-			}
-			if v, ok := m["availability_zone_id"]; ok {
-				azid = v.(string)
-			}
-			if (az != "" && azid != "") || (az == "" && azid == "") {
-				return fmt.Errorf("Exactly one of availability_zone or availability_zone_id must be specified: availability_zone=%q availability_zone_id=%q", az, azid)
-			}
+		if err := validateRegionalNATGatewayAvailabilityZoneAddress(diff); err != nil {
+			return err
 		}
 	}
 
+	return nil
+}
+
+func validateRegionalNATGatewayAvailabilityZoneAddress(diff *schema.ResourceDiff) error {
+	if diff.Id() != "" && diff.HasChange("availability_zone_address") {
+		o, n := diff.GetChange("availability_zone_address")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		if (os.Len() > 0 && ns.Len() == 0) || (ns.Len() > 0 && os.Len() == 0) {
+			if err := diff.SetNewComputed("regional_nat_gateway_auto_mode"); err != nil {
+				return fmt.Errorf("setting regional_nat_gateway_auto_mode to Computed: %w", err)
+			}
+			if err := diff.ForceNew("regional_nat_gateway_auto_mode"); err != nil {
+				return fmt.Errorf("setting regional_nat_gateway_auto_mode to ForceNew: %w", err)
+			}
+		}
+		// regional_nat_gateway_address should recompute when AZ addresses actually change.
+		if !EqualityFuncNATGatewayAvailabilityZoneAddressSet(os, ns) {
+			if err := diff.SetNewComputed("regional_nat_gateway_address"); err != nil {
+				return fmt.Errorf("setting regional_nat_gateway_address to NewComputed: %w", err)
+			}
+		}
+	}
+	n := diff.Get("availability_zone_address").(*schema.Set)
+	for _, v := range n.List() {
+		m, ok := v.(map[string]any)
+		if !ok {
+			continue
+		}
+		var az, azid string
+		if v, ok := m[names.AttrAvailabilityZone]; ok {
+			az = v.(string)
+		}
+		if v, ok := m["availability_zone_id"]; ok {
+			azid = v.(string)
+		}
+		if (az != "" && azid != "") || (az == "" && azid == "") {
+			return fmt.Errorf("Exactly one of availability_zone or availability_zone_id must be specified: availability_zone=%q availability_zone_id=%q", az, azid)
+		}
+	}
 	return nil
 }
 
