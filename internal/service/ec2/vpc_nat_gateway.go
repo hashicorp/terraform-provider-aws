@@ -536,7 +536,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 			// Cache AZ ID→Name map to avoid redundant API calls
 			var azIDtoNameMap map[string]string
-			oldMap, err := processAZAddressSetWithCache(ctx, conn, os, azIDtoNameMap)
+			oldMap, err := processAZAddressSet(ctx, conn, os, azIDtoNameMap)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "processing old availability zone address set: %s", err)
 			}
@@ -546,7 +546,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					return sdkdiag.AppendErrorf(diags, "retrieving availability zone ID to name map: %s", err)
 				}
 			}
-			newMap, err := processAZAddressSetWithCache(ctx, conn, ns, azIDtoNameMap)
+			newMap, err := processAZAddressSet(ctx, conn, ns, azIDtoNameMap)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "processing new availability zone address set: %s", err)
 			}
@@ -826,11 +826,7 @@ func makeAZIDtoNameMap(ctx context.Context, conn *ec2.Client) (map[string]string
 	return azIDtoNameMap, nil
 }
 
-func processAZAddressSet(ctx context.Context, conn *ec2.Client, s *schema.Set) (map[string]*schema.Set, error) {
-	return processAZAddressSetWithCache(ctx, conn, s, nil)
-}
-
-func processAZAddressSetWithCache(ctx context.Context, conn *ec2.Client, s *schema.Set, azIDtoNameMap map[string]string) (map[string]*schema.Set, error) {
+func processAZAddressSet(ctx context.Context, conn *ec2.Client, s *schema.Set, azIDtoNameMap map[string]string) (map[string]*schema.Set, error) {
 	sl := s.List()
 	result := make(map[string]*schema.Set)
 	for _, addr := range sl {
