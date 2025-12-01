@@ -454,6 +454,31 @@ func resourceCatalogTable() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"sub_object_version_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
+						},
+						"view_version_id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"view_version_token": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"last_refresh_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"FULL",
+								"INCREMENTAL",
+							}, false),
+						},
+						"refresh_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -716,6 +741,10 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 
 	if v, ok := d.GetOk("target_table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		tableInput.TargetTable = expandTableTargetTable(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("view_definition"); ok {
+		tableInput.ViewDefinition = expandViewDefinition(v.([]any))
 	}
 
 	return tableInput
@@ -1230,4 +1259,62 @@ func flattenNonManagedParameters(table *awstypes.Table) map[string]string {
 		delete(allParameters, "metadata_location")
 	}
 	return allParameters
+}
+
+func expandViewDefinition(l []any) *awstypes.ViewDefinitionInput {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	s := l[0].(map[string]any)
+	viewDefinition := &awstypes.ViewDefinitionInput{}
+
+	if v, ok := s["definer"]; ok && v != nil {
+		viewDefinition.Definer = aws.String(v.(string))
+	}
+
+	if v, ok := s["is_protected"]; ok && v != nil {
+		viewDefinition.IsProtected = aws.Bool(v.(bool))
+	}
+
+	if v, ok := s["representations"]; ok && v != nil {
+		viewDefinition.Representations = expandViewRepresentationInput(v.([]any))
+	}
+
+	if v, ok := s["input_format"]; ok && v != nil {
+		viewDefinition.SubObjects = flex.ExpandStringValueList(v.([]any))
+	}
+
+	return viewDefinition
+}
+
+func expandViewRepresentationInput(l []any) []awstypes.ViewRepresentationInput {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	s := l[0].(map[string]any)
+	viewRepresentationInput := awstypes.ViewRepresentationInput{}
+
+	if v, ok := s["dialect"]; ok && v != nil {
+		viewRepresentationInput.Dialect = awstypes.ViewDialect(v.(string))
+	}
+
+	if v, ok := s["dialect_version"]; ok && v != nil {
+		viewRepresentationInput.DialectVersion = aws.String(v.(string))
+	}
+
+	if v, ok := s["validation_connection"]; ok && v != nil {
+		viewRepresentationInput.ValidationConnection = aws.String(v.(string))
+	}
+
+	if v, ok := s["view_expanded_text"]; ok && v != nil {
+		viewRepresentationInput.ViewExpandedText = aws.String(v.(string))
+	}
+
+	if v, ok := s["view_original_text"]; ok && v != nil {
+		viewRepresentationInput.ViewOriginalText = aws.String(v.(string))
+	}
+
+	return []awstypes.ViewRepresentationInput{viewRepresentationInput}
 }

@@ -149,16 +149,6 @@ func TestAccGlueCatalogTable_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "view_expanded_text", "view_expanded_text_1"),
 					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "param1_val"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "SPARK"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "3.0"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
 				),
 			},
 			{
@@ -239,16 +229,6 @@ func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "view_expanded_text", "view_expanded_text_1"),
 					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "param1_val"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "SPARK"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "3.0"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
 				),
 			},
 		},
@@ -310,16 +290,6 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "view_expanded_text", "view_expanded_text_1"),
 					resource.TestCheckResourceAttr(resourceName, "table_type", "VIRTUAL_VIEW"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "param1_val"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "SPARK"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "3.0"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
 				),
 			},
 			{
@@ -857,17 +827,6 @@ resource "aws_glue_catalog_table" "test" {
 
   parameters = {
     param1 = "param1_val"
-  }
-
-  view_definition {
-    representations {
-      dialect               = "SPARK"
-      dialect_version       = "3.0"
-      validation_connection = "test-connection"
-    }
-    is_protected = true
-    definer      = "test-user"
-		sub_objects  = ["object_1", "object_2"]
   }
 }
 `, rName, desc)
@@ -1531,7 +1490,7 @@ resource "aws_glue_catalog_table" "test" {
 }
 `, rName, columnComment)
 }
-func TestAccGlueCatalogTable_viewDefinition(t *testing.T) {
+func TestAccGlueCatalogTable_viewDefinition_spark(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_catalog_table.test"
@@ -1543,19 +1502,24 @@ func TestAccGlueCatalogTable_viewDefinition(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCatalogTableConfig_viewDefinition(rName),
+				Config: testAccCatalogTableConfig_viewDefinition_spark(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "SPARK"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.refresh_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.last_refresh_type", "FULL"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_object_version_ids.0", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_object_version_ids.1", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.view_version_id", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.view_version_token", "view_version_token"),
 				),
 			},
 			{
@@ -1567,7 +1531,175 @@ func TestAccGlueCatalogTable_viewDefinition(t *testing.T) {
 	})
 }
 
-func testAccCatalogTableConfig_viewDefinition(rName string) string {
+func TestAccGlueCatalogTable_viewDefinition_athena(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_viewDefinition_athena(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "ATHENA"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.refresh_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.last_refresh_type", "FULL"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_object_version_ids.0", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_object_version_ids.1", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.view_version_id", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.view_version_token", "view_version_token"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueCatalogTable_viewDefinition_redshift(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_viewDefinition_redshift(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "REDSHIFT"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.refresh_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.last_refresh_type", "FULL"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_object_version_ids.0", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_object_version_ids.1", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.view_version_id", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.view_version_token", "view_version_token"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCatalogTableConfig_viewDefinition_spark(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+	storage_descriptor {
+    bucket_columns            = ["bucket_column_1"]
+    compressed                = false
+    input_format              = "SequenceFileInputFormat"
+    location                  = "my_location"
+    number_of_buckets         = 1
+    output_format             = "SequenceFileInputFormat"
+    stored_as_sub_directories = false
+
+    parameters = {
+      param1 = "param1_val"
+    }
+
+    columns {
+      name    = "my_column_1"
+      type    = "int"
+      comment = "my_column1_comment"
+    }
+
+    columns {
+      name    = "my_column_2"
+      type    = "string"
+      comment = "my_column2_comment"
+    }
+
+    ser_de_info {
+      name = "ser_de_name"
+
+      parameters = {
+        param1 = "param_val_1"
+      }
+
+      serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
+    }
+
+    sort_columns {
+      column     = "my_column_1"
+      sort_order = 1
+    }
+
+    skewed_info {
+      skewed_column_names = [
+        "my_column_1",
+      ]
+
+      skewed_column_value_location_maps = {
+        my_column_1 = "my_column_1_val_loc_map"
+      }
+
+      skewed_column_values = [
+        "skewed_val_1",
+      ]
+    }
+  }
+
+  view_definition {
+    representations {
+      dialect               = "SPARK"
+      dialect_version       = "1.0"
+    }
+    last_refresh_type = "FULL"
+		refresh_seconds   = 3600
+    is_protected = true
+    definer      = "test-user"
+		sub_objects  = ["object_1", "object_2"]
+		sub_object_version_ids = [1, 2]
+		view_version_id 			 = 1
+		view_version_token		 = "view_version_token"
+  }
+}
+`, rName)
+}
+
+func testAccCatalogTableConfig_viewDefinition_athena(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -1580,13 +1712,48 @@ resource "aws_glue_catalog_table" "test" {
 
   view_definition {
     representations {
-      dialect               = "SPARK"
+      dialect               = "ATHENA"
       dialect_version       = "1.0"
       validation_connection = "test-connection"
     }
+    last_refresh_type = "FULL"
+		refresh_seconds   = 3600
     is_protected = true
     definer      = "test-user"
 		sub_objects  = ["object_1", "object_2"]
+		sub_object_version_ids = [1, 2]
+		view_version_id 			 = 1
+		view_version_token		 = "view_version_token"
+  }
+}
+`, rName)
+}
+
+func testAccCatalogTableConfig_viewDefinition_redshift(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  view_definition {
+    representations {
+      dialect               = "REDSHIFT"
+      dialect_version       = "1.0"
+      validation_connection = "test-connection"
+    }
+		last_refresh_type = "FULL"
+		refresh_seconds   = 3600
+    is_protected = true
+    definer      = "test-user"
+		sub_objects  = ["object_1", "object_2"]
+		sub_object_version_ids = [1, 2]
+		view_version_id 			 = 1
+		view_version_token		 = "view_version_token"
   }
 }
 `, rName)
