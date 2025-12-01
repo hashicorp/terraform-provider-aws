@@ -159,9 +159,9 @@ func (r *resourceCapacityProvider) Create(ctx context.Context, request resource.
 	}
 	input.Tags = getTagsIn(ctx)
 
-	out, err := tfresource.RetryWhenIsAErrorMessageContains[*lambda.CreateCapacityProviderOutput, *awstypes.InvalidParameterValueException](ctx, iamPropagationTimeout, func(ctx context.Context) (*lambda.CreateCapacityProviderOutput, error) {
+	out, err := tfresource.RetryWhenIsA[*lambda.CreateCapacityProviderOutput, *awstypes.InvalidParameterValueException](ctx, iamPropagationTimeout, func(ctx context.Context) (*lambda.CreateCapacityProviderOutput, error) {
 		return conn.CreateCapacityProvider(ctx, &input)
-	}, "doesn't have permission to perform")
+	})
 
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
@@ -173,16 +173,16 @@ func (r *resourceCapacityProvider) Create(ctx context.Context, request resource.
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, out.CapacityProvider, &plan, flex.WithFieldNamePrefix(capacityProviderNamePrefix)))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitCapacityProviderActive(ctx, conn, plan.Name.ValueString(), createTimeout)
+	output, err := waitCapacityProviderActive(ctx, conn, plan.Name.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(names.AttrName), plan.Name.ValueString()))
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
+		return
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &plan, flex.WithFieldNamePrefix(capacityProviderNamePrefix)))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -198,7 +198,7 @@ func (r *resourceCapacityProvider) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	out, err := findCapacityProviderByName(ctx, conn, state.Name.ValueString())
+	output, err := findCapacityProviderByName(ctx, conn, state.Name.ValueString())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -209,7 +209,7 @@ func (r *resourceCapacityProvider) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix(capacityProviderNamePrefix)))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &state, flex.WithFieldNamePrefix(capacityProviderNamePrefix)))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -240,17 +240,17 @@ func (r *resourceCapacityProvider) Update(ctx context.Context, request resource.
 			return
 		}
 
-		out, err := conn.UpdateCapacityProvider(ctx, &input)
+		output, err := conn.UpdateCapacityProvider(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.Name.String())
 			return
 		}
-		if out == nil {
+		if output == nil {
 			smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 			return
 		}
 
-		smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix(capacityProviderNamePrefix)))
+		smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &plan, flex.WithFieldNamePrefix(capacityProviderNamePrefix)))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -349,7 +349,7 @@ func (r *resourceCapacityProvider) ValidateConfig(ctx context.Context, request r
 	}
 }
 
-func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
+func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.CapacityProvider, error) { //nolint:unparam
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.CapacityProviderStatePending),
 		Target:                    enum.Slice(awstypes.CapacityProviderStateActive),
@@ -366,7 +366,7 @@ func waitCapacityProviderActive(ctx context.Context, conn *lambda.Client, name s
 	return nil, smarterr.NewError(err)
 }
 
-func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.CapacityProvider, error) {
+func waitCapacityProviderDeleted(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.CapacityProvider, error) { //nolint:unparam
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.CapacityProviderStatePending, awstypes.CapacityProviderStateDeleting),
 		Target:                    []string{},
