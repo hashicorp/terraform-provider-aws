@@ -1,5 +1,5 @@
 ---
-subcategory: "EKS (Elastic Kubernetes Service)"
+subcategory: "EKS (Elastic Kubernetes)"
 layout: "aws"
 page_title: "AWS: aws_eks_capability"
 description: |-
