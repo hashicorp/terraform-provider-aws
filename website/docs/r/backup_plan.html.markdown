@@ -51,6 +51,7 @@ This resource supports the following arguments:
 
 * `rule_name` - (Required) An display name for a backup rule.
 * `target_vault_name` - (Required) The name of a logical container where backups are stored.
+* `target_logically_air_gapped_backup_vault_arn` - (Optional) The ARN of a logically air-gapped vault. ARN must be in the same account and region. If provided, supported fully managed resources back up directly to logically air-gapped vault, while other supported resources create a temporary (billable) snapshot in backup vault, then copy it to logically air-gapped vault. Unsupported resources only back up to the specified backup vault.
 * `schedule` - (Optional) A CRON expression specifying when AWS Backup initiates a backup job.
 * `schedule_expression_timezone` - (Optional) The timezone in which the schedule expression is set. Default value: `"Etc/UTC"`.
 * `enable_continuous_backup` - (Optional) Enable continuous backups for supported resources.
