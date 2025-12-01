@@ -97,6 +97,7 @@ func resourceNATGateway() *schema.Resource {
 						"availability_zone_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -708,8 +709,9 @@ func validateRegionalNATGatewayAvailabilityZoneAddress(diff *schema.ResourceDiff
 		if v, ok := m["availability_zone_id"]; ok {
 			azid = v.(string)
 		}
-		if (az != "" && azid != "") || (az == "" && azid == "") {
-			return fmt.Errorf("Exactly one of availability_zone or availability_zone_id must be specified: availability_zone=%q availability_zone_id=%q", az, azid)
+		// Allow both if they're both set (AWS returns both), but require at least one
+		if az == "" && azid == "" {
+			return fmt.Errorf("At least one of availability_zone or availability_zone_id must be specified")
 		}
 	}
 	return nil

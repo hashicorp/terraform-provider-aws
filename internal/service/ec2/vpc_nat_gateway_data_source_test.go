@@ -101,6 +101,7 @@ func TestAccVPCNATGatewayDataSource_availabilityModeRegional(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceNameByID, "regional_nat_gateway_address.0.association_id", resourceName, "regional_nat_gateway_address.0.association_id"),
 					resource.TestCheckResourceAttrPair(dataSourceNameByID, "regional_nat_gateway_address.0.availability_zone", resourceName, "regional_nat_gateway_address.0.availability_zone"),
 					resource.TestCheckResourceAttrPair(dataSourceNameByID, "regional_nat_gateway_address.0.availability_zone_id", resourceName, "regional_nat_gateway_address.0.availability_zone_id"),
+					resource.TestCheckResourceAttrPair(dataSourceNameByID, "regional_nat_gateway_address.0.network_interface_id", resourceName, "regional_nat_gateway_address.0.network_interface_id"),
 					resource.TestCheckResourceAttrPair(dataSourceNameByID, "regional_nat_gateway_address.0.public_ip", resourceName, "regional_nat_gateway_address.0.public_ip"),
 					resource.TestCheckResourceAttrPair(dataSourceNameByID, "regional_nat_gateway_address.0.status", resourceName, "regional_nat_gateway_address.0.status"),
 					resource.TestCheckResourceAttrPair(dataSourceNameByID, "route_table_id", resourceName, "route_table_id"),
