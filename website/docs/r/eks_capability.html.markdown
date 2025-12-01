@@ -18,7 +18,7 @@ resource "aws_eks_capability" "example" {
   capability_name             = "argocd"
   type                        = "ARGOCD"
   role_arn                    = aws_iam_role.example.arn
-  delete_propagation_policy   = "DELETE"
+  delete_propagation_policy   = "RETAIN"
 
   configuration {
     argo_cd {
@@ -41,29 +41,61 @@ This resource supports the following arguments:
 
 * `capability_name` - (Required) Name of the capability. Must be unique within the cluster.
 * `cluster_name` - (Required) Name of the EKS cluster.
-* `type` - (Required) Type of the capability (e.g., `ARGOCD`).
+* `configuration` - (Optional) Configuration for the capability. See [`configuration`](#configuration) below.
+* `delete_propagation_policy` - (Required) Delete propagation policy for the capability. Valid values: `RETAIN`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `role_arn` - (Required) ARN of the IAM role to associate with the capability.
-* `delete_propagation_policy` - (Required) Delete propagation policy for the capability. Valid values are `DELETE` and `ORPHAN`.
-* `configuration` - (Optional) Configuration for the capability.
-  * `argo_cd` - (Optional) ArgoCD configuration.
-    * `aws_idc` - (Optional) AWS IAM Identity Center configuration.
-      * `idc_instance_arn` - (Required) ARN of the IAM Identity Center instance.
-      * `idc_region` - (Optional) Region of the IAM Identity Center instance.
-    * `namespace` - (Optional) Kubernetes namespace for ArgoCD.
-    * `network_access` - (Optional) Network access configuration.
-      * `vpce_ids` - (Optional) VPC Endpoint IDs.
-    * `rbac_role_mapping` - (Optional) RBAC role mappings.
-      * `identity` - (Required) List of identities.
-        * `id` - (Required) Identity ID.
-        * `type` - (Required) Identity type.
-      * `role` - (Required) ArgoCD role.
 * `tags` - (Optional) Key-value map of resource tags.
+* `type` - (Required) Type of the capability. Valid values: `ACK`, `KRO`, `ARGOCD`.
+
+### `configuration`
+
+The `configuration` block contains the following:
+
+* `argo_cd` - (Optional) ArgoCD configuration. See [`argo_cd`](#argo_cd) below.
+
+### `argo_cd`
+
+The `argo_cd` block contains the following:
+
+* `aws_idc` - (Optional) AWS IAM Identity Center configuration. See [`aws_idc`](#aws_idc) below.
+* `namespace` - (Optional) Kubernetes namespace for ArgoCD.
+* `network_access` - (Optional) Network access configuration. See [`network_access`](#network_access) below.
+* `rbac_role_mapping` - (Optional) RBAC role mappings. See [`rbac_role_mapping`](#rbac_role_mapping) below.
+
+### `aws_idc`
+
+The `aws_idc` block contains the following:
+
+* `idc_instance_arn` - (Required) ARN of the IAM Identity Center instance.
+* `idc_region` - (Optional) Region of the IAM Identity Center instance.
+
+### `network_access`
+
+The `network_access` block contains the following:
+
+* `vpce_ids` - (Optional) VPC Endpoint IDs.
+
+### `rbac_role_mapping`
+
+The `rbac_role_mapping` block contains the following:
+
+* `identity` - (Required) List of identities. See [`identity`](#identity) below.
+* `role` - (Required) ArgoCD role. Valid values: `ADMIN`, `EDITOR`, `VIEWER`.
+
+### `identity`
+
+The `identity` block contains the following:
+
+* `id` - (Required) Identity ID.
+* `type` - (Required) Identity type. Valid values: `SSO_USER`, `SSO_GROUP`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the capability.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Version of the capability.
 
 ## Timeouts
