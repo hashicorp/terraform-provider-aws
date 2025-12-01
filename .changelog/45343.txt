@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_efs_file_system: Fix perpetual drift when `protection.replication_overwrite` is in `REPLICATING` state for replication destination file systems
+```
