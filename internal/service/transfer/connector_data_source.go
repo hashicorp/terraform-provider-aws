@@ -8,9 +8,11 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -44,7 +46,8 @@ func (d *connectorDataSource) Schema(ctx context.Context, req datasource.SchemaR
 			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
-			"as2_config": framework.DataSourceComputedListOfObjectAttribute[dsAs2Config](ctx),
+			"as2_config":    framework.DataSourceComputedListOfObjectAttribute[dsAs2Config](ctx),
+			"egress_config": framework.DataSourceComputedListOfObjectAttribute[dsEgressConfig](ctx),
 			names.AttrID: schema.StringAttribute{
 				CustomType: fwtypes.RegexpType,
 				Required:   true,
@@ -98,10 +101,18 @@ func (d *connectorDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, description.Connector, &data)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, description.Connector, &data, flex.WithIgnoredFieldNamesAppend("EgressConfig"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Manually flatten EgressConfig since it's a union type
+	egressConfig, diags := flattenDataSourceEgressConfig(ctx, description.Connector.EgressConfig)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	data.EgressConfig = egressConfig
 
 	tags := keyValueTags(ctx, description.Connector.Tags).IgnoreAWS().IgnoreConfig(d.Meta().IgnoreTagsConfig(ctx))
 	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
@@ -111,16 +122,17 @@ func (d *connectorDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 type connectorDataSourceModel struct {
 	framework.WithRegionModel
-	ARN                             types.String                                  `tfsdk:"arn"`
-	AccessRole                      types.String                                  `tfsdk:"access_role"`
-	As2Config                       fwtypes.ListNestedObjectValueOf[dsAs2Config]  `tfsdk:"as2_config"`
-	ConnectorId                     fwtypes.Regexp                                `tfsdk:"id"`
-	LoggingRole                     types.String                                  `tfsdk:"logging_role"`
-	SecurityPolicyName              types.String                                  `tfsdk:"security_policy_name"`
-	ServiceManagedEgressIpAddresses fwtypes.ListOfString                          `tfsdk:"service_managed_egress_ip_addresses"`
-	SftpConfig                      fwtypes.ListNestedObjectValueOf[dsSftpConfig] `tfsdk:"sftp_config"`
-	Tags                            tftags.Map                                    `tfsdk:"tags"`
-	Url                             types.String                                  `tfsdk:"url"`
+	ARN                             types.String                                    `tfsdk:"arn"`
+	AccessRole                      types.String                                    `tfsdk:"access_role"`
+	As2Config                       fwtypes.ListNestedObjectValueOf[dsAs2Config]    `tfsdk:"as2_config"`
+	ConnectorId                     fwtypes.Regexp                                  `tfsdk:"id"`
+	EgressConfig                    fwtypes.ListNestedObjectValueOf[dsEgressConfig] `tfsdk:"egress_config"`
+	LoggingRole                     types.String                                    `tfsdk:"logging_role"`
+	SecurityPolicyName              types.String                                    `tfsdk:"security_policy_name"`
+	ServiceManagedEgressIpAddresses fwtypes.ListOfString                            `tfsdk:"service_managed_egress_ip_addresses"`
+	SftpConfig                      fwtypes.ListNestedObjectValueOf[dsSftpConfig]   `tfsdk:"sftp_config"`
+	Tags                            tftags.Map                                      `tfsdk:"tags"`
+	Url                             types.String                                    `tfsdk:"url"`
 }
 
 type dsAs2Config struct {
@@ -138,4 +150,62 @@ type dsAs2Config struct {
 type dsSftpConfig struct {
 	TrustedHostKeys fwtypes.ListValueOf[types.String] `tfsdk:"trusted_host_keys"`
 	UserSecretId    types.String                      `tfsdk:"user_secret_id"`
+}
+
+type dsEgressConfig struct {
+	VpcLattice fwtypes.ListNestedObjectValueOf[dsVpcLatticeEgressConfig] `tfsdk:"vpc_lattice"`
+}
+
+type dsVpcLatticeEgressConfig struct {
+	ResourceConfigurationArn types.String `tfsdk:"resource_configuration_arn"`
+	PortNumber               types.Int64  `tfsdk:"port_number"`
+}
+
+func flattenDataSourceEgressConfig(ctx context.Context, apiObject awstypes.DescribedConnectorEgressConfig) (fwtypes.ListNestedObjectValueOf[dsEgressConfig], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if apiObject == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[dsEgressConfig](ctx), diags
+	}
+
+	var egressConfig dsEgressConfig
+
+	switch v := apiObject.(type) {
+	case *awstypes.DescribedConnectorEgressConfigMemberVpcLattice:
+		vpcLattice, d := flattenDataSourceVpcLatticeEgressConfig(ctx, &v.Value)
+		diags.Append(d...)
+		egressConfig.VpcLattice = vpcLattice
+	}
+
+	listValue, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &egressConfig)
+	diags.Append(d...)
+
+	return listValue, diags
+}
+
+func flattenDataSourceVpcLatticeEgressConfig(ctx context.Context, apiObject *awstypes.DescribedConnectorVpcLatticeEgressConfig) (fwtypes.ListNestedObjectValueOf[dsVpcLatticeEgressConfig], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if apiObject == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[dsVpcLatticeEgressConfig](ctx), diags
+	}
+
+	var vpcLatticeConfig dsVpcLatticeEgressConfig
+
+	if v := apiObject.ResourceConfigurationArn; v != nil {
+		vpcLatticeConfig.ResourceConfigurationArn = types.StringValue(*v)
+	} else {
+		vpcLatticeConfig.ResourceConfigurationArn = types.StringNull()
+	}
+
+	if v := apiObject.PortNumber; v != nil {
+		vpcLatticeConfig.PortNumber = types.Int64Value(int64(*v))
+	} else {
+		vpcLatticeConfig.PortNumber = types.Int64Null()
+	}
+
+	listValue, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &vpcLatticeConfig)
+	diags.Append(d...)
+
+	return listValue, diags
 }
