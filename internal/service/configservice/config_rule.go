@@ -29,7 +29,8 @@ import (
 
 // @SDKResource("aws_config_config_rule", name="Config Rule")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigRule")
 func resourceConfigRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigRulePut,

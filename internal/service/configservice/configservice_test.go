@@ -23,7 +23,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"scopeTagKey":        testAccConfigRule_Scope_TagKey,
 			"scopeTagKeyEmpty":   testAccConfigRule_Scope_TagKey_Empty,
 			"scopeTagValue":      testAccConfigRule_Scope_TagValue,
-			"tags":               testAccConfigRule_tags,
+			"tags":               testAccConfigServiceConfigRule_tagsSerial,
 			acctest.CtDisappears: testAccConfigRule_disappears,
 		},
 		"ConfigurationRecorderStatus": {
