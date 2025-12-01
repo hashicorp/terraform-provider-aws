@@ -76,8 +76,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EKS Capability can be imported using the `cluster_name` and `capability_name` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Capability using the `cluster_name` and `capability_name` separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_eks_capability.example
+  id = "my-cluster,my-capability"
+}
 ```
-$ terraform import aws_eks_capability.example my-cluster:my-capability
+
+Using `terraform import`, import EKS Capability using the `cluster_name` and `capability_name` separated by a comma (`,`). For example:
+
+```console
+$ terraform import aws_eks_capability.example my-cluster,my-capability
 ```

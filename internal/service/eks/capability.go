@@ -26,8 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_eks_capability", name="Capability")
-// @Tags(identifierAttribute="arn")
 func resourceCapability() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCapabilityCreate,

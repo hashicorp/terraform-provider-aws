@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -22,6 +23,7 @@ import (
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -296,6 +298,8 @@ func (r *capabilityResource) Update(ctx context.Context, request resource.Update
 		// Additional fields.
 		input.ClientRequestToken = aws.String(sdkid.UniqueId())
 
+		// TODO ArgoCD configuration update handling.
+
 		output, err := conn.UpdateCapability(ctx, &input)
 
 		if err != nil {
@@ -346,6 +350,22 @@ func (r *capabilityResource) Delete(ctx context.Context, request resource.Delete
 
 		return
 	}
+}
+
+func (r *capabilityResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	const (
+		capability = 2
+	)
+	parts, err := intflex.ExpandResourceId(request.ID, capability, true)
+
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
+		return
+	}
+
+	response.State.SetAttribute(ctx, path.Root(names.AttrClusterName), parts[0])
+	response.State.SetAttribute(ctx, path.Root("capability_name"), parts[1])
 }
 
 type capabilityResourceModel struct {

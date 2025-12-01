@@ -8,11 +8,17 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -35,17 +41,23 @@ func TestAccEKSCapability_basic(t *testing.T) {
 				Config: testAccCapabilityConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapabilityExists(ctx, resourceName, &capability),
-					resource.TestCheckResourceAttr(resourceName, "capability_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
-					resource.TestCheckResourceAttr(resourceName, "type", "KRO"),
-					resource.TestCheckResourceAttr(resourceName, "delete_propagation_policy", "RETAIN"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("eks", regexache.MustCompile(`capability/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capability_name"), knownvalue.StringExact(rName)),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, "capability_name"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -70,6 +82,14 @@ func TestAccEKSCapability_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceCapability(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -77,7 +97,7 @@ func TestAccEKSCapability_disappears(t *testing.T) {
 
 func TestAccEKSCapability_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var capability1, capability2, capability3 types.Capability
+	var capability types.Capability
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
 
@@ -90,32 +110,58 @@ func TestAccEKSCapability_tags(t *testing.T) {
 			{
 				Config: testAccCapabilityConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapabilityExists(ctx, resourceName, &capability1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					testAccCheckCapabilityExists(ctx, resourceName, &capability),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, "capability_name"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
 				Config: testAccCapabilityConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapabilityExists(ctx, resourceName, &capability2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					testAccCheckCapabilityExists(ctx, resourceName, &capability),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
 				Config: testAccCapabilityConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapabilityExists(ctx, resourceName, &capability3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					testAccCheckCapabilityExists(ctx, resourceName, &capability),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -128,18 +174,16 @@ func testAccCheckCapabilityExists(ctx context.Context, n string, v *types.Capabi
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		clusterName, capabilityName, err := tfeks.CapabilityParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
-		output, err := tfeks.FindCapabilityByTwoPartKey(ctx, conn, clusterName, capabilityName)
+
+		output, err := tfeks.FindCapabilityByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["capability_name"])
+
 		if err != nil {
 			return err
 		}
 
 		*v = *output
+
 		return nil
 	}
 }
@@ -153,12 +197,8 @@ func testAccCheckCapabilityDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			clusterName, capabilityName, err := tfeks.CapabilityParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
+			_, err := tfeks.FindCapabilityByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["capability_name"])
 
-			_, err = tfeks.FindCapabilityByTwoPartKey(ctx, conn, clusterName, capabilityName)
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -167,7 +207,7 @@ func testAccCheckCapabilityDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("EKS Capability %s still exists", rs.Primary.ID)
+			return fmt.Errorf("EKS Capability (%s,%s) still exists", rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["capability_name"])
 		}
 
 		return nil
