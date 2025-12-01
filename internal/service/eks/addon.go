@@ -130,6 +130,7 @@ func resourceAddon() *schema.Resource {
 			names.AttrNamespace: {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
