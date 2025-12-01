@@ -161,6 +161,9 @@ type dsVpcLatticeEgressConfig struct {
 	PortNumber               types.Int64  `tfsdk:"port_number"`
 }
 
+// flattenDataSourceEgressConfig manually flattens the union type DescribedConnectorEgressConfig.
+// AutoFlex cannot handle union types (interfaces), so manual flattening with type switching is required.
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
 func flattenDataSourceEgressConfig(ctx context.Context, apiObject awstypes.DescribedConnectorEgressConfig) (fwtypes.ListNestedObjectValueOf[dsEgressConfig], diag.Diagnostics) {
 	var diags diag.Diagnostics
 
@@ -172,7 +175,7 @@ func flattenDataSourceEgressConfig(ctx context.Context, apiObject awstypes.Descr
 
 	switch v := apiObject.(type) {
 	case *awstypes.DescribedConnectorEgressConfigMemberVpcLattice:
-		vpcLattice, d := flattenDataSourceVpcLatticeEgressConfig(ctx, &v.Value)
+		vpcLattice, d := flattenDataSourceVPCLatticeEgressConfig(ctx, &v.Value)
 		diags.Append(d...)
 		egressConfig.VpcLattice = vpcLattice
 	}
@@ -183,7 +186,10 @@ func flattenDataSourceEgressConfig(ctx context.Context, apiObject awstypes.Descr
 	return listValue, diags
 }
 
-func flattenDataSourceVpcLatticeEgressConfig(ctx context.Context, apiObject *awstypes.DescribedConnectorVpcLatticeEgressConfig) (fwtypes.ListNestedObjectValueOf[dsVpcLatticeEgressConfig], diag.Diagnostics) {
+// flattenDataSourceVPCLatticeEgressConfig manually flattens VPC Lattice egress configuration.
+// This is called by flattenDataSourceEgressConfig which handles the union type.
+// nosemgrep:ci.semgrep.framework.manual-flattener-functions
+func flattenDataSourceVPCLatticeEgressConfig(ctx context.Context, apiObject *awstypes.DescribedConnectorVpcLatticeEgressConfig) (fwtypes.ListNestedObjectValueOf[dsVpcLatticeEgressConfig], diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if apiObject == nil {
