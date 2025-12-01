@@ -2383,6 +2383,10 @@ resource "aws_vpn_connection" "test" {
   tags = {
     Name = %[1]q
   }
+
+  depends_on = [
+    aws_dx_gateway_association.test
+  ]
 }
 `, rName, rBgpAsn)
 }
