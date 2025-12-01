@@ -22,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -29,6 +31,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -373,6 +376,142 @@ func (r *capabilityResource) ImportState(ctx context.Context, request resource.I
 
 	response.State.SetAttribute(ctx, path.Root(names.AttrClusterName), parts[0])
 	response.State.SetAttribute(ctx, path.Root("capability_name"), parts[1])
+}
+
+func findCapabilityByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, capabilityName string) (*awstypes.Capability, error) {
+	input := &eks.DescribeCapabilityInput{
+		CapabilityName: aws.String(capabilityName),
+		ClusterName:    aws.String(clusterName),
+	}
+
+	output, err := conn.DescribeCapability(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Capability == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Capability, nil
+}
+
+func findCapabilityUpdateByThreePartKey(ctx context.Context, conn *eks.Client, clusterName, capabilityName, id string) (*awstypes.Update, error) {
+	input := &eks.DescribeUpdateInput{
+		Name:           aws.String(clusterName),
+		UpdateId:       aws.String(id),
+		CapabilityName: aws.String(capabilityName),
+	}
+
+	output, err := conn.DescribeUpdate(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Update == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Update, nil
+}
+
+func statusCapability(ctx context.Context, conn *eks.Client, clusterName, capabilityName string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findCapabilityByTwoPartKey(ctx, conn, clusterName, capabilityName)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func statusCapabilityUpdate(ctx context.Context, conn *eks.Client, clusterName, capabilityName, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findCapabilityUpdateByThreePartKey(ctx, conn, clusterName, capabilityName, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitCapabilityCreated(ctx context.Context, conn *eks.Client, clusterName, capabilityName string, timeout time.Duration) (*awstypes.Capability, error) {
+	stateConf := sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.CapabilityStatusCreating),
+		Target:  enum.Slice(awstypes.CapabilityStatusActive),
+		Refresh: statusCapability(ctx, conn, clusterName, capabilityName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Capability); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitCapabilityDeleted(ctx context.Context, conn *eks.Client, clusterName, capabilityName string, timeout time.Duration) (*awstypes.Capability, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.CapabilityStatusActive, awstypes.CapabilityStatusDeleting),
+		Target:  []string{},
+		Refresh: statusCapability(ctx, conn, clusterName, capabilityName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Capability); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitCapabilityUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterName, capabilityName, id string, timeout time.Duration) (*awstypes.Update, error) {
+	stateConf := sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.UpdateStatusInProgress),
+		Target:  enum.Slice(awstypes.UpdateStatusSuccessful),
+		Refresh: statusCapabilityUpdate(ctx, conn, clusterName, capabilityName, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Update); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 type capabilityResourceModel struct {
