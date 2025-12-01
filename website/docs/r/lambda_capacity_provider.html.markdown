@@ -19,7 +19,7 @@ resource "aws_lambda_capacity_provider" "example" {
   name = "example"
 
   vpc_config {
-    subnet_ids         = aws_subnet.example.*.id
+    subnet_ids         = aws_subnet.example[*].id
     security_group_ids = [aws_security_group.example.id]
   }
 
