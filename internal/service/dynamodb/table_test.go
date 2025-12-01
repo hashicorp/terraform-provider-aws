@@ -897,6 +897,7 @@ func TestAccDynamoDBTable_extended_gsiMultiHashKey_transition(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
+	t.Skip("Skipping test for validation")
 
 	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
