@@ -487,7 +487,7 @@ resource "aws_lambda_function" "example" {
   runtime       = "python3.14"
   memory_size   = 2048
 
-  publish    = true
+  publish = true
 
   capacity_provider_config {
     lambda_managed_instances_capacity_provider_config {
@@ -509,6 +509,7 @@ resource "aws_lambda_capacity_provider" "example" {
   }
 }
 ```
+
 ## Specifying the Deployment Package
 
 AWS Lambda expects source code to be provided as a deployment package whose structure varies depending on which `runtime` is in use. See [Runtimes](https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime) for the valid values of `runtime`. The expected structure of the deployment package can be found in [the AWS Lambda documentation for each runtime](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html).
@@ -564,10 +565,11 @@ The following arguments are optional:
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-configuration-block).
 
 ### capacity_provider_config Configuration
+
 * `lambda_managed_instances_capacity_provider_config` - (Required) Configuration block for Lambda Managed Instances Capacity Provider.
-  * `capacity_provider_arn` - (Required) ARN of the Capacity Provider.
-  * `execution_environment_memory_gib_per_vcpu` - (Optional) Memory GiB per vCPU for the execution environment.
-  * `per_execution_environment_max_concurrency` - (Optional) Maximum concurrency per execution environment.
+    * `capacity_provider_arn` - (Required) ARN of the Capacity Provider.
+    * `execution_environment_memory_gib_per_vcpu` - (Optional) Memory GiB per vCPU for the execution environment.
+    * `per_execution_environment_max_concurrency` - (Optional) Maximum concurrency per execution environment.
 
 ### dead_letter_config Configuration Block
 

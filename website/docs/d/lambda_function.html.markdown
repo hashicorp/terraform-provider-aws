@@ -151,14 +151,13 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$LATEST`.
 * `vpc_config` - VPC configuration associated with your Lambda function. [See below](#vpc_config-attribute-reference).
 
-
 ### capacity_provider_config
 
 * `lambda_managed_instances_capacity_provider_config` - Configuration block for Lambda Managed Instances Capacity Provider.
-  * `capacity_provider_arn` - ARN of the Capacity Provider.
-  * `execution_environment_memory_gib_per_vcpu` - Memory GiB per vCPU for the execution environment.
-  * `per_execution_environment_max_concurrency` - Maximum concurrency per execution environment.
-    
+    * `capacity_provider_arn` - ARN of the Capacity Provider.
+    * `execution_environment_memory_gib_per_vcpu` - Memory GiB per vCPU for the execution environment.
+    * `per_execution_environment_max_concurrency` - Maximum concurrency per execution environment.
+
 ### dead_letter_config
 
 * `target_arn` - ARN of an SNS topic or SQS queue to notify when an invocation fails.
