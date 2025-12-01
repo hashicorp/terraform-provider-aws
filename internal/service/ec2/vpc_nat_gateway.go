@@ -763,7 +763,15 @@ func flattenNATGatewayAvailabilityZoneAddresses(addresses []awstypes.NatGatewayA
 		mmap[azKey] = azAddr
 	}
 
-	for azKey, azAddr := range mmap {
+	// Sort by AZ name for deterministic ordering
+	var azKeys []string
+	for azKey := range mmap {
+		azKeys = append(azKeys, azKey)
+	}
+	slices.Sort(azKeys)
+
+	for _, azKey := range azKeys {
+		azAddr := mmap[azKey]
 		m := make(map[string]any)
 		parts := strings.Split(azKey, ":")
 		m[names.AttrAvailabilityZone], m["availability_zone_id"] = parts[0], parts[1]
@@ -800,7 +808,7 @@ func makeAZIDtoNameMap(ctx context.Context, conn *ec2.Client) (map[string]string
 
 	output, err := conn.DescribeAvailabilityZones(ctx, input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("describing availability zones: %w", err)
 	}
 
 	azIDtoNameMap := make(map[string]string)
