@@ -491,7 +491,7 @@ resource "aws_lambda_function" "example" {
 
   capacity_provider_config {
     lambda_managed_instances_capacity_provider_config {
-      capacity_provider_arn = aws_lambda_capacity_provider.test.arn
+      capacity_provider_arn = aws_lambda_capacity_provider.example.arn
     }
   }
 }
