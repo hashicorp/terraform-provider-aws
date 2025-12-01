@@ -5,6 +5,7 @@ package eks
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -461,6 +462,10 @@ func waitCapabilityCreated(ctx context.Context, conn *eks.Client, clusterName, c
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Capability); ok {
+		if status, health := output.Status, output.Health; status == awstypes.CapabilityStatusCreateFailed && health != nil {
+			tfresource.SetLastError(err, capabilityIssuesError(health.Issues))
+		}
+
 		return output, err
 	}
 
@@ -478,6 +483,10 @@ func waitCapabilityDeleted(ctx context.Context, conn *eks.Client, clusterName, c
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Capability); ok {
+		if status, health := output.Status, output.Health; status == awstypes.CapabilityStatusDeleteFailed && health != nil {
+			tfresource.SetLastError(err, capabilityIssuesError(health.Issues))
+		}
+
 		return output, err
 	}
 
@@ -495,10 +504,28 @@ func waitCapabilityUpdateSuccessful(ctx context.Context, conn *eks.Client, clust
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Update); ok {
+		if status := output.Status; status == awstypes.UpdateStatusCancelled || status == awstypes.UpdateStatusFailed {
+			tfresource.SetLastError(err, errorDetailsError(output.Errors))
+		}
+
 		return output, err
 	}
 
 	return nil, err
+}
+
+func capabilityIssueError(apiObject awstypes.CapabilityIssue) error {
+	return fmt.Errorf("%s: %s", apiObject.Code, aws.ToString(apiObject.Message))
+}
+
+func capabilityIssuesError(apiObjects []awstypes.CapabilityIssue) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		errs = append(errs, capabilityIssueError(apiObject))
+	}
+
+	return errors.Join(errs...)
 }
 
 type capabilityResourceModel struct {
