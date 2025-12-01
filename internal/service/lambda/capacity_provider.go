@@ -454,25 +454,3 @@ type scalingPoliciesModel struct {
 	PredefinedMetricType fwtypes.StringEnum[awstypes.CapacityProviderPredefinedMetricType] `tfsdk:"predefined_metric_type"`
 	TargetValue          types.Float64                                                     `tfsdk:"target_value"`
 }
-
-//func sweepCapacityProviders(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-//	input := lambda.ListCapacityProvidersInput{}
-//	conn := client.LambdaClient(ctx)
-//	var sweepResources []sweep.Sweepable
-//
-//	pages := lambda.NewListCapacityProvidersPaginator(conn, &input)
-//	for pages.HasMorePages() {
-//		page, err := pages.NextPage(ctx)
-//		if err != nil {
-//			return nil, smarterr.NewError(err)
-//		}
-//
-//		for _, v := range page.CapacityProviders {
-//			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceCapacityProvider, client,
-//				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.CapacityProviderId))),
-//			)
-//		}
-//	}
-//
-//	return sweepResources, nil
-//}

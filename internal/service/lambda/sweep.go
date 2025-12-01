@@ -13,12 +13,36 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_lambda_capacity_provider", sweepCapacityProviders, "aws_lambda_function")
 	awsv2.Register("aws_lambda_function", sweepFunctions)
 	awsv2.Register("aws_lambda_layer", sweepLayerVersions, "aws_lambda_function")
+}
+
+func sweepCapacityProviders(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := lambda.ListCapacityProvidersInput{}
+	conn := client.LambdaClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := lambda.NewListCapacityProvidersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.CapacityProviders {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceCapacityProvider, client,
+				sweepfw.NewAttribute(names.AttrName, aws.ToString(v.CapacityProviderArn))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepFunctions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
