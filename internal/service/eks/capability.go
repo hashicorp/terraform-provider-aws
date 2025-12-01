@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -235,7 +236,7 @@ func resourceCapabilityRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	capability, err := findCapabilityByTwoPartKey(ctx, conn, clusterName, capabilityName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EKS Capability (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -667,7 +668,7 @@ func findCapabilityByTwoPartKey(ctx context.Context, conn *eks.Client, clusterNa
 	output, err := conn.DescribeCapability(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -694,7 +695,7 @@ func findCapabilityUpdateByThreePartKey(ctx context.Context, conn *eks.Client, c
 	output, err := conn.DescribeUpdate(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -711,11 +712,11 @@ func findCapabilityUpdateByThreePartKey(ctx context.Context, conn *eks.Client, c
 	return output.Update, nil
 }
 
-func statusCapability(ctx context.Context, conn *eks.Client, clusterName, capabilityName string) retry.StateRefreshFunc {
+func statusCapability(ctx context.Context, conn *eks.Client, clusterName, capabilityName string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCapabilityByTwoPartKey(ctx, conn, clusterName, capabilityName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -727,11 +728,11 @@ func statusCapability(ctx context.Context, conn *eks.Client, clusterName, capabi
 	}
 }
 
-func statusCapabilityUpdate(ctx context.Context, conn *eks.Client, clusterName, capabilityName, id string) retry.StateRefreshFunc {
+func statusCapabilityUpdate(ctx context.Context, conn *eks.Client, clusterName, capabilityName, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCapabilityUpdateByThreePartKey(ctx, conn, clusterName, capabilityName, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -744,7 +745,7 @@ func statusCapabilityUpdate(ctx context.Context, conn *eks.Client, clusterName, 
 }
 
 func waitCapabilityCreated(ctx context.Context, conn *eks.Client, clusterName, capabilityName string, timeout time.Duration) (*types.Capability, error) {
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.CapabilityStatusCreating),
 		Target:  enum.Slice(types.CapabilityStatusActive),
 		Refresh: statusCapability(ctx, conn, clusterName, capabilityName),
@@ -761,7 +762,7 @@ func waitCapabilityCreated(ctx context.Context, conn *eks.Client, clusterName, c
 }
 
 func waitCapabilityDeleted(ctx context.Context, conn *eks.Client, clusterName, capabilityName string, timeout time.Duration) (*types.Capability, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.CapabilityStatusActive, types.CapabilityStatusDeleting),
 		Target:  []string{},
 		Refresh: statusCapability(ctx, conn, clusterName, capabilityName),
@@ -778,7 +779,7 @@ func waitCapabilityDeleted(ctx context.Context, conn *eks.Client, clusterName, c
 }
 
 func waitCapabilityUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterName, capabilityName, id string, timeout time.Duration) (*types.Update, error) {
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.UpdateStatusInProgress),
 		Target:  enum.Slice(types.UpdateStatusSuccessful),
 		Refresh: statusCapabilityUpdate(ctx, conn, clusterName, capabilityName, id),
