@@ -482,7 +482,7 @@ resource "aws_lambda_function" "example" {
 resource "aws_lambda_function" "example" {
   filename      = "function.zip"
   function_name = "example"
-  role          = aws_iam_role.test.arn
+  role          = aws_iam_role.example.arn
   handler       = "index.handler"
   runtime       = "nodejs20.x"
   memory_size   = 2048
