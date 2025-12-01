@@ -65,7 +65,7 @@ This data source exports the following attributes in addition to the arguments a
 * `auto_provision_zones` - (regional NAT gateways only) Indicates whether AWS automatically manages AZ coverage.
 * `auto_scaling_ips` - (regional NAT gateways only) Indicates whether AWS automatically allocates additional Elastic IP addresses (EIPs) in an AZ when the NAT gateway needs more ports due to increased concurrent connections to a single destination from that AZ.
 * `availability_mode` - Specifies whether to create a zonal (single-AZ) or regional (multi-AZ) NAT gateway.
-* `availability_zone_address` - (reginal NAT gateways only) Repeatable configuration block for the Elastic IP addresses (EIPs) and availability zones for the regional NAT gateway.
+* `availability_zone_address` - (regional NAT gateways only) Repeatable configuration block for the Elastic IP addresses (EIPs) and availability zones for the regional NAT gateway.
     * `allocation_ids` - List of allocation IDs of the Elastic IP addresses (EIPs) to be used for handling outbound NAT traffic in this specific Availability Zone.
     * `availability_zone` - Availability Zone (e.g. `us-west-2a`) where this specific NAT gateway configuration will be active.
     * `availability_zone_id` - Availability Zone ID (e.g. `usw2-az2`) where this specific NAT gateway configuration will be active
