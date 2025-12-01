@@ -122,6 +122,12 @@ func resourceIntegration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"response_transfer_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.ResponseTransferMode](),
+			},
 			"rest_api_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -213,6 +219,10 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.RequestTemplates = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
+	if v, ok := d.GetOk("response_transfer_mode"); ok {
+		input.ResponseTransferMode = types.ResponseTransferMode(v.(string))
+	}
+
 	if v, ok := d.GetOk("timeout_milliseconds"); ok {
 		input.TimeoutInMillis = aws.Int32(int32(v.(int)))
 	}
@@ -267,6 +277,11 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 	requestTemplates := make(map[string]string)
 	maps.Copy(requestTemplates, integration.RequestTemplates)
 	d.Set("request_templates", requestTemplates)
+	if integration.ResponseTransferMode == "" {
+		d.Set("response_transfer_mode", string(types.ResponseTransferModeBuffered))
+	} else {
+		d.Set("response_transfer_mode", integration.ResponseTransferMode)
+	}
 	d.Set("timeout_milliseconds", integration.TimeoutInMillis)
 	d.Set(names.AttrType, integration.Type)
 	d.Set(names.AttrURI, integration.Uri)
@@ -439,6 +454,18 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			Op:    types.OpReplace,
 			Path:  aws.String("/connectionId"),
 			Value: aws.String(d.Get(names.AttrConnectionID).(string)),
+		})
+	}
+
+	if d.HasChange("response_transfer_mode") {
+		responseTransferMode := d.Get("response_transfer_mode").(string)
+		if responseTransferMode == "" {
+			responseTransferMode = string(types.ResponseTransferModeBuffered)
+		}
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/responseTransferMode"),
+			Value: aws.String(responseTransferMode),
 		})
 	}
 
