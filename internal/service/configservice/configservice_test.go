@@ -14,6 +14,12 @@ func TestAccConfigService_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"AggregateAuthorization": {
+			acctest.CtBasic:      testAccConfigServiceAggregateAuthorization_basic,
+			"deprecatedRegion":   testAccConfigServiceAggregateAuthorization_deprecatedRegion,
+			acctest.CtDisappears: testAccConfigServiceAggregateAuthorization_disappears,
+			"tags":               testAccConfigServiceAggregateAuthorization_tags,
+		},
 		"ConfigRule": {
 			acctest.CtBasic:      testAccConfigRule_basic,
 			"ownerAws":           testAccConfigRule_ownerAWS,

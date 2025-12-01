@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
 	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
@@ -50,7 +50,7 @@ func TestAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceAggregateAuthorization_deprecatedRegion(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_deprecatedRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
 	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
@@ -76,7 +76,7 @@ func TestAccConfigServiceAggregateAuthorization_deprecatedRegion(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceAggregateAuthorization_disappears(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
 	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
@@ -100,7 +100,7 @@ func TestAccConfigServiceAggregateAuthorization_disappears(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
 	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
