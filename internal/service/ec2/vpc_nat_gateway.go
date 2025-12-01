@@ -544,11 +544,11 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				}
 			}
 
-			oldMap, err := processAZAddressSet(ctx, conn, os, azIDtoNameMap)
+			oldMap, err := processAZAddressSet(os, azIDtoNameMap)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "processing old availability zone address set: %s", err)
 			}
-			newMap, err := processAZAddressSet(ctx, conn, ns, azIDtoNameMap)
+			newMap, err := processAZAddressSet(ns, azIDtoNameMap)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "processing new availability zone address set: %s", err)
 			}
@@ -849,7 +849,7 @@ func needsAZIDtoNameMap(s *schema.Set) bool {
 	return false
 }
 
-func processAZAddressSet(ctx context.Context, conn *ec2.Client, s *schema.Set, azIDtoNameMap map[string]string) (map[string]*schema.Set, error) {
+func processAZAddressSet(s *schema.Set, azIDtoNameMap map[string]string) (map[string]*schema.Set, error) {
 	sl := s.List()
 	result := make(map[string]*schema.Set)
 	for _, addr := range sl {
