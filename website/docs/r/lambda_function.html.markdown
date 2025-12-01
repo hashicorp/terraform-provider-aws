@@ -480,11 +480,11 @@ resource "aws_lambda_function" "example" {
 
 ```terraform
 resource "aws_lambda_function" "example" {
-  filename      = "test-fixtures/capacityprovider.zip"
+  filename      = "function.zip"
   function_name = "example"
   role          = aws_iam_role.test.arn
   handler       = "index.handler"
-  runtime       = "python3.14"
+  runtime       = "nodejs20.x"
   memory_size   = 2048
 
   publish = true
