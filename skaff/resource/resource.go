@@ -22,9 +22,6 @@ import (
 //go:embed resource.gtpl
 var resourceTmpl string
 
-//go:embed resourcefw.gtpl
-var resourceFrameworkTmpl string
-
 //go:embed resourcetest.gtpl
 var resourceTestTmpl string
 
@@ -33,6 +30,7 @@ var websiteTmpl string
 
 type TemplateData struct {
 	Resource             string
+	ResourceAWS          string
 	ResourceLower        string
 	ResourceSnake        string
 	HumanFriendlyService string
@@ -43,12 +41,11 @@ type TemplateData struct {
 	Service              string
 	ServiceLower         string
 	AWSServiceName       string
-	PluginFramework      bool
 	HumanResourceName    string
 	ProviderResourceName string
 }
 
-func Create(resName, snakeName string, comments, force, pluginFramework, tags bool) error {
+func Create(resName, snakeName string, comments, force, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -79,6 +76,7 @@ func Create(resName, snakeName string, comments, force, pluginFramework, tags bo
 
 	templateData := TemplateData{
 		Resource:             resName,
+		ResourceAWS:          capitalizeForAWS(resName),
 		ResourceLower:        strings.ToLower(resName),
 		ResourceSnake:        snakeName,
 		HumanFriendlyService: service.HumanFriendly(),
@@ -89,17 +87,12 @@ func Create(resName, snakeName string, comments, force, pluginFramework, tags bo
 		Service:              service.ProviderNameUpper(),
 		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),
 		AWSServiceName:       service.FullHumanFriendly(),
-		PluginFramework:      pluginFramework,
 		HumanResourceName:    convert.ToHumanResName(resName),
 		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
-	tmpl := resourceTmpl
-	if pluginFramework {
-		tmpl = resourceFrameworkTmpl
-	}
 	f := fmt.Sprintf("%s.go", snakeName)
-	if err = writeTemplate("newres", f, tmpl, force, templateData); err != nil {
+	if err = writeTemplate("newres", f, resourceTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource template: %w", err)
 	}
 
@@ -154,4 +147,9 @@ func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateD
 	}
 
 	return nil
+}
+
+// AWS API structs use different capitalization than the provider standards
+func capitalizeForAWS(s string) string {
+	return strings.ReplaceAll(s, "VPC", "Vpc")
 }
