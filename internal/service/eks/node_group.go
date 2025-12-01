@@ -668,11 +668,15 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func findNodegroupByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string) (*types.Nodegroup, error) {
-	input := &eks.DescribeNodegroupInput{
+	input := eks.DescribeNodegroupInput{
 		ClusterName:   aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
 	}
 
+	return findNodegroup(ctx, conn, &input)
+}
+
+func findNodegroup(ctx context.Context, conn *eks.Client, input *eks.DescribeNodegroupInput) (*types.Nodegroup, error) {
 	output, err := conn.DescribeNodegroup(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -694,30 +698,13 @@ func findNodegroupByTwoPartKey(ctx context.Context, conn *eks.Client, clusterNam
 }
 
 func findNodegroupUpdateByThreePartKey(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName, id string) (*types.Update, error) {
-	input := &eks.DescribeUpdateInput{
+	input := eks.DescribeUpdateInput{
 		Name:          aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
 		UpdateId:      aws.String(id),
 	}
 
-	output, err := conn.DescribeUpdate(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Update == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Update, nil
+	return findUpdate(ctx, conn, &input)
 }
 
 func statusNodegroup(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string) retry.StateRefreshFunc {

@@ -379,11 +379,15 @@ func (r *capabilityResource) ImportState(ctx context.Context, request resource.I
 }
 
 func findCapabilityByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, capabilityName string) (*awstypes.Capability, error) {
-	input := &eks.DescribeCapabilityInput{
+	input := eks.DescribeCapabilityInput{
 		CapabilityName: aws.String(capabilityName),
 		ClusterName:    aws.String(clusterName),
 	}
 
+	return findCapability(ctx, conn, &input)
+}
+
+func findCapability(ctx context.Context, conn *eks.Client, input *eks.DescribeCapabilityInput) (*awstypes.Capability, error) {
 	output, err := conn.DescribeCapability(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -405,30 +409,13 @@ func findCapabilityByTwoPartKey(ctx context.Context, conn *eks.Client, clusterNa
 }
 
 func findCapabilityUpdateByThreePartKey(ctx context.Context, conn *eks.Client, clusterName, capabilityName, id string) (*awstypes.Update, error) {
-	input := &eks.DescribeUpdateInput{
+	input := eks.DescribeUpdateInput{
+		CapabilityName: aws.String(capabilityName),
 		Name:           aws.String(clusterName),
 		UpdateId:       aws.String(id),
-		CapabilityName: aws.String(capabilityName),
 	}
 
-	output, err := conn.DescribeUpdate(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Update == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Update, nil
+	return findUpdate(ctx, conn, &input)
 }
 
 func statusCapability(ctx context.Context, conn *eks.Client, clusterName, capabilityName string) sdkretry.StateRefreshFunc {
