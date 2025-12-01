@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_config_configuration_aggregator", name="Configuration Aggregator")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceConfigurationAggregator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationAggregatorPut,

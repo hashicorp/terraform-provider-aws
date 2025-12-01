@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_config_config_rule", name="Config Rule")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceConfigRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigRulePut,

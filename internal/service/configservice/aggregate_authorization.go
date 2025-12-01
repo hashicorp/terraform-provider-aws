@@ -26,6 +26,7 @@ import (
 // @SDKResource("aws_config_aggregate_authorization", name="Aggregate Authorization")
 // @Tags(identifierAttribute="arn")
 // @Region(overrideEnabled=false)
+// @Testing(tagsTest=false)
 func resourceAggregateAuthorization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAggregateAuthorizationCreate,
