@@ -1493,7 +1493,7 @@ resource "aws_glue_catalog_table" "test" {
 func TestAccGlueCatalogTable_viewDefinition_spark(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_glue_catalog_table.test"
+	resourceName := "aws_glue_catalog_table.test_spark"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1509,6 +1509,8 @@ func TestAccGlueCatalogTable_viewDefinition_spark(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "SPARK"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_expanded_text", "view_expanded_text"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
@@ -1534,7 +1536,7 @@ func TestAccGlueCatalogTable_viewDefinition_spark(t *testing.T) {
 func TestAccGlueCatalogTable_viewDefinition_athena(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_glue_catalog_table.test"
+	resourceName := "aws_glue_catalog_table.test_athena"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1551,6 +1553,8 @@ func TestAccGlueCatalogTable_viewDefinition_athena(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "ATHENA"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_expanded_text", "view_expanded_text"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
@@ -1576,7 +1580,7 @@ func TestAccGlueCatalogTable_viewDefinition_athena(t *testing.T) {
 func TestAccGlueCatalogTable_viewDefinition_redshift(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_glue_catalog_table.test"
+	resourceName := "aws_glue_catalog_table.test_redshift"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1593,6 +1597,7 @@ func TestAccGlueCatalogTable_viewDefinition_redshift(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "REDSHIFT"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "test-user"),
 					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
@@ -1621,20 +1626,11 @@ resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
 
-resource "aws_glue_catalog_table" "test" {
+resource "aws_glue_catalog_table" "test_spark" {
   name          = %[1]q
   database_name = aws_glue_catalog_database.test.name
-  table_type    = "VIRTUAL_VIEW"
 
 	storage_descriptor {
-    bucket_columns            = ["bucket_column_1"]
-    compressed                = false
-    input_format              = "SequenceFileInputFormat"
-    location                  = "my_location"
-    number_of_buckets         = 1
-    output_format             = "SequenceFileInputFormat"
-    stored_as_sub_directories = false
-
     parameters = {
       param1 = "param1_val"
     }
@@ -1651,40 +1647,15 @@ resource "aws_glue_catalog_table" "test" {
       comment = "my_column2_comment"
     }
 
-    ser_de_info {
-      name = "ser_de_name"
-
-      parameters = {
-        param1 = "param_val_1"
-      }
-
-      serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
-    }
-
-    sort_columns {
-      column     = "my_column_1"
-      sort_order = 1
-    }
-
-    skewed_info {
-      skewed_column_names = [
-        "my_column_1",
-      ]
-
-      skewed_column_value_location_maps = {
-        my_column_1 = "my_column_1_val_loc_map"
-      }
-
-      skewed_column_values = [
-        "skewed_val_1",
-      ]
-    }
+    ser_de_info { }
   }
 
   view_definition {
     representations {
       dialect               = "SPARK"
       dialect_version       = "1.0"
+			view_original_text    = "view_original_text"
+			view_expanded_text    = "view_expanded_text"
     }
     last_refresh_type = "FULL"
 		refresh_seconds   = 3600
@@ -1705,16 +1676,16 @@ resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
 
-resource "aws_glue_catalog_table" "test" {
+resource "aws_glue_catalog_table" "test_athena" {
   name          = %[1]q
   database_name = aws_glue_catalog_database.test.name
-  table_type    = "VIRTUAL_VIEW"
 
   view_definition {
     representations {
       dialect               = "ATHENA"
       dialect_version       = "1.0"
       validation_connection = "test-connection"
+			view_original_text    = "view_original_text"
     }
     last_refresh_type = "FULL"
 		refresh_seconds   = 3600
@@ -1735,16 +1706,16 @@ resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
 
-resource "aws_glue_catalog_table" "test" {
+resource "aws_glue_catalog_table" "test_redshift" {
   name          = %[1]q
   database_name = aws_glue_catalog_database.test.name
-  table_type    = "VIRTUAL_VIEW"
 
   view_definition {
     representations {
       dialect               = "REDSHIFT"
       dialect_version       = "1.0"
       validation_connection = "test-connection"
+			view_original_text    = "view_original_text"
     }
 		last_refresh_type = "FULL"
 		refresh_seconds   = 3600
