@@ -89,6 +89,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the image.
 * `date_created` - Date the image was created.
+* `latest_major_version_arn` - Amazon Resource Name (ARN) of the latest major version of the image.
+* `latest_minor_version_arn` - Amazon Resource Name (ARN) of the latest minor version of the image.
+* `latest_patch_version_arn` - Amazon Resource Name (ARN) of the latest patch version of the image.
+* `latest_version_arn` - Amazon Resource Name (ARN) of the latest version of the image.
 * `platform` - Platform of the image.
 * `os_version` - Operating System version of the image.
 * `output_resources` - List of objects with resources created by the image.

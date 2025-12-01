@@ -78,6 +78,22 @@ func dataSourceComponent() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"latest_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_major_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_minor_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_patch_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -87,12 +103,13 @@ func dataSourceComponentRead(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	arn := d.Get(names.AttrARN).(string)
-	component, err := findComponentByARN(ctx, conn, arn)
+	output, err := findComponentByARN(ctx, conn, arn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Component (%s): %s", arn, err)
 	}
 
+	component := output.Component
 	arn = aws.ToString(component.Arn)
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
@@ -108,6 +125,13 @@ func dataSourceComponentRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("supported_os_versions", component.SupportedOsVersions)
 	d.Set(names.AttrType, component.Type)
 	d.Set(names.AttrVersion, component.Version)
+
+	if output.LatestVersionReferences != nil {
+		d.Set("latest_version_arn", aws.ToString(output.LatestVersionReferences.LatestVersionArn))
+		d.Set("latest_major_version_arn", aws.ToString(output.LatestVersionReferences.LatestMajorVersionArn))
+		d.Set("latest_minor_version_arn", aws.ToString(output.LatestVersionReferences.LatestMinorVersionArn))
+		d.Set("latest_patch_version_arn", aws.ToString(output.LatestVersionReferences.LatestPatchVersionArn))
+	}
 
 	setTagsOut(ctx, component.Tags)
 

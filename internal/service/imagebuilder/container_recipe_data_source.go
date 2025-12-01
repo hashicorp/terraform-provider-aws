@@ -152,6 +152,22 @@ func dataSourceContainerRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"latest_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_major_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_minor_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_patch_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -202,12 +218,13 @@ func dataSourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	arn := d.Get(names.AttrARN).(string)
-	containerRecipe, err := findContainerRecipeByARN(ctx, conn, arn)
+	output, err := findContainerRecipeByARN(ctx, conn, arn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipe (%s): %s", arn, err)
 	}
 
+	containerRecipe := output.ContainerRecipe
 	arn = aws.ToString(containerRecipe.Arn)
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
@@ -227,6 +244,12 @@ func dataSourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("instance_configuration", nil)
 	}
 	d.Set(names.AttrKMSKeyID, containerRecipe.KmsKeyId)
+	if output.LatestVersionReferences != nil {
+		d.Set("latest_version_arn", aws.ToString(output.LatestVersionReferences.LatestVersionArn))
+		d.Set("latest_major_version_arn", aws.ToString(output.LatestVersionReferences.LatestMajorVersionArn))
+		d.Set("latest_minor_version_arn", aws.ToString(output.LatestVersionReferences.LatestMinorVersionArn))
+		d.Set("latest_patch_version_arn", aws.ToString(output.LatestVersionReferences.LatestPatchVersionArn))
+	}
 	d.Set(names.AttrName, containerRecipe.Name)
 	d.Set(names.AttrOwner, containerRecipe.Owner)
 	d.Set("parent_image", containerRecipe.ParentImage)

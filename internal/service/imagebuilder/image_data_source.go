@@ -173,6 +173,22 @@ func dataSourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"latest_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_major_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_minor_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_patch_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -182,12 +198,13 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	arn := d.Get(names.AttrARN).(string)
-	image, err := findImageByARN(ctx, conn, arn)
+	output, err := findImageByARN(ctx, conn, arn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image (%s): %s", arn, err)
 	}
 
+	image := output.Image
 	d.SetId(aws.ToString(image.Arn))
 	// To prevent Terraform errors, only reset arn if not configured.
 	// The configured ARN may contain x.x.x wildcards while the API returns
@@ -235,6 +252,13 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		d.Set("output_resources", nil)
 	}
 	d.Set(names.AttrVersion, image.Version)
+
+	if output.LatestVersionReferences != nil {
+		d.Set("latest_version_arn", aws.ToString(output.LatestVersionReferences.LatestVersionArn))
+		d.Set("latest_major_version_arn", aws.ToString(output.LatestVersionReferences.LatestMajorVersionArn))
+		d.Set("latest_minor_version_arn", aws.ToString(output.LatestVersionReferences.LatestMinorVersionArn))
+		d.Set("latest_patch_version_arn", aws.ToString(output.LatestVersionReferences.LatestPatchVersionArn))
+	}
 
 	setTagsOut(ctx, image.Tags)
 
