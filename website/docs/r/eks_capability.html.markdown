@@ -52,8 +52,8 @@ This resource supports the following arguments:
     * `namespace` - (Optional) Kubernetes namespace for ArgoCD.
     * `network_access` - (Optional) Network access configuration.
       * `vpce_ids` - (Optional) VPC Endpoint IDs.
-    * `rbac_role_mappings` - (Optional) RBAC role mappings.
-      * `identities` - (Required) List of identities.
+    * `rbac_role_mapping` - (Optional) RBAC role mappings.
+      * `identity` - (Required) List of identities.
         * `id` - (Required) Identity ID.
         * `type` - (Required) Identity type.
       * `role` - (Required) ArgoCD role.
@@ -64,9 +64,6 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the capability.
-* `created_at` - Creation timestamp of the capability.
-* `modified_at` - Last modification timestamp of the capability.
-* `status` - Status of the capability.
 * `version` - Version of the capability.
 
 ## Timeouts
