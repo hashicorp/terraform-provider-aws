@@ -527,7 +527,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stays the same.
-* `capacity_provider_config` - (Optional) Configuration block for Lambda Capacity Provider. [See below](#capacity-provider-configuration).
+* `capacity_provider_config` - (Optional) Configuration block for Lambda Capacity Provider. [See below](#capacity_provider_config-configuration).
 * `code_signing_config_arn` - (Optional) ARN of a code-signing configuration to enable code signing for this function.
 * `dead_letter_config` - (Optional) Configuration block for dead letter queue. [See below](#dead_letter_config-configuration-block).
 * `description` - (Optional) Description of what your Lambda Function does.
