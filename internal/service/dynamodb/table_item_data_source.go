@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -104,7 +104,7 @@ func createTableItemDataSourceID(tableName string, attrs map[string]awstypes.Att
 	for k, v := range attrs {
 		switch v := v.(type) {
 		case *awstypes.AttributeValueMemberB:
-			id = append(id, k, itypes.Base64EncodeOnce(v.Value))
+			id = append(id, k, inttypes.Base64EncodeOnce(v.Value))
 		case *awstypes.AttributeValueMemberN:
 			id = append(id, v.Value)
 		case *awstypes.AttributeValueMemberS:

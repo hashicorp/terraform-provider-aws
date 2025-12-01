@@ -76,9 +76,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newDataSourceVPNConnection,
+			Factory:  newVPNConnectionDataSource,
 			TypeName: "aws_vpn_connection",
 			Name:     "VPN Connection",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
@@ -90,6 +91,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newEBSFastSnapshotRestoreResource,
 			TypeName: "aws_ebs_fast_snapshot_restore",
 			Name:     "EBS Fast Snapshot Restore",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newAllowedImagesSettingsResource,
+			TypeName: "aws_ec2_allowed_images_settings",
+			Name:     "Allowed Images Settings",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
@@ -166,6 +173,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_vpc_block_public_access_options",
 			Name:     "VPC Block Public Access Options",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newResourceVPCEncryptionControl,
+			TypeName: "aws_vpc_encryption_control",
+			Name:     "VPC Encryption Control",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newVPCEndpointPrivateDNSResource,
@@ -257,6 +277,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 				ImportID:      securityGroupVPCAssociationImportID{},
 			},
+		},
+		{
+			Factory:  newVPNConcentratorResource,
+			TypeName: "aws_vpn_concentrator",
+			Name:     "VPN Concentrator",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "vpn_concentrator_id",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -1030,9 +1059,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceImageBlockPublicAccess,
 			TypeName: "aws_ec2_image_block_public_access",
 			Name:     "Image Block Public Access",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalSingletonIdentity(
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(
 				inttypes.WithV6_0SDKv2Fix(),
+				inttypes.WithVersion(1),
+				inttypes.WithSDKv2IdentityUpgraders(imageBlockPublicAccessIdentityUpgradeV0),
 			),
 		},
 		{
@@ -1093,9 +1124,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceSerialConsoleAccess,
 			TypeName: "aws_ec2_serial_console_access",
 			Name:     "Serial Console Access",
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalSingletonIdentity(
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(
 				inttypes.WithV6_0SDKv2Fix(),
+				inttypes.WithVersion(1),
+				inttypes.WithSDKv2IdentityUpgraders(serialConsoleAccessIdentityUpgradeV0),
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -1828,6 +1861,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Factory:  instanceResourceAsListResource,
 			TypeName: "aws_instance",
 			Name:     "Instance",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+		{
+			Factory:  subnetResourceAsListResource,
+			TypeName: "aws_subnet",
+			Name:     "Subnet",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,

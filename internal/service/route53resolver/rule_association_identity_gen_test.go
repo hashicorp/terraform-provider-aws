@@ -7,7 +7,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -25,7 +24,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_Basic(t *testing.T) {
 
 	var v awstypes.ResolverRuleAssociation
 	resourceName := "aws_route53_resolver_rule_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -114,7 +113,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_RegionOverride(t *testing.T)
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route53_resolver_rule_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -208,7 +207,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource(t *testing.
 
 	var v awstypes.ResolverRuleAssociation
 	resourceName := "aws_route53_resolver_rule_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -269,7 +268,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource_NoRefresh_N
 
 	var v awstypes.ResolverRuleAssociation
 	resourceName := "aws_route53_resolver_rule_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

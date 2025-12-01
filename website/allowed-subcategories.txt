@@ -51,7 +51,9 @@ CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
 CloudWatch Network Monitor
+CloudWatch NetworkFlow Monitor
 CloudWatch Observability Access Manager
+CloudWatch Observability Admin
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
@@ -159,9 +161,9 @@ Lex V2 Models
 License Manager
 Lightsail
 Location
-Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
+MWAA (Managed Workflows for Apache Airflow) Serverless
 Macie
 Mainframe Modernization
 Managed Grafana
@@ -190,6 +192,7 @@ QLDB (Quantum Ledger Database)
 QuickSight
 RAM (Resource Access Manager)
 RDS (Relational Database)
+RDS Data
 Recycle Bin (RBin)
 Redshift
 Redshift Data

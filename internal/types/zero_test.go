@@ -12,9 +12,10 @@ type AIsZero struct {
 	Value int
 }
 
-func TestIsZero(t *testing.T) {
+func TestIsZeroPtr(t *testing.T) {
 	t.Parallel()
 
+	zero := Zero[AIsZero]()
 	testCases := []struct {
 		Name     string
 		Ptr      *AIsZero
@@ -26,7 +27,7 @@ func TestIsZero(t *testing.T) {
 		},
 		{
 			Name:     "pointer to zero value",
-			Ptr:      &AIsZero{},
+			Ptr:      &zero,
 			Expected: true,
 		},
 		{
@@ -44,6 +45,36 @@ func TestIsZero(t *testing.T) {
 			t.Parallel()
 
 			got := IsZero(testCase.Ptr)
+
+			if got != testCase.Expected {
+				t.Errorf("got %t, expected %t", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestIsZeroStructValue(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		Value    AIsZero
+		Expected bool
+	}{
+		"zero value struct": {
+			Value:    AIsZero{},
+			Expected: true,
+		},
+		"non-zero value struct": {
+			Value:    AIsZero{Value: 42},
+			Expected: false,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := IsZero(testCase.Value)
 
 			if got != testCase.Expected {
 				t.Errorf("got %t, expected %t", got, testCase.Expected)
@@ -90,6 +121,47 @@ func TestIsZeroPointerToAny(t *testing.T) {
 			t.Parallel()
 
 			got := IsZero(testCase.Ptr)
+
+			if got != testCase.Expected {
+				t.Errorf("got %t, expected %t", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestIsZeroAnyValue(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		Value    any
+		Expected bool
+	}{
+		"nil value": {
+			Expected: true,
+		},
+		"zero int value": {
+			Value:    0,
+			Expected: true,
+		},
+		"zero string value": {
+			Value:    "",
+			Expected: true,
+		},
+		"non-zero int value": {
+			Value:    1,
+			Expected: false,
+		},
+		"non-zero string value": {
+			Value:    "string",
+			Expected: false,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := IsZero(testCase.Value)
 
 			if got != testCase.Expected {
 				t.Errorf("got %t, expected %t", got, testCase.Expected)

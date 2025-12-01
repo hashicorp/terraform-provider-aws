@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -875,7 +876,7 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 			}
 
 			for _, vpc := range page.Vpcs {
-				ctx := tflog.SetField(ctx, "tf_aws.resource_attribute.id", aws.ToString(vpc.VpcId))
+				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), aws.ToString(vpc.VpcId))
 
 				result := request.NewListResult(ctx)
 
@@ -905,7 +906,7 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 				}
 
 				if v, ok := tags["Name"]; ok {
-					result.DisplayName = v.ValueString()
+					result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(vpc.VpcId))
 				} else {
 					result.DisplayName = aws.ToString(vpc.VpcId)
 				}

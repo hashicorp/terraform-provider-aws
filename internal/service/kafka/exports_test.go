@@ -23,5 +23,7 @@ var (
 	FindServerlessClusterByARN                   = findServerlessClusterByARN
 	FindVPCConnectionByARN                       = findVPCConnectionByARN
 
-	SortEndpointsString = sortEndpointsString
+	ClusterUUIDFromARN    = clusterUUIDFromARN
+	NormalizeKafkaVersion = normalizeKafkaVersion // nosemgrep:ci.kafka-in-var-name
+	SortEndpointsString   = sortEndpointsString
 )

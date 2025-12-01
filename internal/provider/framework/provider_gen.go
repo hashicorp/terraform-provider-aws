@@ -1209,13 +1209,6 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
-				// lookoutmetrics
-
-				"lookoutmetrics": schema.StringAttribute{
-					Optional:    true,
-					Description: "Use this to override the default service endpoint URL",
-				},
-
 				// m2
 
 				"m2": schema.StringAttribute{
@@ -1307,6 +1300,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// mwaaserverless
+
+				"mwaaserverless": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// neptune
 
 				"neptune": schema.StringAttribute{
@@ -1324,6 +1324,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// networkfirewall
 
 				"networkfirewall": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// networkflowmonitor
+
+				"networkflowmonitor": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},
@@ -1364,6 +1371,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				},
 
 				"cloudwatchobservabilityaccessmanager": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// observabilityadmin
+
+				"observabilityadmin": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},
@@ -1519,6 +1533,18 @@ func endpointsBlock() schema.SetNestedBlock {
 				// rds
 
 				"rds": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// rdsdata
+
+				"rdsdata": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				"rdsdataservice": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},

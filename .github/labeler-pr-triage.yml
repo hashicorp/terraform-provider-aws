@@ -791,6 +791,7 @@ service/ec2:
               - 'internal/service/ec2/**/ec2_*'
               - 'website/**/ami*'
               - 'website/**/availability_zone*'
+              - 'website/**/ec2_allowed_images_settings*'
               - 'website/**/ec2_availability_*'
               - 'website/**/ec2_capacity_*'
               - 'website/**/ec2_default_credit_specification*'
@@ -1561,6 +1562,12 @@ service/mwaa:
           - any-glob-to-any-file:
               - 'internal/service/mwaa/**/*'
               - 'website/**/mwaa_*'
+service/mwaaserverless:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/mwaaserverless/**/*'
+              - 'website/**/mwaaserverless_*'
 service/neptune:
   - any:
       - changed-files:
@@ -1579,6 +1586,12 @@ service/networkfirewall:
           - any-glob-to-any-file:
               - 'internal/service/networkfirewall/**/*'
               - 'website/**/networkfirewall_*'
+service/networkflowmonitor:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/networkflowmonitor/**/*'
+              - 'website/**/networkflowmonitor_*'
 service/networkmanager:
   - any:
       - changed-files:
@@ -1615,6 +1628,12 @@ service/oam:
           - any-glob-to-any-file:
               - 'internal/service/oam/**/*'
               - 'website/**/oam_*'
+service/observabilityadmin:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/observabilityadmin/**/*'
+              - 'website/**/observabilityadmin_*'
 service/odb:
   - any:
       - changed-files:
@@ -2304,6 +2323,7 @@ service/vpc:
               - 'website/**/security_group*'
               - 'website/**/subnet*'
               - 'website/**/vpc_dhcp_*'
+              - 'website/**/vpc_encryption_*'
               - 'website/**/vpc_endpoint*'
               - 'website/**/vpc_ipv*'
               - 'website/**/vpc_network_performance*'

@@ -1730,6 +1730,30 @@ service "networkmonitor" {
   brand                    = "Amazon"
 }
 
+service "networkflowmonitor" {
+  sdk {
+    id            = "NetworkFlowMonitor"
+    arn_namespace = "networkflowmonitor"
+  }
+
+  names {
+    provider_name_upper = "NetworkFlowMonitor"
+    human_friendly      = "CloudWatch NetworkFlow Monitor"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListMonitors"
+  }
+
+  resource_prefix {
+    correct = "aws_networkflowmonitor_"
+  }
+
+  provider_package_correct = "networkflowmonitor"
+  doc_prefix               = ["networkflowmonitor_"]
+  brand                    = "Amazon"
+}
+
 service "rum" {
   go_packages {
     v1_package = "cloudwatchrum"
@@ -5268,6 +5292,7 @@ service "lookoutmetrics" {
   provider_package_correct = "lookoutmetrics"
   doc_prefix               = ["lookoutmetrics_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "lookoutvision" {
@@ -5837,6 +5862,30 @@ service "mwaa" {
   brand                    = "AWS"
 }
 
+service "mwaaserverless" {
+  sdk {
+    id            = "MWAA Serverless"
+    arn_namespace = "airflow-serverless"
+  }
+
+  names {
+    provider_name_upper = "MWAAServerless"
+    human_friendly      = "MWAA (Managed Workflows for Apache Airflow) Serverless"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListWorkflows"
+  }
+
+  resource_prefix {
+    correct = "aws_mwaaserverless_"
+  }
+
+  provider_package_correct = "mwaaserverless"
+  doc_prefix               = ["mwaaserverless_"]
+  brand                    = "AWS"
+}
+
 service "neptune" {
   sdk {
     id            = "Neptune"
@@ -6067,6 +6116,30 @@ service "oam" {
 
   provider_package_correct = "oam"
   doc_prefix               = ["oam_"]
+  brand                    = "AWS"
+}
+
+service "observabilityadmin" {
+  sdk {
+    id            = "ObservabilityAdmin"
+    arn_namespace = "observabilityadmin"
+  }
+
+  names {
+    provider_name_upper = "ObservabilityAdmin"
+    human_friendly      = "CloudWatch Observability Admin"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListCentralizationRulesForOrganization"
+  }
+
+  resource_prefix {
+    correct = "aws_observabilityadmin_"
+  }
+
+  provider_package_correct = "observabilityadmin"
+  doc_prefix               = ["observabilityadmin_"]
   brand                    = "AWS"
 }
 
@@ -6814,6 +6887,11 @@ service "rdsdata" {
     arn_namespace = "rdsdata"
   }
 
+  endpoint_info {
+    endpoint_api_call   = "ExecuteStatement"
+    endpoint_api_params = "ResourceArn: aws.String(\"arn:\" + acctest.Partition() + \":rds:\" + acctest.Region() + \":\" + acctest.Ct12Digit + \":cluster:test\"),\n\t\tSecretArn: aws.String(\"arn:\" + acctest.Partition() + \":secretsmanager:\" + acctest.Region() + \":\" + acctest.Ct12Digit + \":secret:test\"),\n\t\tSql: aws.String(\"SELECT 1\")"
+  }
+
   names {
     aliases             = ["rdsdataservice"]
     provider_name_upper = "RDSData"
@@ -6827,7 +6905,6 @@ service "rdsdata" {
   provider_package_correct = "rdsdata"
   doc_prefix               = ["rdsdata_"]
   brand                    = "Amazon"
-  not_implemented          = true
 }
 
 service "pi" {
@@ -9228,7 +9305,7 @@ service "ec2" {
   }
 
   resource_prefix {
-    actual  = "aws_(ami|availability_zone|ec2_(availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
+    actual  = "aws_(ami|availability_zone|ec2_(allowed_images_settings|availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
     correct = "aws_ec2_"
   }
 
@@ -9395,7 +9472,7 @@ service "ec2" {
 
     split_package       = "ec2"
     file_prefix         = "vpc_"
-    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\.", "vpc_block_public_access_", "vpc_route_server"]
+    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_encryption_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\.", "vpc_block_public_access_", "vpc_route_server"]
     brand               = "Amazon"
     exclude             = true
     allowed_subcategory = true
@@ -9538,7 +9615,7 @@ service "ec2" {
   provider_package_correct = "ec2"
   split_package            = "ec2"
   file_prefix              = "ec2_"
-  doc_prefix               = ["ami", "availability_zone", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
+  doc_prefix               = ["ami", "availability_zone", "ec2_allowed_images_settings", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
   brand                    = "Amazon"
 }
 

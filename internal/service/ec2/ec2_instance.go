@@ -47,7 +47,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -876,7 +876,7 @@ func resourceInstance() *schema.Resource {
 							return sdkdiag.AppendErrorf(diags, "expected type to be string")
 						}
 
-						if _, err := itypes.Base64Decode(v); err == nil {
+						if _, err := inttypes.Base64Decode(v); err == nil {
 							// value is a base46 encoded string
 							return diag.Diagnostics{
 								diag.Diagnostic{
@@ -1071,7 +1071,7 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 }
 
 // @SDKListResource("aws_instance")
-func instanceResourceAsListResource() itypes.ListResourceForSDK {
+func instanceResourceAsListResource() inttypes.ListResourceForSDK {
 	l := instanceListResource{}
 	l.SetResourceSchema(resourceInstance())
 
@@ -1581,7 +1581,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if d.HasChange("user_data") {
 			// Decode so the AWS SDK doesn't double encode.
-			v, err := itypes.Base64Decode(d.Get("user_data").(string))
+			v, err := inttypes.Base64Decode(d.Get("user_data").(string))
 			if err != nil {
 				v = []byte(d.Get("user_data").(string))
 			}
@@ -1601,7 +1601,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		if d.HasChange("user_data_base64") {
 			// Schema validation technically ensures the data is Base64 encoded.
 			// Decode so the AWS SDK doesn't double encode.
-			v, err := itypes.Base64Decode(d.Get("user_data_base64").(string))
+			v, err := inttypes.Base64Decode(d.Get("user_data_base64").(string))
 			if err != nil {
 				v = []byte(d.Get("user_data_base64").(string))
 			}
@@ -3013,7 +3013,7 @@ func userDataHashSum(userData string) string {
 	// Check whether the user_data is not Base64 encoded.
 	// Always calculate hash of base64 decoded value since we
 	// check against double-encoding when setting it.
-	v, err := itypes.Base64Decode(userData)
+	v, err := inttypes.Base64Decode(userData)
 	if err != nil {
 		v = []byte(userData)
 	}
@@ -3378,7 +3378,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 			if b64 {
 				rd.Set("user_data_base64", attr.UserData.Value)
 			} else {
-				data, err := itypes.Base64Decode(aws.ToString(attr.UserData.Value))
+				data, err := inttypes.Base64Decode(aws.ToString(attr.UserData.Value))
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "decoding user_data: %s", err)
 				}
@@ -4042,8 +4042,6 @@ type instanceListResourceModel struct {
 	IncludeAutoScaled types.Bool        `tfsdk:"include_auto_scaled"`
 }
 
-// ListResourceConfigSchema defines the schema for the List configuration
-// might be able to intercept or wrap this for simplicity
 func (l *instanceListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
@@ -4094,14 +4092,14 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 
-		for output, err := range listInstances(ctx, conn, &input) {
+		for instance, err := range listInstances(ctx, conn, &input) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			tags := keyValueTags(ctx, output.Tags)
+			tags := keyValueTags(ctx, instance.Tags)
 
 			if !includeAutoScaled {
 				// Exclude Auto Scaled Instances
@@ -4111,8 +4109,8 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 			}
 
 			rd := l.ResourceData()
-			rd.SetId(aws.ToString(output.InstanceId))
-			result.Diagnostics.Append(translateDiags(resourceInstanceFlatten(ctx, awsClient, &output, rd))...)
+			rd.SetId(aws.ToString(instance.InstanceId))
+			result.Diagnostics.Append(translateDiags(resourceInstanceFlatten(ctx, awsClient, &instance, rd))...)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -4127,9 +4125,9 @@ func (l *instanceListResource) List(ctx context.Context, request list.ListReques
 			}
 
 			if v, ok := tags["Name"]; ok {
-				result.DisplayName = v.ValueString()
+				result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(instance.InstanceId))
 			} else {
-				result.DisplayName = aws.ToString(output.InstanceId)
+				result.DisplayName = aws.ToString(instance.InstanceId)
 			}
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)

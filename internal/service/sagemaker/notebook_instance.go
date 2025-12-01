@@ -115,7 +115,7 @@ func resourceNotebookInstance() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(notebook-al1-v1|notebook-al2-v1|notebook-al2-v2|notebook-al2-v3)$`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(notebook-al1-v1|notebook-al2-v1|notebook-al2-v2|notebook-al2-v3|notebook-al2023-v1)$`), ""),
 			},
 			names.AttrRoleARN: {
 				Type:         schema.TypeString,
