@@ -120,5 +120,5 @@ import {
 Using `terraform import`, import EKS Capability using the `cluster_name` and `capability_name` separated by a comma (`,`). For example:
 
 ```console
-$ terraform import aws_eks_capability.example my-cluster,my-capability
+% terraform import aws_eks_capability.example my-cluster,my-capability
 ```
