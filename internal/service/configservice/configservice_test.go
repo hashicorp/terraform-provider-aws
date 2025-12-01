@@ -18,7 +18,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			acctest.CtBasic:      testAccConfigServiceAggregateAuthorization_basic,
 			"deprecatedRegion":   testAccConfigServiceAggregateAuthorization_deprecatedRegion,
 			acctest.CtDisappears: testAccConfigServiceAggregateAuthorization_disappears,
-			"tags":               testAccConfigServiceAggregateAuthorization_tags,
+			"tags":               testAccConfigServiceAggregateAuthorization_tagsSerial,
 		},
 		"ConfigRule": {
 			acctest.CtBasic:      testAccConfigRule_basic,
