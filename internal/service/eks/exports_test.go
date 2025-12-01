@@ -8,14 +8,13 @@ var (
 	ResourceAccessEntry             = resourceAccessEntry
 	ResourceAccessPolicyAssociation = resourceAccessPolicyAssociation
 	ResourceAddon                   = resourceAddon
-	ResourceCapability              = resourceCapability
+	ResourceCapability              = newCapabilityResource
 	ResourceCluster                 = resourceCluster
 	ResourceFargateProfile          = resourceFargateProfile
 	ResourceIdentityProviderConfig  = resourceIdentityProviderConfig
 	ResourceNodeGroup               = resourceNodeGroup
 	ResourcePodIdentityAssociation  = newPodIdentityAssociationResource
 
-	CapabilityParseResourceID                  = capabilityParseResourceID
 	ClusterStateUpgradeV0                      = clusterStateUpgradeV0
 	FindAccessEntryByTwoPartKey                = findAccessEntryByTwoPartKey
 	FindAccessPolicyAssociationByThreePartKey  = findAccessPolicyAssociationByThreePartKey

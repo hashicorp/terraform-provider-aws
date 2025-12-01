@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -30,6 +31,7 @@ import (
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -98,7 +100,7 @@ func (r *capabilityResource) Schema(ctx context.Context, request resource.Schema
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"argoc_cd": schema.ListNestedBlock{
+						"argo_cd": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[argoCDConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -147,8 +149,8 @@ func (r *capabilityResource) Schema(ctx context.Context, request resource.Schema
 											},
 										},
 									},
-									"rbac_role_mapping": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[argoCDRoleMappingModel](ctx),
+									"rbac_role_mapping": schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[argoCDRoleMappingModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												names.AttrRole: schema.StringAttribute{
@@ -157,11 +159,11 @@ func (r *capabilityResource) Schema(ctx context.Context, request resource.Schema
 												},
 											},
 											Blocks: map[string]schema.Block{
-												"identity": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[SSOIdentity](ctx),
-													Validators: []validator.List{
-														listvalidator.IsRequired(),
-														listvalidator.SizeAtLeast(1),
+												"identity": schema.SetNestedBlock{
+													CustomType: fwtypes.NewSetNestedObjectTypeOf[SSOIdentity](ctx),
+													Validators: []validator.Set{
+														setvalidator.IsRequired(),
+														setvalidator.SizeAtLeast(1),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
@@ -213,7 +215,7 @@ func (r *capabilityResource) Create(ctx context.Context, request resource.Create
 	input.ClientRequestToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateCapability(ctx, &input)
+	_, err := conn.CreateCapability(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating EKS Capability (%s,%s)", clusterName, capabilityName), err.Error())
@@ -221,14 +223,15 @@ func (r *capabilityResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	if _, err := waitCapabilityCreated(ctx, conn, clusterName, capabilityName, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	capability, err := waitCapabilityCreated(ctx, conn, clusterName, capabilityName, r.CreateTimeout(ctx, data.Timeouts))
+
+	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EKS Capability (%s,%s) create", clusterName, capabilityName), err.Error())
 
 		return
 	}
 
 	// Set values for unknowns.
-	capability := output.Capability
 	data.ARN = fwflex.StringToFramework(ctx, capability.Arn)
 	data.Version = fwflex.StringToFramework(ctx, capability.Version)
 
@@ -258,6 +261,10 @@ func (r *capabilityResource) Read(ctx context.Context, request resource.ReadRequ
 		response.Diagnostics.AddError(fmt.Sprintf("reading EKS Capability (%s,%s)", clusterName, capabilityName), err.Error())
 
 		return
+	}
+
+	if inttypes.IsZero(output.Configuration) {
+		output.Configuration = nil
 	}
 
 	// Set attributes for import.
@@ -391,7 +398,7 @@ type argoCDConfigModel struct {
 	AWSIDC           fwtypes.ListNestedObjectValueOf[argoCDAWSIDCConfigModel]        `tfsdk:"aws_idc"`
 	Namespace        types.String                                                    `tfsdk:"namespace"`
 	NetworkAccess    fwtypes.ListNestedObjectValueOf[argoCDNetworkAccessConfigModel] `tfsdk:"network_access"`
-	RBACRoleMappings fwtypes.ListNestedObjectValueOf[argoCDRoleMappingModel]         `tfsdk:"rbac_role_mapping"`
+	RBACRoleMappings fwtypes.SetNestedObjectValueOf[argoCDRoleMappingModel]          `tfsdk:"rbac_role_mapping"`
 }
 
 type argoCDAWSIDCConfigModel struct {
@@ -404,8 +411,8 @@ type argoCDNetworkAccessConfigModel struct {
 }
 
 type argoCDRoleMappingModel struct {
-	Identities fwtypes.ListNestedObjectValueOf[SSOIdentity] `tfsdk:"identity"`
-	Role       fwtypes.StringEnum[awstypes.ArgoCdRole]      `tfsdk:"role"`
+	Identities fwtypes.SetNestedObjectValueOf[SSOIdentity] `tfsdk:"identity"`
+	Role       fwtypes.StringEnum[awstypes.ArgoCdRole]     `tfsdk:"role"`
 }
 
 type SSOIdentity struct {

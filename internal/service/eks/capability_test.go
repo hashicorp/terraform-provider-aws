@@ -79,7 +79,7 @@ func TestAccEKSCapability_disappears(t *testing.T) {
 				Config: testAccCapabilityConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapabilityExists(ctx, resourceName, &capability),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceCapability(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfeks.ResourceCapability, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
