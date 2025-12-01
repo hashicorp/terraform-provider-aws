@@ -117,6 +117,7 @@ const (
 	errCodeInvalidTransitGatewayPolicyTableIdNotFound              = "InvalidTransitGatewayPolicyTableId.NotFound"
 	errCodeInvalidVPCBlockPublicAccessExclusionIdNotFound          = "InvalidVpcBlockPublicAccessExclusionId.NotFound"
 	errCodeInvalidVPCCIDRBlockAssociationIDNotFound                = "InvalidVpcCidrBlockAssociationID.NotFound"
+	errCodeInvalidVPCEncryptionControlIdNotFound                   = "InvalidVpcEncryptionControlId.NotFound"
 	errCodeInvalidVPCEndpointIdNotFound                            = "InvalidVpcEndpointId.NotFound"
 	errCodeInvalidVPCEndpointNotFound                              = "InvalidVpcEndpoint.NotFound"
 	errCodeInvalidVPCEndpointServiceIdNotFound                     = "InvalidVpcEndpointServiceId.NotFound"

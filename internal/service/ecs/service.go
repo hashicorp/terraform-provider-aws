@@ -2298,7 +2298,7 @@ func findPrimaryDeploymentARN(ctx context.Context, conn *ecs.Client, primaryTask
 	}
 	taskSetID := parts[1]
 
-	input := &ecs.ListServiceDeploymentsInput{
+	input := ecs.ListServiceDeploymentsInput{
 		Cluster: aws.String(clusterNameOrARN),
 		Service: aws.String(serviceNameFromARN(serviceNameOrARN)),
 		CreatedAt: &awstypes.CreatedAt{
@@ -2306,13 +2306,13 @@ func findPrimaryDeploymentARN(ctx context.Context, conn *ecs.Client, primaryTask
 		},
 	}
 
-	output, err := conn.ListServiceDeployments(ctx, input)
+	deployments, err := findServiceDeploymentBriefs(ctx, conn, &input)
 	if err != nil {
 		return nil, err
 	}
 
 	// Find deployment matching task set
-	for _, deployment := range output.ServiceDeployments {
+	for _, deployment := range deployments {
 		if strings.Contains(aws.ToString(deployment.TargetServiceRevisionArn), taskSetID) {
 			return deployment.ServiceDeploymentArn, nil
 		}
@@ -2321,23 +2321,22 @@ func findPrimaryDeploymentARN(ctx context.Context, conn *ecs.Client, primaryTask
 	return nil, nil
 }
 
-func findDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn string) (string, error) {
+func findDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentARN string) (string, error) {
 	input := ecs.DescribeServiceDeploymentsInput{
-		ServiceDeploymentArns: []string{deploymentArn},
+		ServiceDeploymentArns: []string{deploymentARN},
 	}
 
-	output, err := conn.DescribeServiceDeployments(ctx, &input)
+	output, err := findServiceDeployments(ctx, conn, &input)
+
 	if err != nil {
 		return "", err
 	}
 
-	if len(output.ServiceDeployments) == 0 {
+	if len(output) == 0 {
 		return serviceStatusPending, nil
 	}
 
-	deployment := output.ServiceDeployments[0]
-
-	switch deployment.Status {
+	switch deployment := output[0]; deployment.Status {
 	case awstypes.ServiceDeploymentStatusSuccessful:
 		return serviceStatusStable, nil
 	case awstypes.ServiceDeploymentStatusInProgress:
@@ -2353,6 +2352,54 @@ func findDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn s
 	default:
 		return serviceStatusPending, nil
 	}
+}
+
+func findServiceDeployments(ctx context.Context, conn *ecs.Client, input *ecs.DescribeServiceDeploymentsInput) ([]awstypes.ServiceDeployment, error) {
+	output, err := conn.DescribeServiceDeployments(ctx, input)
+
+	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ServiceDeployments, nil
+}
+
+func findServiceDeploymentBriefs(ctx context.Context, conn *ecs.Client, input *ecs.ListServiceDeploymentsInput) ([]awstypes.ServiceDeploymentBrief, error) {
+	var output []awstypes.ServiceDeploymentBrief
+
+	err := listServiceDeploymentsPages(ctx, conn, input, func(page *ecs.ListServiceDeploymentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.ServiceDeployments...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 type rollbackState struct {

@@ -168,6 +168,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mgn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaaserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptunegraph"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
@@ -430,6 +431,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		mgn.ServicePackage(ctx),
 		mq.ServicePackage(ctx),
 		mwaa.ServicePackage(ctx),
+		mwaaserverless.ServicePackage(ctx),
 		neptune.ServicePackage(ctx),
 		neptunegraph.ServicePackage(ctx),
 		networkfirewall.ServicePackage(ctx),

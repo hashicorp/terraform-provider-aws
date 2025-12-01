@@ -400,6 +400,56 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 	})
 }
 
+func TestAccSiteVPNConnection_cloudWatchLogOptionsBGPLog(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn awstypes.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPNConnectionConfig_cloudWatchLogOptionsBGPLog(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.bgp_log_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.bgp_log_group_arn", "aws_cloudwatch_log_group.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.bgp_log_output_format", names.AttrJSON),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.bgp_log_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
+			},
+			{
+				Config: testAccVPNConnectionConfig_cloudWatchLogOptionsBGPLogUpdated(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.bgp_log_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.bgp_log_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.bgp_log_group_arn", "aws_cloudwatch_log_group.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.bgp_log_output_format", "text"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpn awstypes.VpnConnection
@@ -2062,6 +2112,88 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
+func testAccVPNConnectionConfig_cloudWatchLogOptionsBGPLog(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id      = aws_vpn_gateway.test.id
+  customer_gateway_id = aws_customer_gateway.test.id
+  type                = "ipsec.1"
+
+  tunnel1_log_options {
+    cloudwatch_log_options {
+      bgp_log_enabled       = true
+      bgp_log_group_arn     = aws_cloudwatch_log_group.test.arn
+      bgp_log_output_format = "json"
+    }
+  }
+}
+`, rName, rBgpAsn)
+}
+
+func testAccVPNConnectionConfig_cloudWatchLogOptionsBGPLogUpdated(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id      = aws_vpn_gateway.test.id
+  customer_gateway_id = aws_customer_gateway.test.id
+  type                = "ipsec.1"
+
+  tunnel1_log_options {
+    cloudwatch_log_options {
+      bgp_log_enabled = false
+    }
+  }
+
+  tunnel2_log_options {
+    cloudwatch_log_options {
+      bgp_log_enabled       = true
+      bgp_log_group_arn     = aws_cloudwatch_log_group.test.arn
+      bgp_log_output_format = "text"
+    }
+  }
+}
+`, rName, rBgpAsn)
+}
+
 func testAccVPNConnectionConfig_customerGatewayID(rName string, rBgpAsn1, rBgpAsn2 int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
@@ -2251,6 +2383,10 @@ resource "aws_vpn_connection" "test" {
   tags = {
     Name = %[1]q
   }
+
+  depends_on = [
+    aws_dx_gateway_association.test
+  ]
 }
 `, rName, rBgpAsn)
 }

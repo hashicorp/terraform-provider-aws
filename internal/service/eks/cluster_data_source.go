@@ -81,6 +81,18 @@ func dataSourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"control_plane_scaling_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tier": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -349,6 +361,9 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	if err := d.Set("compute_config", flattenComputeConfigResponse(cluster.ComputeConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
+	}
+	if err := d.Set("control_plane_scaling_config", flattenControlPlaneScalingConfig(cluster.ControlPlaneScalingConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting control_plane_scaling_config: %s", err)
 	}
 	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrDeletionProtection, cluster.DeletionProtection)

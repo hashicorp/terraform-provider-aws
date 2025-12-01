@@ -262,10 +262,16 @@ func resourceGatewayAssociationDelete(ctx context.Context, d *schema.ResourceDat
 	associationID := d.Get("dx_gateway_association_id").(string)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway Association: %s", d.Id())
+	const (
+		timeout = 1 * time.Minute
+	)
 	input := directconnect.DeleteDirectConnectGatewayAssociationInput{
 		AssociationId: aws.String(associationID),
 	}
-	_, err := conn.DeleteDirectConnectGatewayAssociation(ctx, &input)
+
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.DirectConnectClientException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteDirectConnectGatewayAssociation(ctx, &input)
+	}, "has non-deleted Private IP VPN")
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "does not exist") {
 		return diags
