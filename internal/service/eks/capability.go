@@ -113,6 +113,11 @@ func (r *capabilityResource) Schema(ctx context.Context, request resource.Schema
 								Attributes: map[string]schema.Attribute{
 									names.AttrNamespace: schema.StringAttribute{
 										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplaceIfConfigured(),
+											stringplanmodifier.UseStateForUnknown(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -128,11 +133,25 @@ func (r *capabilityResource) Schema(ctx context.Context, request resource.Schema
 												"idc_instance_arn": schema.StringAttribute{
 													CustomType: fwtypes.ARNType,
 													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"idc_managed_application_arn": schema.StringAttribute{
+													Computed: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.UseStateForUnknown(),
+													},
 												},
 												"idc_region": schema.StringAttribute{
 													Optional: true,
+													Computed: true,
 													Validators: []validator.String{
 														fwvalidators.AWSRegion(),
+													},
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplaceIfConfigured(),
+														stringplanmodifier.UseStateForUnknown(),
 													},
 												},
 											},
@@ -236,8 +255,10 @@ func (r *capabilityResource) Create(ctx context.Context, request resource.Create
 	}
 
 	// Set values for unknowns.
-	data.ARN = fwflex.StringToFramework(ctx, capability.Arn)
-	data.Version = fwflex.StringToFramework(ctx, capability.Version)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, capability, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -555,8 +576,9 @@ type argoCDConfigModel struct {
 }
 
 type argoCDAWSIDCConfigModel struct {
-	IDCInstanceARN fwtypes.ARN  `tfsdk:"idc_instance_arn"`
-	IDCRegion      types.String `tfsdk:"idc_region"`
+	IDCInstanceARN           fwtypes.ARN  `tfsdk:"idc_instance_arn"`
+	IDCManagedApplicationARN fwtypes.ARN  `tfsdk:"idc_managed_application_arn"`
+	IDCRegion                types.String `tfsdk:"idc_region"`
 }
 
 type argoCDNetworkAccessConfigModel struct {
