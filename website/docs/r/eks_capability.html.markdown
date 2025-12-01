@@ -14,11 +14,11 @@ Manages an EKS Capability for an EKS cluster.
 
 ```terraform
 resource "aws_eks_capability" "example" {
-  cluster_name                = aws_eks_cluster.example.name
-  capability_name             = "argocd"
-  type                        = "ARGOCD"
-  role_arn                    = aws_iam_role.example.arn
-  delete_propagation_policy   = "RETAIN"
+  cluster_name              = aws_eks_cluster.example.name
+  capability_name           = "argocd"
+  type                      = "ARGOCD"
+  role_arn                  = aws_iam_role.example.arn
+  delete_propagation_policy = "RETAIN"
 
   configuration {
     argo_cd {
