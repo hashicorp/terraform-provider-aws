@@ -144,6 +144,10 @@ func resourceNATGateway() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						names.AttrNetworkInterfaceID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"public_ip": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -528,7 +532,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		if d.HasChanges("availability_zone_address") {
 			o, n := d.GetChange("availability_zone_address")
 			os, ns := o.(*schema.Set), n.(*schema.Set)
-			
+
 			// Cache AZ ID→Name map to avoid redundant API calls
 			var azIDtoNameMap map[string]string
 			oldMap, err := processAZAddressSetWithCache(ctx, conn, os, azIDtoNameMap)
@@ -791,6 +795,7 @@ func flattenRegionalNATGatewayAddress(addresses []awstypes.NatGatewayAddress) []
 		m[names.AttrAssociationID] = aws.ToString(addr.AssociationId)
 		m[names.AttrAvailabilityZone] = aws.ToString(addr.AvailabilityZone)
 		m["availability_zone_id"] = aws.ToString(addr.AvailabilityZoneId)
+		m[names.AttrNetworkInterfaceID] = aws.ToString(addr.NetworkInterfaceId)
 		m["public_ip"] = aws.ToString(addr.PublicIp)
 		m[names.AttrStatus] = addr.Status
 		result = append(result, m)
