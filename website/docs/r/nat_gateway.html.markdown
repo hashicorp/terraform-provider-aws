@@ -152,11 +152,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `public_ip` - (zonal NAT gateways only) The Elastic IP address associated with the NAT Gateway.
 * `regional_nat_gateway_address` - (regional NAT gateways only) Repeatable blocks for information about the IP addresses and network interface associated with the regional NAT gateway.
     * `allocation_id` - Allocation ID of the Elastic IP address.
+    * `association_id` - Association ID of the Elastic IP address.
     * `availability_zone` - Availability Zone where this specific NAT gateway configuration is active.
     * `availability_zone_id` - Availability Zone ID where this specific NAT gateway configuration is active
-    * `association_id` - Association ID of the Elastic IP address.
     * `network_interface_id` - ID of the network interface.
     * `public_ip` - Public IP address.
+    * `status` - Status of the NAT gateway address.
 * `route_table_id` - (regional NAT gateways only) ID of the automatically created route table.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
