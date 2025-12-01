@@ -534,17 +534,19 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			o, n := d.GetChange("availability_zone_address")
 			os, ns := o.(*schema.Set), n.(*schema.Set)
 
-			// Cache AZ ID→Name map to avoid redundant API calls
+			// Pre-fetch AZ ID→Name map once if needed to avoid redundant API calls
 			var azIDtoNameMap map[string]string
-			oldMap, err := processAZAddressSet(ctx, conn, os, azIDtoNameMap)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "processing old availability zone address set: %s", err)
-			}
-			if azIDtoNameMap == nil {
+			if needsAZIDtoNameMap(os) || needsAZIDtoNameMap(ns) {
+				var err error
 				azIDtoNameMap, err = makeAZIDtoNameMap(ctx, conn)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "retrieving availability zone ID to name map: %s", err)
 				}
+			}
+
+			oldMap, err := processAZAddressSet(ctx, conn, os, azIDtoNameMap)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "processing old availability zone address set: %s", err)
 			}
 			newMap, err := processAZAddressSet(ctx, conn, ns, azIDtoNameMap)
 			if err != nil {
@@ -826,6 +828,27 @@ func makeAZIDtoNameMap(ctx context.Context, conn *ec2.Client) (map[string]string
 	return azIDtoNameMap, nil
 }
 
+func needsAZIDtoNameMap(s *schema.Set) bool {
+	for _, addr := range s.List() {
+		item, ok := addr.(map[string]any)
+		if !ok {
+			continue
+		}
+		var az, azID string
+		if v, ok := item[names.AttrAvailabilityZone]; ok {
+			az = v.(string)
+		}
+		if v, ok := item["availability_zone_id"]; ok {
+			azID = v.(string)
+		}
+		// If AZ ID is specified but AZ name is not, we need the map
+		if az == "" && azID != "" {
+			return true
+		}
+	}
+	return false
+}
+
 func processAZAddressSet(ctx context.Context, conn *ec2.Client, s *schema.Set, azIDtoNameMap map[string]string) (map[string]*schema.Set, error) {
 	sl := s.List()
 	result := make(map[string]*schema.Set)
@@ -845,11 +868,7 @@ func processAZAddressSet(ctx context.Context, conn *ec2.Client, s *schema.Set, a
 
 		if az == "" && azID != "" {
 			if azIDtoNameMap == nil {
-				var err error
-				azIDtoNameMap, err = makeAZIDtoNameMap(ctx, conn)
-				if err != nil {
-					return nil, fmt.Errorf("retrieving availability zone ID to name map: %w", err)
-				}
+				return nil, fmt.Errorf("availability zone ID to name map required but not provided")
 			}
 			var exists bool
 			az, exists = azIDtoNameMap[azID]
