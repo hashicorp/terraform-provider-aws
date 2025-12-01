@@ -508,23 +508,23 @@ func findGateway(ctx context.Context, conn *bedrockagentcorecontrol.Client, inpu
 
 type gatewayResourceModel struct {
 	framework.WithRegionModel
-	AuthorizerConfiguration   fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]        `tfsdk:"authorizer_configuration"`
-	AuthorizerType            fwtypes.StringEnum[awstypes.AuthorizerType]                          `tfsdk:"authorizer_type"`
-	Description               types.String                                                         `tfsdk:"description"`
-	ExceptionLevel            fwtypes.StringEnum[awstypes.ExceptionLevel]                          `tfsdk:"exception_level"`
-	GatewayARN                types.String                                                         `tfsdk:"gateway_arn"`
-	GatewayID                 types.String                                                         `tfsdk:"gateway_id"`
-	GatewayURL                types.String                                                         `tfsdk:"gateway_url"`
+	AuthorizerConfiguration   fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]         `tfsdk:"authorizer_configuration"`
+	AuthorizerType            fwtypes.StringEnum[awstypes.AuthorizerType]                           `tfsdk:"authorizer_type"`
+	Description               types.String                                                          `tfsdk:"description"`
+	ExceptionLevel            fwtypes.StringEnum[awstypes.ExceptionLevel]                           `tfsdk:"exception_level"`
+	GatewayARN                types.String                                                          `tfsdk:"gateway_arn"`
+	GatewayID                 types.String                                                          `tfsdk:"gateway_id"`
+	GatewayURL                types.String                                                          `tfsdk:"gateway_url"`
 	InterceptorConfigurations fwtypes.ListNestedObjectValueOf[gatewayInterceptorConfigurationModel] `tfsdk:"interceptor_configurations"`
-	KMSKeyARN                 fwtypes.ARN                                                          `tfsdk:"kms_key_arn"`
-	Name                      types.String                                                         `tfsdk:"name"`
-	ProtocolConfiguration     fwtypes.ListNestedObjectValueOf[gatewayProtocolConfigurationModel]   `tfsdk:"protocol_configuration"`
-	ProtocolType              fwtypes.StringEnum[awstypes.GatewayProtocolType]                     `tfsdk:"protocol_type"`
-	RoleARN                   fwtypes.ARN                                                          `tfsdk:"role_arn"`
-	Tags                      tftags.Map                                                           `tfsdk:"tags"`
-	TagsAll                   tftags.Map                                                           `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value                                                       `tfsdk:"timeouts"`
-	WorkloadIdentityDetails   fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]        `tfsdk:"workload_identity_details"`
+	KMSKeyARN                 fwtypes.ARN                                                           `tfsdk:"kms_key_arn"`
+	Name                      types.String                                                          `tfsdk:"name"`
+	ProtocolConfiguration     fwtypes.ListNestedObjectValueOf[gatewayProtocolConfigurationModel]    `tfsdk:"protocol_configuration"`
+	ProtocolType              fwtypes.StringEnum[awstypes.GatewayProtocolType]                      `tfsdk:"protocol_type"`
+	RoleARN                   fwtypes.ARN                                                           `tfsdk:"role_arn"`
+	Tags                      tftags.Map                                                            `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                            `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                                                        `tfsdk:"timeouts"`
+	WorkloadIdentityDetails   fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]         `tfsdk:"workload_identity_details"`
 }
 
 type gatewayProtocolConfigurationModel struct {
@@ -582,9 +582,9 @@ type mcpGatewayConfigurationModel struct {
 }
 
 type gatewayInterceptorConfigurationModel struct {
-	InputConfiguration  fwtypes.ListNestedObjectValueOf[interceptorInputConfigurationModel] `tfsdk:"input_configuration"`
-	InterceptionPoints  fwtypes.SetOfString                                                 `tfsdk:"interception_points"`
-	Interceptor         fwtypes.ListNestedObjectValueOf[interceptorConfigurationModel]      `tfsdk:"interceptor"`
+	InputConfiguration fwtypes.ListNestedObjectValueOf[interceptorInputConfigurationModel] `tfsdk:"input_configuration"`
+	InterceptionPoints fwtypes.SetOfString                                                 `tfsdk:"interception_points"`
+	Interceptor        fwtypes.ListNestedObjectValueOf[interceptorConfigurationModel]      `tfsdk:"interceptor"`
 }
 
 type interceptorInputConfigurationModel struct {
