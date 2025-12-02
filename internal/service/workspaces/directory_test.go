@@ -1256,12 +1256,12 @@ func testAccDirectory_poolsWorkspaceCreationAD(t *testing.T) {
 	})
 }
 
-func testAccDirectory_dedicatedTenancy(t *testing.T) {
+func TestAccDirectory_dedicatedTenancy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.WorkspaceDirectory
+	var v1, v2 types.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
 
-	resourceName := "aws_workspaces_directory.dedicated_tenancy"
+	resourceName := "aws_workspaces_directory.pool"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -1275,14 +1275,25 @@ func testAccDirectory_dedicatedTenancy(t *testing.T) {
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfig_dedicatedTenancy(rName, "dedicated_tenancy"),
+				Config: testAccDirectoryConfig_dedicatedTenancy(rName, "SHARED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "workspace_type", "DEDICATED_TENANCY"),
+					testAccCheckDirectoryExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "workspace_type", "POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "CUSTOMER_MANAGED"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_directory_name", fmt.Sprintf("tf-testacc-workspaces-directory-%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "workspace_directory_description", fmt.Sprintf("tf-testacc-workspaces-directory-%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tenancy", "SHARED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDirectoryConfig_dedicatedTenancy(rName, "DEDICATED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "workspace_type", "POOLS"),
+					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "CUSTOMER_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "DEDICATED"),
 				),
 			},
@@ -1501,16 +1512,61 @@ resource "aws_workspaces_directory" "pool" {
 `, rName, domain))
 }
 
-func testAccDirectoryConfig_dedicatedTenancy(rName, domain string) string {
+func testAccDirectoryConfig_dedicatedTenancy(rName, tenancy string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_base(rName, domain),
+		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-resource "aws_workspaces_directory" "dedicated_tenancy" {
-  tenancy = "DEDICATED"
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+locals {
+  region_workspaces_az_ids = {
+    "us-east-1" = formatlist("use1-az%%d", [2, 4, 6])
+  }
+
+  workspaces_az_ids = lookup(local.region_workspaces_az_ids, data.aws_region.current.region, data.aws_availability_zones.available.zone_ids)
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = "tf-testacc-workspaces-directory-%[1]s"
   }
 }
-`, rName),
-	)
+
+resource "aws_subnet" "primary" {
+  vpc_id               = aws_vpc.main.id
+  availability_zone_id = local.workspaces_az_ids[0]
+  cidr_block           = "10.0.1.0/24"
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s-primary"
+  }
+}
+
+resource "aws_subnet" "secondary" {
+  vpc_id               = aws_vpc.main.id
+  availability_zone_id = local.workspaces_az_ids[1]
+  cidr_block           = "10.0.2.0/24"
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s-secondary"
+  }
+}
+
+resource "aws_workspaces_directory" "pool" {
+  subnet_ids                      = [aws_subnet.primary.id, aws_subnet.secondary.id]
+  workspace_type                  = "POOLS"
+  workspace_directory_name        = "tf-testacc-workspaces-directory-%[1]s"
+  workspace_directory_description = "tf-testacc-workspaces-directory-%[1]s"
+  user_identity_type              = "CUSTOMER_MANAGED"
+  tenancy                         = %[2]q
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName, tenancy))
 }

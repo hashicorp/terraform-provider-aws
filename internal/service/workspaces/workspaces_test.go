@@ -20,6 +20,7 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			"selfServicePermissions":      testAccDirectory_selfServicePermissions,
 			"subnetIDs":                   testAccDirectory_subnetIDs,
 			"tags":                        testAccDirectory_tags,
+			"tenancy":                     TestAccDirectory_dedicatedTenancy,
 			"workspaceAccessProperties":   testAccDirectory_workspaceAccessProperties,
 			"workspaceCreationProperties": testAccDirectory_workspaceCreationProperties,
 			"workspaceCreationProperties_customSecurityGroupId_defaultOu": testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu,
@@ -29,7 +30,6 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			"workspacePoolsADConfig":                                      testAccDirectory_poolsADConfig,
 			"workspacePoolsWorkspaceCreation":                             testAccDirectory_poolsWorkspaceCreation,
 			"workspacePoolsWorkspaceCreationAD":                           testAccDirectory_poolsWorkspaceCreationAD,
-			"tenancy":                                                     testAccDirectory_dedicatedTenancy,
 		},
 		"IpGroup": {
 			acctest.CtBasic:       testAccIPGroup_basic,
