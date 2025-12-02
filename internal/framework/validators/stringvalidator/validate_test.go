@@ -11,7 +11,7 @@ import (
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 )
 
-func TestContainsOnlyLowerCaseLettersNumbersHypens(t *testing.T) {
+func TestContainsOnlyLowerCaseLettersNumbersHyphens(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -46,7 +46,7 @@ func TestContainsOnlyLowerCaseLettersNumbersHypens(t *testing.T) {
 				ConfigValue: test.in,
 			}
 			res := validator.StringResponse{}
-			tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersHypens.ValidateString(t.Context(), req, &res)
+			tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersHyphens.ValidateString(t.Context(), req, &res)
 
 			if !res.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")

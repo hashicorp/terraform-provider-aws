@@ -76,7 +76,7 @@ func (r *vectorBucketResource) Schema(ctx context.Context, request resource.Sche
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 63),
-					tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersHypens,
+					tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersHyphens,
 					tfstringvalidator.StartsWithLetterOrNumber,
 					tfstringvalidator.EndsWithLetterOrNumber,
 				},
