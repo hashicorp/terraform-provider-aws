@@ -237,7 +237,7 @@ func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Hsm); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 
 		return output, err
 	}
@@ -258,7 +258,7 @@ func waitHSMDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Hsm); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 
 		return output, err
 	}
