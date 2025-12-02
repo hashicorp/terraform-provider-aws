@@ -426,7 +426,7 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -448,7 +448,7 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -470,7 +470,7 @@ func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
