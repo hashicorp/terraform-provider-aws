@@ -101,8 +101,9 @@ func resourceFunction() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"capacity_provider_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 									},
 									"execution_environment_memory_gib_per_vcpu": {
 										Type:     schema.TypeFloat,
