@@ -60,9 +60,9 @@ func statusImage(ctx context.Context, conn *sagemaker.Client, name string) retry
 	}
 }
 
-func statusImageVersionByName(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+func statusImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int32) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findImageVersionByName(ctx, conn, name)
+		output, err := findImageVersionByTwoPartKey(ctx, conn, name, version)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

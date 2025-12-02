@@ -1,0 +1,3 @@
+```release-note:bug-fix
+resource/aws_sagemaker_image_version: Fix race condition when creating multiple versions concurrently
+```
