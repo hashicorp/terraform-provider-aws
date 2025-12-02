@@ -101,11 +101,11 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Timeouts
 
-`aws_eks_capability` provides the following [Timeouts](https://www.terraform.io/language/resources/syntax#timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `20m`) How long to wait for the capability to be created.
-* `update` - (Default `20m`) How long to wait for the capability to be updated.
-* `delete` - (Default `20m`) How long to wait for the capability to be deleted.
+* `create` - (Default `20m`)
+* `update` - (Default `20m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
