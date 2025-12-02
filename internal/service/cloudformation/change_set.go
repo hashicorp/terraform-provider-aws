@@ -75,7 +75,7 @@ func waitChangeSetCreated(ctx context.Context, conn *cloudformation.Client, stac
 
 	if output, ok := outputRaw.(*cloudformation.DescribeChangeSetOutput); ok {
 		if output.Status == awstypes.ChangeSetStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 		}
 
 		return output, err
