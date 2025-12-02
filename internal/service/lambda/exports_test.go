@@ -6,6 +6,7 @@ package lambda
 // Exports for use in tests only.
 var (
 	ResourceAlias                        = resourceAlias
+	ResourceCapacityProvider             = newResourceCapacityProvider
 	ResourceCodeSigningConfig            = resourceCodeSigningConfig
 	ResourceEventSourceMapping           = resourceEventSourceMapping
 	ResourceFunction                     = resourceFunction
@@ -18,6 +19,7 @@ var (
 	ResourceProvisionedConcurrencyConfig = resourceProvisionedConcurrencyConfig
 
 	FindAliasByTwoPartKey                        = findAliasByTwoPartKey
+	FindCapacityProviderByName                   = findCapacityProviderByName
 	FindCodeSigningConfigByARN                   = findCodeSigningConfigByARN
 	FindEventSourceMappingByID                   = findEventSourceMappingByID
 	FindFunctionByName                           = findFunctionByName

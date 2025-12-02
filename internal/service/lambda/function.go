@@ -88,6 +88,39 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"capacity_provider_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"lambda_managed_instances_capacity_provider_config": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_provider_arn": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+									},
+									"execution_environment_memory_gib_per_vcpu": {
+										Type:     schema.TypeFloat,
+										Optional: true,
+										Computed: true,
+									},
+									"per_execution_environment_max_concurrency": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"code_sha256": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -298,6 +331,11 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"publish_to": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.FunctionVersionLatestPublished](),
 			},
 			"qualified_arn": {
 				Type:     schema.TypeString,
@@ -512,6 +550,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		Timeout:      aws.Int32(int32(d.Get(names.AttrTimeout).(int))),
 	}
 
+	if v, ok := d.GetOk("capacity_provider_config"); ok {
+		input.CapacityProviderConfig = expandCapacityProviderConfig(v.([]any))
+	}
+
 	if v, ok := d.GetOk("filename"); ok {
 		// Grab an exclusive lock so that we're only reading one function into memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364.
@@ -574,6 +616,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 	if packageType == awstypes.PackageTypeZip {
 		input.Handler = aws.String(d.Get("handler").(string))
 		input.Runtime = awstypes.Runtime(d.Get("runtime").(string))
+	}
+
+	if v, ok := d.GetOk("publish_to"); ok {
+		input.PublishTo = awstypes.FunctionVersionLatestPublished(v.(string))
 	}
 
 	if v, ok := d.GetOk("image_config"); ok && len(v.([]any)) > 0 {
@@ -704,6 +750,9 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("architectures", function.Architectures)
 	functionARN := aws.ToString(function.FunctionArn)
 	d.Set(names.AttrARN, functionARN)
+	if err := d.Set("capacity_provider_config", flattenCapacityProviderConfig(function.CapacityProviderConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_config: %s", err)
+	}
 	d.Set("code_sha256", function.CodeSha256)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []any{
@@ -878,6 +927,12 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	if configUpdate {
 		input := lambda.UpdateFunctionConfigurationInput{
 			FunctionName: aws.String(d.Id()),
+		}
+
+		if d.HasChange("capacity_provider_config") {
+			if v, ok := d.GetOk("capacity_provider_config"); ok {
+				input.CapacityProviderConfig = expandCapacityProviderConfig(v.([]any))
+			}
 		}
 
 		if d.HasChange("dead_letter_config") {
@@ -1096,6 +1151,10 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	if d.Get("publish").(bool) && (codeUpdate || configUpdate || d.HasChange("publish")) {
 		input := lambda.PublishVersionInput{
 			FunctionName: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("publish_to"); ok {
+			input.PublishTo = awstypes.FunctionVersionLatestPublished(v.(string))
 		}
 
 		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
@@ -1387,7 +1446,7 @@ func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lamb
 func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.FunctionConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatePending),
-		Target:  enum.Slice(awstypes.StateActive),
+		Target:  enum.Slice(awstypes.StateActive, awstypes.StateActiveNonInvocable),
 		Refresh: statusFunctionState(ctx, conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
@@ -1575,7 +1634,9 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
 		d.HasChange(names.AttrEnvironment) ||
-		d.HasChange("ephemeral_storage")
+		d.HasChange("ephemeral_storage") ||
+		d.HasChange("capacity_provider_config") ||
+		d.HasChange("publish_to")
 }
 
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.
@@ -1618,6 +1679,59 @@ func signerServiceIsAvailable(region string) bool {
 	_, ok := availableRegions[region]
 
 	return ok
+}
+
+func flattenCapacityProviderConfig(apiObject *awstypes.CapacityProviderConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	innerMap := make(map[string]any)
+	if apiObject.LambdaManagedInstancesCapacityProviderConfig != nil {
+		innerMap["capacity_provider_arn"] = apiObject.LambdaManagedInstancesCapacityProviderConfig.CapacityProviderArn
+
+		if apiObject.LambdaManagedInstancesCapacityProviderConfig.ExecutionEnvironmentMemoryGiBPerVCpu != nil {
+			innerMap["execution_environment_memory_gib_per_vcpu"] = apiObject.LambdaManagedInstancesCapacityProviderConfig.ExecutionEnvironmentMemoryGiBPerVCpu
+		}
+
+		if apiObject.LambdaManagedInstancesCapacityProviderConfig.PerExecutionEnvironmentMaxConcurrency != nil {
+			innerMap["per_execution_environment_max_concurrency"] = apiObject.LambdaManagedInstancesCapacityProviderConfig.PerExecutionEnvironmentMaxConcurrency
+		}
+	}
+
+	out := map[string]any{
+		"lambda_managed_instances_capacity_provider_config": []any{innerMap},
+	}
+
+	return []any{out}
+}
+
+func expandCapacityProviderConfig(tfList []any) *awstypes.CapacityProviderConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out awstypes.CapacityProviderConfig
+	m := tfList[0].(map[string]any)
+	if v, ok := m["lambda_managed_instances_capacity_provider_config"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		im := v.([]any)[0].(map[string]any)
+		var lmic awstypes.LambdaManagedInstancesCapacityProviderConfig
+		if val, ok := im["capacity_provider_arn"].(string); ok && v != "" {
+			lmic.CapacityProviderArn = aws.String(val)
+		}
+
+		if val, ok := im["execution_environment_memory_gib_per_vcpu"].(float64); ok && val != 0 {
+			lmic.ExecutionEnvironmentMemoryGiBPerVCpu = aws.Float64(val)
+		}
+
+		if val, ok := im["per_execution_environment_max_concurrency"].(int); ok && val != 0 {
+			lmic.PerExecutionEnvironmentMaxConcurrency = aws.Int32(int32(val))
+		}
+
+		out.LambdaManagedInstancesCapacityProviderConfig = &lmic
+	}
+
+	return &out
 }
 
 func flattenEnvironment(apiObject *awstypes.EnvironmentResponse) []any {
