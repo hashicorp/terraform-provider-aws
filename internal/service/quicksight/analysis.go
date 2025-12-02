@@ -469,7 +469,7 @@ func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, awsAccoun
 
 	if output, ok := outputRaw.(*awstypes.Analysis); ok {
 		if status, apiErrors := output.Status, output.Errors; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, analysisError(apiErrors))
+			retry.SetLastError(err, analysisError(apiErrors))
 		}
 
 		return output, err
@@ -490,7 +490,7 @@ func waitAnalysisUpdated(ctx context.Context, conn *quicksight.Client, awsAccoun
 
 	if output, ok := outputRaw.(*awstypes.Analysis); ok {
 		if status, apiErrors := output.Status, output.Errors; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, analysisError(apiErrors))
+			retry.SetLastError(err, analysisError(apiErrors))
 		}
 
 		return output, err
