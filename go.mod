@@ -50,7 +50,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.15
 	github.com/aws/aws-sdk-go-v2/service/chime v1.41.6
-	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.14
+	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.15
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.13
