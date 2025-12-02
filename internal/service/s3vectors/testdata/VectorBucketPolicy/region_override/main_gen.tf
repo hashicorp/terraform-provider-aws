@@ -8,6 +8,8 @@ resource "aws_s3vectors_vector_bucket" "test" {
 }
 
 resource "aws_s3vectors_vector_bucket_policy" "test" {
+  region = var.region
+
   vector_bucket_arn = aws_s3vectors_vector_bucket.test.vector_bucket_arn
 
   policy = <<EOF
