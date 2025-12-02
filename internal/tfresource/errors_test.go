@@ -5,65 +5,12 @@ package tfresource_test
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"testing"
 
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-func TestTimedOut(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Name     string
-		Err      error
-		Expected bool
-	}{
-		{
-			Name: "nil error",
-			Err:  nil,
-		},
-		{
-			Name: "other error",
-			Err:  errors.New("test"),
-		},
-		{
-			Name:     "timeout error",
-			Err:      &sdkretry.TimeoutError{},
-			Expected: true,
-		},
-		{
-			Name: "timeout error non-nil last error",
-			Err:  &sdkretry.TimeoutError{LastError: errors.New("test")},
-		},
-		{
-			Name: "wrapped other error",
-			Err:  fmt.Errorf("test: %w", errors.New("test")),
-		},
-		{
-			Name: "wrapped timeout error",
-			Err:  fmt.Errorf("test: %w", &sdkretry.TimeoutError{}),
-		},
-		{
-			Name: "wrapped timeout error non-nil last error",
-			Err:  fmt.Errorf("test: %w", &sdkretry.TimeoutError{LastError: errors.New("test")}),
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			t.Parallel()
-
-			got := tfresource.TimedOut(testCase.Err)
-
-			if got != testCase.Expected {
-				t.Errorf("got %t, expected %t", got, testCase.Expected)
-			}
-		})
-	}
-}
 
 func TestSetLastError(t *testing.T) {
 	t.Parallel()
