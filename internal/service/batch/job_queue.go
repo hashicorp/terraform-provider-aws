@@ -438,7 +438,7 @@ func waitJobQueueCreated(ctx context.Context, conn *batch.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.JobQueueDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -459,7 +459,7 @@ func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.JobQueueDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -480,7 +480,7 @@ func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.JobQueueDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
