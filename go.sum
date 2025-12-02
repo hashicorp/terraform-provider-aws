@@ -543,8 +543,8 @@ github.com/aws/aws-sdk-go-v2/service/synthetics v1.42.7 h1:oifMTaWNPRivqrIsOEE/X
 github.com/aws/aws-sdk-go-v2/service/synthetics v1.42.7/go.mod h1:4h08v9AMxyi4g9tgbLvnaWayI6rQSgsUhKxfZL/z65g=
 github.com/aws/aws-sdk-go-v2/service/taxsettings v1.16.15 h1:+bgAggFJSlxO4SGGDlwo1bZdG0iurszOQLgHcBJavGo=
 github.com/aws/aws-sdk-go-v2/service/taxsettings v1.16.15/go.mod h1:yRVQlDi9PXgD6p5sQdWVRbs4KoIvH6OuKQWpYC7lzDQ=
-github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.17.8 h1:TU/TxRi5DfhxuollVqD/rMWI7hQjQteTEaWgNl83CAg=
-github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.17.8/go.mod h1:EWV93YNSnGlftcPAG3E1JiRntqVtv2q538pQLHjHqRo=
+github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.17.9 h1:z2ZF+YNLIaVKR4w5tIzrrDE0RuaOWb2l9ON+fMCGdQM=
+github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.17.9/go.mod h1:kb+JDMbtGgN0TWSZyEfAn0iDEGiHPR3aM031kvM/SZs=
 github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.36.7 h1:HR7wqWGmbdhCKp4VcZ4fT9ryxmOMeftV7cDiKXNUZsM=
 github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.36.7/go.mod h1:QZe19kHWe3eSbS+Gpqj9cnAilJUTMwZnXQ94CkCLj9w=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.13 h1:2D9HCfVwRSoupX9ezUb+2EyMMZFSCzB7mHRQY7TEX2E=
