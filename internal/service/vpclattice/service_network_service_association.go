@@ -244,7 +244,7 @@ func waitServiceNetworkServiceAssociationCreated(ctx context.Context, conn *vpcl
 
 	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkServiceAssociationOutput); ok {
 		if output.Status == types.ServiceNetworkServiceAssociationStatusCreateFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -265,7 +265,7 @@ func waitServiceNetworkServiceAssociationDeleted(ctx context.Context, conn *vpcl
 
 	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkServiceAssociationOutput); ok {
 		if output.Status == types.ServiceNetworkServiceAssociationStatusDeleteFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
