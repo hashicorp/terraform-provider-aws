@@ -27,6 +27,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newIndexResource,
 			TypeName: "aws_s3vectors_index",
 			Name:     "Index",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "index_arn",
+			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentityNamed("index_arn"),
 			Import: inttypes.FrameworkImport{

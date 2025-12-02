@@ -23,12 +23,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3vectors_index", name="Index")
 // @ArnIdentity("index_arn")
+// @Tags(identifierAttribute="index_arn")
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}
 
@@ -37,7 +39,6 @@ func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 
 type indexResource struct {
 	framework.ResourceWithModel[indexResourceModel]
-	framework.WithNoUpdate
 	framework.WithImportByIdentity
 }
 
@@ -83,6 +84,8 @@ func (r *indexResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"vector_bucket_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -108,6 +111,9 @@ func (r *indexResource) Create(ctx context.Context, request resource.CreateReque
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
 	_, err := conn.CreateIndex(ctx, &input)
 
@@ -246,5 +252,7 @@ type indexResourceModel struct {
 	DistanceMetric   fwtypes.StringEnum[awstypes.DistanceMetric] `tfsdk:"distance_metric"`
 	IndexARN         types.String                                `tfsdk:"index_arn"`
 	IndexName        types.String                                `tfsdk:"index_name"`
+	Tags             tftags.Map                                  `tfsdk:"tags"`
+	TagsAll          tftags.Map                                  `tfsdk:"tags_all"`
 	VectorBucketName types.String                                `tfsdk:"vector_bucket_name"`
 }

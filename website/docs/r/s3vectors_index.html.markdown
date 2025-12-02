@@ -33,6 +33,7 @@ The following arguments are required:
 * `dimension` - (Required, Forces new resource) Dimensions of the vectors to be inserted into the vector index.
 * `distance_metric` - (Required, Forces new resource) Distance metric to be used for similarity search. Valid values: `cosine`, `euclidean`.
 * `index_name` - (Required, Forces new resource) Name of the vector index.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vector_bucket_name` - (Required, Forces new resource) Name of the vector bucket for the vector index.
 
 The following arguments are optional:
@@ -45,6 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `creation_time` - Date and time when the vector index was created.
 * `index_arn` - ARN of the vector index.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
