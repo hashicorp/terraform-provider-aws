@@ -453,7 +453,7 @@ func waitS3AccessPointAttachmentCreated(ctx context.Context, conn *fsx.Client, n
 
 	if output, ok := outputRaw.(*awstypes.S3AccessPointAttachment); ok {
 		if v := output.LifecycleTransitionReason; v != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.Message)))
 		}
 
 		return output, err
@@ -475,7 +475,7 @@ func waitS3AccessPointAttachmentDeleted(ctx context.Context, conn *fsx.Client, n
 
 	if output, ok := outputRaw.(*awstypes.S3AccessPointAttachment); ok {
 		if v := output.LifecycleTransitionReason; v != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.Message)))
 		}
 
 		return output, err
