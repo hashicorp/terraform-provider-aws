@@ -217,7 +217,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.33.17
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.21.15
-	github.com/aws/aws-sdk-go-v2/service/route53 v1.61.0
+	github.com/aws/aws-sdk-go-v2/service/route53 v1.61.1
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.34.12
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.9.14
 	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.32.7
