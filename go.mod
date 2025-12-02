@@ -72,7 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.29.13
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.34.14
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.46.15
-	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.35.6
+	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.31.14
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.33.14
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.57.15
