@@ -233,15 +233,3 @@ rules:
     paths:
       include:
         - "**/*.go"
-
-  - id: internal-retry-setlasterror
-    languages: [go]
-    message: "Use retry.SetLastError to replace the deprecated tfresource alias"
-    severity: WARNING
-    pattern: |
-      tfresource.SetLastError($ERR, $LASTERR)
-    fix: |
-      retry.SetLastError($ERR, $LASTERR)
-    paths:
-      include:
-        - "**/*.go"
