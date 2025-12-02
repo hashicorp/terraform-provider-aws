@@ -106,7 +106,7 @@ func (r *indexResource) Create(ctx context.Context, request resource.CreateReque
 
 	conn := r.Meta().S3VectorsClient(ctx)
 
-	name := fwflex.StringValueFromFramework(ctx, data.IndexName)
+	vectorBucketName, indexName := fwflex.StringValueFromFramework(ctx, data.VectorBucketName), fwflex.StringValueFromFramework(ctx, data.IndexName)
 	var input s3vectors.CreateIndexInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
@@ -119,15 +119,15 @@ func (r *indexResource) Create(ctx context.Context, request resource.CreateReque
 	_, err := conn.CreateIndex(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Vectors Index (%s)", name), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Vectors Index (%s)", indexName), err.Error())
 
 		return
 	}
 
-	output, err := findIndexByTwoPartKey(ctx, conn, data.VectorBucketName.ValueString(), name)
+	output, err := findIndexByTwoPartKey(ctx, conn, vectorBucketName, indexName)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Vectors Index (%s)", name), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Vectors Index (%s)", indexName), err.Error())
 
 		return
 	}
