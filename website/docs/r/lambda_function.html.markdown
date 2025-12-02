@@ -566,10 +566,13 @@ The following arguments are optional:
 
 ### capacity_provider_config Configuration
 
-* `lambda_managed_instances_capacity_provider_config` - (Required) Configuration block for Lambda Managed Instances Capacity Provider.
-    * `capacity_provider_arn` - (Required) ARN of the Capacity Provider.
-    * `execution_environment_memory_gib_per_vcpu` - (Optional) Memory GiB per vCPU for the execution environment.
-    * `per_execution_environment_max_concurrency` - (Optional) Maximum concurrency per execution environment.
+* `lambda_managed_instances_capacity_provider_config` - (Required) Configuration block for Lambda Managed Instances Capacity Provider. [See below](#lambda_managed_instances_capacity_provider_config-configuration-block).
+
+### lambda_managed_instances_capacity_provider_config Configuration Block
+
+* `capacity_provider_arn` - (Required) ARN of the Capacity Provider.
+* `execution_environment_memory_gib_per_vcpu` - (Optional) Memory GiB per vCPU for the execution environment.
+* `per_execution_environment_max_concurrency` - (Optional) Maximum concurrency per execution environment.
 
 ### dead_letter_config Configuration Block
 
