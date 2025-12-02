@@ -197,7 +197,7 @@ func waitClientVPNAuthorizationRuleCreated(ctx context.Context, conn *ec2.Client
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.AuthorizationRule); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -216,7 +216,7 @@ func waitClientVPNAuthorizationRuleDeleted(ctx context.Context, conn *ec2.Client
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.AuthorizationRule); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -235,7 +235,7 @@ func waitClientVPNEndpointClientConnectResponseOptionsUpdated(ctx context.Contex
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ClientConnectResponseOptions); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -254,7 +254,7 @@ func waitClientVPNEndpointDeleted(ctx context.Context, conn *ec2.Client, id stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ClientVpnEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -275,7 +275,7 @@ func waitClientVPNNetworkAssociationCreated(ctx context.Context, conn *ec2.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TargetNetwork); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -296,7 +296,7 @@ func waitClientVPNNetworkAssociationDeleted(ctx context.Context, conn *ec2.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TargetNetwork); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -315,7 +315,7 @@ func waitClientVPNRouteCreated(ctx context.Context, conn *ec2.Client, endpointID
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ClientVpnRoute); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -334,7 +334,7 @@ func waitClientVPNRouteDeleted(ctx context.Context, conn *ec2.Client, endpointID
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ClientVpnRoute); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -396,7 +396,7 @@ func waitSnapshotCompleted(ctx context.Context, conn *ec2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 
 		return output, err
 	}
@@ -422,7 +422,7 @@ func waitSnapshotImportCompleted(ctx context.Context, conn *ec2.Client, importTa
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SnapshotTaskDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -442,7 +442,7 @@ func waitSnapshotTierArchive(ctx context.Context, conn *ec2.Client, id string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SnapshotTierStatus); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastTieringOperationStatus), aws.ToString(output.LastTieringOperationStatusDetail)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastTieringOperationStatus), aws.ToString(output.LastTieringOperationStatusDetail)))
 
 		return output, err
 	}
@@ -462,7 +462,7 @@ func waitEIPDomainNameAttributeDeleted(ctx context.Context, conn *ec2.Client, al
 
 	if output, ok := outputRaw.(*awstypes.AddressAttribute); ok {
 		if v := output.PtrRecordUpdate; v != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.Reason)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.Reason)))
 		}
 
 		return output, err
@@ -483,7 +483,7 @@ func waitEIPDomainNameAttributeUpdated(ctx context.Context, conn *ec2.Client, al
 
 	if output, ok := outputRaw.(*awstypes.AddressAttribute); ok {
 		if v := output.PtrRecordUpdate; v != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.Reason)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.Reason)))
 		}
 
 		return output, err
@@ -606,7 +606,7 @@ func waitImageAvailable(ctx context.Context, conn *ec2.Client, id string, timeou
 
 	if output, ok := outputRaw.(*awstypes.Image); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -643,7 +643,7 @@ func waitImageDeleted(ctx context.Context, conn *ec2.Client, id string, timeout 
 
 	if output, ok := outputRaw.(*awstypes.Image); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -666,7 +666,7 @@ func waitInstanceCreated(ctx context.Context, conn *ec2.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -695,7 +695,7 @@ func waitInstanceDeleted(ctx context.Context, conn *ec2.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -718,7 +718,7 @@ func waitInstanceReady(ctx context.Context, conn *ec2.Client, id string, timeout
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -741,7 +741,7 @@ func waitInstanceStarted(ctx context.Context, conn *ec2.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -769,7 +769,7 @@ func waitInstanceStopped(ctx context.Context, conn *ec2.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -807,7 +807,7 @@ func waitInstanceConnectEndpointCreated(ctx context.Context, conn *ec2.Client, i
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Ec2InstanceConnectEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 
 		return output, err
 	}
@@ -826,7 +826,7 @@ func waitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2.Client, i
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Ec2InstanceConnectEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 
 		return output, err
 	}
@@ -992,7 +992,7 @@ func waitIPAMPoolCIDRCreated(ctx context.Context, conn *ec2.Client, poolCIDRID, 
 
 	if output, ok := outputRaw.(*awstypes.IpamPoolCidr); ok {
 		if state, failureReason := output.State, output.FailureReason; state == awstypes.IpamPoolCidrStateFailedProvision && failureReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(failureReason.Code), aws.ToString(failureReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", string(failureReason.Code), aws.ToString(failureReason.Message)))
 		}
 
 		return output, err
@@ -1014,7 +1014,7 @@ func waitIPAMPoolCIDRDeleted(ctx context.Context, conn *ec2.Client, poolCIDRID, 
 
 	if output, ok := outputRaw.(*awstypes.IpamPoolCidr); ok {
 		if state, failureReason := output.State, output.FailureReason; state == awstypes.IpamPoolCidrStateFailedDeprovision && failureReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(failureReason.Code), aws.ToString(failureReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", string(failureReason.Code), aws.ToString(failureReason.Message)))
 		}
 
 		return output, err
@@ -1036,7 +1036,7 @@ func waitIPAMPoolCreated(ctx context.Context, conn *ec2.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.IpamPool); ok {
 		if state := output.State; state == awstypes.IpamPoolStateCreateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 		}
 
 		return output, err
@@ -1058,7 +1058,7 @@ func waitIPAMPoolDeleted(ctx context.Context, conn *ec2.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.IpamPool); ok {
 		if state := output.State; state == awstypes.IpamPoolStateDeleteFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 		}
 
 		return output, err
@@ -1080,7 +1080,7 @@ func waitIPAMPoolUpdated(ctx context.Context, conn *ec2.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.IpamPool); ok {
 		if state := output.State; state == awstypes.IpamPoolStateModifyFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 		}
 
 		return output, err
@@ -1339,7 +1339,7 @@ func waitManagedPrefixListCreated(ctx context.Context, conn *ec2.Client, id stri
 
 	if output, ok := outputRaw.(*awstypes.ManagedPrefixList); ok {
 		if output.State == awstypes.PrefixListStateCreateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 		}
 
 		return output, err
@@ -1360,7 +1360,7 @@ func waitManagedPrefixListDeleted(ctx context.Context, conn *ec2.Client, id stri
 
 	if output, ok := outputRaw.(*awstypes.ManagedPrefixList); ok {
 		if output.State == awstypes.PrefixListStateDeleteFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 		}
 
 		return output, err
@@ -1381,7 +1381,7 @@ func waitManagedPrefixListModified(ctx context.Context, conn *ec2.Client, id str
 
 	if output, ok := outputRaw.(*awstypes.ManagedPrefixList); ok {
 		if output.State == awstypes.PrefixListStateModifyFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 		}
 
 		return output, err
@@ -1402,7 +1402,7 @@ func waitNATGatewayAddressAssigned(ctx context.Context, conn *ec2.Client, natGat
 
 	if output, ok := outputRaw.(*awstypes.NatGatewayAddress); ok {
 		if output.Status == awstypes.NatGatewayAddressStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -1424,7 +1424,7 @@ func waitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.Client, natG
 
 	if output, ok := outputRaw.(*awstypes.NatGatewayAddress); ok {
 		if output.Status == awstypes.NatGatewayAddressStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -1446,7 +1446,7 @@ func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, n
 
 	if output, ok := outputRaw.(*awstypes.NatGatewayAddress); ok {
 		if output.Status == awstypes.NatGatewayAddressStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -1467,7 +1467,7 @@ func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natG
 
 	if output, ok := outputRaw.(*awstypes.NatGatewayAddress); ok {
 		if output.Status == awstypes.NatGatewayAddressStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -1488,7 +1488,7 @@ func waitNATGatewayCreated(ctx context.Context, conn *ec2.Client, id string, tim
 
 	if output, ok := outputRaw.(*awstypes.NatGateway); ok {
 		if output.State == awstypes.NatGatewayStateFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -1511,7 +1511,7 @@ func waitNATGatewayDeleted(ctx context.Context, conn *ec2.Client, id string, tim
 
 	if output, ok := outputRaw.(*awstypes.NatGateway); ok {
 		if output.State == awstypes.NatGatewayStateFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -1533,7 +1533,7 @@ func waitNetworkInsightsAnalysisCreated(ctx context.Context, conn *ec2.Client, i
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.NetworkInsightsAnalysis); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -1629,7 +1629,7 @@ func waitNetworkInterfacePermissionCreated(ctx context.Context, conn *ec2.Client
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.NetworkInterfacePermission); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.PermissionState.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.PermissionState.StatusMessage)))
 
 		return output, err
 	}
@@ -1648,7 +1648,7 @@ func waitNetworkInterfacePermissionDeleted(ctx context.Context, conn *ec2.Client
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.NetworkInterfacePermission); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.PermissionState.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.PermissionState.StatusMessage)))
 
 		return output, err
 	}
@@ -1740,7 +1740,7 @@ func waitRouteTableAssociationCreated(ctx context.Context, conn *ec2.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.RouteTableAssociationState); ok {
 		if output.State == awstypes.RouteTableAssociationStateCodeFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -1761,7 +1761,7 @@ func waitRouteTableAssociationDeleted(ctx context.Context, conn *ec2.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.RouteTableAssociationState); ok {
 		if output.State == awstypes.RouteTableAssociationStateCodeFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -1782,7 +1782,7 @@ func waitRouteTableAssociationUpdated(ctx context.Context, conn *ec2.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.RouteTableAssociationState); ok {
 		if output.State == awstypes.RouteTableAssociationStateCodeFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -1859,7 +1859,7 @@ func waitSecurityGroupVPCAssociationCreated(ctx context.Context, conn *ec2.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SecurityGroupVpcAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -1878,7 +1878,7 @@ func waitSecurityGroupVPCAssociationDeleted(ctx context.Context, conn *ec2.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SecurityGroupVpcAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -1934,7 +1934,7 @@ func waitSpotFleetRequestFulfilled(ctx context.Context, conn *ec2.Client, id str
 				}
 			}
 
-			tfresource.SetLastError(err, errors.Join(errs...))
+			retry.SetLastError(err, errors.Join(errs...))
 		}
 
 		return output, err
@@ -1977,9 +1977,9 @@ func waitSpotInstanceRequestFulfilled(ctx context.Context, conn *ec2.Client, id 
 	if output, ok := outputRaw.(*awstypes.SpotInstanceRequest); ok {
 		if fault := output.Fault; fault != nil {
 			errFault := fmt.Errorf("%s: %s", aws.ToString(fault.Code), aws.ToString(fault.Message))
-			tfresource.SetLastError(err, fmt.Errorf("%s %w", aws.ToString(output.Status.Message), errFault))
+			retry.SetLastError(err, fmt.Errorf("%s %w", aws.ToString(output.Status.Message), errFault))
 		} else {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 		}
 
 		return output, err
@@ -2107,7 +2107,7 @@ func waitSubnetIPv6CIDRBlockAssociationCreated(ctx context.Context, conn *ec2.Cl
 
 	if output, ok := outputRaw.(*awstypes.SubnetCidrBlockState); ok {
 		if output.State == awstypes.SubnetCidrBlockStateCodeFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -2128,7 +2128,7 @@ func waitSubnetIPv6CIDRBlockAssociationDeleted(ctx context.Context, conn *ec2.Cl
 
 	if output, ok := outputRaw.(*awstypes.SubnetCidrBlockState); ok {
 		if output.State == awstypes.SubnetCidrBlockStateCodeFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -2416,7 +2416,7 @@ func waitTransitGatewayPeeringAttachmentAccepted(ctx context.Context, conn *ec2.
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayPeeringAttachment); ok {
 		if status := output.Status; status != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(status.Code), aws.ToString(status.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(status.Code), aws.ToString(status.Message)))
 		}
 
 		return output, err
@@ -2437,7 +2437,7 @@ func waitTransitGatewayPeeringAttachmentCreated(ctx context.Context, conn *ec2.C
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayPeeringAttachment); ok {
 		if status := output.Status; status != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(status.Code), aws.ToString(status.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(status.Code), aws.ToString(status.Message)))
 		}
 
 		return output, err
@@ -2463,7 +2463,7 @@ func waitTransitGatewayPeeringAttachmentDeleted(ctx context.Context, conn *ec2.C
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayPeeringAttachment); ok {
 		if status := output.Status; status != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(status.Code), aws.ToString(status.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(status.Code), aws.ToString(status.Message)))
 		}
 
 		return output, err
@@ -2815,7 +2815,7 @@ func waitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2.Client, id
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -2834,7 +2834,7 @@ func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -2853,7 +2853,7 @@ func waitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2.Client, id
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -2913,7 +2913,7 @@ func waitVolumeAttachmentInstanceReady(ctx context.Context, conn *ec2.Client, id
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -2941,7 +2941,7 @@ func waitVolumeAttachmentInstanceStopped(ctx context.Context, conn *ec2.Client, 
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -3004,7 +3004,7 @@ func waitVolumeModificationComplete(ctx context.Context, conn *ec2.Client, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VolumeModification); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -3063,7 +3063,7 @@ func waitVPCCIDRBlockAssociationCreated(ctx context.Context, conn *ec2.Client, i
 
 	if output, ok := outputRaw.(*awstypes.VpcCidrBlockState); ok {
 		if state := output.State; state == awstypes.VpcCidrBlockStateCodeFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -3086,7 +3086,7 @@ func waitVPCCIDRBlockAssociationDeleted(ctx context.Context, conn *ec2.Client, i
 
 	if output, ok := outputRaw.(*awstypes.VpcCidrBlockState); ok {
 		if state := output.State; state == awstypes.VpcCidrBlockStateCodeFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -3126,7 +3126,7 @@ func waitVPCEndpointAccepted(ctx context.Context, conn *ec2.Client, vpcEndpointI
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
 		if state, lastError := string(output.State), output.LastError; strings.EqualFold(state, vpcEndpointStateFailed) && lastError != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
 		}
 
 		return output, err
@@ -3149,7 +3149,7 @@ func waitVPCEndpointAvailable(ctx context.Context, conn *ec2.Client, vpcEndpoint
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpoint); ok {
 		if state, lastError := string(output.State), output.LastError; strings.EqualFold(state, vpcEndpointStateFailed) && lastError != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
 		}
 
 		return output, err
@@ -3293,7 +3293,7 @@ func waitVPCIPv6CIDRBlockAssociationCreated(ctx context.Context, conn *ec2.Clien
 
 	if output, ok := outputRaw.(*awstypes.VpcCidrBlockState); ok {
 		if state := output.State; state == awstypes.VpcCidrBlockStateCodeFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -3329,7 +3329,7 @@ func waitVPCPeeringConnectionActive(ctx context.Context, conn *ec2.Client, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcPeeringConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -3352,7 +3352,7 @@ func waitVPCPeeringConnectionDeleted(ctx context.Context, conn *ec2.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcPeeringConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -3606,7 +3606,7 @@ func waitVPCBlockPublicAccessOptionsUpdated(ctx context.Context, conn *ec2.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessOptions); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Reason)))
 
 		return output, err
 	}
@@ -3626,7 +3626,7 @@ func waitVPCBlockPublicAccessExclusionCreated(ctx context.Context, conn *ec2.Cli
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessExclusion); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Reason)))
 
 		return output, err
 	}
@@ -3646,7 +3646,7 @@ func waitVPCBlockPublicAccessExclusionUpdated(ctx context.Context, conn *ec2.Cli
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessExclusion); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Reason)))
 
 		return output, err
 	}
@@ -3671,7 +3671,7 @@ func waitVPCBlockPublicAccessExclusionDeleted(ctx context.Context, conn *ec2.Cli
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessExclusion); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Reason)))
 
 		return output, err
 	}
@@ -3778,7 +3778,7 @@ func waitRouteServerEndpointCreated(ctx context.Context, conn *ec2.Client, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.RouteServerEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -3797,7 +3797,7 @@ func waitRouteServerEndpointDeleted(ctx context.Context, conn *ec2.Client, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.RouteServerEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -3817,7 +3817,7 @@ func waitRouteServerPeerCreated(ctx context.Context, conn *ec2.Client, id string
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.RouteServerPeer); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -3836,7 +3836,7 @@ func waitRouteServerPeerDeleted(ctx context.Context, conn *ec2.Client, id string
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.RouteServerPeer); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
