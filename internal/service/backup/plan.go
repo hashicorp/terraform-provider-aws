@@ -27,6 +27,7 @@ import (
 )
 
 const (
+	defaultPlanRuleScheduleExpression         = "cron(0 5 ? * * *)"
 	defaultPlanRuleScheduleExpressionTimezone = "Etc/UTC"
 )
 
@@ -167,6 +168,7 @@ func resourcePlan() *schema.Resource {
 						names.AttrSchedule: {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  defaultPlanRuleScheduleExpression,
 						},
 						"schedule_expression_timezone": {
 							Type:     schema.TypeString,
