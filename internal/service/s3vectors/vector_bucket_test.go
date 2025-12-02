@@ -61,6 +61,7 @@ func TestAccS3VectorsVectorBucket_basic(t *testing.T) {
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vector_bucket_arn"), tfknownvalue.RegionalARNRegexp("s3vectors", regexache.MustCompile(`bucket/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vector_bucket_name"), knownvalue.StringExact(rName)),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{

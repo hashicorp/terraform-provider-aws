@@ -35,6 +35,7 @@ import (
 // @FrameworkResource("aws_s3vectors_vector_bucket", name="Vector Bucket")
 // @ArnIdentity("vector_bucket_arn")
 // @Tags(identifierAttribute="vector_bucket_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables/types;awstypes;awstypes.VectorBucket")
 func newVectorBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vectorBucketResource{}
 
