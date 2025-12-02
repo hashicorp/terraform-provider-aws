@@ -329,7 +329,7 @@ func (r *capabilityResource) Update(ctx context.Context, request resource.Update
 	if diff.HasChanges() {
 		clusterName, capabilityName := fwflex.StringValueFromFramework(ctx, new.ClusterName), fwflex.StringValueFromFramework(ctx, new.CapabilityName)
 		var input eks.UpdateCapabilityInput
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, fwflex.WithIgnoredFieldNamesAppend("RbacRoleMappings"))...)
 		if response.Diagnostics.HasError() {
 			return
 		}
