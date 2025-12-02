@@ -88,11 +88,11 @@ func (e *TooManyResultsError) As(target any) bool {
 
 // SingularDataSourceFindError returns a standard error message for a singular data source's non-nil resource find error.
 func SingularDataSourceFindError(resourceType string, err error) error {
-	if retry.NotFound(err) {
-		if errors.Is(err, &TooManyResultsError{}) {
-			return fmt.Errorf("multiple %[1]ss matched; use additional constraints to reduce matches to a single %[1]s", resourceType)
-		}
+	if errors.Is(err, &TooManyResultsError{}) {
+		return fmt.Errorf("multiple %[1]ss matched; use additional constraints to reduce matches to a single %[1]s", resourceType)
+	}
 
+	if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 		return fmt.Errorf("no matching %[1]s found", resourceType)
 	}
 
