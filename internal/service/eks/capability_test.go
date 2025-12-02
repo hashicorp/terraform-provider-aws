@@ -211,6 +211,8 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 	var capability types.Capability
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
+	userID := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
+	groupName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_GROUP_NAME")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -223,7 +225,7 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 		CheckDestroy:             testAccCheckCapabilityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapabilityConfig_argoCDRBAC1(rName),
+				Config: testAccCapabilityConfig_argoCDRBAC1(rName, userID, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapabilityExists(ctx, resourceName, &capability),
 				),
@@ -241,7 +243,7 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
-				Config: testAccCapabilityConfig_argoCDRBAC2(rName),
+				Config: testAccCapabilityConfig_argoCDRBAC2(rName, userID, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapabilityExists(ctx, resourceName, &capability),
 				),
@@ -420,7 +422,7 @@ resource "aws_eks_capability" "test" {
 `, rName))
 }
 
-func testAccCapabilityConfig_argoCDRBAC1(rName string) string {
+func testAccCapabilityConfig_argoCDRBAC1(rName, userID, groupName string) string {
 	return acctest.ConfigCompose(testAccCapabilityConfig_base(rName), fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -443,7 +445,7 @@ resource "aws_eks_capability" "test" {
 
         identity {
           type = "SSO_USER"
-          id   = "user1"
+          id   = %[3]q
         }
       }
 
@@ -451,22 +453,8 @@ resource "aws_eks_capability" "test" {
         role = "VIEWER"
 
         identity {
-          type = "SSO_USER"
-          id   = "user2"
-        }
-
-        identity {
           type = "SSO_GROUP"
-          id   = "group1"
-        }
-      }
-
-      rbac_role_mapping {
-        role = "EDITOR"
-
-        identity {
-          type = "SSO_USER"
-          id   = "user3"
+          id   = %[4]q
         }
       }
     }
@@ -474,10 +462,10 @@ resource "aws_eks_capability" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.capability]
 }
-`, rName, acctest.Region()))
+`, rName, acctest.Region(), userID, groupName))
 }
 
-func testAccCapabilityConfig_argoCDRBAC2(rName string) string {
+func testAccCapabilityConfig_argoCDRBAC2(rName, userID, groupName string) string {
 	return acctest.ConfigCompose(testAccCapabilityConfig_base(rName), fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -496,20 +484,20 @@ resource "aws_eks_capability" "test" {
       }
 
       rbac_role_mapping {
-        role = "ADMIN"
-
-        identity {
-          type = "SSO_USER"
-          id   = "user2"
-        }
-      }
-
-      rbac_role_mapping {
         role = "EDITOR"
 
         identity {
           type = "SSO_USER"
-          id   = "user3"
+          id   = %[3]q
+        }
+      }
+
+      rbac_role_mapping {
+        role = "ADMIN"
+
+        identity {
+          type = "SSO_GROUP"
+          id   = %[4]q
         }
       }
     }
@@ -517,5 +505,5 @@ resource "aws_eks_capability" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.capability]
 }
-`, rName, acctest.Region()))
+`, rName, acctest.Region(), userID, groupName))
 }
