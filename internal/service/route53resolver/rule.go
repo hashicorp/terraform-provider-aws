@@ -316,7 +316,7 @@ func waitRuleCreated(ctx context.Context, conn *route53resolver.Client, id strin
 
 	if output, ok := outputRaw.(*awstypes.ResolverRule); ok {
 		if output.Status == awstypes.ResolverRuleStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -337,7 +337,7 @@ func waitRuleUpdated(ctx context.Context, conn *route53resolver.Client, id strin
 
 	if output, ok := outputRaw.(*awstypes.ResolverRule); ok {
 		if output.Status == awstypes.ResolverRuleStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -358,7 +358,7 @@ func waitRuleDeleted(ctx context.Context, conn *route53resolver.Client, id strin
 
 	if output, ok := outputRaw.(*awstypes.ResolverRule); ok {
 		if output.Status == awstypes.ResolverRuleStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
