@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -71,6 +72,13 @@ func resourceAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
+			},
+			"calendar_names": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"compliance_severity": {
 				Type:             schema.TypeString,
@@ -191,6 +199,10 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.AutomationTargetParameterName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("calendar_names"); ok && v.(*schema.Set).Len() > 0 {
+		input.CalendarNames = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("compliance_severity"); ok {
 		input.ComplianceSeverity = awstypes.AssociationComplianceSeverity(v.(string))
 	}
@@ -273,6 +285,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrAssociationID, association.AssociationId)
 	d.Set("association_name", association.AssociationName)
 	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
+	d.Set("calendar_names", association.CalendarNames)
 	d.Set("compliance_severity", association.ComplianceSeverity)
 	d.Set("document_version", association.DocumentVersion)
 	d.Set("max_concurrency", association.MaxConcurrency)
@@ -313,6 +326,10 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk("automation_target_parameter_name"); ok {
 			input.AutomationTargetParameterName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("calendar_names"); ok && v.(*schema.Set).Len() > 0 {
+			input.CalendarNames = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("compliance_severity"); ok {
