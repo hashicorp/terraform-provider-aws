@@ -120,6 +120,12 @@ func (r *capabilityResource) Schema(ctx context.Context, request resource.Schema
 											stringplanmodifier.UseStateForUnknown(),
 										},
 									},
+									"server_url": schema.StringAttribute{
+										Computed: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
 								},
 								Blocks: map[string]schema.Block{
 									"aws_idc": schema.ListNestedBlock{
@@ -603,6 +609,7 @@ type argoCDConfigModel struct {
 	Namespace        types.String                                                    `tfsdk:"namespace"`
 	NetworkAccess    fwtypes.ListNestedObjectValueOf[argoCDNetworkAccessConfigModel] `tfsdk:"network_access"`
 	RBACRoleMappings fwtypes.SetNestedObjectValueOf[argoCDRoleMappingModel]          `tfsdk:"rbac_role_mapping"`
+	ServerURL        types.String                                                    `tfsdk:"server_url"`
 }
 
 type argoCDAWSIDCConfigModel struct {
