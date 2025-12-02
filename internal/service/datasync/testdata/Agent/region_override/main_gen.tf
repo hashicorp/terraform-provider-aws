@@ -84,6 +84,8 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
+# acctest.ConfigSubnets(rName, 1)
+
 resource "aws_subnet" "test" {
   region = var.region
 
