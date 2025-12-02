@@ -1054,7 +1054,7 @@ func waitClusterRestored(ctx context.Context, conn *redshift.Client, id string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ClusterStatus)))
 
 		return output, err
 	}
