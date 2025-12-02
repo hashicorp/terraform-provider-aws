@@ -1753,7 +1753,7 @@ func waitApplicationOperationSucceeded(ctx context.Context, conn *kinesisanalyti
 
 	if output, ok := outputRaw.(*awstypes.ApplicationOperationInfoDetails); ok {
 		if failureDetails := output.OperationFailureDetails; failureDetails != nil && failureDetails.ErrorInfo != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(failureDetails.ErrorInfo.ErrorString)))
+			retry.SetLastError(err, errors.New(aws.ToString(failureDetails.ErrorInfo.ErrorString)))
 		}
 
 		return output, err
