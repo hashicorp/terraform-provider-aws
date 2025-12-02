@@ -1387,9 +1387,7 @@ resource "aws_nat_gateway" "test" {
 }
 
 func testAccVPCNATGatewayConfig_availabilityModeRegionalBase(rName string, eipCount int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
-
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1414,7 +1412,7 @@ resource "aws_eip" "test" {
     Name = "%[1]s-${count.index}"
   }
 }
-`, rName, eipCount)
+`, rName, eipCount))
 }
 
 func testAccVPCNATGatewayConfig_availabilityModeRegionalAuto(rName string) string {
