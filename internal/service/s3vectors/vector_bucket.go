@@ -58,7 +58,7 @@ func (r *vectorBucketResource) Schema(ctx context.Context, request resource.Sche
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrEncryptionConfiguration: framework.ResourceOptionalComputedListOfObjectsAttribute[encryptionConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			names.AttrEncryptionConfiguration: framework.ResourceOptionalComputedListOfObjectsAttribute[encryptionConfigurationModel](ctx, 1, nil, listplanmodifier.RequiresReplaceIfConfigured(), listplanmodifier.UseStateForUnknown()),
 			names.AttrForceDestroy: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
