@@ -1643,5 +1643,3 @@ resource "aws_ssm_association" "test" {
 }
 `)
 }
-
-
