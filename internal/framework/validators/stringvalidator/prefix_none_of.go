@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package validators
+package stringvalidator
 
 import (
 	"context"
@@ -14,23 +14,23 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-var _ validator.String = suffixNoneOfValidator{}
+var _ validator.String = prefixNoneOfValidator{}
 
-type suffixNoneOfValidator struct {
+type prefixNoneOfValidator struct {
 	values []string
 }
 
-func (v suffixNoneOfValidator) Description(ctx context.Context) string {
+func (v prefixNoneOfValidator) Description(ctx context.Context) string {
 	return v.MarkdownDescription(ctx)
 }
 
-func (v suffixNoneOfValidator) MarkdownDescription(_ context.Context) string {
-	return fmt.Sprintf("value must end with none of: %s", tfslices.ApplyToAll(v.values, func(v string) string {
+func (v prefixNoneOfValidator) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("value must begin with none of: %s", tfslices.ApplyToAll(v.values, func(v string) string {
 		return `"` + v + `"`
 	}))
 }
 
-func (v suffixNoneOfValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+func (v prefixNoneOfValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
 	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
 		return
 	}
@@ -38,7 +38,7 @@ func (v suffixNoneOfValidator) ValidateString(ctx context.Context, request valid
 	value := request.ConfigValue.ValueString()
 
 	for _, otherValue := range v.values {
-		if !strings.HasSuffix(value, otherValue) {
+		if !strings.HasPrefix(value, otherValue) {
 			continue
 		}
 
@@ -52,10 +52,10 @@ func (v suffixNoneOfValidator) ValidateString(ctx context.Context, request valid
 	}
 }
 
-// SuffixNoneOf checks that the String held in the attribute
-// ends with none of the given `values`.
-func SuffixNoneOf(values ...string) suffixNoneOfValidator {
-	return suffixNoneOfValidator{
+// PrefixNoneOf checks that the String held in the attribute
+// begins with none of the given `values`.
+func PrefixNoneOf(values ...string) prefixNoneOfValidator {
+	return prefixNoneOfValidator{
 		values: slices.Clone(values),
 	}
 }

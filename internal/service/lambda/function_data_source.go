@@ -37,6 +37,34 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"capacity_provider_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"lambda_managed_instances_capacity_provider_config": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_provider_arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"execution_environment_memory_gib_per_vcpu": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"per_execution_environment_max_concurrency": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"code_sha256": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -326,6 +354,9 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.SetId(functionName)
 	d.Set("architectures", function.Architectures)
 	d.Set(names.AttrARN, unqualifiedARN)
+	if err := d.Set("capacity_provider_config", flattenCapacityProviderConfig(function.CapacityProviderConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_config: %s", err)
+	}
 	d.Set("code_sha256", function.CodeSha256)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []any{
