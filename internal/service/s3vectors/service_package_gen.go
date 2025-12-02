@@ -37,6 +37,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newVectorBucketResource,
 			TypeName: "aws_s3vectors_vector_bucket",
 			Name:     "Vector Bucket",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "vector_bucket_arn",
+			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentityNamed("vector_bucket_arn"),
 			Import: inttypes.FrameworkImport{

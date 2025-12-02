@@ -27,12 +27,14 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3vectors_vector_bucket", name="Vector Bucket")
 // @ArnIdentity("vector_bucket_arn")
+// @Tags(identifierAttribute="vector_bucket_arn")
 func newVectorBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vectorBucketResource{}
 
@@ -60,6 +62,8 @@ func (r *vectorBucketResource) Schema(ctx context.Context, request resource.Sche
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"vector_bucket_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -97,6 +101,9 @@ func (r *vectorBucketResource) Create(ctx context.Context, request resource.Crea
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
 	_, err := conn.CreateVectorBucket(ctx, &input)
 
@@ -253,6 +260,8 @@ type vectorBucketResourceModel struct {
 	CreationTime            timetypes.RFC3339                                             `tfsdk:"creation_time"`
 	EncryptionConfiguration fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel] `tfsdk:"encryption_configuration"`
 	ForceDestroy            types.Bool                                                    `tfsdk:"force_destroy"`
+	Tags                    tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                    `tfsdk:"tags_all"`
 	VectorBucketARN         types.String                                                  `tfsdk:"vector_bucket_arn"`
 	VectorBucketName        types.String                                                  `tfsdk:"vector_bucket_name"`
 }
