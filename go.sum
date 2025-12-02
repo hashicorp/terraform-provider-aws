@@ -23,8 +23,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go-v2 v1.40.0 h1:/WMUA0kjhZExjOQN2z3oLALDREea1A7TobfuiBrKlwc=
-github.com/aws/aws-sdk-go-v2 v1.40.0/go.mod h1:c9pm7VwuW0UPxAEYGyTmyurVcNrbF6Rt/wixFqDhcjE=
+github.com/aws/aws-sdk-go-v2 v1.40.1 h1:difXb4maDZkRH0x//Qkwcfpdg1XQVXEAEs2DdXldFFc=
+github.com/aws/aws-sdk-go-v2 v1.40.1/go.mod h1:MayyLB8y+buD9hZqkCW3kX1AKq07Y5pXxtgB+rRFhz0=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.3 h1:DHctwEM8P8iTXFxC/QK0MRjwEpWQeM9yzidCRjldUz0=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.3/go.mod h1:xdCzcZEtnSTKVDOmUZs4l/j3pSV6rpo1WXl5ugNsL8Y=
 github.com/aws/aws-sdk-go-v2/config v1.32.2 h1:4liUsdEpUUPZs5WVapsJLx5NPmQhQdez7nYFcovrytk=
@@ -573,8 +573,8 @@ github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.34.2 h1:nX+YZMR94quoX5cgTV
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.34.2/go.mod h1:Jp186sz4W1dlIrkBAK6sn5xq0U1nPSA7EdeHsmb/uuc=
 github.com/aws/aws-sdk-go-v2/service/xray v1.36.13 h1:6bXNofa4S+/0353WsDn3Q4yFbLzKADGyNNgN+jdm2fw=
 github.com/aws/aws-sdk-go-v2/service/xray v1.36.13/go.mod h1:1hlRhW+26LYxyR7Oy2One3agC/jU4DhiPFdDniFBL6s=
-github.com/aws/smithy-go v1.23.2 h1:Crv0eatJUQhaManss33hS5r40CG3ZFH+21XSkqMrIUM=
-github.com/aws/smithy-go v1.23.2/go.mod h1:LEj2LM3rBRQJxPZTB4KuzZkaZYnZPnvgIhb4pu07mx0=
+github.com/aws/smithy-go v1.24.0 h1:LpilSUItNPFr1eY85RYgTIg5eIEPtvFbskaFcmmIUnk=
+github.com/aws/smithy-go v1.24.0/go.mod h1:LEj2LM3rBRQJxPZTB4KuzZkaZYnZPnvgIhb4pu07mx0=
 github.com/beevik/etree v1.6.0 h1:u8Kwy8pp9D9XeITj2Z0XtA5qqZEmtJtuXZRQi+j03eE=
 github.com/beevik/etree v1.6.0/go.mod h1:bh4zJxiIr62SOf9pRzN7UUYaEDa9HEKafK25+sLc0Gc=
 github.com/bgentry/speakeasy v0.1.0 h1:ByYyxL9InA1OWqxJqqp2A5pYHUrCiAL6K3J+LKSsQkY=
