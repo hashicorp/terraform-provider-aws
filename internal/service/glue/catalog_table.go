@@ -1269,11 +1269,11 @@ func expandViewDefinition(l []any) *awstypes.ViewDefinitionInput {
 	s := l[0].(map[string]any)
 	viewDefinition := &awstypes.ViewDefinitionInput{}
 
-	if v, ok := s["definer"]; ok && v != nil {
+	if v, ok := s["definer"]; ok && v != nil && v != "" {
 		viewDefinition.Definer = aws.String(v.(string))
 	}
 
-	if v, ok := s["is_protected"]; ok && v != nil {
+	if v, ok := s["is_protected"]; ok && v != nil && v != "" {
 		viewDefinition.IsProtected = aws.Bool(v.(bool))
 	}
 
@@ -1281,7 +1281,7 @@ func expandViewDefinition(l []any) *awstypes.ViewDefinitionInput {
 		viewDefinition.Representations = expandViewRepresentationInput(v.([]any))
 	}
 
-	if v, ok := s["input_format"]; ok && v != nil {
+	if v, ok := s["sub_objects"]; ok && v != nil {
 		viewDefinition.SubObjects = flex.ExpandStringValueList(v.([]any))
 	}
 
@@ -1296,23 +1296,23 @@ func expandViewRepresentationInput(l []any) []awstypes.ViewRepresentationInput {
 	s := l[0].(map[string]any)
 	viewRepresentationInput := awstypes.ViewRepresentationInput{}
 
-	if v, ok := s["dialect"]; ok && v != nil {
+	if v, ok := s["dialect"]; ok && v != nil && v != "" {
 		viewRepresentationInput.Dialect = awstypes.ViewDialect(v.(string))
 	}
 
-	if v, ok := s["dialect_version"]; ok && v != nil {
+	if v, ok := s["dialect_version"]; ok && v != nil && v != "" {
 		viewRepresentationInput.DialectVersion = aws.String(v.(string))
 	}
 
-	if v, ok := s["validation_connection"]; ok && v != nil {
+	if v, ok := s["validation_connection"]; ok && v != nil && v != "" {
 		viewRepresentationInput.ValidationConnection = aws.String(v.(string))
 	}
 
-	if v, ok := s["view_expanded_text"]; ok && v != nil {
+	if v, ok := s["view_expanded_text"]; ok && v != nil && v != "" {
 		viewRepresentationInput.ViewExpandedText = aws.String(v.(string))
 	}
 
-	if v, ok := s["view_original_text"]; ok && v != nil {
+	if v, ok := s["view_original_text"]; ok && v != nil && v != "" {
 		viewRepresentationInput.ViewOriginalText = aws.String(v.(string))
 	}
 
