@@ -354,7 +354,7 @@ func (r *capabilityResource) Update(ctx context.Context, request resource.Update
 				})
 
 			input.Configuration.ArgoCd.RbacRoleMappings = &awstypes.UpdateRoleMappings{}
-			if addOrUpdate := append(add, update...); len(addOrUpdate) > 0 {
+			if addOrUpdate := append(add, update...); len(addOrUpdate) > 0 { //nolint:gocritic // append re-assign is intentional
 				input.Configuration.ArgoCd.RbacRoleMappings.AddOrUpdateRoleMappings = addOrUpdate
 			}
 			if len(remove) > 0 {
