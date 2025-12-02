@@ -26,6 +26,7 @@ import (
 
 // @FrameworkResource("aws_s3vectors_vector_bucket_policy", name="Vector Bucket Policy")
 // @ArnIdentity("vector_bucket_arn")
+// @Testing(hasNoPreExistingResource=true)
 func newVectorBucketPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vectorBucketPolicyResource{}
 
