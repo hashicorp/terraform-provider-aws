@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -58,41 +59,49 @@ func (r identityInterceptor) create(ctx context.Context, opts interceptorOptions
 				}
 			}
 		}
+
 	case OnError:
 		identity := response.Identity
 		if identity == nil {
 			break
 		}
 
-		if identityIsFullyNull(ctx, identity, r.attributes) {
-			for _, att := range r.attributes {
-				switch att.Name() {
-				case names.AttrAccountID:
-					opts.response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.AccountID(ctx))...)
-					if opts.response.Diagnostics.HasError() {
-						return
-					}
+		var diags diag.Diagnostics
 
-				case names.AttrRegion:
-					opts.response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.Region(ctx))...)
-					if opts.response.Diagnostics.HasError() {
-						return
-					}
+	identityLoop:
+		for _, att := range r.attributes {
+			switch att.Name() {
+			case names.AttrAccountID:
+				diags.Append(identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.AccountID(ctx))...)
+				if diags.HasError() {
+					break identityLoop
+				}
 
-				default:
-					var attrVal attr.Value
-					opts.response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
-					if opts.response.Diagnostics.HasError() {
-						return
-					}
+			case names.AttrRegion:
+				diags.Append(identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.Region(ctx))...)
+				if diags.HasError() {
+					break identityLoop
+				}
 
-					opts.response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(att.Name()), attrVal)...)
-					if opts.response.Diagnostics.HasError() {
-						return
-					}
+			default:
+				var attrVal attr.Value
+				diags.Append(response.State.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
+				if diags.HasError() {
+					break identityLoop
+				}
+
+				diags.Append(identity.SetAttribute(ctx, path.Root(att.Name()), attrVal)...)
+				if diags.HasError() {
+					break identityLoop
 				}
 			}
 		}
+
+		if diags.HasError() {
+			response.Identity = nil
+		}
+
+		opts.response.Diagnostics.Append(diags...)
 	}
 }
 
@@ -189,32 +198,41 @@ func (r identityInterceptor) update(ctx context.Context, opts interceptorOptions
 		}
 
 		if identityIsFullyNull(ctx, identity, r.attributes) {
+			var diags diag.Diagnostics
+
+		identityLoop:
 			for _, att := range r.attributes {
 				switch att.Name() {
 				case names.AttrAccountID:
-					opts.response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.AccountID(ctx))...)
-					if opts.response.Diagnostics.HasError() {
-						return
+					diags.Append(identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.AccountID(ctx))...)
+					if diags.HasError() {
+						break identityLoop
 					}
 
 				case names.AttrRegion:
-					opts.response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.Region(ctx))...)
-					if opts.response.Diagnostics.HasError() {
-						return
+					diags.Append(identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.Region(ctx))...)
+					if diags.HasError() {
+						break identityLoop
 					}
 
 				default:
 					var attrVal attr.Value
-					opts.response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
-					if opts.response.Diagnostics.HasError() {
-						return
+					diags.Append(response.State.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
+					if diags.HasError() {
+						break identityLoop
 					}
 
-					opts.response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(att.Name()), attrVal)...)
-					if opts.response.Diagnostics.HasError() {
-						return
+					diags.Append(identity.SetAttribute(ctx, path.Root(att.Name()), attrVal)...)
+					if diags.HasError() {
+						break identityLoop
 					}
 				}
+
+				if diags.HasError() {
+					response.Identity = nil
+				}
+
+				opts.response.Diagnostics.Append(diags...)
 			}
 		}
 	}

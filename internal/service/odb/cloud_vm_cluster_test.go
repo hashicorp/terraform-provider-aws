@@ -332,6 +332,32 @@ func TestAccODBCloudVmCluster_usingARN(t *testing.T) {
 	})
 }
 
+func TestAccODBCloudVmCluster_variables(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.vmClusterDisplayNamePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			vmClusterTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             vmClusterTestEntity.testAccCheckCloudVmClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
+			{
+				Config:             testAccCloudVmClusterConfig_useVariables(vmcDisplayName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func (cloudVmClusterResourceTest) testAccCheckCloudVmClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
@@ -383,6 +409,43 @@ func (cloudVmClusterResourceTest) testAccPreCheck(ctx context.Context, t *testin
 	}
 }
 
+func testAccCloudVmClusterConfig_useVariables(rName string) string {
+	return fmt.Sprintf(`
+variable cloud_exadata_infrastructure_id {
+  default     = "exa_gjrmtxl4qk"
+  type        = string
+  description = "ODB Exadata Infrastructure Resource ID"
+
+}
+variable odb_network_id {
+  default     = "odbnet_3l9st3litg"
+  type        = string
+  description = "ODB Network"
+}
+
+resource "aws_odb_cloud_vm_cluster" "test" {
+  display_name                    = %[1]q
+  cloud_exadata_infrastructure_id = var.cloud_exadata_infrastructure_id
+  cpu_core_count                  = 6
+  gi_version                      = "23.0.0.0"
+  hostname_prefix                 = "apollo12"
+  ssh_public_keys                 = ["public-ssh-key"]
+  odb_network_id                  = var.odb_network_id
+  is_local_backup_enabled         = true
+  is_sparse_diskgroup_enabled     = true
+  license_model                   = "LICENSE_INCLUDED"
+  data_storage_size_in_tbs        = 20.0
+  db_servers                      = ["db-server-1", "db-server-2"]
+  db_node_storage_size_in_gbs     = 120.0
+  memory_size_in_gbs              = 60
+  data_collection_options {
+    is_diagnostics_events_enabled = false
+    is_health_monitoring_enabled  = false
+    is_incident_logs_enabled      = false
+  }
+}
+`, rName)
+}
 func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigBasic(vmClusterDisplayName, sshKey string) (string, string) {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.exaInfraDisplayNamePrefix)
 	odbNetDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestEntity.odbNetDisplayNamePrefix)

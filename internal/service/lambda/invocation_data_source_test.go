@@ -100,6 +100,26 @@ func TestAccLambdaInvocationDataSource_complex(t *testing.T) {
 	})
 }
 
+func TestAccLambdaInvocationDataSource_tenantId(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInvocationDataSourceConfig_tenantId(rName, testData),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
+				),
+			},
+		},
+	})
+}
+
 func testAccInvocationDataSource_base_config(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
@@ -225,6 +245,40 @@ data "aws_lambda_invocation" "invocation_test" {
       "a": "b"
     }
   }
+}
+JSON
+}
+`, rName, testData)
+}
+
+func testAccInvocationDataSourceConfig_tenantId(rName, testData string) string {
+	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
+resource "aws_lambda_function" "lambda" {
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
+
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = "%s"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs20.x"
+  tenancy_config {
+    tenant_isolation_mode = "PER_TENANT"
+  }
+
+  environment {
+    variables = {
+      TEST_DATA = "%s"
+    }
+  }
+}
+
+data "aws_lambda_invocation" "invocation_test" {
+  function_name = aws_lambda_function.lambda.function_name
+  tenant_id     = "tenant-1"
+  input         = <<JSON
+{
+  "key1": "value1",
+  "key2": "value2"
 }
 JSON
 }

@@ -25,19 +25,15 @@ import (
 // @FrameworkDataSource("aws_vpn_connection", name="VPN Connection")
 // @Tags
 // @Testing(tagsTest=false)
-func newDataSourceVPNConnection(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceVPNConnection{}, nil
+func newVPNConnectionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &vpnConnectionDataSource{}, nil
 }
 
-const (
-	DSNameVPNConnection = "VPN Connection Data Source"
-)
-
-type dataSourceVPNConnection struct {
-	framework.DataSourceWithModel[dataSourceVPNConnectionModel]
+type vpnConnectionDataSource struct {
+	framework.DataSourceWithModel[vpnConnectionDataSourceModel]
 }
 
-func (d *dataSourceVPNConnection) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *vpnConnectionDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"category": schema.StringAttribute{
@@ -62,7 +58,7 @@ func (d *dataSourceVPNConnection) Schema(ctx context.Context, req datasource.Sch
 			"pre_shared_key_arn": schema.StringAttribute{
 				Computed: true,
 			},
-			"routes": framework.DataSourceComputedListOfObjectAttribute[routeModel](ctx),
+			"routes": framework.DataSourceComputedListOfObjectAttribute[vpnStaticRouteModel](ctx),
 			names.AttrState: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.VpnState](),
 				Computed:   true,
@@ -75,6 +71,9 @@ func (d *dataSourceVPNConnection) Schema(ctx context.Context, req datasource.Sch
 				Computed: true,
 			},
 			"vgw_telemetries": framework.DataSourceComputedListOfObjectAttribute[vgwTelemetryModel](ctx),
+			"vpn_concentrator_id": schema.StringAttribute{
+				Computed: true,
+			},
 			"vpn_connection_id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -89,9 +88,9 @@ func (d *dataSourceVPNConnection) Schema(ctx context.Context, req datasource.Sch
 	}
 }
 
-func (d *dataSourceVPNConnection) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *vpnConnectionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().EC2Client(ctx)
-	var data dataSourceVPNConnectionModel
+	var data vpnConnectionDataSourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
@@ -100,8 +99,8 @@ func (d *dataSourceVPNConnection) Read(ctx context.Context, req datasource.ReadR
 	input := ec2.DescribeVpnConnectionsInput{}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, data, &input, flex.WithIgnoredFieldNamesAppend("VpnConnectionId")), smerr.ID)
 
-	if !data.VpnConnectionId.IsNull() && !data.VpnConnectionId.IsUnknown() {
-		input.VpnConnectionIds = []string{data.VpnConnectionId.ValueString()}
+	if !data.VPNConnectionID.IsNull() && !data.VPNConnectionID.IsUnknown() {
+		input.VpnConnectionIds = []string{data.VPNConnectionID.ValueString()}
 	}
 
 	out, err := findVPNConnection(ctx, conn, &input)
@@ -110,16 +109,16 @@ func (d *dataSourceVPNConnection) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data), smerr.ID, data.VpnConnectionId.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data), smerr.ID, data.VPNConnectionID.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	setTagsOut(ctx, out.Tags)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.VpnConnectionId.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.VPNConnectionID.String())
 }
 
-func (d *dataSourceVPNConnection) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+func (d *vpnConnectionDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.AtLeastOneOf(
 			path.MatchRoot("vpn_connection_id"),
@@ -128,36 +127,37 @@ func (d *dataSourceVPNConnection) ConfigValidators(_ context.Context) []datasour
 	}
 }
 
-type dataSourceVPNConnectionModel struct {
+type vpnConnectionDataSourceModel struct {
 	framework.WithRegionModel
 	Category                     types.String                                         `tfsdk:"category"`
-	CoreNetworkArn               types.String                                         `tfsdk:"core_network_arn"`
-	CoreNetworkAttachmentArn     types.String                                         `tfsdk:"core_network_attachment_arn"`
+	CoreNetworkARN               types.String                                         `tfsdk:"core_network_arn"`
+	CoreNetworkAttachmentARN     types.String                                         `tfsdk:"core_network_attachment_arn"`
 	CustomerGatewayConfiguration types.String                                         `tfsdk:"customer_gateway_configuration"`
 	CustomerGatewayID            types.String                                         `tfsdk:"customer_gateway_id"`
 	Filters                      customFilters                                        `tfsdk:"filter"`
 	GatewayAssociationState      fwtypes.StringEnum[awstypes.GatewayAssociationState] `tfsdk:"gateway_association_state"`
-	PreSharedKeyArn              types.String                                         `tfsdk:"pre_shared_key_arn"`
+	PreSharedKeyARN              types.String                                         `tfsdk:"pre_shared_key_arn"`
+	Routes                       fwtypes.ListNestedObjectValueOf[vpnStaticRouteModel] `tfsdk:"routes"`
 	State                        fwtypes.StringEnum[awstypes.VpnState]                `tfsdk:"state"`
-	TransitGatewayId             types.String                                         `tfsdk:"transit_gateway_id"`
-	Type                         types.String                                         `tfsdk:"type"`
-	VpnGatewayId                 types.String                                         `tfsdk:"vpn_gateway_id"`
-	Routes                       fwtypes.ListNestedObjectValueOf[routeModel]          `tfsdk:"routes"`
-	VgwTelemetries               fwtypes.ListNestedObjectValueOf[vgwTelemetryModel]   `tfsdk:"vgw_telemetries"`
-	VpnConnectionId              types.String                                         `tfsdk:"vpn_connection_id"`
 	Tags                         tftags.Map                                           `tfsdk:"tags"`
+	TransitGatewayID             types.String                                         `tfsdk:"transit_gateway_id"`
+	Type                         types.String                                         `tfsdk:"type"`
+	VGWTelemetry                 fwtypes.ListNestedObjectValueOf[vgwTelemetryModel]   `tfsdk:"vgw_telemetries"`
+	VPNConcentratorID            types.String                                         `tfsdk:"vpn_concentrator_id"`
+	VPNConnectionID              types.String                                         `tfsdk:"vpn_connection_id"`
+	VPNGatewayID                 types.String                                         `tfsdk:"vpn_gateway_id"`
 }
 
-type routeModel struct {
-	DestinationCidrBlock types.String                          `tfsdk:"destination_cidr_block"`
-	Source               types.String                          `tfsdk:"source"`
-	State                fwtypes.StringEnum[awstypes.VpnState] `tfsdk:"state"`
+type vpnStaticRouteModel struct {
+	DestinationCIDRBlock types.String                                      `tfsdk:"destination_cidr_block"`
+	Source               fwtypes.StringEnum[awstypes.VpnStaticRouteSource] `tfsdk:"source"`
+	State                fwtypes.StringEnum[awstypes.VpnState]             `tfsdk:"state"`
 }
 
 type vgwTelemetryModel struct {
 	AcceptedRouteCount types.Int64                                  `tfsdk:"accepted_route_count"`
 	LastStatusChange   timetypes.RFC3339                            `tfsdk:"last_status_change"`
+	OutsideIPAddress   types.String                                 `tfsdk:"outside_ip_address"`
 	Status             fwtypes.StringEnum[awstypes.TelemetryStatus] `tfsdk:"status"`
 	StatusMessage      types.String                                 `tfsdk:"status_message"`
-	OutsideIpAddress   types.String                                 `tfsdk:"outside_ip_address"`
 }

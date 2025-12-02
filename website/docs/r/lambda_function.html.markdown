@@ -476,6 +476,40 @@ resource "aws_lambda_function" "example" {
 }
 ```
 
+### Capacity Provider Configuration
+
+```terraform
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "example"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+  memory_size   = 2048
+
+  publish = true
+
+  capacity_provider_config {
+    lambda_managed_instances_capacity_provider_config {
+      capacity_provider_arn = aws_lambda_capacity_provider.example.arn
+    }
+  }
+}
+
+resource "aws_lambda_capacity_provider" "example" {
+  name = "example"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.example.id]
+    security_group_ids = [aws_security_group.example.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.example.arn
+  }
+}
+```
+
 ## Specifying the Deployment Package
 
 AWS Lambda expects source code to be provided as a deployment package whose structure varies depending on which `runtime` is in use. See [Runtimes](https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime) for the valid values of `runtime`. The expected structure of the deployment package can be found in [the AWS Lambda documentation for each runtime](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html).
@@ -494,6 +528,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stays the same.
+* `capacity_provider_config` - (Optional) Configuration block for Lambda Capacity Provider. [See below](#capacity_provider_config-configuration).
 * `code_signing_config_arn` - (Optional) ARN of a code-signing configuration to enable code signing for this function.
 * `dead_letter_config` - (Optional) Configuration block for dead letter queue. [See below](#dead_letter_config-configuration-block).
 * `description` - (Optional) Description of what your Lambda Function does.
@@ -510,6 +545,7 @@ The following arguments are optional:
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 10,240 MB (10 GB), in 1 MB increments. Defaults to 128.
 * `package_type` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
+* `publish_to` - (Optional) Whether to publish to a alias or version number. Omit for regular version publishing. Option is `LATEST_PUBLISHED`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replace_security_groups_on_destroy` - (Optional) Whether to replace the security groups on the function's VPC configuration prior to destruction. Default is `false`.
 * `replacement_security_group_ids` - (Optional) List of security group IDs to assign to the function's VPC configuration prior to destruction. Required if `replace_security_groups_on_destroy` is `true`.
@@ -524,8 +560,19 @@ The following arguments are optional:
 * `source_kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package. Conflicts with `image_uri`.
 * `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
+* `tenancy_config` - (Optional) Configuration block for Tenancy. [See below](#tenancy_config-configuration-block).
 * `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-configuration-block).
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-configuration-block).
+
+### capacity_provider_config Configuration
+
+* `lambda_managed_instances_capacity_provider_config` - (Required) Configuration block for Lambda Managed Instances Capacity Provider. [See below](#lambda_managed_instances_capacity_provider_config-configuration-block).
+
+### lambda_managed_instances_capacity_provider_config Configuration Block
+
+* `capacity_provider_arn` - (Required) ARN of the Capacity Provider.
+* `execution_environment_memory_gib_per_vcpu` - (Optional) Memory GiB per vCPU for the execution environment.
+* `per_execution_environment_max_concurrency` - (Optional) Maximum concurrency per execution environment.
 
 ### dead_letter_config Configuration Block
 
@@ -560,6 +607,10 @@ The following arguments are optional:
 ### snap_start Configuration Block
 
 * `apply_on` - (Required) When to apply snap start optimization. Valid value: `PublishedVersions`.
+
+### tenancy_config Configuration Block
+
+* `tenant_isolation_mode` - (Required) Tenant Isolation Mode. Valid values: `PER_TENANT`.
 
 ### tracing_config Configuration Block
 

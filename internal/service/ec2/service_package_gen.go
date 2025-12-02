@@ -76,7 +76,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newDataSourceVPNConnection,
+			Factory:  newVPNConnectionDataSource,
 			TypeName: "aws_vpn_connection",
 			Name:     "VPN Connection",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
@@ -175,6 +175,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newResourceVPCEncryptionControl,
+			TypeName: "aws_vpc_encryption_control",
+			Name:     "VPC Encryption Control",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newVPCEndpointPrivateDNSResource,
 			TypeName: "aws_vpc_endpoint_private_dns",
 			Name:     "VPC Endpoint Private DNS",
@@ -264,6 +277,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 				ImportID:      securityGroupVPCAssociationImportID{},
 			},
+		},
+		{
+			Factory:  newVPNConcentratorResource,
+			TypeName: "aws_vpn_concentrator",
+			Name:     "VPN Concentrator",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "vpn_concentrator_id",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }

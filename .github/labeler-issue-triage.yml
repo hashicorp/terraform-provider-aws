@@ -491,6 +491,8 @@ service/mturk:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mturk_'
 service/mwaa:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mwaa_'
+service/mwaaserverless:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mwaaserverless_'
 service/neptune:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptune_'
 service/neptunegraph:

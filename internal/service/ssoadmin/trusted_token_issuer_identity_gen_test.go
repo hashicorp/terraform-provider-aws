@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -38,7 +37,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_Basic(t *testing.T) {
 
 	var v ssoadmin.DescribeTrustedTokenIssuerOutput
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -127,7 +126,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -252,7 +251,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource(t *testing.T) {
 
 	var v ssoadmin.DescribeTrustedTokenIssuerOutput
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -337,7 +336,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource_NoRefresh_NoCha
 
 	var v ssoadmin.DescribeTrustedTokenIssuerOutput
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

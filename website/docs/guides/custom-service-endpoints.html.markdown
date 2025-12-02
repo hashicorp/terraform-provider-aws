@@ -230,7 +230,6 @@ provider "aws" {
 |Lightsail|`lightsail`|`AWS_ENDPOINT_URL_LIGHTSAIL`|`lightsail`|
 |Location|`location`(or `locationservice`)|`AWS_ENDPOINT_URL_LOCATION`|`location`|
 |CloudWatch Logs|`logs`(or `cloudwatchlog` or `cloudwatchlogs`)|`AWS_ENDPOINT_URL_CLOUDWATCH_LOGS`|`cloudwatch_logs`|
-|Lookout for Metrics|`lookoutmetrics`|`AWS_ENDPOINT_URL_LOOKOUTMETRICS`|`lookoutmetrics`|
 |Mainframe Modernization|`m2`|`AWS_ENDPOINT_URL_M2`|`m2`|
 |Macie|`macie2`|`AWS_ENDPOINT_URL_MACIE2`|`macie2`|
 |Elemental MediaConnect|`mediaconnect`|`AWS_ENDPOINT_URL_MEDIACONNECT`|`mediaconnect`|
@@ -244,6 +243,7 @@ provider "aws" {
 |Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|
 |MQ|`mq`|`AWS_ENDPOINT_URL_MQ`|`mq`|
 |MWAA (Managed Workflows for Apache Airflow)|`mwaa`|`AWS_ENDPOINT_URL_MWAA`|`mwaa`|
+|MWAA (Managed Workflows for Apache Airflow) Serverless|`mwaaserverless`|`AWS_ENDPOINT_URL_MWAA_SERVERLESS`|`mwaa_serverless`|
 |Neptune|`neptune`|`AWS_ENDPOINT_URL_NEPTUNE`|`neptune`|
 |Neptune Analytics|`neptunegraph`|`AWS_ENDPOINT_URL_NEPTUNE_GRAPH`|`neptune_graph`|
 |Network Firewall|`networkfirewall`|`AWS_ENDPOINT_URL_NETWORK_FIREWALL`|`network_firewall`|
@@ -274,6 +274,7 @@ provider "aws" {
 |RAM (Resource Access Manager)|`ram`|`AWS_ENDPOINT_URL_RAM`|`ram`|
 |Recycle Bin (RBin)|`rbin`(or `recyclebin`)|`AWS_ENDPOINT_URL_RBIN`|`rbin`|
 |RDS (Relational Database)|`rds`|`AWS_ENDPOINT_URL_RDS`|`rds`|
+|RDS Data|`rdsdata`(or `rdsdataservice`)|`AWS_ENDPOINT_URL_RDS_DATA`|`rds_data`|
 |Redshift|`redshift`|`AWS_ENDPOINT_URL_REDSHIFT`|`redshift`|
 |Redshift Data|`redshiftdata`(or `redshiftdataapiservice`)|`AWS_ENDPOINT_URL_REDSHIFT_DATA`|`redshift_data`|
 |Redshift Serverless|`redshiftserverless`|`AWS_ENDPOINT_URL_REDSHIFT_SERVERLESS`|`redshift_serverless`|

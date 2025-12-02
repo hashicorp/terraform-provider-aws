@@ -154,7 +154,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/lookoutmetrics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/m2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
@@ -169,6 +168,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mgn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaaserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptunegraph"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
@@ -199,6 +199,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rbin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rdsdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
@@ -416,7 +417,6 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		lightsail.ServicePackage(ctx),
 		location.ServicePackage(ctx),
 		logs.ServicePackage(ctx),
-		lookoutmetrics.ServicePackage(ctx),
 		m2.ServicePackage(ctx),
 		macie2.ServicePackage(ctx),
 		mediaconnect.ServicePackage(ctx),
@@ -431,6 +431,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		mgn.ServicePackage(ctx),
 		mq.ServicePackage(ctx),
 		mwaa.ServicePackage(ctx),
+		mwaaserverless.ServicePackage(ctx),
 		neptune.ServicePackage(ctx),
 		neptunegraph.ServicePackage(ctx),
 		networkfirewall.ServicePackage(ctx),
@@ -461,6 +462,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		ram.ServicePackage(ctx),
 		rbin.ServicePackage(ctx),
 		rds.ServicePackage(ctx),
+		rdsdata.ServicePackage(ctx),
 		redshift.ServicePackage(ctx),
 		redshiftdata.ServicePackage(ctx),
 		redshiftserverless.ServicePackage(ctx),
