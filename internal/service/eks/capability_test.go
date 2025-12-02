@@ -168,7 +168,7 @@ func TestAccEKSCapability_tags(t *testing.T) {
 	})
 }
 
-func TestAccEKSCapability_argoCD(t *testing.T) {
+func TestAccEKSCapability_ArgoCD_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var capability types.Capability
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -185,7 +185,7 @@ func TestAccEKSCapability_argoCD(t *testing.T) {
 		CheckDestroy:             testAccCheckCapabilityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapabilityConfig_argoCD(rName),
+				Config: testAccCapabilityConfig_argoCDBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapabilityExists(ctx, resourceName, &capability),
 				),
@@ -201,6 +201,55 @@ func TestAccEKSCapability_argoCD(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, "capability_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
+	ctx := acctest.Context(t)
+	var capability types.Capability
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_capability.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapabilityDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapabilityConfig_argoCDRBAC1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCapabilityExists(ctx, resourceName, &capability),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, "capability_name"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccCapabilityConfig_argoCDRBAC2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCapabilityExists(ctx, resourceName, &capability),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -347,7 +396,7 @@ resource "aws_eks_capability" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccCapabilityConfig_argoCD(rName string) string {
+func testAccCapabilityConfig_argoCDBasic(rName string) string {
 	return acctest.ConfigCompose(testAccCapabilityConfig_base(rName), fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -369,4 +418,104 @@ resource "aws_eks_capability" "test" {
   depends_on = [aws_iam_role_policy_attachment.capability]
 }
 `, rName))
+}
+
+func testAccCapabilityConfig_argoCDRBAC1(rName string) string {
+	return acctest.ConfigCompose(testAccCapabilityConfig_base(rName), fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_eks_capability" "test" {
+  cluster_name              = aws_eks_cluster.test.name
+  capability_name           = %[1]q
+  type                      = "ARGOCD"
+  role_arn                  = aws_iam_role.capability.arn
+  delete_propagation_policy = "RETAIN"
+
+  configuration {
+    argo_cd {
+      aws_idc {
+        idc_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+        idc_region       = %[2]q
+      }
+
+      rbac_role_mapping {
+        role = "ADMIN"
+
+        identity {
+          type = "SSO_USER"
+          id   = "user1"
+        }
+      }
+
+      rbac_role_mapping {
+        role = "VIEWER"
+
+        identity {
+          type = "SSO_USER"
+          id   = "user2"
+        }
+
+        identity {
+          type = "SSO_GROUP"
+          id   = "group1"
+        }
+      }
+
+      rbac_role_mapping {
+        role = "EDITOR"
+
+        identity {
+          type = "SSO_USER"
+          id   = "user3"
+        }
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.capability]
+}
+`, rName, acctest.Region()))
+}
+
+func testAccCapabilityConfig_argoCDRBAC2(rName string) string {
+	return acctest.ConfigCompose(testAccCapabilityConfig_base(rName), fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_eks_capability" "test" {
+  cluster_name              = aws_eks_cluster.test.name
+  capability_name           = %[1]q
+  type                      = "ARGOCD"
+  role_arn                  = aws_iam_role.capability.arn
+  delete_propagation_policy = "RETAIN"
+
+  configuration {
+    argo_cd {
+      aws_idc {
+        idc_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+        idc_region       = %[2]q
+      }
+
+      rbac_role_mapping {
+        role = "ADMIN"
+
+        identity {
+          type = "SSO_USER"
+          id   = "user2"
+        }
+      }
+
+      rbac_role_mapping {
+        role = "EDITOR"
+
+        identity {
+          type = "SSO_USER"
+          id   = "user3"
+        }
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.capability]
+}
+`, rName, acctest.Region()))
 }

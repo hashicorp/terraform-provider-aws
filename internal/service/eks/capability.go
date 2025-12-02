@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
+	set "github.com/hashicorp/go-set/v3"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -330,7 +331,36 @@ func (r *capabilityResource) Update(ctx context.Context, request resource.Update
 		// Additional fields.
 		input.ClientRequestToken = aws.String(sdkid.UniqueId())
 
-		// TODO ArgoCD configuration update handling.
+		// argo_cd block can only be modified in-place (not added or removed).
+		var oldConfiguration, newConfiguration awstypes.CapabilityConfigurationRequest
+		response.Diagnostics.Append(fwflex.Expand(ctx, old.Configuration, &oldConfiguration)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new.Configuration, &newConfiguration)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if oldArgoCD, newArgoCD := oldConfiguration.ArgoCd, newConfiguration.ArgoCd; oldArgoCD != nil && newArgoCD != nil {
+			add, remove, update, _ := intflex.DiffSlicesWithModify(oldArgoCD.RbacRoleMappings, newArgoCD.RbacRoleMappings,
+				func(a, b awstypes.ArgoCdRoleMapping) bool {
+					hashIdentity := func(v awstypes.SsoIdentity) string {
+						return string(v.Type) + ":" + aws.ToString(v.Id)
+					}
+					return a.Role == b.Role && set.HashSetFromFunc(a.Identities, hashIdentity).Equal(set.HashSetFromFunc(b.Identities, hashIdentity))
+				}, func(a, b awstypes.ArgoCdRoleMapping) bool {
+					return a.Role == b.Role
+				})
+
+			input.Configuration.ArgoCd.RbacRoleMappings = &awstypes.UpdateRoleMappings{}
+			if addOrUpdate := append(add, update...); len(addOrUpdate) > 0 {
+				input.Configuration.ArgoCd.RbacRoleMappings.AddOrUpdateRoleMappings = addOrUpdate
+			}
+			if len(remove) > 0 {
+				input.Configuration.ArgoCd.RbacRoleMappings.RemoveRoleMappings = remove
+			}
+		}
 
 		output, err := conn.UpdateCapability(ctx, &input)
 
