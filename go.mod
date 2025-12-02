@@ -389,5 +389,3 @@ require (
 )
 
 replace github.com/hashicorp/terraform-plugin-log => github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb
-
-replace github.com/aws/aws-sdk-go-v2/service/s3tables => /Users/kewbank/Downloads/s3-meridian/service/s3tables
