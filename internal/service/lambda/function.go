@@ -1628,7 +1628,7 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FunctionConfiguration); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.StateReasonCode), aws.ToString(output.StateReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.StateReasonCode), aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -1648,7 +1648,7 @@ func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, name string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FunctionConfiguration); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
 
 		return output, err
 	}
@@ -1668,7 +1668,7 @@ func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.GetFunctionConfigurationOutput); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
 
 		return output, err
 	}
