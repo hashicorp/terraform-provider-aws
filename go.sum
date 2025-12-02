@@ -103,8 +103,8 @@ github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.1 h1:3bes4u/HO/klW+u8655
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.1/go.mod h1:AN1aWQCV7gA7RsCxtjHXplAFKu99LNgpJu2VXtPsBok=
 github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.15.0 h1:xo8UWUQ02ZCqMZ7wHNfsr94uI79W8BYfEd6oj99KHAA=
 github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.15.0/go.mod h1:YwlvHWUZ0EA81k5PKZWD7of31ZGvEHEKL9XPpOAn4Vo=
-github.com/aws/aws-sdk-go-v2/service/billing v1.9.2 h1:SPzTCg0ribbTX0l/5Wh7mRnyNM/B/L/V8nTzGuDCzzM=
-github.com/aws/aws-sdk-go-v2/service/billing v1.9.2/go.mod h1:xJnUORWEM7RAHY+bzFl1la8IFxfyAbccbdSr25vJUS0=
+github.com/aws/aws-sdk-go-v2/service/billing v1.9.3 h1:W2d8xuwt/J08O9ndk0TybFu6F/muw/nbc7IWzph0AXM=
+github.com/aws/aws-sdk-go-v2/service/billing v1.9.3/go.mod h1:0j0TM0ToeEmZLE5QtljWtjR9fwHwhgFJzOLJ7X/zmrQ=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.42.2 h1:+WOHbc1jNZLIRE8RQISGYeB66v2shPN7+UZnThMDUXI=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.42.2/go.mod h1:6Yh/bUIDAqk3HwbsOiq3KUOk5Qv2fM2y8mzHw4PNxac=
 github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.15 h1:404JWSmGSsff16G6g96rAp+A7Oc7qTsfDzqd2wFp+1c=
