@@ -1,4 +1,4 @@
-## 6.24.0 (Unreleased)
+## 6.24.0 (December 2, 2025)
 
 FEATURES:
 
