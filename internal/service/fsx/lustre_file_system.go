@@ -909,7 +909,7 @@ func waitFileSystemCreated(ctx context.Context, conn *fsx.Client, id string, tim
 
 	if output, ok := outputRaw.(*awstypes.FileSystem); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileSystemLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(details.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(details.Message)))
 		}
 
 		return output, err
@@ -943,12 +943,12 @@ func waitFileSystemUpdated(ctx context.Context, conn *fsx.Client, id string, sta
 
 			if details := output.FailureDetails; details != nil {
 				if message := aws.ToString(details.Message); administrativeActionsError != nil {
-					tfresource.SetLastError(err, fmt.Errorf("%s: %w", message, administrativeActionsError))
+					retry.SetLastError(err, fmt.Errorf("%s: %w", message, administrativeActionsError))
 				} else {
-					tfresource.SetLastError(err, errors.New(message))
+					retry.SetLastError(err, errors.New(message))
 				}
 			} else {
-				tfresource.SetLastError(err, administrativeActionsError)
+				retry.SetLastError(err, administrativeActionsError)
 			}
 		}
 
@@ -972,7 +972,7 @@ func waitFileSystemDeleted(ctx context.Context, conn *fsx.Client, id string, tim
 
 	if output, ok := outputRaw.(*awstypes.FileSystem); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileSystemLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(details.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(details.Message)))
 		}
 
 		return output, err
@@ -1027,7 +1027,7 @@ func waitFileSystemAdministrativeActionCompleted(ctx context.Context, conn *fsx.
 
 	if output, ok := outputRaw.(*awstypes.AdministrativeAction); ok {
 		if status, details := output.Status, output.FailureDetails; status == awstypes.StatusFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err
