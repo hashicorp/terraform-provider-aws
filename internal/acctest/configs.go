@@ -295,6 +295,17 @@ provider "aws" {
 `, tag1, value1, tag2, value2))
 }
 
+func ConfigAssumeRole() string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  assume_role {
+    role_arn = %[1]q
+  }
+}
+`, os.Getenv(envvar.AccAssumeRoleARN))
+}
+
 func ConfigAssumeRolePolicy(policy string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
