@@ -489,8 +489,8 @@ resource "aws_lambda_function" "example" {
   timeout       = 30
   # Durable function configuration for long-running processes
   durable_config {
-    execution_timeout = 3600    # 1 hour maximum execution time
-    retention_period  = 7       # Retain execution state for 7 days
+    execution_timeout = 3600 # 1 hour maximum execution time
+    retention_period  = 7    # Retain execution state for 7 days
   }
   environment {
     variables = {
@@ -611,7 +611,6 @@ The following arguments are optional:
 
 * `execution_timeout` - (Required) Maximum execution time in seconds for the durable function. Valid value between 1 and 31622400 (366 days).
 * `retention_period` - (Optional) Number of days to retain the function's execution state. Valid value between 1 and 90. If not specified, the function's execution state is not retained. Defaults to 14.
-
 
 ### environment Configuration Block
 

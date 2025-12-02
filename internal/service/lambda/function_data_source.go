@@ -98,7 +98,7 @@ func dataSourceFunction() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"retention_period": {
+						names.AttrRetentionPeriod: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},

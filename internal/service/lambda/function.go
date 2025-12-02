@@ -160,7 +160,7 @@ func resourceFunction() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 31622400),
 						},
-						"retention_period": {
+						names.AttrRetentionPeriod: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      14,
@@ -1828,7 +1828,7 @@ func expandDurableConfigs(tfList []any) *awstypes.DurableConfig {
 	tfMap := tfList[0].(map[string]any)
 	return &awstypes.DurableConfig{
 		ExecutionTimeout:      aws.Int32(int32(tfMap["execution_timeout"].(int))),
-		RetentionPeriodInDays: aws.Int32(int32(tfMap["retention_period"].(int))),
+		RetentionPeriodInDays: aws.Int32(int32(tfMap[names.AttrRetentionPeriod].(int))),
 	}
 }
 
@@ -1844,7 +1844,7 @@ func flattenDurableConfig(apiObject *awstypes.DurableConfig) []any {
 	}
 
 	if v := apiObject.RetentionPeriodInDays; v != nil {
-		tfMap["retention_period"] = aws.ToInt32(v)
+		tfMap[names.AttrRetentionPeriod] = aws.ToInt32(v)
 	}
 
 	if len(tfMap) == 0 {
