@@ -688,7 +688,7 @@ func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, i
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*types.EntityRecognizerProperties); ok {
 		if output.Status == types.ModelStatusInError {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 		return output, err
 	}
