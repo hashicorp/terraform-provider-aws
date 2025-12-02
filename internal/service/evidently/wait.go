@@ -79,7 +79,7 @@ func waitLaunchCreated(ctx context.Context, conn *evidently.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Launch); ok {
 		if v := aws.ToString(output.StatusReason); v != "" {
-			tfresource.SetLastError(err, errors.New(v))
+			retry.SetLastError(err, errors.New(v))
 		}
 
 		return output, err
@@ -100,7 +100,7 @@ func waitLaunchUpdated(ctx context.Context, conn *evidently.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Launch); ok {
 		if v := aws.ToString(output.StatusReason); v != "" {
-			tfresource.SetLastError(err, errors.New(v))
+			retry.SetLastError(err, errors.New(v))
 		}
 
 		return output, err
@@ -121,7 +121,7 @@ func waitLaunchDeleted(ctx context.Context, conn *evidently.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Launch); ok {
 		if v := aws.ToString(output.StatusReason); v != "" {
-			tfresource.SetLastError(err, errors.New(v))
+			retry.SetLastError(err, errors.New(v))
 		}
 
 		return output, err
