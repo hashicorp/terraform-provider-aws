@@ -56,7 +56,7 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_account_assignment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
+	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_NAME")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -88,7 +88,7 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 func TestAccSSOAdminAccountAssignment_MissingPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
+	userName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_NAME")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -101,7 +101,7 @@ func TestAccSSOAdminAccountAssignment_MissingPolicy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// We assign a policy called rName on the assumption it doesn't exist due to being randomly generated, hoping to generate an error
-				Config:      testAccAccountAssignmentConfig_withCustomerPolicy(userId, "/", rName, rName),
+				Config:      testAccAccountAssignmentConfig_withCustomerPolicy(userName, "/", rName, rName),
 				ExpectError: regexache.MustCompile(fmt.Sprintf(`Received a 404 status error: Not supported policy.*%s`, rName)),
 			},
 		},
