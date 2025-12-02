@@ -1529,7 +1529,7 @@ func waitClusterCreated(ctx context.Context, conn *emr.Client, id string) (*awst
 
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
 		}
 
 		return output, err
@@ -1555,7 +1555,7 @@ func waitClusterDeleted(ctx context.Context, conn *emr.Client, id string) (*awst
 
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
 		}
 
 		return output, err
