@@ -21,6 +21,7 @@ var (
 	ExpandTableItemQueryKey                      = expandTableItemQueryKey
 	FindContributorInsightsByTwoPartKey          = findContributorInsightsByTwoPartKey
 	FindGlobalTableByName                        = findGlobalTableByName
+	FindGSIByTwoPartKey                          = findGSIByTwoPartKey
 	FindKinesisDataStreamDestinationByTwoPartKey = findKinesisDataStreamDestinationByTwoPartKey
 	FindResourcePolicyByARN                      = findResourcePolicyByARN
 	FindTableByName                              = findTableByName
