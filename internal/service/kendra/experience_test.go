@@ -6,7 +6,6 @@ package kendra_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -395,11 +394,7 @@ func TestAccKendraExperience_Configuration_UserIdentityConfiguration(t *testing.
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	userId := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
-	if userId == "" {
-		t.Skip("Environment variable AWS_IDENTITY_STORE_USER_ID is not set")
-	}
-
+	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
@@ -437,11 +432,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationAndUserIden
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	userId := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
-	if userId == "" {
-		t.Skip("Environment variable AWS_IDENTITY_STORE_USER_ID is not set")
-	}
-
+	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
@@ -481,11 +472,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationWithUserIde
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	userId := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
-	if userId == "" {
-		t.Skip("Environment variable AWS_IDENTITY_STORE_USER_ID is not set")
-	}
-
+	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
@@ -535,11 +522,7 @@ func TestAccKendraExperience_Configuration_UserIdentityConfigurationWithContentS
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	userId := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
-	if userId == "" {
-		t.Skip("Environment variable AWS_IDENTITY_STORE_USER_ID is not set")
-	}
-
+	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
