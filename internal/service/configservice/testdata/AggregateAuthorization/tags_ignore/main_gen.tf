@@ -17,9 +17,9 @@ resource "aws_config_aggregate_authorization" "test" {
   tags = var.resource_tags
 }
 
-data "aws_region" "default" {}
-
 data "aws_caller_identity" "current" {}
+
+data "aws_region" "default" {}
 
 variable "resource_tags" {
   description = "Tags to set on resource. To specify no tags, set to `null`"

@@ -13,9 +13,9 @@ resource "aws_config_aggregate_authorization" "test" {
   }
 }
 
-data "aws_region" "default" {}
-
 data "aws_caller_identity" "current" {}
+
+data "aws_region" "default" {}
 
 resource "null_resource" "test" {}
 
