@@ -39,7 +39,8 @@ func sweepViews(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 		for _, v := range page.BillingViews {
 			if v.BillingViewType != awstypes.BillingViewTypeCustom {
 				tflog.Info(ctx, "Skipping resource", map[string]any{
-					"skip_reason": fmt.Sprintf("View Type is %q", v.BillingViewType),
+					names.AttrName: aws.ToString(v.Name),
+					"skip_reason":  fmt.Sprintf("View Type is %q", v.BillingViewType),
 				})
 				continue
 			}
