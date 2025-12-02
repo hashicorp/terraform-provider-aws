@@ -212,7 +212,7 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
 	userID := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
-	groupName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_GROUP_NAME")
+	groupID := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_GROUP_ID")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -225,7 +225,7 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 		CheckDestroy:             testAccCheckCapabilityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapabilityConfig_argoCDRBAC1(rName, userID, groupName),
+				Config: testAccCapabilityConfig_argoCDRBAC1(rName, userID, groupID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapabilityExists(ctx, resourceName, &capability),
 				),
@@ -243,7 +243,7 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
-				Config: testAccCapabilityConfig_argoCDRBAC2(rName, userID, groupName),
+				Config: testAccCapabilityConfig_argoCDRBAC2(rName, userID, groupID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapabilityExists(ctx, resourceName, &capability),
 				),
