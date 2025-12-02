@@ -133,7 +133,7 @@ func waitContainerServiceCreated(ctx context.Context, conn *lightsail.Client, se
 
 	if output, ok := outputRaw.(*types.ContainerService); ok {
 		if detail := output.StateDetail; detail != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(detail.Code), aws.ToString(detail.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", string(detail.Code), aws.ToString(detail.Message)))
 		}
 
 		return err
@@ -156,7 +156,7 @@ func waitContainerServiceDisabled(ctx context.Context, conn *lightsail.Client, s
 
 	if output, ok := outputRaw.(*types.ContainerService); ok {
 		if detail := output.StateDetail; detail != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(detail.Code), aws.ToString(detail.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", string(detail.Code), aws.ToString(detail.Message)))
 		}
 
 		return err
@@ -179,7 +179,7 @@ func waitContainerServiceUpdated(ctx context.Context, conn *lightsail.Client, se
 
 	if output, ok := outputRaw.(*types.ContainerService); ok {
 		if detail := output.StateDetail; detail != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(detail.Code), aws.ToString(detail.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", string(detail.Code), aws.ToString(detail.Message)))
 		}
 
 		return err
@@ -202,7 +202,7 @@ func waitContainerServiceDeleted(ctx context.Context, conn *lightsail.Client, se
 
 	if output, ok := outputRaw.(*types.ContainerService); ok {
 		if detail := output.StateDetail; detail != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(detail.Code), aws.ToString(detail.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", string(detail.Code), aws.ToString(detail.Message)))
 		}
 
 		return err
@@ -225,7 +225,7 @@ func waitContainerServiceDeploymentVersionActive(ctx context.Context, conn *ligh
 
 	if output, ok := outputRaw.(*types.ContainerServiceDeployment); ok {
 		if output.State == types.ContainerServiceDeploymentStateFailed {
-			tfresource.SetLastError(err, errors.New("The deployment failed. Use the GetContainerLog action to view the log events for the containers in the deployment to try to determine the reason for the failure."))
+			retry.SetLastError(err, errors.New("The deployment failed. Use the GetContainerLog action to view the log events for the containers in the deployment to try to determine the reason for the failure."))
 		}
 
 		return err
