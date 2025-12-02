@@ -6831,8 +6831,8 @@ resource "aws_dynamodb_table" "test" {
   }
 
   attribute {
-	name = "TestTableHashKey2"
-	type = "S"
+    name = "TestTableHashKey2"
+    type = "S"
   }
 
   attribute {
@@ -6884,8 +6884,8 @@ resource "aws_dynamodb_table" "test" {
   }
 
   attribute {
-	name = "TestTableHashKey2"
-	type = "S"
+    name = "TestTableHashKey2"
+    type = "S"
   }
 
   attribute {
@@ -6936,18 +6936,18 @@ resource "aws_dynamodb_table" "test" {
   }
 
   attribute {
-	name = "TestTableHashKey2"
-	type = "S"
+    name = "TestTableHashKey2"
+    type = "S"
   }
 
   attribute {
-	name = "TestTableHashKey3"
-	type = "S"
+    name = "TestTableHashKey3"
+    type = "S"
   }
 
   attribute {
-	name = "TestTableHashKey4"
-	type = "S"
+    name = "TestTableHashKey4"
+    type = "S"
   }
 
   attribute {
@@ -7085,7 +7085,7 @@ resource "aws_dynamodb_table" "test" {
   global_secondary_index {
     name               = "ReplacementTestTableGSI"
     hash_key           = "TestTableHashKey"
-	range_key          = "ReplacementGSIRangeKey"
+    range_key          = "ReplacementGSIRangeKey"
     range_keys         = ["ReplacementGSIRangeKey", "ReplacementGSIRangeKey2"]
     write_capacity     = 5
     read_capacity      = 5
@@ -7139,8 +7139,8 @@ resource "aws_dynamodb_table" "test" {
   global_secondary_index {
     name               = "ReplacementTestTableGSI"
     hash_key           = "TestTableHashKey"
-	hash_keys		   = ["TestTableRangeKey","TestTableHashKey"]
-	range_key          = "ReplacementGSIRangeKey"
+    hash_keys          = ["TestTableRangeKey", "TestTableHashKey"]
+    range_key          = "ReplacementGSIRangeKey"
     write_capacity     = 5
     read_capacity      = 5
     projection_type    = "INCLUDE"

@@ -128,21 +128,21 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 
   global_secondary_index {
-    name               = "TournamentRegionIndex"
-    hash_keys          = ["tournamentId", "region"]
-    range_keys         = ["round", "bracket", "matchId"]
-    write_capacity     = 10
-    read_capacity      = 10
-    projection_type    = "ALL"
+    name            = "TournamentRegionIndex"
+    hash_keys       = ["tournamentId", "region"]
+    range_keys      = ["round", "bracket", "matchId"]
+    write_capacity  = 10
+    read_capacity   = 10
+    projection_type = "ALL"
   }
 
   global_secondary_index {
-    name               = "PlayerMatchHistoryIndex"
-    hash_key           = "playerId"
-    range_keys         = ["matchDate", "round"]
-    write_capacity     = 10
-    read_capacity      = 10
-    projection_type    = "ALL"
+    name            = "PlayerMatchHistoryIndex"
+    hash_key        = "playerId"
+    range_keys      = ["matchDate", "round"]
+    write_capacity  = 10
+    read_capacity   = 10
+    projection_type = "ALL"
   }
 
   tags = {
@@ -374,15 +374,15 @@ The following arguments are optional:
 ### `global_secondary_index`
 
 * `hash_key` and `hash_keys` are `mutually exclusive`, but one is `required`. Refer to [AWS SDK Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html)
-  * `hash_key` - (Optional) Name of the hash key in the index; must be defined as an attribute in the resource.
-  * `hash_keys` - (Optional) List of the hash keys in the index; each must be defined as an attribute in the resource; max of 4.
+    * `hash_key` - (Optional) Name of the hash key in the index; must be defined as an attribute in the resource.
+    * `hash_keys` - (Optional) List of the hash keys in the index; each must be defined as an attribute in the resource; max of 4.
 * `name` - (Required) Name of the index.
 * `non_key_attributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
 * `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand index. See below.
 * `projection_type` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `non_key_attributes` in addition to the attributes that that`KEYS_ONLY` project.
 * `range_key` and `range_keys` are `mutually exclusive`, but are both `optional`. Refer to [AWS SDK Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html)
-  * `range_key` - (Optional) Name of the range key; must be defined.
-  * `range_keys` - (Optional) List of the range keys in the index; each must be defined as an attribute in the resource; max of 4.
+    * `range_key` - (Optional) Name of the range key; must be defined.
+    * `range_keys` - (Optional) List of the range keys in the index; each must be defined as an attribute in the resource; max of 4.
 * `read_capacity` - (Optional) Number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
 * `warm_throughput` - (Optional) Sets the number of warm read and write units for this index. See below.
 * `write_capacity` - (Optional) Number of write units for this index. Must be set if billing_mode is set to PROVISIONED.
