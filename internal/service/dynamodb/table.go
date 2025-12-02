@@ -196,6 +196,7 @@ func resourceTable() *schema.Resource {
 							"hash_keys": {
 								Type:     schema.TypeSet,
 								Optional: true,
+								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 								MaxItems: 4,
 							},
@@ -221,6 +222,7 @@ func resourceTable() *schema.Resource {
 							"range_keys": {
 								Type:     schema.TypeSet,
 								Optional: true,
+								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 								MaxItems: 4,
 							},
@@ -237,7 +239,6 @@ func resourceTable() *schema.Resource {
 							},
 						},
 					},
-					Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
 				},
 				"global_table_witness": {
 					Type:     schema.TypeList,
@@ -2112,6 +2113,17 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			if err != nil {
 				return ops, err
 			}
+			// Remove empty hash_keys/range_keys to avoid false positive diffs
+			if hks, ok := oldAttributes["hash_keys"]; ok {
+				if set, ok := hks.(*schema.Set); ok && set.Len() == 0 {
+					delete(oldAttributes, "hash_keys")
+				}
+			}
+			if rks, ok := oldAttributes["range_keys"]; ok {
+				if set, ok := rks.(*schema.Set); ok && set.Len() == 0 {
+					delete(oldAttributes, "range_keys")
+				}
+			}
 			newAttributes, err := stripCapacityAttributes(newMap)
 			if err != nil {
 				return ops, err
@@ -2127,6 +2139,17 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			newAttributes, err = stripWarmThroughputAttributes(newAttributes)
 			if err != nil {
 				return ops, err
+			}
+			// Remove empty hash_keys/range_keys to avoid false positive diffs
+			if hks, ok := newAttributes["hash_keys"]; ok {
+				if set, ok := hks.(*schema.Set); ok && set.Len() == 0 {
+					delete(newAttributes, "hash_keys")
+				}
+			}
+			if rks, ok := newAttributes["range_keys"]; ok {
+				if set, ok := rks.(*schema.Set); ok && set.Len() == 0 {
+					delete(newAttributes, "range_keys")
+				}
 			}
 			gsiNeedsRecreate := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes) || warmThroughPutDecreased
 
@@ -2997,7 +3020,7 @@ func expandKeySchema(data map[string]any) []awstypes.KeySchemaElement {
 				KeyType:       awstypes.KeyTypeRange,
 			})
 		} else if rKeys != nil && rKeys.Len() > 0 {
-			//use range_keys
+			// use range_keys
 			for _, rKeyItem := range rKeys.List() {
 				keySchema = append(keySchema, awstypes.KeySchemaElement{
 					AttributeName: aws.String(rKeyItem.(string)),
