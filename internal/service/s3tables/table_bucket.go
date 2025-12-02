@@ -92,7 +92,7 @@ func (r *tableBucketResource) Schema(ctx context.Context, request resource.Schem
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 63),
-					tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersHypens,
+					tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersHyphens,
 					tfstringvalidator.StartsWithLetterOrNumber,
 					tfstringvalidator.EndsWithLetterOrNumber,
 					tfstringvalidator.PrefixNoneOf(
