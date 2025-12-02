@@ -447,7 +447,7 @@ func waitLoggingConfigurationCreated(ctx context.Context, conn *amp.Client, work
 
 	if output, ok := outputRaw.(*types.LoggingConfigurationMetadata); ok {
 		if statusCode := output.Status.StatusCode; statusCode == types.LoggingConfigurationStatusCodeCreationFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 		}
 
 		return output, err
@@ -471,7 +471,7 @@ func waitLoggingConfigurationUpdated(ctx context.Context, conn *amp.Client, work
 
 	if output, ok := outputRaw.(*types.LoggingConfigurationMetadata); ok {
 		if statusCode := output.Status.StatusCode; statusCode == types.LoggingConfigurationStatusCodeUpdateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 		}
 
 		return output, err
