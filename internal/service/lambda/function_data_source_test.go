@@ -976,7 +976,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs22.x"
   durable_config {
     execution_timeout = 300
     retention_period  = 7
