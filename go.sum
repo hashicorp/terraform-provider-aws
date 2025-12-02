@@ -203,8 +203,8 @@ github.com/aws/aws-sdk-go-v2/service/devicefarm v1.38.2 h1:nool8Jdy3Br9fPULOBW8g
 github.com/aws/aws-sdk-go-v2/service/devicefarm v1.38.2/go.mod h1:y1r3KT12YHe7Yvvr7VkEHrqCspdyAyOfcwscyRsjegI=
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.40.6 h1:fneTrR4kBwod1tYBEZ7CHefAbEYl2MobBuKDknPGN6Y=
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.40.6/go.mod h1:6zL92WEwpagvzZ1thiDIQUucL0jatYZzybtikF5Ifp4=
-github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.7 h1:Fpb9FBYw6W0hRMMQynCRdcxyDLY7cMz/34bMo7XZfeQ=
-github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.7/go.mod h1:S+im9xXqp0IB2fFvcOXgbFKzV+vL7d8ShTl9BNUXJdg=
+github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.8 h1:uQvfMq+q9vdaV9ZEBUINZM1kB3O9FzqEhUd6lJh6IZU=
+github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.8/go.mod h1:IpN/3lxIbssrrBj6+Rungjy3l0xsyDmPI9yrj1hRq+4=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.8 h1:NMItf4yYus58+QxG+jBKNYhOVuni77MEOgOk3esh9Gk=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.8/go.mod h1:G6YzonR7wX5/pMGXX24c4SyUBVg4p1WwUNf/t2BBIIY=
 github.com/aws/aws-sdk-go-v2/service/dlm v1.35.8 h1:QapaaolQgQ6AsDC5C41OUWfExeGFbUWs7wTZnHcxlhk=
