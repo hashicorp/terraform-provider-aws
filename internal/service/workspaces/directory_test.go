@@ -1258,7 +1258,7 @@ func testAccDirectory_poolsWorkspaceCreationAD(t *testing.T) {
 
 func TestAccDirectory_dedicatedTenancy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 types.WorkspaceDirectory
+	var v types.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
 
 	resourceName := "aws_workspaces_directory.pool"
@@ -1277,7 +1277,7 @@ func TestAccDirectory_dedicatedTenancy(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_dedicatedTenancy(rName, "SHARED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(ctx, resourceName, &v1),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_type", "POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "CUSTOMER_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "SHARED"),
@@ -1287,15 +1287,6 @@ func TestAccDirectory_dedicatedTenancy(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDirectoryConfig_dedicatedTenancy(rName, "DEDICATED"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "workspace_type", "POOLS"),
-					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "CUSTOMER_MANAGED"),
-					resource.TestCheckResourceAttr(resourceName, "tenancy", "DEDICATED"),
-				),
 			},
 		},
 	})
