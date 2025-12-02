@@ -1234,6 +1234,13 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	// Stop any running durable executions before deleting the function
+	if v, ok := d.GetOk("durable_config"); ok && len(v.([]any)) > 0 {
+		if err := stopDurableExecutions(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "stopping durable executions for Lambda Function (%s): %s", d.Id(), err)
+		}
+	}
+
 	log.Printf("[INFO] Deleting Lambda Function: %s", d.Id())
 	input := lambda.DeleteFunctionInput{
 		FunctionName: aws.String(d.Id()),
@@ -1250,7 +1257,100 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "deleting Lambda Function (%s): %s", d.Id(), err)
 	}
 
+	if _, err := waitFunctionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) delete: %s", d.Id(), err)
+	}
+
 	return diags
+}
+
+func stopDurableExecutions(ctx context.Context, conn *lambda.Client, functionName string, timeout time.Duration) error {
+	input := &lambda.ListDurableExecutionsByFunctionInput{
+		FunctionName: aws.String(functionName),
+		Statuses:     []awstypes.ExecutionStatus{awstypes.ExecutionStatusRunning},
+	}
+
+	paginator := lambda.NewListDurableExecutionsByFunctionPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return err
+		}
+
+		for _, execution := range page.DurableExecutions {
+			_, err := conn.StopDurableExecution(ctx, &lambda.StopDurableExecutionInput{
+				DurableExecutionArn: execution.DurableExecutionArn,
+			})
+			if err != nil {
+				return err
+			}
+
+			if _, err := waitDurableExecutionStopped(ctx, conn, aws.ToString(execution.DurableExecutionArn), timeout); err != nil {
+				return fmt.Errorf("waiting for durable execution (%s) to stop: %w", aws.ToString(execution.DurableExecutionArn), err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) (*lambda.GetDurableExecutionOutput, error) {
+	input := &lambda.GetDurableExecutionInput{
+		DurableExecutionArn: aws.String(arn),
+	}
+
+	output, err := conn.GetDurableExecution(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusDurableExecution(ctx context.Context, conn *lambda.Client, arn string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findDurableExecution(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitDurableExecutionStopped(ctx context.Context, conn *lambda.Client, arn string, timeout time.Duration) (*lambda.GetDurableExecutionOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ExecutionStatusRunning),
+		Target:  enum.Slice(awstypes.ExecutionStatusStopped),
+		Refresh: statusDurableExecution(ctx, conn, arn),
+		Timeout: timeout,
+		Delay:   2 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*lambda.GetDurableExecutionOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func findFunctionByName(ctx context.Context, conn *lambda.Client, name string) (*lambda.GetFunctionOutput, error) {
@@ -1547,6 +1647,24 @@ func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, 
 	return nil, err
 }
 
+func waitFunctionDeleted(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*lambda.GetFunctionOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StateActive, awstypes.StateActiveNonInvocable, awstypes.StatePending, awstypes.StateInactive, awstypes.StateFailed, awstypes.StateDeleting),
+		Target:  []string{},
+		Refresh: statusFunctionState(ctx, conn, name),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.FunctionConfiguration); ok {
+		return &lambda.GetFunctionOutput{Configuration: output}, err
+	}
+
+	return nil, err
+}
+
 // retryFunctionOp retries a Lambda Function Create or Update operation.
 // It handles IAM eventual consistency and EC2 throttling.
 type functionCU interface {
@@ -1671,6 +1789,7 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange(names.AttrKMSKeyARN) ||
 		d.HasChange("layers") ||
 		d.HasChange("dead_letter_config") ||
+		d.HasChange("durable_config") ||
 		d.HasChange("snap_start") ||
 		d.HasChange("tracing_config") ||
 		d.HasChange("vpc_config.0.ipv6_allowed_for_dual_stack") ||
