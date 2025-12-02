@@ -198,7 +198,7 @@ func waitDomainNameAPIAssociation(ctx context.Context, conn *appsync.Client, id 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DeploymentDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DeploymentDetail)))
 		return output, smarterr.NewError(err)
 	}
 
@@ -219,7 +219,7 @@ func waitDomainNameAPIDisassociation(ctx context.Context, conn *appsync.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DeploymentDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DeploymentDetail)))
 		return output, smarterr.NewError(err)
 	}
 

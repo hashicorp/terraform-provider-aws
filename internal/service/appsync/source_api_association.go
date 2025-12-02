@@ -380,7 +380,7 @@ func waitSourceAPIAssociationCreated(ctx context.Context, conn *appsync.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
 
 		return output, smarterr.NewError(err)
 	}
@@ -399,7 +399,7 @@ func waitSourceAPIAssociationUpdated(ctx context.Context, conn *appsync.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
 
 		return output, smarterr.NewError(err)
 	}
@@ -418,7 +418,7 @@ func waitSourceAPIAssociationDeleted(ctx context.Context, conn *appsync.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
 
 		return output, smarterr.NewError(err)
 	}
