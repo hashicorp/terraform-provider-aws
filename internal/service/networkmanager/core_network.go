@@ -594,7 +594,7 @@ func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.Clie
 				errs = append(errs, fmt.Errorf("%s: %s", aws.ToString(err.ErrorCode), aws.ToString(err.Message)))
 			}
 
-			tfresource.SetLastError(err, errors.Join(errs...))
+			retry.SetLastError(err, errors.Join(errs...))
 		}
 
 		return output, err
