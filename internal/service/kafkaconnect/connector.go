@@ -640,7 +640,7 @@ func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.Client, arn st
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
 		if state, stateDescription := output.ConnectorState, output.StateDescription; state == awstypes.ConnectorStateFailed && stateDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
 		}
 
 		return output, err
@@ -661,7 +661,7 @@ func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.Client, arn st
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
 		if state, stateDescription := output.ConnectorState, output.StateDescription; state == awstypes.ConnectorStateFailed && stateDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
 		}
 
 		return output, err
@@ -682,7 +682,7 @@ func waitConnectorDeleted(ctx context.Context, conn *kafkaconnect.Client, arn st
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
 		if state, stateDescription := output.ConnectorState, output.StateDescription; state == awstypes.ConnectorStateFailed && stateDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
 		}
 
 		return output, err
