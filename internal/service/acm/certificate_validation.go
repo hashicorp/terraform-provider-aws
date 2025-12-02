@@ -180,9 +180,9 @@ func waitCertificateIssued(ctx context.Context, conn *acm.Client, arn string, ti
 	if output, ok := outputRaw.(*types.CertificateDetail); ok {
 		switch output.Status {
 		case types.CertificateStatusFailed:
-			tfresource.SetLastError(err, errors.New(string(output.FailureReason)))
+			retry.SetLastError(err, errors.New(string(output.FailureReason)))
 		case types.CertificateStatusRevoked:
-			tfresource.SetLastError(err, errors.New(string(output.RevocationReason)))
+			retry.SetLastError(err, errors.New(string(output.RevocationReason)))
 		}
 
 		return output, err

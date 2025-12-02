@@ -929,7 +929,7 @@ func waitCertificateRenewed(ctx context.Context, conn *acm.Client, arn string, t
 
 	if output, ok := outputRaw.(*types.RenewalSummary); ok {
 		if output.RenewalStatus == types.RenewalStatusFailed {
-			tfresource.SetLastError(err, errors.New(string(output.RenewalStatusReason)))
+			retry.SetLastError(err, errors.New(string(output.RenewalStatusReason)))
 		}
 
 		return output, err
