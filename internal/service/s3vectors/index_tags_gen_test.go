@@ -5,6 +5,7 @@ package s3vectors_test
 import (
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3vectors/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -18,6 +19,7 @@ import (
 func TestAccS3VectorsIndex_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -36,7 +38,7 @@ func TestAccS3VectorsIndex_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -82,7 +84,7 @@ func TestAccS3VectorsIndex_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -132,7 +134,7 @@ func TestAccS3VectorsIndex_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -175,7 +177,7 @@ func TestAccS3VectorsIndex_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -208,6 +210,7 @@ func TestAccS3VectorsIndex_tags(t *testing.T) {
 func TestAccS3VectorsIndex_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -226,7 +229,7 @@ func TestAccS3VectorsIndex_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -272,6 +275,7 @@ func TestAccS3VectorsIndex_tags_null(t *testing.T) {
 func TestAccS3VectorsIndex_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -288,7 +292,7 @@ func TestAccS3VectorsIndex_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -324,6 +328,7 @@ func TestAccS3VectorsIndex_tags_EmptyMap(t *testing.T) {
 func TestAccS3VectorsIndex_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -340,7 +345,7 @@ func TestAccS3VectorsIndex_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -363,7 +368,7 @@ func TestAccS3VectorsIndex_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -406,6 +411,7 @@ func TestAccS3VectorsIndex_tags_AddOnUpdate(t *testing.T) {
 func TestAccS3VectorsIndex_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -424,7 +430,7 @@ func TestAccS3VectorsIndex_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -467,7 +473,7 @@ func TestAccS3VectorsIndex_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -500,6 +506,7 @@ func TestAccS3VectorsIndex_tags_EmptyTag_OnCreate(t *testing.T) {
 func TestAccS3VectorsIndex_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -518,7 +525,7 @@ func TestAccS3VectorsIndex_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -550,7 +557,7 @@ func TestAccS3VectorsIndex_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -600,7 +607,7 @@ func TestAccS3VectorsIndex_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -643,6 +650,7 @@ func TestAccS3VectorsIndex_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 func TestAccS3VectorsIndex_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -661,7 +669,7 @@ func TestAccS3VectorsIndex_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -692,7 +700,7 @@ func TestAccS3VectorsIndex_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -735,6 +743,7 @@ func TestAccS3VectorsIndex_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 func TestAccS3VectorsIndex_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -754,7 +763,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -800,7 +809,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -848,7 +857,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -890,7 +899,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -924,6 +933,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_providerOnly(t *testing.T) {
 func TestAccS3VectorsIndex_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -945,7 +955,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1001,7 +1011,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1056,7 +1066,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1090,6 +1100,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_nonOverlapping(t *testing.T) {
 func TestAccS3VectorsIndex_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1111,7 +1122,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1166,7 +1177,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1225,7 +1236,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1272,6 +1283,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_overlapping(t *testing.T) {
 func TestAccS3VectorsIndex_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1290,7 +1302,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1323,7 +1335,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1364,6 +1376,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 func TestAccS3VectorsIndex_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1383,7 +1396,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1411,7 +1424,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1455,6 +1468,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 func TestAccS3VectorsIndex_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1476,7 +1490,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1523,6 +1537,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 func TestAccS3VectorsIndex_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1542,7 +1557,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1583,6 +1598,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 func TestAccS3VectorsIndex_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1604,7 +1620,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_nullOverlappingResourceTag(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1654,6 +1670,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_nullOverlappingResourceTag(t *testin
 func TestAccS3VectorsIndex_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1675,7 +1692,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_nullNonOverlappingResourceTag(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1727,6 +1744,7 @@ func TestAccS3VectorsIndex_tags_DefaultTags_nullNonOverlappingResourceTag(t *tes
 func TestAccS3VectorsIndex_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1743,7 +1761,7 @@ func TestAccS3VectorsIndex_tags_ComputedTag_OnCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1784,6 +1802,7 @@ func TestAccS3VectorsIndex_tags_ComputedTag_OnCreate(t *testing.T) {
 func TestAccS3VectorsIndex_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1802,7 +1821,7 @@ func TestAccS3VectorsIndex_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1834,7 +1853,7 @@ func TestAccS3VectorsIndex_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1883,6 +1902,7 @@ func TestAccS3VectorsIndex_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 func TestAccS3VectorsIndex_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1901,7 +1921,7 @@ func TestAccS3VectorsIndex_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1931,7 +1951,7 @@ func TestAccS3VectorsIndex_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1972,6 +1992,7 @@ func TestAccS3VectorsIndex_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 func TestAccS3VectorsIndex_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1997,7 +2018,7 @@ func TestAccS3VectorsIndex_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2046,7 +2067,7 @@ func TestAccS3VectorsIndex_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2095,7 +2116,7 @@ func TestAccS3VectorsIndex_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2134,6 +2155,7 @@ func TestAccS3VectorsIndex_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 func TestAccS3VectorsIndex_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
+	var v awstypes.Index
 	resourceName := "aws_s3vectors_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -2157,7 +2179,7 @@ func TestAccS3VectorsIndex_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2215,7 +2237,7 @@ func TestAccS3VectorsIndex_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2272,7 +2294,7 @@ func TestAccS3VectorsIndex_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

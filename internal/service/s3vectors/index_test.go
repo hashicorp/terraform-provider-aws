@@ -65,6 +65,7 @@ func TestAccS3VectorsIndex_basic(t *testing.T) {
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						"index_arn": tfknownvalue.RegionalARNRegexp("s3vectors", regexache.MustCompile(`bucket/.+/index/.+`)),
 					}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
 			{

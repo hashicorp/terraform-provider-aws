@@ -5,7 +5,7 @@ package s3vectors_test
 import (
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3vectors/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -73,6 +73,9 @@ func TestAccS3VectorsVectorBucket_tags(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VectorBucket/tags/"),
@@ -124,6 +127,9 @@ func TestAccS3VectorsVectorBucket_tags(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VectorBucket/tags/"),
@@ -169,6 +175,9 @@ func TestAccS3VectorsVectorBucket_tags(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VectorBucket/tags/"),
@@ -202,6 +211,9 @@ func TestAccS3VectorsVectorBucket_tags(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -266,6 +278,7 @@ func TestAccS3VectorsVectorBucket_tags_null(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -319,6 +332,7 @@ func TestAccS3VectorsVectorBucket_tags_EmptyMap(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -403,6 +417,9 @@ func TestAccS3VectorsVectorBucket_tags_AddOnUpdate(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -465,6 +482,9 @@ func TestAccS3VectorsVectorBucket_tags_EmptyTag_OnCreate(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VectorBucket/tags/"),
@@ -498,6 +518,9 @@ func TestAccS3VectorsVectorBucket_tags_EmptyTag_OnCreate(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -597,6 +620,9 @@ func TestAccS3VectorsVectorBucket_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/VectorBucket/tags/"),
@@ -642,6 +668,9 @@ func TestAccS3VectorsVectorBucket_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -735,6 +764,9 @@ func TestAccS3VectorsVectorBucket_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -796,6 +828,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -845,6 +880,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -890,6 +928,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -925,6 +966,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -996,6 +1040,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1057,6 +1104,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1092,6 +1142,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1161,6 +1214,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1222,6 +1278,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1275,6 +1334,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1368,6 +1430,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_updateToProviderOnly(t *testi
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1460,6 +1525,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_updateToResourceOnly(t *testi
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1529,6 +1597,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_emptyResourceTag(t *testing.T
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1590,6 +1661,9 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_emptyProviderOnlyTag(t *testi
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1661,6 +1735,7 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_nullOverlappingResourceTag(t 
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -1735,6 +1810,7 @@ func TestAccS3VectorsVectorBucket_tags_DefaultTags_nullNonOverlappingResourceTag
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
 				ImportStateVerifyIgnore: []string{
 					"tags.resourcekey1", // The canonical value returned by the AWS API is ""
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -1794,6 +1870,9 @@ func TestAccS3VectorsVectorBucket_tags_ComputedTag_OnCreate(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1894,6 +1973,9 @@ func TestAccS3VectorsVectorBucket_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1984,6 +2066,9 @@ func TestAccS3VectorsVectorBucket_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
