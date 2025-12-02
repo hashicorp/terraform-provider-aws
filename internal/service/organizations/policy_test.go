@@ -409,6 +409,162 @@ func testAccPolicy_type_Tag(t *testing.T) {
 	})
 }
 
+func testAccPolicy_type_SecurityHub(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_security_hub_syntax.html
+	inspectorPolicyContent := `{
+    "securityhub" : {
+      "enable_in_regions" : {
+        "@@assign" : [
+          "ALL_SUPPORTED"
+        ]
+      },
+      "disable_in_regions" : {
+        "@@assign" : []
+      }
+    }
+}`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, inspectorPolicyContent, string(awstypes.PolicyTypeSecurityhubPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeSecurityhubPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_Inspector(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_inspector_syntax.html
+	//lintignore:AWSAT003
+	inspectorPolicyContent := `{
+    "inspector" : {
+      "enablement" : {
+        "ec2_scanning" : {
+          "enable_in_regions" : {
+            "@@assign" : ["us-east-1", "us-west-2"]
+          },
+          "disable_in_regions" : {
+            "@@assign" : ["eu-west-1"]
+          }
+        }
+      }
+    }
+}`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, inspectorPolicyContent, string(awstypes.PolicyTypeInspectorPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeInspectorPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_UpgradeRollout(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_upgrade_syntax.html
+	upgradeRolloutPolicyContent := `{
+      "upgrade_rollout" : {
+        "default" : {
+          "patch_order" : {
+            "@@assign" : "last"
+          }
+        },
+        "tags" : {
+          "my_patch_order_tag" : {
+            "tag_values" : {
+              "tag1" : {
+                "patch_order" : {
+                  "@@assign" : "first"
+                }
+              },
+              "tag2" : {
+                "patch_order" : {
+                  "@@assign" : "second"
+                }
+              },
+              "tag3" : {
+                "patch_order" : {
+                  "@@assign" : "last"
+                }
+              }
+            }
+          }
+        }
+      }
+}`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, upgradeRolloutPolicyContent, string(awstypes.PolicyTypeUpgradeRolloutPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeUpgradeRolloutPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
 func testAccPolicy_importManagedPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_organizations_policy.test"

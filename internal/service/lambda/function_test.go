@@ -2560,6 +2560,36 @@ func TestAccLambdaFunction_skipDestroy(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_capacityProvider(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_capacityProvider(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "lambda", "function:{function_name}"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_config.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish", "publish_to"},
+			},
+		},
+	})
+}
+
 func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
@@ -4457,6 +4487,30 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   runtime       = "nodejs20.x"
   skip_destroy  = true
+}
+`, rName))
+}
+
+func testAccFunctionConfig_capacityProvider(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_basic(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/capacityprovider.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  handler       = "index.handler"
+  runtime       = "python3.14"
+  memory_size   = 2048
+
+  publish    = true
+  publish_to = "LATEST_PUBLISHED"
+
+  capacity_provider_config {
+    lambda_managed_instances_capacity_provider_config {
+      capacity_provider_arn = aws_lambda_capacity_provider.test.arn
+    }
+  }
 }
 `, rName))
 }

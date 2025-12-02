@@ -118,6 +118,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `architectures` - Instruction set architecture for the Lambda function.
 * `arn` - Unqualified (no `:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `qualified_arn`.
+* `capacity_provider_config` - Configuration for Lambda function's capacity provider. [See below](#capacity_provider_config).
 * `code_sha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `code_signing_config_arn` - ARN for a Code Signing Configuration.
 * `dead_letter_config` - Configuration for the function's dead letter queue. [See below](#dead_letter_config-attribute-reference).
@@ -149,6 +150,13 @@ This data source exports the following attributes in addition to the arguments a
 * `tracing_config` - Tracing settings of the function. [See below](#tracing_config-attribute-reference).
 * `version` - Version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$LATEST`.
 * `vpc_config` - VPC configuration associated with your Lambda function. [See below](#vpc_config-attribute-reference).
+
+### capacity_provider_config
+
+* `lambda_managed_instances_capacity_provider_config` - Configuration block for Lambda Managed Instances Capacity Provider.
+    * `capacity_provider_arn` - ARN of the Capacity Provider.
+    * `execution_environment_memory_gib_per_vcpu` - Memory GiB per vCPU for the execution environment.
+    * `per_execution_environment_max_concurrency` - Maximum concurrency per execution environment.
 
 ### dead_letter_config
 
