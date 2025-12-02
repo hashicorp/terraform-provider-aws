@@ -149,6 +149,26 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"durable_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"execution_timeout": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 31622400),
+						},
+						"retention_period": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      14,
+							ValidateFunc: validation.IntBetween(1, 90),
+						},
+					},
+				},
+			},
 			names.AttrEnvironment: {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -528,6 +548,13 @@ func resourceFunction() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			checkHandlerRuntimeForZipFunction,
 			updateComputedAttributesOnPublish,
+			customdiff.ForceNewIfChange("durable_config", func(_ context.Context, old, new, meta any) bool {
+				// Force new when durable_config is being added (from empty to non-empty) or removed (from non-empty to empty)
+				// Allow updates to execution_timeout and retention_period when durable_config already exists
+				oldLen := len(old.([]any))
+				newLen := len(new.([]any))
+				return (oldLen == 0 && newLen > 0) || (oldLen > 0 && newLen == 0)
+			}),
 		),
 	}
 }
@@ -593,6 +620,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.DeadLetterConfig = &awstypes.DeadLetterConfig{
 			TargetArn: aws.String(v.([]any)[0].(map[string]any)[names.AttrTargetARN].(string)),
 		}
+	}
+
+	if v, ok := d.GetOk("durable_config"); ok && len(v.([]any)) > 0 {
+		input.DurableConfig = expandDurableConfigs(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrEnvironment); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -764,6 +795,13 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	} else {
 		d.Set("dead_letter_config", []any{})
+	}
+	if function.DurableConfig != nil {
+		if err := d.Set("durable_config", flattenDurableConfig(function.DurableConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting durable_config: %s", err)
+		}
+	} else {
+		d.Set("durable_config", []any{})
 	}
 	d.Set(names.AttrDescription, function.Description)
 	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
@@ -948,6 +986,12 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				input.DeadLetterConfig = &awstypes.DeadLetterConfig{
 					TargetArn: aws.String(""),
 				}
+			}
+		}
+
+		if d.HasChange("durable_config") {
+			if v, ok := d.GetOk("durable_config"); ok && len(v.([]any)) > 0 {
+				input.DurableConfig = expandDurableConfigs(v.([]any))
 			}
 		}
 
@@ -1774,6 +1818,40 @@ func expandFileSystemConfigs(tfList []any) []awstypes.FileSystemConfig {
 	}
 
 	return apiObjects
+}
+
+func expandDurableConfigs(tfList []any) *awstypes.DurableConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	return &awstypes.DurableConfig{
+		ExecutionTimeout:      aws.Int32(int32(tfMap["execution_timeout"].(int))),
+		RetentionPeriodInDays: aws.Int32(int32(tfMap["retention_period"].(int))),
+	}
+}
+
+func flattenDurableConfig(apiObject *awstypes.DurableConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.ExecutionTimeout; v != nil {
+		tfMap["execution_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.RetentionPeriodInDays; v != nil {
+		tfMap["retention_period"] = aws.ToInt32(v)
+	}
+
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	return []any{tfMap}
 }
 
 func flattenImageConfig(apiObject *awstypes.ImageConfigResponse) []any {

@@ -476,6 +476,34 @@ resource "aws_lambda_function" "example" {
 }
 ```
 
+### Function with Durable Configuration
+
+```terraform
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "example_durable_function"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+  memory_size   = 512
+  timeout       = 30
+  # Durable function configuration for long-running processes
+  durable_config {
+    execution_timeout = 3600    # 1 hour maximum execution time
+    retention_period  = 7       # Retain execution state for 7 days
+  }
+  environment {
+    variables = {
+      DURABLE_MODE = "enabled"
+    }
+  }
+  tags = {
+    Environment = "production"
+    Type        = "durable"
+  }
+}
+```
+
 ### Capacity Provider Configuration
 
 ```terraform
@@ -532,6 +560,7 @@ The following arguments are optional:
 * `code_signing_config_arn` - (Optional) ARN of a code-signing configuration to enable code signing for this function.
 * `dead_letter_config` - (Optional) Configuration block for dead letter queue. [See below](#dead_letter_config-configuration-block).
 * `description` - (Optional) Description of what your Lambda Function does.
+* `durable_config` - (Optional) Configuration block for durable function settings. [See below](#durable_config-configuration-block).
 * `environment` - (Optional) Configuration block for environment variables. [See below](#environment-configuration-block).
 * `ephemeral_storage` - (Optional) Amount of ephemeral storage (`/tmp`) to allocate for the Lambda Function. [See below](#ephemeral_storage-configuration-block).
 * `file_system_config` - (Optional) Configuration block for EFS file system. [See below](#file_system_config-configuration-block).
@@ -577,6 +606,12 @@ The following arguments are optional:
 ### dead_letter_config Configuration Block
 
 * `target_arn` - (Required) ARN of an SNS topic or SQS queue to notify when an invocation fails.
+
+### durable_config Configuration Block
+
+* `execution_timeout` - (Required) Maximum execution time in seconds for the durable function. Valid value between 1 and 31622400 (366 days).
+* `retention_period` - (Optional) Number of days to retain the function's execution state. Valid value between 1 and 90. If not specified, the function's execution state is not retained. Defaults to 14.
+
 
 ### environment Configuration Block
 

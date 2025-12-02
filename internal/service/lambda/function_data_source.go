@@ -89,6 +89,22 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"durable_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"execution_timeout": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"retention_period": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrEnvironment: {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -370,6 +386,11 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 		d.Set("dead_letter_config", []any{})
 	}
 	d.Set(names.AttrDescription, function.Description)
+	if function.DurableConfig != nil {
+		if err := d.Set("durable_config", flattenDurableConfig(function.DurableConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting durable_config: %s", err)
+		}
+	}
 	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}

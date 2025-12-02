@@ -73,6 +73,15 @@ resource "aws_lambda_function" "example" {
   environment {
     variables = data.aws_lambda_function.reference.environment[0].variables
   }
+
+  # Copy durable configuration if present
+  dynamic "durable_config" {
+    for_each = data.aws_lambda_function.reference.durable_config
+    content {
+      execution_timeout = durable_config.value.execution_timeout
+      retention_period  = durable_config.value.retention_period
+    }
+  }
 }
 ```
 
@@ -101,6 +110,22 @@ output "version_comparison" {
 }
 ```
 
+### Accessing Durable Configuration
+
+```terraform
+data "aws_lambda_function" "durable_function" {
+  function_name = "my-durable-function"
+}
+# Output durable configuration details
+output "durable_settings" {
+  value = {
+    has_durable_config = length(data.aws_lambda_function.durable_function.durable_config) > 0
+    execution_timeout  = length(data.aws_lambda_function.durable_function.durable_config) > 0 ? data.aws_lambda_function.durable_function.durable_config[0].execution_timeout : null
+    retention_period   = length(data.aws_lambda_function.durable_function.durable_config) > 0 ? data.aws_lambda_function.durable_function.durable_config[0].retention_period : null
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -123,6 +148,7 @@ This data source exports the following attributes in addition to the arguments a
 * `code_signing_config_arn` - ARN for a Code Signing Configuration.
 * `dead_letter_config` - Configuration for the function's dead letter queue. [See below](#dead_letter_config-attribute-reference).
 * `description` - Description of what your Lambda Function does.
+* `durable_config` - Configuration for the function's durable settings. [See below](#durable_config-attribute-reference).
 * `environment` - Lambda environment's configuration settings. [See below](#environment-attribute-reference).
 * `ephemeral_storage` - Amount of ephemeral storage (`/tmp`) allocated for the Lambda Function. [See below](#ephemeral_storage-attribute-reference).
 * `file_system_config` - Connection settings for an Amazon EFS file system. [See below](#file_system_config-attribute-reference).
@@ -161,6 +187,11 @@ This data source exports the following attributes in addition to the arguments a
 ### dead_letter_config
 
 * `target_arn` - ARN of an SNS topic or SQS queue to notify when an invocation fails.
+
+### durable_config
+
+* `execution_timeout` - Maximum execution time in seconds for the durable function.
+* `retention_period` - Number of days to retain the function's execution state.
 
 ### environment
 
