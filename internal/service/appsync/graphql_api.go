@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -413,7 +412,7 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	api, err := findGraphQLAPIByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && intretry.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
@@ -619,7 +618,7 @@ func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) 
 	return func() (any, string, error) {
 		output, err := findSchemaCreationStatusByID(ctx, conn, id)
 
-		if intretry.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

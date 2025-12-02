@@ -32,7 +32,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -220,7 +219,7 @@ func (r *sourceAPIAssociationResource) Read(ctx context.Context, request resourc
 	}
 
 	out, err := findSourceAPIAssociationByTwoPartKey(ctx, conn, state.AssociationID.ValueString(), state.MergedAPIID.ValueString())
-	if intretry.NotFound(err) {
+	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -358,7 +357,7 @@ func statusSourceAPIAssociation(ctx context.Context, conn *appsync.Client, assoc
 	return func() (any, string, error) {
 		output, err := findSourceAPIAssociationByTwoPartKey(ctx, conn, associationID, mergedAPIID)
 
-		if intretry.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

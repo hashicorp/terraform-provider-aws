@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -356,7 +356,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	dataSource, err := findDataSourceByTwoPartKey(ctx, conn, apiID, name)
 
-	if !d.IsNewResource() && intretry.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
