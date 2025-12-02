@@ -478,6 +478,8 @@ resource "aws_lambda_function" "example" {
 
 ### Function with Durable Configuration
 
+Stopping durable executions and deleting the Lambda function may take up to `60m`. Use configured `timeouts` as shown below.
+
 ```terraform
 resource "aws_lambda_function" "example" {
   filename      = "function.zip"
@@ -487,16 +489,23 @@ resource "aws_lambda_function" "example" {
   runtime       = "nodejs22.x"
   memory_size   = 512
   timeout       = 30
+
   # Durable function configuration for long-running processes
   durable_config {
     execution_timeout = 3600 # 1 hour maximum execution time
     retention_period  = 7    # Retain execution state for 7 days
   }
+
   environment {
     variables = {
       DURABLE_MODE = "enabled"
     }
   }
+
+  timeouts {
+    delete = "60m"
+  }
+
   tags = {
     Environment = "production"
     Type        = "durable"

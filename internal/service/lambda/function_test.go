@@ -4652,6 +4652,10 @@ resource "aws_lambda_function" "test" {
     execution_timeout = %[3]d
     retention_period  = %[4]d
   }
+
+  timeouts {
+    delete = "60m"
+  }
 }
 `, rName, descriptionLine, executionTimeout, retentionPeriod))
 }
