@@ -259,7 +259,7 @@ func waitTransitGatewayRegistrationCreated(ctx context.Context, conn *networkman
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayRegistration); ok {
 		if state := output.State.Code; state == awstypes.TransitGatewayRegistrationStateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.State.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.State.Message)))
 		}
 
 		return output, err
@@ -280,7 +280,7 @@ func waitTransitGatewayRegistrationDeleted(ctx context.Context, conn *networkman
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayRegistration); ok {
 		if state := output.State.Code; state == awstypes.TransitGatewayRegistrationStateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.State.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.State.Message)))
 		}
 
 		return output, err
