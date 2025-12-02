@@ -5,6 +5,9 @@ FEATURES:
 * **New Resource:** `aws_lambda_capacity_provider` ([#45342](https://github.com/hashicorp/terraform-provider-aws/issues/45342))
 * **New Resource:** `aws_s3tables_table_bucket_replication` ([#45360](https://github.com/hashicorp/terraform-provider-aws/issues/45360))
 * **New Resource:** `aws_s3tables_table_replication` ([#45360](https://github.com/hashicorp/terraform-provider-aws/issues/45360))
+* **New Resource:** `aws_s3vectors_index` ([#43393](https://github.com/hashicorp/terraform-provider-aws/issues/43393))
+* **New Resource:** `aws_s3vectors_vector_bucket` ([#43393](https://github.com/hashicorp/terraform-provider-aws/issues/43393))
+* **New Resource:** `aws_s3vectors_vector_bucket_policy` ([#43393](https://github.com/hashicorp/terraform-provider-aws/issues/43393))
 
 ENHANCEMENTS:
 
