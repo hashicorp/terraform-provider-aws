@@ -235,7 +235,7 @@ func waitDeploymentDeployed(ctx context.Context, conn *apigatewayv2.Client, apiI
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*apigatewayv2.GetDeploymentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DeploymentStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DeploymentStatusMessage)))
 
 		return output, err
 	}
