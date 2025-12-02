@@ -12,7 +12,6 @@ resource "aws_s3tables_table_bucket_replication" "test" {
   }
 }
 
-data "aws_partition" "current" {}
 data "aws_service_principal" "current" {
   service_name = "s3"
 }
