@@ -1256,7 +1256,7 @@ func testAccDirectory_poolsWorkspaceCreationAD(t *testing.T) {
 	})
 }
 
-func TestAccWorkspacesDirectory_dedicatedTenancy(t *testing.T) {
+func TestAccWorkSpacesDirectory_dedicatedTenancy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
@@ -1275,7 +1275,7 @@ func TestAccWorkspacesDirectory_dedicatedTenancy(t *testing.T) {
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDirectoryConfig_dedicatedTenancy(rName, "SHARED"),
+				Config: testAccDirectoryConfig_dedicatedTenancy(rName, "SHARED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_type", "POOLS"),
@@ -1503,7 +1503,7 @@ resource "aws_workspaces_directory" "pool" {
 `, rName, domain))
 }
 
-func testAccWorkspacesDirectoryConfig_dedicatedTenancy(rName, tenancy string) string {
+func testAccDirectoryConfig_dedicatedTenancy(rName, tenancy string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
