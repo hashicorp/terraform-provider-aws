@@ -573,6 +573,10 @@ resource "aws_transfer_connector" "test" {
       port_number                = 22
     }
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, publickey))
 }

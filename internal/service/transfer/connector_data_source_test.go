@@ -4,7 +4,6 @@
 package transfer_test
 
 import (
-	"fmt"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -15,10 +14,6 @@ import (
 
 func TestAccTransferConnectorDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_transfer_connector.test"
 	resourceName := "aws_transfer_connector.test"
@@ -32,7 +27,6 @@ func TestAccTransferConnectorDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorDataSourceConfig_basic(rName, url),
@@ -43,7 +37,7 @@ func TestAccTransferConnectorDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(dataSourceName, "service_managed_egress_ip_addresses.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "sftp_config.#", resourceName, "sftp_config.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrURL, resourceName, names.AttrURL),
 				),
 			},
@@ -53,10 +47,6 @@ func TestAccTransferConnectorDataSource_basic(t *testing.T) {
 
 func TestAccTransferConnectorDataSource_egressConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_transfer_connector.test"
 	resourceName := "aws_transfer_connector.test"
@@ -70,7 +60,6 @@ func TestAccTransferConnectorDataSource_egressConfig(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorDataSourceConfig_egressConfig(rName, publicKey),
@@ -83,7 +72,7 @@ func TestAccTransferConnectorDataSource_egressConfig(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "egress_config.0.vpc_lattice.0.port_number", resourceName, "egress_config.0.vpc_lattice.0.port_number"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "sftp_config.#", resourceName, "sftp_config.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -91,174 +80,17 @@ func TestAccTransferConnectorDataSource_egressConfig(t *testing.T) {
 }
 
 func testAccConnectorDataSourceConfig_basic(rName, url string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "transfer.amazonaws.com"
-    },
-    "Action": "sts:AssumeRole"
-  }]
- }
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<POLICY
-{
-  "Version":"2012-10-17",
-  "Statement":[{
-    "Sid":"AllowFullAccesstoS3",
-    "Effect":"Allow",
-    "Action":[
-      "s3:*"
-    ],
-    "Resource":"*"
-  }]
-}
-POLICY
-}
-resource "aws_transfer_profile" "local" {
-  as2_id       = %[1]q
-  profile_type = "LOCAL"
-}
-
-resource "aws_transfer_profile" "partner" {
-  as2_id       = %[1]q
-  profile_type = "PARTNER"
-}
-
-resource "aws_transfer_connector" "test" {
-  access_role = aws_iam_role.test.arn
-
-  as2_config {
-    compression           = "DISABLED"
-    encryption_algorithm  = "AES128_CBC"
-    message_subject       = %[1]q
-    local_profile_id      = aws_transfer_profile.local.profile_id
-    mdn_response          = "NONE"
-    mdn_signing_algorithm = "NONE"
-    partner_profile_id    = aws_transfer_profile.partner.profile_id
-    signing_algorithm     = "NONE"
-  }
-
-  url = %[2]q
-}
+	return acctest.ConfigCompose(testAccConnectorConfig_basic(rName, url), `
 data "aws_transfer_connector" "test" {
   id = aws_transfer_connector.test.id
 }
-
-
-`, rName, url)
+`)
 }
 
 func testAccConnectorDataSourceConfig_egressConfig(rName, publickey string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "transfer.amazonaws.com"
-    },
-    "Action": "sts:AssumeRole"
-  }]
- }
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<POLICY
-{
-  "Version":"2012-10-17",
-  "Statement":[{
-    "Sid":"AllowFullAccesstoS3",
-    "Effect":"Allow",
-    "Action":[
-      "s3:*"
-    ],
-    "Resource":"*"
-  }]
-}
-POLICY
-}
-
-resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpclattice_resource_gateway" "test" {
-  name       = %[1]q
-  vpc_id     = aws_vpc.test.id
-  subnet_ids = [aws_subnet.test.id]
-}
-
-resource "aws_vpclattice_resource_configuration" "test" {
-  name = %[1]q
-
-  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
-
-  port_ranges = ["22"]
-  protocol    = "TCP"
-
-  resource_configuration_definition {
-    dns_resource {
-      domain_name     = "sftp.example.com"
-      ip_address_type = "IPV4"
-    }
-  }
-}
-
-resource "aws_transfer_connector" "test" {
-  access_role = aws_iam_role.test.arn
-
-  sftp_config {
-    trusted_host_keys = [%[2]q]
-    user_secret_id    = aws_secretsmanager_secret.test.id
-  }
-
-  egress_config {
-    vpc_lattice {
-      resource_configuration_arn = aws_vpclattice_resource_configuration.test.arn
-      port_number                = 22
-    }
-  }
-}
-
+	return acctest.ConfigCompose(testAccConnectorConfig_egressConfig(rName, publickey), `
 data "aws_transfer_connector" "test" {
   id = aws_transfer_connector.test.id
 }
-`, rName, publickey))
+`)
 }
