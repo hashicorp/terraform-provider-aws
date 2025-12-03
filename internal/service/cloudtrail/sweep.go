@@ -31,7 +31,7 @@ func sweepTrails(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudTrailClient(ctx)
 	input := &cloudtrail.ListTrailsInput{}
@@ -94,7 +94,7 @@ func sweepEventDataStores(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CloudTrailClient(ctx)
 	input := &cloudtrail.ListEventDataStoresInput{}

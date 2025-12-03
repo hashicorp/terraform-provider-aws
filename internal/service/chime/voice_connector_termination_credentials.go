@@ -94,10 +94,6 @@ func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *sc
 		return findVoiceConnectorTerminationCredentialsByID(ctx, conn, d.Id())
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = findVoiceConnectorTerminationCredentialsByID(ctx, conn, d.Id())
-	}
-
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector (%s) termination credentials not found, removing from state", d.Id())
 		d.SetId("")

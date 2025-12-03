@@ -28,16 +28,16 @@ import (
 
 // @SDKResource("aws_ivs_channel", name="Channel")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivs/types;awstypes.Channel")
+// @Testing(preIdentityVersion="v6.7.0")
+// @Testing(generator=false)
 func ResourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,
 		ReadWithoutTimeout:   resourceChannelRead,
 		UpdateWithoutTimeout: resourceChannelUpdate,
 		DeleteWithoutTimeout: resourceChannelDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),

@@ -65,6 +65,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ivs_playback_key_pair.example
+  identity = {
+    "arn" = "arn:aws:ivs:us-west-2:123456789012:playback-key/abcdABCDefgh"
+  }
+}
+
+resource "aws_ivs_playback_key_pair" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the IVS playback key pair.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Playback Key Pair using the ARN. For example:
 
 ```typescript
@@ -95,4 +116,4 @@ Using `terraform import`, import IVS (Interactive Video) Playback Key Pair using
 % terraform import aws_ivs_playback_key_pair.example arn:aws:ivs:us-west-2:326937407773:playback-key/KDJRJNQhiQzA
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3e6fc77fc0837291a4d49927d42c7ac79eda8cc5bec78311802e20b7b8aab30d -->
+<!-- cache-key: cdktf-0.20.8 input-0347ad49910092c7b7db427eff8eb157daa3de336d8d6154399ff5c453baf115 -->

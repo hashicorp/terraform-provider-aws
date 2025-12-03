@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 )
@@ -78,13 +79,13 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 		conf.ContinuousTargetOccurence = 1
 	}
 
-	// Set a default DelayFunc using the StateChangeConf values
-	delayFunc := backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout)
+	// Set a default Delay using the StateChangeConf values
+	delay := backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout)
 
-	// When VCR testing in replay mode, override the default DelayFunc
+	// When VCR testing in replay mode, override the default Delay
 	if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 		if mode, _ := vcr.Mode(); mode == recorder.ModeReplayOnly {
-			delayFunc = backoff.ZeroDelay
+			delay = backoff.ZeroDelay
 		}
 	}
 
@@ -95,7 +96,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 		notFoundTick, targetOccurence int
 		l                             *backoff.Loop
 	)
-	for l = backoff.NewLoopWithOptions(conf.Timeout, backoff.WithDelay(delayFunc)); l.Continue(ctx); {
+	for l = backoff.NewLoopWithOptions(conf.Timeout, backoff.WithDelay(delay)); l.Continue(ctx); {
 		t, currentState, err = conf.refreshWithTimeout(ctx, l.Remaining())
 
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -106,7 +107,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 			return t, err
 		}
 
-		if any(t) == nil {
+		if inttypes.IsZero(t) {
 			// If we're waiting for the absence of a thing, then return.
 			if len(conf.Target) == 0 {
 				targetOccurence++
@@ -150,6 +151,12 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 					State:         string(currentState),
 					ExpectedState: tfslices.Strings(conf.Target),
 				}
+			}
+
+			// Wait between refreshes using exponential backoff, except when
+			// waiting for the target state to reoccur.
+			if v, ok := delay.(backoff.DelayWithSetIncrementDelay); ok {
+				v.SetIncrementDelay(targetOccurence == 0)
 			}
 		}
 	}

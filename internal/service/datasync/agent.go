@@ -131,44 +131,40 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		var response *http.Response
-		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 			response, err = client.Do(request)
 
 			if errs.IsA[net.Error](err) {
-				return retry.RetryableError(fmt.Errorf("making HTTP request: %w", err))
+				return tfresource.RetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			if err != nil {
-				return retry.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
+				return tfresource.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			if response == nil {
-				return retry.NonRetryableError(fmt.Errorf("no response for activation key request"))
+				return tfresource.NonRetryableError(fmt.Errorf("no response for activation key request"))
 			}
 
 			log.Printf("[DEBUG] Received HTTP response: %#v", response)
 			if expected := http.StatusFound; expected != response.StatusCode {
-				return retry.NonRetryableError(fmt.Errorf("expected HTTP status code %d, received: %d", expected, response.StatusCode))
+				return tfresource.NonRetryableError(fmt.Errorf("expected HTTP status code %d, received: %d", expected, response.StatusCode))
 			}
 
 			redirectURL, err := response.Location()
 			if err != nil {
-				return retry.NonRetryableError(fmt.Errorf("extracting HTTP Location header: %w", err))
+				return tfresource.NonRetryableError(fmt.Errorf("extracting HTTP Location header: %w", err))
 			}
 
 			if errorType := redirectURL.Query().Get("errorType"); errorType == "PRIVATE_LINK_ENDPOINT_UNREACHABLE" {
 				errMessage := fmt.Errorf("during activation: %s", errorType)
-				return retry.RetryableError(errMessage)
+				return tfresource.RetryableError(errMessage)
 			}
 
 			activationKey = redirectURL.Query().Get("activationKey")
 
 			return nil
 		})
-
-		if tfresource.TimedOut(err) {
-			return sdkdiag.AppendErrorf(diags, "timeout retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
-		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "retrieving activation key from IP Address (%s): %s", agentIpAddress, err)

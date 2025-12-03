@@ -451,7 +451,7 @@ func testAccCheckJobQueueComputeEnvironmentOrderUpdate(ctx context.Context, jobQ
 		_, err := conn.UpdateJobQueue(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Batch Job Queue (%s): %s", name, err)
+			return fmt.Errorf("error updating Batch Job Queue (%s): %w", name, err)
 		}
 
 		return nil

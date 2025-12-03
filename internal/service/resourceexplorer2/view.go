@@ -41,6 +41,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resourceexplorer2;resourceexplorer2.GetViewOutput")
 // @Testing(serialize=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &viewResource{}, nil
 }
@@ -64,7 +65,7 @@ func (r *viewResource) Schema(ctx context.Context, request resource.SchemaReques
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{

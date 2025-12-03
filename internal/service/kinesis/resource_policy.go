@@ -30,6 +30,7 @@ import (
 // @Testing(useAlternateAccount=true)
 // We need to ignore `policy` because the JSON body is not normalized
 // @Testing(importIgnore="policy")
+// @Testing(preIdentityVersion="v5.100.0")
 func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 

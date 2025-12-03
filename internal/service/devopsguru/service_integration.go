@@ -29,6 +29,7 @@ import (
 // @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="v5.100.0")
 func newServiceIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &serviceIntegrationResource{}, nil
 }

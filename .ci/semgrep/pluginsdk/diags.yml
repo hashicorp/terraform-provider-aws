@@ -70,9 +70,9 @@ rules:
     message: Return diags instead of nil
     paths:
       include:
-        - internal/service
+        - "/internal/service"
       exclude:
-        - internal/service/o*
+        - "/internal/service/o*"
     patterns:
       - pattern: return nil
       - pattern-not-inside: |

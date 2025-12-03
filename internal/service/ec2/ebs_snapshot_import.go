@@ -223,7 +223,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.ImportSnapshot(ctx, &input)
 		},
 		errCodeInvalidParameter, "provided does not exist or does not have sufficient permissions")

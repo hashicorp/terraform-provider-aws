@@ -114,7 +114,7 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 		input.DeliveryChannel.SnsTopicARN = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.InsufficientDeliveryPolicyException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InsufficientDeliveryPolicyException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutDeliveryChannel(ctx, input)
 	})
 

@@ -91,7 +91,7 @@ func TestAccIoTTopicRuleDestination_enabled(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleDestinationConfig_enabled(rName, false),
+				Config: testAccTopicRuleDestinationConfig_enabled(rName, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -103,16 +103,18 @@ func TestAccIoTTopicRuleDestination_enabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTopicRuleDestinationConfig_enabled(rName, true),
+				Config: testAccTopicRuleDestinationConfig_enabled(rName, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccTopicRuleDestinationConfig_enabled(rName, false),
+				Config: testAccTopicRuleDestinationConfig_enabled(rName, 2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
@@ -169,28 +171,29 @@ func testAccCheckTopicRuleDestinationExists(ctx context.Context, n string) resou
 	}
 }
 
-func testAccTopicRuleDestinationBaseConfig(rName string) string {
+func testAccTopicRuleDestinationBaseConfig(rName string, securityGroupCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name   = %[1]q
+  count  = %[2]d
+  name   = "%[1]s-${count.index}"
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = %[1]q
+    Name = "%[1]s-${count.index}"
   }
 }
-`, rName))
+`, rName, securityGroupCount))
 }
 
 func testAccTopicRuleDestinationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccTopicRuleDestinationBaseConfig(rName), `
+	return acctest.ConfigCompose(testAccTopicRuleDestinationBaseConfig(rName, 1), `
 resource "aws_iot_topic_rule_destination" "test" {
   vpc_configuration {
     role_arn        = aws_iam_role.test.arn
-    security_groups = [aws_security_group.test.id]
+    security_groups = aws_security_group.test[*].id
     subnet_ids      = aws_subnet.test[*].id
     vpc_id          = aws_vpc.test.id
   }
@@ -198,14 +201,14 @@ resource "aws_iot_topic_rule_destination" "test" {
 `)
 }
 
-func testAccTopicRuleDestinationConfig_enabled(rName string, enabled bool) string {
-	return acctest.ConfigCompose(testAccTopicRuleDestinationBaseConfig(rName), fmt.Sprintf(`
+func testAccTopicRuleDestinationConfig_enabled(rName string, securityGroupCount int, enabled bool) string {
+	return acctest.ConfigCompose(testAccTopicRuleDestinationBaseConfig(rName, securityGroupCount), fmt.Sprintf(`
 resource "aws_iot_topic_rule_destination" "test" {
   enabled = %[1]t
 
   vpc_configuration {
     role_arn        = aws_iam_role.test.arn
-    security_groups = [aws_security_group.test.id]
+    security_groups = aws_security_group.test[*].id
     subnet_ids      = aws_subnet.test[*].id
     vpc_id          = aws_vpc.test.id
   }

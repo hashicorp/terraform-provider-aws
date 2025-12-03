@@ -238,8 +238,8 @@ func resourceThingGroupDelete(ctx context.Context, d *schema.ResourceData, meta 
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, timeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, timeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteThingGroup(ctx, &iot.DeleteThingGroupInput{
 				ThingGroupName: aws.String(d.Id()),
 			})

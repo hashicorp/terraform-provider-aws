@@ -5,6 +5,7 @@ package directconnect
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 )
@@ -13,7 +14,7 @@ func describeDirectConnectGatewayAssociationProposalsPages(ctx context.Context, 
 	for {
 		output, err := conn.DescribeDirectConnectGatewayAssociationProposals(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -29,7 +30,7 @@ func describeDirectConnectGatewayAssociationsPages(ctx context.Context, conn *di
 	for {
 		output, err := conn.DescribeDirectConnectGatewayAssociations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -45,7 +46,7 @@ func describeDirectConnectGatewaysPages(ctx context.Context, conn *directconnect
 	for {
 		output, err := conn.DescribeDirectConnectGateways(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

@@ -17,11 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53recoverycontrolconfig_control_panel", name="Control Panel")
+// @Tags(identifierAttribute="arn")
 func resourceControlPanel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceControlPanelCreate,
@@ -57,6 +59,8 @@ func resourceControlPanel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -86,6 +90,10 @@ func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if _, err := waitControlPanelCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Control Panel (%s) to be Deployed: %s", d.Id(), err)
+	}
+
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Control Config Control Panel (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceControlPanelRead(ctx, d, meta)...)
@@ -121,15 +129,17 @@ func resourceControlPanelUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
-	input := &r53rcc.UpdateControlPanelInput{
-		ControlPanelName: aws.String(d.Get(names.AttrName).(string)),
-		ControlPanelArn:  aws.String(d.Get(names.AttrARN).(string)),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &r53rcc.UpdateControlPanelInput{
+			ControlPanelName: aws.String(d.Get(names.AttrName).(string)),
+			ControlPanelArn:  aws.String(d.Get(names.AttrARN).(string)),
+		}
 
-	_, err := conn.UpdateControlPanel(ctx, input)
+		_, err := conn.UpdateControlPanel(ctx, input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Control Panel: %s", err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Control Panel: %s", err)
+		}
 	}
 
 	return append(diags, resourceControlPanelRead(ctx, d, meta)...)

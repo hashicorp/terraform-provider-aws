@@ -108,7 +108,7 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.RegistrationLimit = aws.Int32(int32(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateActivation(ctx, input)
 	}, errCodeValidationException, "Nonexistent role")
 

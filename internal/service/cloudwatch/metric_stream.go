@@ -21,7 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -250,7 +252,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
-			return append(diags, resourceMetricStreamRead(ctx, d, meta)...) // no error, just continue
+			return smerr.AppendEnrich(ctx, diags, resourceMetricStreamRead(ctx, d, meta)) // no error, just continue
 		}
 
 		if err != nil {
@@ -258,7 +260,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceMetricStreamRead(ctx, d, meta))
 }
 
 func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -267,8 +269,8 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findMetricStreamByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudWatch Metric Stream (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && intretry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -342,7 +344,7 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceMetricStreamRead(ctx, d, meta))
 }
 
 func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -395,7 +397,7 @@ func statusMetricStream(ctx context.Context, conn *cloudwatch.Client, name strin
 	return func() (any, string, error) {
 		output, err := findMetricStreamByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if intretry.NotFound(err) {
 			return nil, "", nil
 		}
 

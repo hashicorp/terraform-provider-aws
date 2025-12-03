@@ -75,6 +75,20 @@ func resourceMountTarget() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsIPv4Address,
 			},
+			names.AttrIPAddressType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+			},
+			"ipv6_address": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPv6Address,
+			},
 			"mount_target_dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -131,6 +145,14 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.IpAddress = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
+		input.IpAddressType = awstypes.IpAddressType(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipv6_address"); ok {
+		input.Ipv6Address = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -180,6 +202,16 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("file_system_arn", fsARN)
 	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrIPAddress, mt.IpAddress)
+	if mt.IpAddress != nil && mt.Ipv6Address != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeDualStack)
+	} else if mt.IpAddress != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeIpv4Only)
+	} else if mt.Ipv6Address != nil {
+		d.Set(names.AttrIPAddressType, awstypes.IpAddressTypeIpv6Only)
+	} else {
+		d.Set(names.AttrIPAddressType, nil)
+	}
+	d.Set("ipv6_address", mt.Ipv6Address)
 	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.ToString(mt.AvailabilityZoneName), aws.ToString(mt.FileSystemId))))
 	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)
 	d.Set(names.AttrOwnerID, mt.OwnerId)

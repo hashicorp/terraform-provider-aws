@@ -383,21 +383,17 @@ func (r *optInResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	var output *lakeformation.CreateLakeFormationOptInOutput
-	err := retry.RetryContext(ctx, 2*IAMPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 2*IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		output, err = conn.CreateLakeFormationOptIn(ctx, &in)
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Insufficient Lake Formation permission(s) on Catalog") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateLakeFormationOptIn(ctx, &in)
-	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(

@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,6 +36,7 @@ func testAccAppMeshRouteDataSource_tagsSerial(t *testing.T) {
 
 func testAccAppMeshRouteDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_appmesh_route.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -64,6 +65,7 @@ func testAccAppMeshRouteDataSource_tags(t *testing.T) {
 
 func testAccAppMeshRouteDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_appmesh_route.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -88,6 +90,7 @@ func testAccAppMeshRouteDataSource_tags_NullMap(t *testing.T) {
 
 func testAccAppMeshRouteDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_appmesh_route.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -112,6 +115,7 @@ func testAccAppMeshRouteDataSource_tags_EmptyMap(t *testing.T) {
 
 func testAccAppMeshRouteDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_appmesh_route.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -144,6 +148,7 @@ func testAccAppMeshRouteDataSource_tags_DefaultTags_nonOverlapping(t *testing.T)
 
 func testAccAppMeshRouteDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_appmesh_route.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -182,6 +187,7 @@ func testAccAppMeshRouteDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 
 func testAccAppMeshRouteDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_appmesh_route.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -214,7 +220,7 @@ func testAccAppMeshRouteDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 }
 
 func expectFullRouteDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfappmesh.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfappmesh.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrARN,
 	}), knownValue)
 }

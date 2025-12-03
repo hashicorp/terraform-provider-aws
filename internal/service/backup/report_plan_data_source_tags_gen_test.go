@@ -16,6 +16,7 @@ import (
 
 func TestAccBackupReportPlanDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_backup_report_plan.test"
 	rName := randomReportPlanName()
 
@@ -44,6 +45,7 @@ func TestAccBackupReportPlanDataSource_tags(t *testing.T) {
 
 func TestAccBackupReportPlanDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_backup_report_plan.test"
 	rName := randomReportPlanName()
 
@@ -68,6 +70,7 @@ func TestAccBackupReportPlanDataSource_tags_NullMap(t *testing.T) {
 
 func TestAccBackupReportPlanDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_backup_report_plan.test"
 	rName := randomReportPlanName()
 
@@ -92,6 +95,7 @@ func TestAccBackupReportPlanDataSource_tags_EmptyMap(t *testing.T) {
 
 func TestAccBackupReportPlanDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_backup_report_plan.test"
 	rName := randomReportPlanName()
 
@@ -124,6 +128,7 @@ func TestAccBackupReportPlanDataSource_tags_DefaultTags_nonOverlapping(t *testin
 
 func TestAccBackupReportPlanDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_backup_report_plan.test"
 	rName := randomReportPlanName()
 
@@ -162,6 +167,7 @@ func TestAccBackupReportPlanDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 
 func TestAccBackupReportPlanDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_backup_report_plan.test"
 	rName := randomReportPlanName()
 

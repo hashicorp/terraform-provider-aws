@@ -200,7 +200,7 @@ func findDefaultDefaultPatchBaselineIDByOperatingSystem(ctx context.Context, con
 		page, err := paginator.NextPage(ctx)
 
 		if err != nil {
-			return nil, fmt.Errorf("reading SSM Patch Baselines: %s", err)
+			return nil, fmt.Errorf("reading SSM Patch Baselines: %w", err)
 		}
 
 		for _, v := range page.BaselineIdentities {
@@ -272,7 +272,7 @@ func validatePatchBaselineARN(v any, k string) (ws []string, errors []error) {
 	}
 
 	if _, err := arn.Parse(value); err != nil {
-		errors = append(errors, fmt.Errorf("%q (%s) is not a valid ARN: %s", k, value, err))
+		errors = append(errors, fmt.Errorf("%q (%s) is not a valid ARN: %w", k, value, err))
 		return
 	}
 

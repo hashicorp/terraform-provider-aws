@@ -858,6 +858,12 @@ func resourceDeliveryStream() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"append_only": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
 							"buffering_interval": {
 								Type:     schema.TypeInt,
 								Optional: true,
@@ -1534,7 +1540,7 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	_, err := retryDeliveryStreamOp(ctx, func() (any, error) {
+	_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
 		return conn.CreateDeliveryStream(ctx, input)
 	})
 
@@ -1730,7 +1736,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 			}
 		}
 
-		_, err := retryDeliveryStreamOp(ctx, func() (any, error) {
+		_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
 			return conn.UpdateDestination(ctx, input)
 		})
 
@@ -1802,7 +1808,7 @@ func resourceDeliveryStreamDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func retryDeliveryStreamOp(ctx context.Context, f func() (any, error)) (any, error) {
+func retryDeliveryStreamOp(ctx context.Context, f func(context.Context) (any, error)) (any, error) {
 	return tfresource.RetryWhen(ctx, propagationTimeout,
 		f,
 		func(err error) (bool, error) {
@@ -2543,6 +2549,10 @@ func expandIcebergDestinationConfiguration(tfMap map[string]any) *types.IcebergD
 		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]any)),
 	}
 
+	if v, ok := tfMap["append_only"].(bool); ok && v {
+		apiObject.AppendOnly = aws.Bool(v)
+	}
+
 	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
 		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
 	}
@@ -2574,6 +2584,10 @@ func expandIcebergDestinationUpdate(tfMap map[string]any) *types.IcebergDestinat
 			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
 		RoleARN: aws.String(roleARN),
+	}
+
+	if v, ok := tfMap["append_only"].(bool); ok && v {
+		apiObject.AppendOnly = aws.Bool(v)
 	}
 
 	if catalogARN, ok := tfMap["catalog_arn"].(string); ok {
@@ -4243,6 +4257,7 @@ func flattenIcebergDestinationDescription(apiObject *types.IcebergDestinationDes
 	}
 
 	tfMap := map[string]any{
+		"append_only":      aws.ToBool(apiObject.AppendOnly),
 		"catalog_arn":      aws.ToString(apiObject.CatalogConfiguration.CatalogARN),
 		"s3_configuration": flattenS3DestinationDescription(apiObject.S3DestinationDescription),
 		names.AttrRoleARN:  aws.ToString(apiObject.RoleARN),

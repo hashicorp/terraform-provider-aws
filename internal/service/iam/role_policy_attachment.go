@@ -10,16 +10,25 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -50,6 +59,14 @@ func resourceRolePolicyAttachment() *schema.Resource {
 			},
 		},
 	}
+}
+
+// @SDKListResource("aws_iam_role_policy_attachment")
+func rolePolicyAttachmentResourceAsListResource() inttypes.ListResourceForSDK {
+	l := rolePolicyAttachmentListResource{}
+	l.SetResourceSchema(resourceRolePolicyAttachment())
+
+	return &l
 }
 
 func resourceRolePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -107,7 +124,7 @@ func resourceRolePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceD
 
 func attachPolicyToRole(ctx context.Context, conn *iam.Client, role, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AttachRolePolicy(ctx, &iam.AttachRolePolicyInput{
 			PolicyArn: aws.String(policyARN),
 			RoleName:  aws.String(role),
@@ -123,7 +140,7 @@ func attachPolicyToRole(ctx context.Context, conn *iam.Client, role, policyARN s
 
 func detachPolicyFromRole(ctx context.Context, conn *iam.Client, role, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DetachRolePolicy(ctx, &iam.DetachRolePolicyInput{
 			PolicyArn: aws.String(policyARN),
 			RoleName:  aws.String(role),
@@ -195,8 +212,12 @@ func createRolePolicyAttachmentImportID(d *schema.ResourceData) string {
 
 type rolePolicyAttachmentImportID struct{}
 
-func (rolePolicyAttachmentImportID) Create(d *schema.ResourceData) string {
-	return fmt.Sprintf("%s/%s", d.Get(names.AttrRole).(string), d.Get("policy_arn").(string))
+func (v rolePolicyAttachmentImportID) Create(d *schema.ResourceData) string {
+	return v.create(d.Get(names.AttrRole).(string), d.Get("policy_arn").(string))
+}
+
+func (rolePolicyAttachmentImportID) create(roleName, policyARN string) string {
+	return fmt.Sprintf("%s/%s", roleName, policyARN)
 }
 
 func (rolePolicyAttachmentImportID) Parse(id string) (string, map[string]string, error) {
@@ -210,4 +231,119 @@ func (rolePolicyAttachmentImportID) Parse(id string) (string, map[string]string,
 		"policy_arn":   parts[1],
 	}
 	return id, result, nil
+}
+
+var _ list.ListResourceWithRawV5Schemas = &rolePolicyAttachmentListResource{}
+
+type rolePolicyAttachmentListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+}
+
+type rolePolicyAttachmentListResourceModel struct {
+}
+
+func (l *rolePolicyAttachmentListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+	}
+}
+
+func (l *rolePolicyAttachmentListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.IAMClient(ctx)
+
+	var query rolePolicyAttachmentListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	var input iam.ListRolesInput
+	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
+	}
+
+	tflog.Info(ctx, "Listing resources")
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		for role, err := range listNonServiceLinkedRoles(ctx, conn, &input) {
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			tflog.Info(ctx, "Listing attached policies for role", map[string]any{
+				logging.ResourceAttributeKey(names.AttrRole): aws.ToString(role.RoleName),
+			})
+
+			input := iam.ListAttachedRolePoliciesInput{
+				RoleName: role.RoleName,
+			}
+			pages := iam.NewListAttachedRolePoliciesPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if errs.IsA[*awstypes.NoSuchEntityException](err) {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping", map[string]any{
+						logging.ResourceAttributeKey(names.AttrRole): aws.ToString(role.RoleName),
+					})
+					continue
+				}
+				if err != nil {
+					result := fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+
+				for _, attachedPolicy := range page.AttachedPolicies {
+					ctx := resourceRolePolicyAttachmentListItemLoggingContext(ctx, role, attachedPolicy)
+
+					result := request.NewListResult(ctx)
+
+					rd := l.ResourceData()
+					rd.SetId(resourceRolePolicyAttachmentImportIDFromData(role, attachedPolicy))
+
+					tflog.Info(ctx, "Reading resource")
+					rd.Set(names.AttrRole, aws.ToString(role.RoleName))
+					rd.Set("policy_arn", aws.ToString(attachedPolicy.PolicyArn))
+
+					result.DisplayName = resourceRolePolicyAttachmentDisplayName(role, attachedPolicy)
+
+					l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+					if result.Diagnostics.HasError() {
+						yield(result)
+						return
+					}
+
+					if !yield(result) {
+						return
+					}
+				}
+			}
+		}
+	}
+}
+
+func resourceRolePolicyAttachmentListItemLoggingContext(ctx context.Context, role awstypes.Role, attachedPolicy awstypes.AttachedPolicy) context.Context {
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrRole), aws.ToString(role.RoleName))
+	ctx = tflog.SetField(ctx, logging.ResourceAttributeKey("policy_arn"), aws.ToString(attachedPolicy.PolicyArn))
+	return ctx
+}
+
+func resourceRolePolicyAttachmentImportIDFromData(role awstypes.Role, attachedPolicy awstypes.AttachedPolicy) string {
+	return (rolePolicyAttachmentImportID{}).create(aws.ToString(role.RoleName), aws.ToString(attachedPolicy.PolicyArn))
+}
+
+func resourceRolePolicyAttachmentDisplayName(role awstypes.Role, attachedPolicy awstypes.AttachedPolicy) string {
+	foo := aws.ToString(attachedPolicy.PolicyArn)
+	policyARN, err := arn.Parse(foo)
+	if err == nil {
+		foo = strings.TrimPrefix(policyARN.Resource, "policy/")
+	}
+
+	return fmt.Sprintf("Role: %s - Policy: %s", resourceRoleDisplayName(role), foo)
 }

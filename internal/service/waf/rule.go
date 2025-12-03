@@ -182,7 +182,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.WAFReferencedItemException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.WAFReferencedItemException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 			input := &waf.DeleteRuleInput{
 				ChangeToken: token,

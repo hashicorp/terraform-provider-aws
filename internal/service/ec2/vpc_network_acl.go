@@ -288,7 +288,7 @@ func resourceNetworkACLDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[INFO] Deleting EC2 Network ACL: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteNetworkAcl(ctx, input)
 	}, errCodeDependencyViolation)
 

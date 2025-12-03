@@ -97,9 +97,8 @@ func (r *vpcOriginResource) Schema(ctx context.Context, request resource.SchemaR
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"items": schema.SetAttribute{
-										CustomType:  fwtypes.SetOfStringEnumType[awstypes.SslProtocol](),
-										Required:    true,
-										ElementType: types.StringType,
+										CustomType: fwtypes.SetOfStringEnumType[awstypes.SslProtocol](),
+										Required:   true,
 									},
 									"quantity": schema.Int64Attribute{
 										Required: true,
@@ -418,6 +417,6 @@ type vpcOriginEndpointConfigModel struct {
 }
 
 type originSSLProtocolsModel struct {
-	Items    fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.SslProtocol]] `tfsdk:"items"`
-	Quantity types.Int64                                                  `tfsdk:"quantity"`
+	Items    fwtypes.SetOfStringEnum[awstypes.SslProtocol] `tfsdk:"items"`
+	Quantity types.Int64                                   `tfsdk:"quantity"`
 }

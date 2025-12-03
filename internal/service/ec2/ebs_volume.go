@@ -114,12 +114,17 @@ func resourceEBSVolume() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(125, 1000),
+				ValidateFunc: validation.IntBetween(125, 2000),
 			},
 			names.AttrType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"volume_initialization_rate": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(100, 300),
 			},
 		},
 	}
@@ -171,6 +176,10 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.VolumeType = awstypes.VolumeType(value.(string))
 	}
 
+	if value, ok := d.GetOk("volume_initialization_rate"); ok {
+		input.VolumeInitializationRate = aws.Int32(int32(value.(int)))
+	}
+
 	output, err := conn.CreateVolume(ctx, &input)
 
 	if err != nil {
@@ -215,6 +224,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrSnapshotID, volume.SnapshotId)
 	d.Set(names.AttrThroughput, volume.Throughput)
 	d.Set(names.AttrType, volume.VolumeType)
+	d.Set("volume_initialization_rate", volume.VolumeInitializationRate)
 
 	setTagsOut(ctx, volume.Tags)
 
@@ -282,7 +292,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta a
 		}
 
 		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.CreateSnapshot(ctx, &input)
 			},
 			errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
@@ -294,7 +304,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta a
 		snapshotID := aws.ToString(outputRaw.(*ec2.CreateSnapshotOutput).SnapshotId)
 
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return waitSnapshotCompleted(ctx, conn, snapshotID, d.Timeout(schema.TimeoutDelete))
 			},
 			errCodeResourceNotReady)
@@ -309,7 +319,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta a
 		VolumeId: aws.String(d.Id()),
 	}
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteVolume(ctx, &input)
 		},
 		errCodeVolumeInUse)
@@ -366,6 +376,13 @@ func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff
 		// Throughput is valid only for gp3 volumes.
 		if throughput > 0 && volumeType != awstypes.VolumeTypeGp3 {
 			return fmt.Errorf("'throughput' must not be set when 'type' is '%s'", volumeType)
+		}
+
+		config := diff.GetRawConfig()
+		if v := config.GetAttr(names.AttrSnapshotID); v.IsKnown() && v.IsNull() {
+			if v := config.GetAttr("volume_initialization_rate"); v.IsKnown() && !v.IsNull() {
+				return fmt.Errorf("'volume_initialization_rate' must not be set unless 'snapshot_id' is set")
+			}
 		}
 	} else {
 		// Update.

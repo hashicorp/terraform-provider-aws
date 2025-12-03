@@ -200,9 +200,20 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
+										Validators: []validator.Int64{
+											int64validator.Between(1, 5000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
 									},
 									names.AttrUnit: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DataStorageUnit](),
@@ -220,14 +231,22 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 								},
@@ -405,7 +424,7 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 		FinalSnapshotName:   nil,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteServerlessCache(ctx, input)
 	}, errCodeDependencyViolation)
 

@@ -360,7 +360,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err = tfresource.RetryWhenIsA[*awstypes.ResourceInUseException](ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteQueue(ctx, &connect.DeleteQueueInput{
 			InstanceId: aws.String(instanceID),
 			QueueId:    aws.String(queueID),

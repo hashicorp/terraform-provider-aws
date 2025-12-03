@@ -95,10 +95,10 @@ class MyConvertedCode(TerraformStack):
         CloudwatchLogAnomalyDetector.generate_config_for_import(self, "example", "log_anomaly_detector-arn-12345678")
 ```
 
-Using `terraform import`, import CloudWatch Log Anomaly Detector using the `example_id_arg`. For example:
+Using `terraform import`, import CloudWatch Log Anomaly Detector using the `arn`. For example:
 
 ```console
 % terraform import aws_cloudwatch_log_anomaly_detector.example log_anomaly_detector-arn-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7ed6bea3f772033a86597eba03b1f23d8f7a2701f5a655751d6910599f4cd907 -->
+<!-- cache-key: cdktf-0.20.8 input-46101e7912cbe6e1a9bd469704cfcd1987cc828143c76d08b440e331b19203ce -->

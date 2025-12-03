@@ -35,6 +35,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(serialize=true)
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="v5.100.0")
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}
 
@@ -55,7 +56,7 @@ func (r *indexResource) Schema(ctx context.Context, request resource.SchemaReque
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN:     framework.ARNAttributeComputedOnly(),
-			names.AttrID:      framework.IDAttribute(),
+			names.AttrID:      framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{

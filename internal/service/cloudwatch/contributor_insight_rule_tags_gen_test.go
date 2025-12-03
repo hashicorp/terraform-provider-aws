@@ -18,6 +18,7 @@ import (
 
 func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -220,6 +221,7 @@ func TestAccCloudWatchContributorInsightRule_tags(t *testing.T) {
 
 func TestAccCloudWatchContributorInsightRule_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -285,6 +287,7 @@ func TestAccCloudWatchContributorInsightRule_tags_null(t *testing.T) {
 
 func TestAccCloudWatchContributorInsightRule_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -338,6 +341,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyMap(t *testing.T) {
 
 func TestAccCloudWatchContributorInsightRule_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -423,6 +427,7 @@ func TestAccCloudWatchContributorInsightRule_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -523,6 +528,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnCreate(t *testing.T
 
 func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -672,6 +678,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Add(t *testi
 
 func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -767,6 +774,7 @@ func TestAccCloudWatchContributorInsightRule_tags_EmptyTag_OnUpdate_Replace(t *t
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -968,6 +976,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_providerOnly(t *te
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1143,6 +1152,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nonOverlapping(t *
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1334,6 +1344,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_overlapping(t *tes
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1429,6 +1440,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToProviderOn
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1523,6 +1535,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_updateToResourceOn
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1594,6 +1607,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyResourceTag(t
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1657,6 +1671,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_emptyProviderOnlyT
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1729,6 +1744,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullOverlappingRes
 
 func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1803,6 +1819,7 @@ func TestAccCloudWatchContributorInsightRule_tags_DefaultTags_nullNonOverlapping
 
 func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1863,6 +1880,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnCreate(t *testin
 
 func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1965,6 +1983,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Add(t *te
 
 func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2057,6 +2076,7 @@ func TestAccCloudWatchContributorInsightRule_tags_ComputedTag_OnUpdate_Replace(t
 
 func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2219,6 +2239,7 @@ func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_DefaultTag(
 
 func TestAccCloudWatchContributorInsightRule_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.InsightRule
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

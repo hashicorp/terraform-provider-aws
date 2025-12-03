@@ -677,7 +677,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 		input.ScheduleFrequency = expandScheduleFrequency(v.([]any))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateClassificationJob(ctx, &input)
 	}, errCodeClientError)
 

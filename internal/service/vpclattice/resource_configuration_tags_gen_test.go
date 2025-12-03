@@ -18,6 +18,7 @@ import (
 
 func TestAccVPCLatticeResourceConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -200,6 +201,7 @@ func TestAccVPCLatticeResourceConfiguration_tags(t *testing.T) {
 
 func TestAccVPCLatticeResourceConfiguration_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -262,6 +264,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_null(t *testing.T) {
 
 func TestAccVPCLatticeResourceConfiguration_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -312,6 +315,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_EmptyMap(t *testing.T) {
 
 func TestAccVPCLatticeResourceConfiguration_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -392,6 +396,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccVPCLatticeResourceConfiguration_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -482,6 +487,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_EmptyTag_OnCreate(t *testing.T)
 
 func TestAccVPCLatticeResourceConfiguration_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -621,6 +627,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_EmptyTag_OnUpdate_Add(t *testin
 
 func TestAccVPCLatticeResourceConfiguration_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -711,6 +718,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_EmptyTag_OnUpdate_Replace(t *te
 
 func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -892,6 +900,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_providerOnly(t *tes
 
 func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1052,6 +1061,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_nonOverlapping(t *t
 
 func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1228,6 +1238,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_overlapping(t *test
 
 func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1318,6 +1329,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_updateToProviderOnl
 
 func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1407,6 +1419,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_updateToResourceOnl
 
 func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1473,6 +1486,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_emptyResourceTag(t 
 
 func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1531,6 +1545,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_emptyProviderOnlyTa
 
 func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1600,6 +1615,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_nullOverlappingReso
 
 func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1671,6 +1687,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_nullNonOverlappingR
 
 func TestAccVPCLatticeResourceConfiguration_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1726,6 +1743,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_ComputedTag_OnCreate(t *testing
 
 func TestAccVPCLatticeResourceConfiguration_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1823,6 +1841,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_ComputedTag_OnUpdate_Add(t *tes
 
 func TestAccVPCLatticeResourceConfiguration_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1910,6 +1929,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_ComputedTag_OnUpdate_Replace(t 
 
 func TestAccVPCLatticeResourceConfiguration_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2072,6 +2092,7 @@ func TestAccVPCLatticeResourceConfiguration_tags_IgnoreTags_Overlap_DefaultTag(t
 
 func TestAccVPCLatticeResourceConfiguration_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

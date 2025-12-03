@@ -251,7 +251,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 		ResourceTags:     getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.AccessDeniedException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateBudgetAction(ctx, input)
 	})
 
@@ -382,7 +382,7 @@ func resourceBudgetActionDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Deleting Budget Action: %s", d.Id())
-	_, err = tfresource.RetryWhenIsA[*awstypes.ResourceLockedException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.ResourceLockedException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteBudgetAction(ctx, &budgets.DeleteBudgetActionInput{
 			AccountId:  aws.String(accountID),
 			ActionId:   aws.String(actionID),

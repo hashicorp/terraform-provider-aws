@@ -250,9 +250,12 @@ func resourceRuleGroup() *schema.Resource {
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
 																									"address_definition": {
-																										Type:         schema.TypeString,
-																										Required:     true,
-																										ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+																										Type:     schema.TypeString,
+																										Required: true,
+																										ValidateFunc: validation.Any(
+																											verify.ValidIPv4CIDRNetworkAddress,
+																											verify.ValidIPv6CIDRNetworkAddress,
+																										),
 																									},
 																								},
 																							},
@@ -284,9 +287,12 @@ func resourceRuleGroup() *schema.Resource {
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
 																									"address_definition": {
-																										Type:         schema.TypeString,
-																										Required:     true,
-																										ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+																										Type:     schema.TypeString,
+																										Required: true,
+																										ValidateFunc: validation.Any(
+																											verify.ValidIPv4CIDRNetworkAddress,
+																											verify.ValidIPv6CIDRNetworkAddress,
+																										),
 																									},
 																								},
 																							},

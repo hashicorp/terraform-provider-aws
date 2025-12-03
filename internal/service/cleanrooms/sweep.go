@@ -37,7 +37,7 @@ func sweepCollaborations(region string) error {
 
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CleanRoomsClient(ctx)
 	input := &cleanrooms.ListCollaborationsInput{}
@@ -78,7 +78,7 @@ func sweepConfiguredTables(region string) error {
 
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CleanRoomsClient(ctx)
 	input := &cleanrooms.ListConfiguredTablesInput{}
@@ -119,7 +119,7 @@ func sweepMemberships(region string) error {
 
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.CleanRoomsClient(ctx)
 	input := &cleanrooms.ListMembershipsInput{}

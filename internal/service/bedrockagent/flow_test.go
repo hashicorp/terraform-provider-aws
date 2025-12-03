@@ -66,6 +66,23 @@ func TestAccBedrockAgentFlow_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccFlowConfig_basicUpdate(rName, foundationModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flow),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`flow/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "update"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "customer_encryption_key_arn"),
+				),
+			},
 		},
 	})
 }
@@ -330,6 +347,69 @@ func TestAccBedrockAgentFlow_withDefinition(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentFlow_withPromptResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var flow bedrockagent.GetFlowOutput
+	flowName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	promptName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_flow.test"
+	foundationModel := "amazon.titan-text-express-v1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckFlow(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowConfig_withPromptResource(flowName, promptName, foundationModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flow),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`flow/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, flowName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckNoResourceAttr(resourceName, "customer_encryption_key_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.#", "1"),
+
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.name", "Prompt_1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.type", "Prompt"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.configuration.0.prompt.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.configuration.0.prompt.0.source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.configuration.0.prompt.0.source_configuration.0.resource.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "definition.0.node.0.configuration.0.prompt.0.source_configuration.0.resource.0.prompt_arn", "aws_bedrockagent_prompt.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.input.0.expression", "$.data"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.input.0.name", "topic"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.input.0.type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.output.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.output.0.name", "modelCompletion"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.output.0.type", "String"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckFlowDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
@@ -441,6 +521,16 @@ resource "aws_bedrockagent_flow" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
   description        = "basic"
+}
+`, rName))
+}
+
+func testAccFlowConfig_basicUpdate(rName, model string) string {
+	return acctest.ConfigCompose(testAccFlowConfig_base(model), fmt.Sprintf(`
+resource "aws_bedrockagent_flow" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+  description        = "update"
 }
 `, rName))
 }
@@ -595,4 +685,46 @@ resource "aws_bedrockagent_flow" "test" {
   }
 }
 `, rName, model))
+}
+
+func testAccFlowConfig_withPromptResource(flowName, promptName, model string) string {
+	return acctest.ConfigCompose(testAccFlowConfig_base(model), fmt.Sprintf(`
+resource "aws_bedrockagent_prompt" "test" {
+  name        = %[1]q
+  description = "My prompt description."
+}
+
+resource "aws_bedrockagent_flow" "test" {
+  name               = %[2]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  definition {
+    node {
+      name = "Prompt_1"
+      type = "Prompt"
+
+      configuration {
+        prompt {
+          source_configuration {
+            resource {
+              prompt_arn = aws_bedrockagent_prompt.test.arn
+            }
+          }
+        }
+      }
+
+      input {
+        expression = "$.data"
+        name       = "topic"
+        type       = "String"
+      }
+
+      output {
+        name = "modelCompletion"
+        type = "String"
+      }
+    }
+  }
+}
+`, promptName, flowName, model))
 }

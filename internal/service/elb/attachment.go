@@ -58,7 +58,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.RegisterInstancesWithLoadBalancer(ctx, input)
 	}, errCodeInvalidTarget)
 

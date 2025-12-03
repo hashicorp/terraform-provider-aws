@@ -33,6 +33,7 @@ func TestAccS3ControlAccessPointDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, dataSourceName, names.AttrBucket),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket_account_id", dataSourceName, "bucket_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, "network_origin", dataSourceName, "network_origin"),
 				),
 			},
@@ -41,7 +42,7 @@ func TestAccS3ControlAccessPointDataSource_basic(t *testing.T) {
 }
 
 func testAccAccessPointDataSourceConfig_basic(bucketName, accessPointName string) string {
-	return acctest.ConfigCompose(testAccAccessPointConfig_basic(bucketName, accessPointName), `
+	return acctest.ConfigCompose(testAccAccessPointConfig_tags1(bucketName, accessPointName, acctest.CtKey1, acctest.CtValue1), `
 data "aws_s3_access_point" "test" {
   name = aws_s3_access_point.test.name
 }

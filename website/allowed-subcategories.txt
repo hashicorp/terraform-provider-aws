@@ -17,6 +17,7 @@ AppStream 2.0
 AppSync
 Application Auto Scaling
 Application Migration (Mgn)
+Application Resilience Controller Region Switch
 Application Signals
 Athena
 Audit Manager
@@ -26,6 +27,7 @@ BCM Data Exports
 Backup
 Batch
 Bedrock
+Bedrock AgentCore
 Bedrock Agents
 Billing
 CE (Cost Explorer)
@@ -49,7 +51,9 @@ CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
 CloudWatch Network Monitor
+CloudWatch NetworkFlow Monitor
 CloudWatch Observability Access Manager
+CloudWatch Observability Admin
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
@@ -157,9 +161,9 @@ Lex V2 Models
 License Manager
 Lightsail
 Location
-Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
+MWAA (Managed Workflows for Apache Airflow) Serverless
 Macie
 Mainframe Modernization
 Managed Grafana
@@ -174,6 +178,7 @@ Network Manager
 OpenSearch
 OpenSearch Ingestion
 OpenSearch Serverless
+Oracle Database@AWS
 Organizations
 Outposts
 Outposts (EC2)
@@ -187,6 +192,7 @@ QLDB (Quantum Ledger Database)
 QuickSight
 RAM (Resource Access Manager)
 RDS (Relational Database)
+RDS Data
 Recycle Bin (RBin)
 Redshift
 Redshift Data
@@ -207,6 +213,7 @@ S3 (Simple Storage)
 S3 Control
 S3 Glacier
 S3 Tables
+S3 Vectors
 S3 on Outposts
 SES (Simple Email)
 SESv2 (Simple Email V2)
@@ -255,6 +262,7 @@ WAF Classic Regional
 Wavelength
 Web Services Budgets
 Well-Architected Tool
+WorkMail
 WorkSpaces
 WorkSpaces Web
 X-Ray

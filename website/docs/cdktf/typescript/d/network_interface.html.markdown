@@ -47,7 +47,8 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the network interface.
-* `association` - Association information for an Elastic IP address (IPv4) associated with the network interface. See supported fields below.
+* `association` - Association information for an Elastic IP address (IPv4) associated with the network interface. See [association](#association) below.
+* `attachment` - Attachment of the ENI. See [attachment](#attachment) below.
 * `availabilityZone` - Availability Zone.
 * `description` - Description of the network interface.
 * `interfaceType` - Type of interface.
@@ -74,10 +75,18 @@ This data source exports the following attributes in addition to the arguments a
 * `public_dns_name` - Public DNS name.
 * `publicIp` - Address of the Elastic IP address bound to the network interface.
 
+### `attachment`
+
+* `attachmentId` - ID of the network interface attachment.
+* `deviceIndex` - Device index of the network interface attachment on the instance.
+* `instanceId` - ID of the instance.
+* `instanceOwnerId` - AWS account ID of the owner of the instance.
+* `networkCardIndex` - Index of the network card.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-f409fd91709afd0788432053fbb0cbf5a6f39f89378658fc8472e479d6131aa2 -->
+<!-- cache-key: cdktf-0.20.8 input-4d2139f76babc1591b6ecd28aa12b2a7cb023a572cfe4d1feeab0316971b3bbb -->

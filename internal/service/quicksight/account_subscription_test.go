@@ -125,10 +125,9 @@ func testAccCheckAccountSubscriptionDisableTerminationProtection(ctx context.Con
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 
-		defaultNs := "default"
 		input := &quicksight.UpdateAccountSettingsInput{
 			AwsAccountId:                 aws.String(rs.Primary.ID),
-			DefaultNamespace:             aws.String(defaultNs),
+			DefaultNamespace:             aws.String(tfquicksight.DefaultNamespace),
 			TerminationProtectionEnabled: false,
 		}
 

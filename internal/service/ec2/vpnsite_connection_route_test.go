@@ -31,7 +31,7 @@ func TestAccSiteVPNConnectionRoute_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionRouteConfig_basic(rName, rBgpAsn),
+				Config: testAccVPNConnectionRouteConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionRouteExists(ctx, resourceName),
 				),
@@ -53,7 +53,7 @@ func TestAccSiteVPNConnectionRoute_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionRouteConfig_basic(rName, rBgpAsn),
+				Config: testAccVPNConnectionRouteConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionRouteExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNConnectionRoute(), resourceName),
@@ -105,7 +105,7 @@ func testAccVPNConnectionRouteExists(ctx context.Context, n string) resource.Tes
 	}
 }
 
-func testAccSiteVPNConnectionRouteConfig_basic(rName string, rBgpAsn int) string {
+func testAccVPNConnectionRouteConfig_basic(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {

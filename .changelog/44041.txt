@@ -1,0 +1,9 @@
+```release-note:enhancement
+resource/aws_ecr_repository: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_ecr_repository_policy: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_ecr_lifecycle_policy: Add resource identity support
+```

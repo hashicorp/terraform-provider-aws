@@ -138,6 +138,26 @@ func dataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"health_check_logs": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrBucket: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						names.AttrPrefix: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"idle_timeout": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -173,6 +193,10 @@ func dataSourceLoadBalancer() *schema.Resource {
 			},
 			"preserve_host_header": {
 				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"secondary_ips_auto_assigned_per_subnet": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			names.AttrSecurityGroups: {
@@ -316,6 +340,10 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 
 	if err := d.Set("connection_logs", []any{flattenLoadBalancerConnectionLogsAttributes(attributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting connection_logs: %s", err)
+	}
+
+	if err := d.Set("health_check_logs", []any{flattenLoadBalancerHealthCheckLogsAttributes(attributes)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting health_check_logs: %s", err)
 	}
 
 	loadBalancerAttributes.flatten(d, attributes)

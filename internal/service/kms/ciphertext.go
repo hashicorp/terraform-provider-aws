@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -100,7 +100,7 @@ func resourceCiphertextCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	//lintignore:R017 // Allow legacy unstable ID usage in managed resource
 	d.SetId(time.Now().UTC().String())
-	d.Set("ciphertext_blob", itypes.Base64Encode(output.CiphertextBlob))
+	d.Set("ciphertext_blob", inttypes.Base64Encode(output.CiphertextBlob))
 
 	return diags
 }

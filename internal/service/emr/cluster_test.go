@@ -564,7 +564,7 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 				Config: testAccClusterConfig_ec2AttributesDefaultManagedSecurityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 				),
 			},
 			{
@@ -1277,56 +1277,6 @@ func TestAccEMRCluster_keepJob(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "keep_job_flow_alive_when_no_steps", acctest.CtFalse),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"cluster_state", // Ignore RUNNING versus WAITING changes
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
-			},
-		},
-	})
-}
-
-func TestAccEMRCluster_visibleToAllUsers(t *testing.T) {
-	ctx := acctest.Context(t)
-	var cluster awstypes.Cluster
-
-	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "visible_to_all_users", acctest.CtTrue),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"cluster_state", // Ignore RUNNING versus WAITING changes
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
-			},
-			{
-				Config: testAccClusterConfig_visibleToAllUsersUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "visible_to_all_users", acctest.CtFalse),
 				),
 			},
 			{
@@ -3662,61 +3612,6 @@ resource "aws_emr_cluster" "test" {
   autoscaling_role = aws_iam_role.emr_autoscaling_role.arn
 }
 `, rName, keepJob))
-}
-
-func testAccClusterConfig_visibleToAllUsersUpdated(rName string) string {
-	return acctest.ConfigCompose(
-		testAccClusterConfig_baseVPC(rName, false),
-		testAccClusterConfig_baseIAMServiceRole(rName),
-		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterConfig_baseIAMAutoScalingRole(rName),
-		fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_emr_cluster" "test" {
-  name          = %[1]q
-  release_label = "emr-4.6.0"
-  applications  = ["Spark"]
-
-  ec2_attributes {
-    subnet_id                         = aws_subnet.test.id
-    emr_managed_master_security_group = aws_security_group.test.id
-    emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
-  }
-
-  master_instance_group {
-    instance_type = "c4.large"
-  }
-
-  core_instance_group {
-    instance_count = 1
-    instance_type  = "c4.large"
-  }
-
-  tags = {
-    role     = "rolename"
-    dns_zone = "env_zone"
-    env      = "env"
-    name     = "name-env"
-  }
-
-  keep_job_flow_alive_when_no_steps = true
-  visible_to_all_users              = false
-
-  configurations = "test-fixtures/emr_configurations.json"
-
-  depends_on = [
-    aws_route_table_association.test,
-    aws_iam_role_policy_attachment.emr_service,
-    aws_iam_role_policy_attachment.emr_instance_profile,
-    aws_iam_role_policy_attachment.emr_autoscaling_role,
-  ]
-
-  service_role     = aws_iam_role.emr_service.arn
-  autoscaling_role = aws_iam_role.emr_autoscaling_role.arn
-}
-`, rName))
 }
 
 func testAccClusterConfig_s3Logging(rName string) string {

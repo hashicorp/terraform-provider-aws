@@ -31,6 +31,9 @@ import (
 
 // @SDKResource("aws_ssm_association", name="Association")
 // @Tags(identifierAttribute="id", resourceType="Association")
+// @IdentityAttribute("association_id")
+// @Testing(idAttrDuplicates="association_id")
+// @Testing(preIdentityVersion="v6.10.0")
 func resourceAssociation() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -38,10 +41,6 @@ func resourceAssociation() *schema.Resource {
 		ReadWithoutTimeout:   resourceAssociationRead,
 		UpdateWithoutTimeout: resourceAssociationUpdate,
 		DeleteWithoutTimeout: resourceAssociationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		MigrateState:  associationMigrateState,
 		SchemaVersion: 1,

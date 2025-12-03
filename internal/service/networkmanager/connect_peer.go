@@ -28,6 +28,10 @@ import (
 
 // @SDKResource("aws_networkmanager_connect_peer", name="Connect Peer")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.ConnectPeer")
+// @Testing(skipEmptyTags=true)
+// @Testing(importIgnore="state")
+// @Testing(generator=false)
 func resourceConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectPeerCreate,
@@ -213,7 +217,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateConnectPeer(ctx, input)
 		},
 		func(err error) (bool, error) {

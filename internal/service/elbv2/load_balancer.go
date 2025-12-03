@@ -212,6 +212,35 @@ func resourceLoadBalancer() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.EnforceSecurityGroupInboundRulesOnPrivateLinkTrafficEnum](),
 				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
 			},
+			"health_check_logs": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrBucket: {
+							Type:     schema.TypeString,
+							Required: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return !d.Get("health_check_logs.0.enabled").(bool)
+							},
+						},
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						names.AttrPrefix: {
+							Type:     schema.TypeString,
+							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return !d.Get("health_check_logs.0.enabled").(bool)
+							},
+						},
+					},
+				},
+			},
 			"idle_timeout": {
 				Type:             schema.TypeInt,
 				Optional:         true,
@@ -286,6 +315,13 @@ func resourceLoadBalancer() *schema.Resource {
 				Optional:         true,
 				Default:          false,
 				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+			},
+			"secondary_ips_auto_assigned_per_subnet": {
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
+				ValidateFunc:     validation.IntBetween(0, 7),
 			},
 			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
@@ -483,6 +519,14 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 				Value: flex.BoolValueToString(false),
 			})
 		}
+		if v, ok := d.GetOk("health_check_logs"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			attributes = append(attributes, expandLoadBalancerHealthLogsAttributes(v.([]any)[0].(map[string]any), false)...)
+		} else {
+			attributes = append(attributes, awstypes.LoadBalancerAttribute{
+				Key:   aws.String(loadBalancerAttributeHealthCheckLogsS3Enabled),
+				Value: flex.BoolValueToString(false),
+			})
+		}
 	}
 
 	attributes = append(attributes, loadBalancerAttributes.expand(d, lbType, false)...)
@@ -587,6 +631,9 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		if err := d.Set("connection_logs", []any{flattenLoadBalancerConnectionLogsAttributes(attributes)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connection_logs: %s", err)
 		}
+		if err := d.Set("health_check_logs", []any{flattenLoadBalancerHealthCheckLogsAttributes(attributes)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting health_check_logs: %s", err)
+		}
 	}
 
 	loadBalancerAttributes.flatten(d, attributes)
@@ -633,6 +680,17 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		} else {
 			attributes = append(attributes, awstypes.LoadBalancerAttribute{
 				Key:   aws.String(loadBalancerAttributeConnectionLogsS3Enabled),
+				Value: flex.BoolValueToString(false),
+			})
+		}
+	}
+
+	if d.HasChange("health_check_logs") {
+		if v, ok := d.GetOk("health_check_logs"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			attributes = append(attributes, expandLoadBalancerHealthLogsAttributes(v.([]any)[0].(map[string]any), true)...)
+		} else {
+			attributes = append(attributes, awstypes.LoadBalancerAttribute{
+				Key:   aws.String(loadBalancerAttributeHealthCheckLogsS3Enabled),
 				Value: flex.BoolValueToString(false),
 			})
 		}
@@ -898,6 +956,11 @@ var loadBalancerAttributes = loadBalancerAttributeMap(map[string]loadBalancerAtt
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPPreserveHostHeaderEnabled,
 		tfType:                     schema.TypeBool,
 		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
+	},
+	"secondary_ips_auto_assigned_per_subnet": {
+		apiAttributeKey:            loadBalancerAttributeSecondaryIPsAutoAssignedPerSubnet,
+		tfType:                     schema.TypeInt,
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumNetwork},
 	},
 	"xff_header_processing_mode": {
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPXFFHeaderProcessingMode,
@@ -1280,6 +1343,7 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 	// - there are subnet removals
 	//   OR security groups are being added where none currently exist
 	//   OR all security groups are being removed
+	//   OR secondary IPv4 addresses are being decreased
 	//
 	// Any other combination should be treated as normal. At this time, subnet
 	// handling is the only known difference between Network Load Balancers and
@@ -1354,6 +1418,21 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 
 			if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
 				if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	// Get diff for secondary IPv4 addresses
+	if diff.HasChange("secondary_ips_auto_assigned_per_subnet") {
+		if v := config.GetAttr("secondary_ips_auto_assigned_per_subnet"); v.IsWhollyKnown() {
+			o, n := diff.GetChange("secondary_ips_auto_assigned_per_subnet")
+			oldCount, newCount := o.(int), n.(int)
+
+			// Force new if secondary IPv4 address count is decreased
+			if newCount < oldCount {
+				if err := diff.ForceNew("secondary_ips_auto_assigned_per_subnet"); err != nil {
 					return err
 				}
 			}
@@ -1497,6 +1576,39 @@ func expandLoadBalancerConnectionLogsAttributes(tfMap map[string]any, update boo
 	return apiObjects
 }
 
+func expandLoadBalancerHealthLogsAttributes(tfMap map[string]any, update bool) []awstypes.LoadBalancerAttribute {
+	if tfMap == nil {
+		return nil
+	}
+
+	var apiObjects []awstypes.LoadBalancerAttribute
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObjects = append(apiObjects, awstypes.LoadBalancerAttribute{
+			Key:   aws.String(loadBalancerAttributeHealthCheckLogsS3Enabled),
+			Value: flex.BoolValueToString(v),
+		})
+
+		if v {
+			if v, ok := tfMap[names.AttrBucket].(string); ok && (update || v != "") {
+				apiObjects = append(apiObjects, awstypes.LoadBalancerAttribute{
+					Key:   aws.String(loadBalancerAttributeHealthCheckLogsS3Bucket),
+					Value: aws.String(v),
+				})
+			}
+
+			if v, ok := tfMap[names.AttrPrefix].(string); ok && (update || v != "") {
+				apiObjects = append(apiObjects, awstypes.LoadBalancerAttribute{
+					Key:   aws.String(loadBalancerAttributeHealthCheckLogsS3Prefix),
+					Value: aws.String(v),
+				})
+			}
+		}
+	}
+
+	return apiObjects
+}
+
 func flattenLoadBalancerAccessLogsAttributes(apiObjects []awstypes.LoadBalancerAttribute) map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
@@ -1532,6 +1644,27 @@ func flattenLoadBalancerConnectionLogsAttributes(apiObjects []awstypes.LoadBalan
 		case loadBalancerAttributeConnectionLogsS3Bucket:
 			tfMap[names.AttrBucket] = aws.ToString(v)
 		case loadBalancerAttributeConnectionLogsS3Prefix:
+			tfMap[names.AttrPrefix] = aws.ToString(v)
+		}
+	}
+
+	return tfMap
+}
+
+func flattenLoadBalancerHealthCheckLogsAttributes(apiObjects []awstypes.LoadBalancerAttribute) map[string]any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	for _, apiObject := range apiObjects {
+		switch k, v := aws.ToString(apiObject.Key), apiObject.Value; k {
+		case loadBalancerAttributeHealthCheckLogsS3Enabled:
+			tfMap[names.AttrEnabled] = flex.StringToBoolValue(v)
+		case loadBalancerAttributeHealthCheckLogsS3Bucket:
+			tfMap[names.AttrBucket] = aws.ToString(v)
+		case loadBalancerAttributeHealthCheckLogsS3Prefix:
 			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 	}

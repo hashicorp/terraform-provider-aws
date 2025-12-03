@@ -89,6 +89,11 @@ func testAccAppBundle_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceAppBundle, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -644,7 +649,7 @@ func testAccCheckAppBundleExists(ctx context.Context, n string, v *awstypes.AppB
 
 func testAccCheckAppBundleExistsInRegion(ctx context.Context, n string, v *awstypes.AppBundle, region string) resource.TestCheckFunc {
 	// Push region into Context.
-	ctx = conns.NewResourceContext(ctx, "AppFabric", "aws_appfabric_app_bundle", region)
+	ctx = conns.NewResourceContext(ctx, "AppFabric", "App Bundle", "aws_appfabric_app_bundle", region)
 	return testAccCheckAppBundleExists(ctx, n, v)
 }
 

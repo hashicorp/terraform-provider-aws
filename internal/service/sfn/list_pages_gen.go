@@ -5,6 +5,7 @@ package sfn
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 )
@@ -13,7 +14,7 @@ func listStateMachineVersionsPages(ctx context.Context, conn *sfn.Client, input 
 	for {
 		output, err := conn.ListStateMachineVersions(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

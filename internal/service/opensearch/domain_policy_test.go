@@ -21,6 +21,7 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
 	ri := sdkacctest.RandInt()
+	resourceName := "aws_opensearch_domain_policy.test"
 	policy := `{
     "Version": "2012-10-17",
     "Statement": [
@@ -69,9 +70,14 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 						}
 						expectedPolicy := fmt.Sprintf(expectedPolicyTpl, expectedArn)
 
-						return testAccCheckPolicyMatch("aws_opensearch_domain_policy.test", "access_policies", expectedPolicy)(s)
+						return testAccCheckPolicyMatch(resourceName, "access_policies", expectedPolicy)(s)
 					},
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -95,7 +101,7 @@ func testAccCheckPolicyMatch(resource, attr, expectedPolicy string) resource.Tes
 
 		areEquivalent, err := awspolicy.PoliciesAreEquivalent(given, expectedPolicy)
 		if err != nil {
-			return fmt.Errorf("Comparing AWS Policies failed: %s", err)
+			return fmt.Errorf("Comparing AWS Policies failed: %w", err)
 		}
 
 		if !areEquivalent {

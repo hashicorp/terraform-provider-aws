@@ -377,7 +377,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluste
 		}
 		resp, err := conn.DescribeClusters(ctx, &input)
 		if err != nil {
-			return fmt.Errorf("DAX error: %v", err)
+			return fmt.Errorf("DAX error: %w", err)
 		}
 
 		for _, c := range resp.Clusters {

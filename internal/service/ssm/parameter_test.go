@@ -6,6 +6,7 @@ package ssm_test
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -229,6 +230,114 @@ func TestAccSSMParameter_writeOnly(t *testing.T) {
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					testAccCheckParameterWriteOnlyValueEqual(t, &param, "testUpdated"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_changeValueToWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_changeValueToWriteOnly1(rName, "SecureString", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(ctx, resourceName, &param),
+				),
+			},
+			{
+				Config: testAccParameterConfig_changeValueToWriteOnly2(rName, "SecureString", "testUpdated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(ctx, resourceName, &param),
+					testAccCheckParameterWriteOnlyValueEqual(t, &param, "testUpdated"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("has_value_wo"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("value_wo_version"),
+						knownvalue.NumberFunc(func(v *big.Float) error {
+							if v.IsInt() {
+								if v == nil {
+									return fmt.Errorf("version is nil")
+								}
+								if v.Cmp(big.NewFloat(0)) <= 0 { // Si v <= 0
+									return fmt.Errorf("expected version to be greater than 0, got %s", v.String())
+								}
+								return nil
+							} else {
+								return fmt.Errorf("expected version to be an int value")
+							}
+						})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("value_wo"), knownvalue.Null()),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("has_value_wo")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("value_wo_version")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("value_wo"), knownvalue.Null()),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				Config: testAccParameterConfig_changeValueToWriteOnly1(rName, "SecureString", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(ctx, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("has_value_wo"),
+						knownvalue.Bool(false),
+					),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("value_wo_version"),
+						knownvalue.NumberExact(big.NewFloat(float64(0))),
+					),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("value_wo"), knownvalue.Null()),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("has_value_wo")),
+						plancheck.ExpectKnownValue(
+							resourceName,
+							tfjsonpath.New("value_wo_version"),
+							knownvalue.Null(),
+						),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("value_wo"), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("insecure_value"), knownvalue.Null()),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrValue)),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrVersion)),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1594,4 +1703,45 @@ resource "aws_ssm_parameter" "test" {
   value_wo_version = %[3]d
 }
 `, rName, value, valueVersion)
+}
+
+func testAccParameterConfig_changeValueToWriteOnly1(rName, typ, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "prereq" {
+  name  = "%[1]s-prereq"
+  type  = %[2]q
+  value = %[3]q
+}
+
+data "aws_ssm_parameter" "prereq" {
+  name = aws_ssm_parameter.prereq.name
+}
+
+resource "aws_ssm_parameter" "test" {
+  name  = %[1]q
+  type  = %[2]q
+  value = data.aws_ssm_parameter.prereq.value
+}
+`, rName, typ, value)
+}
+
+func testAccParameterConfig_changeValueToWriteOnly2(rName, typ, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "prereq" {
+  name  = "%[1]s-prereq"
+  type  = %[2]q
+  value = %[3]q
+}
+
+data "aws_ssm_parameter" "prereq" {
+  name = aws_ssm_parameter.prereq.name
+}
+
+resource "aws_ssm_parameter" "test" {
+  name             = %[1]q
+  type             = %[2]q
+  value_wo         = data.aws_ssm_parameter.prereq.value
+  value_wo_version = data.aws_ssm_parameter.prereq.version
+}
+`, rName, typ, value)
 }

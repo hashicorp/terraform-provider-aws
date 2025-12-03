@@ -501,7 +501,7 @@ func retryTaskSetCreate(ctx context.Context, conn *ecs.Client, input *ecs.Create
 		timeout              = propagationTimeout + taskSetCreateTimeout
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateTaskSet(ctx, input)
 		},
 		func(err error) (bool, error) {

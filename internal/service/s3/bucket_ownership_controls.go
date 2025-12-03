@@ -24,16 +24,14 @@ import (
 )
 
 // @SDKResource("aws_s3_bucket_ownership_controls", name="Bucket Ownership Controls")
+// @IdentityAttribute("bucket")
+// @Testing(preIdentityVersion="v6.9.0")
 func resourceBucketOwnershipControls() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketOwnershipControlsCreate,
 		ReadWithoutTimeout:   resourceBucketOwnershipControlsRead,
 		UpdateWithoutTimeout: resourceBucketOwnershipControlsUpdate,
 		DeleteWithoutTimeout: resourceBucketOwnershipControlsDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrBucket: {
@@ -163,7 +161,7 @@ func resourceBucketOwnershipControlsDelete(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Bucket Ownership Controls: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteBucketOwnershipControls(ctx, &s3.DeleteBucketOwnershipControlsInput{
 			Bucket: aws.String(bucket),
 		})

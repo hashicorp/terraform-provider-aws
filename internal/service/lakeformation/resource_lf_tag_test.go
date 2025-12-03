@@ -44,7 +44,7 @@ func testAccResourceLFTag_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -76,7 +76,7 @@ func testAccResourceLFTag_table(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -107,7 +107,7 @@ func testAccResourceLFTag_tableWithColumns(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -138,7 +138,7 @@ func testAccResourceLFTag_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

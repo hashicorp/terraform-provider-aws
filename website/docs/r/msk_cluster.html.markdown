@@ -104,7 +104,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 
 resource "aws_msk_cluster" "example" {
   cluster_name           = "example"
-  kafka_version          = "3.2.0"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -175,7 +175,7 @@ output "bootstrap_brokers_tls" {
 ```terraform
 resource "aws_msk_cluster" "example" {
   cluster_name           = "example"
-  kafka_version          = "2.7.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -204,16 +204,17 @@ resource "aws_msk_cluster" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `broker_node_group_info` - (Required) Configuration block for the broker nodes of the Kafka cluster.
+* `broker_node_group_info` - (Required) Configuration block for the broker nodes of the Kafka cluster. See [broker_node_group_info Argument Reference](#broker_node_group_info-argument-reference) below.
 * `cluster_name` - (Required) Name of the MSK cluster.
 * `kafka_version` - (Required) Specify the desired Kafka software version.
 * `number_of_broker_nodes` - (Required) The desired total number of broker nodes in the kafka cluster.  It must be a multiple of the number of specified client subnets.
-* `client_authentication` - (Optional) Configuration block for specifying a client authentication. See below.
-* `configuration_info` - (Optional) Configuration block for specifying a MSK Configuration to attach to Kafka brokers. See below.
-* `encryption_info` - (Optional) Configuration block for specifying encryption. See below.
+* `client_authentication` - (Optional) Configuration block for specifying a client authentication. See [client_authentication Argument Reference](#client_authentication-argument-reference) below.
+* `configuration_info` - (Optional) Configuration block for specifying an MSK Configuration to attach to Kafka brokers. See [configuration_info Argument Reference](#configuration_info-argument-reference) below.
+* `encryption_info` - (Optional) Configuration block for specifying encryption. See [encryption_info Argument Reference](#encryption_info-argument-reference) below.
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level. See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
-* `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See below.
-* `logging_info` - (Optional) Configuration block for streaming broker logs to Cloudwatch/S3/Kinesis Firehose. See below.
+* `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See [open_monitoring Argument Reference](#open_monitoring-argument-reference) below.
+* `logging_info` - (Optional) Configuration block for streaming broker logs to Cloudwatch/S3/Kinesis Firehose. See [logging_info Argument Reference](#logging_info-argument-reference) below.
+* `rebalancing` - (Optional) Configuration block for intelligent rebalancing. See [rebalancing Argument Reference](#rebalancing-argument-reference) below. Only applicable to MSK Provisioned clusters with Express brokers.
 * `storage_mode` - (Optional) Controls storage mode for supported storage tiers. Valid values are: `LOCAL` or `TIERED`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -222,14 +223,14 @@ This resource supports the following arguments:
 * `client_subnets` - (Required) A list of subnets to connect to in client VPC ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-prop-brokernodegroupinfo-clientsubnets)).
 * `instance_type` - (Required) Specify the instance type to use for the kafka brokersE.g., kafka.m5.large. ([Pricing info](https://aws.amazon.com/msk/pricing/))
 * `security_groups` - (Required) A list of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
-* `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently the only valid value is `DEFAULT`.
-* `connectivity_info` - (Optional) Information about the cluster access configuration. See below. For security reasons, you can't turn on public access while creating an MSK cluster. However, you can update an existing cluster to make it publicly accessible. You can also create a new cluster and then update it to make it publicly accessible ([documentation](https://docs.aws.amazon.com/msk/latest/developerguide/public-access.html)).
-* `storage_info` - (Optional) A block that contains information about storage volumes attached to MSK broker nodes. See below.
+* `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently, the only valid value is `DEFAULT`.
+* `connectivity_info` - (Optional) Information about the cluster access configuration. See [broker_node_group_info connectivity_info Argument Reference](#broker_node_group_info-connectivity_info-argument-reference) below. For security reasons, you can't turn on public access while creating an MSK cluster. However, you can update an existing cluster to make it publicly accessible. You can also create a new cluster and then update it to make it publicly accessible ([documentation](https://docs.aws.amazon.com/msk/latest/developerguide/public-access.html)).
+* `storage_info` - (Optional) A block that contains information about storage volumes attached to MSK broker nodes. See [broker_node_group_info storage_info Argument Reference](#broker_node_group_info-storage_info-argument-reference) below.
 
 ### broker_node_group_info connectivity_info Argument Reference
 
-* `public_access` - (Optional) Access control settings for brokers. See below.
-* `vpc_connectivity` - (Optional) VPC connectivity access control for brokers. See below.
+* `public_access` - (Optional) Access control settings for brokers. See [connectivity_info public_access Argument Reference](#connectivity_info-public_access-argument-reference) below.
+* `vpc_connectivity` - (Optional) VPC connectivity access control for brokers. See [connectivity_info vpc_connectivity Argument Reference](#connectivity_info-vpc_connectivity-argument-reference) below.
 
 ### connectivity_info public_access Argument Reference
 
@@ -237,11 +238,11 @@ This resource supports the following arguments:
 
 ### connectivity_info vpc_connectivity Argument Reference
 
-* `client_authentication` - (Optional) Includes all client authentication information for VPC connectivity. See below.
+* `client_authentication` - (Optional) Includes all client authentication information for VPC connectivity. See [vpc_connectivity client_authentication Argument Reference](#vpc_connectivity-client_authentication-argument-reference) below.
 
 ### vpc_connectivity client_authentication Argument Reference
 
-* `sasl` - (Optional) SASL authentication type details for VPC connectivity. See below.
+* `sasl` - (Optional) SASL authentication type details for VPC connectivity. See [vpc_connectivity client_authentication sasl Argument Reference](#vpc_connectivity-client_authentication-sasl-argument-reference) below.
 * `tls` - (Optional) Enables TLS authentication for VPC connectivity.
 
 ### vpc_connectivity client_authentication sasl Argument Reference
@@ -251,11 +252,11 @@ This resource supports the following arguments:
 
 ### broker_node_group_info storage_info Argument Reference
 
-* `ebs_storage_info` - (Optional) A block that contains EBS volume information. See below.
+* `ebs_storage_info` - (Optional) A block that contains EBS volume information. See [storage_info ebs_storage_info Argument Reference](#storage_info-ebs_storage_info-argument-reference) below.
 
 ### storage_info ebs_storage_info Argument Reference
 
-* `provisioned_throughput` - (Optional) A block that contains EBS volume provisioned throughput information. To provision storage throughput, you must choose broker type kafka.m5.4xlarge or larger. See below.
+* `provisioned_throughput` - (Optional) A block that contains EBS volume provisioned throughput information. To provision storage throughput, you must choose broker type kafka.m5.4xlarge or larger. See [ebs_storage_info provisioned_throughput Argument Reference](#ebs_storage_info-provisioned_throughput-argument-reference) below.
 * `volume_size` - (Optional) The size in GiB of the EBS volume for the data drive on each broker node. Minimum value of `1` and maximum value of `16384`.
 
 ### ebs_storage_info provisioned_throughput Argument Reference
@@ -265,8 +266,8 @@ This resource supports the following arguments:
 
 ### client_authentication Argument Reference
 
-* `sasl` - (Optional) Configuration block for specifying SASL client authentication. See below.
-* `tls` - (Optional) Configuration block for specifying TLS client authentication. See below.
+* `sasl` - (Optional) Configuration block for specifying SASL client authentication. See [client_authentication sasl Argument Reference](#client_authentication-sasl-argument-reference) below.
+* `tls` - (Optional) Configuration block for specifying TLS client authentication. See [client_authentication tls Argument Reference](#client_authentication-tls-argument-reference) below.
 * `unauthenticated` - (Optional) Enables unauthenticated access.
 
 #### client_authentication sasl Argument Reference
@@ -285,7 +286,7 @@ This resource supports the following arguments:
 
 ### encryption_info Argument Reference
 
-* `encryption_in_transit` - (Optional) Configuration block to specify encryption in transit. See below.
+* `encryption_in_transit` - (Optional) Configuration block to specify encryption in transit. See [encryption_info encryption_in_transit Argument Reference](#encryption_info-encryption_in_transit-argument-reference) below.
 * `encryption_at_rest_kms_key_arn` - (Optional) You may specify a KMS key short ID or ARN (it will always output an ARN) to use for encrypting your data at rest.  If no key is specified, an AWS managed KMS ('aws/msk' managed service) key will be used for encrypting the data at rest.
 
 #### encryption_info encryption_in_transit Argument Reference
@@ -295,12 +296,12 @@ This resource supports the following arguments:
 
 #### open_monitoring Argument Reference
 
-* `prometheus` - (Required) Configuration block for Prometheus settings for open monitoring. See below.
+* `prometheus` - (Required) Configuration block for Prometheus settings for open monitoring. See [open_monitoring prometheus Argument Reference](#open_monitoring-prometheus-argument-reference) below.
 
 #### open_monitoring prometheus Argument Reference
 
-* `jmx_exporter` - (Optional) Configuration block for JMX Exporter. See below.
-* `node_exporter` - (Optional) Configuration block for Node Exporter. See below.
+* `jmx_exporter` - (Optional) Configuration block for JMX Exporter. See [open_monitoring prometheus jmx_exporter Argument Reference](#open_monitoring-prometheus-jmx_exporter-argument-reference) below.
+* `node_exporter` - (Optional) Configuration block for Node Exporter. See [open_monitoring prometheus node_exporter Argument Reference](#open_monitoring-prometheus-node_exporter-argument-reference) below.
 
 #### open_monitoring prometheus jmx_exporter Argument Reference
 
@@ -312,7 +313,13 @@ This resource supports the following arguments:
 
 #### logging_info Argument Reference
 
-* `broker_logs` - (Required) Configuration block for Broker Logs settings for logging info. See below.
+* `broker_logs` - (Required) Configuration block for Broker Logs settings for logging info. See [logging_info broker_logs Argument Reference](#logging_info-broker_logs-argument-reference) below.
+
+#### logging_info broker_logs Argument Reference
+
+* `cloudwatch_logs` - (Optional) Configuration block for Cloudwatch Logs settings. See [logging_info broker_logs cloudwatch_logs Argument Reference](#logging_info-broker_logs-cloudwatch_logs-argument-reference) below.
+* `firehose` - (Optional) Configuration block for Kinesis Data Firehose settings. See [logging_info broker_logs firehose Argument Reference](#logging_info-broker_logs-firehose-argument-reference) below.
+* `s3` - (Optional) Configuration block for S3 settings. See [logging_info broker_logs s3 Argument Reference](#logging_info-broker_logs-s3-argument-reference) below.
 
 #### logging_info broker_logs cloudwatch_logs Argument Reference
 
@@ -329,6 +336,12 @@ This resource supports the following arguments:
 * `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to S3.
 * `bucket` - (Optional) Name of the S3 bucket to deliver logs to.
 * `prefix` - (Optional) Prefix to append to the folder name.
+
+### rebalancing Argument Reference
+
+* `status` - (Required) The status of intelligent rebalancing. Valid values: `ACTIVE`, `PAUSED`. Default is `ACTIVE` for new Express-based clusters.
+
+~> **NOTE:** Intelligent rebalancing is only available for MSK Provisioned clusters with Express brokers. When enabled, you cannot use third-party rebalancing tools such as Cruise Control. See [AWS MSK Intelligent Rebalancing](https://docs.aws.amazon.com/msk/latest/developerguide/intelligent-rebalancing.html) for more information.
 
 ## Attribute Reference
 

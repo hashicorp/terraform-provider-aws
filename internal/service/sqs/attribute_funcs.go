@@ -49,7 +49,7 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 
 	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutCreate))
 
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate)/2, func(ctx context.Context) (any, error) {
 		return conn.SetQueueAttributes(ctx, input)
 	}, errCodeInvalidAttributeValue, "Invalid value for the parameter Policy")
 

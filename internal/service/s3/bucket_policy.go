@@ -23,16 +23,14 @@ import (
 )
 
 // @SDKResource("aws_s3_bucket_policy", name="Bucket Policy")
+// @IdentityAttribute("bucket")
+// @Testing(preIdentityVersion="v6.9.0")
 func resourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPolicyPut,
 		ReadWithoutTimeout:   resourceBucketPolicyRead,
 		UpdateWithoutTimeout: resourceBucketPolicyPut,
 		DeleteWithoutTimeout: resourceBucketPolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrBucket: {
@@ -63,7 +61,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta a
 		Policy: aws.String(policy),
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketPolicy(ctx, input)
 	}, errCodeMalformedPolicy, errCodeNoSuchBucket)
 

@@ -89,7 +89,7 @@ func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.Resource
 		TTL:                  aws.Int64(int64(d.Get("ttl").(int))),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchTrafficPolicy](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.NoSuchTrafficPolicy](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateTrafficPolicyInstance(ctx, input)
 	})
 

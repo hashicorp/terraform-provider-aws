@@ -16,12 +16,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccServiceCatalogProduct_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -215,6 +216,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 
 func TestAccServiceCatalogProduct_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -284,6 +286,7 @@ func TestAccServiceCatalogProduct_tags_null(t *testing.T) {
 
 func TestAccServiceCatalogProduct_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -349,6 +352,7 @@ func TestAccServiceCatalogProduct_tags_EmptyMap(t *testing.T) {
 
 func TestAccServiceCatalogProduct_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -434,6 +438,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnCreate(t *testing.T) {
 	t.Skip("Resource Product does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -530,6 +535,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	t.Skip("Resource Product does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -674,6 +680,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	t.Skip("Resource Product does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -765,6 +772,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 
 func TestAccServiceCatalogProduct_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -957,6 +965,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_providerOnly(t *testing.T) {
 
 func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1125,6 +1134,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 
 func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1309,6 +1319,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 
 func TestAccServiceCatalogProduct_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1401,6 +1412,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_updateToProviderOnly(t *testi
 
 func TestAccServiceCatalogProduct_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1494,6 +1506,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_emptyResourceTag(t *testing.T
 	t.Skip("Resource Product does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1563,6 +1576,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_emptyProviderOnlyTag(t *testi
 	t.Skip("Resource Product does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1622,6 +1636,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_emptyProviderOnlyTag(t *testi
 
 func TestAccServiceCatalogProduct_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1686,6 +1701,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nullOverlappingResourceTag(t 
 
 func TestAccServiceCatalogProduct_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1750,6 +1766,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nullNonOverlappingResourceTag
 
 func TestAccServiceCatalogProduct_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1807,6 +1824,7 @@ func TestAccServiceCatalogProduct_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func TestAccServiceCatalogProduct_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1906,6 +1924,7 @@ func TestAccServiceCatalogProduct_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 
 func TestAccServiceCatalogProduct_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1995,6 +2014,7 @@ func TestAccServiceCatalogProduct_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 
 func TestAccServiceCatalogProduct_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -2156,6 +2176,7 @@ func TestAccServiceCatalogProduct_tags_IgnoreTags_Overlap_DefaultTag(t *testing.
 
 func TestAccServiceCatalogProduct_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_servicecatalog_product.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -2358,7 +2379,7 @@ func TestAccServiceCatalogProduct_tags_IgnoreTags_Overlap_ResourceTag(t *testing
 }
 
 func expectFullProductResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Product",
 	}), knownValue)

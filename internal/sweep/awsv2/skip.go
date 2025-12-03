@@ -45,6 +45,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "HttpConnectionTimeoutException", "Failed to connect to") {
 		return true
 	}
+	// Example (amp): InternalServerErrorException: Internal server error
+	if tfawserr.ErrMessageContains(err, "InternalServerErrorException", "Internal server error") {
+		return true
+	}
 	// Example (GovCloud): InvalidAction: DescribeDBProxies is not available in this region
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not available") {
 		return true
@@ -90,12 +94,20 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
 		return true
 	}
+	// Example (GovCloud): InvalidParameterException: The DATA_PROTECTION_POLICY policy type is not supported in this region
+	if tfawserr.ErrMessageContains(err, "InvalidParameterException", "DATA_PROTECTION_POLICY policy type is not supported in this region") {
+		return true
+	}
 	// Example (GovCloud): The AppStream 2.0 user pool feature is not supported in the us-gov-west-1 AWS Region
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "feature is not supported") {
 		return true
 	}
 	// Example (GovCloud): InvalidParameterValueException: This API operation is currently unavailable
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "This API operation is currently unavailable") {
+		return true
+	}
+	// Example (GovCloud): InvalidSignatureException: Credential should be scoped to a valid region
+	if tfawserr.ErrMessageContains(err, "InvalidSignatureException", "Credential should be scoped to a valid region") {
 		return true
 	}
 	// For example from us-west-2 Route53 zone
@@ -108,6 +120,10 @@ func SkipSweepError(err error) bool {
 	}
 	// Example (shield): ResourceNotFoundException: The subscription does not exist
 	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "The subscription does not exist") {
+		return true
+	}
+	// Example (GovCloud): SignatureDoesNotMatch: Credential should be scoped to a valid region
+	if tfawserr.ErrMessageContains(err, "SignatureDoesNotMatch", "Credential should be scoped to a valid region") {
 		return true
 	}
 	// For example from us-gov-east-1 IoT domain configuration
@@ -128,6 +144,10 @@ func SkipSweepError(err error) bool {
 	}
 	//  Example (ec2): UnsupportedOperation: The functionality you requested is not available in this region
 	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not available in this region") {
+		return true
+	}
+	//  Example (fsx): UnsupportedOperation: This operation is unsupported.
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "This operation is unsupported") {
 		return true
 	}
 	// For example from us-west-1 EMR studio

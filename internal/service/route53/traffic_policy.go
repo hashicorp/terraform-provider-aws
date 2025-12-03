@@ -102,7 +102,7 @@ func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Comment = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchTrafficPolicy](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.NoSuchTrafficPolicy](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateTrafficPolicy(ctx, input)
 	})
 

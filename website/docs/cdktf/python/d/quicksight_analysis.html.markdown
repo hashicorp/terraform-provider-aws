@@ -37,9 +37,9 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `analysis_id` - (Required) Identifier for the analysis.
-* `aws_account_id` - (Optional) AWS account ID.
+* `aws_account_id` - (Optional) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 See the [Analysis Resource](/docs/providers/aws/r/quicksight_analysis.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.8 input-09ea9a4493089128bff39a9874634b0500c1b6ae8d351f9b04f0e818f3c2c66e -->
+<!-- cache-key: cdktf-0.20.8 input-eab5e5661d91db3aac27d11b403adf6b9355bbda704e44df1620b20954bd6a7f -->

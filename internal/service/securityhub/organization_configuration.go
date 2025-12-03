@@ -93,7 +93,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	}
 
 	// e.g. "DataUnavailableException: Central configuration couldn't be enabled because data from organization o-ira6i4k380 is still syncing. Retry later."
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateOrganizationConfiguration(ctx, input)
 	}, errCodeDataUnavailableException, "Retry later")
 

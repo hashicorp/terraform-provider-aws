@@ -91,11 +91,11 @@ func TestListNestedObjectTypeOfValueFromTerraform(t *testing.T) {
 		},
 		"valid value": {
 			tfVal:   objectAListValue,
-			wantVal: fwtypes.NewListNestedObjectValueOfPtrMust[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &objectA),
 		},
 		"invalid Terraform value": {
 			tfVal:   objectBListValue,
-			wantVal: fwtypes.NewListNestedObjectValueOfPtrMust[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &objectA),
 			wantErr: true,
 		},
 	}

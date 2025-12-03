@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -51,16 +51,14 @@ var routeTableValidTargets = []string{
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.RouteTable")
 // @Testing(generator=false)
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.9.0")
 func resourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableCreate,
 		ReadWithoutTimeout:   resourceRouteTableRead,
 		UpdateWithoutTimeout: resourceRouteTableUpdate,
 		DeleteWithoutTimeout: resourceRouteTableDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -393,7 +391,7 @@ func resourceRouteTableHash(v any) int {
 	}
 
 	if v, ok := m["ipv6_cidr_block"]; ok {
-		fmt.Fprintf(&buf, "%s-", itypes.CanonicalCIDRBlock(v.(string)))
+		fmt.Fprintf(&buf, "%s-", inttypes.CanonicalCIDRBlock(v.(string)))
 	}
 
 	if v, ok := m[names.AttrCIDRBlock]; ok {
@@ -487,7 +485,7 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 		// created by AWS so probably doesn't need a retry but just to be sure
 		// we provide a small one
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, time.Second*15,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return routeFinder(ctx, conn, routeTableID, destination)
 			},
 			errCodeInvalidRouteNotFound,
@@ -505,7 +503,7 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateRoute(ctx, input)
 		},
 		errCodeInvalidParameterException,
@@ -636,7 +634,7 @@ func routeTableEnableVGWRoutePropagation(ctx context.Context, conn *ec2.Client, 
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.EnableVgwRoutePropagation(ctx, input)
 		},
 		errCodeGatewayNotAttached,

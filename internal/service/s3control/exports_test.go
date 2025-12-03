@@ -23,7 +23,7 @@ var (
 	ResourceStorageLensConfiguration           = resourceStorageLensConfiguration
 
 	FindAccessGrantByTwoPartKey                            = findAccessGrantByTwoPartKey
-	FindAccessGrantsInstance                               = findAccessGrantsInstance
+	FindAccessGrantsInstanceByID                           = findAccessGrantsInstanceByID
 	FindAccessGrantsInstanceResourcePolicy                 = findAccessGrantsInstanceResourcePolicy
 	FindAccessGrantsLocationByTwoPartKey                   = findAccessGrantsLocationByTwoPartKey
 	FindAccessPointByTwoPartKey                            = findAccessPointByTwoPartKey
