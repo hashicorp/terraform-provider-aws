@@ -64,6 +64,7 @@ func resourceZone() *schema.Resource {
 			"enable_accelerated_recovery": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
