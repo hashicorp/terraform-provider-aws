@@ -103,7 +103,7 @@ func resourceTransitGateway() *schema.Resource {
 			"encryption_support": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          awstypes.EncryptionSupportOptionValueDisable,
+				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.EncryptionSupportOptionValue](),
 			},
 			"multicast_support": {
