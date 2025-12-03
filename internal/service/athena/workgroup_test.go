@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -688,7 +689,7 @@ func TestAccAthenaWorkGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAthenaWorkGroup_ManagedQueryResultsConfigurationEnabled(t *testing.T) {
+func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workgroup1, workGroup2 types.WorkGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -701,7 +702,7 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfigurationEnabled(t *testing.T
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfig_managedQueryResultsConfigurationEnabled(rName, true),
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration_Enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -710,19 +711,24 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfigurationEnabled(t *testing.T
 				),
 			},
 			{
-				Config: testAccWorkGroupConfig_managedQueryResultsConfigurationEnabled(rName, false),
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration_Enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workGroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func TestAccAthenaWorkGroup_ManagedQueryResultsConfigurationUpdate(t *testing.T) {
+func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workgroup1, workgroup2, workgroup3 types.WorkGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -735,7 +741,7 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfigurationUpdate(t *testing.T)
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfig_configurationManagedQueryResultsConfiguration(rName),
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -751,7 +757,7 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfigurationUpdate(t *testing.T)
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config: testAccWorkGroupConfig_withOutputLocation(rName),
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration_OutputLocation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -759,9 +765,14 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfigurationUpdate(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
-				Config: testAccWorkGroupConfig_configurationManagedQueryResultsConfiguration(rName),
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup3),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -769,6 +780,11 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfigurationUpdate(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -780,7 +796,7 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfigurationUpdate(t *testing.T)
 	})
 }
 
-func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_EncryptionConfigurationUpdate(t *testing.T) {
+func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_EncryptionConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workgroup1, workgroup2, workgroup3 types.WorkGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -793,7 +809,7 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_EncryptionConfigura
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfig_configurationManagedQueryResultsConfiguration(rName),
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -809,7 +825,7 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_EncryptionConfigura
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config: testAccWorkGroupConfig_configurationManagedQueryResultsConfigurationNoEncryption(rName, true),
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration_EncryptionConfiguration_removed(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -817,9 +833,14 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_EncryptionConfigura
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
-				Config: testAccWorkGroupConfig_configurationManagedQueryResultsConfiguration(rName),
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup3),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -827,6 +848,11 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_EncryptionConfigura
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -838,7 +864,7 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_EncryptionConfigura
 	})
 }
 
-func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_conflictWithOutputLocation(t *testing.T) {
+func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_conflictValidation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -849,7 +875,7 @@ func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_conflictWithOutputL
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWorkGroupConfig_managedQueryResultsConflict(rName),
+				Config:      testAccWorkGroupConfig_ManagedQueryResultsConfiguration_conflictValidation(rName),
 				ExpectError: regexache.MustCompile(`output_location cannot be specified when.*enabled is true`),
 			},
 		},
@@ -1196,7 +1222,7 @@ resource "aws_athena_database" "test" {
 `, rName, dbName)
 }
 
-func testAccWorkGroupConfig_managedQueryResultsConfigurationEnabled(rName string, enabled bool) string {
+func testAccWorkGroupConfig_ManagedQueryResultsConfiguration_Enabled(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
@@ -1210,7 +1236,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, enabled)
 }
 
-func testAccWorkGroupConfig_configurationManagedQueryResultsConfiguration(rName string) string {
+func testAccWorkGroupConfig_ManagedQueryResultsConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -1233,7 +1259,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName)
 }
 
-func testAccWorkGroupConfig_configurationManagedQueryResultsConfigurationNoEncryption(rName string, enabled bool) string {
+func testAccWorkGroupConfig_ManagedQueryResultsConfiguration_EncryptionConfiguration_removed(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -1253,30 +1279,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, enabled)
 }
 
-func testAccWorkGroupConfig_managedQueryResultsConflict(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_athena_workgroup" "test" {
-  name = %[1]q
-
-  configuration {
-    managed_query_results_configuration {
-      enabled = true
-    }
-
-    result_configuration {
-      output_location = "s3://${aws_s3_bucket.test.bucket}/"
-    }
-  }
-}
-`, rName)
-}
-
-func testAccWorkGroupConfig_withOutputLocation(rName string) string {
+func testAccWorkGroupConfig_ManagedQueryResultsConfiguration_OutputLocation(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -1299,6 +1302,29 @@ resource "aws_athena_workgroup" "test" {
 
     result_configuration {
       output_location = "s3://${aws_s3_bucket.test.bucket}/output/"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccWorkGroupConfig_ManagedQueryResultsConfiguration_conflictValidation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    managed_query_results_configuration {
+      enabled = true
+    }
+
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.bucket}/"
     }
   }
 }
