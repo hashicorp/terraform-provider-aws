@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -3125,7 +3126,13 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 		}
 	}
 
-	if v, ok := d.GetOk("global_secondary_index"); ok {
+	config := d.GetRawConfig()
+	hasConfiguredGsi := false
+	if config.IsKnown() {
+		hasConfiguredGsi = config.GetAttr("global_secondary_index").AsValueSet().Length() > 0
+	}
+
+	if v, ok := d.GetOk("global_secondary_index"); ok && hasConfiguredGsi {
 		indexes := v.(*schema.Set).List()
 		for _, idx := range indexes {
 			index := idx.(map[string]any)
@@ -3141,7 +3148,12 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 
 	// validate against remote as well, because we're using the remote state as a bridge between the table and gsi resources
 	remoteGSIAttributes := map[string]bool{}
-	if table, err := findTableByName(ctx, conn, d.Get(names.AttrName).(string)); err == nil && table != nil {
+	table, err := findTableByName(ctx, conn, d.Get(names.AttrName).(string))
+	if err != nil && !retry.NotFound(err) {
+		return err
+	}
+
+	if table != nil {
 		for _, g := range table.GlobalSecondaryIndexes {
 			for _, ks := range g.KeySchema {
 				remoteGSIAttributes[aws.ToString(ks.AttributeName)] = true
@@ -3151,7 +3163,20 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 	}
 
 	// Check if all indexed attributes have an attribute definition
-	attributes := d.Get("attribute").(*schema.Set).List()
+	var attributes []any
+	if hasConfiguredGsi {
+		vals := d.GetRawConfig().GetAttr("attribute").AsValueSet().Values()
+		for _, v := range vals {
+			attr := map[string]any{}
+			for k, v := range v.AsValueMap() {
+				attr[k] = v.AsString()
+			}
+			attributes = append(attributes, attr)
+		}
+	} else {
+		attributes = d.Get("attribute").(*schema.Set).List()
+	}
+
 	unindexedAttributes := []string{}
 	for _, attr := range attributes {
 		attribute := attr.(map[string]any)

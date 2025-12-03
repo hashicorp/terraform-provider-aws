@@ -6,6 +6,7 @@ package dynamodb
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -625,7 +627,12 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 	conn := r.Meta().DynamoDBClient(ctx)
 
-	_, err := waitAllGSIActive(ctx, conn, data.TableName.ValueString(), deleteTimeout)
+	table, err := waitAllGSIActive(ctx, conn, data.TableName.ValueString(), deleteTimeout)
+	// attempt early exit if owning table is already in deleting state
+	if table != nil && table.TableStatus == awstypes.TableStatusDeleting {
+		return
+	}
+
 	if err != nil {
 		if retry.NotFound(err) {
 			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -651,7 +658,17 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 		},
 	}
 
-	if _, err = conn.UpdateTable(ctx, ut); err != nil {
+	if res, err := conn.UpdateTable(ctx, ut); err != nil {
+		// exit if owning table is already in deleting state
+		if res != nil && res.TableDescription != nil && res.TableDescription.TableStatus == awstypes.TableStatusDeleting {
+			return
+		}
+
+		// exit if error says the table is being deleted
+		if err, ok := errs.As[*awstypes.ResourceInUseException](err); ok && err != nil && strings.Contains(err.Error(), "Table is being deleted") {
+			return
+		}
+
 		response.Diagnostics.AddError(
 			fmt.Sprintf(`Unable to delete index "%s" on table "%s"`, data.IndexName.ValueString(), data.TableName.ValueString()),
 			err.Error(),
@@ -663,6 +680,13 @@ func (r *resourceGlobalSecondaryIndex) Delete(ctx context.Context, request resou
 	if _, err := waitGSIDeleted(ctx, conn, data.TableName.ValueString(), data.IndexName.ValueString(), deleteTimeout); err != nil {
 		response.Diagnostics.AddError(
 			fmt.Sprintf(`Error while waiting for GSI "%s" on table "%s" to be deleted`, data.IndexName.ValueString(), data.TableName.ValueString()),
+			err.Error(),
+		)
+	}
+
+	if _, err := waitTableActive(ctx, conn, data.TableName.ValueString(), deleteTimeout); err != nil {
+		response.Diagnostics.AddError(
+			fmt.Sprintf(`Error while waiting for "%s" to be active after delete`, data.TableName.ValueString()),
 			err.Error(),
 		)
 	}

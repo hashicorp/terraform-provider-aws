@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	retryinternal "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -137,7 +138,7 @@ func statusAllGSI(ctx context.Context, conn *dynamodb.Client, tableName string) 
 	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName)
 
-		if tfresource.NotFound(err) {
+		if retryinternal.NotFound(err) {
 			return nil, "", nil
 		}
 
