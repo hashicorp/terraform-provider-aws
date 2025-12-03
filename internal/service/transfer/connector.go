@@ -5,7 +5,7 @@ package transfer
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
 	"time"
 
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -105,6 +106,34 @@ func resourceConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"egress_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"vpc_lattice": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"port_number": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(1, 65535),
+									},
+									"resource_configuration_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"logging_role": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -142,34 +171,6 @@ func resourceConnector() *schema.Resource {
 					},
 				},
 			},
-			"egress_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"vpc_lattice": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"resource_configuration_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 2048),
-									},
-									"port_number": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 65535),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrURL: {
@@ -184,13 +185,9 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	input := &transfer.CreateConnectorInput{
+	input := transfer.CreateConnectorInput{
 		AccessRole: aws.String(d.Get("access_role").(string)),
 		Tags:       getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk(names.AttrURL); ok {
-		input.Url = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("as2_config"); ok {
@@ -213,7 +210,11 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.SftpConfig = expandSftpConnectorConfig(v.([]any))
 	}
 
-	output, err := conn.CreateConnector(ctx, input)
+	if v, ok := d.GetOk(names.AttrURL); ok {
+		input.Url = aws.String(v.(string))
+	}
+
+	output, err := conn.CreateConnector(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Transfer Connector: %s", err)
@@ -250,7 +251,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "setting as2_config: %s", err)
 	}
 	d.Set("connector_id", output.ConnectorId)
-	if err := d.Set("egress_config", flattenConnectorEgressConfig(output.EgressConfig)); err != nil {
+	if err := d.Set("egress_config", flattenDescribedConnectorEgressConfig(output.EgressConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting egress_config: %s", err)
 	}
 	d.Set("logging_role", output.LoggingRole)
@@ -270,7 +271,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &transfer.UpdateConnectorInput{
+		input := transfer.UpdateConnectorInput{
 			ConnectorId: aws.String(d.Id()),
 		}
 
@@ -302,7 +303,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			input.Url = aws.String(d.Get(names.AttrURL).(string))
 		}
 
-		_, err := conn.UpdateConnector(ctx, input)
+		_, err := conn.UpdateConnector(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Transfer Connector (%s): %s", d.Id(), err)
@@ -342,10 +343,14 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func findConnectorByID(ctx context.Context, conn *transfer.Client, id string) (*awstypes.DescribedConnector, error) {
-	input := &transfer.DescribeConnectorInput{
+	input := transfer.DescribeConnectorInput{
 		ConnectorId: aws.String(id),
 	}
 
+	return findConnector(ctx, conn, &input)
+}
+
+func findConnector(ctx context.Context, conn *transfer.Client, input *transfer.DescribeConnectorInput) (*awstypes.DescribedConnector, error) {
 	output, err := conn.DescribeConnector(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -453,9 +458,19 @@ func expandConnectorEgressConfig(tfList []any) awstypes.ConnectorEgressConfig {
 
 	tfMap := tfList[0].(map[string]any)
 
-	if v, ok := tfMap["vpc_lattice"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap["vpc_lattice"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+
+		apiObject := awstypes.ConnectorVpcLatticeEgressConfig{
+			ResourceConfigurationArn: aws.String(tfMap["resource_configuration_arn"].(string)),
+		}
+
+		if v, ok := tfMap["port_number"].(int); ok && v > 0 {
+			apiObject.PortNumber = aws.Int32(int32(v))
+		}
+
 		return &awstypes.ConnectorEgressConfigMemberVpcLattice{
-			Value: *expandConnectorVPCLatticeEgressConfig(v),
+			Value: apiObject,
 		}
 	}
 
@@ -469,52 +484,26 @@ func expandUpdateConnectorEgressConfig(tfList []any) awstypes.UpdateConnectorEgr
 
 	tfMap := tfList[0].(map[string]any)
 
-	if v, ok := tfMap["vpc_lattice"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap["vpc_lattice"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+
+		apiObject := awstypes.UpdateConnectorVpcLatticeEgressConfig{
+			ResourceConfigurationArn: aws.String(tfMap["resource_configuration_arn"].(string)),
+		}
+
+		if v, ok := tfMap["port_number"].(int); ok && v > 0 {
+			apiObject.PortNumber = aws.Int32(int32(v))
+		}
+
 		return &awstypes.UpdateConnectorEgressConfigMemberVpcLattice{
-			Value: *expandUpdateConnectorVPCLatticeEgressConfig(v),
+			Value: apiObject,
 		}
 	}
 
 	return nil
 }
 
-func expandConnectorVPCLatticeEgressConfig(tfList []any) *awstypes.ConnectorVpcLatticeEgressConfig {
-	if len(tfList) < 1 || tfList[0] == nil {
-		return nil
-	}
-
-	tfMap := tfList[0].(map[string]any)
-
-	apiObject := &awstypes.ConnectorVpcLatticeEgressConfig{
-		ResourceConfigurationArn: aws.String(tfMap["resource_configuration_arn"].(string)),
-	}
-
-	if v, ok := tfMap["port_number"].(int); ok && v > 0 {
-		apiObject.PortNumber = aws.Int32(int32(v))
-	}
-
-	return apiObject
-}
-
-func expandUpdateConnectorVPCLatticeEgressConfig(tfList []any) *awstypes.UpdateConnectorVpcLatticeEgressConfig {
-	if len(tfList) < 1 || tfList[0] == nil {
-		return nil
-	}
-
-	tfMap := tfList[0].(map[string]any)
-
-	apiObject := &awstypes.UpdateConnectorVpcLatticeEgressConfig{
-		ResourceConfigurationArn: aws.String(tfMap["resource_configuration_arn"].(string)),
-	}
-
-	if v, ok := tfMap["port_number"].(int); ok && v > 0 {
-		apiObject.PortNumber = aws.Int32(int32(v))
-	}
-
-	return apiObject
-}
-
-func flattenConnectorEgressConfig(apiObject awstypes.DescribedConnectorEgressConfig) []any {
+func flattenDescribedConnectorEgressConfig(apiObject awstypes.DescribedConnectorEgressConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -579,7 +568,7 @@ func waitConnectorCreated(ctx context.Context, conn *transfer.Client, id string,
 
 	if output, ok := outputRaw.(*awstypes.DescribedConnector); ok {
 		if output.Status == awstypes.ConnectorStatusErrored {
-			tfresource.SetLastError(err, fmt.Errorf("%s", aws.ToString(output.ErrorMessage)))
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err
@@ -600,7 +589,7 @@ func waitConnectorUpdated(ctx context.Context, conn *transfer.Client, id string,
 
 	if output, ok := outputRaw.(*awstypes.DescribedConnector); ok {
 		if output.Status == awstypes.ConnectorStatusErrored {
-			tfresource.SetLastError(err, fmt.Errorf("%s", aws.ToString(output.ErrorMessage)))
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err
@@ -621,7 +610,7 @@ func waitConnectorDeleted(ctx context.Context, conn *transfer.Client, id string,
 
 	if output, ok := outputRaw.(*awstypes.DescribedConnector); ok {
 		if output.Status == awstypes.ConnectorStatusErrored {
-			tfresource.SetLastError(err, fmt.Errorf("%s", aws.ToString(output.ErrorMessage)))
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err
