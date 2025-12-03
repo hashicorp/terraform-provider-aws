@@ -69,6 +69,7 @@ func testAccDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-directory-%[1]s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "tenancy", string(types.TenancyShared)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "ALLOW"),
@@ -1256,7 +1257,7 @@ func testAccDirectory_poolsWorkspaceCreationAD(t *testing.T) {
 	})
 }
 
-func testAccDirectory_dedicatedTenancy(t *testing.T) {
+func testAccDirectory_tenancy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
@@ -1282,7 +1283,7 @@ func testAccDirectory_dedicatedTenancy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workspace_type", "PERSONAL"),
 					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "AWS_DIRECTORY_SERVICE"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tenancy", "SHARED"),
+					resource.TestCheckResourceAttr(resourceName, "tenancy", string(types.TenancyShared)),
 				),
 			},
 			{
