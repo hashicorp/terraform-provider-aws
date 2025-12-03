@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -27,7 +27,7 @@ import (
 
 func TestAccEKSCapability_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var capability types.Capability
+	var capability awstypes.Capability
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
 
@@ -50,7 +50,11 @@ func TestAccEKSCapability_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("eks", regexache.MustCompile(`capability/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capability_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("delete_propagation_policy"), tfknownvalue.StringExact(awstypes.CapabilityDeletePropagationPolicyRetain)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.CapabilityTypeKro)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.NotNull()),
 				},
 			},
 			{
@@ -66,7 +70,7 @@ func TestAccEKSCapability_basic(t *testing.T) {
 
 func TestAccEKSCapability_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var capability types.Capability
+	var capability awstypes.Capability
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
 
@@ -98,7 +102,7 @@ func TestAccEKSCapability_disappears(t *testing.T) {
 
 func TestAccEKSCapability_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var capability types.Capability
+	var capability awstypes.Capability
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
 
@@ -170,7 +174,7 @@ func TestAccEKSCapability_tags(t *testing.T) {
 
 func TestAccEKSCapability_ArgoCD_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var capability types.Capability
+	var capability awstypes.Capability
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
 
@@ -208,7 +212,7 @@ func TestAccEKSCapability_ArgoCD_basic(t *testing.T) {
 
 func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 	ctx := acctest.Context(t)
-	var capability types.Capability
+	var capability awstypes.Capability
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_capability.test"
 	userID := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
@@ -257,7 +261,7 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 	})
 }
 
-func testAccCheckCapabilityExists(ctx context.Context, n string, v *types.Capability) resource.TestCheckFunc {
+func testAccCheckCapabilityExists(ctx context.Context, n string, v *awstypes.Capability) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
