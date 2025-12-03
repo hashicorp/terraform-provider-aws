@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3vectors "github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
