@@ -1256,12 +1256,13 @@ func testAccDirectory_poolsWorkspaceCreationAD(t *testing.T) {
 	})
 }
 
-func TestAccWorkSpacesDirectory_dedicatedTenancy(t *testing.T) {
+func testAccDirectory_dedicatedTenancy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
+	domain := acctest.RandomDomainName()
 
-	resourceName := "aws_workspaces_directory.pool"
+	resourceName := "aws_workspaces_directory.main"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -1275,11 +1276,12 @@ func TestAccWorkSpacesDirectory_dedicatedTenancy(t *testing.T) {
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfig_dedicatedTenancy(rName, "SHARED"),
+				Config: testAccDirectoryConfig_sharedTenancy(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "workspace_type", "POOLS"),
-					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "CUSTOMER_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_type", "PERSONAL"),
+					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "AWS_DIRECTORY_SERVICE"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "SHARED"),
 				),
 			},
@@ -1503,61 +1505,22 @@ resource "aws_workspaces_directory" "pool" {
 `, rName, domain))
 }
 
-func testAccDirectoryConfig_dedicatedTenancy(rName, tenancy string) string {
+func testAccDirectoryConfig_sharedTenancy(rName, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
-data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-
-locals {
-  region_workspaces_az_ids = {
-    "us-east-1" = formatlist("use1-az%%d", [2, 4, 6])
-  }
-
-  workspaces_az_ids = lookup(local.region_workspaces_az_ids, data.aws_region.current.region, data.aws_availability_zones.available.zone_ids)
-}
-
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+  tenancy = "SHARED"
 
   tags = {
     Name = "tf-testacc-workspaces-directory-%[1]s"
   }
 }
 
-resource "aws_subnet" "primary" {
-  vpc_id               = aws_vpc.main.id
-  availability_zone_id = local.workspaces_az_ids[0]
-  cidr_block           = "10.0.1.0/24"
-
-  tags = {
-    Name = "tf-testacc-workspaces-directory-%[1]s-primary"
-  }
+data "aws_iam_role" "workspaces-default" {
+  name = "workspaces_DefaultRole"
 }
-
-resource "aws_subnet" "secondary" {
-  vpc_id               = aws_vpc.main.id
-  availability_zone_id = local.workspaces_az_ids[1]
-  cidr_block           = "10.0.2.0/24"
-
-  tags = {
-    Name = "tf-testacc-workspaces-directory-%[1]s-secondary"
-  }
-}
-
-resource "aws_workspaces_directory" "pool" {
-  subnet_ids                      = [aws_subnet.primary.id, aws_subnet.secondary.id]
-  workspace_type                  = "POOLS"
-  workspace_directory_name        = "tf-testacc-workspaces-directory-%[1]s"
-  workspace_directory_description = "tf-testacc-workspaces-directory-%[1]s"
-  user_identity_type              = "CUSTOMER_MANAGED"
-  tenancy                         = %[2]q
-
-  tags = {
-    Name = "tf-testacc-workspaces-directory-%[1]s"
-  }
-}
-`, rName, tenancy))
+`, rName),
+	)
 }
