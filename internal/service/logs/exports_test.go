@@ -21,6 +21,7 @@ var (
 	ResourceResourcePolicy            = resourceResourcePolicy
 	ResourceStream                    = resourceStream
 	ResourceSubscriptionFilter        = resourceSubscriptionFilter
+	ResourceTransformer               = newTransformerResource
 
 	FindAccountPolicyByTwoPartKey                          = findAccountPolicyByTwoPartKey
 	FindDataProtectionPolicyByLogGroupName                 = findDataProtectionPolicyByLogGroupName
@@ -38,6 +39,7 @@ var (
 	FindQueryDefinitionByTwoPartKey                        = findQueryDefinitionByTwoPartKey
 	FindResourcePolicyByName                               = findResourcePolicyByName
 	FindSubscriptionFilterByTwoPartKey                     = findSubscriptionFilterByTwoPartKey
+	FindTransformerByLogGroupIdentifier                    = findTransformerByLogGroupIdentifier
 
 	TrimLogGroupARNWildcardSuffix          = trimLogGroupARNWildcardSuffix
 	ValidLogGroupName                      = validLogGroupName
