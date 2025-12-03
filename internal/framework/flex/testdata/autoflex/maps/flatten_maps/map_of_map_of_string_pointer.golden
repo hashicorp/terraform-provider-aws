@@ -1,0 +1,58 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapOfMapOfStringPointer",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapOfMapOfString"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapOfMapOfStringPointer",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapOfMapOfString"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field1",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsMapOfMapOfStringPointer",
+    "autoflex.target.fieldname": "Field1",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfMapOfMapOfString"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.type": "map[string]map[string]*string",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.MapValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening map",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.size": 1,
+    "autoflex.source.type": "map[string]map[string]*string",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.MapValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening with NewMapValueOf",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1[\"x\"]",
+    "autoflex.source.size": 1,
+    "autoflex.source.type": "map[string]*string",
+    "autoflex.target.path": "Field1[\"x\"]",
+    "autoflex.target.type": "map[string]github.com/hashicorp/terraform-plugin-framework/attr.Value"
+  }
+]

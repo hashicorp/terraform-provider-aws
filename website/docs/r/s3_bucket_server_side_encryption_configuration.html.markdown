@@ -12,6 +12,8 @@ Provides a S3 bucket server-side encryption configuration resource.
 
 ~> **NOTE:** Destroying an `aws_s3_bucket_server_side_encryption_configuration` resource resets the bucket to [Amazon S3 bucket default encryption](https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html).
 
+~> **NOTE:** Starting in March 2026, Amazon S3 will automatically block server-side encryption with customer-provided keys (SSE-C) for all new buckets. Use the `blocked_encryption_types` argument to manage this behavior. For more information, see the [SSE-C changes FAQ](https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-s3-c-encryption-setting-faq.html).
+
 ## Example Usage
 
 ```terraform
@@ -36,6 +38,32 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
 }
 ```
 
+### Blocking SSE-C Uploads
+
+```terraform
+resource "aws_kms_key" "mykey" {
+  description             = "This key is used to encrypt bucket objects"
+  deletion_window_in_days = 10
+}
+
+resource "aws_s3_bucket" "mybucket" {
+  bucket = "mybucket"
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
+  bucket = aws_s3_bucket.mybucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.mykey.arn
+      sse_algorithm     = "aws:kms"
+    }
+    bucket_key_enabled       = true
+    blocked_encryption_types = ["SSE-C"]
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -50,6 +78,7 @@ This resource supports the following arguments:
 The `rule` configuration block supports the following arguments:
 
 * `apply_server_side_encryption_by_default` - (Optional) Single object for setting server-side encryption by default. [See below](#apply_server_side_encryption_by_default).
+* `blocked_encryption_types` - (Optional) List of server-side encryption types to block for object uploads. Valid values are `SSE-C` (blocks uploads using server-side encryption with customer-provided keys) and `NONE` (unblocks all encryption types). Starting in March 2026, Amazon S3 will automatically block SSE-C uploads for all new buckets.
 * `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 
 ### apply_server_side_encryption_by_default
@@ -66,6 +95,33 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_server_side_encryption_configuration.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `expected_bucket_owner` (String) Account ID of the expected bucket owner.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket server-side encryption configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 

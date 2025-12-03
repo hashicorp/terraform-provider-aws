@@ -43,7 +43,10 @@ import (
 
 // @FrameworkResource("aws_vpc_security_group_ingress_rule", name="Security Group Ingress Rule")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.SecurityGroupRule")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroupRule")
+// @Testing(idAttrDuplicates="security_group_rule_id")
+// @Testing(preIdentityVersion="v6.12.0")
 func newSecurityGroupIngressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupIngressRuleResource{}
 	r.securityGroupRule = r
@@ -168,7 +171,7 @@ type securityGroupRule interface {
 type securityGroupRuleResource struct {
 	securityGroupRule
 	framework.ResourceWithModel[securityGroupRuleResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *securityGroupRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

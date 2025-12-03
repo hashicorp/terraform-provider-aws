@@ -5,15 +5,16 @@ package appstream
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 )
 
-func describeDirectoryConfigsPages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeDirectoryConfigsInput, fn func(*appstream.DescribeDirectoryConfigsOutput, bool) bool) error {
+func describeDirectoryConfigsPages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeDirectoryConfigsInput, fn func(*appstream.DescribeDirectoryConfigsOutput, bool) bool, optFns ...func(*appstream.Options)) error {
 	for {
-		output, err := conn.DescribeDirectoryConfigs(ctx, input)
+		output, err := conn.DescribeDirectoryConfigs(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -25,11 +26,11 @@ func describeDirectoryConfigsPages(ctx context.Context, conn *appstream.Client, 
 	}
 	return nil
 }
-func describeFleetsPages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeFleetsInput, fn func(*appstream.DescribeFleetsOutput, bool) bool) error {
+func describeFleetsPages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeFleetsInput, fn func(*appstream.DescribeFleetsOutput, bool) bool, optFns ...func(*appstream.Options)) error {
 	for {
-		output, err := conn.DescribeFleets(ctx, input)
+		output, err := conn.DescribeFleets(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -41,11 +42,11 @@ func describeFleetsPages(ctx context.Context, conn *appstream.Client, input *app
 	}
 	return nil
 }
-func describeImageBuildersPages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeImageBuildersInput, fn func(*appstream.DescribeImageBuildersOutput, bool) bool) error {
+func describeImageBuildersPages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeImageBuildersInput, fn func(*appstream.DescribeImageBuildersOutput, bool) bool, optFns ...func(*appstream.Options)) error {
 	for {
-		output, err := conn.DescribeImageBuilders(ctx, input)
+		output, err := conn.DescribeImageBuilders(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -57,11 +58,11 @@ func describeImageBuildersPages(ctx context.Context, conn *appstream.Client, inp
 	}
 	return nil
 }
-func describeStacksPages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeStacksInput, fn func(*appstream.DescribeStacksOutput, bool) bool) error {
+func describeStacksPages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeStacksInput, fn func(*appstream.DescribeStacksOutput, bool) bool, optFns ...func(*appstream.Options)) error {
 	for {
-		output, err := conn.DescribeStacks(ctx, input)
+		output, err := conn.DescribeStacks(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -73,11 +74,11 @@ func describeStacksPages(ctx context.Context, conn *appstream.Client, input *app
 	}
 	return nil
 }
-func describeUserStackAssociationsPages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeUserStackAssociationsInput, fn func(*appstream.DescribeUserStackAssociationsOutput, bool) bool) error {
+func describeUserStackAssociationsPages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeUserStackAssociationsInput, fn func(*appstream.DescribeUserStackAssociationsOutput, bool) bool, optFns ...func(*appstream.Options)) error {
 	for {
-		output, err := conn.DescribeUserStackAssociations(ctx, input)
+		output, err := conn.DescribeUserStackAssociations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -89,11 +90,11 @@ func describeUserStackAssociationsPages(ctx context.Context, conn *appstream.Cli
 	}
 	return nil
 }
-func describeUsersPages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeUsersInput, fn func(*appstream.DescribeUsersOutput, bool) bool) error {
+func describeUsersPages(ctx context.Context, conn *appstream.Client, input *appstream.DescribeUsersInput, fn func(*appstream.DescribeUsersOutput, bool) bool, optFns ...func(*appstream.Options)) error {
 	for {
-		output, err := conn.DescribeUsers(ctx, input)
+		output, err := conn.DescribeUsers(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -105,11 +106,11 @@ func describeUsersPages(ctx context.Context, conn *appstream.Client, input *apps
 	}
 	return nil
 }
-func listAssociatedStacksPages(ctx context.Context, conn *appstream.Client, input *appstream.ListAssociatedStacksInput, fn func(*appstream.ListAssociatedStacksOutput, bool) bool) error {
+func listAssociatedStacksPages(ctx context.Context, conn *appstream.Client, input *appstream.ListAssociatedStacksInput, fn func(*appstream.ListAssociatedStacksOutput, bool) bool, optFns ...func(*appstream.Options)) error {
 	for {
-		output, err := conn.ListAssociatedStacks(ctx, input)
+		output, err := conn.ListAssociatedStacks(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

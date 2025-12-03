@@ -94,8 +94,8 @@ func (r *loggingResource) Create(ctx context.Context, req resource.CreateRequest
 
 	// Retry InvalidClusterState faults, which can occur when logging is enabled
 	// immediately after being disabled (ie. resource replacement).
-	out, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidClusterStateFault](ctx, propagationTimeout,
-		func() (any, error) {
+	out, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidClusterStateFault](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.EnableLogging(ctx, in)
 		},
 		"There is an operation running on the Cluster",
@@ -171,8 +171,8 @@ func (r *loggingResource) Update(ctx context.Context, req resource.UpdateRequest
 
 		// Retry InvalidClusterState faults, which can occur when logging is enabled
 		// immediately after being disabled (ie. resource replacement).
-		out, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidClusterStateFault](ctx, propagationTimeout,
-			func() (any, error) {
+		out, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidClusterStateFault](ctx, propagationTimeout,
+			func(ctx context.Context) (any, error) {
 				return conn.EnableLogging(ctx, in)
 			},
 			"There is an operation running on the Cluster",
@@ -210,8 +210,8 @@ func (r *loggingResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	// Retry InvalidClusterState faults, which can occur when logging is being enabled.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidClusterStateFault](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidClusterStateFault](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DisableLogging(ctx, in)
 		},
 		"There is an operation running on the Cluster",

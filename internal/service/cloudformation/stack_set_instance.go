@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -291,8 +291,8 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionFlatteningResourceId, ResNameStackSetInstance, id, err)
 	}
 
-	output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
-		func() (*cloudformation.CreateStackInstancesOutput, error) {
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func(ctx context.Context) (*cloudformation.CreateStackInstancesOutput, error) {
 			input.OperationId = aws.String(sdkid.UniqueId())
 
 			return conn.CreateStackInstances(ctx, input)
@@ -329,7 +329,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	callAs := d.Get("call_as").(string)
 
-	if itypes.IsAWSAccountID(accountOrOrgID) {
+	if inttypes.IsAWSAccountID(accountOrOrgID) {
 		// Stack instances deployed by account ID
 		stackInstance, err := findStackInstanceByFourPartKey(ctx, conn, stackSetName, accountOrOrgID, region, callAs)
 
@@ -455,7 +455,7 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.OperationInProgressException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.OperationInProgressException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteStackInstances(ctx, input)
 	})
 

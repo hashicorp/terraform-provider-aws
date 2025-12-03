@@ -55,6 +55,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the listener. Required if `loadBalancerArn` and `port` is not set.
 * `loadBalancerArn` - (Optional) ARN of the load balancer. Required if `arn` is not set.
 * `port` - (Optional) Port of the listener. Required if `arn` is not set.
@@ -71,4 +72,4 @@ See the [LB Listener Resource](/docs/providers/aws/r/lb_listener.html) for detai
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-4aae57d55fff69138e225a0cab6264a5bfa8fc96e9ab269bd895479669bb26dc -->
+<!-- cache-key: cdktf-0.20.8 input-89e7245635c0e737bf923323d53bb06eca7558b3e01792cb6b5db4a6cbbd26d4 -->

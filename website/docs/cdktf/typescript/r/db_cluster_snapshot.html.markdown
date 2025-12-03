@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dbClusterIdentifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `dbClusterSnapshotIdentifier` - (Required) The Identifier for the snapshot.
 * `sharedAccounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
@@ -57,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `licenseModel` - License model information for the restored DB cluster.
 * `port` - Port that the DB cluster was listening on at the time of the snapshot.
 
-* `source_db_cluster_snapshot_identifier` - DB Cluster Snapshot ARN that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
+* `sourceDbClusterSnapshotIdentifier` - DB Cluster Snapshot ARN that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `storageEncrypted` - Whether the DB cluster snapshot is encrypted.
 * `status` - The status of this DB Cluster Snapshot.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -101,4 +102,4 @@ Using `terraform import`, import `aws_db_cluster_snapshot` using the cluster sna
 % terraform import aws_db_cluster_snapshot.example my-cluster-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2d79729594e2ee44aedd9fc92ffa463a6de54138756327a15a1ba8e2ad7a7bc0 -->
+<!-- cache-key: cdktf-0.20.8 input-9b121296b7abc787ae46486660faad88c4d64778084a17936aaf1c7e849f5ad4 -->

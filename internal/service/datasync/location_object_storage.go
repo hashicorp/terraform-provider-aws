@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -30,6 +31,7 @@ import (
 // @SDKResource("aws_datasync_location_object_storage", name="Location Object Storage")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationObjectStorageOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(domainTfVar="domain")
@@ -48,7 +50,7 @@ func resourceLocationObjectStorage() *schema.Resource {
 			},
 			"agent_arns": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
@@ -105,6 +107,11 @@ func resourceLocationObjectStorage() *schema.Resource {
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: customdiff.ForceNewIfChange("agent_arns", func(_ context.Context, old, new, meta any) bool {
+			// "InvalidRequestException: Invalid parameter: Updating AgentArns is not permitted for agentless object storage locations".
+			return (old.(*schema.Set).Len() == 0 && new.(*schema.Set).Len() > 0) || (old.(*schema.Set).Len() > 0 && new.(*schema.Set).Len() == 0)
+		}),
 	}
 }
 
@@ -113,11 +120,14 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationObjectStorageInput{
-		AgentArns:      flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
 		BucketName:     aws.String(d.Get(names.AttrBucketName).(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("agent_arns"); ok && v.(*schema.Set).Len() > 0 {
+		input.AgentArns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrAccessKey); ok {
@@ -201,7 +211,9 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		if d.HasChange("agent_arns") {
-			input.AgentArns = flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set))
+			if v, ok := d.GetOk("agent_arns"); ok && v.(*schema.Set).Len() > 0 {
+				input.AgentArns = flex.ExpandStringValueSet(v.(*schema.Set))
+			}
 
 			// Access key must be specified when updating agent ARNs
 			input.AccessKey = aws.String("")

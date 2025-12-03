@@ -6,6 +6,7 @@ package networkfirewall
 import (
 	"context"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -142,6 +144,12 @@ func resourceFirewallPolicy() *schema.Resource {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"deep_threat_inspection": {
+											Type:         nullable.TypeNullableBool,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: nullable.ValidateTypeStringNullableBool,
+										},
 										"override": {
 											Type:     schema.TypeList,
 											MaxItems: 1,
@@ -328,7 +336,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidOperationException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidOperationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteFirewallPolicy(ctx, &networkfirewall.DeleteFirewallPolicyInput{
 			FirewallPolicyArn: aws.String(d.Id()),
 		})
@@ -493,6 +501,11 @@ func expandStatefulRuleGroupReferences(tfList []any) []awstypes.StatefulRuleGrou
 
 		apiObject := awstypes.StatefulRuleGroupReference{}
 
+		if v, ok := tfMap["deep_threat_inspection"]; ok {
+			if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+				apiObject.DeepThreatInspection = aws.Bool(v)
+			}
+		}
 		if v, ok := tfMap["override"].([]any); ok && len(v) > 0 {
 			apiObject.Override = expandStatefulRuleGroupOverride(v)
 		}
@@ -678,6 +691,9 @@ func flattenPolicyStatefulRuleGroupReferences(apiObjects []awstypes.StatefulRule
 			names.AttrResourceARN: aws.ToString(apiObject.ResourceArn),
 		}
 
+		if apiObject.DeepThreatInspection != nil {
+			tfMap["deep_threat_inspection"] = strconv.FormatBool(aws.ToBool(apiObject.DeepThreatInspection))
+		}
 		if apiObject.Override != nil {
 			tfMap["override"] = flattenStatefulRuleGroupOverride(apiObject.Override)
 		}

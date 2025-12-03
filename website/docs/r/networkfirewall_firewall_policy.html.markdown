@@ -13,6 +13,10 @@ Provides an AWS Network Firewall Firewall Policy Resource
 ## Example Usage
 
 ```terraform
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+
 resource "aws_networkfirewall_firewall_policy" "example" {
   name = "example"
 
@@ -23,7 +27,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
       priority     = 1
       resource_arn = aws_networkfirewall_rule_group.example.arn
     }
-    tls_inspection_configuration_arn = "arn:aws:network-firewall:REGION:ACCT:tls-configuration/example"
+    tls_inspection_configuration_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:tls-configuration/example"
   }
 
   tags = {
@@ -66,7 +70,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 ## Policy with a Custom Action for Stateless Inspection
 
 ```terraform
-resource "aws_networkfirewall_firewall_policy" "test" {
+resource "aws_networkfirewall_firewall_policy" "example" {
   name = "example"
 
   firewall_policy {
@@ -82,6 +86,53 @@ resource "aws_networkfirewall_firewall_policy" "test" {
         }
       }
       action_name = "ExampleCustomAction"
+    }
+  }
+}
+```
+
+## Policy with Active Threat Defense in Action Order
+
+```terraform
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_networkfirewall_firewall_policy" "example" {
+  name = "example"
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+
+    stateful_rule_group_reference {
+      deep_threat_inspection = true
+      resource_arn           = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.region}:aws-managed:stateful-rulegroup/AttackInfrastructureActionOrder"
+    }
+  }
+}
+```
+
+## Policy with Active Threat Defense in Strict Order
+
+```terraform
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_networkfirewall_firewall_policy" "example" {
+  name = "example"
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+
+    stateful_engine_options {
+      rule_order = "STRICT_ORDER"
+    }
+
+    stateful_rule_group_reference {
+      deep_threat_inspection = false
+      priority               = 1
+      resource_arn           = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.region}:aws-managed:stateful-rulegroup/AttackInfrastructureStrictOrder"
     }
   }
 }
@@ -165,6 +216,9 @@ The `flow_timeouts` block supports the following argument:
 
 The `stateful_rule_group_reference` block supports the following arguments:
 
+* `deep_threat_inspection` - (Optional) Whether to enable deep threat inspection, which allows AWS to analyze service logs of network traffic processed by these rule groups to identify threat indicators across customers. AWS will use these threat indicators to improve the active threat defense managed rule groups and protect the security of AWS customers and services. This only applies to active threat defense maanaged rule groups.
+
+  For details, refer to [AWS active threat defense for AWS Network Firewall](https://docs.aws.amazon.com/network-firewall/latest/developerguide/aws-managed-rule-groups-atd.html) in the AWS Network Firewall Developer Guide.
 * `priority` - (Optional) An integer setting that indicates the order in which to apply the stateful rule groups in a single policy. This argument must be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. AWS Network Firewall applies each stateful rule group to a packet starting with the group that has the lowest priority setting.
 
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the stateful rule group.

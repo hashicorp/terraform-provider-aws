@@ -5,8 +5,8 @@ package iam
 
 // Exports for use in tests only.
 var (
-	ResourceAccessKey = resourceAccessKey
-	// ResourceAccountAlias          = resourceAccountAlias
+	ResourceAccessKey             = resourceAccessKey
+	ResourceAccountAlias          = resourceAccountAlias
 	ResourceAccountPasswordPolicy = resourceAccountPasswordPolicy
 	ResourceGroup                 = resourceGroup
 	// ResourceGroupMembership       = resourceGroupMembership
@@ -32,30 +32,49 @@ var (
 	ResourceUserSSHKey                = resourceUserSSHKey
 	ResourceVirtualMFADevice          = resourceVirtualMFADevice
 
-	FindAccessKeyByTwoPartKey           = findAccessKeyByTwoPartKey
-	FindAccountPasswordPolicy           = findAccountPasswordPolicy
-	FindAttachedGroupPolicies           = findAttachedGroupPolicies
-	FindAttachedGroupPolicyByTwoPartKey = findAttachedGroupPolicyByTwoPartKey
-	FindAttachedRolePolicies            = findAttachedRolePolicies
-	FindAttachedRolePolicyByTwoPartKey  = findAttachedRolePolicyByTwoPartKey
-	FindAttachedUserPolicies            = findAttachedUserPolicies
-	FindAttachedUserPolicyByTwoPartKey  = findAttachedUserPolicyByTwoPartKey
-	FindEntitiesForPolicyByARN          = findEntitiesForPolicyByARN
-	FindGroupByName                     = findGroupByName
-	FindGroupPoliciesByName             = findGroupPoliciesByName
-	FindGroupPolicyAttachmentsByName    = findGroupPolicyAttachmentsByName
-	FindInstanceProfileByName           = findInstanceProfileByName
-	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
-	FindOrganizationsFeatures           = findOrganizationsFeatures
-	FindPolicyByARN                     = findPolicyByARN
-	FindRolePoliciesByName              = findRolePoliciesByName
-	FindRolePolicyAttachmentsByName     = findRolePolicyAttachmentsByName
-	FindSAMLProviderByARN               = findSAMLProviderByARN
-	FindServerCertificateByName         = findServerCertificateByName
-	FindSSHPublicKeyByThreePartKey      = findSSHPublicKeyByThreePartKey
-	FindUserByName                      = findUserByName
-	FindUserPoliciesByName              = findUserPoliciesByName
-	FindUserPolicyAttachmentsByName     = findUserPolicyAttachmentsByName
-	FindVirtualMFADeviceBySerialNumber  = findVirtualMFADeviceBySerialNumber
-	SESSMTPPasswordFromSecretKeySigV4   = sesSMTPPasswordFromSecretKeySigV4
+	FindAccessKeyByTwoPartKey                   = findAccessKeyByTwoPartKey
+	FindAccountAlias                            = findAccountAlias
+	FindAccountPasswordPolicy                   = findAccountPasswordPolicy
+	FindAttachedGroupPolicies                   = findAttachedGroupPolicies
+	FindAttachedGroupPolicyByTwoPartKey         = findAttachedGroupPolicyByTwoPartKey
+	FindAttachedRolePolicies                    = findAttachedRolePolicies
+	FindAttachedRolePolicyByTwoPartKey          = findAttachedRolePolicyByTwoPartKey
+	FindAttachedUserPolicies                    = findAttachedUserPolicies
+	FindAttachedUserPolicyByTwoPartKey          = findAttachedUserPolicyByTwoPartKey
+	FindEntitiesForPolicyByARN                  = findEntitiesForPolicyByARN
+	FindGroupByName                             = findGroupByName
+	FindGroupPoliciesByName                     = findGroupPoliciesByName
+	FindGroupPolicyAttachmentsByName            = findGroupPolicyAttachmentsByName
+	FindGroupPolicyByTwoPartKey                 = findGroupPolicyByTwoPartKey
+	FindInstanceProfileByName                   = findInstanceProfileByName
+	FindOpenIDConnectProviderByARN              = findOpenIDConnectProviderByARN
+	FindOrganizationsFeatures                   = findOrganizationsFeatures
+	FindPolicyByARN                             = findPolicyByARN
+	FindRolePolicyByTwoPartKey                  = findRolePolicyByTwoPartKey
+	FindRolePoliciesByName                      = findRolePoliciesByName
+	FindRolePolicyAttachmentsByName             = findRolePolicyAttachmentsByName
+	FindSAMLProviderByARN                       = findSAMLProviderByARN
+	FindServerCertificateByName                 = findServerCertificateByName
+	FindServiceSpecificCredentialByThreePartKey = findServiceSpecificCredentialByThreePartKey
+	FindSigningCertificateByTwoPartKey          = findSigningCertificateByTwoPartKey
+	FindSSHPublicKeyByThreePartKey              = findSSHPublicKeyByThreePartKey
+	FindUserByName                              = findUserByName
+	FindUserPoliciesByName                      = findUserPoliciesByName
+	FindUserPolicyAttachmentsByName             = findUserPolicyAttachmentsByName
+	FindUserPolicyByTwoPartKey                  = findUserPolicyByTwoPartKey
+	FindVirtualMFADeviceBySerialNumber          = findVirtualMFADeviceBySerialNumber
+
+	AttachPolicyToUser                = attachPolicyToUser
+	CheckPwdPolicy                    = checkPwdPolicy
+	GeneratePassword                  = generatePassword
+	IsValidPolicyAWSPrincipal         = isValidPolicyAWSPrincipal // nosemgrep:ci.aws-in-var-name
+	ListGroupsForUserPages            = listGroupsForUserPages
+	RoleNameSessionFromARN            = roleNameSessionFromARN
+	RolePolicyParseID                 = rolePolicyParseID
+	ServiceLinkedRoleParseResourceID  = serviceLinkedRoleParseResourceID
+	SESSMTPPasswordFromSecretKeySigV4 = sesSMTPPasswordFromSecretKeySigV4
+)
+
+type (
+	IAMPolicyStatementConditionSet = iamPolicyStatementConditionSet
 )

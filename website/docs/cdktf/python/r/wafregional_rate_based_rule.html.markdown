@@ -54,6 +54,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
 * `name` - (Required) The name or description of the rule.
 * `rate_key` - (Required) Valid value is IP.
@@ -109,4 +110,4 @@ Using `terraform import`, import WAF Regional Rate Based Rule using the id. For 
 % terraform import aws_wafregional_rate_based_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c9528cd637559b06111f0a86770cfd3352bea18039b8f306e153eeb9fb06d57f -->
+<!-- cache-key: cdktf-0.20.8 input-45393966556581aa4996319fd47cf38678e94f23519859d5c114cf5ebafb3385 -->

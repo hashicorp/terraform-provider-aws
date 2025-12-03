@@ -6,4 +6,5 @@ package acmpca
 // Exports for use in other modules.
 var (
 	FindCertificateAuthorityByARN = findCertificateAuthorityByARN
+	FindCertificateByTwoPartKey   = findCertificateByTwoPartKey
 )

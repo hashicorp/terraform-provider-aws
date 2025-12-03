@@ -66,6 +66,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `action` - (Required) Describes the action to take.
   Described in [`action` Configuration Block](#action-configuration-block) below.
 * `event` - (Required) Describes the event that triggers the `action`.
@@ -146,4 +147,4 @@ Using `terraform import`, import Data Exchange Event Action using the id. For ex
 % terraform import aws_dataexchange_event_action.example example-event-action-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4b7cd1dd593660e1517fdc77baa48e493feb83ae85d3a9d1d5999d4046873aef -->
+<!-- cache-key: cdktf-0.20.8 input-e65ee533ef75215bd82e2f25edff0a96084a8f700349be537b07fc88a49aad3a -->

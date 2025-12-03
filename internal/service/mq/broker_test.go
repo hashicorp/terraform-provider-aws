@@ -307,6 +307,34 @@ func TestNormalizeEngineVersion(t *testing.T) {
 			autoMinorVersionUpgrade: true,
 			want:                    "5.18",
 		},
+		{
+			name:                    "ActiveMQ, auto, post 5.18, ActiveMQ 5.19",
+			engineType:              string(types.EngineTypeActivemq),
+			engineVersion:           "5.19.1",
+			autoMinorVersionUpgrade: true,
+			want:                    "5.19",
+		},
+		{
+			name:                    "RabbitMQ, auto, post 3.13, RabbitMQ 4",
+			engineType:              string(types.EngineTypeRabbitmq),
+			engineVersion:           "4.2.1",
+			autoMinorVersionUpgrade: true,
+			want:                    "4.2",
+		},
+		{
+			name:                    "ActiveMQ, auto, post 5.18, ActiveMQ 5.19 without patch version",
+			engineType:              string(types.EngineTypeActivemq),
+			engineVersion:           "5.19",
+			autoMinorVersionUpgrade: true,
+			want:                    "5.19",
+		},
+		{
+			name:                    "RabbitMQ, auto, post 3.13, RabbitMQ 4 without patch version",
+			engineType:              string(types.EngineTypeRabbitmq),
+			engineVersion:           "4.2",
+			autoMinorVersionUpgrade: true,
+			want:                    "4.2",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1629,10 +1657,11 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "data_replication_primary_broker_arn"},
 			},
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
 				// Preparation for destruction would require multiple configuration changes
 				// and applies to unpair brokers. Instead, complete the necessary update, reboot,
-				// and delete opreations on the primary cluster out-of-band to ensure remaining
+				// and delete operations on the primary cluster out-of-band to ensure remaining
 				// resources will be freed for clean up.
 				PreConfig: func() {
 					// In order to delete, replicated brokers must first be unpaired by setting

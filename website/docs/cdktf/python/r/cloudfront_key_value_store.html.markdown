@@ -49,8 +49,8 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifying your CloudFront KeyValueStore.
-* `id` - A unique identifier for the KeyValueStore. Same as `name`.
 * `etag` - ETag hash of the KeyValueStore.
+* `id` - A unique identifier for the KeyValueStore.
 
 ## Timeouts
 
@@ -59,6 +59,31 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudfront_key_value_store.example
+  identity = {
+    name = "example_store"
+  }
+}
+
+resource "aws_cloudfront_key_value_store" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the CloudFront Key Value Store.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Key Value Store using the `name`. For example:
 
@@ -83,4 +108,4 @@ Using `terraform import`, import CloudFront Key Value Store using the `name`. Fo
 % terraform import aws_cloudfront_key_value_store.example example_store
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2c7d66072a4a2d94c521f72818a599845afcff8fc7069e0cb0264c4da9928d51 -->
+<!-- cache-key: cdktf-0.20.8 input-1524f5f7fa1bfacd5b1157429096254906d0558d4c25f1c91f2d318357a26f6a -->

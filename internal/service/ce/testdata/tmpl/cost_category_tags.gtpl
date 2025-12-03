@@ -1,5 +1,4 @@
 resource "aws_ce_cost_category" "test" {
-{{- template "region" }}
   name         = var.rName
   rule_version = "CostCategoryExpression.v1"
   rule {

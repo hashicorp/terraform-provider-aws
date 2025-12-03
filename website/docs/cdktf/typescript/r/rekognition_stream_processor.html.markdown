@@ -313,6 +313,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dataSharingPreference` - (Optional) See [`dataSharingPreference`](#data_sharing_preference).
 * `kmsKeyId` - (Optional) Optional parameter for label detection stream processors.
 * `notificationChannel` - (Optional) The Amazon Simple Notification Service topic to which Amazon Rekognition publishes the completion status. See [`notificationChannel`](#notification_channel).
@@ -434,4 +435,4 @@ Using `terraform import`, import Rekognition Stream Processor using the `name`. 
 % terraform import aws_rekognition_stream_processor.example my-stream 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9086dcb85a09a1a4c26b3ac427d64f76310c9439e49a56bd1cf4796965ca00fb -->
+<!-- cache-key: cdktf-0.20.8 input-abe0591166b356690839bb3e9aa7a8f44be0b3d976ea807930a332854a221c26 -->

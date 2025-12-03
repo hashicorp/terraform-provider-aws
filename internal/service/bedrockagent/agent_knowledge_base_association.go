@@ -37,6 +37,7 @@ func newAgentKnowledgeBaseAssociationResource(context.Context) (resource.Resourc
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -109,7 +110,12 @@ func (r *agentKnowledgeBaseAssociationResource) Create(ctx context.Context, requ
 		return
 	}
 
-	_, err := conn.AssociateAgentKnowledgeBase(ctx, input)
+	timeout := r.CreateTimeout(ctx, data.Timeouts)
+
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.AssociateAgentKnowledgeBaseOutput, error) {
+			return conn.AssociateAgentKnowledgeBase(ctx, input)
+		})
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Agent Knowledge Base Association", err.Error())
@@ -124,7 +130,7 @@ func (r *agentKnowledgeBaseAssociationResource) Create(ctx context.Context, requ
 	}
 	data.ID = types.StringValue(id)
 
-	_, err = prepareAgent(ctx, conn, data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	_, err = prepareAgent(ctx, conn, data.AgentID.ValueString(), timeout)
 	if err != nil {
 		response.Diagnostics.AddError("preparing Agent", err.Error())
 
@@ -191,17 +197,21 @@ func (r *agentKnowledgeBaseAssociationResource) Update(ctx context.Context, requ
 		return
 	}
 
-	_, err := conn.UpdateAgentKnowledgeBase(ctx, input)
+	timeout := r.UpdateTimeout(ctx, new.Timeouts)
+
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.UpdateAgentKnowledgeBaseOutput, error) {
+			return conn.UpdateAgentKnowledgeBase(ctx, input)
+		})
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Knowledge Base Association (%s)", new.ID.ValueString()), err.Error())
-
 		return
 	}
-	_, err = prepareAgent(ctx, conn, new.AgentID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+
+	_, err = prepareAgent(ctx, conn, new.AgentID.ValueString(), timeout)
 	if err != nil {
 		response.Diagnostics.AddError("preparing Agent", err.Error())
-
 		return
 	}
 
@@ -222,7 +232,13 @@ func (r *agentKnowledgeBaseAssociationResource) Delete(ctx context.Context, requ
 		AgentVersion:    fwflex.StringFromFramework(ctx, data.AgentVersion),
 		KnowledgeBaseId: fwflex.StringFromFramework(ctx, data.KnowledgeBaseID),
 	}
-	_, err := conn.DisassociateAgentKnowledgeBase(ctx, &input)
+
+	timeout := r.DeleteTimeout(ctx, data.Timeouts)
+
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.DisassociateAgentKnowledgeBaseOutput, error) {
+			return conn.DisassociateAgentKnowledgeBase(ctx, &input)
+		})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -230,7 +246,12 @@ func (r *agentKnowledgeBaseAssociationResource) Delete(ctx context.Context, requ
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent Knowledge Base Association (%s)", data.ID.ValueString()), err.Error())
+		return
+	}
 
+	_, err = prepareAgent(ctx, conn, data.AgentID.ValueString(), timeout)
+	if err != nil {
+		response.Diagnostics.AddError("preparing Agent", err.Error())
 		return
 	}
 }

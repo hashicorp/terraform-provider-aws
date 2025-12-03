@@ -42,7 +42,7 @@ This resource supports the following arguments:
 * `account_ids` - (Required) Set of account IDs.
   Can contain one of: the Organization's Administrator Account, or one or more Member Accounts.
 * `resource_types` - (Required) Type of resources to scan.
-  Valid values are `EC2`, `ECR`, `LAMBDA` and `LAMBDA_CODE`.
+  Valid values are `EC2`, `ECR`, `LAMBDA`, `LAMBDA_CODE` and `CODE_REPOSITORY`.
   At least one item is required.
 
 ## Attribute Reference
@@ -56,3 +56,20 @@ This resource exports no additional attributes.
 * `create` - (Default `5m`)
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Inspector Enabler using `account_ids` and `region_types` formatted as `[account_id1]:[account_id2]:...-[resource_type1]:[resource_type2]:...`, where `account_ids` are sorted in ascending order and `resource_types` are sorted in alphabetical order. For example:
+
+```terraform
+import {
+  to = aws_inspector2_enabler.example
+  id = "123456789012:234567890123-EC2:ECR"
+}
+```
+
+Using `terraform import`, import Inspector Enabler using using `account_ids` and `region_types` formatted as `[account_id1]:[account_id2]:...-[resource_type1]:[resource_type2]:...`, where `account_ids` are sorted in ascending order and `resource_types` are sorted in alphabetical order. For example:
+
+```console
+% terraform import aws_inspector2_enabler.example 123456789012:234567890123-EC2:ECR
+```

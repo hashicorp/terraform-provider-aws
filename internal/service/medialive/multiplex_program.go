@@ -197,7 +197,7 @@ func (m *multiplexProgramResource) Create(ctx context.Context, req resource.Crea
 	state.ID = fwflex.StringValueToFramework(ctx, fmt.Sprintf("%s/%s", programName, multiplexId))
 
 	createTimeout := m.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*medialive.DescribeMultiplexProgramOutput, error) {
 		return findMultiplexProgramByID(ctx, conn, multiplexId, programName)
 	})
 	if err != nil {
@@ -208,7 +208,6 @@ func (m *multiplexProgramResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	output := outputRaws.(*medialive.DescribeMultiplexProgramOutput)
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

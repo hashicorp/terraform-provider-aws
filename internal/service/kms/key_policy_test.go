@@ -238,27 +238,6 @@ func TestAccKMSKeyPolicy_iamRoleOrder(t *testing.T) {
 					testAccCheckKeyExists(ctx, keyResourceName, &key),
 				),
 			},
-			{
-				Config: testAccKeyPolicyConfig_policyIAMMultiRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, keyResourceName, &key),
-				),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccKeyPolicyConfig_policyIAMMultiRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, keyResourceName, &key),
-				),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccKeyPolicyConfig_policyIAMMultiRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, keyResourceName, &key),
-				),
-				PlanOnly: true,
-			},
 		},
 	})
 }

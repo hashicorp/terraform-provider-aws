@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationId` - (Required) The application ID.
 * `apiKey` - (Required) Platform credential API key from Google.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
@@ -81,4 +82,4 @@ Using `terraform import`, import Pinpoint GCM Channel using the `application-id`
 % terraform import aws_pinpoint_gcm_channel.gcm application-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-200362337b5bd04b62d3e5237c42fed5c951481ede3469edf838e6a12fe27f02 -->
+<!-- cache-key: cdktf-0.20.8 input-818f94a810492a487d2bee9cb6e20b1dab17b975ed5ee6eb6bb7a5bcfb6ba5d0 -->

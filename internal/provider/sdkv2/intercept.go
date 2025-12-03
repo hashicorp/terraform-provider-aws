@@ -6,14 +6,29 @@ package sdkv2
 import (
 	"context"
 	"errors"
+	"slices"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
+
+type awsClient interface {
+	AccountID(ctx context.Context) string
+	Region(ctx context.Context) string
+	DefaultTagsConfig(ctx context.Context) *tftags.DefaultConfig
+	IgnoreTagsConfig(ctx context.Context) *tftags.IgnoreConfig
+	Partition(context.Context) string
+	ServicePackage(_ context.Context, name string) conns.ServicePackage
+	TagPolicyConfig(context.Context) *tftags.TagPolicyConfig
+	ValidateInContextRegionInPartition(ctx context.Context) error
+	AwsConfig(context.Context) aws.Config
+}
 
 // schemaResourceData is an interface that implements a subset of schema.ResourceData's public methods.
 type schemaResourceData interface {
@@ -23,7 +38,7 @@ type schemaResourceData interface {
 }
 
 type interceptorOptions[D any] struct {
-	c    *conns.AWSClient
+	c    awsClient
 	d    D
 	when when
 	why  why
@@ -44,28 +59,18 @@ type interceptor1[D, E any] interface {
 	run(context.Context, interceptorOptions[D]) E
 }
 
-type interceptor2[D, R, E any] interface {
-	run(context.Context, interceptorOptions[D]) (R, E)
-}
-
 type (
 	// crudInterceptor is functionality invoked during a CRUD request lifecycle.
 	crudInterceptor = interceptor1[schemaResourceData, diag.Diagnostics]
 	// customizeDiffInterceptor is functionality invoked during a CustomizeDiff request lifecycle.
 	customizeDiffInterceptor = interceptor1[*schema.ResourceDiff, error]
 	// importInterceptor is functionality invoked during an Import request lifecycle.
-	importInterceptor = interceptor2[*schema.ResourceData, []*schema.ResourceData, error]
+	importInterceptor = interceptor1[*schema.ResourceData, error]
 )
 
 type interceptorFunc1[D, E any] func(context.Context, interceptorOptions[D]) E
 
-func (f interceptorFunc1[D, E]) run(ctx context.Context, opts interceptorOptions[D]) E { //nolint:unused // used via crudInterceptor/customizeDiffInterceptor
-	return f(ctx, opts)
-}
-
-type interceptorFunc2[D, R, E any] func(context.Context, interceptorOptions[D]) (R, E)
-
-func (f interceptorFunc2[D, R, E]) run(ctx context.Context, opts interceptorOptions[D]) (R, E) { //nolint:unused // used via importInterceptor
+func (f interceptorFunc1[D, E]) run(ctx context.Context, opts interceptorOptions[D]) E { //nolint:unused // used via crudInterceptor/customizeDiffInterceptor/importInterceptor
 	return f(ctx, opts)
 }
 
@@ -82,17 +87,14 @@ type typedInterceptorInvocation[D, E any] struct {
 	interceptor interceptor1[D, E]
 }
 
-type typedInterceptor2Invocation[D, R, E any] struct {
-	when        when
-	why         why
-	interceptor interceptor2[D, R, E]
-}
-
 type (
 	crudInterceptorInvocation          = typedInterceptorInvocation[schemaResourceData, diag.Diagnostics]
 	customizeDiffInterceptorInvocation = typedInterceptorInvocation[*schema.ResourceDiff, error]
-	importInterceptorInvocation        = typedInterceptor2Invocation[*schema.ResourceData, []*schema.ResourceData, error]
+	importInterceptorInvocation        = typedInterceptorInvocation[*schema.ResourceData, error]
 )
+
+// Only generate strings for use in tests
+//go:generate stringer -type=when -output=when_string_test.go
 
 // when represents the point in the request lifecycle that an interceptor is run.
 // Multiple values can be ORed together.
@@ -135,19 +137,18 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		return nil
 	}
 
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return func(ctx context.Context, rd *schema.ResourceData, meta any) diag.Diagnostics {
 		var diags diag.Diagnostics
 
-		ctx, err := bootstrapContext(ctx, d.GetOk, meta)
+		ctx, err := bootstrapContext(ctx, rd.GetOk, meta)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		// Before interceptors are run first to last.
-		forward := make([]crudInterceptorInvocation, 0)
+		var interceptors []crudInterceptorInvocation
 		for _, v := range interceptorInvocations.why(why) {
 			if interceptor, ok := v.interceptor.(crudInterceptor); ok {
-				forward = append(forward, crudInterceptorInvocation{
+				interceptors = append(interceptors, crudInterceptorInvocation{
 					when:        v.when,
 					why:         v.why,
 					interceptor: interceptor,
@@ -155,15 +156,16 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 			}
 		}
 
-		when := Before
-		for _, v := range forward {
-			if v.when&when != 0 {
-				opts := crudInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
-					d:    d,
-					when: when,
-					why:  why,
-				}
+		opts := crudInterceptorOptions{
+			c:   meta.(awsClient),
+			d:   rd,
+			why: why,
+		}
+
+		// Before interceptors are run first to last.
+		opts.when = Before
+		for v := range slices.Values(interceptors) {
+			if v.when&opts.when != 0 {
 				diags = append(diags, v.interceptor.run(ctx, opts)...)
 
 				// Short circuit if any Before interceptor errors.
@@ -173,36 +175,24 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 			}
 		}
 
-		// All other interceptors are run last to first.
-		reverse := tfslices.Reverse(forward)
-		diags = f(ctx, d, meta)
+		d := f(ctx, rd, meta)
+		diags = append(diags, d...)
 
-		if diags.HasError() {
-			when = OnError
+		// All other interceptors are run last to first.
+		if d.HasError() {
+			opts.when = OnError
 		} else {
-			when = After
+			opts.when = After
 		}
-		for _, v := range reverse {
-			if v.when&when != 0 {
-				opts := crudInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
-					d:    d,
-					when: when,
-					why:  why,
-				}
+		for v := range tfslices.BackwardValues(interceptors) {
+			if v.when&opts.when != 0 {
 				diags = append(diags, v.interceptor.run(ctx, opts)...)
 			}
 		}
 
-		when = Finally
-		for _, v := range reverse {
-			if v.when&when != 0 {
-				opts := crudInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
-					d:    d,
-					when: when,
-					why:  why,
-				}
+		opts.when = Finally
+		for v := range tfslices.BackwardValues(interceptors) {
+			if v.when&opts.when != 0 {
 				diags = append(diags, v.interceptor.run(ctx, opts)...)
 			}
 		}
@@ -222,11 +212,10 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 
 		why := CustomizeDiff
 
-		// Before interceptors are run first to last.
-		forward := make([]customizeDiffInterceptorInvocation, 0)
+		var interceptors []customizeDiffInterceptorInvocation
 		for _, v := range interceptorInvocations.why(why) {
 			if interceptor, ok := v.interceptor.(customizeDiffInterceptor); ok {
-				forward = append(forward, customizeDiffInterceptorInvocation{
+				interceptors = append(interceptors, customizeDiffInterceptorInvocation{
 					when:        v.when,
 					why:         v.why,
 					interceptor: interceptor,
@@ -234,15 +223,16 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 			}
 		}
 
-		when := Before
-		for _, v := range forward {
-			if v.when&when != 0 {
-				opts := customizeDiffInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
-					d:    d,
-					when: when,
-					why:  why,
-				}
+		opts := customizeDiffInterceptorOptions{
+			c:   meta.(awsClient),
+			d:   d,
+			why: why,
+		}
+
+		// Before interceptors are run first to last.
+		opts.when = Before
+		for v := range slices.Values(interceptors) {
+			if v.when&opts.when != 0 {
 				// Short circuit if any Before interceptor errors.
 				if err := v.interceptor.run(ctx, opts); err != nil {
 					return err
@@ -250,41 +240,28 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 			}
 		}
 
-		// All other interceptors are run last to first.
-		reverse := tfslices.Reverse(forward)
 		var errs []error
 
-		when = After
+		opts.when = After
 		if f != nil {
 			if err := f(ctx, d, meta); err != nil {
-				when = OnError
+				opts.when = OnError
 				errs = append(errs, err)
 			}
 		}
 
-		for _, v := range reverse {
-			if v.when&when != 0 {
-				opts := customizeDiffInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
-					d:    d,
-					when: when,
-					why:  why,
-				}
+		// All other interceptors are run last to first.
+		for v := range tfslices.BackwardValues(interceptors) {
+			if v.when&opts.when != 0 {
 				if err := v.interceptor.run(ctx, opts); err != nil {
 					errs = append(errs, err)
 				}
 			}
 		}
 
-		when = Finally
-		for _, v := range reverse {
-			if v.when&when != 0 {
-				opts := customizeDiffInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
-					d:    d,
-					when: when,
-					why:  why,
-				}
+		opts.when = Finally
+		for v := range tfslices.BackwardValues(interceptors) {
+			if v.when&opts.when != 0 {
 				if err := v.interceptor.run(ctx, opts); err != nil {
 					errs = append(errs, err)
 				}
@@ -310,11 +287,10 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 
 		why := Import
 
-		// Before interceptors are run first to last.
-		forward := make([]importInterceptorInvocation, 0)
+		var interceptors []importInterceptorInvocation
 		for _, v := range interceptorInvocations.why(why) {
 			if interceptor, ok := v.interceptor.(importInterceptor); ok {
-				forward = append(forward, importInterceptorInvocation{
+				interceptors = append(interceptors, importInterceptorInvocation{
 					when:        v.when,
 					why:         v.why,
 					interceptor: interceptor,
@@ -322,58 +298,46 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 			}
 		}
 
-		when := Before
-		for _, v := range forward {
-			if v.when&when != 0 {
-				opts := importInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
-					d:    d,
-					when: when,
-					why:  why,
-				}
+		opts := importInterceptorOptions{
+			c:   meta.(awsClient),
+			d:   d,
+			why: why,
+		}
+
+		// Before interceptors are run first to last.
+		opts.when = Before
+		for v := range slices.Values(interceptors) {
+			if v.when&opts.when != 0 {
 				// Short circuit if any Before interceptor errors.
-				if _, err := v.interceptor.run(ctx, opts); err != nil {
+				if err := v.interceptor.run(ctx, opts); err != nil {
 					return nil, err
 				}
 			}
 		}
 
-		// All other interceptors are run last to first.
-		reverse := tfslices.Reverse(forward)
 		var errs []error
 
 		r, err := f(ctx, d, meta)
 		if err != nil {
-			when = OnError
+			opts.when = OnError
 			errs = append(errs, err)
 		} else {
-			when = After
+			opts.when = After
 		}
 
-		for _, v := range reverse {
-			if v.when&when != 0 {
-				opts := importInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
-					d:    d,
-					when: when,
-					why:  why,
-				}
-				if _, err := v.interceptor.run(ctx, opts); err != nil {
+		// All other interceptors are run last to first.
+		for v := range tfslices.BackwardValues(interceptors) {
+			if v.when&opts.when != 0 {
+				if err := v.interceptor.run(ctx, opts); err != nil {
 					errs = append(errs, err)
 				}
 			}
 		}
 
-		when = Finally
-		for _, v := range reverse {
-			if v.when&when != 0 {
-				opts := importInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
-					d:    d,
-					when: when,
-					why:  why,
-				}
-				if _, err := v.interceptor.run(ctx, opts); err != nil {
+		opts.when = Finally
+		for v := range tfslices.BackwardValues(interceptors) {
+			if v.when&opts.when != 0 {
+				if err := v.interceptor.run(ctx, opts); err != nil {
 					errs = append(errs, err)
 				}
 			}

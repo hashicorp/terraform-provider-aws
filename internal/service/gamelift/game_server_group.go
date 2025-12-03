@@ -223,7 +223,7 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		input.VpcSubnets = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateGameServerGroup(ctx, input)
 	}, "GameLift is not authorized to perform")
 
@@ -339,7 +339,7 @@ func resourceGameServerGroupDelete(ctx context.Context, d *schema.ResourceData, 
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteGameServerGroup(ctx, &gamelift.DeleteGameServerGroupInput{
 			GameServerGroupName: aws.String(d.Id()),
 		})

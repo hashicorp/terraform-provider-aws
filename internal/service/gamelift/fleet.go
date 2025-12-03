@@ -298,7 +298,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.ScriptId = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFleet(ctx, input)
 	}, "GameLift is not authorized to perform")
 
@@ -435,7 +435,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	const (
 		timeout = 60 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteFleet(ctx, &gamelift.DeleteFleetInput{
 			FleetId: aws.String(d.Id()),
 		})

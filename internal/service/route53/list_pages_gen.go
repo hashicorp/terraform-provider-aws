@@ -5,15 +5,16 @@ package route53
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 )
 
-func listHostedZonesByVPCPages(ctx context.Context, conn *route53.Client, input *route53.ListHostedZonesByVPCInput, fn func(*route53.ListHostedZonesByVPCOutput, bool) bool) error {
+func listHostedZonesByVPCPages(ctx context.Context, conn *route53.Client, input *route53.ListHostedZonesByVPCInput, fn func(*route53.ListHostedZonesByVPCOutput, bool) bool, optFns ...func(*route53.Options)) error {
 	for {
-		output, err := conn.ListHostedZonesByVPC(ctx, input)
+		output, err := conn.ListHostedZonesByVPC(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -25,11 +26,11 @@ func listHostedZonesByVPCPages(ctx context.Context, conn *route53.Client, input 
 	}
 	return nil
 }
-func listVPCAssociationAuthorizationsPages(ctx context.Context, conn *route53.Client, input *route53.ListVPCAssociationAuthorizationsInput, fn func(*route53.ListVPCAssociationAuthorizationsOutput, bool) bool) error {
+func listVPCAssociationAuthorizationsPages(ctx context.Context, conn *route53.Client, input *route53.ListVPCAssociationAuthorizationsInput, fn func(*route53.ListVPCAssociationAuthorizationsOutput, bool) bool, optFns ...func(*route53.Options)) error {
 	for {
-		output, err := conn.ListVPCAssociationAuthorizations(ctx, input)
+		output, err := conn.ListVPCAssociationAuthorizations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

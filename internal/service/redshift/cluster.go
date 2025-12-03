@@ -38,6 +38,8 @@ import (
 
 // @SDKResource("aws_redshift_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.Cluster")
+// @Testing(importIgnore="final_snapshot_identifier;master_password;skip_final_snapshot;apply_immediately")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -430,10 +432,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		inputC.AvailabilityZone = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("availability_zone_relocation_enabled"); ok {
-		inputR.AvailabilityZoneRelocation = aws.Bool(v.(bool))
-		inputC.AvailabilityZoneRelocation = aws.Bool(v.(bool))
-	}
+	v := d.Get("availability_zone_relocation_enabled")
+	inputR.AvailabilityZoneRelocation = aws.Bool(v.(bool))
+	inputC.AvailabilityZoneRelocation = aws.Bool(v.(bool))
 
 	if v, ok := d.GetOk("cluster_parameter_group_name"); ok {
 		inputR.ClusterParameterGroupName = aws.String(v.(string))
@@ -456,7 +457,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	isEncrypted := true
-	v := d.Get(names.AttrEncrypted)
+	v = d.Get(names.AttrEncrypted)
 	if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 		isEncrypted = v
 	}
@@ -859,8 +860,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				ClusterIdentifier: aws.String(d.Id()),
 			}
 
-			_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-				func() (any, error) {
+			_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
+				func(ctx context.Context) (any, error) {
 					return conn.RebootCluster(ctx, input)
 				})
 
@@ -955,8 +956,8 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteCluster(ctx, input)
 		})
 

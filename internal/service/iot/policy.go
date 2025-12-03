@@ -286,8 +286,8 @@ func deletePolicy(ctx context.Context, conn *iot.Client, name string) error {
 		PolicyName: aws.String(name),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.DeleteConflictException](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.DeleteConflictException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeletePolicy(ctx, input)
 		})
 
@@ -308,8 +308,8 @@ func deletePolicyVersion(ctx context.Context, conn *iot.Client, name, versionID 
 		PolicyVersionId: aws.String(versionID),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.DeleteConflictException](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.DeleteConflictException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeletePolicyVersion(ctx, input)
 		})
 

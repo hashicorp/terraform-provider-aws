@@ -7,18 +7,13 @@ description: |-
 
 # AWS Provider
 
-Use the Amazon Web Services (AWS) provider to interact with the
-many resources supported by AWS. You must configure the provider
-with the proper credentials before you can use it.
+The Amazon Web Services (AWS) provider is Terraform’s most widely-used provider and the industry-standard way to manage AWS infrastructure as code. It is an indispensable part of how leading technology companies, global banks, government agencies, and some of the largest enterprises in the world build and operate in the cloud. Every day, it provisions and orchestrates billions of dollars of AWS infrastructure across thousands of organizations.
 
-Use the navigation to the left to read about the available resources. There are currently 1526 resources and 608 data sources available in the provider.
+With 1,579 resources and 630 data sources, the AWS provider spans the full breadth of AWS services—from foundational capabilities like compute, storage, networking, and identity management to advanced services for AI, analytics, and event-driven architectures, including Lambda, RDS, SageMaker, and Bedrock. Whether automating a single S3 bucket or orchestrating a multi-region, enterprise-scale environment, the provider delivers consistent, reliable workflows that scale with your needs.
 
-To learn the basics of Terraform using this provider, follow the
-hands-on [get started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
-including Lambda, RDS, and IAM by following the [AWS services
-tutorials](https://developer.hashicorp.com/terraform/tutorials/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
+Configure the provider with your AWS credentials, and you can immediately begin creating and managing infrastructure in a safe, repeatable way. Use the navigation on the left to explore the available resources, or start with our [Get Started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) to learn the fundamentals. For deeper guidance on specific AWS services, visit the [AWS services tutorials](https://developer.hashicorp.com/terraform/tutorials/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
 
-Some AWS services do not support IPv6. As a result, the provider may not be able to interact with AWS APIs using IPv6 addresses.
+Note: Some AWS services do not yet support IPv6. In those cases, the provider may not be able to connect to AWS APIs over IPv6 addresses.
 
 ## Example Usage
 
@@ -29,7 +24,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
   }
 }
@@ -50,7 +45,7 @@ Terraform 0.12 and earlier:
 ```terraform
 # Configure the AWS Provider
 provider "aws" {
-  version = "~> 5.0"
+  version = "~> 6.0"
   region  = "us-east-1"
 }
 
@@ -498,6 +493,12 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
     - [`aws_waf_web_acl` resource](/docs/providers/aws/r/waf_web_acl.html)
     - [`aws_waf_xss_match_set` resource](/docs/providers/aws/r/waf_xss_match_set.html)
 * `sts_region` - (Optional) AWS Region for STS. If unset, AWS will use the same Region for STS as other non-STS operations.
+* `tag_policy_compliance` - (Optional) The severity with which to enforce organizational tagging policies on resources managed by this provider instance.
+  At this time this only includes compliance with required tag keys by resource type.
+  Valid values are `error`, `warning`, and `disabled`.
+  When unset or `disabled`, tag policy compliance will not be enforced by the provider.
+  Can also be configured with the `TF_AWS_TAG_POLICY_COMPLIANCE` environment variable.
+  See the [Tag Policy Compliance user guide](./guides/tag-policy-compliance.html.markdown) for additional details.
 * `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterward, not the 6 digit MFA code used to get temporary credentials.  Can also be set with the `AWS_SESSION_TOKEN` environment variable.
 * `token_bucket_rate_limiter_capacity` - (Optional) The capacity of the AWS SDK's token bucket retry rate limiter. If no value is specified then client-side rate limiting is disabled. If a value is specified there is a greater likelihood of `retry quota exceeded` errors being raised.
 * `use_dualstack_endpoint` - (Optional) Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`use_dualstack_endpoint`).

@@ -155,7 +155,7 @@ func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Updating OpenSearch domain SAML Options %#v", config)
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
 			DomainName:              aws.String(domainName),
 			AdvancedSecurityOptions: &config,
@@ -182,7 +182,7 @@ func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData
 	domainName := d.Get(names.AttrDomainName).(string)
 	config := awstypes.AdvancedSecurityOptionsInput{}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
 			DomainName:              aws.String(domainName),
 			AdvancedSecurityOptions: &config,

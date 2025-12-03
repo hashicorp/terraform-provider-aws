@@ -146,7 +146,7 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 		input.Regex = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateCustomDataIdentifier(ctx, &input)
 	}, errCodeClientError)
 

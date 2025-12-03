@@ -333,6 +333,41 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_maxBatchSize(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontKeyValueStoreKeysExclusive_valueUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	keys := []string{sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)}
+	values := []string{sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)}
+	valuesUpdated := []string{sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)}
+	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFront)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeysExclusiveConfig_basic(keys, values, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testCheckMultipleKeyValuePairs(keys, values, resourceName),
+				),
+			},
+			{
+				Config: testAccKeysExclusiveConfig_basic(keys, valuesUpdated, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testCheckMultipleKeyValuePairs(keys, valuesUpdated, resourceName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKeysExclusiveDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontKeyValueStoreClient(ctx)
@@ -369,7 +404,6 @@ func testAccCheckKeysExclusiveExists(ctx context.Context, n string) resource.Tes
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontKeyValueStoreClient(ctx)
 
 		_, out, err := tfcloudfrontkeyvaluestore.FindResourceKeyValuePairsForKeyValueStore(ctx, conn, rs.Primary.Attributes["key_value_store_arn"])
-
 		if err != nil {
 			return create.Error(names.CloudFrontKeyValueStore, create.ErrActionCheckingExistence, tfcloudfrontkeyvaluestore.ResNameKeysExclusive, rs.Primary.Attributes["key_value_store_arn"], err)
 		}
@@ -393,7 +427,6 @@ func testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx context.Context, n string,
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontKeyValueStoreClient(ctx)
 
 		resp, err := tfcloudfrontkeyvaluestore.FindKeyValueStoreByARN(ctx, conn, rs.Primary.Attributes["key_value_store_arn"])
-
 		if err != nil {
 			return fmt.Errorf("error finding Cloudfront KeyValueStore in out of band test")
 		}
@@ -406,7 +439,6 @@ func testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx context.Context, n string,
 		}
 
 		_, err = conn.UpdateKeys(ctx, &input)
-
 		if err != nil {
 			return fmt.Errorf("Error updating CloudFront KeyValueStore %s Key for out of band tests", rs.Primary.Attributes["key_value_store_arn"])
 		}

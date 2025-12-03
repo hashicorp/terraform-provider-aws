@@ -11,9 +11,9 @@ import (
 
 // Custom Route 53 service lister functions using the same format as generated code.
 
-func listTrafficPolicyInstancesPages(ctx context.Context, conn *route53.Client, input *route53.ListTrafficPolicyInstancesInput, fn func(*route53.ListTrafficPolicyInstancesOutput, bool) bool) error {
+func listTrafficPolicyInstancesPages(ctx context.Context, conn *route53.Client, input *route53.ListTrafficPolicyInstancesInput, fn func(*route53.ListTrafficPolicyInstancesOutput, bool) bool, optFns ...func(*route53.Options)) error {
 	for {
-		output, err := conn.ListTrafficPolicyInstances(ctx, input)
+		output, err := conn.ListTrafficPolicyInstances(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

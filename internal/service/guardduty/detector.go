@@ -247,7 +247,7 @@ func resourceDetectorDelete(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	log.Printf("[DEBUG] Deleting GuardDuty Detector: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.BadRequestException](ctx, membershipPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.BadRequestException](ctx, membershipPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteDetector(ctx, &guardduty.DeleteDetectorInput{
 			DetectorId: aws.String(d.Id()),
 		})

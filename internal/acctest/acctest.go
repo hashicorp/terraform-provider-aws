@@ -36,6 +36,7 @@ import (
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	"github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -68,6 +69,7 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/jmespath/go-jmespath"
@@ -96,6 +98,9 @@ const (
 
 	// Provider name for third configuration testing
 	ProviderNameThird = "awsthird"
+
+	// Provider name for fourth configuration testing
+	ProviderNameFourth = "awsfourth"
 
 	ResourcePrefix = "tf-acc-test"
 
@@ -284,6 +289,8 @@ func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) m
 		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate)
 	case 3:
 		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate, ProviderNameThird)
+	case 4:
+		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate, ProviderNameThird, ProviderNameFourth)
 	default:
 		t.Fatalf("invalid number of Region configurations: %d", n)
 	}
@@ -521,7 +528,7 @@ func MatchResourceAttrRegionalARNNoAccount(resourceName, attributeName, arnServi
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -673,7 +680,7 @@ func MatchResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -917,6 +924,10 @@ func ThirdRegion() string {
 	return envvar.GetWithDefault(envvar.ThirdRegion, endpoints.UsEast2RegionID)
 }
 
+func FourthRegion() string {
+	return envvar.GetWithDefault(envvar.FourthRegion, endpoints.UsWest1RegionID)
+}
+
 func Partition() string {
 	return names.PartitionForRegion(Region()).ID()
 }
@@ -941,6 +952,10 @@ func thirdRegionPartition() string {
 	return names.PartitionForRegion(ThirdRegion()).ID()
 }
 
+func fourthRegionPartition() string {
+	return names.PartitionForRegion(FourthRegion()).ID()
+}
+
 func PreCheckAlternateAccount(t *testing.T) {
 	t.Helper()
 
@@ -958,6 +973,17 @@ func PreCheckThirdAccount(t *testing.T) {
 
 	if os.Getenv(envvar.ThirdAccessKeyId) != "" {
 		envvar.SkipIfEmpty(t, envvar.ThirdSecretAccessKey, "static credentials value when using "+envvar.ThirdAccessKeyId)
+	}
+}
+
+// add fourth region
+func PreCheckFourthAccount(t *testing.T) {
+	t.Helper()
+
+	envvar.SkipIfAllEmpty(t, []string{envvar.FourthProfile, envvar.FourthAccessKeyId}, "credentials for running acceptance testing in fourth AWS account")
+
+	if os.Getenv(envvar.FourthAccessKeyId) != "" {
+		envvar.SkipIfEmpty(t, envvar.FourthSecretAccessKey, "static credentials value when using "+envvar.FourthAccessKeyId)
 	}
 }
 
@@ -1002,6 +1028,28 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 		if Partition() != thirdRegionPartition() {
 			t.Fatalf("%s partition (%s) does not match %s partition (%s)", envvar.ThirdRegion, thirdRegionPartition(), envvar.DefaultRegion, Partition())
 		}
+
+		if regions == 4 {
+			if fourthRegionPartition() == endpoints.AwsUsGovPartitionID || Partition() == endpoints.AwsUsGovPartitionID {
+				t.Skipf("wanted %d regions, partition (%s) only has 2 regions", regions, Partition())
+			}
+
+			if Region() == FourthRegion() {
+				t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.DefaultRegion, envvar.FourthRegion)
+			}
+
+			if AlternateRegion() == FourthRegion() {
+				t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.AlternateRegion, envvar.FourthRegion)
+			}
+
+			if ThirdRegion() == FourthRegion() {
+				t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.ThirdRegion, envvar.FourthRegion)
+			}
+
+			if Partition() != fourthRegionPartition() {
+				t.Fatalf("%s partition (%s) does not match %s partition (%s)", envvar.FourthRegion, fourthRegionPartition(), envvar.DefaultRegion, Partition())
+			}
+		}
 	}
 
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
@@ -1044,6 +1092,15 @@ func PreCheckThirdRegion(t *testing.T, regions ...string) {
 
 	if curr := ThirdRegion(); !slices.Contains(regions, curr) {
 		t.Skipf("skipping tests; %s (%s) not supported. Supported: [%s]", envvar.ThirdRegion, curr, strings.Join(regions, ", "))
+	}
+}
+
+// PreCheckFourthRegion checks that the fourth test region is one of the specified AWS Regions.
+func PreCheckFourthRegion(t *testing.T, regions ...string) {
+	t.Helper()
+
+	if curr := FourthRegion(); !slices.Contains(regions, curr) {
+		t.Skipf("skipping tests; %s (%s) not supported. Supported: [%s]", envvar.FourthRegion, curr, strings.Join(regions, ", "))
 	}
 }
 
@@ -1228,6 +1285,23 @@ func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
 	}
 }
 
+func PreCheckResourceGroupsTaggingAPIRequiredTags(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).ResourceGroupsTaggingAPIClient(ctx)
+	input := resourcegroupstaggingapi.ListRequiredTagsInput{}
+
+	output, err := conn.ListRequiredTags(ctx, &input)
+	if err != nil {
+		t.Skipf("listing required tags: %s", err)
+	}
+
+	// Ensure some required tags are configured
+	if output == nil || len(output.RequiredTags) == 0 {
+		t.Skip("no required tags found")
+	}
+}
+
 func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 	PreCheckSSOAdminInstancesWithRegion(ctx, t, Region())
 }
@@ -1236,7 +1310,7 @@ func PreCheckSSOAdminInstancesWithRegion(ctx context.Context, t *testing.T, regi
 	t.Helper()
 
 	// Push region into Context.
-	ctx = conns.NewResourceContext(ctx, "", "", region)
+	ctx = conns.NewResourceContext(ctx, "", "", "", region)
 	conn := Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 	input := ssoadmin.ListInstancesInput{}
 	var instances []ssoadmintypes.InstanceMetadata
@@ -1842,19 +1916,19 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
-		arn := aws.ToString(certificateAuthority.Arn)
+		caARN := aws.ToString(certificateAuthority.Arn)
 
 		getCSRInput := acmpca.GetCertificateAuthorityCsrInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 		}
 		getCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, &getCSRInput)
 
 		if err != nil {
-			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
+			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", caARN, err)
 		}
 
 		issueCertInput := acmpca.IssueCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
 			IdempotencyToken:        aws.String(id.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
@@ -1866,36 +1940,28 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 		}
 		issueCertOutput, err := conn.IssueCertificate(ctx, &issueCertInput)
 		if err != nil {
-			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Root CA certificate from CSR: %w", arn, err)
+			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Root CA certificate from CSR: %w", caARN, err)
 		}
+
+		caCertARN := aws.ToString(issueCertOutput.CertificateArn)
 
 		// Wait for certificate status to become ISSUED.
-		waiter := acmpca.NewCertificateIssuedWaiter(conn)
-		getCertificateInput := acmpca.GetCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
-			CertificateArn:          issueCertOutput.CertificateArn,
-		}
-
-		err = waiter.Wait(ctx, &getCertificateInput, CertificateIssueTimeout)
+		getCertOutput, err := tfresource.RetryWhenIsA[*acmpca.GetCertificateOutput, *acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func(ctx context.Context) (*acmpca.GetCertificateOutput, error) {
+			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, caCertARN, caARN)
+		})
 
 		if err != nil {
-			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate to become ISSUED: %w", arn, err)
-		}
-
-		getCertOutput, err := conn.GetCertificate(ctx, &getCertificateInput)
-
-		if err != nil {
-			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) issued Root CA certificate: %w", arn, err)
+			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate (%s) to become ISSUED: %w", caARN, caCertARN, err)
 		}
 
 		importCACertificateInput := acmpca.ImportCertificateAuthorityCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 			Certificate:             []byte(aws.ToString(getCertOutput.Certificate)),
 		}
 		_, err = conn.ImportCertificateAuthorityCertificate(ctx, &importCACertificateInput)
 
 		if err != nil {
-			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Root CA certificate: %w", arn, err)
+			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Root CA certificate: %w", caARN, err)
 		}
 
 		return err
@@ -1910,21 +1976,21 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
-		arn := aws.ToString(certificateAuthority.Arn)
+		caARN := aws.ToString(certificateAuthority.Arn)
 
 		getCSRInput := acmpca.GetCertificateAuthorityCsrInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 		}
 		getCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, &getCSRInput)
 
 		if err != nil {
-			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
+			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", caARN, err)
 		}
 
-		rootCertificateAuthorityArn := aws.ToString(rootCertificateAuthority.Arn)
+		rootCAARN := aws.ToString(rootCertificateAuthority.Arn)
 
 		issueCertInput := acmpca.IssueCertificateInput{
-			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
+			CertificateAuthorityArn: aws.String(rootCAARN),
 			Csr:                     []byte(aws.ToString(getCsrOutput.Csr)),
 			IdempotencyToken:        aws.String(id.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
@@ -1936,37 +2002,29 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		}
 		issueCertOutput, err := conn.IssueCertificate(ctx, &issueCertInput)
 		if err != nil {
-			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Subordinate CA certificate from CSR: %w", arn, err)
+			return fmt.Errorf("issuing ACM PCA Certificate Authority (%s) Subordinate CA certificate from CSR: %w", caARN, err)
 		}
+
+		caCertARN := aws.ToString(issueCertOutput.CertificateArn)
 
 		// Wait for certificate status to become ISSUED.
-		waiter := acmpca.NewCertificateIssuedWaiter(conn)
-		getCertificateInput := acmpca.GetCertificateInput{
-			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
-			CertificateArn:          issueCertOutput.CertificateArn,
-		}
-
-		err = waiter.Wait(ctx, &getCertificateInput, CertificateIssueTimeout)
+		getCertOutput, err := tfresource.RetryWhenIsA[*acmpca.GetCertificateOutput, *acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func(ctx context.Context) (*acmpca.GetCertificateOutput, error) {
+			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, caCertARN, rootCAARN)
+		})
 
 		if err != nil {
-			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate (%s) to become ISSUED: %w", arn, aws.ToString(issueCertOutput.CertificateArn), err)
-		}
-
-		getCertOutput, err := conn.GetCertificate(ctx, &getCertificateInput)
-
-		if err != nil {
-			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) issued Subordinate CA certificate: %w", arn, err)
+			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate (%s) to become ISSUED: %w", caARN, caCertARN, err)
 		}
 
 		importCACertificateInput := acmpca.ImportCertificateAuthorityCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(caARN),
 			Certificate:             []byte(aws.ToString(getCertOutput.Certificate)),
 			CertificateChain:        []byte(aws.ToString(getCertOutput.CertificateChain)),
 		}
 		_, err = conn.ImportCertificateAuthorityCertificate(ctx, &importCACertificateInput)
 
 		if err != nil {
-			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Subordinate CA certificate: %w", arn, err)
+			return fmt.Errorf("importing ACM PCA Certificate Authority (%s) Subordinate CA certificate: %w", caARN, err)
 		}
 
 		return err
@@ -2021,7 +2079,7 @@ func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 	}
 }
 
-func CheckVPCExists(ctx context.Context, n string, v *ec2types.Vpc) resource.TestCheckFunc {
+func CheckVPCExists(ctx context.Context, t *testing.T, n string, v *ec2types.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2032,7 +2090,7 @@ func CheckVPCExists(ctx context.Context, n string, v *ec2types.Vpc) resource.Tes
 			return fmt.Errorf("no VPC ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
 
@@ -2189,4 +2247,10 @@ func ExpectErrorAttrAtLeastOneOf(attrs ...string) *regexp.Regexp {
 
 func ExpectErrorAttrMinItems(attr string, expected, actual int) *regexp.Regexp {
 	return regexache.MustCompile(fmt.Sprintf(`Attribute %s requires %d\s+item minimum, but config has only %d declared`, attr, expected, actual))
+}
+
+func ListOfStrings[E ~string](s ...E) string {
+	return strings.Join(tfslices.ApplyToAll(s, func(e E) string {
+		return strconv.Quote(string(e))
+	}), ", ")
 }

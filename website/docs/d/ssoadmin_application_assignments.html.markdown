@@ -16,7 +16,7 @@ Terraform data source for managing AWS SSO Admin Application Assignments.
 
 ```terraform
 data "aws_ssoadmin_application_assignments" "example" {
-  application_arn = aws_ssoadmin_application.example.application_arn
+  application_arn = aws_ssoadmin_application.example.arn
 }
 ```
 

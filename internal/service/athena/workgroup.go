@@ -88,6 +88,24 @@ func resourceWorkGroup() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"identity_center_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enable_identity_center": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"identity_center_instance_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
 						"publish_cloudwatch_metrics_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -187,7 +205,7 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &athena.CreateWorkGroupInput{
+	input := athena.CreateWorkGroupInput{
 		Configuration: expandWorkGroupConfiguration(d.Get(names.AttrConfiguration).([]any)),
 		Name:          aws.String(name),
 		Tags:          getTagsIn(ctx),
@@ -197,7 +215,7 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateWorkGroup(ctx, input)
+	_, err := conn.CreateWorkGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Athena WorkGroup (%s): %s", name, err)
@@ -206,12 +224,12 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 	d.SetId(name)
 
 	if v := types.WorkGroupState(d.Get(names.AttrState).(string)); v == types.WorkGroupStateDisabled {
-		input := &athena.UpdateWorkGroupInput{
+		input := athena.UpdateWorkGroupInput{
 			State:     v,
 			WorkGroup: aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateWorkGroup(ctx, input)
+		_, err := conn.UpdateWorkGroup(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "disabling Athena WorkGroup (%s): %s", d.Id(), err)
@@ -261,7 +279,7 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &athena.UpdateWorkGroupInput{
+		input := athena.UpdateWorkGroupInput{
 			WorkGroup: aws.String(d.Get(names.AttrName).(string)),
 		}
 
@@ -277,7 +295,7 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			input.State = types.WorkGroupState(d.Get(names.AttrState).(string))
 		}
 
-		_, err := conn.UpdateWorkGroup(ctx, input)
+		_, err := conn.UpdateWorkGroup(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Athena WorkGroup (%s): %s", d.Id(), err)
@@ -291,16 +309,14 @@ func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	input := &athena.DeleteWorkGroupInput{
+	log.Printf("[DEBUG] Deleting Athena WorkGroup (%s)", d.Id())
+	input := athena.DeleteWorkGroupInput{
 		WorkGroup: aws.String(d.Id()),
 	}
-
 	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		input.RecursiveDeleteOption = aws.Bool(v.(bool))
 	}
-
-	log.Printf("[DEBUG] Deleting Athena WorkGroup (%s)", d.Id())
-	_, err := conn.DeleteWorkGroup(ctx, input)
+	_, err := conn.DeleteWorkGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena WorkGroup (%s): %s", d.Id(), err)
@@ -310,11 +326,11 @@ func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func findWorkGroupByName(ctx context.Context, conn *athena.Client, name string) (*types.WorkGroup, error) {
-	input := &athena.GetWorkGroupInput{
+	input := athena.GetWorkGroupInput{
 		WorkGroup: aws.String(name),
 	}
 
-	output, err := conn.GetWorkGroup(ctx, input)
+	output, err := conn.GetWorkGroup(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "is not found") {
 		return nil, &retry.NotFoundError{
@@ -357,6 +373,10 @@ func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 
 	if v, ok := m["execution_role"].(string); ok && v != "" {
 		configuration.ExecutionRole = aws.String(v)
+	}
+
+	if v, ok := m["identity_center_configuration"]; ok {
+		configuration.IdentityCenterConfiguration = expandWorkGroupIdentityCenterConfiguration(v.([]any))
 	}
 
 	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
@@ -430,6 +450,26 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 	}
 
 	return configurationUpdates
+}
+
+func expandWorkGroupIdentityCenterConfiguration(l []any) *types.IdentityCenterConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	identityCenterConfiguration := &types.IdentityCenterConfiguration{}
+
+	if v, ok := m["enable_identity_center"].(bool); ok {
+		identityCenterConfiguration.EnableIdentityCenter = aws.Bool(v)
+	}
+
+	if v, ok := m["identity_center_instance_arn"].(string); ok && v != "" {
+		identityCenterConfiguration.IdentityCenterInstanceArn = aws.String(v)
+	}
+
+	return identityCenterConfiguration
 }
 
 func expandWorkGroupResultConfiguration(l []any) *types.ResultConfiguration {
@@ -526,6 +566,7 @@ func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) 
 		"enforce_workgroup_configuration":    aws.ToBool(configuration.EnforceWorkGroupConfiguration),
 		names.AttrEngineVersion:              flattenWorkGroupEngineVersion(configuration.EngineVersion),
 		"execution_role":                     aws.ToString(configuration.ExecutionRole),
+		"identity_center_configuration":      flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
 		"publish_cloudwatch_metrics_enabled": aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":               flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
 		"requester_pays_enabled":             aws.ToBool(configuration.RequesterPaysEnabled),
@@ -542,6 +583,19 @@ func flattenWorkGroupEngineVersion(engineVersion *types.EngineVersion) []any {
 	m := map[string]any{
 		"effective_engine_version": aws.ToString(engineVersion.EffectiveEngineVersion),
 		"selected_engine_version":  aws.ToString(engineVersion.SelectedEngineVersion),
+	}
+
+	return []any{m}
+}
+
+func flattenWorkGroupIdentityCenterConfiguration(identityCenterConfiguration *types.IdentityCenterConfiguration) []any {
+	if identityCenterConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		"enable_identity_center":       aws.ToBool(identityCenterConfiguration.EnableIdentityCenter),
+		"identity_center_instance_arn": aws.ToString(identityCenterConfiguration.IdentityCenterInstanceArn),
 	}
 
 	return []any{m}

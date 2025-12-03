@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ecr_lifecycle_policy", name="Lifecycle Policy")
+// @IdentityAttribute("repository")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(idAttrDuplicates="repository")
 func resourceLifecyclePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLifecyclePolicyCreate,
 		ReadWithoutTimeout:   resourceLifecyclePolicyRead,
 		DeleteWithoutTimeout: resourceLifecyclePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrPolicy: {
@@ -48,10 +48,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 					return equal
 				},
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
+				StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
 			},
 			"registry_id": {
 				Type:     schema.TypeString,
@@ -96,7 +93,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*ecr.GetLifecyclePolicyOutput, error) {
 		return findLifecyclePolicyByRepositoryName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -109,8 +106,6 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Lifecycle Policy (%s): %s", d.Id(), err)
 	}
-
-	output := outputRaw.(*ecr.GetLifecyclePolicyOutput)
 
 	if equivalent, err := equivalentLifecyclePolicyJSON(d.Get(names.AttrPolicy).(string), aws.ToString(output.LifecyclePolicyText)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

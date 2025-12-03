@@ -1229,7 +1229,7 @@ func testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx context.C
 func testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx context.Context) acctest.TestCheckWithRegionFunc {
 	return func(s *terraform.State, region string) error {
 		// Push region into Context.
-		ctx = conns.NewResourceContext(ctx, "S3", "aws_s3_bucket_replication_configuration", region)
+		ctx = conns.NewResourceContext(ctx, "S3", "Bucket Replication Configuration", "aws_s3_bucket_replication_configuration", region)
 		for _, rs := range s.RootModule().Resources {
 			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 

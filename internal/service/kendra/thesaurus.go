@@ -120,7 +120,7 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateThesaurus(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -236,7 +236,7 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		log.Printf("[DEBUG] Updating Kendra Thesaurus (%s): %#v", d.Id(), input)
 
 		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateThesaurus(ctx, input)
 			},
 			func(err error) (bool, error) {

@@ -46,6 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_endpoint_service_id` - (Required) The ID of the VPC endpoint service to allow permission.
 * `principal_arn` - (Required) The ARN of the principal to allow permissions.
 
@@ -55,4 +56,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the association.
 
-<!-- cache-key: cdktf-0.20.8 input-8ff7831d801343519ca1bf1af9bc9600a8326d54f66a019278e06cc2bc3ebf39 -->
+<!-- cache-key: cdktf-0.20.8 input-8fc2599c38e012dc296cf4ebfb91391d0153c0904d4fc0faf2944caddd810c01 -->

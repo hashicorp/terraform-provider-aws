@@ -11,7 +11,7 @@ import (
 func NewIdentitySchema(identitySpec inttypes.Identity) identityschema.Schema {
 	schemaAttrs := make(map[string]identityschema.Attribute, len(identitySpec.Attributes))
 	for _, attr := range identitySpec.Attributes {
-		schemaAttrs[attr.Name] = newIdentityAttribute(attr)
+		schemaAttrs[attr.Name()] = newIdentityAttribute(attr)
 	}
 	return identityschema.Schema{
 		Attributes: schemaAttrs,
@@ -20,7 +20,7 @@ func NewIdentitySchema(identitySpec inttypes.Identity) identityschema.Schema {
 
 func newIdentityAttribute(attribute inttypes.IdentityAttribute) identityschema.Attribute {
 	attr := identityschema.StringAttribute{}
-	if attribute.Required {
+	if attribute.Required() {
 		attr.RequiredForImport = true
 	} else {
 		attr.OptionalForImport = true

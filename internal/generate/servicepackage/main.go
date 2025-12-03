@@ -1,8 +1,8 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build generate
-// +build generate
+//go:build ignore
+// +build ignore
 
 package main
 
@@ -22,7 +22,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
@@ -62,11 +61,14 @@ func main() {
 		v := &visitor{
 			g: g,
 
-			ephemeralResources:   make(map[string]ResourceDatum, 0),
-			frameworkDataSources: make(map[string]ResourceDatum, 0),
-			frameworkResources:   make(map[string]ResourceDatum, 0),
-			sdkDataSources:       make(map[string]ResourceDatum, 0),
-			sdkResources:         make(map[string]ResourceDatum, 0),
+			actions:                make(map[string]ResourceDatum, 0),
+			ephemeralResources:     make(map[string]ResourceDatum, 0),
+			frameworkDataSources:   make(map[string]ResourceDatum, 0),
+			frameworkListResources: make(map[string]ResourceDatum, 0),
+			frameworkResources:     make(map[string]ResourceDatum, 0),
+			sdkDataSources:         make(map[string]ResourceDatum, 0),
+			sdkResources:           make(map[string]ResourceDatum, 0),
+			sdkListResources:       make(map[string]ResourceDatum, 0),
 		}
 
 		v.processDir(".")
@@ -87,6 +89,34 @@ func main() {
 			}
 		}
 
+		for key, value := range v.frameworkListResources {
+			if val, exists := v.frameworkResources[key]; exists {
+				value.Name = val.Name
+				value.ResourceIdentity = val.ResourceIdentity
+				value.TransparentTagging = val.TransparentTagging
+				value.TagsResourceType = val.TagsResourceType
+				value.TagsIdentifierAttribute = val.TagsIdentifierAttribute
+
+				v.frameworkListResources[key] = value
+			} else {
+				g.Fatalf("Framework List Resource %q has no matching Framework Resource", key)
+			}
+		}
+
+		for key, value := range v.sdkListResources {
+			if val, exists := v.sdkResources[key]; exists {
+				value.Name = val.Name
+				value.ResourceIdentity = val.ResourceIdentity
+				value.TransparentTagging = val.TransparentTagging
+				value.TagsResourceType = val.TagsResourceType
+				value.TagsIdentifierAttribute = val.TagsIdentifierAttribute
+
+				v.sdkListResources[key] = value
+			} else {
+				g.Fatalf("SDK List Resource %q has no matching SDK Resource", key)
+			}
+		}
+
 		s := ServiceDatum{
 			GenerateClient:          l.GenerateClient(),
 			IsGlobal:                l.IsGlobal(),
@@ -94,30 +124,42 @@ func main() {
 			GoV2Package:             l.GoV2Package(),
 			ProviderPackage:         p,
 			ProviderNameUpper:       l.ProviderNameUpper(),
+			Actions:                 v.actions,
 			EphemeralResources:      v.ephemeralResources,
 			FrameworkDataSources:    v.frameworkDataSources,
+			FrameworkListResources:  v.frameworkListResources,
 			FrameworkResources:      v.frameworkResources,
 			SDKDataSources:          v.sdkDataSources,
 			SDKResources:            v.sdkResources,
+			SDKListResources:        v.sdkListResources,
 		}
 
-		var imports []goImport
-		for resource := range maps.Values(v.ephemeralResources) {
+		var imports []common.GoImport
+		for _, resource := range v.actions {
 			imports = append(imports, resource.goImports...)
 		}
-		for resource := range maps.Values(v.frameworkDataSources) {
+		for _, resource := range v.ephemeralResources {
 			imports = append(imports, resource.goImports...)
 		}
-		for resource := range maps.Values(v.frameworkResources) {
+		for _, resource := range v.frameworkDataSources {
 			imports = append(imports, resource.goImports...)
 		}
-		for resource := range maps.Values(v.sdkDataSources) {
+		for _, resource := range v.frameworkListResources {
 			imports = append(imports, resource.goImports...)
 		}
-		for resource := range maps.Values(v.sdkResources) {
+		for _, resource := range v.frameworkResources {
 			imports = append(imports, resource.goImports...)
 		}
-		slices.SortFunc(imports, func(a, b goImport) int {
+		for _, resource := range v.sdkDataSources {
+			imports = append(imports, resource.goImports...)
+		}
+		for _, resource := range v.sdkResources {
+			imports = append(imports, resource.goImports...)
+		}
+		for _, resource := range v.sdkListResources {
+			imports = append(imports, resource.goImports...)
+		}
+		slices.SortFunc(imports, func(a, b common.GoImport) int {
 			if n := strings.Compare(a.Path, b.Path); n != 0 {
 				return n
 			}
@@ -174,49 +216,30 @@ type ResourceDatum struct {
 	TagsIdentifierAttribute           string
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
-	IdentityAttributes                []identityAttribute
-	ARNIdentity                       bool
-	arnAttribute                      string
 	isARNFormatGlobal                 arnFormatState
-	SingletonIdentity                 bool
-	MutableIdentity                   bool
-	WrappedImport                     bool
-	goImports                         []goImport
-	IdentityDuplicateAttrs            []string
+	wrappedImport                     common.TriBoolean
+	CustomImport                      bool
+	goImports                         []common.GoImport
+	ImportIDHandler                   string
+	SetIDAttribute                    bool
+	HasIdentityFix                    bool
+	common.ResourceIdentity
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
 	return r.isARNFormatGlobal == arnFormatStateGlobal
 }
 
-type identityAttribute struct {
-	Name     string
-	Optional bool
-}
-
-type goImport struct {
-	Path              string
-	Alias             string
-	ARNIdentity       bool
-	arnAttribute      string
-	SingletonIdentity bool
-	WrappedImport     bool
-}
-
-func (r ResourceDatum) HasARNAttribute() bool {
-	return r.arnAttribute != "" && r.arnAttribute != "arn"
-}
-
-func (r ResourceDatum) ARNAttribute() string {
-	return namesgen.ConstOrQuote(r.arnAttribute)
+func (r ResourceDatum) HasAlternateARNAttribute() bool {
+	return r.IdentityAttributeName() != "" && r.IdentityAttributeName() != "arn"
 }
 
 func (d ResourceDatum) RegionOverrideEnabled() bool {
 	return d.regionOverrideEnabled && !d.IsGlobal
 }
 
-func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
-	return len(r.IdentityDuplicateAttrs) > 0
+func (r ResourceDatum) WrappedImport() bool {
+	return r.wrappedImport == common.TriBooleanTrue
 }
 
 type ServiceDatum struct {
@@ -226,12 +249,15 @@ type ServiceDatum struct {
 	GoV2Package             string // AWS SDK for Go v2 package name
 	ProviderPackage         string
 	ProviderNameUpper       string
+	Actions                 map[string]ResourceDatum
 	EphemeralResources      map[string]ResourceDatum
 	FrameworkDataSources    map[string]ResourceDatum
+	FrameworkListResources  map[string]ResourceDatum
 	FrameworkResources      map[string]ResourceDatum
 	SDKDataSources          map[string]ResourceDatum
 	SDKResources            map[string]ResourceDatum
-	GoImports               []goImport
+	SDKListResources        map[string]ResourceDatum
+	GoImports               []common.GoImport
 }
 
 //go:embed service_package_gen.go.gtpl
@@ -254,11 +280,14 @@ type visitor struct {
 	functionName string
 	packageName  string
 
-	ephemeralResources   map[string]ResourceDatum
-	frameworkDataSources map[string]ResourceDatum
-	frameworkResources   map[string]ResourceDatum
-	sdkDataSources       map[string]ResourceDatum
-	sdkResources         map[string]ResourceDatum
+	actions                map[string]ResourceDatum
+	ephemeralResources     map[string]ResourceDatum
+	frameworkDataSources   map[string]ResourceDatum
+	frameworkListResources map[string]ResourceDatum
+	frameworkResources     map[string]ResourceDatum
+	sdkDataSources         map[string]ResourceDatum
+	sdkResources           map[string]ResourceDatum
+	sdkListResources       map[string]ResourceDatum
 }
 
 // processDir scans a single service package directory and processes contained Go sources files.
@@ -324,8 +353,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
+		var implementation common.Implementation
+
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
+			case "FrameworkResource":
+				implementation = common.ImplementationFramework
+
+			case "SDKResource":
+				implementation = common.ImplementationSDK
+
 			case "Region":
 				if attr, ok := args.Keyword["global"]; ok {
 					if global, err := strconv.ParseBool(attr); err != nil {
@@ -368,28 +405,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.TagsResourceType = attr
 				}
 
-			case "IdentityAttribute":
-				d.WrappedImport = true
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				identityAttribute := identityAttribute{
-					Name: namesgen.ConstOrQuote(args.Positional[0]),
-				}
-
-				if attr, ok := args.Keyword["optional"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						identityAttribute.Optional = b
-					}
-				}
-
-				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
-
 			case "WrappedImport":
 				if len(args.Positional) != 1 {
 					v.errs = append(v.errs, fmt.Errorf("WrappedImport missing required parameter: at %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -399,30 +414,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, fmt.Errorf("invalid WrappedImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
 					} else {
-						d.WrappedImport = b
+						d.wrappedImport = common.TriBool(b)
 					}
 				}
 
-			case "ArnIdentity":
-				d.ARNIdentity = true
-				d.WrappedImport = true
-				args := common.ParseArgs(m[3])
-				if len(args.Positional) == 0 {
-					d.arnAttribute = "arn"
-				} else {
-					d.arnAttribute = args.Positional[0]
-				}
-
-				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-					attrs := strings.Split(attr, ";")
-					d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
-						return namesgen.ConstOrQuote(s)
-					})
-				}
+			case "CustomImport":
+				d.CustomImport = true
 
 			case "ArnFormat":
-				args := common.ParseArgs(m[3])
-
 				if attr, ok := args.Keyword["global"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -436,23 +435,45 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
-			case "MutableIdentity":
-				d.MutableIdentity = true
+			case "NoImport":
+				d.wrappedImport = common.TriBooleanFalse
 
-			case "SingletonIdentity":
-				d.SingletonIdentity = true
-				d.WrappedImport = true
-
-				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-					attrs := strings.Split(attr, ";")
-					d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
-						return namesgen.ConstOrQuote(s)
-					})
+			case "ImportIDHandler":
+				attr := args.Positional[0]
+				if typeName, importSpec, err := common.ParseIdentifierSpec(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%q at %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					continue
+				} else {
+					d.ImportIDHandler = typeName
+					if importSpec != nil {
+						d.goImports = append(d.goImports, *importSpec)
+					}
 				}
 
-			case "NoImport":
-				d.WrappedImport = false
+				if attr, ok := args.Keyword["setIDAttribute"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.SetIDAttribute = b
+					}
+				}
+
+			case "IdentityFix":
+				d.HasIdentityFix = true
+
+			default:
+				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+					continue
+				}
 			}
+		}
+	}
+
+	if d.HasResourceIdentity() {
+		if d.wrappedImport == common.TriBooleanUnset {
+			d.wrappedImport = common.TriBooleanTrue
 		}
 	}
 
@@ -470,6 +491,30 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 
 			switch annotationName := m[1]; annotationName {
+			case "Action":
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if _, ok := v.actions[typeName]; ok {
+					v.errs = append(v.errs, fmt.Errorf("duplicate Action (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				} else {
+					v.actions[typeName] = d
+				}
+
 			case "EphemeralResource":
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -493,6 +538,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.ephemeralResources[typeName] = d
 				}
+
+				if d.HasV6_0NullValuesError {
+					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Ephemeral Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
 			case "FrameworkDataSource":
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -516,6 +566,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.frameworkDataSources[typeName] = d
 				}
+
+				if d.HasV6_0NullValuesError {
+					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
 			case "FrameworkResource":
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -539,6 +594,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.frameworkResources[typeName] = d
 				}
+
+				if d.HasV6_0NullValuesError {
+					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
+				if d.IdentityVersion > 0 {
+					v.errs = append(v.errs, fmt.Errorf("IdentityVersion not currently supported for Framework Resources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
 			case "SDKDataSource":
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -562,6 +626,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkDataSources[typeName] = d
 				}
+
+				if d.HasV6_0NullValuesError {
+					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
 			case "SDKResource":
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -586,9 +655,51 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport":
+			case "FrameworkListResource":
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				_, fOK := v.frameworkListResources[typeName]
+				_, sdkOK := v.sdkListResources[typeName]
+				if fOK || sdkOK {
+					v.errs = append(v.errs, fmt.Errorf("duplicate List Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				} else {
+					v.frameworkListResources[typeName] = d
+				}
+
+			case "SDKListResource":
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				_, fOK := v.frameworkListResources[typeName]
+				_, sdkOK := v.sdkListResources[typeName]
+				if fOK || sdkOK {
+					v.errs = append(v.errs, fmt.Errorf("duplicate List Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				} else {
+					v.sdkListResources[typeName] = d
+				}
+
+			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
 				// Handled above.
-			case "ArnFormat", "NoImport", "Testing":
+			case "ArnFormat", "IdAttrFormat", "NoImport", "Testing":
 				// Ignored.
 			default:
 				v.g.Warnf("unknown annotation: %s", annotationName)

@@ -7,7 +7,6 @@ import (
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,13 +28,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceSigningJob,
+			Factory:  dataSourceSigningJob,
 			TypeName: "aws_signer_signing_job",
 			Name:     "Signing Job",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceSigningProfile,
+			Factory:  dataSourceSigningProfile,
 			TypeName: "aws_signer_signing_profile",
 			Name:     "Signing Profile",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
@@ -46,13 +45,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceSigningJob,
+			Factory:  resourceSigningJob,
 			TypeName: "aws_signer_signing_job",
 			Name:     "Signing Job",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceSigningProfile,
+			Factory:  resourceSigningProfile,
 			TypeName: "aws_signer_signing_profile",
 			Name:     "Signing Profile",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -61,7 +60,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceSigningProfilePermission,
+			Factory:  resourceSigningProfilePermission,
 			TypeName: "aws_signer_signing_profile_permission",
 			Name:     "Signing Profile Permission",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
@@ -92,7 +91,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *signer.Options) {
 			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
-				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), vcr.InteractionNotFoundRetryableFunc)
 			}
 		},
 		withExtraOptions(ctx, p, config),

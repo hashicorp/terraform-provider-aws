@@ -215,6 +215,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `databaseName` (Required) Glue database where results are written.
 * `name` (Required) Name of the crawler.
 * `role` (Required) The IAM role friendly name (including path without leading slash), or ARN of an IAM role, used by the crawler to access other resources.
@@ -355,4 +356,4 @@ Using `terraform import`, import Glue Crawlers using `name`. For example:
 % terraform import aws_glue_crawler.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-79105020f369af2ee4b1acbb9e4d0c032d5fbaef52eb433968bf5f947b5f84d0 -->
+<!-- cache-key: cdktf-0.20.8 input-e5957fba1f4e68614275732cc4dd65ab2802b0f2f3c114bdf433977b37ac5bb8 -->

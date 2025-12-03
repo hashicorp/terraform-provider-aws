@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -201,7 +201,7 @@ func (r *applicationResource) Read(ctx context.Context, req resource.ReadRequest
 	conn := r.Meta().QBusinessClient(ctx)
 
 	out, err := findApplicationByID(ctx, conn, data.ApplicationId.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -323,8 +323,7 @@ func findApplicationByID(ctx context.Context, conn *qbusiness.Client, id string)
 	output, err := conn.GetApplication(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -339,8 +338,8 @@ func findApplicationByID(ctx context.Context, conn *qbusiness.Client, id string)
 	return output, nil
 }
 
-func statusApplication(ctx context.Context, conn *qbusiness.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusApplication(conn *qbusiness.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -359,7 +358,7 @@ func waitApplicationActive(ctx context.Context, conn *qbusiness.Client, id strin
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ApplicationStatusCreating, awstypes.ApplicationStatusUpdating),
 		Target:     enum.Slice(awstypes.ApplicationStatusActive),
-		Refresh:    statusApplication(ctx, conn, id),
+		Refresh:    statusApplication(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -367,7 +366,7 @@ func waitApplicationActive(ctx context.Context, conn *qbusiness.Client, id strin
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*qbusiness.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(string(output.Status)))
+		retry.SetLastError(err, errors.New(string(output.Status)))
 
 		return output, err
 	}
@@ -378,7 +377,7 @@ func waitApplicationDeleted(ctx context.Context, conn *qbusiness.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ApplicationStatusActive, awstypes.ApplicationStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusApplication(ctx, conn, id),
+		Refresh:    statusApplication(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -386,7 +385,7 @@ func waitApplicationDeleted(ctx context.Context, conn *qbusiness.Client, id stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*qbusiness.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(string(output.Status)))
+		retry.SetLastError(err, errors.New(string(output.Status)))
 
 		return output, err
 	}

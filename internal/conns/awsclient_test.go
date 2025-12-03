@@ -243,11 +243,357 @@ func TestAWSClientValidateInContextRegionInPartition(t *testing.T) { // nosemgre
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx = NewResourceContext(ctx, "test", "Test", testCase.Region)
+			ctx = NewResourceContext(ctx, "test", "Test", "aws_test_test", testCase.Region)
 			err := testCase.AWSClient.ValidateInContextRegionInPartition(ctx)
 
 			if got := err == nil; got != testCase.Expected {
 				t.Errorf("got %t, expected %t", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientGlobalARN(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Service   string
+		Resource  string
+		Expected  string
+	}{
+		{
+			Name: "AWS Commercial",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: standardPartition,
+			},
+			Service:  "iam",
+			Resource: "policy/test",
+			Expected: "arn:aws:iam::123456789012:policy/test", //lintignore:AWSAT003,AWSAT005
+		},
+		{
+			Name: "AWS China",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: chinaPartition,
+			},
+			Service:  "iam",
+			Resource: "policy/test",
+			Expected: "arn:aws-cn:iam::123456789012:policy/test", //lintignore:AWSAT003,AWSAT005
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.AWSClient.GlobalARN(ctx, testCase.Service, testCase.Resource)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientGlobalARNNoAccount(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Service   string
+		Resource  string
+		Expected  string
+	}{
+		{
+			Name: "AWS Commercial",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: standardPartition,
+			},
+			Service:  "s3",
+			Resource: "bucket/test",
+			Expected: "arn:aws:s3:::bucket/test", //lintignore:AWSAT003,AWSAT005
+		},
+		{
+			Name: "AWS China",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: chinaPartition,
+			},
+			Service:  "s3",
+			Resource: "bucket/test",
+			Expected: "arn:aws-cn:s3:::bucket/test", //lintignore:AWSAT003,AWSAT005
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.AWSClient.GlobalARNNoAccount(ctx, testCase.Service, testCase.Resource)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientGlobalARNWithAccount(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Service   string
+		Resource  string
+		Expected  string
+	}{
+		{
+			Name: "AWS Commercial",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: standardPartition,
+			},
+			Service:  "iam",
+			Resource: "policy/test",
+			Expected: "arn:aws:iam::234567890123:policy/test", //lintignore:AWSAT003,AWSAT005
+		},
+		{
+			Name: "AWS China",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: chinaPartition,
+			},
+			Service:  "iam",
+			Resource: "policy/test",
+			Expected: "arn:aws-cn:iam::234567890123:policy/test", //lintignore:AWSAT003,AWSAT005
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.AWSClient.GlobalARNWithAccount(ctx, testCase.Service, "234567890123", testCase.Resource)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientRegionalARN(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Service   string
+		Resource  string
+		Expected  string
+	}{
+		{
+			Name: "AWS Commercial",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: standardPartition,
+				awsConfig: &aws.Config{
+					Region: "us-west-2", //lintignore:AWSAT003
+				},
+			},
+			Service:  "ec2",
+			Resource: "vpc/test",
+			Expected: "arn:aws:ec2:us-west-2:123456789012:vpc/test", //lintignore:AWSAT003,AWSAT005
+		},
+		{
+			Name: "AWS China",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: chinaPartition,
+				awsConfig: &aws.Config{
+					Region: "cn-northwest-1", //lintignore:AWSAT003
+				},
+			},
+			Service:  "ec2",
+			Resource: "vpc/test",
+			Expected: "arn:aws-cn:ec2:cn-northwest-1:123456789012:vpc/test", //lintignore:AWSAT003,AWSAT005
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.AWSClient.RegionalARN(ctx, testCase.Service, testCase.Resource)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientRegionalARNNoAccount(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Service   string
+		Resource  string
+		Expected  string
+	}{
+		{
+			Name: "AWS Commercial",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: standardPartition,
+				awsConfig: &aws.Config{
+					Region: "us-west-2", //lintignore:AWSAT003
+				},
+			},
+			Service:  "ec2",
+			Resource: "vpc/test",
+			Expected: "arn:aws:ec2:us-west-2::vpc/test", //lintignore:AWSAT003,AWSAT005
+		},
+		{
+			Name: "AWS China",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: chinaPartition,
+				awsConfig: &aws.Config{
+					Region: "cn-northwest-1", //lintignore:AWSAT003
+				},
+			},
+			Service:  "ec2",
+			Resource: "vpc/test",
+			Expected: "arn:aws-cn:ec2:cn-northwest-1::vpc/test", //lintignore:AWSAT003,AWSAT005
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.AWSClient.RegionalARNNoAccount(ctx, testCase.Service, testCase.Resource)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientRegionalARNWithAccount(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Service   string
+		Resource  string
+		Expected  string
+	}{
+		{
+			Name: "AWS Commercial",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: standardPartition,
+				awsConfig: &aws.Config{
+					Region: "us-west-2", //lintignore:AWSAT003
+				},
+			},
+			Service:  "ec2",
+			Resource: "vpc/test",
+			Expected: "arn:aws:ec2:us-west-2:234567890123:vpc/test", //lintignore:AWSAT003,AWSAT005
+		},
+		{
+			Name: "AWS China",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: chinaPartition,
+				awsConfig: &aws.Config{
+					Region: "cn-northwest-1", //lintignore:AWSAT003
+				},
+			},
+			Service:  "ec2",
+			Resource: "vpc/test",
+			Expected: "arn:aws-cn:ec2:cn-northwest-1:234567890123:vpc/test", //lintignore:AWSAT003,AWSAT005
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.AWSClient.RegionalARNWithAccount(ctx, testCase.Service, "234567890123", testCase.Resource)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientRegionalARNWithRegion(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Service   string
+		Resource  string
+		Expected  string
+	}{
+		{
+			Name: "AWS Commercial",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: standardPartition,
+				awsConfig: &aws.Config{
+					Region: "us-west-2", //lintignore:AWSAT003
+				},
+			},
+			Service:  "ec2",
+			Resource: "vpc/test",
+			Expected: "arn:aws:ec2:region-1:123456789012:vpc/test", //lintignore:AWSAT003,AWSAT005
+		},
+		{
+			Name: "AWS China",
+			AWSClient: &AWSClient{
+				accountID: "123456789012",
+				partition: chinaPartition,
+				awsConfig: &aws.Config{
+					Region: "cn-northwest-1", //lintignore:AWSAT003
+				},
+			},
+			Service:  "ec2",
+			Resource: "vpc/test",
+			Expected: "arn:aws-cn:ec2:region-1:123456789012:vpc/test", //lintignore:AWSAT003,AWSAT005
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.AWSClient.RegionalARNWithRegion(ctx, testCase.Service, "region-1", testCase.Resource)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
 			}
 		})
 	}

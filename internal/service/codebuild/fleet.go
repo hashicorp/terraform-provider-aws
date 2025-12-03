@@ -29,6 +29,7 @@ import (
 // @SDKResource("aws_codebuild_fleet", name="Fleet")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 func resourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,
@@ -57,9 +58,15 @@ func resourceFleet() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						names.AttrInstanceType: {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
 						"machine_type": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[types.MachineType](),
 						},
 						"memory": {
@@ -261,7 +268,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	// InvalidInputException: CodeBuild is not authorized to perform
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFleet(ctx, input)
 	}, "ot authorized to perform")
 
@@ -397,7 +404,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	input.Tags = getTagsIn(ctx)
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateFleet(ctx, input)
 	}, "ot authorized to perform")
 
@@ -584,6 +591,10 @@ func expandComputeConfiguration(tfMap map[string]any) *types.ComputeConfiguratio
 		apiObject.MachineType = types.MachineType(v)
 	}
 
+	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
+		apiObject.InstanceType = aws.String(v)
+	}
+
 	if v, ok := tfMap["memory"].(int); ok {
 		apiObject.Memory = aws.Int64(int64(v))
 	}
@@ -671,6 +682,10 @@ func flattenComputeConfiguration(apiObject *types.ComputeConfiguration) map[stri
 
 	if v := apiObject.MachineType; v != "" {
 		tfMap["machine_type"] = v
+	}
+
+	if v := apiObject.InstanceType; v != nil {
+		tfMap[names.AttrInstanceType] = aws.ToString(v)
 	}
 
 	if v := apiObject.Memory; v != nil {

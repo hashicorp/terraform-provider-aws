@@ -69,6 +69,7 @@ data "aws_availability_zones" "available" {
 locals {
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
 }
+
 resource "null_resource" "test" {}
 
 variable "rName" {

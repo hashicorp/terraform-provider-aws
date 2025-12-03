@@ -32,6 +32,53 @@ resource "aws_s3tables_table_bucket" "example" {
 }
 ```
 
+### With Metadata Schema
+
+```terraform
+resource "aws_s3tables_table" "example" {
+  name             = "example_table"
+  namespace        = aws_s3tables_namespace.example.namespace
+  table_bucket_arn = aws_s3tables_namespace.example.table_bucket_arn
+  format           = "ICEBERG"
+
+  metadata {
+    iceberg {
+      schema {
+        field {
+          name     = "id"
+          type     = "long"
+          required = true
+        }
+        field {
+          name     = "name"
+          type     = "string"
+          required = true
+        }
+        field {
+          name     = "created_at"
+          type     = "timestamp"
+          required = false
+        }
+        field {
+          name     = "price"
+          type     = "decimal(10,2)"
+          required = false
+        }
+      }
+    }
+  }
+}
+
+resource "aws_s3tables_namespace" "example" {
+  namespace        = "example_namespace"
+  table_bucket_arn = aws_s3tables_table_bucket.example.arn
+}
+
+resource "aws_s3tables_table_bucket" "example" {
+  name = "example-bucket"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -49,11 +96,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `encryption_configuration` - (Optional) A single table bucket encryption configuration object.
   [See `encryption_configuration` below](#encryption_configuration).
 * `maintenance_configuration` - (Optional) A single table bucket maintenance configuration object.
   [See `maintenance_configuration` below](#maintenance_configuration).
+* `metadata` - (Optional) Contains details about the table metadata. This configuration specifies the metadata format and schema for the table. Currently only supports Iceberg format.
+  [See `metadata` below](#metadata).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `encryption_configuration`
 
@@ -105,6 +155,35 @@ The `iceberg_snapshot_management.settings` object supports the following argumen
 * `min_snapshots_to_keep` - (Required) Minimum number of snapshots to keep.
   Must be at least `1`.
 
+### `metadata`
+
+The `metadata` configuration block supports the following argument:
+
+* `iceberg` - (Optional) Contains details about the metadata for an Iceberg table. This block defines the schema structure for the Apache Iceberg table format.
+  [See `iceberg` below](#iceberg).
+
+### `iceberg`
+
+The `iceberg` configuration block supports the following argument:
+
+* `schema` - (Required) Schema configuration for the Iceberg table.
+  [See `schema` below](#schema).
+
+### `schema`
+
+The `schema` configuration block supports the following argument:
+
+* `field` - (Required) List of schema fields for the Iceberg table. Each field defines a column in the table schema.
+  [See `field` below](#field).
+
+### `field`
+
+The `field` configuration block supports the following arguments:
+
+* `name` - (Required) The name of the field.
+* `type` - (Required) The field type. S3 Tables supports all Apache Iceberg primitive types including: `boolean`, `int`, `long`, `float`, `double`, `decimal(precision,scale)`, `date`, `time`, `timestamp`, `timestamptz`, `string`, `uuid`, `fixed(length)`, `binary`.
+* `required` - (Optional) A Boolean value that specifies whether values are required for each row in this field. Defaults to `false`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -116,6 +195,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `modified_at` - Date and time when the namespace was last modified.
 * `modified_by` - Account ID of the account that last modified the namespace.
 * `owner_account_id` - Account ID of the account that owns the namespace.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - Type of the table.
   One of `customer` or `aws`.
 * `version_token` - Identifier for the current version of table data.

@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,6 +18,7 @@ import (
 
 // @SDKResource("aws_ebs_snapshot_block_public_access", name="EBS Snapshot Block Public Access")
 // @SingletonIdentity
+// @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
 func resourceEBSSnapshotBlockPublicAccess() *schema.Resource {
@@ -31,7 +32,7 @@ func resourceEBSSnapshotBlockPublicAccess() *schema.Resource {
 			names.AttrState: {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.SnapshotBlockPublicAccessState](),
+				ValidateDiagFunc: enum.Validate[awstypes.SnapshotBlockPublicAccessState](),
 			},
 		},
 	}
@@ -43,7 +44,7 @@ func resourceEBSSnapshotBlockPublicAccessPut(ctx context.Context, d *schema.Reso
 
 	state := d.Get(names.AttrState).(string)
 	input := ec2.EnableSnapshotBlockPublicAccessInput{
-		State: types.SnapshotBlockPublicAccessState(state),
+		State: awstypes.SnapshotBlockPublicAccessState(state),
 	}
 
 	_, err := conn.EnableSnapshotBlockPublicAccess(ctx, &input)

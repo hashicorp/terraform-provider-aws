@@ -42,7 +42,6 @@ resource "aws_ssm_document" "test" {
   }
 }
 DOC
-
 }
 
 variable "rName" {

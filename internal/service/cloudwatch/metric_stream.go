@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
@@ -22,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -234,13 +237,13 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Metric Stream (%s): %s", name, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, name)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitMetricStreamRunning(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Metric Stream (%s) create: %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
@@ -249,15 +252,15 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
-			return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
+			return smerr.AppendEnrich(ctx, diags, resourceMetricStreamRead(ctx, d, meta)) // no error, just continue
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting CloudWatch Metric Stream (%s) tags: %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	}
 
-	return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceMetricStreamRead(ctx, d, meta))
 }
 
 func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -266,27 +269,27 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findMetricStreamByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudWatch Metric Stream (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && intretry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Metric Stream (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set(names.AttrARN, output.Arn)
 	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
 	if output.ExcludeFilters != nil {
 		if err := d.Set("exclude_filter", flattenMetricStreamFilters(output.ExcludeFilters)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting exclude_filter: %s", err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	}
 	d.Set("firehose_arn", output.FirehoseArn)
 	if output.IncludeFilters != nil {
 		if err := d.Set("include_filter", flattenMetricStreamFilters(output.IncludeFilters)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting include_filter: %s", err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	}
 	d.Set("include_linked_accounts_metrics", output.IncludeLinkedAccountsMetrics)
@@ -298,7 +301,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrState, output.State)
 	if output.StatisticsConfigurations != nil {
 		if err := d.Set("statistics_configuration", flattenMetricStreamStatisticsConfigurations(output.StatisticsConfigurations)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting statistics_configuration: %s", err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	}
 
@@ -333,15 +336,15 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := conn.PutMetricStream(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Metric Stream (%s): %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 
 		if _, err := waitMetricStreamRunning(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Metric Stream (%s) update: %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	}
 
-	return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceMetricStreamRead(ctx, d, meta))
 }
 
 func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -355,11 +358,11 @@ func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, met
 	_, err := conn.DeleteMetricStream(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Metric Stream (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	if _, err := waitMetricStreamDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Metric Stream (%s) delete: %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -373,18 +376,18 @@ func findMetricStreamByName(ctx context.Context, conn *cloudwatch.Client, name s
 	output, err := conn.GetMetricStream(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
-		}
+		})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
 	return output, nil
@@ -394,12 +397,12 @@ func statusMetricStream(ctx context.Context, conn *cloudwatch.Client, name strin
 	return func() (any, string, error) {
 		output, err := findMetricStreamByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if intretry.NotFound(err) {
 			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return output, aws.ToString(output.State), nil
@@ -422,10 +425,10 @@ func waitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.Client, name 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatch.GetMetricStreamOutput); ok {
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.Client, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) { //nolint:unparam
@@ -439,16 +442,16 @@ func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.Client, name 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatch.GetMetricStreamOutput); ok {
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func validateMetricStreamName(v any, k string) (ws []string, errors []error) {
 	return validation.All(
 		validation.StringLenBetween(1, 255),
-		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]*$`), "must match [0-9A-Za-z_-]"),
+		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]*$`), "must match [0-9A-ZaZ_-]"),
 	)(v, k)
 }
 

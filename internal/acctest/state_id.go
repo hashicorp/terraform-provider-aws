@@ -5,9 +5,11 @@ package acctest
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -20,6 +22,20 @@ func AttrImportStateIdFunc(resourceName, attrName string) resource.ImportStateId
 		}
 
 		return rs.Primary.Attributes[attrName], nil
+	}
+}
+
+// AttrsImportStateIdFunc is a resource.ImportStateIdFunc that returns the values of the specified attributes concatenated with a separator
+func AttrsImportStateIdFunc(resourceName, sep string, attrNames ...string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return strings.Join(tfslices.ApplyToAll(attrNames, func(attrName string) string {
+			return rs.Primary.Attributes[attrName]
+		}), sep), nil
 	}
 }
 

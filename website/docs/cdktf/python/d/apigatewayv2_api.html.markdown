@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
 
 ## Attribute Reference
@@ -67,4 +68,4 @@ The `cors_configuration` object supports the following:
 * `expose_headers` - Set of exposed HTTP headers.
 * `max_age` - Number of seconds that the browser should cache preflight request results.
 
-<!-- cache-key: cdktf-0.20.8 input-a36ee2097a07e6743ff2fde182e662250c9234a8799fef163ba25e3e035f9a0d -->
+<!-- cache-key: cdktf-0.20.8 input-4c79dc7e2a5e287b40fad50e71e8091a89f716883977c66572eaaf3620e21feb -->

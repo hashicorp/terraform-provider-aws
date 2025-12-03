@@ -175,6 +175,10 @@ func dataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"secondary_ips_auto_assigned_per_subnet": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},

@@ -8,16 +8,20 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,6 +45,10 @@ func resourceServiceSetting() *schema.Resource {
 			"setting_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					validation.StringMatch(regexache.MustCompile(`^/ssm/`), "setting_id must begin with '/ssm/'"),
+				),
 			},
 			"setting_value": {
 				Type:     schema.TypeString,
@@ -56,21 +64,27 @@ func resourceServiceSetting() *schema.Resource {
 
 func resourceServiceSettingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SSMClient(ctx)
 
 	settingID := d.Get("setting_id").(string)
-	input := &ssm.UpdateServiceSettingInput{
+	input := ssm.UpdateServiceSettingInput{
 		SettingId:    aws.String(settingID),
 		SettingValue: aws.String(d.Get("setting_value").(string)),
 	}
 
-	_, err := conn.UpdateServiceSetting(ctx, input)
+	_, err := conn.UpdateServiceSetting(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SSM Service Setting (%s): %s", settingID, err)
 	}
 
-	d.SetId(settingID)
+	// While settingID can be either a full ARN or an ID with "/ssm/" prefix, id is always ARN.
+	if arn.IsARN(settingID) {
+		d.SetId(settingID)
+	} else {
+		d.SetId(c.RegionalARN(ctx, "ssm", "servicesetting"+settingID))
+	}
 
 	if _, err := waitServiceSettingUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SSM Service Setting (%s) update: %s", d.Id(), err)
@@ -96,9 +110,15 @@ func resourceServiceSettingRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set(names.AttrARN, output.ARN)
-	// AWS SSM service setting API requires the entire ARN as input,
-	// but setting_id in the output is only a part of ARN.
-	d.Set("setting_id", output.ARN)
+	// setting_id begins with "/ssm/" prefix, according to the AWS documentation
+	// https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_GetServiceSetting.html#API_GetServiceSetting_RequestSyntax
+	// However, the full ARN format can be accepted by the AWS API as well and the first implementation of this resource assumed the full ARN format for setting_id.
+	// For backwards compatibility, support both formats.
+	if arn.IsARN(d.Get("setting_id").(string)) {
+		d.Set("setting_id", output.ARN)
+	} else {
+		d.Set("setting_id", output.SettingId)
+	}
 	d.Set("setting_value", output.SettingValue)
 	d.Set(names.AttrStatus, output.Status)
 
@@ -110,9 +130,10 @@ func resourceServiceSettingDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SSM Service Setting: %s", d.Id())
-	_, err := conn.ResetServiceSetting(ctx, &ssm.ResetServiceSettingInput{
+	input := ssm.ResetServiceSettingInput{
 		SettingId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.ResetServiceSetting(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SSM Service Setting (%s): %s", d.Id(), err)
@@ -126,11 +147,11 @@ func resourceServiceSettingDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findServiceSettingByID(ctx context.Context, conn *ssm.Client, id string) (*awstypes.ServiceSetting, error) {
-	input := &ssm.GetServiceSettingInput{
+	input := ssm.GetServiceSettingInput{
 		SettingId: aws.String(id),
 	}
 
-	output, err := conn.GetServiceSetting(ctx, input)
+	output, err := conn.GetServiceSetting(ctx, &input)
 
 	if errs.IsA[*awstypes.ServiceSettingNotFound](err) {
 		return nil, &retry.NotFoundError{

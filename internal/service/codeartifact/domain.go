@@ -29,6 +29,7 @@ import (
 // @SDKResource("aws_codeartifact_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @ArnFormat("domain/{domain}")
 // @Testing(serialize=true)
 func resourceDomain() *schema.Resource {
@@ -95,7 +96,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.EncryptionKey = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ValidationException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateDomain(ctx, input)
 	}, "KMS key not found")
 

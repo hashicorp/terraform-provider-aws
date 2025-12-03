@@ -18,4 +18,7 @@ var (
 	FindSlotByID                = findSlotByID
 
 	IntentFlexOpt = intentFlexOpt
+
+	ArePromptAttemptsEqual             = arePromptAttemptsEqual
+	DefaultPromptAttemptsSpecification = defaultPromptAttemptsSpecification
 )

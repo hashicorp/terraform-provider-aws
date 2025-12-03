@@ -36,6 +36,7 @@ import (
 // @ArnFormat("key-value-store/{id}", attribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.KeyValueStore")
 // @Testing(importStateIdAttribute="name")
+// @Testing(preIdentityVersion="v5.100.0")
 func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyValueStoreResource{}
 
@@ -47,7 +48,7 @@ func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, 
 type keyValueStoreResource struct {
 	framework.ResourceWithModel[keyValueStoreResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByParameterizedIdentity
+	framework.WithImportByIdentity
 }
 
 func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

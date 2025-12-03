@@ -42,10 +42,10 @@ class MyConvertedCode(TerraformStack):
             depends_on=[aws_iam_role_policy_example],
             input_data_config=ComprehendEntityRecognizerInputDataConfig(
                 documents=ComprehendEntityRecognizerInputDataConfigDocuments(
-                    s3_uri="s3://${" + aws_s3_bucket_documents.bucket + "}/${" + documents.id + "}"
+                    s3_uri="s3://${" + aws_s3_bucket_documents.bucket + "}/${" + documents.key + "}"
                 ),
                 entity_list=ComprehendEntityRecognizerInputDataConfigEntityListStruct(
-                    s3_uri="s3://${" + aws_s3_bucket_entities.bucket + "}/${" + entities.id + "}"
+                    s3_uri="s3://${" + aws_s3_bucket_entities.bucket + "}/${" + entities.key + "}"
                 ),
                 entity_types=[ComprehendEntityRecognizerInputDataConfigEntityTypes(
                     type="ENTITY_1"
@@ -74,6 +74,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `model_kms_key_id` - (Optional) The ID or ARN of a KMS Key used to encrypt trained Entity Recognizers.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version_name` - (Optional) Name for the version of the Entity Recognizer.
@@ -165,6 +166,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_comprehend_entity_recognizer.example
+  identity = {
+    "arn" = "arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example"
+  }
+}
+
+resource "aws_comprehend_entity_recognizer" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Comprehend entity recognizer.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Comprehend Entity Recognizer using the ARN. For example:
 
 ```python
@@ -188,4 +210,4 @@ Using `terraform import`, import Comprehend Entity Recognizer using the ARN. For
 % terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-eb76cf76bcd9ae3f63202cc7186a5ea4ba2a43a084b6d50a4124097787c31abc -->
+<!-- cache-key: cdktf-0.20.8 input-f7dc5b90fd174ae8fbfbb034157ad471936108443ed08f84d54701bfc1793c28 -->

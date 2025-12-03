@@ -63,7 +63,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(accountID)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, 5*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return findOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 	})
 
@@ -115,7 +115,7 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "disabling Detective Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return findOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 	})
 

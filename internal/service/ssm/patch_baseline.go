@@ -32,17 +32,15 @@ import (
 
 // @SDKResource("aws_ssm_patch_baseline", name="Patch Baseline")
 // @Tags(identifierAttribute="id", resourceType="PatchBaseline")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm;ssm.GetPatchBaselineOutput")
+// @Testing(preIdentityVersion="v6.10.0")
 func resourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePatchBaselineCreate,
 		ReadWithoutTimeout:   resourcePatchBaselineRead,
 		UpdateWithoutTimeout: resourcePatchBaselineUpdate,
 		DeleteWithoutTimeout: resourcePatchBaselineDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"approval_rule": {
@@ -120,6 +118,12 @@ func resourcePatchBaseline() *schema.Resource {
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"available_security_updates_compliance_status": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.PatchComplianceStatus](),
 			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
@@ -266,6 +270,10 @@ func resourcePatchBaselineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.ApprovedPatchesEnableNonSecurity = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("available_security_updates_compliance_status"); ok {
+		input.AvailableSecurityUpdatesComplianceStatus = awstypes.PatchComplianceStatus(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -333,6 +341,7 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 		Resource:  "patchbaseline/" + strings.TrimPrefix(d.Id(), "/"),
 	}.String()
 	d.Set(names.AttrARN, arn)
+	d.Set("available_security_updates_compliance_status", output.AvailableSecurityUpdatesComplianceStatus)
 	d.Set(names.AttrDescription, output.Description)
 	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_filter: %s", err)
@@ -372,6 +381,10 @@ func resourcePatchBaselineUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if d.HasChange("approved_patches_enable_non_security") {
 			input.ApprovedPatchesEnableNonSecurity = aws.Bool(d.Get("approved_patches_enable_non_security").(bool))
+		}
+
+		if d.HasChange("available_security_updates_compliance_status") {
+			input.AvailableSecurityUpdatesComplianceStatus = awstypes.PatchComplianceStatus(d.Get("available_security_updates_compliance_status").(string))
 		}
 
 		if d.HasChange(names.AttrDescription) {

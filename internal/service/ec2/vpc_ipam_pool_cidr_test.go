@@ -44,9 +44,6 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"netmask_length",
-				},
 			},
 		},
 	})
@@ -77,9 +74,6 @@ func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) { // nosemgrep:ci.vpc-
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"netmask_length",
-				},
 			},
 		},
 	})

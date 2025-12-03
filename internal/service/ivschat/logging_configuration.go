@@ -25,16 +25,15 @@ import (
 
 // @SDKResource("aws_ivschat_logging_configuration", name="Logging Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivschat;ivschat.GetLoggingConfigurationOutput")
+// @Testing(preIdentityVersion="v6.5.0")
 func ResourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingConfigurationCreate,
 		ReadWithoutTimeout:   resourceLoggingConfigurationRead,
 		UpdateWithoutTimeout: resourceLoggingConfigurationUpdate,
 		DeleteWithoutTimeout: resourceLoggingConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),

@@ -51,14 +51,18 @@ func resourceDistribution() *schema.Resource {
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"aliases": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"anycast_ip_list_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"caller_reference": {
 				Type:     schema.TypeString,
@@ -333,7 +337,7 @@ func resourceDistribution() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						names.AttrBucket: {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"include_cookies": {
 							Type:     schema.TypeBool,
@@ -347,6 +351,10 @@ func resourceDistribution() *schema.Resource {
 						},
 					},
 				},
+			},
+			"logging_v1_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"ordered_cache_behavior": {
 				Type:     schema.TypeList,
@@ -624,6 +632,11 @@ func resourceDistribution() *schema.Resource {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
+									names.AttrIPAddressType: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+									},
 									"origin_keepalive_timeout": {
 										Type:         schema.TypeInt,
 										Optional:     true,
@@ -689,6 +702,11 @@ func resourceDistribution() *schema.Resource {
 									},
 								},
 							},
+						},
+						"response_completion_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
 						},
 						"s3_origin_config": {
 							Type:     schema.TypeList,
@@ -897,7 +915,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	input := &cloudfront.CreateDistributionWithTagsInput{
+	input := cloudfront.CreateDistributionWithTagsInput{
 		DistributionConfigWithTags: &awstypes.DistributionConfigWithTags{
 			DistributionConfig: expandDistributionConfig(d),
 			Tags:               &awstypes.Tags{Items: []awstypes.Tag{}},
@@ -913,8 +931,8 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 	const (
 		timeout = 1 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidViewerCertificate](ctx, timeout, func() (any, error) {
-		return conn.CreateDistributionWithTags(ctx, input)
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidViewerCertificate](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.CreateDistributionWithTags(ctx, &input)
 	})
 
 	if err != nil {
@@ -954,6 +972,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
 		}
 	}
+	d.Set("anycast_ip_list_id", distributionConfig.AnycastIpListId)
 	d.Set(names.AttrARN, output.Distribution.ARN)
 	d.Set("caller_reference", distributionConfig.CallerReference)
 	if aws.ToString(distributionConfig.Comment) != "" {
@@ -980,11 +999,17 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
-	if distributionConfig.Logging != nil && aws.ToBool(distributionConfig.Logging.Enabled) {
-		if err := d.Set("logging_config", flattenLoggingConfig(distributionConfig.Logging)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
+	if distributionConfig.Logging != nil {
+		d.Set("logging_v1_enabled", distributionConfig.Logging.Enabled)
+		if aws.ToBool(distributionConfig.Logging.Enabled) || aws.ToBool(distributionConfig.Logging.IncludeCookies) {
+			if err := d.Set("logging_config", flattenLoggingConfig(distributionConfig.Logging)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
+			}
+		} else {
+			d.Set("logging_config", []any{})
 		}
 	} else {
+		d.Set("logging_v1_enabled", false)
 		d.Set("logging_config", []any{})
 	}
 	if distributionConfig.CacheBehaviors != nil {
@@ -1029,7 +1054,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &cloudfront.UpdateDistributionInput{
+		input := cloudfront.UpdateDistributionInput{
 			DistributionConfig: expandDistributionConfig(d),
 			Id:                 aws.String(d.Id()),
 			IfMatch:            aws.String(d.Get("etag").(string)),
@@ -1040,8 +1065,8 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		const (
 			timeout = 1 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidViewerCertificate](ctx, timeout, func() (any, error) {
-			return conn.UpdateDistribution(ctx, input)
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidViewerCertificate](ctx, timeout, func(ctx context.Context) (any, error) {
+			return conn.UpdateDistribution(ctx, &input)
 		})
 
 		// Refresh our ETag if it is out of date and attempt update again.
@@ -1055,7 +1080,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 			input.IfMatch = aws.String(etag)
 
-			_, err = conn.UpdateDistribution(ctx, input)
+			_, err = conn.UpdateDistribution(ctx, &input)
 		}
 
 		if err != nil {
@@ -1128,7 +1153,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		const (
 			timeout = 3 * time.Minute
 		)
-		_, err = tfresource.RetryWhenIsA[*awstypes.DistributionNotDisabled](ctx, timeout, func() (any, error) {
+		_, err = tfresource.RetryWhenIsA[any, *awstypes.DistributionNotDisabled](ctx, timeout, func(ctx context.Context) (any, error) {
 			return nil, deleteDistribution(ctx, conn, d.Id())
 		})
 	}
@@ -1137,7 +1162,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		const (
 			timeout = 1 * time.Minute
 		)
-		_, err = tfresource.RetryWhenIsOneOf2[*awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, timeout, func() (any, error) {
+		_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, timeout, func(ctx context.Context) (any, error) {
 			return nil, deleteDistribution(ctx, conn, d.Id())
 		})
 	}
@@ -1172,12 +1197,12 @@ func deleteDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 		return err
 	}
 
-	input := &cloudfront.DeleteDistributionInput{
+	input := cloudfront.DeleteDistributionInput{
 		Id:      aws.String(id),
 		IfMatch: aws.String(etag),
 	}
 
-	_, err = conn.DeleteDistribution(ctx, input)
+	_, err = conn.DeleteDistribution(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("deleting CloudFront Distribution (%s): %w", id, err)
@@ -1219,14 +1244,20 @@ func disableDistribution(ctx context.Context, conn *cloudfront.Client, id string
 		return nil
 	}
 
-	input := &cloudfront.UpdateDistributionInput{
+	input := cloudfront.UpdateDistributionInput{
 		DistributionConfig: output.Distribution.DistributionConfig,
 		Id:                 aws.String(id),
 		IfMatch:            output.ETag,
 	}
 	input.DistributionConfig.Enabled = aws.Bool(false)
 
-	_, err = conn.UpdateDistribution(ctx, input)
+	_, err = conn.UpdateDistribution(ctx, &input)
+
+	// If the configured logging bucket no longer exists, disable logging and retry update
+	if errs.IsAErrorMessageContains[*awstypes.InvalidArgument](err, "The S3 bucket that you specified for CloudFront logs doesn't exist") {
+		input.DistributionConfig.Logging = &awstypes.LoggingConfig{Enabled: aws.Bool(false)}
+		_, err = conn.UpdateDistribution(ctx, &input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("updating CloudFront Distribution (%s): %w", id, err)
@@ -1240,11 +1271,11 @@ func disableDistribution(ctx context.Context, conn *cloudfront.Client, id string
 }
 
 func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
-	input := &cloudfront.GetDistributionInput{
+	input := cloudfront.GetDistributionInput{
 		Id: aws.String(id),
 	}
 
-	output, err := conn.GetDistribution(ctx, input)
+	output, err := conn.GetDistribution(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchDistribution](err) {
 		return nil, &retry.NotFoundError{
@@ -1344,6 +1375,10 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 		apiObject.Aliases = expandAliases(v.(*schema.Set).List())
 	} else {
 		apiObject.Aliases = expandAliases([]any{})
+	}
+
+	if v, ok := d.GetOk("anycast_ip_list_id"); ok {
+		apiObject.AnycastIpListId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("caller_reference"); ok {
@@ -2129,6 +2164,12 @@ func expandOrigin(tfMap map[string]any) *awstypes.Origin {
 		}
 	}
 
+	if v, ok := tfMap["response_completion_timeout"]; ok {
+		if v := v.(int); v > 0 {
+			apiObject.ResponseCompletionTimeout = aws.Int32(int32(v))
+		}
+	}
+
 	if v, ok := tfMap["s3_origin_config"]; ok {
 		if v := v.([]any); len(v) > 0 {
 			apiObject.S3OriginConfig = expandS3OriginConfig(v[0].(map[string]any))
@@ -2187,6 +2228,12 @@ func flattenOrigin(apiObject *awstypes.Origin) map[string]any {
 
 	if apiObject.OriginShield != nil && aws.ToBool(apiObject.OriginShield.Enabled) {
 		tfMap["origin_shield"] = []any{flattenOriginShield(apiObject.OriginShield)}
+	}
+
+	if apiObject.ResponseCompletionTimeout != nil {
+		tfMap["response_completion_timeout"] = aws.ToInt32(apiObject.ResponseCompletionTimeout)
+	} else {
+		tfMap["response_completion_timeout"] = 0
 	}
 
 	if apiObject.S3OriginConfig != nil && aws.ToString(apiObject.S3OriginConfig.OriginAccessIdentity) != "" {
@@ -2414,6 +2461,10 @@ func expandCustomOriginConfig(tfMap map[string]any) *awstypes.CustomOriginConfig
 		OriginSslProtocols:     expandCustomOriginConfigSSL(tfMap["origin_ssl_protocols"].(*schema.Set).List()),
 	}
 
+	if v, ok := tfMap[names.AttrIPAddressType]; ok && v.(string) != "" {
+		apiObject.IpAddressType = awstypes.IpAddressType(v.(string))
+	}
+
 	return apiObject
 }
 
@@ -2429,6 +2480,10 @@ func flattenCustomOriginConfig(apiObject *awstypes.CustomOriginConfig) map[strin
 		"origin_protocol_policy":   apiObject.OriginProtocolPolicy,
 		"origin_read_timeout":      aws.ToInt32(apiObject.OriginReadTimeout),
 		"origin_ssl_protocols":     flattenCustomOriginConfigSSL(apiObject.OriginSslProtocols),
+	}
+
+	if apiObject.IpAddressType != "" {
+		tfMap[names.AttrIPAddressType] = apiObject.IpAddressType
 	}
 
 	return tfMap
@@ -2606,8 +2661,13 @@ func expandLoggingConfig(tfMap map[string]any) *awstypes.LoggingConfig {
 	apiObject := &awstypes.LoggingConfig{}
 
 	if tfMap != nil {
-		apiObject.Bucket = aws.String(tfMap[names.AttrBucket].(string))
-		apiObject.Enabled = aws.Bool(true)
+		if v, ok := tfMap[names.AttrBucket]; ok && v.(string) != "" {
+			apiObject.Bucket = aws.String(v.(string))
+			apiObject.Enabled = aws.Bool(true)
+		} else {
+			apiObject.Bucket = aws.String("")
+			apiObject.Enabled = aws.Bool(false)
+		}
 		apiObject.IncludeCookies = aws.Bool(tfMap["include_cookies"].(bool))
 		apiObject.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 	} else {

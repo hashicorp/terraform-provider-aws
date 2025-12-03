@@ -23,7 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,15 +48,8 @@ type folderMembershipResource struct {
 func (r *folderMembershipResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrAWSAccountID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
+			names.AttrID:           framework.IDAttribute(),
 			"folder_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -82,18 +76,18 @@ func (r *folderMembershipResource) Schema(ctx context.Context, req resource.Sche
 }
 
 func (r *folderMembershipResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightClient(ctx)
-
-	var plan folderMembershipResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var data folderMembershipResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
+	if data.AWSAccountID.IsUnknown() {
+		data.AWSAccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
-	awsAccountID, folderID, memberType, memberID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.FolderID), flex.StringValueFromFramework(ctx, plan.MemberType), flex.StringValueFromFramework(ctx, plan.MemberID)
+
+	conn := r.Meta().QuickSightClient(ctx)
+
+	awsAccountID, folderID, memberType, memberID := fwflex.StringValueFromFramework(ctx, data.AWSAccountID), fwflex.StringValueFromFramework(ctx, data.FolderID), fwflex.StringValueFromFramework(ctx, data.MemberType), fwflex.StringValueFromFramework(ctx, data.MemberID)
 	in := &quicksight.CreateFolderMembershipInput{
 		AwsAccountId: aws.String(awsAccountID),
 		FolderId:     aws.String(folderID),
@@ -104,22 +98,22 @@ func (r *folderMembershipResource) Create(ctx context.Context, req resource.Crea
 	out, err := conn.CreateFolderMembership(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameFolderMembership, plan.MemberID.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameFolderMembership, data.MemberID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.FolderMember == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameFolderMembership, plan.MemberID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameFolderMembership, data.MemberID.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, folderMembershipCreateResourceID(awsAccountID, folderID, memberType, memberID))
+	data.ID = fwflex.StringValueToFramework(ctx, folderMembershipCreateResourceID(awsAccountID, folderID, memberType, memberID))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
 func (r *folderMembershipResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -153,10 +147,10 @@ func (r *folderMembershipResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	state.MemberID = flex.StringToFramework(ctx, out.MemberId)
-	state.AWSAccountID = flex.StringValueToFramework(ctx, awsAccountID)
-	state.FolderID = flex.StringValueToFramework(ctx, folderID)
-	state.MemberType = flex.StringValueToFramework(ctx, memberType)
+	state.MemberID = fwflex.StringToFramework(ctx, out.MemberId)
+	state.AWSAccountID = fwflex.StringValueToFramework(ctx, awsAccountID)
+	state.FolderID = fwflex.StringValueToFramework(ctx, folderID)
+	state.MemberType = fwflex.StringValueToFramework(ctx, memberType)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

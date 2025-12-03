@@ -25,12 +25,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -200,9 +200,20 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
+										Validators: []validator.Int64{
+											int64validator.Between(1, 5000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
 									},
 									names.AttrUnit: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DataStorageUnit](),
@@ -220,14 +231,22 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
+										Computed: true,
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 								},
@@ -302,7 +321,7 @@ func (r *serverlessCacheResource) Read(ctx context.Context, request resource.Rea
 
 	output, err := findServerlessCacheByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -405,7 +424,7 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 		FinalSnapshotName:   nil,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteServerlessCache(ctx, input)
 	}, errCodeDependencyViolation)
 
@@ -443,8 +462,7 @@ func findServerlessCaches(ctx context.Context, conn *elasticache.Client, input *
 
 		if errs.IsA[*awstypes.ServerlessCacheNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -466,11 +484,11 @@ func findServerlessCacheByID(ctx context.Context, conn *elasticache.Client, id s
 	return findServerlessCache(ctx, conn, input)
 }
 
-func statusServerlessCache(ctx context.Context, conn *elasticache.Client, cacheClusterID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusServerlessCache(conn *elasticache.Client, cacheClusterID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findServerlessCacheByID(ctx, conn, cacheClusterID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -496,7 +514,7 @@ func waitServerlessCacheAvailable(ctx context.Context, conn *elasticache.Client,
 			serverlessCacheStatusModifying,
 		},
 		Target:     []string{serverlessCacheStatusAvailable},
-		Refresh:    statusServerlessCache(ctx, conn, cacheClusterID),
+		Refresh:    statusServerlessCache(conn, cacheClusterID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -519,7 +537,7 @@ func waitServerlessCacheDeleted(ctx context.Context, conn *elasticache.Client, c
 			serverlessCacheStatusModifying,
 		},
 		Target:     []string{},
-		Refresh:    statusServerlessCache(ctx, conn, cacheClusterID),
+		Refresh:    statusServerlessCache(conn, cacheClusterID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

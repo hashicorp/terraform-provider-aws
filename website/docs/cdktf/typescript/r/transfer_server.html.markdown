@@ -234,6 +234,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificate` - (Optional) The Amazon Resource Name (ARN) of the AWS Certificate Manager (ACM) certificate. This is required when `protocols` is set to `FTPS`
 * `domain` - (Optional) The domain of the storage system that is used for file transfers. Valid values are: `S3` and `EFS`. The default value is `S3`.
 * `protocols` - (Optional) Specifies the file transfer protocol or protocols over which your file transfer protocol client can connect to your server's endpoint. This defaults to `SFTP` . The available protocols are:
@@ -368,4 +369,4 @@ Using `terraform import`, import Transfer Servers using the server `id`. For exa
 
 Certain resource arguments, such as `hostKey`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
 
-<!-- cache-key: cdktf-0.20.8 input-cb8a7090d83ebda8d13dfbff58f30c628ce69aae6cb7fa8df5f82c6839325d18 -->
+<!-- cache-key: cdktf-0.20.8 input-add2822e6902873bd30af2e7f862e646c6978fc4befb9951014b1a58667877fd -->

@@ -3,8 +3,8 @@ package acmpca
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
@@ -23,6 +23,7 @@ func listTags(ctx context.Context, conn *acmpca.Client, identifier string, optFn
 	input := acmpca.ListTagsInput{
 		CertificateAuthorityArn: aws.String(identifier),
 	}
+
 	var output []awstypes.Tag
 
 	pages := acmpca.NewListTagsPaginator(conn, &input)
@@ -30,12 +31,10 @@ func listTags(ctx context.Context, conn *acmpca.Client, identifier string, optFn
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if err != nil {
-			return tftags.New(ctx, nil), err
+			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return keyValueTags(ctx, output), nil
@@ -47,7 +46,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).ACMPCAClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -125,7 +124,7 @@ func updateTags(ctx context.Context, conn *acmpca.Client, identifier string, old
 		_, err := conn.UntagCertificateAuthority(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -140,7 +139,7 @@ func updateTags(ctx context.Context, conn *acmpca.Client, identifier string, old
 		_, err := conn.TagCertificateAuthority(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

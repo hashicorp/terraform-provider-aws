@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -16,17 +15,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_Basic(t *testing.T) {
+func TestAccDataSyncLocationAzureBlob_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationAzureBlobOutput
 	resourceName := "aws_datasync_location_azure_blob.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -35,28 +35,31 @@ func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_Basic(t *testing.
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
-		CheckDestroy:             testAccCheckLocationMicrosoftAzureBlobStorageDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationAzureBlobDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LocationMicrosoftAzureBlobStorage/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationMicrosoftAzureBlobStorageExists(ctx, resourceName, &v),
+					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LocationMicrosoftAzureBlobStorage/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -71,7 +74,7 @@ func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_Basic(t *testing.
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LocationMicrosoftAzureBlobStorage/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -91,7 +94,7 @@ func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_Basic(t *testing.
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LocationMicrosoftAzureBlobStorage/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -112,13 +115,13 @@ func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_Basic(t *testing.
 	})
 }
 
-func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_RegionOverride(t *testing.T) {
+func TestAccDataSyncLocationAzureBlob_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_datasync_location_azure_blob.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -132,7 +135,7 @@ func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_RegionOverride(t 
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LocationMicrosoftAzureBlobStorage/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -140,13 +143,16 @@ func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_RegionOverride(t 
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
 
 			// Step 2: Import command with appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LocationMicrosoftAzureBlobStorage/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -163,7 +169,7 @@ func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_RegionOverride(t 
 
 			// Step 3: Import command without appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LocationMicrosoftAzureBlobStorage/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -179,7 +185,7 @@ func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_RegionOverride(t 
 
 			// Step 4: Import block with Import ID and appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LocationMicrosoftAzureBlobStorage/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -201,7 +207,7 @@ func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_RegionOverride(t 
 
 			// Step 5: Import block with Import ID and no appended "@<region>"
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LocationMicrosoftAzureBlobStorage/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -222,7 +228,7 @@ func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_RegionOverride(t 
 
 			// Step 6: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LocationMicrosoftAzureBlobStorage/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -239,6 +245,140 @@ func TestAccDataSyncLocationMicrosoftAzureBlobStorage_Identity_RegionOverride(t 
 					},
 				},
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDataSyncLocationAzureBlob_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v datasync.DescribeLocationAzureBlobOutput
+	resourceName := "aws_datasync_location_azure_blob.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
+		CheckDestroy: testAccCheckLocationAzureBlobDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: v6.0 Identity error
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/basic_v6.0.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.Null(),
+					}),
+				},
+			},
+
+			// Step 3: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/LocationAzureBlob/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccDataSyncLocationAzureBlob_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v datasync.DescribeLocationAzureBlobOutput
+	resourceName := "aws_datasync_location_azure_blob.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
+		CheckDestroy: testAccCheckLocationAzureBlobDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/LocationAzureBlob/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/LocationAzureBlob/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
+				),
 			},
 		},
 	})

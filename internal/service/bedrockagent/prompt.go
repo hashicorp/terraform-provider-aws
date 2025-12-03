@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -685,7 +685,7 @@ func (m promptVariantModel) Expand(ctx context.Context) (any, diag.Diagnostics) 
 	}
 
 	if !m.AdditionalModelRequestFields.IsNull() {
-		json, err := smithyjson.SmithyDocumentFromString(fwflex.StringValueFromFramework(ctx, m.AdditionalModelRequestFields), document.NewLazyDocument)
+		json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.AdditionalModelRequestFields), document.NewLazyDocument)
 		if err != nil {
 			diags.Append(diag.NewErrorDiagnostic(
 				"Decoding JSON",
@@ -723,7 +723,7 @@ func (m *promptVariantModel) Flatten(ctx context.Context, v any) diag.Diagnostic
 		}
 
 		if v.AdditionalModelRequestFields != nil {
-			json, err := smithyjson.SmithyDocumentToString(v.AdditionalModelRequestFields)
+			json, err := tfsmithy.DocumentToJSONString(v.AdditionalModelRequestFields)
 			if err != nil {
 				diags.Append(diag.NewErrorDiagnostic(
 					"Encoding JSON",
@@ -1084,8 +1084,8 @@ func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) diag.Diagn
 }
 
 type toolConfigurationModel struct {
-	Tools      fwtypes.ListNestedObjectValueOf[toolModel]       `tfsdk:"tool"`
 	ToolChoice fwtypes.ListNestedObjectValueOf[toolChoiceModel] `tfsdk:"tool_choice"`
+	Tools      fwtypes.ListNestedObjectValueOf[toolModel]       `tfsdk:"tool"`
 }
 
 type toolModel struct {
@@ -1182,7 +1182,7 @@ func (m toolInputSchemaModel) Expand(ctx context.Context) (any, diag.Diagnostics
 
 	switch {
 	case !m.JSON.IsNull():
-		json, err := smithyjson.SmithyDocumentFromString(fwflex.StringValueFromFramework(ctx, m.JSON), document.NewLazyDocument)
+		json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.JSON), document.NewLazyDocument)
 		if err != nil {
 			diags.Append(diag.NewErrorDiagnostic(
 				"Decoding JSON",
@@ -1207,7 +1207,7 @@ func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) diag.Diagnost
 	switch v := v.(type) {
 	case awstypes.ToolInputSchemaMemberJson:
 		if v.Value != nil {
-			json, err := smithyjson.SmithyDocumentToString(v.Value)
+			json, err := tfsmithy.DocumentToJSONString(v.Value)
 			if err != nil {
 				diags.Append(diag.NewErrorDiagnostic(
 					"Encoding JSON",

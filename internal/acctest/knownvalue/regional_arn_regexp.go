@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package statecheck
+package knownvalue
 
 import (
 	"context"
@@ -81,6 +81,16 @@ func RegionalARNThirdRegionRegexp(service string, resource *regexp.Regexp) known
 	return regionalARNRegexp{
 		check:          "RegionalARNThirdRegionRegexp",
 		region:         acctest.ThirdRegion(),
+		service:        service,
+		resourceRegexp: resource,
+	}
+}
+
+// RegionalARNFourthRegionRegexp
+func RegionalARNFourthRegionRegexp(service string, resource *regexp.Regexp) knownvalue.Check {
+	return regionalARNRegexp{
+		check:          "RegionalARNFourthRegionRegexp",
+		region:         acctest.FourthRegion(),
 		service:        service,
 		resourceRegexp: resource,
 	}

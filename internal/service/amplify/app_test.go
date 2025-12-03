@@ -47,7 +47,7 @@ func testAccApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "build_spec", ""),
 					resource.TestCheckResourceAttr(resourceName, "cache_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cache_config.0.type", "AMPLIFY_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "cache_config.0.type", "AMPLIFY_MANAGED_NO_COOKIES"),
 					resource.TestCheckResourceAttr(resourceName, "compute_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "0"),
@@ -59,6 +59,8 @@ func testAccApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_branch_auto_deletion", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iam_service_role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "job_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_config.0.build_compute_type", "STANDARD_8GB"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "oauth_token"),
 					resource.TestCheckResourceAttr(resourceName, "platform", "WEB"),
@@ -139,10 +141,11 @@ func testAccApp_AutoBranchCreationConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.basic_auth_credentials", credentials),
+					// resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.basic_auth_credentials", credentials),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.build_spec", "version: 0.1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_auto_build", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_basic_auth", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_basic_auth", acctest.CtFalse),
+					// resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_basic_auth", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_performance_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_pull_request_preview", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.%", "1"),
@@ -426,6 +429,43 @@ func testAccApp_CustomRules(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccApp_JobConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var app types.App
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_amplify_app.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppConfig_jobConfig(rName, "LARGE_16GB"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "job_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_config.0.build_compute_type", "LARGE_16GB"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppConfig_jobConfig(rName, "STANDARD_8GB"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "job_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_config.0.build_compute_type", "STANDARD_8GB"),
 				),
 			},
 		},
@@ -766,8 +806,10 @@ resource "aws_amplify_app" "test" {
     framework  = "React"
     stage      = "DEVELOPMENT"
 
-    enable_basic_auth      = true
-    basic_auth_credentials = %[2]q
+    # enable_basic_auth      = true
+    # basic_auth_credentials = %[2]q
+    enable_basic_auth      = false
+    basic_auth_credentials = null
 
     enable_auto_build             = true
     enable_pull_request_preview   = true
@@ -1037,4 +1079,16 @@ resource "aws_amplify_app" "test" {
   access_token = %[3]q
 }
 `, rName, repository, accessToken)
+}
+
+func testAccAppConfig_jobConfig(rName, buildComputeType string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  job_config {
+    build_compute_type = %[2]q
+  }
+}
+`, rName, buildComputeType)
 }

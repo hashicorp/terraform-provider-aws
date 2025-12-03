@@ -72,7 +72,7 @@ func resourceEgressOnlyInternetGatewayRead(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	ig, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.EgressOnlyInternetGateway, error) {
 		return findEgressOnlyInternetGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -85,8 +85,6 @@ func resourceEgressOnlyInternetGatewayRead(ctx context.Context, d *schema.Resour
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Egress-only Internet Gateway (%s): %s", d.Id(), err)
 	}
-
-	ig := outputRaw.(*awstypes.EgressOnlyInternetGateway)
 
 	if len(ig.Attachments) == 1 && ig.Attachments[0].State == awstypes.AttachmentStatusAttached {
 		d.Set(names.AttrVPCID, ig.Attachments[0].VpcId)

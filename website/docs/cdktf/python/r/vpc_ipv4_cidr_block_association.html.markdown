@@ -43,6 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_block` - (Optional) The IPv4 CIDR block for the VPC. CIDR can be explicitly set or it can be derived from IPAM using `ipv4_netmask_length`.
 * `ipv4_ipam_pool_id` - (Optional) The ID of an IPv4 IPAM pool you want to use for allocating this VPC's CIDR. IPAM is a VPC feature that you can use to automate your IP address management workflows including assigning, tracking, troubleshooting, and auditing IP addresses across AWS Regions and accounts. Using IPAM you can monitor IP address usage throughout your AWS Organization.
 * `ipv4_netmask_length` - (Optional) The netmask length of the IPv4 CIDR you want to allocate to this VPC. Requires specifying a `ipv4_ipam_pool_id`.
@@ -132,4 +133,4 @@ or
 % terraform import aws_vpc_ipv4_cidr_block_association.example vpc-cidr-assoc-021e8461d70ed08be,ipam-pool-0a07c432810393463,28
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-55bb8bd172565d019fa4aeae7814756b2283cdf9c0e53e8c401632847a2db69a -->
+<!-- cache-key: cdktf-0.20.8 input-1380fb653151f3b9a4a885272ee2b08272601e1f18c2b746eabb4e9714dbb45d -->

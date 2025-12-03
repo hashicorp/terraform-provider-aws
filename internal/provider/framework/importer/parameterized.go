@@ -5,6 +5,7 @@ package importer
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -13,60 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func RegionalSingleParameterized(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
-	regionPath := path.Root(names.AttrRegion)
-	attrPath := path.Root(identitySpec.IdentityAttribute)
-
-	var (
-		parameterVal string
-		regionVal    string
-	)
-	if parameterVal = request.ID; parameterVal != "" {
-		var regionAttr types.String
-		response.Diagnostics.Append(response.State.GetAttribute(ctx, regionPath, &regionAttr)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		regionVal = regionAttr.ValueString()
-	} else if identity := request.Identity; identity != nil {
-		response.Diagnostics.Append(validateAccountID(ctx, identity, client.AccountID(ctx))...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		var regionAttr types.String
-		response.Diagnostics.Append(identity.GetAttribute(ctx, regionPath, &regionAttr)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		if !regionAttr.IsNull() {
-			regionVal = regionAttr.ValueString()
-		} else {
-			regionVal = client.Region(ctx)
-		}
-
-		var parameterAttr types.String
-		response.Diagnostics.Append(identity.GetAttribute(ctx, attrPath, &parameterAttr)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		parameterVal = parameterAttr.ValueString()
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, regionPath, regionVal)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, attrPath, parameterVal)...)
-
-	accountID := client.AccountID(ctx)
-
-	if identity := response.Identity; identity != nil {
-		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrAccountID), accountID)...)
-		response.Diagnostics.Append(identity.SetAttribute(ctx, regionPath, regionVal)...)
-		response.Diagnostics.Append(identity.SetAttribute(ctx, attrPath, parameterVal)...)
-	}
-}
-
-func GlobalSingleParameterized(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
-	attrPath := path.Root(identitySpec.IdentityAttribute)
+func SingleParameterized(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
+	attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
+	identityPath := path.Root(attr.Name())
+	resourcePath := path.Root(attr.ResourceAttributeName())
 
 	parameterVal := request.ID
 
@@ -77,19 +28,99 @@ func GlobalSingleParameterized(ctx context.Context, client AWSClient, request re
 		}
 
 		var parameterAttr types.String
-		response.Diagnostics.Append(identity.GetAttribute(ctx, attrPath, &parameterAttr)...)
+		response.Diagnostics.Append(identity.GetAttribute(ctx, identityPath, &parameterAttr)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 		parameterVal = parameterAttr.ValueString()
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, attrPath, parameterVal)...)
-
-	accountID := client.AccountID(ctx)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, parameterVal)...)
 
 	if identity := response.Identity; identity != nil {
-		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrAccountID), accountID)...)
-		response.Diagnostics.Append(identity.SetAttribute(ctx, attrPath, parameterVal)...)
+		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrAccountID), client.AccountID(ctx))...)
+		response.Diagnostics.Append(identity.SetAttribute(ctx, identityPath, parameterVal)...)
+	}
+
+	if !identitySpec.IsGlobalResource {
+		setRegionFromStateOrIdentity(ctx, client, request, response)
+	}
+}
+
+func MultipleParameterized(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
+	if request.ID != "" {
+		id, parts, err := importSpec.ImportID.Parse(request.ID)
+		if err != nil {
+			response.Diagnostics.Append(InvalidResourceImportIDError(
+				"could not be parsed.\n\n" +
+					fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
+			))
+			return
+		}
+
+		for attr, val := range parts {
+			attrPath := path.Root(attr)
+			response.Diagnostics.Append(response.State.SetAttribute(ctx, attrPath, val)...)
+
+			if identity := response.Identity; identity != nil {
+				response.Diagnostics.Append(identity.SetAttribute(ctx, attrPath, val)...)
+			}
+		}
+
+		if importSpec.SetIDAttr {
+			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), id)...)
+		}
+	} else if identity := request.Identity; identity != nil {
+		response.Diagnostics.Append(validateAccountID(ctx, identity, client.AccountID(ctx))...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		for _, attr := range identitySpec.Attributes {
+			switch attr.Name() {
+			case names.AttrAccountID, names.AttrRegion:
+				// Do nothing
+
+			default:
+				identityPath := path.Root(attr.Name())
+				resourcePath := path.Root(attr.ResourceAttributeName())
+
+				var parameterAttr types.String
+				response.Diagnostics.Append(identity.GetAttribute(ctx, identityPath, &parameterAttr)...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+				parameterVal := parameterAttr.ValueString()
+
+				response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, parameterVal)...)
+
+				if identity := response.Identity; identity != nil {
+					response.Diagnostics.Append(identity.SetAttribute(ctx, identityPath, parameterVal)...)
+				}
+			}
+		}
+
+		if importSpec.SetIDAttr {
+			if idCreator, ok := importSpec.ImportID.(inttypes.FrameworkImportIDCreator); ok {
+				response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), idCreator.Create(ctx, response.State))...)
+			} else {
+				response.Diagnostics.AddError(
+					"Unexpected Error",
+					"An unexpected error occurred while importing a resource. "+
+						"This is always an error in the provider. "+
+						"Please report the following to the provider developer:\n\n"+
+						"Import ID handler does not implement Creator, but needs to set \"id\" attribute.",
+				)
+				return
+			}
+		}
+	}
+
+	if identity := response.Identity; identity != nil {
+		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrAccountID), client.AccountID(ctx))...)
+	}
+
+	if !identitySpec.IsGlobalResource {
+		setRegionFromStateOrIdentity(ctx, client, request, response)
 	}
 }

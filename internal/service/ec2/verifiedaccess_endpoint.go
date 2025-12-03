@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -57,7 +57,7 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.VerifiedAccessEndpointAttachmentType](),
+				ValidateDiagFunc: enum.Validate[awstypes.VerifiedAccessEndpointAttachmentType](),
 			},
 			"cidr_options": {
 				Type:     schema.TypeList,
@@ -93,7 +93,7 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(types.VerifiedAccessEndpointProtocolTcp), false),
+							ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.VerifiedAccessEndpointProtocolTcp), false),
 						},
 						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
@@ -131,7 +131,7 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.VerifiedAccessEndpointType](),
+				ValidateDiagFunc: enum.Validate[awstypes.VerifiedAccessEndpointType](),
 			},
 			"load_balancer_options": {
 				Type:     schema.TypeList,
@@ -171,7 +171,7 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 						names.AttrProtocol: {
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.VerifiedAccessEndpointProtocol](),
+							ValidateDiagFunc: enum.Validate[awstypes.VerifiedAccessEndpointProtocol](),
 						},
 						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
@@ -218,7 +218,7 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 						names.AttrProtocol: {
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.VerifiedAccessEndpointProtocol](),
+							ValidateDiagFunc: enum.Validate[awstypes.VerifiedAccessEndpointProtocol](),
 						},
 					},
 				},
@@ -241,7 +241,7 @@ func resourceVerifiedAccessEndpoint() *schema.Resource {
 						names.AttrProtocol: {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(types.VerifiedAccessEndpointProtocolTcp), false),
+							ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.VerifiedAccessEndpointProtocolTcp), false),
 						},
 						"rds_db_cluster_arn": {
 							Type:         schema.TypeString,
@@ -318,10 +318,10 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.CreateVerifiedAccessEndpointInput{
-		AttachmentType:        types.VerifiedAccessEndpointAttachmentType(d.Get("attachment_type").(string)),
+		AttachmentType:        awstypes.VerifiedAccessEndpointAttachmentType(d.Get("attachment_type").(string)),
 		ClientToken:           aws.String(sdkid.UniqueId()),
-		EndpointType:          types.VerifiedAccessEndpointType(d.Get(names.AttrEndpointType).(string)),
-		TagSpecifications:     getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessEndpoint),
+		EndpointType:          awstypes.VerifiedAccessEndpointType(d.Get(names.AttrEndpointType).(string)),
+		TagSpecifications:     getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessEndpoint),
 		VerifiedAccessGroupId: aws.String(d.Get("verified_access_group_id").(string)),
 	}
 
@@ -538,7 +538,7 @@ func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func flattenVerifiedAccessEndpointPortRanges(apiObjects []types.VerifiedAccessEndpointPortRange) []any {
+func flattenVerifiedAccessEndpointPortRanges(apiObjects []awstypes.VerifiedAccessEndpointPortRange) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -562,7 +562,7 @@ func flattenVerifiedAccessEndpointPortRanges(apiObjects []types.VerifiedAccessEn
 	return tfList
 }
 
-func flattenVerifiedAccessEndpointCIDROptions(apiObject *types.VerifiedAccessEndpointCidrOptions) []any {
+func flattenVerifiedAccessEndpointCIDROptions(apiObject *awstypes.VerifiedAccessEndpointCidrOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -588,7 +588,7 @@ func flattenVerifiedAccessEndpointCIDROptions(apiObject *types.VerifiedAccessEnd
 	return []any{tfMap}
 }
 
-func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedAccessEndpointLoadBalancerOptions) []any {
+func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *awstypes.VerifiedAccessEndpointLoadBalancerOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -618,7 +618,7 @@ func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedA
 	return []any{tfMap}
 }
 
-func flattenVerifiedAccessEndpointENIOptions(apiObject *types.VerifiedAccessEndpointEniOptions) []any {
+func flattenVerifiedAccessEndpointENIOptions(apiObject *awstypes.VerifiedAccessEndpointEniOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -644,7 +644,7 @@ func flattenVerifiedAccessEndpointENIOptions(apiObject *types.VerifiedAccessEndp
 	return []any{tfMap}
 }
 
-func flattenVerifiedAccessEndpointRDSOptions(apiObject *types.VerifiedAccessEndpointRdsOptions) []any {
+func flattenVerifiedAccessEndpointRDSOptions(apiObject *awstypes.VerifiedAccessEndpointRdsOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -682,7 +682,7 @@ func flattenVerifiedAccessEndpointRDSOptions(apiObject *types.VerifiedAccessEndp
 	return []any{tfMap}
 }
 
-func flattenVerifiedAccessSSESpecificationResponse(apiObject *types.VerifiedAccessSseSpecificationResponse) []any {
+func flattenVerifiedAccessSSESpecificationResponse(apiObject *awstypes.VerifiedAccessSseSpecificationResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -700,12 +700,12 @@ func flattenVerifiedAccessSSESpecificationResponse(apiObject *types.VerifiedAcce
 	return []any{tfMap}
 }
 
-func expandCreateVerifiedAccessEndpointCIDROptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointCidrOptions {
+func expandCreateVerifiedAccessEndpointCIDROptions(tfMap map[string]any) *awstypes.CreateVerifiedAccessEndpointCidrOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.CreateVerifiedAccessEndpointCidrOptions{}
+	apiObject := &awstypes.CreateVerifiedAccessEndpointCidrOptions{}
 
 	if v, ok := tfMap["cidr"].(string); ok && v != "" {
 		apiObject.Cidr = aws.String(v)
@@ -716,7 +716,7 @@ func expandCreateVerifiedAccessEndpointCIDROptions(tfMap map[string]any) *types.
 	}
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
-		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+		apiObject.Protocol = awstypes.VerifiedAccessEndpointProtocol(v)
 	}
 
 	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
@@ -726,19 +726,19 @@ func expandCreateVerifiedAccessEndpointCIDROptions(tfMap map[string]any) *types.
 	return apiObject
 }
 
-func expandCreateVerifiedAccessEndpointRDSOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointRdsOptions {
+func expandCreateVerifiedAccessEndpointRDSOptions(tfMap map[string]any) *awstypes.CreateVerifiedAccessEndpointRdsOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.CreateVerifiedAccessEndpointRdsOptions{}
+	apiObject := &awstypes.CreateVerifiedAccessEndpointRdsOptions{}
 
 	if v, ok := tfMap[names.AttrPort].(int); ok {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
-		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+		apiObject.Protocol = awstypes.VerifiedAccessEndpointProtocol(v)
 	}
 
 	if v, ok := tfMap["rds_db_cluster_arn"].(string); ok && v != "" {
@@ -764,16 +764,16 @@ func expandCreateVerifiedAccessEndpointRDSOptions(tfMap map[string]any) *types.C
 	return apiObject
 }
 
-func expandVerifiedAccessEndpointPortRanges(tfList []any) []types.VerifiedAccessEndpointPortRange {
+func expandVerifiedAccessEndpointPortRanges(tfList []any) []awstypes.VerifiedAccessEndpointPortRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	apiObjects := make([]types.VerifiedAccessEndpointPortRange, len(tfList))
+	apiObjects := make([]awstypes.VerifiedAccessEndpointPortRange, len(tfList))
 
 	for i, tfElem := range tfList {
 		tfMap := tfElem.(map[string]any)
-		apiObjects[i] = types.VerifiedAccessEndpointPortRange{
+		apiObjects[i] = awstypes.VerifiedAccessEndpointPortRange{
 			FromPort: aws.Int32(int32(tfMap["from_port"].(int))),
 			ToPort:   aws.Int32(int32(tfMap["to_port"].(int))),
 		}
@@ -782,42 +782,42 @@ func expandVerifiedAccessEndpointPortRanges(tfList []any) []types.VerifiedAccess
 	return apiObjects
 }
 
-func expandCreateVerifiedAccessEndpointPortRanges(tfList []any) []types.CreateVerifiedAccessEndpointPortRange {
+func expandCreateVerifiedAccessEndpointPortRanges(tfList []any) []awstypes.CreateVerifiedAccessEndpointPortRange {
 	apiObjects := expandVerifiedAccessEndpointPortRanges(tfList)
 
 	if apiObjects == nil {
 		return nil
 	}
 
-	return tfslices.ApplyToAll(apiObjects, func(v types.VerifiedAccessEndpointPortRange) types.CreateVerifiedAccessEndpointPortRange {
-		return types.CreateVerifiedAccessEndpointPortRange{
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.VerifiedAccessEndpointPortRange) awstypes.CreateVerifiedAccessEndpointPortRange {
+		return awstypes.CreateVerifiedAccessEndpointPortRange{
 			FromPort: v.FromPort,
 			ToPort:   v.ToPort,
 		}
 	})
 }
 
-func expandModifyVerifiedAccessEndpointPortRanges(tfList []any) []types.ModifyVerifiedAccessEndpointPortRange {
+func expandModifyVerifiedAccessEndpointPortRanges(tfList []any) []awstypes.ModifyVerifiedAccessEndpointPortRange {
 	apiObjects := expandVerifiedAccessEndpointPortRanges(tfList)
 
 	if apiObjects == nil {
 		return nil
 	}
 
-	return tfslices.ApplyToAll(apiObjects, func(v types.VerifiedAccessEndpointPortRange) types.ModifyVerifiedAccessEndpointPortRange {
-		return types.ModifyVerifiedAccessEndpointPortRange{
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.VerifiedAccessEndpointPortRange) awstypes.ModifyVerifiedAccessEndpointPortRange {
+		return awstypes.ModifyVerifiedAccessEndpointPortRange{
 			FromPort: v.FromPort,
 			ToPort:   v.ToPort,
 		}
 	})
 }
 
-func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointLoadBalancerOptions {
+func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any) *awstypes.CreateVerifiedAccessEndpointLoadBalancerOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.CreateVerifiedAccessEndpointLoadBalancerOptions{}
+	apiObject := &awstypes.CreateVerifiedAccessEndpointLoadBalancerOptions{}
 
 	if v, ok := tfMap["load_balancer_arn"].(string); ok && v != "" {
 		apiObject.LoadBalancerArn = aws.String(v)
@@ -832,7 +832,7 @@ func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 	}
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
-		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+		apiObject.Protocol = awstypes.VerifiedAccessEndpointProtocol(v)
 	}
 
 	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
@@ -842,12 +842,12 @@ func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 	return apiObject
 }
 
-func expandCreateVerifiedAccessEndpointENIOptions(tfMap map[string]any) *types.CreateVerifiedAccessEndpointEniOptions {
+func expandCreateVerifiedAccessEndpointENIOptions(tfMap map[string]any) *awstypes.CreateVerifiedAccessEndpointEniOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.CreateVerifiedAccessEndpointEniOptions{}
+	apiObject := &awstypes.CreateVerifiedAccessEndpointEniOptions{}
 
 	if v, ok := tfMap[names.AttrNetworkInterfaceID].(string); ok && v != "" {
 		apiObject.NetworkInterfaceId = aws.String(v)
@@ -862,17 +862,17 @@ func expandCreateVerifiedAccessEndpointENIOptions(tfMap map[string]any) *types.C
 	}
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
-		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+		apiObject.Protocol = awstypes.VerifiedAccessEndpointProtocol(v)
 	}
 	return apiObject
 }
 
-func expandModifyVerifiedAccessEndpointCIDROptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointCidrOptions {
+func expandModifyVerifiedAccessEndpointCIDROptions(tfMap map[string]any) *awstypes.ModifyVerifiedAccessEndpointCidrOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.ModifyVerifiedAccessEndpointCidrOptions{}
+	apiObject := &awstypes.ModifyVerifiedAccessEndpointCidrOptions{}
 
 	if v, ok := tfMap["port_range"].(*schema.Set); ok {
 		apiObject.PortRanges = expandModifyVerifiedAccessEndpointPortRanges(v.List())
@@ -881,12 +881,12 @@ func expandModifyVerifiedAccessEndpointCIDROptions(tfMap map[string]any) *types.
 	return apiObject
 }
 
-func expandModifyVerifiedAccessEndpointRDSOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointRdsOptions {
+func expandModifyVerifiedAccessEndpointRDSOptions(tfMap map[string]any) *awstypes.ModifyVerifiedAccessEndpointRdsOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.ModifyVerifiedAccessEndpointRdsOptions{}
+	apiObject := &awstypes.ModifyVerifiedAccessEndpointRdsOptions{}
 
 	if v, ok := tfMap[names.AttrPort].(int); ok {
 		apiObject.Port = aws.Int32(int32(v))
@@ -903,12 +903,12 @@ func expandModifyVerifiedAccessEndpointRDSOptions(tfMap map[string]any) *types.M
 	return apiObject
 }
 
-func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointLoadBalancerOptions {
+func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any) *awstypes.ModifyVerifiedAccessEndpointLoadBalancerOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.ModifyVerifiedAccessEndpointLoadBalancerOptions{}
+	apiObject := &awstypes.ModifyVerifiedAccessEndpointLoadBalancerOptions{}
 
 	if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
@@ -919,7 +919,7 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 	}
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
-		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+		apiObject.Protocol = awstypes.VerifiedAccessEndpointProtocol(v)
 	}
 
 	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
@@ -929,12 +929,12 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]any)
 	return apiObject
 }
 
-func expandModifyVerifiedAccessEndpointENIOptions(tfMap map[string]any) *types.ModifyVerifiedAccessEndpointEniOptions {
+func expandModifyVerifiedAccessEndpointENIOptions(tfMap map[string]any) *awstypes.ModifyVerifiedAccessEndpointEniOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.ModifyVerifiedAccessEndpointEniOptions{}
+	apiObject := &awstypes.ModifyVerifiedAccessEndpointEniOptions{}
 
 	if v, ok := tfMap[names.AttrPort].(int); ok {
 		apiObject.Port = aws.Int32(int32(v))
@@ -945,18 +945,18 @@ func expandModifyVerifiedAccessEndpointENIOptions(tfMap map[string]any) *types.M
 	}
 
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
-		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
+		apiObject.Protocol = awstypes.VerifiedAccessEndpointProtocol(v)
 	}
 
 	return apiObject
 }
 
-func expandVerifiedAccessSSESpecificationRequest(tfMap map[string]any) *types.VerifiedAccessSseSpecificationRequest {
+func expandVerifiedAccessSSESpecificationRequest(tfMap map[string]any) *awstypes.VerifiedAccessSseSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.VerifiedAccessSseSpecificationRequest{}
+	apiObject := &awstypes.VerifiedAccessSseSpecificationRequest{}
 
 	if v, ok := tfMap["customer_managed_key_enabled"].(bool); ok {
 		apiObject.CustomerManagedKeyEnabled = aws.Bool(v)

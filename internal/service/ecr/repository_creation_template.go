@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -85,6 +86,32 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 				Default:          types.ImageTagMutabilityMutable,
 				ValidateDiagFunc: enum.Validate[types.ImageTagMutability](),
 			},
+			"image_tag_mutability_exclusion_filter": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrFilter: {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateDiagFunc: validation.AllDiag(
+								validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
+								validation.ToDiagFunc(validation.StringMatch(
+									regexache.MustCompile(`^[a-zA-Z0-9._*-]+$`),
+									"must contain only letters, numbers, and special characters (._*-)",
+								)),
+								validateImageTagMutabilityExclusionFilter(),
+							),
+						},
+						"filter_type": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.ImageTagMutabilityExclusionFilterType](),
+						},
+					},
+				},
+			},
 			"lifecycle_policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -94,10 +121,7 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 					return equal
 				},
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
+				StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
 			},
 			names.AttrPrefix: {
 				Type:     schema.TypeString,
@@ -114,17 +138,7 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"repository_policy": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"repository_policy":    sdkv2.IAMPolicyDocumentSchemaOptional(),
 			names.AttrResourceTags: tftags.TagsSchema(),
 		},
 	}
@@ -151,6 +165,10 @@ func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.Res
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("image_tag_mutability_exclusion_filter"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ImageTagMutabilityExclusionFilters = expandImageTagMutabilityExclusionFilters(v.([]any))
 	}
 
 	if v, ok := d.GetOk("lifecycle_policy"); ok {
@@ -210,6 +228,10 @@ func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Resou
 	}
 	d.Set("image_tag_mutability", rct.ImageTagMutability)
 
+	if err := d.Set("image_tag_mutability_exclusion_filter", flattenImageTagMutabilityExclusionFilters(rct.ImageTagMutabilityExclusionFilters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting image_tag_mutability_exclusion_filter: %s", err)
+	}
+
 	if _, err := equivalentLifecyclePolicyJSON(d.Get("lifecycle_policy").(string), aws.ToString(rct.LifecyclePolicy)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -268,6 +290,12 @@ func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.Res
 
 	if d.HasChange("image_tag_mutability") {
 		input.ImageTagMutability = types.ImageTagMutability((d.Get("image_tag_mutability").(string)))
+	}
+
+	if d.HasChange("image_tag_mutability_exclusion_filter") {
+		// To use image_tag_mutability_exclusion_filter, image_tag_mutability must be set
+		input.ImageTagMutability = types.ImageTagMutability((d.Get("image_tag_mutability").(string)))
+		input.ImageTagMutabilityExclusionFilters = expandImageTagMutabilityExclusionFilters(d.Get("image_tag_mutability_exclusion_filter").([]any))
 	}
 
 	if d.HasChange("lifecycle_policy") {

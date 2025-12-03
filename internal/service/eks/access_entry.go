@@ -118,7 +118,7 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Username = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateAccessEntry(ctx, input)
 	}, "The specified principalArn is invalid: invalid principal")
 

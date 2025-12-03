@@ -33,8 +33,9 @@ const (
 // @SDKResource("aws_ce_anomaly_subscription", name="Anomaly Subscription")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/costexplorer/types;awstypes;awstypes.AnomalySubscription")
-// @Testing(identityTest=false)
+// @Testing(emailAddress="email_address")
 func resourceAnomalySubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnomalySubscriptionCreate,

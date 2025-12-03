@@ -276,8 +276,8 @@ func testAccCheckVPCIPv4CIDRBlockAssociationWaitVPCIPAMPoolAllocationDeleted(ctx
 		const (
 			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
 		)
-		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
-			return tfec2.FindIPAMPoolAllocationsForVPC(ctx, conn, rsIPAMPool.Primary.ID, rsVPC.Primary.ID)
+		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
+			return tfec2.FindIPAMPoolAllocationForResource(ctx, conn, rsIPAMPool.Primary.ID, rsVPC.Primary.ID)
 		})
 
 		return err

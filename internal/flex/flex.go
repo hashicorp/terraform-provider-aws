@@ -10,12 +10,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/shopspring/decimal"
 )
 
@@ -254,11 +255,11 @@ func ExpandResourceId(id string, partCount int, allowEmptyPart bool) ([]string, 
 	idParts := strings.Split(id, ResourceIdSeparator)
 
 	if len(idParts) <= 1 {
-		return nil, fmt.Errorf("unexpected format for ID (%v), expected more than one part", idParts)
+		return nil, smarterr.Errorf("unexpected format for ID (%v), expected more than one part", idParts)
 	}
 
 	if len(idParts) != partCount {
-		return nil, fmt.Errorf("unexpected format for ID (%s), expected (%d) parts separated by (%s)", id, partCount, ResourceIdSeparator)
+		return nil, smarterr.Errorf("unexpected format for ID (%s), expected (%d) parts separated by (%s)", id, partCount, ResourceIdSeparator)
 	}
 
 	if !allowEmptyPart {
@@ -272,7 +273,7 @@ func ExpandResourceId(id string, partCount int, allowEmptyPart bool) ([]string, 
 		}
 
 		if emptyPart {
-			return nil, fmt.Errorf("unexpected format for ID (%[1]s), the following id parts indexes are blank (%v)", id, emptyParts)
+			return nil, smarterr.Errorf("unexpected format for ID (%[1]s), the following id parts indexes are blank (%v)", id, emptyParts)
 		}
 	}
 	return idParts, nil
@@ -343,6 +344,11 @@ func Float64ToStringValue(v *float64) string {
 	return strconv.FormatFloat(aws.ToFloat64(v), 'f', -1, 64)
 }
 
+// Float64ValueToString converts a Go float64 value to a string pointer.
+func Float64ValueToString(v float64) *string {
+	return aws.String(strconv.FormatFloat(v, 'f', -1, 64))
+}
+
 // IntValueToString converts a Go int value to a string pointer.
 func IntValueToString(v int) *string {
 	return aws.String(strconv.Itoa(v))
@@ -383,7 +389,7 @@ func StringToInt32Value(v *string) int32 {
 
 // StringValueToBase64String converts a string to a Go base64 string pointer.
 func StringValueToBase64String(v string) *string {
-	return aws.String(itypes.Base64EncodeOnce([]byte(v)))
+	return aws.String(inttypes.Base64EncodeOnce([]byte(v)))
 }
 
 // StringValueToInt64 converts a string to a Go int32 pointer.
@@ -410,6 +416,11 @@ func StringValueToInt64(v string) *int64 {
 func StringValueToInt64Value(v string) int64 {
 	i, _ := strconv.ParseInt(v, 0, 64)
 	return i
+}
+
+// Int64ToRFC3339StringValue converts an int64 timestamp pointer to an RFC3339 Go string value.
+func Int64ToRFC3339StringValue(v *int64) string {
+	return time.UnixMilli(aws.ToInt64(v)).Format(time.RFC3339)
 }
 
 // Takes a string of resource attributes separated by the ResourceIdSeparator constant

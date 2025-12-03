@@ -146,7 +146,12 @@ func (r *agentCollaboratorResource) Create(ctx context.Context, request resource
 		return
 	}
 
-	output, err := conn.AssociateAgentCollaborator(ctx, &input)
+	timeout := r.CreateTimeout(ctx, data.Timeouts)
+	output, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.AssociateAgentCollaboratorOutput, error) {
+			return conn.AssociateAgentCollaborator(ctx, &input)
+		},
+	)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Agent Collaborator", err.Error())
@@ -170,7 +175,7 @@ func (r *agentCollaboratorResource) Create(ctx context.Context, request resource
 	}
 
 	if data.PrepareAgent.ValueBool() {
-		if _, err := prepareAgent(ctx, conn, data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		if _, err := prepareAgent(ctx, conn, data.AgentID.ValueString(), timeout); err != nil {
 			response.Diagnostics.AddError("preparing Agent", err.Error())
 
 			return
@@ -240,8 +245,12 @@ func (r *agentCollaboratorResource) Update(ctx context.Context, request resource
 			return
 		}
 
-		_, err := conn.UpdateAgentCollaborator(ctx, &input)
-
+		timeout := r.UpdateTimeout(ctx, new.Timeouts)
+		_, err := retryOpIfPreparing(ctx, timeout,
+			func(ctx context.Context) (*bedrockagent.UpdateAgentCollaboratorOutput, error) {
+				return conn.UpdateAgentCollaborator(ctx, &input)
+			},
+		)
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Collaborator (%s)", new.ID.ValueString()), err.Error())
 
@@ -249,7 +258,7 @@ func (r *agentCollaboratorResource) Update(ctx context.Context, request resource
 		}
 
 		if new.PrepareAgent.ValueBool() {
-			if _, err := prepareAgent(ctx, conn, new.AgentID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			if _, err := prepareAgent(ctx, conn, new.AgentID.ValueString(), timeout); err != nil {
 				response.Diagnostics.AddError("preparing Agent", err.Error())
 				return
 			}
@@ -273,7 +282,13 @@ func (r *agentCollaboratorResource) Delete(ctx context.Context, request resource
 		AgentVersion:   data.AgentVersion.ValueStringPointer(),
 		CollaboratorId: data.CollaboratorID.ValueStringPointer(),
 	}
-	_, err := conn.DisassociateAgentCollaborator(ctx, &input)
+
+	timeout := r.DeleteTimeout(ctx, data.Timeouts)
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.DisassociateAgentCollaboratorOutput, error) {
+			return conn.DisassociateAgentCollaborator(ctx, &input)
+		},
+	)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -286,7 +301,7 @@ func (r *agentCollaboratorResource) Delete(ctx context.Context, request resource
 	}
 
 	if data.PrepareAgent.ValueBool() {
-		response.Diagnostics.Append(prepareSupervisorToReleaseCollaborator(ctx, conn, data.AgentID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))...)
+		response.Diagnostics.Append(prepareSupervisorToReleaseCollaborator(ctx, conn, data.AgentID.ValueString(), timeout)...)
 		if response.Diagnostics.HasError() {
 			return
 		}

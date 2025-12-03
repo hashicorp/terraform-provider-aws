@@ -46,6 +46,7 @@ const (
 // @SDKResource("aws_comprehend_document_classifier", name="Document Classifier")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/comprehend/types;awstypes;awstypes.DocumentClassifierProperties")
 // @Testing(preCheck="testAccPreCheck")
 func ResourceDocumentClassifier() *schema.Resource {
@@ -416,7 +417,7 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 			}
 
 			if _, err := waitDocumentClassifierDeleted(ctx, conn, aws.ToString(v.DocumentClassifierArn), d.Timeout(schema.TimeoutDelete)); err != nil {
-				return fmt.Errorf("waiting for version (%s) to be deleted: %s", aws.ToString(v.VersionName), err)
+				return fmt.Errorf("waiting for version (%s) to be deleted: %w", aws.ToString(v.VersionName), err)
 			}
 
 			ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -494,7 +495,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 	}
 
 	var out *comprehend.CreateDocumentClassifierOutput
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = conn.CreateDocumentClassifier(ctx, in)
 
@@ -502,20 +503,18 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 			var tmre *types.TooManyRequestsException
 			var qee ratelimit.QuotaExceededError // This is not a typo: the ratelimit.QuotaExceededError is returned as a struct, not a pointer
 			if errors.As(err, &tmre) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			} else if errors.As(err, &qee) {
 				// Unable to get a rate limit token
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			} else {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 		}
 
 		return nil
 	}, tfresource.WithPollInterval(documentClassifierPollInterval))
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateDocumentClassifier(ctx, in)
-	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Document Classifier (%s): %s", action, d.Get(names.AttrName).(string), err)
 	}

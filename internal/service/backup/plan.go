@@ -178,6 +178,11 @@ func resourcePlan() *schema.Resource {
 							Optional: true,
 							Default:  60,
 						},
+						"target_logically_air_gapped_backup_vault_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 						"target_vault_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -287,7 +292,7 @@ func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteBackupPlan(ctx, &backup.DeleteBackupPlanInput{
 			BackupPlanId: aws.String(d.Id()),
 		})
@@ -368,6 +373,9 @@ func expandBackupRuleInputs(ctx context.Context, tfList []any) []awstypes.Backup
 		}
 		if v, ok := tfMap["start_window"].(int); ok {
 			apiObject.StartWindowMinutes = aws.Int64(int64(v))
+		}
+		if v, ok := tfMap["target_logically_air_gapped_backup_vault_arn"].(string); ok && v != "" {
+			apiObject.TargetLogicallyAirGappedBackupVaultArn = aws.String(v)
 		}
 		if v, ok := tfMap["target_vault_name"].(string); ok && v != "" {
 			apiObject.TargetBackupVaultName = aws.String(v)
@@ -455,13 +463,14 @@ func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) [
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
-			"completion_window":            aws.ToInt64(apiObject.CompletionWindowMinutes),
-			"enable_continuous_backup":     aws.ToBool(apiObject.EnableContinuousBackup),
-			"rule_name":                    aws.ToString(apiObject.RuleName),
-			names.AttrSchedule:             aws.ToString(apiObject.ScheduleExpression),
-			"schedule_expression_timezone": aws.ToString(apiObject.ScheduleExpressionTimezone),
-			"start_window":                 aws.ToInt64(apiObject.StartWindowMinutes),
-			"target_vault_name":            aws.ToString(apiObject.TargetBackupVaultName),
+			"completion_window":                            aws.ToInt64(apiObject.CompletionWindowMinutes),
+			"enable_continuous_backup":                     aws.ToBool(apiObject.EnableContinuousBackup),
+			"rule_name":                                    aws.ToString(apiObject.RuleName),
+			names.AttrSchedule:                             aws.ToString(apiObject.ScheduleExpression),
+			"schedule_expression_timezone":                 aws.ToString(apiObject.ScheduleExpressionTimezone),
+			"start_window":                                 aws.ToInt64(apiObject.StartWindowMinutes),
+			"target_logically_air_gapped_backup_vault_arn": aws.ToString(apiObject.TargetLogicallyAirGappedBackupVaultArn),
+			"target_vault_name":                            aws.ToString(apiObject.TargetBackupVaultName),
 		}
 
 		if v := apiObject.CopyActions; len(v) > 0 {

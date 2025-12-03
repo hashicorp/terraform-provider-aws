@@ -49,8 +49,10 @@ The following arguments are optional:
 
 * `encryptionConfiguration` - (Optional) A single table bucket encryption configuration object.
   [See `encryptionConfiguration` below](#encryption_configuration).
+* `forceDestroy` - (Optional, Default:`false`) Whether all tables and namespaces within the table bucket should be deleted *when the table bucket is destroyed* so that the table bucket can be destroyed without error. These tables and namespaces are *not* recoverable. This only deletes tables and namespaces when the table bucket is destroyed, *not* when setting this parameter to `true`. Once this parameter is set to `true`, there must be a successful `terraform apply` run before a destroy is required to update this value in the resource state. Without a successful `terraform apply` after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the table bucket or destroying the table bucket, this flag will not work. Additionally when importing a table bucket, a successful `terraform apply` is required to set this value in state before it will take effect on a destroy operation.
 * `maintenanceConfiguration` - (Optional) A single table bucket maintenance configuration object.
   [See `maintenanceConfiguration` below](#maintenance_configuration).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `encryptionConfiguration`
 
@@ -124,4 +126,4 @@ Using `terraform import`, import S3 Tables Table Bucket using the `arn`. For exa
 % terraform import aws_s3tables_table_bucket.example arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8d0657839c87ebec22da7f06db455d16615964442b20d77c5effdf431e3d4a03 -->
+<!-- cache-key: cdktf-0.20.8 input-361659ba17806937f1742577b987c12ee14c0fac717c8d1d46485e04abadd11d -->

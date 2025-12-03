@@ -8,7 +8,6 @@ import (
 	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -16,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,10 +36,11 @@ func testAccAppMeshVirtualRouterDataSource_tagsSerial(t *testing.T) {
 
 func testAccAppMeshVirtualRouterDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_appmesh_virtual_router.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	dataSourceName := "data.aws_appmesh_virtual_router.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -65,10 +65,11 @@ func testAccAppMeshVirtualRouterDataSource_tags(t *testing.T) {
 
 func testAccAppMeshVirtualRouterDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_appmesh_virtual_router.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	dataSourceName := "data.aws_appmesh_virtual_router.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -89,10 +90,11 @@ func testAccAppMeshVirtualRouterDataSource_tags_NullMap(t *testing.T) {
 
 func testAccAppMeshVirtualRouterDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_appmesh_virtual_router.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	dataSourceName := "data.aws_appmesh_virtual_router.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -113,10 +115,11 @@ func testAccAppMeshVirtualRouterDataSource_tags_EmptyMap(t *testing.T) {
 
 func testAccAppMeshVirtualRouterDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_appmesh_virtual_router.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	dataSourceName := "data.aws_appmesh_virtual_router.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.AppMeshServiceID),
 		Steps: []resource.TestStep{
@@ -145,10 +148,11 @@ func testAccAppMeshVirtualRouterDataSource_tags_DefaultTags_nonOverlapping(t *te
 
 func testAccAppMeshVirtualRouterDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_appmesh_virtual_router.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	dataSourceName := "data.aws_appmesh_virtual_router.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.AppMeshServiceID),
 		Steps: []resource.TestStep{
@@ -183,10 +187,11 @@ func testAccAppMeshVirtualRouterDataSource_tags_IgnoreTags_Overlap_DefaultTag(t 
 
 func testAccAppMeshVirtualRouterDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_appmesh_virtual_router.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	dataSourceName := "data.aws_appmesh_virtual_router.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.AppMeshServiceID),
 		Steps: []resource.TestStep{
@@ -215,7 +220,7 @@ func testAccAppMeshVirtualRouterDataSource_tags_IgnoreTags_Overlap_ResourceTag(t
 }
 
 func expectFullVirtualRouterDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfappmesh.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfappmesh.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrARN,
 	}), knownValue)
 }

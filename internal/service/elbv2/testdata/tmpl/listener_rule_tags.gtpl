@@ -1,4 +1,5 @@
 resource "aws_lb_listener_rule" "test" {
+{{- template "region" }}
   listener_arn = aws_lb_listener.test.arn
   priority     = 100
 
@@ -17,6 +18,7 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 resource "aws_lb_listener" "test" {
+{{- template "region" }}
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
   port              = "80"
@@ -28,6 +30,7 @@ resource "aws_lb_listener" "test" {
 }
 
 resource "aws_security_group" "test" {
+{{- template "region" }}
   name   = var.rName
   vpc_id = aws_vpc.test.id
 
@@ -47,6 +50,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_lb" "test" {
+{{- template "region" }}
   name            = var.rName
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -57,6 +61,7 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
+{{- template "region" }}
   name     = var.rName
   port     = 8080
   protocol = "HTTP"

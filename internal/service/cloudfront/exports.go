@@ -5,5 +5,6 @@ package cloudfront
 
 // Exports for use across service packages.
 var (
+	FindDistributionByID  = findDistributionByID
 	ResourceKeyValueStore = newKeyValueStoreResource
 )

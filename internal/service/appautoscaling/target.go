@@ -141,9 +141,9 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute,
-		func() (any, error) {
-			return FindTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
+	t, err := tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute,
+		func(ctx context.Context) (*awstypes.ScalableTarget, error) {
+			return findTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
 		},
 		d.IsNewResource(),
 	)
@@ -157,8 +157,6 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Application AutoScaling Target (%s): %s", d.Id(), err)
 	}
-
-	t := outputRaw.(*awstypes.ScalableTarget)
 
 	d.Set(names.AttrARN, t.ScalableTargetARN)
 	d.Set(names.AttrMaxCapacity, t.MaxCapacity)
@@ -226,8 +224,8 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "deleting Application AutoScaling Target (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (any, error) {
-		return FindTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
+		return findTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
 	})
 
 	if err != nil {
@@ -237,7 +235,7 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
-func FindTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.Client, resourceID, namespace, dimension string) (*awstypes.ScalableTarget, error) {
+func findTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.Client, resourceID, namespace, dimension string) (*awstypes.ScalableTarget, error) {
 	input := applicationautoscaling.DescribeScalableTargetsInput{
 		ResourceIds:       []string{resourceID},
 		ScalableDimension: awstypes.ScalableDimension(dimension),
@@ -246,7 +244,6 @@ func FindTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.
 	var output []awstypes.ScalableTarget
 
 	pages := applicationautoscaling.NewDescribeScalableTargetsPaginator(conn, &input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -297,7 +294,7 @@ func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta any)
 
 func registerScalableTarget(ctx context.Context, conn *applicationautoscaling.Client, input *applicationautoscaling.RegisterScalableTargetInput) error {
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.RegisterScalableTarget(ctx, input)
 		},
 		func(err error) (bool, error) {

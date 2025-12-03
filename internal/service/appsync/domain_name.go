@@ -8,6 +8,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
@@ -17,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -76,12 +79,12 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := conn.CreateDomainName(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Appsync Domain Name (%s): %s", domainName, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, domainName)
 	}
 
 	d.SetId(aws.ToString(output.DomainNameConfig.DomainName))
 
-	return append(diags, resourceDomainNameRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceDomainNameRead(ctx, d, meta))
 }
 
 func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -90,14 +93,14 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	domainName, err := findDomainNameByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AppSync Domain Name (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && intretry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Appsync Domain Name (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set("appsync_domain_name", domainName.AppsyncDomainName)
@@ -124,10 +127,10 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	_, err := conn.UpdateDomainName(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Appsync Domain Name (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	return append(diags, resourceDomainNameRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceDomainNameRead(ctx, d, meta))
 }
 
 func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -138,14 +141,14 @@ func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta 
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModificationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteDomainName(ctx, &appsync.DeleteDomainNameInput{
 			DomainName: aws.String(d.Id()),
 		})
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Appsync Domain Name (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -159,18 +162,15 @@ func findDomainNameByID(ctx context.Context, conn *appsync.Client, id string) (*
 	output, err := conn.GetDomainName(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil || output.DomainNameConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
 	return output.DomainNameConfig, nil

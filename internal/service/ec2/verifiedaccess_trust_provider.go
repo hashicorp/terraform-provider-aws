@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -68,7 +68,7 @@ func resourceVerifiedAccessTrustProvider() *schema.Resource {
 				Type:             schema.TypeString,
 				ForceNew:         true,
 				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.DeviceTrustProviderType](),
+				ValidateDiagFunc: enum.Validate[awstypes.DeviceTrustProviderType](),
 			},
 			"native_application_oidc_options": {
 				Type:     schema.TypeList,
@@ -200,13 +200,13 @@ func resourceVerifiedAccessTrustProvider() *schema.Resource {
 				Type:             schema.TypeString,
 				ForceNew:         true,
 				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.TrustProviderType](),
+				ValidateDiagFunc: enum.Validate[awstypes.TrustProviderType](),
 			},
 			"user_trust_provider_type": {
 				Type:             schema.TypeString,
 				ForceNew:         true,
 				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.UserTrustProviderType](),
+				ValidateDiagFunc: enum.Validate[awstypes.UserTrustProviderType](),
 			},
 		},
 	}
@@ -219,8 +219,8 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	input := ec2.CreateVerifiedAccessTrustProviderInput{
 		ClientToken:         aws.String(sdkid.UniqueId()),
 		PolicyReferenceName: aws.String(d.Get("policy_reference_name").(string)),
-		TagSpecifications:   getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessTrustProvider),
-		TrustProviderType:   types.TrustProviderType(d.Get("trust_provider_type").(string)),
+		TagSpecifications:   getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessTrustProvider),
+		TrustProviderType:   awstypes.TrustProviderType(d.Get("trust_provider_type").(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -232,7 +232,7 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	}
 
 	if v, ok := d.GetOk("device_trust_provider_type"); ok {
-		input.DeviceTrustProviderType = types.DeviceTrustProviderType(v.(string))
+		input.DeviceTrustProviderType = awstypes.DeviceTrustProviderType(v.(string))
 	}
 
 	if v, ok := d.GetOk("native_application_oidc_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -248,7 +248,7 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	}
 
 	if v, ok := d.GetOk("user_trust_provider_type"); ok {
-		input.UserTrustProviderType = types.UserTrustProviderType(v.(string))
+		input.UserTrustProviderType = awstypes.UserTrustProviderType(v.(string))
 	}
 
 	output, err := conn.CreateVerifiedAccessTrustProvider(ctx, &input)
@@ -372,7 +372,7 @@ func resourceVerifiedAccessTrustProviderDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func flattenDeviceOptions(apiObject *types.DeviceOptions) []any {
+func flattenDeviceOptions(apiObject *awstypes.DeviceOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -386,7 +386,7 @@ func flattenDeviceOptions(apiObject *types.DeviceOptions) []any {
 	return []any{tfMap}
 }
 
-func flattenNativeApplicationOIDCOptions(apiObject *types.NativeApplicationOidcOptions, clientSecret string) []any {
+func flattenNativeApplicationOIDCOptions(apiObject *awstypes.NativeApplicationOidcOptions, clientSecret string) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -426,7 +426,7 @@ func flattenNativeApplicationOIDCOptions(apiObject *types.NativeApplicationOidcO
 	return []any{tfMap}
 }
 
-func flattenOIDCOptions(apiObject *types.OidcOptions, clientSecret string) []any {
+func flattenOIDCOptions(apiObject *awstypes.OidcOptions, clientSecret string) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -462,12 +462,12 @@ func flattenOIDCOptions(apiObject *types.OidcOptions, clientSecret string) []any
 	return []any{tfMap}
 }
 
-func expandCreateVerifiedAccessTrustProviderDeviceOptions(tfMap map[string]any) *types.CreateVerifiedAccessTrustProviderDeviceOptions {
+func expandCreateVerifiedAccessTrustProviderDeviceOptions(tfMap map[string]any) *awstypes.CreateVerifiedAccessTrustProviderDeviceOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.CreateVerifiedAccessTrustProviderDeviceOptions{}
+	apiObject := &awstypes.CreateVerifiedAccessTrustProviderDeviceOptions{}
 
 	if v, ok := tfMap["tenant_id"].(string); ok && v != "" {
 		apiObject.TenantId = aws.String(v)
@@ -476,12 +476,12 @@ func expandCreateVerifiedAccessTrustProviderDeviceOptions(tfMap map[string]any) 
 	return apiObject
 }
 
-func expandCreateVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]any) *types.CreateVerifiedAccessTrustProviderOidcOptions {
+func expandCreateVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]any) *awstypes.CreateVerifiedAccessTrustProviderOidcOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.CreateVerifiedAccessTrustProviderOidcOptions{}
+	apiObject := &awstypes.CreateVerifiedAccessTrustProviderOidcOptions{}
 
 	if v, ok := tfMap["authorization_endpoint"].(string); ok && v != "" {
 		apiObject.AuthorizationEndpoint = aws.String(v)
@@ -514,12 +514,12 @@ func expandCreateVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]any) *t
 	return apiObject
 }
 
-func expandCreateVerifiedAccessTrustProviderNativeApplicationOIDCOptions(tfMap map[string]any) *types.CreateVerifiedAccessNativeApplicationOidcOptions {
+func expandCreateVerifiedAccessTrustProviderNativeApplicationOIDCOptions(tfMap map[string]any) *awstypes.CreateVerifiedAccessNativeApplicationOidcOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.CreateVerifiedAccessNativeApplicationOidcOptions{}
+	apiObject := &awstypes.CreateVerifiedAccessNativeApplicationOidcOptions{}
 
 	if v, ok := tfMap["authorization_endpoint"].(string); ok && v != "" {
 		apiObject.AuthorizationEndpoint = aws.String(v)
@@ -556,12 +556,12 @@ func expandCreateVerifiedAccessTrustProviderNativeApplicationOIDCOptions(tfMap m
 	return apiObject
 }
 
-func expandModifyVerifiedAccessTrustProviderNativeApplicationOIDCOptions(tfMap map[string]any) *types.ModifyVerifiedAccessNativeApplicationOidcOptions {
+func expandModifyVerifiedAccessTrustProviderNativeApplicationOIDCOptions(tfMap map[string]any) *awstypes.ModifyVerifiedAccessNativeApplicationOidcOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.ModifyVerifiedAccessNativeApplicationOidcOptions{}
+	apiObject := &awstypes.ModifyVerifiedAccessNativeApplicationOidcOptions{}
 
 	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		apiObject.Scope = aws.String(v)
@@ -570,12 +570,12 @@ func expandModifyVerifiedAccessTrustProviderNativeApplicationOIDCOptions(tfMap m
 	return apiObject
 }
 
-func expandModifyVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]any) *types.ModifyVerifiedAccessTrustProviderOidcOptions {
+func expandModifyVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]any) *awstypes.ModifyVerifiedAccessTrustProviderOidcOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.ModifyVerifiedAccessTrustProviderOidcOptions{}
+	apiObject := &awstypes.ModifyVerifiedAccessTrustProviderOidcOptions{}
 
 	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		apiObject.Scope = aws.String(v)

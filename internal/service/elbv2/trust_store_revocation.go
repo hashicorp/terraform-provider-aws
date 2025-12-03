@@ -109,7 +109,7 @@ func resourceTrustStoreRevocationCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(id)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findTrustStoreRevocationByTwoPartKey(ctx, conn, trustStoreARN, revocationID)
 	})
 

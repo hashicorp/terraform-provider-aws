@@ -81,25 +81,24 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	groupName := d.Get("group").(string)
-	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	request := &iam.PutGroupPolicyInput{
+	groupName, policyName := d.Get("group").(string), create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	input := iam.PutGroupPolicyInput{
 		GroupName:      aws.String(groupName),
 		PolicyDocument: aws.String(policyDoc),
 		PolicyName:     aws.String(policyName),
 	}
 
-	_, err = conn.PutGroupPolicy(ctx, request)
+	_, err = conn.PutGroupPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting IAM Group (%s) Policy (%s): %s", groupName, policyName, err)
 	}
 
 	if d.IsNewResource() {
-		d.SetId(fmt.Sprintf("%s:%s", groupName, policyName))
+		d.SetId(groupPolicyCreateResourceID(groupName, policyName))
 
-		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
-			return FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return findGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
 		})
 
 		if err != nil {
@@ -114,12 +113,12 @@ func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	groupName, policyName, err := GroupPolicyParseID(d.Id())
+	groupName, policyName, err := groupPolicyParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyDocument, err := FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
+	policyDocument, err := findGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Group Policy %s not found, removing from state", d.Id())
@@ -153,16 +152,17 @@ func resourceGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	groupName, policyName, err := GroupPolicyParseID(d.Id())
+	groupName, policyName, err := groupPolicyParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[INFO] Deleting IAM Group Policy: %s", d.Id())
-	_, err = conn.DeleteGroupPolicy(ctx, &iam.DeleteGroupPolicyInput{
+	input := iam.DeleteGroupPolicyInput{
 		GroupName:  aws.String(groupName),
 		PolicyName: aws.String(policyName),
-	})
+	}
+	_, err = conn.DeleteGroupPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
@@ -175,12 +175,16 @@ func resourceGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, groupName, policyName string) (string, error) {
-	input := &iam.GetGroupPolicyInput{
+func findGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, groupName, policyName string) (string, error) {
+	input := iam.GetGroupPolicyInput{
 		GroupName:  aws.String(groupName),
 		PolicyName: aws.String(policyName),
 	}
 
+	return findGroupPolicy(ctx, conn, &input)
+}
+
+func findGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.GetGroupPolicyInput) (string, error) {
 	output, err := conn.GetGroupPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
@@ -201,14 +205,21 @@ func FindGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, groupNam
 	return aws.ToString(output.PolicyDocument), nil
 }
 
-func GroupPolicyParseID(id string) (groupName, policyName string, err error) {
-	parts := strings.SplitN(id, ":", 2)
+const groupPolicyResourceIDSeparator = ":"
+
+func groupPolicyCreateResourceID(groupName, policyName string) string {
+	parts := []string{groupName, policyName}
+	id := strings.Join(parts, groupPolicyResourceIDSeparator)
+
+	return id
+}
+
+func groupPolicyParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, groupPolicyResourceIDSeparator, 2)
+
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err = fmt.Errorf("group_policy id must be of the form <group name>:<policy name>")
-		return
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected GROUP-NAME%[2]sPOLICY-NAME", id, groupPolicyResourceIDSeparator)
 	}
 
-	groupName = parts[0]
-	policyName = parts[1]
-	return
+	return parts[0], parts[1], nil
 }

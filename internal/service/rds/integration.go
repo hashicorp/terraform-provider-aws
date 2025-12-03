@@ -37,7 +37,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;awstypes;awstypes.Integration")
 // @Testing(tagsTest=false)
-// @Testing(identityTest=false)
+// @Testing(preIdentityVersion="v5.100.0")
 func newIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &integrationResource{}
 
@@ -59,7 +59,7 @@ const (
 
 type integrationResource struct {
 	framework.ResourceWithModel[integrationResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -83,7 +83,7 @@ func (r *integrationResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			"integration_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{

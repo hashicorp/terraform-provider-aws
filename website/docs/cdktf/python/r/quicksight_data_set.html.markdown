@@ -231,7 +231,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `aws_account_id` - (Optional, Forces new resource) AWS account ID.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `column_groups` - (Optional) Groupings of columns that work together in certain Amazon QuickSight features. Currently, only geospatial hierarchy is supported. See [column_groups](#column_groups).
 * `column_level_permission_rules` - (Optional) A set of 1 or more definitions of a [ColumnLevelPermissionRule](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnLevelPermissionRule.html). See [column_level_permission_rules](#column_level_permission_rules).
 * `data_set_usage_configuration` - (Optional) The usage configuration to apply to child datasets that reference this dataset as a source. See [data_set_usage_configuration](#data_set_usage_configuration).
@@ -239,6 +239,7 @@ The following arguments are optional:
 * `logical_table_map` - (Optional) Configures the combination and transformation of the data from the physical tables. Maximum of 1 entry. See [logical_table_map](#logical_table_map).
 * `permissions` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [permissions](#permissions).
 * `physical_table_map` - (Optional) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `row_level_permission_data_set` - (Optional) The row-level security configuration for the data that you want to create. See [row_level_permission_data_set](#row_level_permission_data_set).
 * `row_level_permission_tag_configuration` - (Optional) The configuration of tags on a dataset to set row-level security. Row-level security tags are currently supported for anonymous embedding only. See [row_level_permission_tag_configuration](#row_level_permission_tag_configuration).
 * `refresh_properties` - (Optional) The refresh properties for the data set. **NOTE**: Only valid when `import_mode` is set to `SPICE`. See [refresh_properties](#refresh_properties).
@@ -455,7 +456,16 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the data set.
 * `id` - A comma-delimited string joining AWS account ID and data set ID.
+* `output_columns` - The final set of columns available for use in analyses and dashboards after all data preparation and transformation steps have been applied within the data set.  See [`output_columns` Block](#output_columns-block) below.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+### `output_columns` Block
+
+The `output_columns` block has the following attributes.
+
+* `name` - The name of the column.
+* `description` - The description of the column.
+* `type` - The data type of the column.
 
 ## Import
 
@@ -482,4 +492,4 @@ Using `terraform import`, import a QuickSight Data Set using the AWS account ID 
 % terraform import aws_quicksight_data_set.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-209484316ffc23df22cba062139a66942ef37cd214c14e2c05b72e92b260c18e -->
+<!-- cache-key: cdktf-0.20.8 input-f035344646486e0f88c6d327cdb93202b27225c1e97186c64ecdd755d557d4ee -->

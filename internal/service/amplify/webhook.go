@@ -6,11 +6,9 @@ package amplify
 import (
 	"context"
 	"log"
-	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -103,22 +101,8 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading Amplify Webhook (%s): %s", d.Id(), err)
 	}
 
-	webhookArn := aws.ToString(webhook.WebhookArn)
-	arn, err := arn.Parse(webhookArn)
-
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	// arn:${Partition}:amplify:${Region}:${Account}:apps/${AppId}/webhooks/${WebhookId}
-	parts := strings.Split(arn.Resource, "/")
-
-	if len(parts) != 4 {
-		return sdkdiag.AppendErrorf(diags, "unexpected format for ARN resource (%s)", arn.Resource)
-	}
-
-	d.Set("app_id", parts[1])
-	d.Set(names.AttrARN, webhookArn)
+	d.Set("app_id", webhook.AppId)
+	d.Set(names.AttrARN, webhook.WebhookArn)
 	d.Set("branch_name", webhook.BranchName)
 	d.Set(names.AttrDescription, webhook.Description)
 	d.Set(names.AttrURL, webhook.WebhookUrl)

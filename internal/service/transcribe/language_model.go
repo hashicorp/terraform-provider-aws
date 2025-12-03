@@ -122,7 +122,7 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateLanguageModel(ctx, in)
 		},
 		func(err error) (bool, error) {

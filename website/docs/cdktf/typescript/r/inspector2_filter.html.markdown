@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description
 * `reason` - (Optional) Reason for creating the filter
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -73,6 +74,8 @@ This resource exports the following attributes in addition to the arguments abov
 The `filterCriteria` configuration block supports the following attributes:
 
 * `awsAccountId` - (Optional) The AWS account ID in which the finding was generated. [Documented below](#string-filter).
+* `code_repository_project_name` - (Optional) The project name in a code repository. [Documented below](#string-filter).
+* `code_repository_provider_type` - (Optional) The repository provider type (such as GitHub, GitLab, etc.) [Documented below](#string-filter).
 * `codeVulnerabilityDetectorName` - (Optional) The ID of the component. [Documented below](#string-filter).
 * `codeVulnerabilityDetectorTags` - (Optional) The ID of the component. [Documented below](#string-filter).
 * `codeVulnerabilityFilePath` - (Optional) The ID of the component. [Documented below](#string-filter).
@@ -82,6 +85,8 @@ The `filterCriteria` configuration block supports the following attributes:
 * `ec2InstanceSubnetId` - (Optional) The ID of the subnet. [Documented below](#string-filter).
 * `ec2InstanceVpcId` - (Optional) The ID of the VPC. [Documented below](#string-filter).
 * `ecrImageArchitecture` - (Optional) The architecture of the ECR image. [Documented below](#string-filter).
+* `ecr_image_in_use_count` - (Optional)  The number of the ECR images in use. [Documented below](#number-filter).
+* `ecr_image_last_in_use_at` - (Optional) The date range when an ECR image was last used in an ECS cluster task or EKS cluster pod. [Documented below](#date-filter).
 * `ecrImageHash` - (Optional) The SHA256 hash of the ECR image. [Documented below](#string-filter).
 * `ecrImagePushedAt` - (Optional) The date range when the image was pushed. [Documented below](#date-filter).
 * `ecrImageRegistry` - (Optional) The registry of the ECR image. [Documented below](#string-filter).
@@ -190,10 +195,10 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-Using `terraform import`, import Inspector Filter using the `example_id_arg`. For example:
+Using `terraform import`, import Inspector Filter using the `arn`. For example:
 
 ```console
 % terraform import aws_inspector2_filter.example "arn:aws:inspector2:us-east-1:111222333444:owner/111222333444/filter/abcdefgh12345678"
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d16187b3467414ed44b1e92f921749e94002269c71b6785de2b070618914b42e -->
+<!-- cache-key: cdktf-0.20.8 input-d0cf315e56f66042b37ff2626b36acde1d0ebb1e69573a6821502856a76e19f6 -->

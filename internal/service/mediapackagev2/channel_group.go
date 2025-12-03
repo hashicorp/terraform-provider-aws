@@ -219,7 +219,7 @@ func (r *channelGroupResource) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return findChannelGroupByID(ctx, conn, data.Name.ValueString())
 	})
 

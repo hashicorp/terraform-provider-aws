@@ -93,7 +93,7 @@ var (
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      defaultQueueMaximumMessageSize,
-			ValidateFunc: validation.IntBetween(1024, 262_144),
+			ValidateFunc: validation.IntBetween(1024, 1_048_576),
 		},
 		"message_retention_seconds": {
 			Type:         schema.TypeInt,
@@ -194,17 +194,18 @@ var (
 
 // @SDKResource("aws_sqs_queue", name="Queue")
 // @Tags(identifierAttribute="id")
+// @IdentityVersion(1)
+// @CustomInherentRegionIdentity("url", "parseQueueURL")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.19.0")
 func resourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
 		ReadWithoutTimeout:   resourceQueueRead,
 		UpdateWithoutTimeout: resourceQueueUpdate,
 		DeleteWithoutTimeout: resourceQueueDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: resourceQueueCustomizeDiff,
 
@@ -238,7 +239,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	// create is 2 phase: 1. create, 2. wait for propagation
 	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutCreate))
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func(ctx context.Context) (any, error) {
 		return conn.CreateQueue(ctx, input)
 	}, errCodeQueueDeletedRecently)
 
@@ -246,7 +247,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
-		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
+		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func(ctx context.Context) (any, error) {
 			return conn.CreateQueue(ctx, input)
 		}, errCodeQueueDeletedRecently)
 	}
@@ -282,7 +283,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func(ctx context.Context) (map[types.QueueAttributeName]string, error) {
 		return findQueueAttributesByURL(ctx, conn, d.Id())
 	})
 
@@ -301,7 +302,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = queueAttributeMap.APIAttributesToResourceData(outputRaw.(map[types.QueueAttributeName]string), d)
+	err = queueAttributeMap.APIAttributesToResourceData(output, d)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -631,4 +632,16 @@ func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
+}
+
+func parseQueueURL(u string) (result inttypes.BaseIdentity, err error) {
+	re := regexache.MustCompile(`^https://sqs\.([a-z0-9-]+)\.[^/]+/([0-9]{12})/.+`)
+	match := re.FindStringSubmatch(u)
+	if match == nil {
+		return inttypes.BaseIdentity{}, fmt.Errorf("could not parse %q as SQS URL", u)
+	}
+	return inttypes.BaseIdentity{
+		AccountID: match[2],
+		Region:    match[1],
+	}, nil
 }

@@ -85,6 +85,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `delivery_options` - (Optional) Whether messages that use the configuration set are required to use TLS. See below.
 * `reputation_metrics_enabled` - (Optional) Whether or not Amazon SES publishes reputation metrics for the configuration set, such as bounce and complaint rates, to Amazon CloudWatch. The default value is `false`.
 * `sending_enabled` - (Optional) Whether email sending is enabled or disabled for the configuration set. The default value is `true`.
@@ -131,4 +132,4 @@ Using `terraform import`, import SES Configuration Sets using their `name`. For 
 % terraform import aws_ses_configuration_set.test some-configuration-set-test
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ac5378fce948fe7d5fb5752e30c248fe9955a032693e1617b2e2d4c9158fbebc -->
+<!-- cache-key: cdktf-0.20.8 input-60453d501d1bc9db4e1330d250e16135492101aade2a9d43fdb88da22f1bc5a2 -->

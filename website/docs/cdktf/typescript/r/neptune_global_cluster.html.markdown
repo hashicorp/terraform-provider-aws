@@ -141,6 +141,7 @@ This resource supports the following arguments:
 * `deletionProtection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Terraform will only perform drift detection if a configuration value is provided. Current Valid values: `neptune`. Conflicts with `sourceDbClusterIdentifier`.
 * `engineVersion` - (Optional) Engine version of the global database. Upgrading the engine version will result in all cluster members being immediately updated and will.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `sourceDbClusterIdentifier` - (Optional) ARN to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
 * `storageEncrypted` - (Optional, Forces new resources) Whether the DB cluster is encrypted. The default is `false` unless `sourceDbClusterIdentifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
 
@@ -219,4 +220,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-28e353a71880fd769e636189652d04dcf2946b9bc933307081a1ed90e38e9908 -->
+<!-- cache-key: cdktf-0.20.8 input-345d93bc45712d3ecfca26561e4225d321b059ee8a1245707b3f1f2b37306131 -->

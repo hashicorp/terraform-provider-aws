@@ -32,7 +32,7 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         current = DataAwsRegion(self, "current")
         DataAwsEc2ManagedPrefixList(self, "example",
-            name="com.amazonaws.${" + current.name + "}.dynamodb"
+            name="com.amazonaws.${" + current.region + "}.dynamodb"
         )
 ```
 
@@ -63,6 +63,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) ID of the prefix list to select.
 * `name` - (Optional) Name of the prefix list to select.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
@@ -97,4 +98,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-791f129b21e61fc1580e1d68e3c36b7cd05aa8b7b599fa43a75a0556fe9e9f3d -->
+<!-- cache-key: cdktf-0.20.8 input-4631d48149d0dd5dfa7ce0ba24d413ebad998cd170f31f93391da24ac0c370b1 -->

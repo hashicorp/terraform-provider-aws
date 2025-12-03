@@ -194,7 +194,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.TimeoutInMinutes = aws.Int32(int32(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateStack(ctx, input)
 	}, errCodeValidationError, "is invalid or cannot be assumed")
 
@@ -325,7 +325,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.Tags = tags
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateStack(ctx, input)
 	}, errCodeValidationError, "is invalid or cannot be assumed")
 

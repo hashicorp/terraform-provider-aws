@@ -42,7 +42,7 @@ func sweepAccountAssignments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.SSOAdminClient(ctx)
 
@@ -134,7 +134,7 @@ func sweepApplications(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.SSOAdminClient(ctx)
 	var sweepResources []sweep.Sweepable
@@ -173,8 +173,13 @@ func sweepApplications(region string) error {
 
 			for _, application := range page.Applications {
 				applicationARN := aws.ToString(application.ApplicationArn)
-				log.Printf("[INFO] Deleting SSO Application: %s", applicationARN)
 
+				if applicationProviderARN := aws.ToString(application.ApplicationProviderArn); applicationProviderARN != "" {
+					log.Printf("[INFO] Skipping SSO Application %s: ApplicationProviderArn=%s", applicationARN, applicationProviderARN)
+					continue
+				}
+
+				log.Printf("[INFO] Deleting SSO Application: %s", applicationARN)
 				sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationResource, client, framework.NewAttribute("application_arn", applicationARN)))
 			}
 		}
@@ -191,7 +196,7 @@ func sweepPermissionSets(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.SSOAdminClient(ctx)
 	var sweepResources []sweep.Sweepable

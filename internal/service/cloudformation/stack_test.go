@@ -46,6 +46,11 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "template_url"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -53,8 +58,15 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccStackConfig_basic(rName),
-				PlanOnly: true,
+				Config: testAccStackConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -437,13 +449,6 @@ func TestAccCloudFormationStack_withTransform(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_transform(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stack),
-				),
-			},
-			{
-				PlanOnly: true,
-				Config:   testAccStackConfig_transform(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),

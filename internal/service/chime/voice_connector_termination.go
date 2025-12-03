@@ -125,10 +125,6 @@ func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.Resour
 		return findVoiceConnectorTerminationByID(ctx, conn, d.Id())
 	})
 
-	if tfresource.TimedOut(err) {
-		resp, err = findVoiceConnectorTerminationByID(ctx, conn, d.Id())
-	}
-
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector (%s) termination not found, removing from state", d.Id())
 		d.SetId("")

@@ -177,7 +177,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateFaq(ctx, input)
 		},
 		func(err error) (bool, error) {

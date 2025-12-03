@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -80,17 +81,7 @@ func resourceUser() *schema.Resource {
 				Default:          awstypes.HomeDirectoryTypePath,
 				ValidateDiagFunc: enum.Validate[awstypes.HomeDirectoryType](),
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptional(),
 			"posix_profile": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -365,7 +356,7 @@ func userDelete(ctx context.Context, conn *transfer.Client, serverID, userName s
 		return fmt.Errorf("deleting Transfer User (%s): %w", id, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findUserByTwoPartKey(ctx, conn, serverID, userName)
 	})
 

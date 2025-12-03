@@ -27,7 +27,7 @@ import (
 )
 
 // @SDKResource("aws_signer_signing_profile_permission", name="Signing Profile Permission")
-func ResourceSigningProfilePermission() *schema.Resource {
+func resourceSigningProfilePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningProfilePermissionCreate,
 		ReadWithoutTimeout:   resourceSigningProfilePermissionRead,
@@ -121,7 +121,7 @@ func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.Resou
 	}
 
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.AddProfilePermission(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -139,7 +139,7 @@ func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(fmt.Sprintf("%s/%s", profileName, statementID))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findPermissionByTwoPartKey(ctx, conn, profileName, statementID)
 	})
 
@@ -217,7 +217,7 @@ func resourceSigningProfilePermissionDelete(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "deleting Signer Signing Profile Permission (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findPermissionByTwoPartKey(ctx, conn, profileName, statementID)
 	})
 

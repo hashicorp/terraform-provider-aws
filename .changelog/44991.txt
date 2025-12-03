@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.mcp_server` block
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway_target: Make `credential_provider_configuration` block optional
+```

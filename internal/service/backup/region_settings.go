@@ -18,6 +18,7 @@ import (
 
 // @SDKResource("aws_backup_region_settings", name="Region Settings")
 // @SingletonIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeRegionSettingsOutput")
 // @Testing(checkDestroyNoop=true)
 // @Testing(preCheck="testAccPreCheck")

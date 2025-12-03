@@ -35,9 +35,9 @@ import (
 
 // @FrameworkResource("aws_bedrock_provisioned_model_throughput", name="Provisioned Model Throughput")
 // @Tags(identifierAttribute="provisioned_model_arn")
-// @ArnIdentity(identityDuplicateAttributes="id")
-// @Testing(tagsTest=false)
-// @Testing(identityTest=false)
+// @ArnIdentity("provisioned_model_arn", identityDuplicateAttributes="id")
+// Testing is cost-prohibitive
+// @Testing(tagsTest=false, identityTest=false)
 func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &provisionedModelThroughputResource{}
 
@@ -49,7 +49,7 @@ func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWi
 type provisionedModelThroughputResource struct {
 	framework.ResourceWithModel[provisionedModelThroughputResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *provisionedModelThroughputResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

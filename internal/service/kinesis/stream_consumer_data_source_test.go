@@ -33,6 +33,7 @@ func TestAccKinesisStreamConsumerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStreamARN, streamName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},
@@ -109,6 +110,10 @@ data "aws_kinesis_stream_consumer" "test" {
 resource "aws_kinesis_stream_consumer" "test" {
   name       = %[1]q
   stream_arn = aws_kinesis_stream.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }

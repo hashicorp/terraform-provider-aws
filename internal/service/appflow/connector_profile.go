@@ -27,6 +27,7 @@ import (
 // @SDKResource("aws_appflow_connector_profile", name="Connector Profile")
 // @IdentityAttribute("name")
 // @ArnFormat("connectorprofile/{name}", attribute="arn")
+// @V60SDKv2Fix(v60RefreshError="true")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow/types;types.ConnectorProfile")
 // @Testing(importIgnore="connector_profile_config.0.connector_profile_credentials")
 // @Testing(idAttrDuplicates="name")
@@ -1473,7 +1474,7 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	connectorProfile, err := findConnectorProfileByName(ctx, conn, d.Id())
+	connectorProfile, err := findConnectorProfileByName(ctx, conn, d.Get(names.AttrName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Connector Profile (%s) not found, removing from state", d.Id())

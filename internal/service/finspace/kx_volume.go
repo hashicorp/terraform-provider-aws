@@ -243,7 +243,7 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set(names.AttrDescription, out.Description)
 	d.Set("created_timestamp", out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
-	d.Set(names.AttrAvailabilityZones, aws.StringSlice(out.AvailabilityZoneIds))
+	d.Set(names.AttrAvailabilityZones, out.AvailabilityZoneIds)
 
 	if err := d.Set("nas1_configuration", flattenNas1Configuration(out.Nas1Configuration)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)

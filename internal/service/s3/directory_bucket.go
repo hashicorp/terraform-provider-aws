@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -25,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,6 +42,8 @@ func isDirectoryBucket(bucket string) bool {
 }
 
 // @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")
+// @Tags(identifierAttribute="arn", resourceType="DirectoryBucket")
+// @Testing(importIgnore="force_destroy")
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}
 
@@ -81,7 +86,9 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
-			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrBucket)),
+			names.AttrID:      framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrBucket)),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
 				CustomType: bucketTypeType,
 				Optional:   true,
@@ -115,8 +122,12 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 					},
 				},
 				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 					listvalidator.IsRequired(),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
 				},
 			},
 		},
@@ -138,31 +149,33 @@ func (r *directoryBucketResource) Create(ctx context.Context, request resource.C
 
 	conn := r.Meta().S3ExpressClient(ctx)
 
+	bucket := fwflex.StringValueFromFramework(ctx, data.Bucket)
 	input := &s3.CreateBucketInput{
-		Bucket: fwflex.StringFromFramework(ctx, data.Bucket),
+		Bucket: aws.String(bucket),
 		CreateBucketConfiguration: &awstypes.CreateBucketConfiguration{
 			Bucket: &awstypes.BucketInfo{
 				DataRedundancy: data.DataRedundancy.ValueEnum(),
-				Type:           awstypes.BucketType(data.Type.ValueString()),
+				Type:           data.Type.ValueEnum(),
 			},
 			Location: &awstypes.LocationInfo{
 				Name: fwflex.StringFromFramework(ctx, locationInfoData.Name),
 				Type: locationInfoData.Type.ValueEnum(),
 			},
+			Tags: getTagsIn(ctx),
 		},
 	}
 
-	_, err := conn.CreateBucket(ctx, input)
+	output, err := conn.CreateBucket(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Directory Bucket (%s)", data.Bucket.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Directory Bucket (%s)", bucket), err.Error())
 
 		return
 	}
 
 	// Set values for unknowns.
-	data.ARN = types.StringValue(r.arn(ctx, data.Bucket.ValueString()))
-	data.ID = data.Bucket
+	data.ARN = fwflex.StringToFramework(ctx, output.BucketArn)
+	data.ID = fwflex.StringValueToFramework(ctx, bucket)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -176,8 +189,10 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 
 	conn := r.Meta().S3ExpressClient(ctx)
 
-	data.Bucket = data.ID
-	output, err := findBucket(ctx, conn, data.Bucket.ValueString())
+	bucket := fwflex.StringValueFromFramework(ctx, data.ID)
+	// https://github.com/hashicorp/terraform-provider-aws/issues/44095.
+	// Disable S3 Expression session authentication for HeadBucket.
+	output, err := findBucket(ctx, conn, bucket, func(o *s3.Options) { o.DisableS3ExpressSessionAuth = aws.Bool(true) })
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -187,13 +202,14 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Directory Bucket (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Directory Bucket (%s)", bucket), err.Error())
 
 		return
 	}
 
 	// Set attributes for import.
-	data.ARN = types.StringValue(r.arn(ctx, data.Bucket.ValueString()))
+	data.ARN = fwflex.StringToFramework(ctx, output.BucketArn)
+	data.Bucket = fwflex.StringValueToFramework(ctx, bucket)
 	data.DataRedundancy = fwtypes.StringEnumValue(defaultDirectoryBucketDataRedundancy(output.BucketLocationType))
 	data.Location = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &locationInfoModel{
 		Name: fwflex.StringToFramework(ctx, output.BucketLocationName),
@@ -213,23 +229,25 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().S3ExpressClient(ctx)
 
-	_, err := conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
-		Bucket: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	bucket := fwflex.StringValueFromFramework(ctx, data.ID)
+	input := s3.DeleteBucketInput{
+		Bucket: aws.String(bucket),
+	}
+	_, err := conn.DeleteBucket(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
 		if data.ForceDestroy.ValueBool() {
 			// Empty the bucket and try again.
-			_, err = emptyDirectoryBucket(ctx, conn, data.ID.ValueString())
+			_, err = emptyDirectoryBucket(ctx, conn, bucket)
 
 			if err != nil {
-				response.Diagnostics.AddError(fmt.Sprintf("emptying S3 Directory Bucket (%s)", data.ID.ValueString()), err.Error())
+				response.Diagnostics.AddError(fmt.Sprintf("emptying S3 Directory Bucket (%s)", bucket), err.Error())
 
 				return
 			}
 
 			_, err = conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
-				Bucket: fwflex.StringFromFramework(ctx, data.ID),
+				Bucket: aws.String(bucket),
 			})
 		}
 	}
@@ -239,15 +257,10 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Directory Bucket (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Directory Bucket (%s)", bucket), err.Error())
 
 		return
 	}
-}
-
-// arn returns the ARN of the specified bucket.
-func (r *directoryBucketResource) arn(ctx context.Context, bucket string) string {
-	return r.Meta().RegionalARN(ctx, "s3express", fmt.Sprintf("bucket/%s", bucket))
 }
 
 type directoryBucketResourceModel struct {
@@ -258,6 +271,8 @@ type directoryBucketResourceModel struct {
 	ForceDestroy   types.Bool                                         `tfsdk:"force_destroy"`
 	Location       fwtypes.ListNestedObjectValueOf[locationInfoModel] `tfsdk:"location"`
 	ID             types.String                                       `tfsdk:"id"`
+	Tags           tftags.Map                                         `tfsdk:"tags"`
+	TagsAll        tftags.Map                                         `tfsdk:"tags_all"`
 	Type           fwtypes.StringEnum[awstypes.BucketType]            `tfsdk:"type"`
 }
 

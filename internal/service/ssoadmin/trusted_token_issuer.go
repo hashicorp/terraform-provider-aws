@@ -39,13 +39,14 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssoadmin;ssoadmin.DescribeTrustedTokenIssuerOutput")
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 // @Testing(serialize=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newTrustedTokenIssuerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &trustedTokenIssuerResource{}, nil
 }
 
 type trustedTokenIssuerResource struct {
 	framework.ResourceWithModel[trustedTokenIssuerResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *trustedTokenIssuerResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

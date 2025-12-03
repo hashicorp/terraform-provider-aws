@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ipamId` - (Required) The ID of the IPAM to associate.
 * `ipamResourceDiscoveryId` - (Required) The ID of the Resource Discovery to associate.
 * `tags` - (Optional) A map of tags to add to the IPAM resource discovery association resource.
@@ -97,4 +98,4 @@ Using `terraform import`, import IPAMs using the IPAM resource discovery associa
 % terraform import aws_vpc_ipam_resource_discovery_association.example ipam-res-disco-assoc-0178368ad2146a492
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f38914c02b6478a3d1a5d0b4590df76302aa42ccd4610ae8d1077dfd286db5df -->
+<!-- cache-key: cdktf-0.20.8 input-2c4fa99bfb738f9f0be2e68e4355392d3059a63e4a0484bb71e7e7d9ceaf0056 -->

@@ -29,6 +29,7 @@ import (
 // @SDKResource("aws_datasync_location_nfs", name="Location NFS")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationNfsOutput")
 // @Testing(preCheck="testAccPreCheck")
 func resourceLocationNFS() *schema.Resource {

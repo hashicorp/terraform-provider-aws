@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,6 +33,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
 // @ArnFormat("flow/{name}", attribute="arn")
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow;appflow.DescribeFlowOutput")
 // @Testing(idAttrDuplicates="name")
 func resourceFlow() *schema.Resource {
@@ -3719,7 +3720,7 @@ func flattenTasks(tasks []types.Task) []any {
 }
 
 func flattenTask(task types.Task) map[string]any {
-	if itypes.IsZero(&task) {
+	if inttypes.IsZero(&task) {
 		return nil
 	}
 

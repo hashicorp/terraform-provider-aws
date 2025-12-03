@@ -134,8 +134,9 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	d.Set(names.AttrARN, ledger.Arn)
 	d.Set(names.AttrDeletionProtection, ledger.DeletionProtection)
-	if ledger.EncryptionDescription != nil {
-		d.Set(names.AttrKMSKey, ledger.EncryptionDescription.KmsKeyArn)
+	encryptionDescription := ledger.EncryptionDescription
+	if encryptionDescription != nil {
+		d.Set(names.AttrKMSKey, encryptionDescription.KmsKeyArn)
 	} else {
 		d.Set(names.AttrKMSKey, nil)
 	}
@@ -187,7 +188,7 @@ func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	log.Printf("[INFO] Deleting QLDB Ledger: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteLedger(ctx, input)
 	})
 

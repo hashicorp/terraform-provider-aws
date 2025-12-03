@@ -633,6 +633,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `appsync_target` - (Optional) Parameters used when you are using the rule to invoke an AppSync GraphQL API mutation. Documented below. A maximum of 1 are allowed.
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
 * `dead_letter_config` - (Optional)  Parameters used when you are providing a dead letter config. Documented below. A maximum of 1 are allowed.
@@ -764,6 +765,36 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_target.example
+  identity = {
+    event_bus_name = "default"
+    rule           = "rule-name"
+    target_id      = "target-id"
+  }
+}
+
+resource "aws_cloudwatch_event_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `event_bus_name` (String) Event bus name for the target.
+* `rule` (String) Rule name for the target.
+* `target_id` (String) Target ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
  ```python
@@ -778,13 +809,13 @@ from imports.aws.cloudwatch_event_target import CloudwatchEventTarget
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        CloudwatchEventTarget.generate_config_for_import(self, "testEventTarget", "rule-name/target-id")
+        CloudwatchEventTarget.generate_config_for_import(self, "example", "rule-name/target-id")
 ```
 
 Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
  ```console
-% terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
+% terraform import aws_cloudwatch_event_target.example rule-name/target-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fdc2f713a76965d636fc8d89157bf97c323ab9142eb0af278d9b82a78994c024 -->
+<!-- cache-key: cdktf-0.20.8 input-6449ccd183debaacb3e84982033d932cbbdc62d9beb9dd4ca86738468e73fd62 -->

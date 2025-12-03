@@ -12,11 +12,23 @@ Terraform resource for managing an AWS Rekognition Project.
 
 ## Example Usage
 
+### Content Moderation
+
 ```terraform
 resource "aws_rekognition_project" "example" {
   name        = "example-project"
   auto_update = "ENABLED"
   feature     = "CONTENT_MODERATION"
+}
+```
+
+### Custom Labels
+
+```terraform
+resource "aws_rekognition_project" "example" {
+  # Do not set auto_update when feature is "CUSTOM_LABELS"
+  name    = "example-project"
+  feature = "CUSTOM_LABELS"
 }
 ```
 
@@ -29,7 +41,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `auto_update` - (Optional) Specify if automatic retraining should occur. Valid values are `ENABLED` or `DISABLED`. Defaults to `DISABLED`.
+* `auto_update` - (Optional) Specify if automatic retraining should occur. Valid values are `ENABLED` or `DISABLED`. Must be set when `feature` is `CONTENT_MODERATION`, but do not set otherwise.
 * `feature` - (Optional) Specify the feature being customized. Valid values are `CONTENT_MODERATION` or `CUSTOM_LABELS`. Defaults to `CUSTOM_LABELS`.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -49,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Rekognition Project using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Rekognition Project using the `name`. For example:
 
 ```terraform
 import {

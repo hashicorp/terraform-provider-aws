@@ -80,6 +80,9 @@ linters:
           - paralleltest
         text: Function TestAcc
       - linters:
+          - perfsprint
+        path: _test\.go
+      - linters:
           - staticcheck
         text: 'SA1019: \w+.GetOkExists is deprecated: usage is discouraged due to undefined behaviors and may be removed in a future version of the SDK'
       - linters:
@@ -94,6 +97,9 @@ linters:
       - linters:
           - staticcheck
         text: 'SA1019: \w+.\w+ is deprecated: Use \w+Context or \w+WithoutTimeout instead'
+      - linters:
+          - staticcheck
+        text: 'SA1019: tfresource.\w+ is deprecated: \w+ is an alias to a function of the same name in internal/retry which handles both Plugin SDK V2 and internal error types. For net-new usage, prefer calling retry.\w+ directly.'
       - linters:
           - staticcheck
         path: internal/service/appsync/
@@ -148,11 +154,19 @@ linters:
         text: 'SA1019: \w+.Filters is deprecated: Using filters with List\w+ API is deprecated'
       - linters:
           - staticcheck
-        path: internal/service/kms/
-        text: 'SA1019: [a-zA-Z0-9.]+.CustomerMasterKeySpec is deprecated: This field has been deprecated. Instead, use the KeySpec field'
+        path: internal/service/neptune/
+        text: 'SA1019: \w+.(\w+) is deprecated:'
       - linters:
           - staticcheck
-        path: internal/service/neptune/
+        path: internal/service/qldb/
+        text: 'SA1019: "github.com/aws/aws-sdk-go-v2/service/qldb" is deprecated:'
+      - linters:
+          - staticcheck
+        path: internal/service/qldb/
+        text: 'SA1019: \w+.(\w+) is deprecated:'
+      - linters:
+          - staticcheck
+        path: internal/service/quicksight/
         text: 'SA1019: \w+.(\w+) is deprecated:'
       - linters:
           - staticcheck

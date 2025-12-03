@@ -27,13 +27,14 @@ import (
 
 // @FrameworkResource("aws_bedrock_model_invocation_logging_configuration", name="Model Invocation Logging Configuration")
 // @SingletonIdentity(identityDuplicateAttributes="id")
+// @Testing(preIdentityVersion="v5.100.0")
 func newModelInvocationLoggingConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &modelInvocationLoggingConfigurationResource{}, nil
 }
 
 type modelInvocationLoggingConfigurationResource struct {
 	framework.ResourceWithModel[modelInvocationLoggingConfigurationResourceModel]
-	framework.WithImportRegionalSingleton
+	framework.WithImportByIdentity
 }
 
 func (r *modelInvocationLoggingConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -237,8 +238,8 @@ func (r *modelInvocationLoggingConfigurationResource) putModelInvocationLoggingC
 	// Example:
 	//   ValidationException: Failed to validate permissions for log group: <group>, with role: <role>. Verify
 	//   the IAM role permissions are correct.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.PutModelInvocationLoggingConfiguration(ctx, input)
 		},
 		"Failed to validate permissions for log group",

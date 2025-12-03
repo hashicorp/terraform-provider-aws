@@ -162,10 +162,6 @@ func testAccCheckSAMLProviderExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("Not Found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IAM SAML Provider ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		_, err := tfiam.FindSAMLProviderByARN(ctx, conn, rs.Primary.ID)

@@ -64,6 +64,15 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
+			"domain_version": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DomainVersion](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrID: framework.IDAttribute(),
 			"kms_key_identifier": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -80,6 +89,10 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			names.AttrServiceRole: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 			},
 			"skip_deletion_check": schema.BoolAttribute{
 				Optional: true,
@@ -151,9 +164,9 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	const (
 		timeout = 30 * time.Second
 	)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeContains(ctx, timeout, func() (any, error) {
+	output, err := tfresource.RetryWhenAWSErrCodeContains(ctx, timeout, func(ctx context.Context) (*datazone.CreateDomainOutput, error) {
 		return conn.CreateDomain(ctx, &input)
-	}, ErrorCodeAccessDenied)
+	}, errCodeAccessDenied)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating DataZone Domain (%s)", name), err.Error())
@@ -162,10 +175,10 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Set values for unknowns.
-	output := outputRaw.(*datazone.CreateDomainOutput)
 	data.ARN = fwflex.StringToFramework(ctx, output.Arn)
 	data.ID = fwflex.StringToFramework(ctx, output.Id)
 	data.PortalURL = fwflex.StringToFramework(ctx, output.PortalUrl)
+	data.DomainVersion = fwtypes.StringEnumValue[awstypes.DomainVersion](output.DomainVersion)
 
 	if _, err := waitDomainCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
@@ -367,10 +380,12 @@ type domainResourceModel struct {
 	ARN                 types.String                                       `tfsdk:"arn"`
 	Description         types.String                                       `tfsdk:"description"`
 	DomainExecutionRole fwtypes.ARN                                        `tfsdk:"domain_execution_role"`
+	DomainVersion       fwtypes.StringEnum[awstypes.DomainVersion]         `tfsdk:"domain_version"`
 	ID                  types.String                                       `tfsdk:"id"`
 	KMSKeyIdentifier    fwtypes.ARN                                        `tfsdk:"kms_key_identifier"`
 	Name                types.String                                       `tfsdk:"name"`
 	PortalURL           types.String                                       `tfsdk:"portal_url"`
+	ServiceRole         fwtypes.ARN                                        `tfsdk:"service_role"`
 	SkipDeletionCheck   types.Bool                                         `tfsdk:"skip_deletion_check"`
 	SingleSignOn        fwtypes.ListNestedObjectValueOf[singleSignOnModel] `tfsdk:"single_sign_on"`
 	Tags                tftags.Map                                         `tfsdk:"tags"`

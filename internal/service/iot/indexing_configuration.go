@@ -22,6 +22,7 @@ import (
 
 // @SDKResource("aws_iot_indexing_configuration", name="Indexing Configuration")
 // @SingletonIdentity
+// @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(checkDestroyNoop=true)
 // @Testing(generator=false)
@@ -291,7 +292,7 @@ func flattenIndexingFilter(apiObject *awstypes.IndexingFilter) map[string]any {
 	tfMap := map[string]any{}
 
 	if v := apiObject.NamedShadowNames; v != nil {
-		tfMap["named_shadow_names"] = aws.StringSlice(v)
+		tfMap["named_shadow_names"] = v
 	}
 
 	return tfMap

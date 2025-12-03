@@ -184,7 +184,10 @@ func (r *guardrailVersionResource) Delete(ctx context.Context, request resource.
 }
 
 func (r *guardrailVersionResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts, err := flex.ExpandResourceId(request.ID, guardrailIDParts, false)
+	const (
+		guardrailVersionIDParts = 2
+	)
+	parts, err := flex.ExpandResourceId(request.ID, guardrailVersionIDParts, false)
 	if err != nil {
 		response.Diagnostics.AddError(
 			"Unexpected Import Identifier",

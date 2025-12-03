@@ -344,13 +344,6 @@ func TestAccRedshiftCluster_publiclyAccessible_default(t *testing.T) {
 				),
 			},
 			{
-				// plan should not empty because the default value has changed and will for an update unless explicitly set
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccClusterConfig_publiclyAccessible_default(rName),
-				PlanOnly:                 true,
-				ExpectNonEmptyPlan:       true,
-			},
-			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccClusterConfig_publiclyAccessible_default(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -392,7 +385,7 @@ func TestAccRedshiftCluster_updateNodeCount(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "multi-node"),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "dc2.large"),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "ra3.large"),
 				),
 			},
 		},
@@ -412,69 +405,17 @@ func TestAccRedshiftCluster_updateNodeType(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_updateNodeType(rName, "dc2.large"),
+				Config: testAccClusterConfig_updateNodeType(rName, "ra3.large"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "dc2.large"),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "ra3.large"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_updateNodeType(rName, "dc2.8xlarge"),
+				Config: testAccClusterConfig_updateNodeType(rName, "ra3.xlplus"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "dc2.8xlarge"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRedshiftCluster_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.Cluster
-	resourceName := "aws_redshift_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					names.AttrFinalSnapshotIdentifier,
-					"master_password",
-					"skip_final_snapshot",
-					names.AttrApplyImmediately,
-				},
-			},
-			{
-				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "ra3.xlplus"),
 				),
 			},
 		},
@@ -1412,10 +1353,6 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluste
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Cluster ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		output, err := tfredshift.FindClusterByID(ctx, conn, rs.Primary.ID)
@@ -1442,16 +1379,15 @@ func testAccCheckClusterMasterUsername(c *awstypes.Cluster, value string) resour
 func testAccClusterConfig_updateNodeCount(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  number_of_nodes                     = 2
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  encrypted             = true
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  number_of_nodes       = 2
+  skip_final_snapshot   = true
 }
 `, rName)
 }
@@ -1459,16 +1395,15 @@ resource "aws_redshift_cluster" "test" {
 func testAccClusterConfig_updateNodeType(rName, nodeType string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = %[2]q
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  number_of_nodes                     = 2
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  encrypted             = true
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = %[2]q
+  allow_version_upgrade = false
+  number_of_nodes       = 2
+  skip_final_snapshot   = true
 }
 `, rName, nodeType)
 }
@@ -1476,14 +1411,13 @@ resource "aws_redshift_cluster" "test" {
 func testAccClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
 }
 `, rName)
 }
@@ -1509,17 +1443,19 @@ resource "aws_redshift_cluster" "test" {
 func testAccClusterConfig_encrypted(rName string, encrypted bool) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
-  publicly_accessible                 = false
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
+  publicly_accessible   = false
 
   encrypted = %[2]t
+
+  # required for v5.97.0
+  availability_zone_relocation_enabled = true
 }
 `, rName, encrypted)
 }
@@ -1527,15 +1463,14 @@ resource "aws_redshift_cluster" "test" {
 func testAccClusterConfig_encrypted_default(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
-  publicly_accessible                 = false
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
+  publicly_accessible   = false
 }
 `, rName)
 }
@@ -1543,16 +1478,15 @@ resource "aws_redshift_cluster" "test" {
 func testAccClusterConfig_finalSnapshot(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = false
-  final_snapshot_identifier           = %[1]q
+  cluster_identifier        = %[1]q
+  database_name             = "mydb"
+  encrypted                 = true
+  master_username           = "foo_test"
+  master_password           = "Mustbe8characters"
+  node_type                 = "ra3.large"
+  allow_version_upgrade     = false
+  skip_final_snapshot       = false
+  final_snapshot_identifier = %[1]q
 }
 `, rName)
 }
@@ -1584,16 +1518,15 @@ POLICY
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  kms_key_id                          = aws_kms_key.test.arn
-  encrypted                           = true
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  kms_key_id            = aws_kms_key.test.arn
+  encrypted             = true
+  skip_final_snapshot   = true
 }
 `, rName)
 }
@@ -1601,16 +1534,15 @@ resource "aws_redshift_cluster" "test" {
 func testAccClusterConfig_enhancedVPCRoutingEnabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  enhanced_vpc_routing                = true
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  encrypted             = true
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  enhanced_vpc_routing  = true
+  skip_final_snapshot   = true
 }
 `, rName)
 }
@@ -1618,59 +1550,17 @@ resource "aws_redshift_cluster" "test" {
 func testAccClusterConfig_enhancedVPCRoutingDisabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  enhanced_vpc_routing                = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  encrypted             = true
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  enhanced_vpc_routing  = false
+  skip_final_snapshot   = true
 }
 `, rName)
-}
-
-func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 7
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 7
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccClusterConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
@@ -1678,17 +1568,16 @@ func testAccClusterConfig_publiclyAccessible(rName string, publiclyAccessible bo
 		acctest.ConfigVPCWithSubnets(rName, 3),
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  cluster_subnet_group_name           = aws_redshift_subnet_group.test.name
-  publicly_accessible                 = %[2]t
-  skip_final_snapshot                 = true
+  cluster_identifier        = %[1]q
+  database_name             = "mydb"
+  encrypted                 = true
+  master_username           = "foo"
+  master_password           = "Mustbe8characters"
+  node_type                 = "ra3.large"
+  allow_version_upgrade     = false
+  cluster_subnet_group_name = aws_redshift_subnet_group.test.name
+  publicly_accessible       = %[2]t
+  skip_final_snapshot       = true
 
   depends_on = [aws_internet_gateway.test]
 }
@@ -1709,19 +1598,21 @@ func testAccClusterConfig_publiclyAccessible_default(rName string) string {
 		acctest.ConfigVPCWithSubnets(rName, 3),
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true # required for v5.92.0
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
 
   cluster_subnet_group_name = aws_redshift_subnet_group.test.name
 
   depends_on = [aws_internet_gateway.test]
+
+  # required for v5.92.0
+  encrypted                            = true
+  availability_zone_relocation_enabled = true
 }
 
 resource "aws_internet_gateway" "test" {
@@ -1786,16 +1677,15 @@ EOF
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  iam_roles                           = [aws_iam_role.ec2.arn, aws_iam_role.lambda.arn]
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  encrypted             = true
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  iam_roles             = [aws_iam_role.ec2.arn, aws_iam_role.lambda.arn]
+  skip_final_snapshot   = true
 }
 `, rName)
 }
@@ -1851,16 +1741,15 @@ EOF
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  iam_roles                           = [aws_iam_role.ec2.arn]
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  encrypted             = true
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  iam_roles             = [aws_iam_role.ec2.arn]
+  skip_final_snapshot   = true
 }
 `, rName)
 }
@@ -1980,7 +1869,7 @@ resource "aws_redshift_cluster" "restored" {
   encrypted           = true
   master_username     = "foo_test"
   master_password     = "Mustbe8characters"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   skip_final_snapshot = true
 }
 `, rName))
@@ -2002,7 +1891,7 @@ resource "aws_redshift_cluster" "restored" {
   encrypted           = true
   master_username     = "foo_test"
   master_password     = "Mustbe8characters"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   skip_final_snapshot = true
 }
 `, rName))
@@ -2023,7 +1912,7 @@ resource "aws_redshift_cluster" "restored" {
   database_name       = "mydb"
   master_username     = "foo_test"
   master_password     = "Mustbe8characters"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   skip_final_snapshot = true
 
   encrypted = %[2]t
@@ -2034,15 +1923,14 @@ resource "aws_redshift_cluster" "restored" {
 func testAccClusterConfig_manageMasterPassword(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo_test"
-  manage_master_password              = true
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier     = %[1]q
+  database_name          = "mydb"
+  encrypted              = true
+  master_username        = "foo_test"
+  manage_master_password = true
+  node_type              = "ra3.large"
+  allow_version_upgrade  = false
+  skip_final_snapshot    = true
 }
 `, rName)
 }
@@ -2098,17 +1986,16 @@ resource "aws_redshift_cluster" "test" {
 func testAccClusterConfig_passwordWriteOnly(rName, password string, passwordVersion int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = "foo_test"
-  master_password_wo                  = %[2]q
-  master_password_wo_version          = %[3]d
-  multi_az                            = false
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier         = %[1]q
+  database_name              = "mydb"
+  encrypted                  = true
+  master_username            = "foo_test"
+  master_password_wo         = %[2]q
+  master_password_wo_version = %[3]d
+  multi_az                   = false
+  node_type                  = "ra3.large"
+  allow_version_upgrade      = false
+  skip_final_snapshot        = true
 }
 `, rName, password, passwordVersion)
 }
@@ -2116,16 +2003,15 @@ resource "aws_redshift_cluster" "test" {
 func testAccClusterConfig_masterUsername(rName, username string) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  database_name                       = "mydb"
-  encrypted                           = true
-  master_username                     = %[2]q
-  master_password                     = "Mustbe8characters"
-  multi_az                            = false
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  encrypted             = true
+  master_username       = %[2]q
+  master_password       = "Mustbe8characters"
+  multi_az              = false
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
 }
 `, rName, username)
 }

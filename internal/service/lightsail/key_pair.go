@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -253,7 +253,7 @@ func encryptValue(encryptionKey, value, description string) (string, string, err
 		return "", "", fmt.Errorf("encrypting %s: %w", description, err)
 	}
 
-	return fingerprints[0], itypes.Base64Encode(encryptedValue[0]), nil
+	return fingerprints[0], inttypes.Base64Encode(encryptedValue[0]), nil
 }
 
 func FindKeyPairById(ctx context.Context, conn *lightsail.Client, id string) (*types.KeyPair, error) {

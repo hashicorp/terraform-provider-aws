@@ -37,7 +37,8 @@ const (
 // @SDKResource("aws_acmpca_certificate_authority", name="Certificate Authority")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
-// @WrappedImport(false)
+// @V60SDKv2Fix
+// @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca/types;types.CertificateAuthority")
 // @Testing(generator="acctest.RandomDomainName()")
 // @Testing(importIgnore="permanent_deletion_time_in_days")
@@ -49,10 +50,11 @@ func resourceCertificateAuthority() *schema.Resource {
 		UpdateWithoutTimeout: resourceCertificateAuthorityUpdate,
 		DeleteWithoutTimeout: resourceCertificateAuthorityDelete,
 
-		// TODO: handle default values on Import
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalARN(ctx, d, names.AttrARN, []string{names.AttrID}); err != nil {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importer.RegionalARN(ctx, d, identitySpec); err != nil {
 					return nil, err
 				}
 
@@ -365,7 +367,7 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	// ValidationException: The ACM Private CA service account 'acm-pca-prod-pdx' requires getBucketAcl permissions for your S3 bucket 'tf-acc-test-5224996536060125340'. Check your S3 bucket permissions and try again.
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.CreateCertificateAuthority(ctx, &input)
 	}, "ValidationException", "Check your S3 bucket permissions and try again")
 
@@ -466,7 +468,7 @@ func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrRegion, names.AttrTags, names.AttrTagsAll) {
 		input := acmpca.UpdateCertificateAuthorityInput{
 			CertificateAuthorityArn: aws.String(d.Id()),
 		}

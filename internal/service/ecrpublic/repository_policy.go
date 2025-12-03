@@ -81,7 +81,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, policyPutTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.SetRepositoryPolicy(ctx, input)
 		},
 		func(err error) (bool, error) {

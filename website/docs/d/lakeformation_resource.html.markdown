@@ -29,5 +29,8 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `hybrid_access_enabled` - Flag to enable AWS LakeFormation hybrid access permission mode.
 * `last_modified` - Date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `role_arn` - Role that the resource was registered with.
+* `with_federation` - Whether the resource is a federated resource.
+* `with_privileged_access` - Boolean to grant the calling principal the permissions to perform all supported Lake Formation operations on the registered data location.

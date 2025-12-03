@@ -30,7 +30,9 @@ import (
 // @SDKResource("aws_cloudtrail", name="Trail")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudtrail/types;awstypes;awstypes.Trail")
+// @Testing(serialize=true)
 func resourceTrail() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrailCreate,
@@ -310,7 +312,7 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateTrail(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -361,7 +363,7 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	trail, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*types.Trail, error) {
 		return findTrailByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -375,7 +377,6 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading CloudTrail Trail (%s): %s", d.Id(), err)
 	}
 
-	trail := outputRaw.(*types.Trail)
 	d.Set(names.AttrARN, trail.TrailARN)
 	d.Set("cloud_watch_logs_group_arn", trail.CloudWatchLogsLogGroupArn)
 	d.Set("cloud_watch_logs_role_arn", trail.CloudWatchLogsRoleArn)
@@ -499,7 +500,7 @@ func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateTrail(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -671,7 +672,7 @@ func setEventSelectors(ctx context.Context, conn *cloudtrail.Client, d *schema.R
 	input.EventSelectors = eventSelectors
 
 	if _, err := conn.PutEventSelectors(ctx, input); err != nil {
-		return fmt.Errorf("setting CloudTrail Trail (%s) event selectors: %s", d.Id(), err)
+		return fmt.Errorf("setting CloudTrail Trail (%s) event selectors: %w", d.Id(), err)
 	}
 
 	return nil

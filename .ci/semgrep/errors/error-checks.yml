@@ -95,4 +95,11 @@ rules:
             if !d.IsNewResource() && tfresource.NotFound($ERR) { ... }
             return ...
           }
+        # e.g. internal/service/storagegateway/gateway.go
+      - pattern-not-inside: |
+          if !d.IsNewResource() && tfresource.NotFound($ERR) { ... }
+          if isGatewayNotConnectedErr(err) {
+            ...
+          }
+          if $ERR != nil { ... }
     severity: ERROR

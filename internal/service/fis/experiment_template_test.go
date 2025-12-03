@@ -601,6 +601,52 @@ func TestAccFISExperimentTemplate_reportConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccFISExperimentTemplate_lambdaFunctions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fis_experiment_template.test"
+	var conf awstypes.ExperimentTemplate
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExperimentTemplateConfig_lambda_functions(rName, "Lambda function invocation error", "func-invoke-error", "Lambda function invocation error", "aws:lambda:invocation-error", "Functions", "function-target-1", names.AttrDuration, "PT5M", "aws:lambda:function", "ALL", "Name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Lambda function invocation error"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_fis", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.name", "func-invoke-error"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.description", "Lambda function invocation error"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:lambda:invocation-error"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.key", names.AttrDuration),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.value", "PT5M"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.start_after.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.key", "Functions"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.value", "function-target-1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.name", "function-target-1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_type", "aws:lambda:function"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.selection_mode", "ALL"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.resource_arns.0", "aws_lambda_function.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccExperimentTemplateConfig_basic(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -1592,4 +1638,80 @@ resource "aws_fis_experiment_template" "test" {
   }
 }
 `, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
+}
+
+func testAccExperimentTemplateConfig_lambda_functions(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, targetResType, targetSelectMode, targetResTagK string) string {
+	return acctest.ConfigCompose(testAccExperimentTemplateConfig_baseEBSVolume(rName), fmt.Sprintf(`
+resource "aws_iam_role" "test_fis" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+          "lambda.${data.aws_partition.current.dns_suffix}"
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_lambda_function" "test" {
+  function_name = %[1]q
+  role          = aws_iam_role.test_fis.arn
+  handler       = "exports.example"
+  runtime       = "nodejs20.x"
+  filename      = "test-fixtures/lambdatest.zip"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test_fis.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+
+    parameter {
+      key   = %[8]q
+      value = %[9]q
+    }
+
+    parameter {
+      key   = "preventExecution"
+      value = true
+    }
+  }
+
+  target {
+    name           = %[7]q
+    resource_type  = %[10]q
+    selection_mode = %[11]q
+
+    resource_arns = [aws_lambda_function.test.arn]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName+"-fis", desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, targetResType, targetSelectMode, targetResTagK))
 }

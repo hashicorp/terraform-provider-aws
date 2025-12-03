@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the query.
 * `query_string` - (Required) The query to save. You can read more about CloudWatch Logs Query Syntax in the [documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
 * `log_group_names` - (Optional) Specific log groups to use with the query.
@@ -72,4 +73,4 @@ Using `terraform import`, import CloudWatch query definitions using the query de
 % terraform import aws_cloudwatch_query_definition.example arn:aws:logs:us-west-2:123456789012:query-definition:269951d7-6f75-496d-9d7b-6b7a5486bdbd
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a122b619c0de2afa7a8b5aa10fde4e196df14477d2ae2e40ef733a9bc5105e18 -->
+<!-- cache-key: cdktf-0.20.8 input-314f490821d9a55e6df58122328931567693e3fdd02536c7d63b964b46c3c913 -->

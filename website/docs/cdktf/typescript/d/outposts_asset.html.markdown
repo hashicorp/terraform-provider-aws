@@ -57,8 +57,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) Outpost ARN.
 * `assetId` - (Required) ID of the asset.
 
@@ -71,4 +72,4 @@ This data source exports the following attributes in addition to the arguments a
 * `rackElevation` - Position of an asset in a rack measured in rack units.
 * `rackId` - Rack ID of the asset.
 
-<!-- cache-key: cdktf-0.20.8 input-8f6a07737f519ffaadeaca6364717f481098718bcbccdc2303dde41b73d75ac9 -->
+<!-- cache-key: cdktf-0.20.8 input-369e0c3f1ccb2695fd688325cc8ff87abfbced5f210a79914e775e1e47268d9c -->

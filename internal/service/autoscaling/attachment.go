@@ -63,7 +63,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.AttachLoadBalancers(ctx, input)
 			},
 			// ValidationError: Trying to update too many Load Balancers/Target Groups at once. The limit is 10
@@ -80,7 +80,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.AttachLoadBalancerTargetGroups(ctx, input)
 			},
 			errCodeValidationError, "update too many")
@@ -135,7 +135,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.DetachLoadBalancers(ctx, input)
 			},
 			errCodeValidationError, "update too many")
@@ -155,7 +155,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.DetachLoadBalancerTargetGroups(ctx, input)
 			},
 			errCodeValidationError, "update too many")

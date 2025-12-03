@@ -1,0 +1,169 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Test product template for taint reproduction'
+
+Parameters:
+  ExtraParam:
+    Type: String
+    Description: Extra parameter
+    Default: 'none'
+
+  FailureSimulation:
+    Type: String
+    Description: Boolean to simulate failure
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+Resources:
+  TestLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-test-function'
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs18.x
+      Code:
+        ZipFile: |
+          // cfnresponse module inline
+          const cfnresponse = (() => {
+            const SUCCESS = "SUCCESS";
+            const FAILED = "FAILED";
+
+            function send(event, context, responseStatus, responseData, physicalResourceId, noEcho) {
+              return new Promise((resolve, reject) => {
+                const responseBody = JSON.stringify({
+                  Status: responseStatus,
+                  Reason: `See the details in CloudWatch Log Stream: ${context.logStreamName}`,
+                  PhysicalResourceId: physicalResourceId || context.logStreamName,
+                  StackId: event.StackId,
+                  RequestId: event.RequestId,
+                  LogicalResourceId: event.LogicalResourceId,
+                  NoEcho: noEcho || false,
+                  Data: responseData || {}
+                });
+
+                console.log("Response body:", responseBody);
+
+                const https = require("https");
+                const url = require("url");
+
+                const parsedUrl = url.parse(event.ResponseURL);
+                const options = {
+                  hostname: parsedUrl.hostname,
+                  port: 443,
+                  path: parsedUrl.path,
+                  method: "PUT",
+                  headers: {
+                    "content-type": "",
+                    "content-length": responseBody.length
+                  }
+                };
+
+                const request = https.request(options, (response) => {
+                  console.log(`Status code: ${response.statusCode}`);
+                  console.log(`Status message: ${response.statusMessage}`);
+                  resolve();
+                });
+
+                request.on("error", (error) => {
+                  console.log(`Send CFN response failed: ${error}`);
+                  reject(error);
+                });
+
+                request.write(responseBody);
+                request.end();
+              });
+            }
+
+            return {
+              SUCCESS,
+              FAILED,
+              send
+            };
+          })();
+
+          exports.handler = async (event, context) => {
+            console.log('Event:', JSON.stringify(event));
+
+            // For CloudFormation custom resources
+            if (event.RequestType) {
+              try {
+                // Simulate failure if parameter is set to true
+                if (event.ResourceProperties.FailureSimulation === 'true' &&
+                    (event.RequestType === 'Create' || event.RequestType === 'Update')) {
+                  console.log('Simulating failure as requested');
+                  await cfnresponse.send(event, context, cfnresponse.FAILED, {
+                    Message: 'Simulated failure'
+                  });
+                  return;
+                }
+
+                // Process the request based on the RequestType
+                let responseData = {};
+
+                if (event.RequestType === 'Create' || event.RequestType === 'Update') {
+                  // Perform create or update actions
+                  responseData = {
+                    Message: 'Resource created/updated successfully',
+                    Timestamp: new Date().toISOString()
+                  };
+                } else if (event.RequestType === 'Delete') {
+                  // Perform delete actions
+                  responseData = {
+                    Message: 'Resource deleted successfully'
+                  };
+                }
+
+                // Send success response
+                await cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData);
+              } catch (error) {
+                console.error('Error:', error);
+                await cfnresponse.send(event, context, cfnresponse.FAILED, {
+                  Error: error.message
+                });
+              }
+            } else {
+              // For direct Lambda invocations
+              // Simulate failure if parameter is set to true
+              if (event.FailureSimulation === 'true') {
+                throw new Error('Simulated failure');
+              }
+
+              return {
+                statusCode: 200,
+                body: JSON.stringify('Success'),
+              };
+            }
+          };
+      Environment:
+        Variables:
+          FailureSimulation: !Ref FailureSimulation
+          ExtraParam: !Ref ExtraParam
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+
+  TestInvocation:
+    Type: Custom::TestInvocation
+    Properties:
+      ServiceToken: !GetAtt TestLambdaFunction.Arn
+      FailureSimulation: !Ref FailureSimulation
+
+Outputs:
+  LambdaArn:
+    Description: ARN of the Lambda function
+    Value: !GetAtt TestLambdaFunction.Arn

@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -25,11 +24,11 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_Basic(t *testing.
 
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	common_name := acctest.RandomDomain()
 	certificate_domain := common_name.RandomSubdomain()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -53,6 +52,9 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_Basic(t *testing.
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "network-firewall", "tls-configuration/{name}"),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
@@ -121,11 +123,11 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_RegionOverride(t 
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	common_name := acctest.RandomDomain()
 	certificate_domain := common_name.RandomSubdomain()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -147,6 +149,9 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_RegionOverride(t 
 					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "network-firewall", "tls-configuration/{name}"),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
@@ -249,6 +254,146 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_RegionOverride(t 
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
+	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	common_name := acctest.RandomDomain()
+	certificate_domain := common_name.RandomSubdomain()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		CheckDestroy: testAccCheckTLSInspectionConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TLSInspectionConfiguration/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"certificate_domain": config.StringVariable(certificate_domain.String()),
+					"common_name":        config.StringVariable(common_name.String()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: v6.0 Identity set on refresh
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TLSInspectionConfiguration/basic_v6.0.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"certificate_domain": config.StringVariable(certificate_domain.String()),
+					"common_name":        config.StringVariable(common_name.String()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+
+			// Step 3: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/TLSInspectionConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"certificate_domain": config.StringVariable(certificate_domain.String()),
+					"common_name":        config.StringVariable(common_name.String()),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
+	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	common_name := acctest.RandomDomain()
+	certificate_domain := common_name.RandomSubdomain()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		CheckDestroy: testAccCheckTLSInspectionConfigurationDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TLSInspectionConfiguration/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"certificate_domain": config.StringVariable(certificate_domain.String()),
+					"common_name":        config.StringVariable(common_name.String()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/TLSInspectionConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"certificate_domain": config.StringVariable(certificate_domain.String()),
+					"common_name":        config.StringVariable(common_name.String()),
 				},
 			},
 		},

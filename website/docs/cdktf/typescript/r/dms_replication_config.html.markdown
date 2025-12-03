@@ -53,6 +53,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `computeConfig` - (Required) Configuration block for provisioning an DMS Serverless replication.
 * `startReplication` - (Optional) Whether to run or stop the serverless replication, default is false.
 * `replicationConfigIdentifier` - (Required) Unique identifier that you want to use to create the config.
@@ -100,6 +101,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_dms_replication_config.example
+  identity = {
+    "arn" = "arn:aws:dms:us-east-1:123456789012:replication-config:example-config"
+  }
+}
+
+resource "aws_dms_replication_config" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DMS replication configuration.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication configs using the `arn`. For example:
 
 ```typescript
@@ -130,4 +152,4 @@ Using `terraform import`, import a replication config using the `arn`. For examp
 % terraform import aws_dms_replication_config.example arn:aws:dms:us-east-1:123456789012:replication-config:UX6OL6MHMMJKFFOXE3H7LLJCMEKBDUG4ZV7DRSI
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b7a7a8ff3d90aeafeeed28a3176b3d1eca746bb4d693423c343ad7af62c8898e -->
+<!-- cache-key: cdktf-0.20.8 input-a051c2c95f3eb0e5ffcfea95c04da5f91fdab8eb82504169fc30362757b9ccce -->

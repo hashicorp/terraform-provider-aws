@@ -32,16 +32,18 @@ const (
 )
 
 // @SDKResource("aws_iam_role_policy", name="Role Policy")
+// @IdentityAttribute("role")
+// @IdentityAttribute("name")
+// @IdAttrFormat("{role}:{name}")
+// @ImportIDHandler("rolePolicyImportID")
+// @Testing(existsType="string")
+// @Testing(preIdentityVersion="6.0.0")
 func resourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRolePolicyPut,
 		ReadWithoutTimeout:   resourceRolePolicyRead,
 		UpdateWithoutTimeout: resourceRolePolicyPut,
 		DeleteWithoutTimeout: resourceRolePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrName: {
@@ -105,10 +107,10 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.IsNewResource() {
-		d.SetId(fmt.Sprintf("%s:%s", roleName, policyName))
+		d.SetId(createRolePolicyImportID(roleName, policyName))
 
-		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
-			return FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return findRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 		})
 
 		if err != nil {
@@ -123,12 +125,12 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	roleName, policyName, err := RolePolicyParseID(d.Id())
+	roleName, policyName, err := rolePolicyParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyDocument, err := FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
+	policyDocument, err := findRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Role Policy %s not found, removing from state", d.Id())
@@ -162,7 +164,7 @@ func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	roleName, policyName, err := RolePolicyParseID(d.Id())
+	roleName, policyName, err := rolePolicyParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -184,7 +186,7 @@ func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func FindRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName, policyName string) (string, error) {
+func findRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName, policyName string) (string, error) {
 	input := &iam.GetRolePolicyInput{
 		PolicyName: aws.String(policyName),
 		RoleName:   aws.String(roleName),
@@ -210,7 +212,11 @@ func FindRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName,
 	return aws.ToString(output.PolicyDocument), nil
 }
 
-func RolePolicyParseID(id string) (roleName, policyName string, err error) {
+func createRolePolicyImportID(roleName, policyName string) string {
+	return fmt.Sprintf("%s:%s", roleName, policyName)
+}
+
+func rolePolicyParseID(id string) (roleName, policyName string, err error) {
 	parts := strings.SplitN(id, ":", 2)
 	if len(parts) != 2 {
 		err = fmt.Errorf("role_policy id must be of the form <role name>:<policy name>")
@@ -220,4 +226,23 @@ func RolePolicyParseID(id string) (roleName, policyName string, err error) {
 	roleName = parts[0]
 	policyName = parts[1]
 	return
+}
+
+type rolePolicyImportID struct{}
+
+func (rolePolicyImportID) Create(d *schema.ResourceData) string {
+	return createRolePolicyImportID(d.Get(names.AttrRole).(string), d.Get(names.AttrName).(string))
+}
+
+func (rolePolicyImportID) Parse(id string) (string, map[string]string, error) {
+	roleName, policyName, err := rolePolicyParseID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]string{
+		names.AttrRole: roleName,
+		names.AttrName: policyName,
+	}
+	return id, result, nil
 }

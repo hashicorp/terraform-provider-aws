@@ -5,15 +5,16 @@ package elbv2
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 )
 
-func describeListenerCertificatesPages(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeListenerCertificatesInput, fn func(*elasticloadbalancingv2.DescribeListenerCertificatesOutput, bool) bool) error {
+func describeListenerCertificatesPages(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeListenerCertificatesInput, fn func(*elasticloadbalancingv2.DescribeListenerCertificatesOutput, bool) bool, optFns ...func(*elasticloadbalancingv2.Options)) error {
 	for {
-		output, err := conn.DescribeListenerCertificates(ctx, input)
+		output, err := conn.DescribeListenerCertificates(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextMarker) == ""

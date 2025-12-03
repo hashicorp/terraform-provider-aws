@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -76,6 +76,51 @@ func TestAccImageBuilderImageRecipe_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceImageRecipe(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImageRecipe_amiTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageRecipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageRecipeConfig_amiTags1(rName, "tags_key1", acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageRecipeExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ami_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ami_tags.tags_key1", acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccImageRecipeConfig_amiTags2(rName, "tags_key1", acctest.CtValue1Updated, "tags_key2", acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageRecipeExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ami_tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ami_tags.tags_key1", acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, "ami_tags.tags_key2", acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccImageRecipeConfig_amiTags1(rName, "tags_key2", acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageRecipeExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ami_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ami_tags.tags_key2", acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -701,7 +746,7 @@ func TestAccImageBuilderImageRecipe_userDataBase64(t *testing.T) {
 				Config: testAccImageRecipeConfig_userDataBase64(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "user_data_base64", itypes.Base64EncodeOnce([]byte("hello world"))),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", inttypes.Base64EncodeOnce([]byte("hello world"))),
 				),
 			},
 			{
@@ -737,6 +782,47 @@ func TestAccImageBuilderImageRecipe_windowsBaseImage(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccImageRecipeConfig_amiTags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccImageRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
+
+  ami_tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccImageRecipeConfig_amiTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccImageRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
+
+  ami_tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccCheckImageRecipeDestroy(ctx context.Context) resource.TestCheckFunc {

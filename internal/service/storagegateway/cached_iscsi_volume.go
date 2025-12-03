@@ -220,7 +220,7 @@ func resourceCachediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidGatewayRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteVolume(ctx, &storagegateway.DeleteVolumeInput{
 			VolumeARN: aws.String(d.Id()),
 		})

@@ -94,7 +94,7 @@ func (r *defaultCreditSpecificationResource) Create(ctx context.Context, request
 		return
 	}
 
-	_, err = tfresource.RetryUntilEqual(ctx, r.CreateTimeout(ctx, data.Timeouts), data.CPUCredits.ValueString(), func() (string, error) {
+	_, err = tfresource.RetryUntilEqual(ctx, r.CreateTimeout(ctx, data.Timeouts), data.CPUCredits.ValueString(), func(ctx context.Context) (string, error) {
 		output, err := findDefaultCreditSpecificationByInstanceFamily(ctx, conn, instanceFamily)
 
 		if err != nil {
@@ -169,7 +169,7 @@ func (r *defaultCreditSpecificationResource) Update(ctx context.Context, request
 		return
 	}
 
-	_, err = tfresource.RetryUntilEqual(ctx, r.UpdateTimeout(ctx, new.Timeouts), new.CPUCredits.ValueString(), func() (string, error) {
+	_, err = tfresource.RetryUntilEqual(ctx, r.UpdateTimeout(ctx, new.Timeouts), new.CPUCredits.ValueString(), func(ctx context.Context) (string, error) {
 		output, err := findDefaultCreditSpecificationByInstanceFamily(ctx, conn, instanceFamily)
 
 		if err != nil {

@@ -30,6 +30,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -167,7 +169,13 @@ func TestAccS3Object_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccObjectImportByS3URL(resourceName),
 			},
 		},
 	})
@@ -243,11 +251,23 @@ func TestAccS3Object_upgradeFromV4(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccObjectConfig_basic(rName),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -280,7 +300,6 @@ func TestAccS3Object_source(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -310,7 +329,6 @@ func TestAccS3Object_content(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -343,7 +361,6 @@ func TestAccS3Object_etagEncryption(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -421,7 +438,6 @@ func TestAccS3Object_sourceHashTrigger(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy, names.AttrSource, "source_hash"},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -700,7 +716,6 @@ func TestAccS3Object_kms(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -734,7 +749,6 @@ func TestAccS3Object_sse(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -786,7 +800,6 @@ func TestAccS3Object_acl(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrContent, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -834,7 +847,6 @@ func TestAccS3Object_metadata(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -897,7 +909,6 @@ func TestAccS3Object_storageClass(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrContent, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1175,7 +1186,7 @@ func TestAccS3Object_tagsViaAccessPointAlias(t *testing.T) {
 	})
 }
 
-func TestAccS3Object_tagsViaMultiRegionAccessPoint(t *testing.T) {
+func TestAccS3Object_tagsViaMultiRegionAccessPointARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2 s3.GetObjectOutput
 	resourceName := "aws_s3_object.object"
@@ -1189,7 +1200,7 @@ func TestAccS3Object_tagsViaMultiRegionAccessPoint(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop, // Cannot access the object via the access point alias after the access point is destroyed
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectConfig_tagsViaMultiRegionAccessPoint(rName, key, "stuff"),
+				Config: testAccObjectConfig_tagsViaMultiRegionAccessPointARN(rName, key, "stuff"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
@@ -1200,7 +1211,7 @@ func TestAccS3Object_tagsViaMultiRegionAccessPoint(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccObjectConfig_updatedTagsViaMultiRegionAccessPoint(rName, key, "stuff"),
+				Config: testAccObjectConfig_updatedTagsViaMultiRegionAccessPointARN(rName, key, "stuff"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
@@ -1243,6 +1254,72 @@ func TestAccS3Object_tagsViaObjectLambdaAccessPointARN(t *testing.T) {
 			},
 			{
 				Config: testAccObjectConfig_updatedTagsViaObjectLambdaAccessPointARN(rName, key, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					testAccCheckObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_viaDirectoryBucketAccessPointAlias(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	key := "test-key"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop, // Cannot access the object via the access point alias after the access point is destroyed
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_viaDirectoryBucketAccessPointAlias(rName, key, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectBody(&obj, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_tagsViaFSxAccessPointARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj1, obj2 s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	key := "test-key"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop, // Cannot access the object via the access point alias after the access point is destroyed
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_tagsViaFSxAccessPointARN(rName, key, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj1),
+					testAccCheckObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+			{
+				Config: testAccObjectConfig_updatedTagsViaFSxAccessPointARN(rName, key, "stuff"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
@@ -1607,7 +1684,6 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"checksum_algorithm", "checksum_crc32", names.AttrContent, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 			{
 				Config: testAccObjectConfig_checksumAlgorithm(rName, "SHA256"),
@@ -1661,14 +1737,28 @@ func TestAccS3Object_keyWithSlashesMigrated(t *testing.T) {
 				Config: testAccObjectConfig_keyWithSlashes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "/a/b//c///d/////e/"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact("/a/b//c///d/////e/")),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccObjectConfig_keyWithSlashes(rName),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1734,7 +1824,6 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "override_provider"},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1819,7 +1908,6 @@ func TestAccS3Object_DirectoryBucket_kmsSSE(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "override_provider", names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -2033,6 +2121,66 @@ func TestAccS3Object_basicUpgrade(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_Identity_ExistingResource_NoRefresh_WithChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf s3.GetObjectOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_object.object"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckObjectDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccObjectConfig_content(rName, "initial"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccObjectConfig_content(rName, "updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrBucket:    knownvalue.NotNull(),
+						names.AttrKey:       knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrBucket)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrKey)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckObjectVersionIDDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(first.VersionId) == aws.ToString(second.VersionId) {
@@ -2123,7 +2271,7 @@ func testAccCheckObjectExists(ctx context.Context, n string, v *s3.GetObjectOutp
 	}
 }
 
-func testAccObjectImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccObjectImportByS3URL(resourceName string) resource.ImportStateIdFunc { // nosemgrep:s3-in-func-name
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -2383,6 +2531,54 @@ resource "aws_s3control_object_lambda_access_point" "test" {
         aws_lambda {
           function_arn = aws_lambda_function.test.arn
         }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccObjectConfig_baseDirectoryBucketAccessPoint(rName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_basic(rName), `
+resource "aws_s3_access_point" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  name   = local.access_point_name
+}
+`)
+}
+
+func testAccObjectConfig_baseFSxAccessPoint(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_fsx_openzfs_file_system" "test" {
+  storage_capacity    = 64
+  subnet_ids          = aws_subnet.test[*].id
+  deployment_type     = "SINGLE_AZ_HA_2"
+  throughput_capacity = 320
+  skip_final_backup   = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_fsx_openzfs_volume" "test" {
+  name             = %[1]q
+  parent_volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+}
+
+resource "aws_fsx_s3_access_point_attachment" "test" {
+  name = %[1]q
+  type = "OPENZFS"
+
+  openzfs_configuration {
+    volume_id = aws_fsx_openzfs_volume.test.id
+
+    file_system_identity {
+      type = "POSIX"
+
+      posix_user {
+        uid = 1001
+        gid = 1001
       }
     }
   }
@@ -2768,7 +2964,7 @@ resource "aws_s3_object" "object" {
 `, key, content))
 }
 
-func testAccObjectConfig_tagsViaMultiRegionAccessPoint(rName, key, content string) string {
+func testAccObjectConfig_tagsViaMultiRegionAccessPointARN(rName, key, content string) string {
 	return acctest.ConfigCompose(testAccObjectConfig_baseMultiRegionAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
   bucket  = aws_s3control_multi_region_access_point.test.arn
@@ -2784,7 +2980,7 @@ resource "aws_s3_object" "object" {
 `, key, content))
 }
 
-func testAccObjectConfig_updatedTagsViaMultiRegionAccessPoint(rName, key, content string) string {
+func testAccObjectConfig_updatedTagsViaMultiRegionAccessPointARN(rName, key, content string) string {
 	return acctest.ConfigCompose(testAccObjectConfig_baseMultiRegionAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
   bucket  = aws_s3control_multi_region_access_point.test.arn
@@ -2821,6 +3017,49 @@ func testAccObjectConfig_updatedTagsViaObjectLambdaAccessPointARN(rName, key, co
 	return acctest.ConfigCompose(testAccObjectConfig_baseObjectLambdaAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
   bucket  = aws_s3control_object_lambda_access_point.test.arn
+  key     = %[1]q
+  content = %[2]q
+
+  tags = {
+    Key2 = "B@BB"
+    Key3 = "X X"
+    Key4 = "DDD"
+    Key5 = "E:/"
+  }
+}
+`, key, content))
+}
+
+func testAccObjectConfig_viaDirectoryBucketAccessPointAlias(rName, key, content string) string {
+	return acctest.ConfigCompose(testAccObjectConfig_baseDirectoryBucketAccessPoint(rName), fmt.Sprintf(`
+resource "aws_s3_object" "object" {
+  bucket  = aws_s3_access_point.test.alias
+  key     = %[1]q
+  content = %[2]q
+}
+`, key, content))
+}
+
+func testAccObjectConfig_tagsViaFSxAccessPointARN(rName, key, content string) string {
+	return acctest.ConfigCompose(testAccObjectConfig_baseFSxAccessPoint(rName), fmt.Sprintf(`
+resource "aws_s3_object" "object" {
+  bucket  = aws_fsx_s3_access_point_attachment.test.s3_access_point_arn
+  key     = %[1]q
+  content = %[2]q
+
+  tags = {
+    Key1 = "A@AA"
+    Key2 = "BBB"
+    Key3 = "CCC"
+  }
+}
+`, key, content))
+}
+
+func testAccObjectConfig_updatedTagsViaFSxAccessPointARN(rName, key, content string) string {
+	return acctest.ConfigCompose(testAccObjectConfig_baseFSxAccessPoint(rName), fmt.Sprintf(`
+resource "aws_s3_object" "object" {
+  bucket  = aws_fsx_s3_access_point_attachment.test.s3_access_point_arn
   key     = %[1]q
   content = %[2]q
 

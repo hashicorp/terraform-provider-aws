@@ -17,8 +17,25 @@ type Timer interface {
 	After(time.Duration) <-chan time.Time
 }
 
+type Delay interface {
+	// Next returns the duration to wait before the next attempt.
+	Next(uint) time.Duration
+}
+
+type DelayWithSetIncrementDelay interface {
+	Delay
+
+	// SetIncrementDelay sets a flag to determine whether or not the next call to Next increments the delay duration.
+	SetIncrementDelay(bool)
+}
+
 // DelayFunc returns the duration to wait before the next attempt.
 type DelayFunc func(uint) time.Duration
+
+// Next returns the duration to wait before the next attempt.
+func (f DelayFunc) Next(n uint) time.Duration {
+	return f(n)
+}
 
 // FixedDelay returns a delay. The first attempt has no delay (0), and subsequent attempts use the fixed delay.
 func FixedDelay(delay time.Duration) DelayFunc {
@@ -31,64 +48,83 @@ func FixedDelay(delay time.Duration) DelayFunc {
 	}
 }
 
-type sdkv2HelperRetryCompatibleDelay struct {
-	minTimeout   time.Duration
-	pollInterval time.Duration
-	wait         time.Duration
+// ZeroDelay returns 0 for all attempts.
+//
+// This DelayFunc should only be used for testing.
+var ZeroDelay DelayFunc = func(n uint) time.Duration {
+	return 0
 }
 
-func (d *sdkv2HelperRetryCompatibleDelay) delay() time.Duration {
-	wait := d.wait
+type sdkv2HelperRetryCompatibleDelay struct {
+	delay          time.Duration
+	incrementDelay bool
+	initialDelay   time.Duration
+	minTimeout     time.Duration
+	pollInterval   time.Duration
+}
 
-	// First round had no wait.
-	if wait == 0 {
-		wait = 100 * time.Millisecond
+// Next returns the duration to wait before the next attempt.
+func (d *sdkv2HelperRetryCompatibleDelay) Next(n uint) time.Duration {
+	if n == 0 {
+		return d.initialDelay
 	}
 
-	wait *= 2
+	delay := d.delay
+
+	// First round had no wait.
+	if delay == 0 {
+		delay = 100 * time.Millisecond
+	}
+
+	if d.incrementDelay {
+		delay *= 2
+	}
 
 	// If a poll interval has been specified, choose that interval.
 	// Otherwise bound the default value.
 	if d.pollInterval > 0 && d.pollInterval < 180*time.Second {
-		wait = d.pollInterval
+		delay = d.pollInterval
 	} else {
-		if wait < d.minTimeout {
-			wait = d.minTimeout
-		} else if wait > 10*time.Second {
-			wait = 10 * time.Second
+		if delay < d.minTimeout {
+			delay = d.minTimeout
+		} else if delay > 10*time.Second {
+			delay = 10 * time.Second
 		}
 	}
 
-	d.wait = wait
+	d.delay = delay
 
-	return wait
+	return delay
+}
+
+// SetIncrementDelay sets a flag to determine whether or not the next call to Next increments the delay duration.
+func (d *sdkv2HelperRetryCompatibleDelay) SetIncrementDelay(incrementDelay bool) {
+	d.incrementDelay = incrementDelay
 }
 
 // SDKv2HelperRetryCompatibleDelay returns a Terraform Plugin SDK v2 helper/retry-compatible delay.
-func SDKv2HelperRetryCompatibleDelay(initialDelay, pollInterval, minTimeout time.Duration) DelayFunc {
-	delay := &sdkv2HelperRetryCompatibleDelay{
-		minTimeout:   minTimeout,
-		pollInterval: pollInterval,
-	}
-
-	return func(n uint) time.Duration {
-		if n == 0 {
-			return initialDelay
-		}
-
-		return delay.delay()
+func SDKv2HelperRetryCompatibleDelay(initialDelay, pollInterval, minTimeout time.Duration) Delay {
+	return &sdkv2HelperRetryCompatibleDelay{
+		incrementDelay: true,
+		initialDelay:   initialDelay,
+		minTimeout:     minTimeout,
+		pollInterval:   pollInterval,
 	}
 }
 
 // DefaultSDKv2HelperRetryCompatibleDelay returns a Terraform Plugin SDK v2 helper/retry-compatible delay
 // with default values (from the `RetryContext` function).
-func DefaultSDKv2HelperRetryCompatibleDelay() DelayFunc {
+func DefaultSDKv2HelperRetryCompatibleDelay() Delay {
 	return SDKv2HelperRetryCompatibleDelay(0, 0, 500*time.Millisecond) //nolint:mnd // 500ms is the Plugin SDKv2 default
 }
 
+var (
+	_ DelayWithSetIncrementDelay = (*sdkv2HelperRetryCompatibleDelay)(nil)
+)
+
 // LoopConfig configures a loop.
 type LoopConfig struct {
-	delay       DelayFunc
+	delay       Delay
 	gracePeriod time.Duration
 	timer       Timer
 }
@@ -104,7 +140,7 @@ func WithGracePeriod(d time.Duration) Option {
 	}
 }
 
-func WithDelay(d DelayFunc) Option {
+func WithDelay(d Delay) Option {
 	if d == nil {
 		return emptyOption
 	}
@@ -179,7 +215,7 @@ func (r *Loop) Continue(ctx context.Context) bool {
 		r.gracePeriod = 0
 	}
 
-	r.sleep(ctx, r.config.delay(r.attempt))
+	r.sleep(ctx, r.config.delay.Next(r.attempt))
 	r.attempt++
 
 	return context.Cause(ctx) == nil

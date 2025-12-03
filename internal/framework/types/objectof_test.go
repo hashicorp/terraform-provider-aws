@@ -94,11 +94,11 @@ func TestObjectTypeOfValueFromTerraform(t *testing.T) {
 		},
 		"valid value": {
 			tfVal:   objectAValue,
-			wantVal: fwtypes.NewObjectValueOfMust[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewObjectValueOfMust(ctx, &objectA),
 		},
 		"invalid Terraform value": {
 			tfVal:   objectBValue,
-			wantVal: fwtypes.NewObjectValueOfMust[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewObjectValueOfMust(ctx, &objectA),
 			wantErr: true,
 		},
 	}

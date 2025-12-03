@@ -15,11 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackage/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -113,7 +113,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	resp, err := findChannelByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MediaPackage Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -172,20 +172,18 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta any
 	dcinput := &mediapackage.DescribeChannelInput{
 		Id: aws.String(d.Id()),
 	}
-	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DescribeChannel(ctx, dcinput)
 		if err != nil {
 			var nfe *types.NotFoundException
 			if errors.As(err, &nfe) {
 				return nil
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
-		return retry.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
+		return tfresource.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DescribeChannel(ctx, dcinput)
-	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MediaPackage Channel (%s) deletion: %s", d.Id(), err)
 	}
@@ -227,8 +225,7 @@ func findChannelByID(ctx context.Context, conn *mediapackage.Client, id string) 
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
 			return nil, &retry.NotFoundError{
-				LastRequest: in,
-				LastError:   err,
+				LastError: err,
 			}
 		}
 

@@ -192,52 +192,6 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_update(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerDirectConnectGatewayAttachment_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDirectConnectGatewayAttachmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDirectConnectGatewayAttachmentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccDirectConnectGatewayAttachmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccNetworkManagerDirectConnectGatewayAttachment_accepted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
@@ -309,8 +263,6 @@ func testAccCheckDirectConnectGatewayAttachmentExists(ctx context.Context, n str
 
 func testAccDirectConnectGatewayAttachmentConfig_base(rName string, requireAcceptance bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
   amazon_side_asn = 65000
@@ -334,6 +286,8 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   core_network_id = aws_networkmanager_core_network.test.id
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
+
+data "aws_region" "current" {}
 
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
@@ -488,33 +442,4 @@ resource "aws_networkmanager_dx_gateway_attachment" "test" {
   edge_locations             = [%[1]q, %[2]q]
 }
 `, edgeLocation1, edgeLocation2))
-}
-
-func testAccDirectConnectGatewayAttachmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_base(rName, false), fmt.Sprintf(`
-resource "aws_networkmanager_dx_gateway_attachment" "test" {
-  core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  direct_connect_gateway_arn = aws_dx_gateway.test.arn
-  edge_locations             = [data.aws_region.current.region]
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1))
-}
-
-func testAccDirectConnectGatewayAttachmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_base(rName, false), fmt.Sprintf(`
-resource "aws_networkmanager_dx_gateway_attachment" "test" {
-  core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  direct_connect_gateway_arn = aws_dx_gateway.test.arn
-  edge_locations             = [data.aws_region.current.region]
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2))
 }

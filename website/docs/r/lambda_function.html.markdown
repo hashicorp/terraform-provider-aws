@@ -257,6 +257,101 @@ resource "aws_lambda_function" "example" {
 }
 ```
 
+### Function with logging to S3 or Data Firehose
+
+#### Required Resources
+
+* An S3 bucket or Data Firehose delivery stream to store the logs.
+* A CloudWatch Log Group with:
+
+    * `log_group_class = "DELIVERY"`
+    * A subscription filter whose `destination_arn` points to the S3 bucket or the Data Firehose delivery stream.
+
+* IAM roles:
+
+    * Assumed by the `logs.amazonaws.com` service to deliver logs to the S3 bucket or Data Firehose delivery stream.
+    * Assumed by the `lambda.amazonaws.com` service to send logs to CloudWatch Logs
+
+* A Lambda function:
+
+    * In the `logging_configuration`, specify the name of the Log Group created above using the `log_group` field
+    * No special configuration is required to use S3 or Firehose as the log destination
+
+For more details, see [Sending Lambda function logs to Amazon S3](https://docs.aws.amazon.com/lambda/latest/dg/logging-with-s3.html).
+
+#### Example: Exporting Lambda Logs to S3 Bucket
+
+```terraform
+locals {
+  lambda_function_name = "lambda-log-export-example"
+}
+
+resource "aws_s3_bucket" "lambda_log_export" {
+  bucket = "${local.lambda_function_name}-bucket"
+}
+
+resource "aws_cloudwatch_log_group" "export" {
+  name            = "/aws/lambda/${local.lambda_function_name}"
+  log_group_class = "DELIVERY"
+}
+
+data "aws_iam_policy_document" "logs_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["logs.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "logs_log_export" {
+  name               = "${local.lambda_function_name}-lambda-log-export-role"
+  assume_role_policy = data.aws_iam_policy_document.logs_assume_role.json
+}
+
+data "aws_iam_policy_document" "lambda_log_export" {
+  statement {
+    actions = [
+      "s3:PutObject",
+    ]
+    effect = "Allow"
+    resources = [
+      "${aws_s3_bucket.lambda_log_export.arn}/*"
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "lambda_log_export" {
+  policy = data.aws_iam_policy_document.lambda_log_export.json
+  role   = aws_iam_role.logs_log_export.name
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "lambda_log_export" {
+  name            = "${local.lambda_function_name}-filter"
+  log_group_name  = aws_cloudwatch_log_group.export.name
+  filter_pattern  = ""
+  destination_arn = aws_s3_bucket.lambda_log_export.arn
+  role_arn        = aws_iam_role.logs_log_export.arn
+}
+
+resource "aws_lambda_function" "log_export" {
+  function_name = local.lambda_function_name
+  handler       = "index.lambda_handler"
+  runtime       = "python3.13"
+  role          = aws_iam_role.example.arn
+  filename      = "function.zip"
+  logging_config {
+    log_format = "Text"
+    log_group  = aws_cloudwatch_log_group.export.name
+  }
+  depends_on = [
+    aws_cloudwatch_log_group.export
+  ]
+}
+```
+
 ### Function with Error Handling
 
 ```terraform
@@ -381,6 +476,40 @@ resource "aws_lambda_function" "example" {
 }
 ```
 
+### Capacity Provider Configuration
+
+```terraform
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "example"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+  memory_size   = 2048
+
+  publish = true
+
+  capacity_provider_config {
+    lambda_managed_instances_capacity_provider_config {
+      capacity_provider_arn = aws_lambda_capacity_provider.example.arn
+    }
+  }
+}
+
+resource "aws_lambda_capacity_provider" "example" {
+  name = "example"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.example.id]
+    security_group_ids = [aws_security_group.example.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.example.arn
+  }
+}
+```
+
 ## Specifying the Deployment Package
 
 AWS Lambda expects source code to be provided as a deployment package whose structure varies depending on which `runtime` is in use. See [Runtimes](https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime) for the valid values of `runtime`. The expected structure of the deployment package can be found in [the AWS Lambda documentation for each runtime](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html).
@@ -399,6 +528,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stays the same.
+* `capacity_provider_config` - (Optional) Configuration block for Lambda Capacity Provider. [See below](#capacity_provider_config-configuration).
 * `code_signing_config_arn` - (Optional) ARN of a code-signing configuration to enable code signing for this function.
 * `dead_letter_config` - (Optional) Configuration block for dead letter queue. [See below](#dead_letter_config-configuration-block).
 * `description` - (Optional) Description of what your Lambda Function does.
@@ -415,6 +545,7 @@ The following arguments are optional:
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 10,240 MB (10 GB), in 1 MB increments. Defaults to 128.
 * `package_type` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
+* `publish_to` - (Optional) Whether to publish to a alias or version number. Omit for regular version publishing. Option is `LATEST_PUBLISHED`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replace_security_groups_on_destroy` - (Optional) Whether to replace the security groups on the function's VPC configuration prior to destruction. Default is `false`.
 * `replacement_security_group_ids` - (Optional) List of security group IDs to assign to the function's VPC configuration prior to destruction. Required if `replace_security_groups_on_destroy` is `true`.
@@ -426,10 +557,22 @@ The following arguments are optional:
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`.
 * `snap_start` - (Optional) Configuration block for snap start settings. [See below](#snap_start-configuration-block).
 * `source_code_hash` - (Optional) Base64-encoded SHA256 hash of the package file. Used to trigger updates when source code changes.
+* `source_kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package. Conflicts with `image_uri`.
 * `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
+* `tenancy_config` - (Optional) Configuration block for Tenancy. [See below](#tenancy_config-configuration-block).
 * `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-configuration-block).
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-configuration-block).
+
+### capacity_provider_config Configuration
+
+* `lambda_managed_instances_capacity_provider_config` - (Required) Configuration block for Lambda Managed Instances Capacity Provider. [See below](#lambda_managed_instances_capacity_provider_config-configuration-block).
+
+### lambda_managed_instances_capacity_provider_config Configuration Block
+
+* `capacity_provider_arn` - (Required) ARN of the Capacity Provider.
+* `execution_environment_memory_gib_per_vcpu` - (Optional) Memory GiB per vCPU for the execution environment.
+* `per_execution_environment_max_concurrency` - (Optional) Maximum concurrency per execution environment.
 
 ### dead_letter_config Configuration Block
 
@@ -465,11 +608,17 @@ The following arguments are optional:
 
 * `apply_on` - (Required) When to apply snap start optimization. Valid value: `PublishedVersions`.
 
+### tenancy_config Configuration Block
+
+* `tenant_isolation_mode` - (Required) Tenant Isolation Mode. Valid values: `PER_TENANT`.
+
 ### tracing_config Configuration Block
 
 * `mode` - (Required) X-Ray tracing mode. Valid values: `Active`, `PassThrough`.
 
 ### vpc_config Configuration Block
+
+~> **NOTE:** If `subnet_ids`, `security_group_ids` and `ipv6_allowed_for_dual_stack` are empty then `vpc_config` is considered to be empty or unset.
 
 * `ipv6_allowed_for_dual_stack` - (Optional) Whether to allow outbound IPv6 traffic on VPC functions connected to dual-stack subnets. Default: `false`.
 * `security_group_ids` - (Required) List of security group IDs associated with the Lambda function.
@@ -502,6 +651,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lambda_function.example
+  identity = {
+    function_name = "example"
+  }
+}
+
+resource "aws_lambda_function" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `function_name` (String) Name of the Lambda function.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Functions using the `function_name`. For example:
 

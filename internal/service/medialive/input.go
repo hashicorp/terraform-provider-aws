@@ -31,7 +31,7 @@ import (
 // @SDKResource("aws_medialive_input", name="Input")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputOutput")
-func ResourceInput() *schema.Resource {
+func resourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
 		ReadWithoutTimeout:   resourceInputRead,
@@ -226,7 +226,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	// IAM propagation
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateInput(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -260,7 +260,7 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	out, err := FindInputByID(ctx, conn, d.Id())
+	out, err := findInputByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MediaLive Input (%s) not found, removing from state", d.Id())
@@ -323,7 +323,7 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		rawOutput, err := tfresource.RetryWhen(ctx, 2*time.Minute,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateInput(ctx, in)
 			},
 			func(err error) (bool, error) {
@@ -432,7 +432,7 @@ func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, ti
 
 func statusInput(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindInputByID(ctx, conn, id)
+		out, err := findInputByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -445,7 +445,7 @@ func statusInput(ctx context.Context, conn *medialive.Client, id string) retry.S
 	}
 }
 
-func FindInputByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputOutput, error) {
+func findInputByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputOutput, error) {
 	in := &medialive.DescribeInputInput{
 		InputId: aws.String(id),
 	}

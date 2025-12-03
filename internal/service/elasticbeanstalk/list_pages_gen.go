@@ -5,15 +5,16 @@ package elasticbeanstalk
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 )
 
-func describeApplicationVersionsPages(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeApplicationVersionsInput, fn func(*elasticbeanstalk.DescribeApplicationVersionsOutput, bool) bool) error {
+func describeApplicationVersionsPages(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeApplicationVersionsInput, fn func(*elasticbeanstalk.DescribeApplicationVersionsOutput, bool) bool, optFns ...func(*elasticbeanstalk.Options)) error {
 	for {
-		output, err := conn.DescribeApplicationVersions(ctx, input)
+		output, err := conn.DescribeApplicationVersions(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -25,11 +26,11 @@ func describeApplicationVersionsPages(ctx context.Context, conn *elasticbeanstal
 	}
 	return nil
 }
-func describeEnvironmentsPages(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeEnvironmentsInput, fn func(*elasticbeanstalk.DescribeEnvironmentsOutput, bool) bool) error {
+func describeEnvironmentsPages(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeEnvironmentsInput, fn func(*elasticbeanstalk.DescribeEnvironmentsOutput, bool) bool, optFns ...func(*elasticbeanstalk.Options)) error {
 	for {
-		output, err := conn.DescribeEnvironments(ctx, input)
+		output, err := conn.DescribeEnvironments(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

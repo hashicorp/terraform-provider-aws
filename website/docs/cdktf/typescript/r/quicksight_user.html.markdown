@@ -96,14 +96,15 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `email` - (Required) Email address of the user that you want to register.
-* `identityType` - (Required) Identity type that your Amazon QuickSight account uses to manage the identity of users. Valid values: `IAM`, `QUICKSIGHT`.
-* `userRole` - (Required) Amazon QuickSight role for the user. Value values: `READER`, `AUTHOR`, `ADMIN`, `READER_PRO`, `AUTHOR_PRO`, `ADMIN_PRO`.
+* `identityType` - (Required) Identity type that your Amazon QuickSight account uses to manage the identity of users. Valid values: `IAM`, `QUICKSIGHT`, `IAM_IDENTITY_CENTER`.
+* `userRole` - (Required) Amazon QuickSight role for the user. Valid values: `READER`, `AUTHOR`, `ADMIN`, `READER_PRO`, `AUTHOR_PRO`, `ADMIN_PRO`, `RESTRICTED_AUTHOR`, `RESTRICTED_READER`.
 
 The following arguments are optional:
 
-* `awsAccountId` - (Optional) ID for the AWS account that the user is in. Use the ID for the AWS account that contains your Amazon QuickSight account.
+* `awsAccountId` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `iamArn` - (Optional) ARN of the IAM user or role that you are registering with Amazon QuickSight. Required only for users with an identity type of `IAM`.
 * `namespace`  - (Optional) The Amazon Quicksight namespace to create the user in. Defaults to `default`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `sessionName` - (Optional) Name of the IAM session to use when assuming roles that can embed QuickSight dashboards. Only valid for registering users using an assumed IAM role. Additionally, if registering multiple users using the same IAM role, each user needs to have a unique session name.
 * `userName` - (Optional) Amazon QuickSight user name that you want to create for the user you are registering. Required only for users with an identity type of `QUICKSIGHT`.
 
@@ -119,4 +120,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.20.8 input-6a391eed799fba4d600e4895065c5b4dd1a9717ac0ca1e4f82a252c2a8ba476b -->
+<!-- cache-key: cdktf-0.20.8 input-38de73feda47341965345e96f6950d33b8b4e3e489608beb30dc74f9f2376dad -->

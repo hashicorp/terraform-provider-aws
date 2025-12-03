@@ -32,6 +32,7 @@ import (
 // @SDKResource("aws_codestarnotifications_notification_rule", name="Notification Rule")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 func resourceNotificationRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotificationRuleCreate,
@@ -272,7 +273,7 @@ func cleanupNotificationRuleTargets(ctx context.Context, conn *codestarnotificat
 			TargetAddress:       aws.String(target[names.AttrAddress].(string)),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, targetSubscriptionTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, targetSubscriptionTimeout, func(ctx context.Context) (any, error) {
 			return conn.DeleteTarget(ctx, input)
 		}, "ValidationException", notificationRuleErrorSubscribed)
 

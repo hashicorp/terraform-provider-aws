@@ -29,10 +29,11 @@ import (
 // @SDKResource("aws_datasync_agent", name="Agent")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeAgentOutput")
 // @Testing(importIgnore="activation_key;ip_address", plannableImportAction="Replace")
 // @Testing(preCheck="testAccPreCheck")
-func ResourceAgent() *schema.Resource {
+func resourceAgent() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAgentCreate,
 		ReadWithoutTimeout:   resourceAgentRead,
@@ -130,44 +131,40 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		var response *http.Response
-		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 			response, err = client.Do(request)
 
 			if errs.IsA[net.Error](err) {
-				return retry.RetryableError(fmt.Errorf("making HTTP request: %w", err))
+				return tfresource.RetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			if err != nil {
-				return retry.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
+				return tfresource.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			if response == nil {
-				return retry.NonRetryableError(fmt.Errorf("no response for activation key request"))
+				return tfresource.NonRetryableError(fmt.Errorf("no response for activation key request"))
 			}
 
 			log.Printf("[DEBUG] Received HTTP response: %#v", response)
 			if expected := http.StatusFound; expected != response.StatusCode {
-				return retry.NonRetryableError(fmt.Errorf("expected HTTP status code %d, received: %d", expected, response.StatusCode))
+				return tfresource.NonRetryableError(fmt.Errorf("expected HTTP status code %d, received: %d", expected, response.StatusCode))
 			}
 
 			redirectURL, err := response.Location()
 			if err != nil {
-				return retry.NonRetryableError(fmt.Errorf("extracting HTTP Location header: %w", err))
+				return tfresource.NonRetryableError(fmt.Errorf("extracting HTTP Location header: %w", err))
 			}
 
 			if errorType := redirectURL.Query().Get("errorType"); errorType == "PRIVATE_LINK_ENDPOINT_UNREACHABLE" {
 				errMessage := fmt.Errorf("during activation: %s", errorType)
-				return retry.RetryableError(errMessage)
+				return tfresource.RetryableError(errMessage)
 			}
 
 			activationKey = redirectURL.Query().Get("activationKey")
 
 			return nil
 		})
-
-		if tfresource.TimedOut(err) {
-			return sdkdiag.AppendErrorf(diags, "timeout retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
-		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
@@ -178,7 +175,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
-	input := &datasync.CreateAgentInput{
+	input := datasync.CreateAgentInput{
 		ActivationKey: aws.String(activationKey),
 		Tags:          getTagsIn(ctx),
 	}
@@ -199,7 +196,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.VpcEndpointId = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateAgent(ctx, input)
+	output, err := conn.CreateAgent(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DataSync Agent: %s", err)
@@ -207,8 +204,8 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.SetId(aws.ToString(output.AgentArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
-		return FindAgentByARN(ctx, conn, d.Id())
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+		return findAgentByARN(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -222,7 +219,7 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	output, err := FindAgentByARN(ctx, conn, d.Id())
+	output, err := findAgentByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Agent (%s) not found, removing from state", d.Id())
@@ -256,12 +253,12 @@ func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	if d.HasChange(names.AttrName) {
-		input := &datasync.UpdateAgentInput{
+		input := datasync.UpdateAgentInput{
 			AgentArn: aws.String(d.Id()),
 			Name:     aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		_, err := conn.UpdateAgent(ctx, input)
+		_, err := conn.UpdateAgent(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DataSync Agent (%s): %s", d.Id(), err)
@@ -279,7 +276,12 @@ func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	input := datasync.DeleteAgentInput{
 		AgentArn: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteAgent(ctx, &input)
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteAgent(ctx, &input)
+	}, "in-use by these location(s)")
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return diags
@@ -292,12 +294,12 @@ func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
-func FindAgentByARN(ctx context.Context, conn *datasync.Client, arn string) (*datasync.DescribeAgentOutput, error) {
-	input := &datasync.DescribeAgentInput{
+func findAgentByARN(ctx context.Context, conn *datasync.Client, arn string) (*datasync.DescribeAgentOutput, error) {
+	input := datasync.DescribeAgentInput{
 		AgentArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeAgent(ctx, input)
+	output, err := conn.DescribeAgent(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return nil, &retry.NotFoundError{

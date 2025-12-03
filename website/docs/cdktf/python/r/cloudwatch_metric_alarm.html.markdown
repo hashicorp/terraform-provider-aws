@@ -219,6 +219,7 @@ You must choose one or the other
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alarm_name` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
 * `comparison_operator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`. Additionally, the values  `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, and `GreaterThanUpperThreshold` are used only for alarms based on anomaly detection models.
 * `evaluation_periods` - (Required) The number of periods over which data is compared to the specified threshold.
@@ -294,6 +295,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_metric_alarm.example
+  identity = {
+    alarm_name = "alarm-12345"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `alarm_name` (String) Name of the CloudWatch metric alarm.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Metric Alarm using the `alarm_name`. For example:
 
 ```python
@@ -308,13 +335,13 @@ from imports.aws.cloudwatch_metric_alarm import CloudwatchMetricAlarm
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        CloudwatchMetricAlarm.generate_config_for_import(self, "test", "alarm-12345")
+        CloudwatchMetricAlarm.generate_config_for_import(self, "example", "alarm-12345")
 ```
 
 Using `terraform import`, import CloudWatch Metric Alarm using the `alarm_name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_metric_alarm.test alarm-12345
+% terraform import aws_cloudwatch_metric_alarm.example alarm-12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0f6f1aba0c78d5f249b1be2fded305156195f80e46633b47c58ef85a24215499 -->
+<!-- cache-key: cdktf-0.20.8 input-9a7f272d9f320751461cd8357d42baaec6a411d01f769fa15ade05e4665110bd -->

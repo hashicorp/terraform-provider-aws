@@ -21,16 +21,15 @@ import (
 )
 
 // @SDKResource("aws_s3_bucket_public_access_block", name="Bucket Public Access Block")
+// @IdentityAttribute("bucket")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3/types;types.PublicAccessBlockConfiguration")
 func resourceBucketPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPublicAccessBlockCreate,
 		ReadWithoutTimeout:   resourceBucketPublicAccessBlockRead,
 		UpdateWithoutTimeout: resourceBucketPublicAccessBlockUpdate,
 		DeleteWithoutTimeout: resourceBucketPublicAccessBlockDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"block_public_acls": {
@@ -58,6 +57,10 @@ func resourceBucketPublicAccessBlock() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			names.AttrSkipDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -80,7 +83,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutPublicAccessBlock(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -94,7 +97,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(bucket)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findPublicAccessBlockConfiguration(ctx, conn, bucket)
 	})
 
@@ -182,6 +185,11 @@ func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.Resour
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
+		log.Printf("[DEBUG] Skipping destruction of S3 Bucket Public Access Block: %s", d.Id())
+		return diags
+	}
+
 	log.Printf("[DEBUG] Deleting S3 Bucket Public Access Block: %s", d.Id())
 	_, err := conn.DeletePublicAccessBlock(ctx, &s3.DeletePublicAccessBlockInput{
 		Bucket: aws.String(bucket),
@@ -195,7 +203,7 @@ func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findPublicAccessBlockConfiguration(ctx, conn, bucket)
 	})
 

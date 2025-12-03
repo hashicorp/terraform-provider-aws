@@ -5,15 +5,12 @@ package sdkv2
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -21,7 +18,7 @@ import (
 var _ crudInterceptor = identityInterceptor{}
 
 type identityInterceptor struct {
-	attributes []string
+	identitySpec *inttypes.Identity
 }
 
 func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
@@ -31,31 +28,73 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	switch d, when, why := opts.d, opts.when, opts.why; when {
 	case After:
 		switch why {
-		case Create, Read:
+		case Create, Read, Update:
+			if why == Update && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) && !identityIsFullyNull(d, r.identitySpec) {
+				break
+			}
+			if d.Id() == "" {
+				break
+			}
 			identity, err := d.Identity()
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 
-			for _, attr := range r.attributes {
-				switch attr {
+			for _, attr := range r.identitySpec.Attributes {
+				switch attr.Name() {
 				case names.AttrAccountID:
-					if err := identity.Set(attr, awsClient.AccountID(ctx)); err != nil {
+					if err := identity.Set(attr.Name(), awsClient.AccountID(ctx)); err != nil {
 						return sdkdiag.AppendFromErr(diags, err)
 					}
 
 				case names.AttrRegion:
-					if err := identity.Set(attr, awsClient.Region(ctx)); err != nil {
+					if err := identity.Set(attr.Name(), awsClient.Region(ctx)); err != nil {
 						return sdkdiag.AppendFromErr(diags, err)
 					}
 
 				default:
-					val, ok := getAttributeOk(d, attr)
+					val, ok := getAttributeOk(d, attr.ResourceAttributeName())
 					if !ok {
 						continue
 					}
-					if err := identity.Set(attr, val); err != nil {
+					if err := identity.Set(attr.Name(), val); err != nil {
 						return sdkdiag.AppendFromErr(diags, err)
+					}
+				}
+			}
+		}
+	case OnError:
+		switch why {
+		case Update:
+			if identityIsFullyNull(d, r.identitySpec) {
+				if d.Id() == "" {
+					break
+				}
+				identity, err := d.Identity()
+				if err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+
+				for _, attr := range r.identitySpec.Attributes {
+					switch attr.Name() {
+					case names.AttrAccountID:
+						if err := identity.Set(attr.Name(), awsClient.AccountID(ctx)); err != nil {
+							return sdkdiag.AppendFromErr(diags, err)
+						}
+
+					case names.AttrRegion:
+						if err := identity.Set(attr.Name(), awsClient.Region(ctx)); err != nil {
+							return sdkdiag.AppendFromErr(diags, err)
+						}
+
+					default:
+						val, ok := getAttributeOk(d, attr.ResourceAttributeName())
+						if !ok {
+							continue
+						}
+						if err := identity.Set(attr.Name(), val); err != nil {
+							return sdkdiag.AppendFromErr(diags, err)
+						}
 					}
 				}
 			}
@@ -65,40 +104,63 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	return diags
 }
 
+// identityIsFullyNull returns true if a resource supports identity and
+// all attributes are set to null values
+func identityIsFullyNull(d schemaResourceData, identitySpec *inttypes.Identity) bool {
+	identity, err := d.Identity()
+	if err != nil {
+		return false
+	}
+
+	for _, attr := range identitySpec.Attributes {
+		value := identity.Get(attr.Name())
+		if value != "" {
+			return false
+		}
+	}
+
+	return true
+}
+
 func getAttributeOk(d schemaResourceData, name string) (string, bool) {
 	if name == "id" {
 		return d.Id(), true
 	}
-	v, ok := d.GetOk(name)
-	return v.(string), ok
+	if v, ok := d.GetOk(name); !ok {
+		return "", false
+	} else {
+		return v.(string), true
+	}
 }
 
-func newIdentityInterceptor(attributes []inttypes.IdentityAttribute) interceptorInvocation {
-	return interceptorInvocation{
-		when: After,
-		why:  Create, // TODO: probably need to do this after Read and Update as well
+func newIdentityInterceptor(identitySpec *inttypes.Identity) interceptorInvocation {
+	interceptor := interceptorInvocation{
+		when: After | OnError,
+		why:  Create | Read | Update,
 		interceptor: identityInterceptor{
-			attributes: tfslices.ApplyToAll(attributes, func(v inttypes.IdentityAttribute) string {
-				return v.Name
-			}),
+			identitySpec: identitySpec,
 		},
 	}
+
+	return interceptor
 }
 
 func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 	return &schema.ResourceIdentity{
+		Version:           v.Version(),
+		IdentityUpgraders: v.SDKv2IdentityUpgraders(),
 		SchemaFunc: func() map[string]*schema.Schema {
 			return identity.NewIdentitySchema(v)
 		},
 	}
 }
 
-func newParameterizedIdentityImporter(identitySpec inttypes.Identity) *schema.ResourceImporter {
+func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import) *schema.ResourceImporter {
 	if identitySpec.IsSingleParameter {
 		if identitySpec.IsGlobalResource {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-					if err := importer.GlobalSingleParameterized(ctx, rd, identitySpec.IdentityAttribute, meta.(importer.AWSClient)); err != nil {
+					if err := importer.GlobalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
 						return nil, err
 					}
 
@@ -108,7 +170,7 @@ func newParameterizedIdentityImporter(identitySpec inttypes.Identity) *schema.Re
 		} else {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-					if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec.IdentityAttribute, meta.(importer.AWSClient)); err != nil {
+					if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
 						return nil, err
 					}
 
@@ -117,74 +179,27 @@ func newParameterizedIdentityImporter(identitySpec inttypes.Identity) *schema.Re
 			}
 		}
 	} else {
-		return &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if rd.Id() != "" {
-					if identitySpec.IDAttrShadowsAttr != "id" {
-						rd.Set(identitySpec.IDAttrShadowsAttr, rd.Id())
+		if identitySpec.IsGlobalResource {
+			return &schema.ResourceImporter{
+				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+					if err := importer.GlobalMultipleParameterized(ctx, rd, identitySpec, importSpec, meta.(importer.AWSClient)); err != nil {
+						return nil, err
 					}
+
 					return []*schema.ResourceData{rd}, nil
-				}
-
-				identity, err := rd.Identity()
-				if err != nil {
-					return nil, err
-				}
-
-				for _, attr := range identitySpec.Attributes {
-					var val string
-					switch attr.Name {
-					case names.AttrAccountID:
-						accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
-						if ok {
-							accountID, ok := accountIDRaw.(string)
-							if !ok {
-								return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
-							}
-							client := meta.(*conns.AWSClient)
-							if accountID != client.AccountID(ctx) {
-								return nil, fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
-							}
-						}
-
-					case names.AttrRegion:
-						regionRaw, ok := identity.GetOk(names.AttrRegion)
-						if ok {
-							val, ok = regionRaw.(string)
-							if !ok {
-								return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrRegion, regionRaw)
-							}
-							rd.Set(names.AttrRegion, val)
-						}
-
-					default:
-						valRaw, ok := identity.GetOk(attr.Name)
-						if attr.Required && !ok {
-							return nil, fmt.Errorf("identity attribute %q is required", attr.Name)
-						}
-						val, ok = valRaw.(string)
-						if !ok {
-							return nil, fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name, valRaw)
-						}
-						setAttribute(rd, attr.Name, val)
+				},
+			}
+		} else {
+			return &schema.ResourceImporter{
+				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+					if err := importer.RegionalMultipleParameterized(ctx, rd, identitySpec, importSpec, meta.(importer.AWSClient)); err != nil {
+						return nil, err
 					}
 
-					if attr.Name == identitySpec.IDAttrShadowsAttr {
-						rd.SetId(val)
-					}
-				}
-
-				return []*schema.ResourceData{rd}, nil
-			},
+					return []*schema.ResourceData{rd}, nil
+				},
+			}
 		}
-	}
-}
-
-func setAttribute(d *schema.ResourceData, name, value string) {
-	if name == "id" {
-		d.SetId(value)
-	} else {
-		d.Set(name, value)
 	}
 }
 
@@ -192,7 +207,7 @@ func arnIdentityResourceImporter(identity inttypes.Identity) *schema.ResourceImp
 	if identity.IsGlobalResource {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.GlobalARN(ctx, rd, identity.IdentityAttribute, identity.IdentityDuplicateAttrs); err != nil {
+				if err := importer.GlobalARN(ctx, rd, identity); err != nil {
 					return nil, err
 				}
 
@@ -202,7 +217,7 @@ func arnIdentityResourceImporter(identity inttypes.Identity) *schema.ResourceImp
 	} else {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalARN(ctx, rd, identity.IdentityAttribute, identity.IdentityDuplicateAttrs); err != nil {
+				if err := importer.RegionalARN(ctx, rd, identity); err != nil {
 					return nil, err
 				}
 
@@ -234,5 +249,30 @@ func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.Resou
 				return []*schema.ResourceData{rd}, nil
 			},
 		}
+	}
+}
+
+func customInherentRegionResourceImporter(identity inttypes.Identity) *schema.ResourceImporter {
+	// Not supported for Global resources. This is validated in validateResourceSchemas().
+	return &schema.ResourceImporter{
+		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+			if err := importer.RegionalInherentRegion(ctx, rd, identity); err != nil {
+				return nil, err
+			}
+
+			return []*schema.ResourceData{rd}, nil
+		},
+	}
+}
+
+func customResourceImporter(r *schema.Resource, identity *inttypes.Identity, importSpec *inttypes.SDKv2Import) {
+	importF := r.Importer.StateContext
+
+	r.Importer = &schema.ResourceImporter{
+		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+			ctx = importer.Context(ctx, identity, importSpec)
+
+			return importF(ctx, rd, meta)
+		},
 	}
 }

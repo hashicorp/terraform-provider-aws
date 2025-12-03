@@ -26,16 +26,14 @@ import (
 // @SDKResource("aws_iam_openid_connect_provider", name="OIDC Provider")
 // @Tags(identifierAttribute="arn", resourceType="OIDCProvider")
 // @Testing(name="OpenIDConnectProvider")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
 func resourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenIDConnectProviderCreate,
 		ReadWithoutTimeout:   resourceOpenIDConnectProviderRead,
 		UpdateWithoutTimeout: resourceOpenIDConnectProviderUpdate,
 		DeleteWithoutTimeout: resourceOpenIDConnectProviderDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -226,10 +224,14 @@ func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.Resource
 }
 
 func findOpenIDConnectProviderByARN(ctx context.Context, conn *iam.Client, arn string) (*iam.GetOpenIDConnectProviderOutput, error) {
-	input := &iam.GetOpenIDConnectProviderInput{
+	input := iam.GetOpenIDConnectProviderInput{
 		OpenIDConnectProviderArn: aws.String(arn),
 	}
 
+	return findOpenIDConnectProvider(ctx, conn, &input)
+}
+
+func findOpenIDConnectProvider(ctx context.Context, conn *iam.Client, input *iam.GetOpenIDConnectProviderInput) (*iam.GetOpenIDConnectProviderOutput, error) {
 	output, err := conn.GetOpenIDConnectProvider(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
@@ -238,6 +240,7 @@ func findOpenIDConnectProviderByARN(ctx context.Context, conn *iam.Client, arn s
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -249,13 +252,22 @@ func findOpenIDConnectProviderByARN(ctx context.Context, conn *iam.Client, arn s
 	return output, nil
 }
 
-func openIDConnectProviderTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
-	output, err := conn.ListOpenIDConnectProviderTags(ctx, &iam.ListOpenIDConnectProviderTagsInput{
+func openIDConnectProviderTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListOpenIDConnectProviderTagsInput{
 		OpenIDConnectProviderArn: aws.String(identifier),
-	})
-	if err != nil {
-		return nil, err
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListOpenIDConnectProviderTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return output.Tags, nil
+	return output, nil
 }

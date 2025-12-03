@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,7 +29,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -235,6 +236,12 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
+			},
 			names.AttrPort: {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -301,6 +308,31 @@ func resourceCluster() *schema.Resource {
 					"snapshot_identifier",
 				},
 			},
+			"serverless_v2_scaling_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrMaxCapacity: {
+							Type:     schema.TypeFloat,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.FloatBetween(1.0, 256.0),
+								validateServerlessCapacity,
+							),
+						},
+						"min_capacity": {
+							Type:     schema.TypeFloat,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.FloatBetween(0.5, 256.0),
+								validateServerlessCapacity,
+							),
+						},
+					},
+				},
+			},
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -346,7 +378,37 @@ func resourceCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
+		CustomizeDiff: customdiff.All(
+			// if serverless_v2_scaling_configuration is newly set or deleted, ForceNew is required
+			customdiff.ForceNewIfChange("serverless_v2_scaling_configuration",
+				func(_ context.Context, old, new, meta any) bool {
+					o := old != nil && len(old.([]any)) > 0
+					n := new != nil && len(new.([]any)) > 0
+					if (o && n) || (!o && !n) {
+						return false
+					}
+					return true
+				}),
+		),
 	}
+}
+
+func validateServerlessCapacity(i any, k string) (ws []string, es []error) {
+	const (
+		epsilon = 1.0e-10
+	)
+
+	v, ok := i.(float64)
+	if !ok {
+		es = append(es, fmt.Errorf("expected type of %s to be float64", k))
+		return
+	}
+	// add a small epsilon to avoid floating point precision issues
+	if int(v*10+epsilon)%5 != 0 {
+		es = append(es, fmt.Errorf("%s must be a multiple of 0.5", k))
+		return
+	}
+	return
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -430,6 +492,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			requiresModifyDbCluster = true
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
@@ -444,6 +510,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			requiresModifyDbCluster = true
 		}
 
+		if v, ok := d.GetOk("serverless_v2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
+		}
+
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
@@ -452,7 +522,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.RestoreDBClusterFromSnapshot(ctx, &input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -497,8 +567,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk("serverless_v2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
@@ -509,7 +587,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.RestoreDBClusterToPointInTime(ctx, &input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 		if err != nil {
@@ -585,6 +663,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
@@ -595,6 +677,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("serverless_v2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrStorageEncrypted); ok {
@@ -609,7 +695,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.CreateDBCluster(ctx, &input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -700,10 +786,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		d.Set("master_user_secret", nil)
 	}
 	d.Set("master_username", dbc.MasterUsername)
+	d.Set("network_type", dbc.NetworkType)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
+	if err := d.Set("serverless_v2_scaling_configuration", flattenServerlessV2ScalingConfiguration(dbc.ServerlessV2ScalingConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting serverless_v2_scaling_configuration: %s", err)
+	}
 	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
 	d.Set(names.AttrStorageType, dbc.StorageType)
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(dbc.VpcSecurityGroups, func(v awstypes.VpcSecurityGroupMembership) string {
@@ -767,8 +857,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
+		if d.HasChange("network_type") {
+			input.NetworkType = aws.String(d.Get("network_type").(string))
+		}
+
 		if d.HasChange("preferred_backup_window") {
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
+		}
+
+		if d.HasChange("serverless_v2_scaling_configuration") {
+			if v, ok := d.GetOk("serverless_v2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
+			}
 		}
 
 		if d.HasChange(names.AttrStorageType) {
@@ -791,7 +891,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			timeout = 5 * time.Minute
 		)
 		_, err := tfresource.RetryWhen(ctx, timeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBCluster(ctx, &input)
 			},
 			func(err error) (bool, error) {
@@ -866,7 +966,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster: %s", d.Id())
 	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteDBCluster(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -929,6 +1029,38 @@ func diffCloudWatchLogsExportConfiguration(old, new []any) ([]any, []any) {
 	return add, disable
 }
 
+func expandServerlessV2ScalingConfiguration(v map[string]any) *awstypes.ServerlessV2ScalingConfiguration {
+	if v == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ServerlessV2ScalingConfiguration{}
+	if v, ok := v[names.AttrMaxCapacity].(float64); ok {
+		apiObject.MaxCapacity = aws.Float64(v)
+	}
+	if v, ok := v["min_capacity"].(float64); ok {
+		apiObject.MinCapacity = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func flattenServerlessV2ScalingConfiguration(v *awstypes.ServerlessV2ScalingConfigurationInfo) []any {
+	if v == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v.MaxCapacity != nil {
+		tfMap[names.AttrMaxCapacity] = aws.ToFloat64(v.MaxCapacity)
+	}
+	if v.MinCapacity != nil {
+		tfMap["min_capacity"] = aws.ToFloat64(v.MinCapacity)
+	}
+	return []any{tfMap}
+}
+
 func removeClusterFromGlobalCluster(ctx context.Context, conn *docdb.Client, clusterARN, globalClusterID string, timeout time.Duration) error {
 	input := docdb.RemoveFromGlobalClusterInput{
 		DbClusterIdentifier:     aws.String(clusterARN),
@@ -946,7 +1078,7 @@ func removeClusterFromGlobalCluster(ctx context.Context, conn *docdb.Client, clu
 		return fmt.Errorf("removing DocumentDB Cluster (%s) from DocumentDB Global Cluster (%s): %w", clusterARN, globalClusterID, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findGlobalClusterByClusterARN(ctx, conn, clusterARN)
 	})
 
@@ -1014,7 +1146,7 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 		}
 
 		for _, v := range page.DBClusters {
-			if !itypes.IsZero(&v) && filter(&v) {
+			if !inttypes.IsZero(&v) && filter(&v) {
 				output = append(output, v)
 			}
 		}
