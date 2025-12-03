@@ -1511,7 +1511,7 @@ func testAccDirectoryConfig_sharedTenancy(rName, domain string) string {
 		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
-  tenancy = "SHARED"
+  tenancy      = "SHARED"
 
   tags = {
     Name = "tf-testacc-workspaces-directory-%[1]s"
