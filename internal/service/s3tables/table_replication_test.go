@@ -145,7 +145,7 @@ func testAccCheckTableReplicationDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfs3tables.FindTableReplicationByARN(ctx, conn, rs.Primary.Attributes["table_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -145,7 +145,7 @@ func testAccCheckTableBucketReplicationDestroy(ctx context.Context) resource.Tes
 
 			_, err := tfs3tables.FindTableBucketReplicationByARN(ctx, conn, rs.Primary.Attributes["table_bucket_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
