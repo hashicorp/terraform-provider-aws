@@ -25,7 +25,6 @@ func TestAccLogsTransformer_basic(t *testing.T) {
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -40,7 +39,6 @@ func TestAccLogsTransformer_basic(t *testing.T) {
 				Config: testAccTransformerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 				),
@@ -48,9 +46,9 @@ func TestAccLogsTransformer_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -110,11 +108,9 @@ func TestAccLogsTransformer_disappears_logGroup(t *testing.T) {
 
 func TestAccLogsTransformer_update_transformerConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -129,7 +125,6 @@ func TestAccLogsTransformer_update_transformerConfig(t *testing.T) {
 				Config: testAccTransformerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 				),
@@ -138,7 +133,6 @@ func TestAccLogsTransformer_update_transformerConfig(t *testing.T) {
 				Config: testAccTransformerConfig_parseCloudFront(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_cloudfront.#", "1"),
 				),
@@ -146,9 +140,9 @@ func TestAccLogsTransformer_update_transformerConfig(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -156,12 +150,10 @@ func TestAccLogsTransformer_update_transformerConfig(t *testing.T) {
 
 func TestAccLogsTransformer_update_logGroupIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	oldRName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	newRName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -176,7 +168,6 @@ func TestAccLogsTransformer_update_logGroupIdentifier(t *testing.T) {
 				Config: testAccTransformerConfig_basic(oldRName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 				),
@@ -185,7 +176,6 @@ func TestAccLogsTransformer_update_logGroupIdentifier(t *testing.T) {
 				Config: testAccTransformerConfig_basic(newRName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 				),
@@ -198,46 +188,9 @@ func TestAccLogsTransformer_update_logGroupIdentifier(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
-			},
-		},
-	})
-}
-
-func TestAccLogsTransformer_logGroupIdentifierARN(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var transformer cloudwatchlogs.GetTransformerOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransformerDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTransformerConfig_logGroupIdentifierARN(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -245,11 +198,9 @@ func TestAccLogsTransformer_logGroupIdentifierARN(t *testing.T) {
 
 func TestAccLogsTransformer_addKeys(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -264,7 +215,6 @@ func TestAccLogsTransformer_addKeys(t *testing.T) {
 				Config: testAccTransformerConfig_addKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.add_keys.#", "1"),
@@ -280,9 +230,9 @@ func TestAccLogsTransformer_addKeys(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -290,11 +240,9 @@ func TestAccLogsTransformer_addKeys(t *testing.T) {
 
 func TestAccLogsTransformer_copyValue(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -309,7 +257,6 @@ func TestAccLogsTransformer_copyValue(t *testing.T) {
 				Config: testAccTransformerConfig_copyValue(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.copy_value.#", "1"),
@@ -325,9 +272,9 @@ func TestAccLogsTransformer_copyValue(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -335,11 +282,9 @@ func TestAccLogsTransformer_copyValue(t *testing.T) {
 
 func TestAccLogsTransformer_csv(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -354,7 +299,6 @@ func TestAccLogsTransformer_csv(t *testing.T) {
 				Config: testAccTransformerConfig_csv(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.csv.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.csv.0.columns.#", "0"),
@@ -372,9 +316,9 @@ func TestAccLogsTransformer_csv(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -382,11 +326,9 @@ func TestAccLogsTransformer_csv(t *testing.T) {
 
 func TestAccLogsTransformer_dateTimeConverter(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -401,7 +343,6 @@ func TestAccLogsTransformer_dateTimeConverter(t *testing.T) {
 				Config: testAccTransformerConfig_dateTimeConverter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.date_time_converter.#", "1"),
@@ -425,9 +366,9 @@ func TestAccLogsTransformer_dateTimeConverter(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -435,11 +376,9 @@ func TestAccLogsTransformer_dateTimeConverter(t *testing.T) {
 
 func TestAccLogsTransformer_deleteKeys(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -454,7 +393,6 @@ func TestAccLogsTransformer_deleteKeys(t *testing.T) {
 				Config: testAccTransformerConfig_deleteKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.delete_keys.#", "1"),
@@ -466,9 +404,9 @@ func TestAccLogsTransformer_deleteKeys(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -476,11 +414,9 @@ func TestAccLogsTransformer_deleteKeys(t *testing.T) {
 
 func TestAccLogsTransformer_grok(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -495,7 +431,6 @@ func TestAccLogsTransformer_grok(t *testing.T) {
 				Config: testAccTransformerConfig_grok(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.grok.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.grok.0.match", "pattern"),
@@ -504,9 +439,9 @@ func TestAccLogsTransformer_grok(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -514,11 +449,9 @@ func TestAccLogsTransformer_grok(t *testing.T) {
 
 func TestAccLogsTransformer_grokWithSource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -533,7 +466,6 @@ func TestAccLogsTransformer_grokWithSource(t *testing.T) {
 				Config: testAccTransformerConfig_grokWithSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.grok.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.grok.0.match", "pattern"),
@@ -543,9 +475,9 @@ func TestAccLogsTransformer_grokWithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -553,11 +485,9 @@ func TestAccLogsTransformer_grokWithSource(t *testing.T) {
 
 func TestAccLogsTransformer_listToMap(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -572,7 +502,6 @@ func TestAccLogsTransformer_listToMap(t *testing.T) {
 				Config: testAccTransformerConfig_listToMap(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.list_to_map.#", "1"),
@@ -591,9 +520,9 @@ func TestAccLogsTransformer_listToMap(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -601,11 +530,9 @@ func TestAccLogsTransformer_listToMap(t *testing.T) {
 
 func TestAccLogsTransformer_lowerCaseString(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -620,7 +547,6 @@ func TestAccLogsTransformer_lowerCaseString(t *testing.T) {
 				Config: testAccTransformerConfig_lowerCaseString(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.lower_case_string.#", "1"),
@@ -632,9 +558,9 @@ func TestAccLogsTransformer_lowerCaseString(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -642,11 +568,9 @@ func TestAccLogsTransformer_lowerCaseString(t *testing.T) {
 
 func TestAccLogsTransformer_moveKeys(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -661,7 +585,6 @@ func TestAccLogsTransformer_moveKeys(t *testing.T) {
 				Config: testAccTransformerConfig_moveKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.move_keys.#", "1"),
@@ -677,9 +600,9 @@ func TestAccLogsTransformer_moveKeys(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -687,11 +610,9 @@ func TestAccLogsTransformer_moveKeys(t *testing.T) {
 
 func TestAccLogsTransformer_parseCloudFront(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -706,7 +627,6 @@ func TestAccLogsTransformer_parseCloudFront(t *testing.T) {
 				Config: testAccTransformerConfig_parseCloudFront(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_cloudfront.#", "1"),
 				),
@@ -714,9 +634,9 @@ func TestAccLogsTransformer_parseCloudFront(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -724,11 +644,9 @@ func TestAccLogsTransformer_parseCloudFront(t *testing.T) {
 
 func TestAccLogsTransformer_parseCloudFrontWithSource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -743,7 +661,6 @@ func TestAccLogsTransformer_parseCloudFrontWithSource(t *testing.T) {
 				Config: testAccTransformerConfig_parseCloudFrontWithSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_cloudfront.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_cloudfront.0.source", "@message"),
@@ -752,9 +669,9 @@ func TestAccLogsTransformer_parseCloudFrontWithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -762,11 +679,9 @@ func TestAccLogsTransformer_parseCloudFrontWithSource(t *testing.T) {
 
 func TestAccLogsTransformer_parseJSON(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -781,7 +696,6 @@ func TestAccLogsTransformer_parseJSON(t *testing.T) {
 				Config: testAccTransformerConfig_parseJSON(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.parse_json.#", "1"),
@@ -792,9 +706,9 @@ func TestAccLogsTransformer_parseJSON(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -802,11 +716,9 @@ func TestAccLogsTransformer_parseJSON(t *testing.T) {
 
 func TestAccLogsTransformer_parseKeyValue(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -821,7 +733,6 @@ func TestAccLogsTransformer_parseKeyValue(t *testing.T) {
 				Config: testAccTransformerConfig_parseKeyValue(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_key_value.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_key_value.0.overwrite_if_exists", acctest.CtFalse),
@@ -838,9 +749,9 @@ func TestAccLogsTransformer_parseKeyValue(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -848,11 +759,9 @@ func TestAccLogsTransformer_parseKeyValue(t *testing.T) {
 
 func TestAccLogsTransformer_parsePostgres(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -867,7 +776,6 @@ func TestAccLogsTransformer_parsePostgres(t *testing.T) {
 				Config: testAccTransformerConfig_parsePostgres(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_postgres.#", "1"),
 				),
@@ -875,9 +783,9 @@ func TestAccLogsTransformer_parsePostgres(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -885,11 +793,9 @@ func TestAccLogsTransformer_parsePostgres(t *testing.T) {
 
 func TestAccLogsTransformer_parsePostgresWithSource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -904,7 +810,6 @@ func TestAccLogsTransformer_parsePostgresWithSource(t *testing.T) {
 				Config: testAccTransformerConfig_parsePostgresWithSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_postgres.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_postgres.0.source", "@message"),
@@ -913,9 +818,9 @@ func TestAccLogsTransformer_parsePostgresWithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -923,11 +828,9 @@ func TestAccLogsTransformer_parsePostgresWithSource(t *testing.T) {
 
 func TestAccLogsTransformer_parseRoute53(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -942,7 +845,6 @@ func TestAccLogsTransformer_parseRoute53(t *testing.T) {
 				Config: testAccTransformerConfig_parseRoute53(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_route53.#", "1"),
 				),
@@ -950,9 +852,9 @@ func TestAccLogsTransformer_parseRoute53(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -960,11 +862,9 @@ func TestAccLogsTransformer_parseRoute53(t *testing.T) {
 
 func TestAccLogsTransformer_parseRoute53WithSource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -979,7 +879,6 @@ func TestAccLogsTransformer_parseRoute53WithSource(t *testing.T) {
 				Config: testAccTransformerConfig_parseRoute53WithSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_route53.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_route53.0.source", "@message"),
@@ -988,9 +887,9 @@ func TestAccLogsTransformer_parseRoute53WithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -998,11 +897,9 @@ func TestAccLogsTransformer_parseRoute53WithSource(t *testing.T) {
 
 func TestAccLogsTransformer_parseToOCSF(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1017,7 +914,6 @@ func TestAccLogsTransformer_parseToOCSF(t *testing.T) {
 				Config: testAccTransformerConfig_parseToOCSF(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_to_ocsf.0.event_source", "CloudTrail"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_to_ocsf.0.ocsf_version", "V1.1"),
@@ -1027,9 +923,9 @@ func TestAccLogsTransformer_parseToOCSF(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -1037,11 +933,9 @@ func TestAccLogsTransformer_parseToOCSF(t *testing.T) {
 
 func TestAccLogsTransformer_parseToOCSFWithSource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1056,7 +950,6 @@ func TestAccLogsTransformer_parseToOCSFWithSource(t *testing.T) {
 				Config: testAccTransformerConfig_parseToOCSFWithSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_to_ocsf.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_to_ocsf.0.event_source", "Route53Resolver"),
@@ -1067,9 +960,9 @@ func TestAccLogsTransformer_parseToOCSFWithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -1077,11 +970,9 @@ func TestAccLogsTransformer_parseToOCSFWithSource(t *testing.T) {
 
 func TestAccLogsTransformer_parseVPC(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1096,7 +987,6 @@ func TestAccLogsTransformer_parseVPC(t *testing.T) {
 				Config: testAccTransformerConfig_parseVPC(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_vpc.#", "1"),
 				),
@@ -1104,9 +994,9 @@ func TestAccLogsTransformer_parseVPC(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -1114,11 +1004,9 @@ func TestAccLogsTransformer_parseVPC(t *testing.T) {
 
 func TestAccLogsTransformer_parseVPCWithSource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1133,7 +1021,6 @@ func TestAccLogsTransformer_parseVPCWithSource(t *testing.T) {
 				Config: testAccTransformerConfig_parseVPCWithSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_vpc.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_vpc.0.source", "@message"),
@@ -1142,9 +1029,9 @@ func TestAccLogsTransformer_parseVPCWithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -1152,11 +1039,9 @@ func TestAccLogsTransformer_parseVPCWithSource(t *testing.T) {
 
 func TestAccLogsTransformer_parseWAF(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1171,7 +1056,6 @@ func TestAccLogsTransformer_parseWAF(t *testing.T) {
 				Config: testAccTransformerConfig_parseWAF(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_waf.#", "1"),
 				),
@@ -1179,9 +1063,9 @@ func TestAccLogsTransformer_parseWAF(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -1189,11 +1073,9 @@ func TestAccLogsTransformer_parseWAF(t *testing.T) {
 
 func TestAccLogsTransformer_parseWAFWithSource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1208,7 +1090,6 @@ func TestAccLogsTransformer_parseWAFWithSource(t *testing.T) {
 				Config: testAccTransformerConfig_parseWAFWithSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_waf.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_waf.0.source", "@message"),
@@ -1217,9 +1098,9 @@ func TestAccLogsTransformer_parseWAFWithSource(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -1227,11 +1108,9 @@ func TestAccLogsTransformer_parseWAFWithSource(t *testing.T) {
 
 func TestAccLogsTransformer_renameKeys(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1246,7 +1125,6 @@ func TestAccLogsTransformer_renameKeys(t *testing.T) {
 				Config: testAccTransformerConfig_renameKeys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.rename_keys.#", "1"),
@@ -1262,9 +1140,9 @@ func TestAccLogsTransformer_renameKeys(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -1272,11 +1150,9 @@ func TestAccLogsTransformer_renameKeys(t *testing.T) {
 
 func TestAccLogsTransformer_splitString(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1291,7 +1167,6 @@ func TestAccLogsTransformer_splitString(t *testing.T) {
 				Config: testAccTransformerConfig_splitString(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.split_string.#", "1"),
@@ -1303,9 +1178,9 @@ func TestAccLogsTransformer_splitString(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -1313,11 +1188,9 @@ func TestAccLogsTransformer_splitString(t *testing.T) {
 
 func TestAccLogsTransformer_substituteString(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1332,7 +1205,6 @@ func TestAccLogsTransformer_substituteString(t *testing.T) {
 				Config: testAccTransformerConfig_substituteString(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.substitute_string.#", "1"),
@@ -1345,9 +1217,9 @@ func TestAccLogsTransformer_substituteString(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -1355,11 +1227,9 @@ func TestAccLogsTransformer_substituteString(t *testing.T) {
 
 func TestAccLogsTransformer_trimString(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1374,7 +1244,6 @@ func TestAccLogsTransformer_trimString(t *testing.T) {
 				Config: testAccTransformerConfig_trimString(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.trim_string.#", "1"),
@@ -1386,9 +1255,9 @@ func TestAccLogsTransformer_trimString(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -1396,11 +1265,9 @@ func TestAccLogsTransformer_trimString(t *testing.T) {
 
 func TestAccLogsTransformer_typeConverter(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1415,7 +1282,6 @@ func TestAccLogsTransformer_typeConverter(t *testing.T) {
 				Config: testAccTransformerConfig_typeConverter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.type_converter.#", "1"),
@@ -1427,9 +1293,9 @@ func TestAccLogsTransformer_typeConverter(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -1437,11 +1303,9 @@ func TestAccLogsTransformer_typeConverter(t *testing.T) {
 
 func TestAccLogsTransformer_upperCaseString(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var transformer cloudwatchlogs.GetTransformerOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_transformer.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -1456,7 +1320,6 @@ func TestAccLogsTransformer_upperCaseString(t *testing.T) {
 				Config: testAccTransformerConfig_upperCaseString(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransformerExists(ctx, t, resourceName, &transformer),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_identifier", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.0.parse_json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "transformer_config.1.upper_case_string.#", "1"),
@@ -1468,9 +1331,9 @@ func TestAccLogsTransformer_upperCaseString(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_identifier"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "log_group_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "log_group_identifier",
+				ImportStateVerifyIdentifierAttribute: "log_group_arn",
 			},
 		},
 	})
@@ -1485,7 +1348,7 @@ func testAccCheckTransformerDestroy(ctx context.Context, t *testing.T) resource.
 				continue
 			}
 
-			_, err := tflogs.FindTransformerByLogGroupIdentifier(ctx, conn, rs.Primary.Attributes["log_group_identifier"])
+			_, err := tflogs.FindTransformerByLogGroupIdentifier(ctx, conn, rs.Primary.Attributes["log_group_arn"])
 
 			if retry.NotFound(err) {
 				continue
@@ -1495,7 +1358,7 @@ func testAccCheckTransformerDestroy(ctx context.Context, t *testing.T) resource.
 				return err
 			}
 
-			return fmt.Errorf("CloudWatch Logs Transformer still exists: %s", rs.Primary.Attributes["log_group_identifier"])
+			return fmt.Errorf("CloudWatch Logs Transformer still exists: %s", rs.Primary.Attributes["log_group_arn"])
 		}
 
 		return nil
@@ -1511,7 +1374,7 @@ func testAccCheckTransformerExists(ctx context.Context, t *testing.T, n string, 
 
 		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
-		output, err := tflogs.FindTransformerByLogGroupIdentifier(ctx, conn, rs.Primary.Attributes["log_group_identifier"])
+		output, err := tflogs.FindTransformerByLogGroupIdentifier(ctx, conn, rs.Primary.Attributes["log_group_arn"])
 
 		if err != nil {
 			return err
@@ -1526,23 +1389,7 @@ func testAccCheckTransformerExists(ctx context.Context, t *testing.T, n string, 
 func testAccTransformerConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
-
-  transformer_config {
-    parse_json {}
-  }
-}
-
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-`, rName)
-}
-
-func testAccTransformerConfig_logGroupIdentifierARN(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.arn
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -1558,7 +1405,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_addKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -1588,7 +1435,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_copyValue(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -1618,7 +1465,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_csv(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     csv {}
@@ -1643,7 +1490,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_dateTimeConverter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -1679,7 +1526,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_deleteKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -1701,7 +1548,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_grok(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     grok {
@@ -1719,7 +1566,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_grokWithSource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     grok {
@@ -1738,7 +1585,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_listToMap(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -1772,7 +1619,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_lowerCaseString(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -1794,7 +1641,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_moveKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -1824,7 +1671,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parseCloudFront(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_cloudfront {}
@@ -1840,7 +1687,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parseCloudFrontWithSource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_cloudfront {
@@ -1858,7 +1705,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parseJSON(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -1881,7 +1728,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parseKeyValue(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_key_value {}
@@ -1909,7 +1756,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parsePostgres(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_postgres {}
@@ -1925,7 +1772,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parsePostgresWithSource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_postgres {
@@ -1943,7 +1790,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parseRoute53(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_route53 {}
@@ -1959,7 +1806,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parseRoute53WithSource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_route53 {
@@ -1977,7 +1824,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parseToOCSF(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_to_ocsf {
@@ -1996,7 +1843,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parseToOCSFWithSource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_to_ocsf {
@@ -2016,7 +1863,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parseVPC(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_vpc {}
@@ -2032,7 +1879,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parseVPCWithSource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_vpc {
@@ -2050,7 +1897,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parseWAF(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_waf {}
@@ -2066,7 +1913,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_parseWAFWithSource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_waf {
@@ -2084,7 +1931,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_renameKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -2114,7 +1961,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_splitString(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -2139,7 +1986,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_substituteString(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -2165,7 +2012,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_trimString(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -2187,7 +2034,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_typeConverter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
@@ -2212,7 +2059,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccTransformerConfig_upperCaseString(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_transformer" "test" {
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}

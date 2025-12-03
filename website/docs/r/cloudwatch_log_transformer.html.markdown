@@ -16,7 +16,7 @@ Terraform resource for managing an AWS CloudWatch Logs Transformer.
 
 ```terraform
 resource "aws_cloudwatch_log_transformer" "example" {
-  log_group_identifier = aws_cloudwatch_log_group.example.name
+  log_group_arn = aws_cloudwatch_log_group.example.arn
   transformer_config {
     parse_json {}
   }
@@ -32,7 +32,7 @@ resource "aws_cloudwatch_log_group" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `log_group_name` - (Required) Log group name or ARN to set the transformer for.
+* `log_group_arn` - (Required) Log group ARN to set the transformer for.
 * `transformer_config` - (Required) Specifies the configuration of the transformer. You must include at least one configuration, and 20 at most. See [`transformer_config`](#transformer_config-block) below for details.
 
 ### `transformer_config` Block
@@ -305,17 +305,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Transformer using the `log_group_identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Transformer using the `log_group_arn`. For example:
 
 ```terraform
 import {
   to = aws_cloudwatch_log_transformer.example
-  id = "/aws/log/group/name"
+  id = "arn:aws:logs:us-west-2:123456789012:log-group:example"
 }
 ```
 
-Using `terraform import`, import CloudWatch Logs Transformer using the `log_group_identifier`. For example:
+Using `terraform import`, import CloudWatch Logs Transformer using the `log_group_arn`. For example:
 
 ```console
-% terraform import aws_cloudwatch_log_transformer.example /aws/log/group/name
+% terraform import aws_cloudwatch_log_transformer.example arn:aws:logs:us-west-2:123456789012:log-group:example
 ```
