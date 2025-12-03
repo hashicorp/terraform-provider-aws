@@ -194,6 +194,13 @@ func resourceDirectory() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tenancy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.Tenancy](),
+			},
 			"user_identity_type": {
 				Type:             schema.TypeString,
 				Computed:         true,
@@ -304,12 +311,6 @@ func resourceDirectory() *schema.Resource {
 				ForceNew:         true,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.WorkspaceType](),
-			},
-			"tenancy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.Tenancy](),
 			},
 		},
 		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
