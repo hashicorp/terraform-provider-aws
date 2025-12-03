@@ -145,6 +145,10 @@ func dataSourceDirectory() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tenancy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"user_identity_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -230,10 +234,6 @@ func dataSourceDirectory() *schema.Resource {
 				Computed: true,
 			},
 			"workspace_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tenancy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
