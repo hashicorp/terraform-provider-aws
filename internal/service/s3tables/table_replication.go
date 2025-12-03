@@ -140,7 +140,7 @@ func (r *tableReplicationResource) Read(ctx context.Context, request resource.Re
 	tableARN := fwflex.StringValueFromFramework(ctx, data.TableARN)
 	output, err := findTableReplicationByARN(ctx, conn, tableARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 

@@ -140,7 +140,7 @@ func (r *tableBucketReplicationResource) Read(ctx context.Context, request resou
 	tableBucketARN := fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	output, err := findTableBucketReplicationByARN(ctx, conn, tableBucketARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
