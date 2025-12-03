@@ -33,6 +33,14 @@ func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
 	}
 }
 
+func TestEmptyResultErrorErrorsIs(t *testing.T) {
+	t.Parallel()
+
+	if !errors.Is(&emptyResultError{}, ErrEmptyResult) {
+		t.Error("Expected `errors.Is` to match EmptyResultError")
+	}
+}
+
 func TestEmptyResultErrorIs(t *testing.T) {
 	t.Parallel()
 
@@ -51,7 +59,7 @@ func TestEmptyResultErrorIs(t *testing.T) {
 		},
 		{
 			name: "EmptyResultError with LastRequest",
-			err: &EmptyResultError{
+			err: &emptyResultError{
 				LastRequest: 123,
 			},
 			expected: true,
@@ -67,7 +75,7 @@ func TestEmptyResultErrorIs(t *testing.T) {
 		},
 		{
 			name: "wrapped EmptyResultError with LastRequest",
-			err: fmt.Errorf("test: %w", &EmptyResultError{
+			err: fmt.Errorf("test: %w", &emptyResultError{
 				LastRequest: 123,
 			}),
 			expected: true,
@@ -83,7 +91,7 @@ func TestEmptyResultErrorIs(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := &EmptyResultError{}
+			err := &emptyResultError{}
 			ok := errors.Is(testCase.err, err)
 			if ok != testCase.expected {
 				t.Errorf("got %t, expected %t", ok, testCase.expected)

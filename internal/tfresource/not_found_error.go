@@ -14,28 +14,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
-type EmptyResultError struct {
+type emptyResultError struct {
 	LastRequest any
 }
 
-var ErrEmptyResult = &EmptyResultError{}
+var ErrEmptyResult = &emptyResultError{}
 
 func NewEmptyResultError(lastRequest any) error {
-	return &EmptyResultError{
+	return &emptyResultError{
 		LastRequest: lastRequest,
 	}
 }
 
-func (e *EmptyResultError) Error() string {
+func (e *emptyResultError) Error() string {
 	return "empty result"
 }
 
-func (e *EmptyResultError) Is(err error) bool {
-	_, ok := err.(*EmptyResultError)
+func (e *emptyResultError) Is(err error) bool {
+	_, ok := err.(*emptyResultError)
 	return ok
 }
 
-func (e *EmptyResultError) As(target any) bool {
+func (e *emptyResultError) As(target any) bool {
 	t, ok := target.(**sdkretry.NotFoundError)
 	if !ok {
 		return false
