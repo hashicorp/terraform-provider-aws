@@ -275,7 +275,7 @@ func testAccCheckVectorBucketDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfs3vectors.FindVectorBucketByARN(ctx, conn, rs.Primary.Attributes["vector_bucket_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

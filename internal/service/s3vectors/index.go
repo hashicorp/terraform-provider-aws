@@ -188,7 +188,7 @@ func (r *indexResource) Read(ctx context.Context, request resource.ReadRequest, 
 	arn := fwflex.StringValueFromFramework(ctx, data.IndexARN)
 	output, err := findIndexByARN(ctx, conn, arn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 

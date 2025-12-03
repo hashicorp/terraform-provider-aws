@@ -280,7 +280,7 @@ func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfs3vectors.FindIndexByARN(ctx, conn, rs.Primary.Attributes["index_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
