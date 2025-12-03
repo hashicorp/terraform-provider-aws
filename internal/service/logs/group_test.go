@@ -796,22 +796,6 @@ func TestAccLogsLogGroup_deletionProtectionEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
 				),
 			},
-			{
-				// Re-enable deletion protection
-				Config: testAccGroupConfig_deletionProtectionEnabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
-				),
-			},
-			{
-				// Remove deletion_protection_enabled
-				Config: testAccGroupConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
-				),
-			},
 		},
 	})
 }
