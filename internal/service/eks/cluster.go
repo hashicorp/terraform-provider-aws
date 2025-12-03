@@ -1044,7 +1044,7 @@ func updateClusterVPCConfig(ctx context.Context, conn *eks.Client, name string, 
 	return nil
 }
 
-func findUpdateByTwoPartKey(ctx context.Context, conn *eks.Client, name, id string) (*types.Update, error) {
+func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.Client, name, id string) (*types.Update, error) {
 	input := eks.DescribeUpdateInput{
 		Name:     aws.String(name),
 		UpdateId: aws.String(id),
@@ -1092,7 +1092,7 @@ func statusCluster(ctx context.Context, conn *eks.Client, name string) retry.Sta
 
 func statusUpdate(ctx context.Context, conn *eks.Client, name, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findUpdateByTwoPartKey(ctx, conn, name, id)
+		output, err := findClusterUpdateByTwoPartKey(ctx, conn, name, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
