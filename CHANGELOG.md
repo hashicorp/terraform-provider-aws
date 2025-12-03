@@ -1,5 +1,30 @@
 ## 6.25.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_cloudwatch_log_transformer` ([#44300](https://github.com/hashicorp/terraform-provider-aws/issues/44300))
+* **New Resource:** `aws_eks_capability` ([#45326](https://github.com/hashicorp/terraform-provider-aws/issues/45326))
+
+ENHANCEMENTS:
+
+* data-source/aws_cloudwatch_log_group: Add `deletion_protection_enabled` attribute ([#45298](https://github.com/hashicorp/terraform-provider-aws/issues/45298))
+* data-source/aws_ec2_transit_gateway: Add `encryption_support` attribute ([#45317](https://github.com/hashicorp/terraform-provider-aws/issues/45317))
+* data-source/aws_lambda_function: Add `durable_config` attribute ([#45359](https://github.com/hashicorp/terraform-provider-aws/issues/45359))
+* data-source/aws_lb: Add `health_check_logs` attribute ([#45269](https://github.com/hashicorp/terraform-provider-aws/issues/45269))
+* data-source/aws_lb_target_group: Add `target_control_port` attribute ([#45270](https://github.com/hashicorp/terraform-provider-aws/issues/45270))
+* data-source/aws_route53_zone: Add `enable_accelerated_recovery` attribute ([#45302](https://github.com/hashicorp/terraform-provider-aws/issues/45302))
+* data-source/aws_workspaces_directory: Add `tenancy` attribute ([#43134](https://github.com/hashicorp/terraform-provider-aws/issues/43134))
+* resource/aws_api_gateway_integration: Add `response_transfer_mode` argument ([#45329](https://github.com/hashicorp/terraform-provider-aws/issues/45329))
+* resource/aws_athena_workgroup: Add `configuration.managed_query_results_configuration` block ([#44273](https://github.com/hashicorp/terraform-provider-aws/issues/44273))
+* resource/aws_cloudwatch_log_group: Add `deletion_protection_enabled` argument ([#45298](https://github.com/hashicorp/terraform-provider-aws/issues/45298))
+* resource/aws_ec2_transit_gateway: Add `encryption_support` argument ([#45317](https://github.com/hashicorp/terraform-provider-aws/issues/45317))
+* resource/aws_flow_log: Add `regional_nat_gateway_id` argument ([#45380](https://github.com/hashicorp/terraform-provider-aws/issues/45380))
+* resource/aws_lambda_function: Add `durable_config` argument ([#45359](https://github.com/hashicorp/terraform-provider-aws/issues/45359))
+* resource/aws_lb: Add `health_check_logs` configuration block ([#45269](https://github.com/hashicorp/terraform-provider-aws/issues/45269))
+* resource/aws_lb_target_group: Add `target_control_port` argument to support the ALB Target Optimizer ([#45270](https://github.com/hashicorp/terraform-provider-aws/issues/45270))
+* resource/aws_route53_zone: Add `enable_accelerated_recovery` argument ([#45302](https://github.com/hashicorp/terraform-provider-aws/issues/45302))
+* resource/aws_workspaces_directory: Add `tenancy` argument ([#43134](https://github.com/hashicorp/terraform-provider-aws/issues/43134))
+
 ## 6.24.0 (December 2, 2025)
 
 FEATURES:
