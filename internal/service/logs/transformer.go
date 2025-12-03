@@ -939,7 +939,7 @@ func findTransformer(ctx context.Context, conn *cloudwatchlogs.Client, input *cl
 
 type transformerResourceModel struct {
 	framework.WithRegionModel
-	LogGroupIdentifier fwtypes.ARN                                     `tfsdk:"log_group_arn"`
+	LogGroupIdentifier fwtypes.ARN                                     `tfsdk:"log_group_arn" autoflex:",noflatten"`
 	TransformerConfig  fwtypes.ListNestedObjectValueOf[processorModel] `tfsdk:"transformer_config"`
 }
 
