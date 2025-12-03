@@ -243,6 +243,7 @@ provider "aws" {
 |Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|
 |MQ|`mq`|`AWS_ENDPOINT_URL_MQ`|`mq`|
 |MWAA (Managed Workflows for Apache Airflow)|`mwaa`|`AWS_ENDPOINT_URL_MWAA`|`mwaa`|
+|MWAA (Managed Workflows for Apache Airflow) Serverless|`mwaaserverless`|`AWS_ENDPOINT_URL_MWAA_SERVERLESS`|`mwaa_serverless`|
 |Neptune|`neptune`|`AWS_ENDPOINT_URL_NEPTUNE`|`neptune`|
 |Neptune Analytics|`neptunegraph`|`AWS_ENDPOINT_URL_NEPTUNE_GRAPH`|`neptune_graph`|
 |Network Firewall|`networkfirewall`|`AWS_ENDPOINT_URL_NETWORK_FIREWALL`|`network_firewall`|

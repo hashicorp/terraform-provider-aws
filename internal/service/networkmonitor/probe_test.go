@@ -63,7 +63,7 @@ func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
 				),
 			},
@@ -95,7 +95,7 @@ func TestAccNetworkMonitorProbe_disappears(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
 				),
 			},
@@ -152,7 +152,7 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
 				),
 			},

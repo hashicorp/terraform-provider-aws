@@ -8,6 +8,7 @@ var (
 	ResourceAccessEntry             = resourceAccessEntry
 	ResourceAccessPolicyAssociation = resourceAccessPolicyAssociation
 	ResourceAddon                   = resourceAddon
+	ResourceCapability              = newCapabilityResource
 	ResourceCluster                 = resourceCluster
 	ResourceFargateProfile          = resourceFargateProfile
 	ResourceIdentityProviderConfig  = resourceIdentityProviderConfig
@@ -18,6 +19,7 @@ var (
 	FindAccessEntryByTwoPartKey                = findAccessEntryByTwoPartKey
 	FindAccessPolicyAssociationByThreePartKey  = findAccessPolicyAssociationByThreePartKey
 	FindAddonByTwoPartKey                      = findAddonByTwoPartKey
+	FindCapabilityByTwoPartKey                 = findCapabilityByTwoPartKey
 	FindClusterByName                          = findClusterByName
 	FindFargateProfileByTwoPartKey             = findFargateProfileByTwoPartKey
 	FindNodegroupByTwoPartKey                  = findNodegroupByTwoPartKey

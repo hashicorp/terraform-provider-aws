@@ -26,6 +26,9 @@ import (
 // @SDKResource("aws_config_aggregate_authorization", name="Aggregate Authorization")
 // @Tags(identifierAttribute="arn")
 // @Region(overrideEnabled=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.AggregationAuthorization")
+// @Testing(generator=false)
+// @Testing(serialize=true)
 func resourceAggregateAuthorization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAggregateAuthorizationCreate,

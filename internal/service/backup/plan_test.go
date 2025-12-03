@@ -705,6 +705,35 @@ func TestAccBackupPlan_scheduleExpressionTimezone(t *testing.T) {
 	})
 }
 
+func TestAccBackupPlan_targetLogicallyAirGappedVaultARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan backup.GetBackupPlanOutput
+	resourceName := "aws_backup_plan.test"
+	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_targetLogicallyAirGappedVaultARN(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.target_logically_air_gapped_backup_vault_arn", "aws_backup_logically_air_gapped_vault.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
@@ -1208,4 +1237,32 @@ resource "aws_backup_plan" "test" {
   }
 }
 `, rName, scheduleExpressionTimezone)
+}
+
+func testAccPlanConfig_targetLogicallyAirGappedVaultARN(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_logically_air_gapped_vault" "test" {
+  name               = "%[1]s-lav"
+  max_retention_days = 10
+  min_retention_days = 7
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name                                    = %[1]q
+    target_vault_name                            = aws_backup_vault.test.name
+    target_logically_air_gapped_backup_vault_arn = aws_backup_logically_air_gapped_vault.test.arn
+    schedule                                     = "cron(0 12 * * ? *)"
+    lifecycle {
+      delete_after = 10
+    }
+  }
+}
+`, rName)
 }

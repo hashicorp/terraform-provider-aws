@@ -1013,7 +1013,7 @@ func TestAccVPCRouteTable_localRoute(t *testing.T) {
 			{
 				Config: testAccVPCRouteTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 				),
@@ -1054,7 +1054,7 @@ func TestAccVPCRouteTable_localRouteAdoptUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteTableConfig_ipv4NetworkInterfaceToLocal(rName, vpcCIDR, localGatewayCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
@@ -1066,7 +1066,7 @@ func TestAccVPCRouteTable_localRouteAdoptUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, vpcCIDR, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
@@ -1075,7 +1075,7 @@ func TestAccVPCRouteTable_localRouteAdoptUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteTableConfig_ipv4NetworkInterfaceToLocal(rName, vpcCIDR, localGatewayCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
@@ -1117,7 +1117,7 @@ func TestAccVPCRouteTable_localRouteImportUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteConfig_ipv4NoRoute(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 				),
@@ -1139,7 +1139,7 @@ func TestAccVPCRouteTable_localRouteImportUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteConfig_ipv4LocalToNetworkInterface(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					resource.TestCheckResourceAttr(rteResourceName, "gateway_id", ""),
@@ -1149,7 +1149,7 @@ func TestAccVPCRouteTable_localRouteImportUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, vpcCIDR, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
@@ -1158,7 +1158,7 @@ func TestAccVPCRouteTable_localRouteImportUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteTableConfig_ipv4NetworkInterfaceToLocal(rName, vpcCIDR, localGatewayCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
@@ -1170,7 +1170,7 @@ func TestAccVPCRouteTable_localRouteImportUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, vpcCIDR, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),

@@ -143,6 +143,22 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"control_plane_scaling_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tier": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.ProvisionedControlPlaneTier](),
+						},
+					},
+				},
+			},
 			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -510,6 +526,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.AccessConfig = expandCreateAccessConfigRequest(v.([]any))
 	}
 
+	if v, ok := d.GetOk("control_plane_scaling_config"); ok {
+		input.ControlPlaneScalingConfig = expandControlPlaneScalingConfig(v.([]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
 		input.DeletionProtection = aws.Bool(v.(bool))
 	}
@@ -618,6 +638,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	if err := d.Set("compute_config", flattenComputeConfigResponse(cluster.ComputeConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
+	}
+	if err := d.Set("control_plane_scaling_config", flattenControlPlaneScalingConfig(cluster.ControlPlaneScalingConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting control_plane_scaling_config: %s", err)
 	}
 	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrDeletionProtection, cluster.DeletionProtection)
@@ -739,6 +762,25 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
+	if d.HasChange("control_plane_scaling_config") {
+		input := eks.UpdateClusterConfigInput{
+			ControlPlaneScalingConfig: expandControlPlaneScalingConfig(d.Get("control_plane_scaling_config").([]any)),
+			Name:                      aws.String(d.Id()),
+		}
+
+		output, err := conn.UpdateClusterConfig(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) control plane scaling config: %s", d.Id(), err)
+		}
+
+		updateID := aws.ToString(output.Update.Id)
+
+		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) control plane scaling config update (%s): %s", d.Id(), updateID, err)
+		}
+	}
+
 	if d.HasChange(names.AttrDeletionProtection) {
 		if err := updateClusterDeletionProtection(ctx, conn, d.Id(), d.Get(names.AttrDeletionProtection).(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -761,7 +803,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			updateID := aws.ToString(output.Update.Id)
 
 			if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) encryption config association (%s): %s", d.Id(), updateID, err)
+				return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) encryption config update (%s): %s", d.Id(), updateID, err)
 			}
 		}
 	}
@@ -1002,7 +1044,7 @@ func updateClusterVPCConfig(ctx context.Context, conn *eks.Client, name string, 
 	return nil
 }
 
-func findUpdateByTwoPartKey(ctx context.Context, conn *eks.Client, name, id string) (*types.Update, error) {
+func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.Client, name, id string) (*types.Update, error) {
 	input := eks.DescribeUpdateInput{
 		Name:     aws.String(name),
 		UpdateId: aws.String(id),
@@ -1050,7 +1092,7 @@ func statusCluster(ctx context.Context, conn *eks.Client, name string) retry.Sta
 
 func statusUpdate(ctx context.Context, conn *eks.Client, name, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findUpdateByTwoPartKey(ctx, conn, name, id)
+		output, err := findClusterUpdateByTwoPartKey(ctx, conn, name, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1192,6 +1234,25 @@ func expandComputeConfigRequest(tfList []any) *types.ComputeConfigRequest {
 
 	if v, ok := tfMap["node_role_arn"].(string); ok && v != "" {
 		apiObject.NodeRoleArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandControlPlaneScalingConfig(tfList []any) *types.ControlPlaneScalingConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ControlPlaneScalingConfig{}
+
+	if v, ok := tfMap["tier"].(string); ok && v != "" {
+		apiObject.Tier = types.ProvisionedControlPlaneTier(v)
 	}
 
 	return apiObject
@@ -1583,6 +1644,18 @@ func flattenComputeConfigResponse(apiObject *types.ComputeConfigResponse) []map[
 	}
 
 	return []map[string]any{tfMap}
+}
+
+func flattenControlPlaneScalingConfig(apiObject *types.ControlPlaneScalingConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"tier": apiObject.Tier,
+	}
+
+	return []any{tfMap}
 }
 
 func flattenIdentity(apiObject *types.Identity) []map[string]any {

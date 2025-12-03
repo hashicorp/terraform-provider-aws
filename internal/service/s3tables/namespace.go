@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -236,9 +237,9 @@ type namespaceResourceModel struct {
 
 var namespaceNameValidator = []validator.String{
 	stringvalidator.LengthBetween(1, 255),
-	stringMustContainLowerCaseLettersNumbersUnderscores,
-	stringMustStartWithLetterOrNumber,
-	stringMustEndWithLetterOrNumber,
+	tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersUnderscores,
+	tfstringvalidator.StartsWithLetterOrNumber,
+	tfstringvalidator.EndsWithLetterOrNumber,
 }
 
 type namespaceIdentifier struct {
