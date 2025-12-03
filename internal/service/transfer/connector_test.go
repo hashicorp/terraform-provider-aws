@@ -292,10 +292,6 @@ func testAccCheckConnectorExists(ctx context.Context, n string, v *awstypes.Desc
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Transfer Connector ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		output, err := tftransfer.FindConnectorByID(ctx, conn, rs.Primary.ID)
@@ -497,7 +493,7 @@ resource "aws_transfer_connector" "test" {
 }
 
 func testAccConnectorConfig_egressConfigBase(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = <<EOF
@@ -537,28 +533,10 @@ resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_vpclattice_resource_gateway" "test" {
   name       = %[1]q
   vpc_id     = aws_vpc.test.id
-  subnet_ids = [aws_subnet.test.id]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_vpclattice_resource_configuration" "test" {
