@@ -36,17 +36,17 @@ func (e *emptyResultError) Is(err error) bool {
 }
 
 func (e *emptyResultError) As(target any) bool {
-	t, ok := target.(**sdkretry.NotFoundError)
-	if !ok {
+	switch v := target.(type) {
+	case **sdkretry.NotFoundError:
+		*v = &sdkretry.NotFoundError{
+			Message:     e.Error(),
+			LastRequest: e.LastRequest,
+		}
+		return true
+
+	default:
 		return false
 	}
-
-	*t = &sdkretry.NotFoundError{
-		Message:     e.Error(),
-		LastRequest: e.LastRequest,
-	}
-
-	return true
 }
 
 type TooManyResultsError struct {
