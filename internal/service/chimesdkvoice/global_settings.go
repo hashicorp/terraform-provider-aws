@@ -79,8 +79,7 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 		return nil
 	})
 
-	var ere *tfresource.EmptyResultError
-	if !d.IsNewResource() && errors.As(err, &ere) {
+	if !d.IsNewResource() && errors.Is(err, tfresource.ErrEmptyResult) {
 		log.Printf("[WARN] ChimeSDKVoice GlobalSettings (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

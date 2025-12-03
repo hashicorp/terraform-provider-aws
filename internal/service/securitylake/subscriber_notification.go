@@ -292,7 +292,7 @@ func findSubscriberNotificationBySubscriberID(ctx context.Context, conn *securit
 	}
 
 	if output == nil || output.SubscriberEndpoint == nil {
-		return nil, &tfresource.EmptyResultError{}
+		return nil, tfresource.NewEmptyResultError(nil)
 	}
 
 	return output, nil
