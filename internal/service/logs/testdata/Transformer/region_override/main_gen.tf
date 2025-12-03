@@ -4,7 +4,7 @@
 resource "aws_cloudwatch_log_transformer" "test" {
   region = var.region
 
-  log_group_identifier = aws_cloudwatch_log_group.test.name
+  log_group_arn = aws_cloudwatch_log_group.test.arn
 
   transformer_config {
     parse_json {}
