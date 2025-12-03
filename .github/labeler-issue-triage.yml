@@ -79,6 +79,8 @@ service/appsync:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appsync_'
 service/arcregionswitch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_arcregionswitch_'
+service/arczonalshift:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_arczonalshift'
 service/athena:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_athena_'
 service/auditmanager:
