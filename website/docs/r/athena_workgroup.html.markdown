@@ -87,6 +87,7 @@ This resource supports the following arguments:
 * `encryption_configuration` - (Optional) Configuration block for the encryption configuration. See [Managed Query Results Encryption Configuration](#managed-query-results-encryption-configuration) below.
 
 ##### Managed Query Results Encryption Configuration
+
 * `kms_key` - (Optional) KMS key ARN for encrypting managed query results.
 
 ## Attribute Reference
