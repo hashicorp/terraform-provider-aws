@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.38.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.38.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.33.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/appconfig v1.43.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/appconfig v1.43.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.16.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.51.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.37.1 // indirect
@@ -47,7 +47,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.52.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.52.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.2.16 // indirect
+	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.2.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/athena v1.56.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.62.2 // indirect
@@ -197,11 +197,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.43.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.59.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.11.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.11.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.41.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.13.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.7.13 // indirect
-	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.16 // indirect
+	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/odb v1.6.2 // indirect
