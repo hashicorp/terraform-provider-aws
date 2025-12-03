@@ -34,13 +34,26 @@ resource "aws_glue_catalog_database" "example" {
 }
 ```
 
+### Enable Lake Formation Permissions Only
+
+To enable Lake Formation permissions only (removing default IAM permissions), declare an empty `create_table_default_permission` block:
+
+```terraform
+resource "aws_glue_catalog_database" "example" {
+  name = "MyCatalogDatabase"
+
+  create_table_default_permission {
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Optional) ID of the Glue Catalog to create the database in. If omitted, this defaults to the AWS Account ID.
-* `create_table_default_permission` - (Optional) Creates a set of default permissions on the table for principals. See [`create_table_default_permission`](#create_table_default_permission) below.
+* `create_table_default_permission` - (Optional) Creates a set of default permissions on the table for principals. See [`create_table_default_permission`](#create_table_default_permission) below. When this block is present but empty, it enables Lake Formation permissions only by removing default IAM permissions. When this block is absent entirely, default permissions (IAMAllowedPrincipals group) are used.
 * `description` - (Optional) Description of the database.
 * `federated_database` - (Optional) Configuration block that references an entity outside the AWS Glue Data Catalog. See [`federated_database`](#federated_database) below.
 * `location_uri` - (Optional) Location of the database (for example, an HDFS path).

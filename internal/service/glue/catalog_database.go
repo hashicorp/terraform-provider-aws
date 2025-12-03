@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -40,6 +41,35 @@ func resourceCatalogDatabase() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+				// Handle the case where create_table_default_permission is configured as an empty block
+				// This is needed to enable Lake Formation-only permissions
+				old, new := diff.GetChange("create_table_default_permission")
+
+				// Check if we have an empty block in the new configuration
+				if new != nil {
+					if newList, ok := new.([]any); ok && len(newList) == 1 {
+						if newBlock, ok := newList[0].(map[string]any); ok {
+							if isEmptyPermissionBlock(newBlock) {
+								// This is an empty block, we need to ensure it's preserved in state
+								// even when AWS returns no permissions
+								return nil
+							}
+						}
+					}
+				}
+
+				// Check if we're removing the block entirely
+				if old != nil && len(old.([]any)) > 0 && (new == nil || len(new.([]any)) == 0) {
+					// Block was removed, this should trigger an update
+					return nil
+				}
+
+				return nil
+			},
+		),
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -182,7 +212,7 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 		dbInput.TargetDatabase = expandDatabaseTargetDatabase(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]any)) > 0 {
+	if v, ok := d.GetOk("create_table_default_permission"); ok {
 		dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]any))
 	}
 
@@ -295,8 +325,18 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 			dbInput.FederatedDatabase = expandDatabaseFederatedDatabase(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]any)) > 0 {
-			dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]any))
+		if d.HasChange("create_table_default_permission") {
+			// Check if the field is configured (even if empty) vs not configured at all
+			if raw := d.GetRawConfig().GetAttr("create_table_default_permission"); !raw.IsNull() {
+				// Field is configured (could be empty block or with values)
+				if v, ok := d.GetOk("create_table_default_permission"); ok {
+					dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]any))
+				} else {
+					// Empty configuration, send empty array
+					dbInput.CreateTableDefaultPermissions = []awstypes.PrincipalPermissions{}
+				}
+			}
+			// If raw.IsNull(), the field was removed entirely, so we don't set it
 		}
 
 		dbUpdateInput.DatabaseInput = dbInput
@@ -453,25 +493,43 @@ func flattenDatabaseTargetDatabase(apiObject *awstypes.DatabaseIdentifier) map[s
 }
 
 func expandDatabasePrincipalPermissions(tfList []any) []awstypes.PrincipalPermissions {
-	if len(tfList) == 0 {
+	// Always return an empty slice when tfList is not nil, even if it's empty
+	// This handles the case where an empty block {} is specified in config
+	if tfList == nil {
 		return nil
 	}
 
-	var apiObjects []awstypes.PrincipalPermissions
+	apiObjects := make([]awstypes.PrincipalPermissions, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
-
 		if !ok {
 			continue
 		}
 
-		apiObject := expandDatabasePrincipalPermission(tfMap)
+		// Skip empty blocks (no permissions and no principal)
+		if isEmptyPermissionBlock(tfMap) {
+			continue
+		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandDatabasePrincipalPermission(tfMap))
 	}
 
 	return apiObjects
+}
+
+func isEmptyPermissionBlock(tfMap map[string]any) bool {
+	hasPermissions := false
+	if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok && v.Len() > 0 {
+		hasPermissions = true
+	}
+
+	hasPrincipal := false
+	if v, ok := tfMap[names.AttrPrincipal].([]any); ok && len(v) > 0 && v[0] != nil {
+		hasPrincipal = true
+	}
+
+	return !hasPermissions && !hasPrincipal
 }
 
 func expandDatabasePrincipalPermission(tfMap map[string]any) awstypes.PrincipalPermissions {
@@ -504,7 +562,12 @@ func expandDatabasePrincipal(tfMap map[string]any) *awstypes.DataLakePrincipal {
 
 func flattenDatabasePrincipalPermissions(apiObjects []awstypes.PrincipalPermissions) []any {
 	if len(apiObjects) == 0 {
-		return nil
+		// When AWS returns an empty array, preserve it as an empty block
+		// This handles the Lake Formation-only permissions use case
+		return []any{map[string]any{
+			names.AttrPermissions: []any{},
+			names.AttrPrincipal:   []any{},
+		}}
 	}
 
 	var tfList []any
