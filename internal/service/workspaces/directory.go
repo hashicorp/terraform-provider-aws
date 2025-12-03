@@ -365,15 +365,17 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	directoryID := d.Get("directory_id").(string)
 	workspaceType := types.WorkspaceType(d.Get("workspace_type").(string))
-	tenancy := types.Tenancy(d.Get("tenancy").(string))
 	input := workspaces.RegisterWorkspaceDirectoryInput{
 		Tags:          getTagsIn(ctx),
-		Tenancy:       tenancy,
 		WorkspaceType: workspaceType,
 	}
 
 	if v, ok := d.GetOk(names.AttrSubnetIDs); ok {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("tenancy"); ok {
+		input.Tenancy = types.Tenancy(v.(string))
 	}
 
 	switch workspaceType {
