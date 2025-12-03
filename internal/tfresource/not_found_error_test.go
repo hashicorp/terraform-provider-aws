@@ -11,9 +11,10 @@ import (
 
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
+func TestEmptyResultErrorAsSdkNotFoundError(t *testing.T) {
 	t.Parallel()
 
 	lastRequest := 123
@@ -30,6 +31,23 @@ func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
 	}
 	if nfe.LastRequest != lastRequest {
 		t.Errorf("unexpected value for LastRequest")
+	}
+}
+
+func TestEmptyResultErrorAsRetryNotFoundError(t *testing.T) {
+	t.Parallel()
+
+	lastRequest := 123
+	err := NewEmptyResultError(lastRequest)
+
+	var nfe *retry.NotFoundError
+	ok := errors.As(err, &nfe)
+
+	if !ok {
+		t.Fatal("expected errors.As() to return true")
+	}
+	if nfe.Message != "empty result" {
+		t.Errorf(`expected Message to be "empty result", got %q`, nfe.Message)
 	}
 }
 

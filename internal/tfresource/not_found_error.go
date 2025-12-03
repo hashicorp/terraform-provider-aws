@@ -44,6 +44,12 @@ func (e *emptyResultError) As(target any) bool {
 		}
 		return true
 
+	case **retry.NotFoundError:
+		*v = &retry.NotFoundError{
+			Message: e.Error(),
+		}
+		return true
+
 	default:
 		return false
 	}
