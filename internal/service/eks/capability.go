@@ -260,6 +260,11 @@ func (r *capabilityResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
+	// Normalize.
+	if capability.Configuration != nil && capability.Configuration.ArgoCd == nil {
+		capability.Configuration = nil
+	}
+
 	// Set values for unknowns.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, capability, &data)...)
 	if response.Diagnostics.HasError() {
