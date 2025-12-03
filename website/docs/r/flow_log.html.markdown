@@ -316,23 +316,23 @@ resource "aws_kinesis_firehose_delivery_stream" "dst" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `traffic_type` - (Optional) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`. Required if `eni_id`, `regional_nat_gateway_id`, `subnet_id`, or `vpc_id` is specified.
 * `deliver_cross_account_role` - (Optional) ARN of the IAM role in the destination account used for cross-account delivery of flow logs.
+* `destination_options` - (Optional) Describes the destination options for a flow log. More details below.
 * `eni_id` - (Optional) Elastic Network Interface ID to attach to.
 * `iam_role_arn` - (Optional) ARN of the IAM role used to post flow logs. Corresponds to `DeliverLogsPermissionArn` in the [AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateFlowLogs.html).
 * `log_destination_type` - (Optional) Logging destination type. Valid values: `cloud-watch-logs`, `s3`, `kinesis-data-firehose`. Default: `cloud-watch-logs`.
 * `log_destination` - (Optional) ARN of the logging destination.
-* `regional_nat_gateway_id` - (Optional) Regional NAT Gateway ID to attach to.
-* `subnet_id` - (Optional) Subnet ID to attach to.
-* `transit_gateway_id` - (Optional) Transit Gateway ID to attach to.
-* `transit_gateway_attachment_id` - (Optional) Transit Gateway Attachment ID to attach to.
-* `vpc_id` - (Optional) VPC ID to attach to.
 * `log_format` - (Optional) The fields to include in the flow log record. Accepted format example: `"$${interface-id} $${srcaddr} $${dstaddr} $${srcport} $${dstport}"`.
 * `max_aggregation_interval` - (Optional) The maximum interval of time during which a flow of packets is captured and aggregated into a flow log record.
   Valid Values: `60` seconds (1 minute) or `600` seconds (10 minutes). Default: `600`.
   When `transit_gateway_id` or `transit_gateway_attachment_id` is specified, `max_aggregation_interval` *must* be 60 seconds (1 minute).
-* `destination_options` - (Optional) Describes the destination options for a flow log. More details below.
+* `regional_nat_gateway_id` - (Optional) Regional NAT Gateway ID to attach to.
+* `subnet_id` - (Optional) Subnet ID to attach to.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `traffic_type` - (Optional) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`. Required if `eni_id`, `regional_nat_gateway_id`, `subnet_id`, or `vpc_id` is specified.
+* `transit_gateway_id` - (Optional) Transit Gateway ID to attach to.
+* `transit_gateway_attachment_id` - (Optional) Transit Gateway Attachment ID to attach to.
+* `vpc_id` - (Optional) VPC ID to attach to.
 
 ~> **NOTE:** One of `eni_id`, `regional_nat_gateway_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
 
