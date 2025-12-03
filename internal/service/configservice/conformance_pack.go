@@ -320,7 +320,7 @@ func waitConformancePackCreated(ctx context.Context, conn *configservice.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.ConformancePackStatusDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConformancePackStatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConformancePackStatusReason)))
 
 		return output, err
 	}
@@ -339,7 +339,7 @@ func waitConformancePackDeleted(ctx context.Context, conn *configservice.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.ConformancePackStatusDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConformancePackStatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConformancePackStatusReason)))
 
 		return output, err
 	}

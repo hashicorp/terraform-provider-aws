@@ -285,7 +285,7 @@ func waitVocabularyCreated(ctx context.Context, conn *connect.Client, instanceID
 
 	if output, ok := outputRaw.(*awstypes.Vocabulary); ok {
 		if state := output.State; state == awstypes.VocabularyStateCreationFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err

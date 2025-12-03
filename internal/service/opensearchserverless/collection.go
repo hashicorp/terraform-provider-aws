@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -330,7 +329,7 @@ func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Clien
 
 	if output, ok := outputRaw.(*awstypes.CollectionDetail); ok {
 		if output.Status == awstypes.CollectionStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -353,7 +352,7 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 
 	if output, ok := outputRaw.(*awstypes.CollectionDetail); ok {
 		if output.Status == awstypes.CollectionStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err

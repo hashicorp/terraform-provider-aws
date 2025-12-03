@@ -508,7 +508,7 @@ func waitAddonCreated(ctx context.Context, conn *eks.Client, clusterName, addonN
 
 	if output, ok := outputRaw.(*types.Addon); ok {
 		if status, health := output.Status, output.Health; status == types.AddonStatusCreateFailed && health != nil {
-			tfresource.SetLastError(err, addonIssuesError(health.Issues))
+			retry.SetLastError(err, addonIssuesError(health.Issues))
 		}
 
 		return output, err
@@ -529,7 +529,7 @@ func waitAddonDeleted(ctx context.Context, conn *eks.Client, clusterName, addonN
 
 	if output, ok := outputRaw.(*types.Addon); ok {
 		if status, health := output.Status, output.Health; status == types.AddonStatusDeleteFailed && health != nil {
-			tfresource.SetLastError(err, addonIssuesError(health.Issues))
+			retry.SetLastError(err, addonIssuesError(health.Issues))
 		}
 
 		return output, err
@@ -550,7 +550,7 @@ func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterNam
 
 	if output, ok := outputRaw.(*types.Update); ok {
 		if status := output.Status; status == types.UpdateStatusCancelled || status == types.UpdateStatusFailed {
-			tfresource.SetLastError(err, errorDetailsError(output.Errors))
+			retry.SetLastError(err, errorDetailsError(output.Errors))
 		}
 
 		return output, err

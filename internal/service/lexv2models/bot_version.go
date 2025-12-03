@@ -282,7 +282,7 @@ func waitBotVersionCreated(ctx context.Context, conn *lexmodelsv2.Client, botID,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotVersionOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}
@@ -301,7 +301,7 @@ func waitBotVersionDeleted(ctx context.Context, conn *lexmodelsv2.Client, botID,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotVersionOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}

@@ -561,7 +561,7 @@ func waitDevEndpointCreated(ctx context.Context, conn *glue.Client, name string)
 
 	if output, ok := outputRaw.(*awstypes.DevEndpoint); ok {
 		if status := aws.ToString(output.Status); status == devEndpointStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err
@@ -582,7 +582,7 @@ func waitDevEndpointDeleted(ctx context.Context, conn *glue.Client, name string)
 
 	if output, ok := outputRaw.(*awstypes.DevEndpoint); ok {
 		if status := aws.ToString(output.Status); status == devEndpointStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err

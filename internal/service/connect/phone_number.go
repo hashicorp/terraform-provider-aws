@@ -335,7 +335,7 @@ func waitPhoneNumberCreated(ctx context.Context, conn *connect.Client, id string
 
 	if output, ok := outputRaw.(*awstypes.ClaimedPhoneNumberSummary); ok {
 		if status := output.PhoneNumberStatus; status.Status == awstypes.PhoneNumberWorkflowStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(status.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(status.Message)))
 		}
 
 		return output, err
@@ -356,7 +356,7 @@ func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Client, id string
 
 	if output, ok := outputRaw.(*awstypes.ClaimedPhoneNumberSummary); ok {
 		if status := output.PhoneNumberStatus; status.Status == awstypes.PhoneNumberWorkflowStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(status.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(status.Message)))
 		}
 
 		return output, err
@@ -377,7 +377,7 @@ func waitPhoneNumberDeleted(ctx context.Context, conn *connect.Client, id string
 
 	if output, ok := outputRaw.(*awstypes.ClaimedPhoneNumberSummary); ok {
 		if status := output.PhoneNumberStatus; status.Status == awstypes.PhoneNumberWorkflowStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(status.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(status.Message)))
 		}
 
 		return output, err

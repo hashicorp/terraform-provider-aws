@@ -404,7 +404,7 @@ func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*datazone.GetEnvironmentOutput); ok {
 		if status, deployment := out.Status, out.LastDeployment; (status == awstypes.EnvironmentStatusCreateFailed || status == awstypes.EnvironmentStatusValidationFailed) && deployment != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
 		}
 		return out, err
 	}
@@ -425,7 +425,7 @@ func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*datazone.GetEnvironmentOutput); ok {
 		if status, deployment := out.Status, out.LastDeployment; status == awstypes.EnvironmentStatusUpdateFailed && deployment != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
 		}
 		return out, err
 	}
@@ -446,7 +446,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*datazone.GetEnvironmentOutput); ok {
 		if status, deployment := out.Status, out.LastDeployment; status == awstypes.EnvironmentStatusDeleteFailed && deployment != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
 		}
 		return out, err
 	}

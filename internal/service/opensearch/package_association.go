@@ -217,7 +217,7 @@ func waitPackageAssociationCreated(ctx context.Context, conn *opensearch.Client,
 
 	if output, ok := outputRaw.(*awstypes.DomainPackageDetails); ok {
 		if status, details := output.DomainPackageStatus, output.ErrorDetails; status == awstypes.DomainPackageStatusAssociationFailed && details != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
 		}
 
 		return output, err
@@ -239,7 +239,7 @@ func waitPackageAssociationDeleted(ctx context.Context, conn *opensearch.Client,
 
 	if output, ok := outputRaw.(*awstypes.DomainPackageDetails); ok {
 		if status, details := output.DomainPackageStatus, output.ErrorDetails; status == awstypes.DomainPackageStatusDissociationFailed && details != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
 		}
 
 		return output, err

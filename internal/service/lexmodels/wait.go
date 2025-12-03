@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -37,7 +37,7 @@ func waitBotVersionCreated(ctx context.Context, conn *lexmodelbuildingservice.Cl
 
 	if output, ok := outputRaw.(*lexmodelbuildingservice.GetBotOutput); ok {
 		if output.Status == awstypes.StatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err
@@ -62,7 +62,7 @@ func waitBotDeleted(ctx context.Context, conn *lexmodelbuildingservice.Client, n
 
 	if output, ok := outputRaw.(*lexmodelbuildingservice.GetBotOutput); ok {
 		if output.Status == awstypes.StatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err

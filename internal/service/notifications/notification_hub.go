@@ -246,7 +246,7 @@ func waitNotificationHubCreated(ctx context.Context, conn *notifications.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.NotificationHubOverview); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusSummary.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusSummary.Reason)))
 
 		return output, err
 	}
@@ -265,7 +265,7 @@ func waitNotificationHubDeleted(ctx context.Context, conn *notifications.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.NotificationHubOverview); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusSummary.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusSummary.Reason)))
 
 		return output, err
 	}

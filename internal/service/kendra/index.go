@@ -672,7 +672,7 @@ func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeo
 
 	if output, ok := outputRaw.(*kendra.DescribeIndexOutput); ok {
 		if output.Status == types.IndexStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 		return output, err
 	}
@@ -692,7 +692,7 @@ func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeo
 
 	if output, ok := outputRaw.(*kendra.DescribeIndexOutput); ok {
 		if output.Status == types.IndexStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 		return output, err
 	}
@@ -711,7 +711,7 @@ func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeo
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kendra.DescribeIndexOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 
 		return output, err
 	}
