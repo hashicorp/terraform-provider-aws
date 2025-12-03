@@ -330,7 +330,7 @@ func ValidLaunchTemplateID(v any, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 255 characters", k))
 	} else if !regexache.MustCompile(`^lt\-[0-9a-z]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q must begin with 'lt-' and be comprised of only alphanumeric characters: %v", k, value))
+			"%q must begin with 'lt-' and only contain alphanumeric characters: %v", k, value))
 	}
 	return
 }

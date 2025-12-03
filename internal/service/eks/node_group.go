@@ -156,6 +156,64 @@ func resourceNodeGroup() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"max_parallel_nodes_repaired_count": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(1),
+							ConflictsWith: []string{
+								"node_repair_config.0.max_parallel_nodes_repaired_percentage",
+							},
+						},
+						"max_parallel_nodes_repaired_percentage": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 100),
+							ConflictsWith: []string{
+								"node_repair_config.0.max_parallel_nodes_repaired_count",
+							},
+						},
+						"max_unhealthy_node_threshold_count": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(1),
+							ConflictsWith: []string{
+								"node_repair_config.0.max_unhealthy_node_threshold_percentage",
+							},
+						},
+						"max_unhealthy_node_threshold_percentage": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 100),
+							ConflictsWith: []string{
+								"node_repair_config.0.max_unhealthy_node_threshold_count",
+							},
+						},
+						"node_repair_config_overrides": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"min_repair_wait_time_mins": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"node_monitoring_condition": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"node_unhealthy_reason": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"repair_action": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.RepairAction](),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -610,11 +668,15 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func findNodegroupByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string) (*types.Nodegroup, error) {
-	input := &eks.DescribeNodegroupInput{
+	input := eks.DescribeNodegroupInput{
 		ClusterName:   aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
 	}
 
+	return findNodegroup(ctx, conn, &input)
+}
+
+func findNodegroup(ctx context.Context, conn *eks.Client, input *eks.DescribeNodegroupInput) (*types.Nodegroup, error) {
 	output, err := conn.DescribeNodegroup(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -636,30 +698,13 @@ func findNodegroupByTwoPartKey(ctx context.Context, conn *eks.Client, clusterNam
 }
 
 func findNodegroupUpdateByThreePartKey(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName, id string) (*types.Update, error) {
-	input := &eks.DescribeUpdateInput{
+	input := eks.DescribeUpdateInput{
 		Name:          aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
 		UpdateId:      aws.String(id),
 	}
 
-	output, err := conn.DescribeUpdate(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Update == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Update, nil
+	return findUpdate(ctx, conn, &input)
 }
 
 func statusNodegroup(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string) retry.StateRefreshFunc {
@@ -955,7 +1000,64 @@ func expandNodeRepairConfig(tfMap map[string]any) *types.NodeRepairConfig {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["max_parallel_nodes_repaired_count"].(int); ok && v != 0 {
+		apiObject.MaxParallelNodesRepairedCount = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["max_parallel_nodes_repaired_percentage"].(int); ok && v != 0 {
+		apiObject.MaxParallelNodesRepairedPercentage = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["max_unhealthy_node_threshold_count"].(int); ok && v != 0 {
+		apiObject.MaxUnhealthyNodeThresholdCount = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["max_unhealthy_node_threshold_percentage"].(int); ok && v != 0 {
+		apiObject.MaxUnhealthyNodeThresholdPercentage = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["node_repair_config_overrides"].([]any); ok && len(v) > 0 {
+		apiObject.NodeRepairConfigOverrides = expandNodeRepairConfigOverrides(v)
+	}
+
 	return apiObject
+}
+
+func expandNodeRepairConfigOverrides(tfList []any) []types.NodeRepairConfigOverrides {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.NodeRepairConfigOverrides
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.NodeRepairConfigOverrides{}
+
+		if v, ok := tfMap["min_repair_wait_time_mins"].(int); ok {
+			apiObject.MinRepairWaitTimeMins = aws.Int32(int32(v))
+		}
+
+		if v, ok := tfMap["node_monitoring_condition"].(string); ok && v != "" {
+			apiObject.NodeMonitoringCondition = aws.String(v)
+		}
+
+		if v, ok := tfMap["node_unhealthy_reason"].(string); ok && v != "" {
+			apiObject.NodeUnhealthyReason = aws.String(v)
+		}
+
+		if v, ok := tfMap["repair_action"].(string); ok && v != "" {
+			apiObject.RepairAction = types.RepairAction(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
 
 func expandUpdateLabelsPayload(ctx context.Context, oldLabelsMap, newLabelsMap any) *types.UpdateLabelsPayload {
@@ -1069,7 +1171,57 @@ func flattenNodeRepairConfig(apiObject *types.NodeRepairConfig) map[string]any {
 		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
+	if v := apiObject.MaxParallelNodesRepairedCount; v != nil {
+		tfMap["max_parallel_nodes_repaired_count"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MaxParallelNodesRepairedPercentage; v != nil {
+		tfMap["max_parallel_nodes_repaired_percentage"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MaxUnhealthyNodeThresholdCount; v != nil {
+		tfMap["max_unhealthy_node_threshold_count"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MaxUnhealthyNodeThresholdPercentage; v != nil {
+		tfMap["max_unhealthy_node_threshold_percentage"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.NodeRepairConfigOverrides; v != nil {
+		tfMap["node_repair_config_overrides"] = flattenNodeRepairConfigOverrides(v)
+	}
+
 	return tfMap
+}
+
+func flattenNodeRepairConfigOverrides(apiObjects []types.NodeRepairConfigOverrides) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]any)
+
+		if v := apiObject.MinRepairWaitTimeMins; v != nil {
+			tfMap["min_repair_wait_time_mins"] = aws.ToInt32(v)
+		}
+
+		if v := apiObject.NodeMonitoringCondition; v != nil {
+			tfMap["node_monitoring_condition"] = aws.ToString(v)
+		}
+
+		if v := apiObject.NodeUnhealthyReason; v != nil {
+			tfMap["node_unhealthy_reason"] = aws.ToString(v)
+		}
+
+		tfMap["repair_action"] = string(apiObject.RepairAction)
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func flattenNodegroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[string]any {

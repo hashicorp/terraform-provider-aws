@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/backup"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -83,6 +84,41 @@ func TestAccBackupLogicallyAirGappedVault_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceLogicallyAirGappedVault, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccBackupLogicallyAirGappedVault_encryptionKeyARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v backup.DescribeBackupVaultOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_backup_logically_air_gapped_vault.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BackupEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogicallyAirGappedVaultDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLogicallyAirGappedVaultConfig_encryptionKeyARN(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("encryption_key_arn"), kmsKeyResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogicallyAirGappedVaultExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -198,6 +234,22 @@ resource "aws_backup_logically_air_gapped_vault" "test" {
   name               = %[1]q
   max_retention_days = 10
   min_retention_days = 7
+}
+`, rName)
+}
+
+func testAccLogicallyAirGappedVaultConfig_encryptionKeyARN(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_backup_logically_air_gapped_vault" "test" {
+  name               = %[1]q
+  max_retention_days = 10
+  min_retention_days = 7
+  encryption_key_arn = aws_kms_key.test.arn
 }
 `, rName)
 }

@@ -6,7 +6,6 @@ provider "null" {}
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = var.rName
-  visibility          = var.rName
 
   tags = {
     (var.unknownTagKey) = null_resource.test.id

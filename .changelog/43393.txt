@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_s3vectors_vector_bucket
+```
+
+```release-note:new-resource
+aws_s3vectors_vector_bucket_policy
+```
+
+```release-note:new-resource
+aws_s3vectors_index
+```

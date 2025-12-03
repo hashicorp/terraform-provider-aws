@@ -24,3 +24,8 @@ func ToLowerSchemaStateFunc(v any) string {
 func ToUpperSchemaStateFunc(v any) string {
 	return strings.ToUpper(v.(string))
 }
+
+// TrimSpaceSchemaStateFunc removes all leading and trailing white space from a string value before storing it in state.
+func TrimSpaceSchemaStateFunc(v any) string {
+	return strings.TrimSpace(v.(string))
+}

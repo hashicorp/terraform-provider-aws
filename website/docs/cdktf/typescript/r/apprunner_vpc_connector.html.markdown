@@ -57,6 +57,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_apprunner_vpc_connector.example
+  identity = {
+    "arn" = "arn:aws:apprunner:us-east-1:123456789012:vpcconnector/example-vpc-connector/1/a1b2c3d4567890ab"
+  }
+}
+
+resource "aws_apprunner_vpc_connector" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the App Runner VPC connector.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner vpc connector using the `arn`. For example:
 
 ```typescript
@@ -87,4 +108,4 @@ Using `terraform import`, import App Runner vpc connector using the `arn`. For e
 % terraform import aws_apprunner_vpc_connector.example arn:aws:apprunner:us-east-1:1234567890:vpcconnector/example/1/0a03292a89764e5882c41d8f991c82fe
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-54aba0cae40e42c5f052998da0f78a26b4253418a6efb074f00766c7c88196d9 -->
+<!-- cache-key: cdktf-0.20.8 input-d8099674688d24ef7dc39e6ea3434ee87e41d74e19fbe66ade73897d5e718bba -->

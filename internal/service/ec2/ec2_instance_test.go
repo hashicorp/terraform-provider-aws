@@ -10048,7 +10048,7 @@ resource "aws_instance" "test" {
 resource "aws_ec2_capacity_reservation" "test" {
   instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
   instance_platform = %[2]q
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone = data.aws_availability_zones.available.names[1]
   instance_count    = 10
 
   tags = {

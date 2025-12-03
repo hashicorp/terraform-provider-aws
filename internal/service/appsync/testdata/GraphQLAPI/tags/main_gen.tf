@@ -4,7 +4,6 @@
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = var.rName
-  visibility          = var.rName
 
   tags = var.resource_tags
 }

@@ -6,9 +6,11 @@ package framework
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -17,9 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
@@ -90,9 +94,9 @@ func (w *wrappedDataSource) context(ctx context.Context, getAttribute getAttribu
 		overrideRegion = target.ValueString()
 	}
 
-	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, overrideRegion)
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
 		ctx = fwflex.RegisterLogger(ctx)
 	}
@@ -240,7 +244,7 @@ func (w *wrappedEphemeralResource) context(ctx context.Context, getAttribute get
 		overrideRegion = target.ValueString()
 	}
 
-	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, overrideRegion)
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
 		ctx = c.RegisterLogger(ctx)
 		ctx = fwflex.RegisterLogger(ctx)
@@ -354,6 +358,158 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 	}
 }
 
+// wrappedAction represents an interceptor dispatcher for a Plugin Framework action.
+type wrappedAction struct {
+	inner              action.ActionWithConfigure
+	meta               *conns.AWSClient
+	servicePackageName string
+	spec               *inttypes.ServicePackageAction
+	interceptors       interceptorInvocations
+}
+
+func newWrappedAction(spec *inttypes.ServicePackageAction, servicePackageName string) action.ActionWithConfigure {
+	var isRegionOverrideEnabled bool
+	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	var interceptors interceptorInvocations
+
+	if isRegionOverrideEnabled {
+		v := spec.Region.Value()
+
+		interceptors = append(interceptors, actionInjectRegionAttribute())
+		if v.IsValidateOverrideInPartition {
+			interceptors = append(interceptors, actionValidateRegion())
+		}
+	}
+
+	inner, _ := spec.Factory(context.TODO())
+
+	return &wrappedAction{
+		inner:              inner,
+		servicePackageName: servicePackageName,
+		spec:               spec,
+		interceptors:       interceptors,
+	}
+}
+
+// context is run on all wrapped methods before any interceptors.
+func (w *wrappedAction) context(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var overrideRegion string
+
+	var isRegionOverrideEnabled bool
+	if regionSpec := w.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled && getAttribute != nil {
+		var target types.String
+		diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		overrideRegion = target.ValueString()
+	}
+
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
+	if c != nil {
+		ctx = c.RegisterLogger(ctx)
+		ctx = fwflex.RegisterLogger(ctx)
+		ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+	}
+
+	return ctx, diags
+}
+
+func (w *wrappedAction) Metadata(ctx context.Context, request action.MetadataRequest, response *action.MetadataResponse) {
+	// This method does not call down to the inner action.
+	response.TypeName = w.spec.TypeName
+}
+
+func (w *wrappedAction) Schema(ctx context.Context, request action.SchemaRequest, response *action.SchemaResponse) {
+	ctx, diags := w.context(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	f := func(ctx context.Context, request action.SchemaRequest, response *action.SchemaResponse) {
+		w.inner.Schema(ctx, request, response)
+	}
+	interceptedHandler(w.interceptors.actionSchema(), f, actionSchemaHasError, w.meta)(ctx, request, response)
+
+	// Validate the action's model against the schema.
+	if v, ok := w.inner.(framework.ActionValidateModel); ok {
+		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
+		if response.Diagnostics.HasError() {
+			response.Diagnostics.AddError("action model validation error", w.spec.TypeName)
+			return
+		}
+	} else {
+		response.Diagnostics.AddError("missing framework.ActionValidateModel", w.spec.TypeName)
+	}
+}
+
+func (w *wrappedAction) Invoke(ctx context.Context, request action.InvokeRequest, response *action.InvokeResponse) {
+	ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	f := func(ctx context.Context, request action.InvokeRequest, response *action.InvokeResponse) {
+		w.inner.Invoke(ctx, request, response)
+	}
+	interceptedHandler(w.interceptors.actionInvoke(), f, actionInvokeHasError, w.meta)(ctx, request, response)
+}
+
+func (w *wrappedAction) Configure(ctx context.Context, request action.ConfigureRequest, response *action.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+
+	ctx, diags := w.context(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedAction) ConfigValidators(ctx context.Context) []action.ConfigValidator {
+	if v, ok := w.inner.(action.ActionWithConfigValidators); ok {
+		ctx, diags := w.context(ctx, nil, w.meta)
+		if diags.HasError() {
+			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
+				"action":                 w.spec.TypeName,
+				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+			})
+
+			return nil
+		}
+
+		return v.ConfigValidators(ctx)
+	}
+
+	return nil
+}
+
+func (w *wrappedAction) ValidateConfig(ctx context.Context, request action.ValidateConfigRequest, response *action.ValidateConfigResponse) {
+	if v, ok := w.inner.(action.ActionWithValidateConfig); ok {
+		ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		v.ValidateConfig(ctx, request, response)
+	}
+}
+
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
 type wrappedResource struct {
 	inner              resource.ResourceWithConfigure
@@ -390,26 +546,40 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 
 	if !tfunique.IsHandleNil(spec.Tags) {
 		interceptors = append(interceptors, resourceTransparentTagging(spec.Tags))
-	}
-
-	if len(spec.Identity.Attributes) > 0 {
-		interceptors = append(interceptors, newIdentityInterceptor(spec.Identity.Attributes))
+		interceptors = append(interceptors, resourceValidateRequiredTags())
 	}
 
 	inner, _ := spec.Factory(context.TODO())
 
+	if len(spec.Identity.Attributes) == 0 {
+		return &wrappedResource{
+			inner:              inner,
+			servicePackageName: servicePackageName,
+			spec:               spec,
+			interceptors:       interceptors,
+		}
+	}
+
+	interceptors = append(interceptors, newIdentityInterceptor(spec.Identity.Attributes))
+	if v, ok := inner.(framework.Identityer); ok {
+		v.SetIdentitySpec(spec.Identity)
+	}
+
 	if spec.Import.WrappedImport {
 		if v, ok := inner.(framework.ImportByIdentityer); ok {
-			v.SetIdentitySpec(spec.Identity, spec.Import)
+			v.SetImportSpec(spec.Import)
 		}
 		// If the resource does not implement framework.ImportByIdentityer,
 		// it will be caught by `validateResourceSchemas`, so we can ignore it here.
 	}
-	return &wrappedResource{
-		inner:              inner,
-		servicePackageName: servicePackageName,
-		spec:               spec,
-		interceptors:       interceptors,
+
+	return &wrappedResourceWithIdentity{
+		wrappedResource: wrappedResource{
+			inner:              inner,
+			servicePackageName: servicePackageName,
+			spec:               spec,
+			interceptors:       interceptors,
+		},
 	}
 }
 
@@ -433,9 +603,9 @@ func (w *wrappedResource) context(ctx context.Context, getAttribute getAttribute
 		overrideRegion = target.ValueString()
 	}
 
-	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, overrideRegion)
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
 	if c != nil {
-		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
 		ctx = fwflex.RegisterLogger(ctx)
 	}
@@ -629,8 +799,275 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 	return nil
 }
 
-func (w *wrappedResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
+type wrappedResourceWithIdentity struct {
+	wrappedResource
+}
+
+func (w *wrappedResourceWithIdentity) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
 	if len(w.spec.Identity.Attributes) > 0 {
 		resp.IdentitySchema = identity.NewIdentitySchema(w.spec.Identity)
+	}
+}
+
+type wrappedListResourceFramework struct {
+	inner              list.ListResourceWithConfigure
+	meta               *conns.AWSClient
+	servicePackageName string
+	spec               *inttypes.ServicePackageFrameworkListResource
+	interceptors       interceptorInvocations
+}
+
+var _ list.ListResourceWithConfigure = &wrappedListResourceFramework{}
+
+func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListResource, servicePackageName string) list.ListResourceWithConfigure {
+	var interceptors interceptorInvocations
+
+	var isRegionOverrideEnabled bool
+	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled {
+		interceptors = append(interceptors, listResourceInjectRegionAttribute())
+		// TODO: validate region in partition, needs tweaked error message
+	}
+
+	inner := spec.Factory()
+
+	if v, ok := inner.(framework.Identityer); ok {
+		v.SetIdentitySpec(spec.Identity)
+	}
+
+	if v, ok := inner.(framework.Lister); ok {
+		if isRegionOverrideEnabled {
+			v.AppendResultInterceptor(listresource.SetRegionInterceptor())
+		}
+
+		v.AppendResultInterceptor(listresource.IdentityInterceptor(spec.Identity.Attributes))
+
+		if !tfunique.IsHandleNil(spec.Tags) {
+			v.AppendResultInterceptor(listresource.TagsInterceptor(spec.Tags))
+		}
+	}
+
+	return &wrappedListResourceFramework{
+		inner:              inner,
+		servicePackageName: servicePackageName,
+		spec:               spec,
+		interceptors:       interceptors,
+	}
+}
+
+// context is run on all wrapped methods before any interceptors.
+func (w *wrappedListResourceFramework) context(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var overrideRegion string
+
+	var isRegionOverrideEnabled bool
+	if regionSpec := w.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled && getAttribute != nil {
+		var target types.String
+		diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		if target.IsNull() || target.IsUnknown() {
+			overrideRegion = c.AwsConfig(ctx).Region
+		} else {
+			overrideRegion = target.ValueString()
+		}
+	}
+
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
+	if c != nil {
+		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
+		ctx = c.RegisterLogger(ctx)
+		ctx = fwflex.RegisterLogger(ctx)
+	}
+
+	return ctx, diags
+}
+
+func (w *wrappedListResourceFramework) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+
+	ctx, diags := w.context(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedListResourceFramework) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	stream.Results = tfiter.Null[list.ListResult]()
+
+	ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
+	if len(diags) > 0 {
+		stream.Results = tfiter.Concat(stream.Results, list.ListResultsStreamDiagnostics(diags))
+	}
+	if diags.HasError() {
+		return
+	}
+
+	interceptedListHandler(w.interceptors.resourceList(), w.inner.List, w.meta)(ctx, request, stream)
+}
+
+// ListResourceConfigSchema implements list.ListResourceWithConfigure.
+func (w *wrappedListResourceFramework) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	ctx, diags := w.context(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	interceptedHandler(w.interceptors.resourceListResourceConfigSchema(), w.inner.ListResourceConfigSchema, listResourceConfigSchemaHasError, w.meta)(ctx, request, response)
+}
+
+// Metadata implements list.ListResourceWithConfigure.
+func (w *wrappedListResourceFramework) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	// This method does not call down to the inner resource.
+	response.TypeName = w.spec.TypeName
+}
+
+type wrappedListResourceSDK struct {
+	inner              inttypes.ListResourceForSDK
+	meta               *conns.AWSClient
+	servicePackageName string
+	spec               *inttypes.ServicePackageSDKListResource
+	interceptors       interceptorInvocations
+}
+
+var _ inttypes.ListResourceForSDK = &wrappedListResourceSDK{}
+
+func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string) inttypes.ListResourceForSDK {
+	var interceptors interceptorInvocations
+
+	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+		interceptors = append(interceptors, listResourceInjectRegionAttribute())
+		// TODO: validate region in partition, needs tweaked error message
+	}
+
+	inner := spec.Factory()
+
+	if v, ok := inner.(framework.WithRegionSpec); ok {
+		v.SetRegionSpec(spec.Region)
+	}
+
+	if v, ok := inner.(framework.Identityer); ok {
+		v.SetIdentitySpec(spec.Identity)
+	}
+
+	if v, ok := inner.(inttypes.SDKv2Tagger); ok {
+		if !tfunique.IsHandleNil(spec.Tags) {
+			v.SetTagsSpec(spec.Tags)
+		}
+	}
+
+	return &wrappedListResourceSDK{
+		inner:              inner,
+		servicePackageName: servicePackageName,
+		spec:               spec,
+		interceptors:       interceptors,
+	}
+}
+
+// Metadata implements list.ListResourceWithConfigure.
+func (w *wrappedListResourceSDK) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	// This method does not call down to the inner resource.
+	response.TypeName = w.spec.TypeName
+}
+
+// context is run on all wrapped methods before any interceptors.
+func (w *wrappedListResourceSDK) context(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var overrideRegion string
+
+	var isRegionOverrideEnabled bool
+	if regionSpec := w.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled && getAttribute != nil {
+		var target types.String
+		diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		if target.IsNull() || target.IsUnknown() {
+			overrideRegion = c.AwsConfig(ctx).Region
+		} else {
+			overrideRegion = target.ValueString()
+		}
+	}
+
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, w.spec.TypeName, overrideRegion)
+	if c != nil {
+		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
+		ctx = c.RegisterLogger(ctx)
+		ctx = fwflex.RegisterLogger(ctx)
+	}
+
+	return ctx, diags
+}
+
+func (w *wrappedListResourceSDK) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+
+	ctx, diags := w.context(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedListResourceSDK) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	stream.Results = tfiter.Null[list.ListResult]()
+
+	ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
+	if len(diags) > 0 {
+		stream.Results = tfiter.Concat(stream.Results, list.ListResultsStreamDiagnostics(diags))
+	}
+	if diags.HasError() {
+		return
+	}
+
+	interceptedListHandler(w.interceptors.resourceList(), w.inner.List, w.meta)(ctx, request, stream)
+}
+
+// ListResourceConfigSchema implements list.ListResourceWithConfigure.
+func (w *wrappedListResourceSDK) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	ctx, diags := w.context(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	interceptedHandler(w.interceptors.resourceListResourceConfigSchema(), w.inner.ListResourceConfigSchema, listResourceConfigSchemaHasError, w.meta)(ctx, request, response)
+}
+
+func (w *wrappedListResourceSDK) RawV5Schemas(ctx context.Context, request list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
+	if v, ok := w.inner.(list.ListResourceWithRawV5Schemas); ok {
+		ctx, diags := w.context(ctx, nil, w.meta)
+		if diags.HasError() {
+			tflog.Warn(ctx, "wrapping Schemas", map[string]any{
+				"resource":               w.spec.TypeName,
+				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+			})
+		}
+
+		v.RawV5Schemas(ctx, request, response)
 	}
 }

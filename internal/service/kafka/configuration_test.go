@@ -130,8 +130,8 @@ func TestAccKafkaConfiguration_kafkaVersions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
 					resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "kafka_versions.*", "2.6.0"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "kafka_versions.*", "2.7.0"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "kafka_versions.*", "3.8.x"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "kafka_versions.*", "3.9.x"),
 				),
 			},
 			{
@@ -297,7 +297,7 @@ PROPERTIES
 func testAccConfigurationConfig_versions(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
-  kafka_versions = ["2.6.0", "2.7.0"]
+  kafka_versions = ["3.8.x", "3.9.x"]
   name           = %[1]q
 
   server_properties = <<PROPERTIES
@@ -331,7 +331,7 @@ PROPERTIES
 
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "3.3.2"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
   broker_node_group_info {

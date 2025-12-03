@@ -1,6 +1,6 @@
 module testdata
 
-go 1.24.6
+go 1.24.11
 
 require github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.1
 

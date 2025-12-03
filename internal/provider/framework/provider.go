@@ -15,11 +15,14 @@ import (
 	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/action"
+	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	empemeralschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/function"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -42,13 +45,17 @@ var (
 
 var (
 	_ provider.Provider                       = &frameworkProvider{}
+	_ provider.ProviderWithActions            = &frameworkProvider{}
 	_ provider.ProviderWithFunctions          = &frameworkProvider{}
 	_ provider.ProviderWithEphemeralResources = &frameworkProvider{}
+	_ provider.ProviderWithListResources      = &frameworkProvider{}
 )
 
 type frameworkProvider struct {
+	actions            []func() action.Action
 	dataSources        []func() datasource.DataSource
 	ephemeralResources []func() ephemeral.EphemeralResource
+	listResources      []func() list.ListResource
 	primary            interface{ Meta() any }
 	resources          []func() resource.Resource
 	servicePackages    iter.Seq[conns.ServicePackage]
@@ -60,6 +67,7 @@ func NewProvider(ctx context.Context, primary interface{ Meta() any }) (provider
 	log.Printf("Creating Terraform AWS Provider (Framework-style)...")
 
 	provider := &frameworkProvider{
+		actions:            make([]func() action.Action, 0),
 		dataSources:        make([]func() datasource.DataSource, 0),
 		ephemeralResources: make([]func() ephemeral.EphemeralResource, 0),
 		primary:            primary,
@@ -190,6 +198,14 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 			"sts_region": schema.StringAttribute{
 				Optional:    true,
 				Description: "The region where AWS STS operations will take place. Examples\nare us-east-1 and us-west-2.", // lintignore:AWSAT003
+			},
+			"tag_policy_compliance": schema.StringAttribute{
+				Optional: true,
+				Description: `The severity with which to enforce organizational tagging policies on resources managed by this provider instance. ` +
+					`At this time this only includes compliance with required tag keys by resource type. ` +
+					`Valid values are "error", "warning", and "disabled". ` +
+					`When unset or "disabled", tag policy compliance will not be enforced by the provider. ` +
+					`Can also be configured with the ` + tftags.TagPolicyComplianceEnvVar + ` environment variable.`,
 			},
 			"token": schema.StringAttribute{
 				Optional:    true,
@@ -344,6 +360,8 @@ func (p *frameworkProvider) Configure(ctx context.Context, request provider.Conf
 	response.DataSourceData = v
 	response.ResourceData = v
 	response.EphemeralResourceData = v
+	response.ActionData = v
+	response.ListResourceData = v
 }
 
 // DataSources returns a slice of functions to instantiate each DataSource
@@ -370,6 +388,14 @@ func (p *frameworkProvider) EphemeralResources(ctx context.Context) []func() eph
 	return slices.Clone(p.ephemeralResources)
 }
 
+// Actions returns a slice of functions to instantiate each Action
+// implementation.
+//
+// All actions must have unique type names.
+func (p *frameworkProvider) Actions(ctx context.Context) []func() action.Action {
+	return slices.Clone(p.actions)
+}
+
 // Functions returns a slice of functions to instantiate each Function
 // implementation.
 //
@@ -381,6 +407,10 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 		tffunction.NewARNParseFunction,
 		tffunction.NewTrimIAMRolePathFunction,
 	}
+}
+
+func (p *frameworkProvider) ListResources(_ context.Context) []func() list.ListResource {
+	return slices.Clone(p.listResources)
 }
 
 // initialize is called from `New` to perform any Terraform Framework-style initialization.
@@ -404,10 +434,33 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 			}
 		}
 
+		if v, ok := sp.(conns.ServicePackageWithFrameworkListResources); ok {
+			for listResourceSpec := range v.FrameworkListResources(ctx) {
+				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
+					return newWrappedListResourceFramework(listResourceSpec, servicePackageName)
+				})
+			}
+		}
+		if v, ok := sp.(conns.ServicePackageWithSDKListResources); ok {
+			for listResourceSpec := range v.SDKListResources(ctx) {
+				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
+					return newWrappedListResourceSDK(listResourceSpec, servicePackageName)
+				})
+			}
+		}
+
 		for _, resourceSpec := range sp.FrameworkResources(ctx) {
 			p.resources = append(p.resources, func() resource.Resource { //nolint:contextcheck // must be a func()
 				return newWrappedResource(resourceSpec, servicePackageName)
 			})
+		}
+
+		if v, ok := sp.(conns.ServicePackageWithActions); ok {
+			for _, actionSpec := range v.Actions(ctx) {
+				p.actions = append(p.actions, func() action.Action { //nolint:contextcheck // must be a func()
+					return newWrappedAction(actionSpec, servicePackageName)
+				})
+			}
 		}
 	}
 }
@@ -455,6 +508,26 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 
 				if err := validateSchemaRegionForEphemeralResource(ephemeralResourceSpec.Region, schemaResponse.Schema); err != nil {
 					errs = append(errs, fmt.Errorf("ephemeral resource type %q: %w", typeName, err))
+					continue
+				}
+			}
+		}
+
+		if v, ok := sp.(conns.ServicePackageWithActions); ok {
+			for _, actionSpec := range v.Actions(ctx) {
+				typeName := actionSpec.TypeName
+				inner, err := actionSpec.Factory(ctx)
+
+				if err != nil {
+					errs = append(errs, fmt.Errorf("creating action type (%s): %w", typeName, err))
+					continue
+				}
+
+				schemaResponse := action.SchemaResponse{}
+				inner.Schema(ctx, action.SchemaRequest{}, &schemaResponse)
+
+				if err := validateSchemaRegionForAction(actionSpec.Region, schemaResponse.Schema); err != nil {
+					errs = append(errs, fmt.Errorf("action type %q: %w", typeName, err))
 					continue
 				}
 			}
@@ -514,6 +587,17 @@ func validateSchemaRegionForEphemeralResource(regionSpec unique.Handle[inttypes.
 	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 		if _, ok := schema.Attributes[names.AttrRegion]; ok {
 			return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
+		}
+	}
+	return nil
+}
+
+func validateSchemaRegionForAction(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion], schemaIface any) error {
+	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		if schema, ok := schemaIface.(aschema.Schema); ok {
+			if _, ok := schema.Attributes[names.AttrRegion]; ok {
+				return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
+			}
 		}
 	}
 	return nil

@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -229,6 +230,161 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"monitoring_configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_logging_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									names.AttrLogGroupName: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 512),
+									},
+									"log_stream_name_prefix": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 512),
+									},
+									"encryption_key_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"log_types": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrValues: {
+													Type:     schema.TypeSet,
+													Required: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"managed_persistence_monitoring_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"encryption_key_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+						"prometheus_monitoring_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"remote_write_url": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 10280),
+											validation.StringMatch(
+												regexache.MustCompile(`^https://aps-workspaces\.([a-z]{2}-[a-z-]{1,20}-[1-9])\.amazonaws(\.[0-9A-Za-z]{2,4})+/workspaces/[-_.0-9A-Za-z]{1,100}/api/v1/remote_write$`),
+												"remote_write_url must be a valid Amazon Managed Service for Prometheus remote write URL",
+											),
+										),
+									},
+								},
+							},
+						},
+						"s3_monitoring_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_uri": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 10280),
+									},
+									"encryption_key_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"runtime_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"classification": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrProperties: {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"scheduler_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_concurrent_runs": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1, 1000),
+						},
+						"queue_timeout_minutes": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(15, 720),
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrType: {
@@ -248,7 +404,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &emrserverless.CreateApplicationInput{
+	input := emrserverless.CreateApplicationInput{
 		ClientToken:  aws.String(id.UniqueId()),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
 		Name:         aws.String(name),
@@ -284,12 +440,24 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.MaximumCapacity = expandMaximumCapacity(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("monitoring_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.MonitoringConfiguration = expandMonitoringConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	output, err := conn.CreateApplication(ctx, input)
+	if v, ok := d.GetOk("runtime_configuration"); ok && len(v.([]any)) > 0 {
+		input.RuntimeConfiguration = expandRuntimeConfiguration(v.([]any))
+	}
 
+	// Empty block (len(v.([]any)) > 0 but v.([]any)[0] == nil) is allowed to enable scheduler_configuration with default values
+	if v, ok := d.GetOk("scheduler_configuration"); ok && len(v.([]any)) > 0 {
+		input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any))
+	}
+
+	output, err := conn.CreateApplication(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EMR Serveless Application (%s): %s", name, err)
 	}
@@ -309,7 +477,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	application, err := findApplicationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Serverless Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -349,8 +517,20 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting maximum_capacity: %s", err)
 	}
 
+	if err := d.Set("monitoring_configuration", flattenMonitoringConfiguration(application.MonitoringConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting monitoring_configuration: %s", err)
+	}
+
 	if err := d.Set(names.AttrNetworkConfiguration, []any{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
+	}
+
+	if err := d.Set("runtime_configuration", flattenRuntimeConfiguration(application.RuntimeConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting runtime_configuration: %s", err)
+	}
+
+	if err := d.Set("scheduler_configuration", flattenSchedulerConfiguration(application.SchedulerConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting scheduler_configuration: %s", err)
 	}
 
 	setTagsOut(ctx, application.Tags)
@@ -363,7 +543,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &emrserverless.UpdateApplicationInput{
+		input := emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
 			ClientToken:   aws.String(id.UniqueId()),
 		}
@@ -400,11 +580,29 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
 		}
 
+		if d.HasChange("scheduler_configuration") {
+			// Empty block (len(v.([]any)) > 0 but v.([]any)[0] == nil) is allowed to enable scheduler_configuration with default values
+			if v, ok := d.GetOk("scheduler_configuration"); ok && len(v.([]any)) > 0 {
+				input.SchedulerConfiguration = expandSchedulerConfiguration(v.([]any))
+			} else {
+				// scheduler_configuration block is removed
+				input.SchedulerConfiguration = &types.SchedulerConfiguration{}
+			}
+		}
+
 		if v, ok := d.GetOk("release_label"); ok {
 			input.ReleaseLabel = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateApplication(ctx, input)
+		if v, ok := d.GetOk("monitoring_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.MonitoringConfiguration = expandMonitoringConfiguration(v.([]any)[0].(map[string]any))
+		}
+
+		if v, ok := d.GetOk("runtime_configuration"); ok && len(v.([]any)) > 0 {
+			input.RuntimeConfiguration = expandRuntimeConfiguration(v.([]any))
+		}
+
+		_, err := conn.UpdateApplication(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EMR Serveless Application (%s): %s", d.Id(), err)
@@ -439,16 +637,15 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func findApplicationByID(ctx context.Context, conn *emrserverless.Client, id string) (*types.Application, error) {
-	input := &emrserverless.GetApplicationInput{
+	input := emrserverless.GetApplicationInput{
 		ApplicationId: aws.String(id),
 	}
 
-	output, err := conn.GetApplication(ctx, input)
+	output, err := conn.GetApplication(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -467,8 +664,8 @@ func findApplicationByID(ctx context.Context, conn *emrserverless.Client, id str
 	return output.Application, nil
 }
 
-func statusApplication(ctx context.Context, conn *emrserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusApplication(conn *emrserverless.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -492,7 +689,7 @@ func waitApplicationCreated(ctx context.Context, conn *emrserverless.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ApplicationStateCreating),
 		Target:     enum.Slice(types.ApplicationStateCreated),
-		Refresh:    statusApplication(ctx, conn, id),
+		Refresh:    statusApplication(conn, id),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 		Delay:      delay,
@@ -502,7 +699,7 @@ func waitApplicationCreated(ctx context.Context, conn *emrserverless.Client, id 
 
 	if output, ok := outputRaw.(*types.Application); ok {
 		if stateChangeReason := output.StateDetails; stateChangeReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateChangeReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateChangeReason)))
 		}
 
 		return output, err
@@ -520,7 +717,7 @@ func waitApplicationTerminated(ctx context.Context, conn *emrserverless.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Values[types.ApplicationState](),
 		Target:     []string{},
-		Refresh:    statusApplication(ctx, conn, id),
+		Refresh:    statusApplication(conn, id),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 		Delay:      delay,
@@ -530,7 +727,7 @@ func waitApplicationTerminated(ctx context.Context, conn *emrserverless.Client, 
 
 	if output, ok := outputRaw.(*types.Application); ok {
 		if stateChangeReason := output.StateDetails; stateChangeReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateChangeReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(stateChangeReason)))
 		}
 
 		return output, err
@@ -859,6 +1056,343 @@ func flattenWorkerResourceConfig(apiObject *types.WorkerResourceConfig) map[stri
 
 	if v := apiObject.Memory; v != nil {
 		tfMap["memory"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func expandSchedulerConfiguration(tfList []any) *types.SchedulerConfiguration {
+	// SchedulerConfiguration without any attributes disables the scheduler_configuration.
+	// If an empty block is specified, the scheduler_configuration is enabled with default values.
+	if tfList[0] == nil {
+		return &types.SchedulerConfiguration{
+			MaxConcurrentRuns:   aws.Int32(15),  // default
+			QueueTimeoutMinutes: aws.Int32(360), // default
+		}
+	}
+
+	apiObject := &types.SchedulerConfiguration{}
+	m := tfList[0].(map[string]any)
+
+	if v, ok := m["max_concurrent_runs"].(int); ok && v != 0 {
+		apiObject.MaxConcurrentRuns = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["queue_timeout_minutes"].(int); ok && v != 0 {
+		apiObject.QueueTimeoutMinutes = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenSchedulerConfiguration(apiObject *types.SchedulerConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+	if v := apiObject.MaxConcurrentRuns; v != nil {
+		tfMap["max_concurrent_runs"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.QueueTimeoutMinutes; v != nil {
+		tfMap["queue_timeout_minutes"] = aws.ToInt32(v)
+	}
+	return []any{tfMap}
+}
+
+func expandRuntimeConfiguration(tfList []any) []types.Configuration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.Configuration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.Configuration{}
+
+		if v, ok := tfMap["classification"].(string); ok && v != "" {
+			apiObject.Classification = aws.String(v)
+		}
+
+		if v, ok := tfMap[names.AttrProperties].(map[string]any); ok && len(v) > 0 {
+			apiObject.Properties = flex.ExpandStringValueMap(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenRuntimeConfiguration(apiObjects []types.Configuration) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.Classification; v != nil {
+			tfMap["classification"] = aws.ToString(v)
+		}
+
+		if v := apiObject.Properties; v != nil {
+			tfMap[names.AttrProperties] = flex.FlattenStringValueMap(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func expandMonitoringConfiguration(tfMap map[string]any) *types.MonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.MonitoringConfiguration{}
+
+	if v, ok := tfMap["cloudwatch_logging_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.CloudWatchLoggingConfiguration = expandCloudWatchLoggingConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["s3_monitoring_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.S3MonitoringConfiguration = expandS3MonitoringConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["managed_persistence_monitoring_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.ManagedPersistenceMonitoringConfiguration = expandManagedPersistenceMonitoringConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["prometheus_monitoring_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.PrometheusMonitoringConfiguration = expandPrometheusMonitoringConfiguration(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func flattenMonitoringConfiguration(apiObject *types.MonitoringConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CloudWatchLoggingConfiguration; v != nil {
+		tfMap["cloudwatch_logging_configuration"] = []any{flattenCloudWatchLoggingConfiguration(v)}
+	}
+
+	if v := apiObject.S3MonitoringConfiguration; v != nil {
+		tfMap["s3_monitoring_configuration"] = []any{flattenS3MonitoringConfiguration(v)}
+	}
+
+	if v := apiObject.ManagedPersistenceMonitoringConfiguration; v != nil {
+		tfMap["managed_persistence_monitoring_configuration"] = []any{flattenManagedPersistenceMonitoringConfiguration(v)}
+	}
+
+	if v := apiObject.PrometheusMonitoringConfiguration; v != nil {
+		tfMap["prometheus_monitoring_configuration"] = []any{flattenPrometheusMonitoringConfiguration(v)}
+	}
+
+	return []any{tfMap}
+}
+
+func expandCloudWatchLoggingConfiguration(tfMap map[string]any) *types.CloudWatchLoggingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.CloudWatchLoggingConfiguration{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
+		apiObject.LogGroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap["log_stream_name_prefix"].(string); ok && v != "" {
+		apiObject.LogStreamNamePrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["encryption_key_arn"].(string); ok && v != "" {
+		apiObject.EncryptionKeyArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["log_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.LogTypes = expandLogTypes(v.List())
+	}
+
+	return apiObject
+}
+
+func flattenCloudWatchLoggingConfiguration(apiObject *types.CloudWatchLoggingConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
+	}
+
+	if v := apiObject.LogGroupName; v != nil {
+		tfMap[names.AttrLogGroupName] = aws.ToString(v)
+	}
+
+	if v := apiObject.LogStreamNamePrefix; v != nil {
+		tfMap["log_stream_name_prefix"] = aws.ToString(v)
+	}
+
+	if v := apiObject.EncryptionKeyArn; v != nil {
+		tfMap["encryption_key_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.LogTypes; v != nil {
+		tfMap["log_types"] = flattenLogTypes(v)
+	}
+
+	return tfMap
+}
+
+func expandLogTypes(tfList []any) map[string][]string {
+	if tfList == nil {
+		return nil
+	}
+
+	configs := make(map[string][]string)
+	for _, v := range tfList {
+		configData := v.(map[string]any)
+		key := configData[names.AttrName].(string)
+		values := flex.ExpandStringValueSet(configData[names.AttrValues].(*schema.Set))
+		configs[key] = values
+	}
+
+	return configs
+}
+
+func flattenLogTypes(apiObject map[string][]string) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	var out []any
+	for k, v := range apiObject {
+		data := make(map[string]any)
+		data[names.AttrName] = k
+		data[names.AttrValues] = flex.FlattenStringValueSet(v)
+		out = append(out, data)
+	}
+
+	return out
+}
+
+func expandS3MonitoringConfiguration(tfMap map[string]any) *types.S3MonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.S3MonitoringConfiguration{}
+
+	if v, ok := tfMap["log_uri"].(string); ok && v != "" {
+		apiObject.LogUri = aws.String(v)
+	}
+
+	if v, ok := tfMap["encryption_key_arn"].(string); ok && v != "" {
+		apiObject.EncryptionKeyArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenS3MonitoringConfiguration(apiObject *types.S3MonitoringConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.LogUri; v != nil {
+		tfMap["log_uri"] = aws.ToString(v)
+	}
+
+	if v := apiObject.EncryptionKeyArn; v != nil {
+		tfMap["encryption_key_arn"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func expandManagedPersistenceMonitoringConfiguration(tfMap map[string]any) *types.ManagedPersistenceMonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ManagedPersistenceMonitoringConfiguration{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["encryption_key_arn"].(string); ok && v != "" {
+		apiObject.EncryptionKeyArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenManagedPersistenceMonitoringConfiguration(apiObject *types.ManagedPersistenceMonitoringConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
+	}
+
+	if v := apiObject.EncryptionKeyArn; v != nil {
+		tfMap["encryption_key_arn"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func expandPrometheusMonitoringConfiguration(tfMap map[string]any) *types.PrometheusMonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PrometheusMonitoringConfiguration{}
+
+	if v, ok := tfMap["remote_write_url"].(string); ok && v != "" {
+		apiObject.RemoteWriteUrl = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenPrometheusMonitoringConfiguration(apiObject *types.PrometheusMonitoringConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.RemoteWriteUrl; v != nil {
+		tfMap["remote_write_url"] = aws.ToString(v)
 	}
 
 	return tfMap

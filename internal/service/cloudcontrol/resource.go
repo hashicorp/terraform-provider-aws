@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -137,7 +137,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Get(names.AttrRoleARN).(string),
 	)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cloud Control API Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -331,8 +331,7 @@ func findResource(ctx context.Context, conn *cloudcontrol.Client, input *cloudco
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -340,8 +339,7 @@ func findResource(ctx context.Context, conn *cloudcontrol.Client, input *cloudco
 	// These should be reported and fixed upstream over time, but for now work around the issue.
 	if errs.Contains(err, "not found") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -369,8 +367,7 @@ func findProgressEvent(ctx context.Context, conn *cloudcontrol.Client, input *cl
 
 	if errs.IsA[*types.RequestTokenNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -385,8 +382,8 @@ func findProgressEvent(ctx context.Context, conn *cloudcontrol.Client, input *cl
 	return output.ProgressEvent, nil
 }
 
-func statusProgressEventOperation(ctx context.Context, conn *cloudcontrol.Client, requestToken string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProgressEventOperation(conn *cloudcontrol.Client, requestToken string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findProgressEventByRequestToken(ctx, conn, requestToken)
 
 		if tfresource.NotFound(err) {
@@ -405,7 +402,7 @@ func waitProgressEventOperationStatusSuccess(ctx context.Context, conn *cloudcon
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.OperationStatusInProgress, types.OperationStatusPending),
 		Target:  enum.Slice(types.OperationStatusSuccess),
-		Refresh: statusProgressEventOperation(ctx, conn, requestToken),
+		Refresh: statusProgressEventOperation(conn, requestToken),
 		Timeout: timeout,
 	}
 
@@ -413,7 +410,7 @@ func waitProgressEventOperationStatusSuccess(ctx context.Context, conn *cloudcon
 
 	if output, ok := outputRaw.(*types.ProgressEvent); ok {
 		if output.OperationStatus == types.OperationStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", output.ErrorCode, aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", output.ErrorCode, aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

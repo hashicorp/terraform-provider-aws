@@ -217,30 +217,24 @@ func sweepJobQueues(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	input := &batch.DescribeJobQueuesInput{}
+	input := batch.DescribeJobQueuesInput{}
 	conn := client.BatchClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	pages := batch.NewDescribeJobQueuesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Batch Job Queue sweep for %s: %s", region, err)
-			return nil
-		}
-
+	for jobQueue, err := range listJobQueues(ctx, conn, &input) {
 		if err != nil {
+			if awsv2.SkipSweepError(err) {
+				log.Printf("[WARN] Skipping Batch Job Queue sweep for %s: %s", region, err)
+				return nil
+			}
 			return fmt.Errorf("error listing Batch Job Queues (%s): %w", region, err)
 		}
 
-		for _, v := range page.JobQueues {
-			id := aws.ToString(v.JobQueueArn)
+		id := aws.ToString(jobQueue.JobQueueArn)
 
-			sweepResources = append(sweepResources, framework.NewSweepResource(newJobQueueResource, client,
-				framework.NewAttribute(names.AttrID, id),
-			))
-		}
+		sweepResources = append(sweepResources, framework.NewSweepResource(newJobQueueResource, client,
+			framework.NewAttribute(names.AttrID, id),
+		))
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

@@ -55,6 +55,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3control_bucket.example
+  identity = {
+    "arn" = "arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example"
+  }
+}
+
+resource "aws_s3control_bucket" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the bucket.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Control Buckets using Amazon Resource Name (ARN). For example:
 
 ```python
@@ -78,4 +99,4 @@ Using `terraform import`, import S3 Control Buckets using Amazon Resource Name (
 % terraform import aws_s3control_bucket.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-32a2d5ee854ebd1032d54a174860683e18ce57538e46596fae6c97d24752b4a8 -->
+<!-- cache-key: cdktf-0.20.8 input-caebb2f6cb68c3fc54b30efd5fb03e31ea29bb3d96ecea4f881d6a952270f5fe -->

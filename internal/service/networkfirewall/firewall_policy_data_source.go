@@ -121,12 +121,12 @@ func dataSourceFirewallPolicy() *schema.Resource {
 										},
 										"override": {
 											Type:     schema.TypeList,
-											Optional: true,
+											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													names.AttrAction: {
 														Type:     schema.TypeString,
-														Optional: true,
+														Computed: true,
 													},
 												},
 											},

@@ -167,10 +167,10 @@ func waitPortfolioShareReady(ctx context.Context, conn *servicecatalog.Client, p
 	return nil, err
 }
 
-func waitPortfolioShareCreatedWithToken(ctx context.Context, conn *servicecatalog.Client, token string, acceptRequired bool, timeout time.Duration) (*servicecatalog.DescribePortfolioShareStatusOutput, error) {
+func waitPortfolioShareCreatedWithToken(ctx context.Context, conn *servicecatalog.Client, token string, waitForAcceptance bool, timeout time.Duration) (*servicecatalog.DescribePortfolioShareStatusOutput, error) {
 	targets := enum.Slice(awstypes.ShareStatusCompleted)
 
-	if !acceptRequired {
+	if !waitForAcceptance {
 		targets = append(targets, string(awstypes.ShareStatusInProgress))
 	}
 

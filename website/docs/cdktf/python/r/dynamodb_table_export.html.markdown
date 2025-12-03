@@ -157,6 +157,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_dynamodb_table_export.example
+  identity = {
+    "arn" = "arn:aws:dynamodb:us-west-2:123456789012:table/example-table/export/01234567890123-a1b2c3d4"
+  }
+}
+
+resource "aws_dynamodb_table_export" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DynamoDB table export.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB table exports using the `arn`. For example:
 
 ```python
@@ -180,4 +201,4 @@ Using `terraform import`, import DynamoDB table exports using the `arn`. For exa
 % terraform import aws_dynamodb_table_export.example arn:aws:dynamodb:us-west-2:12345678911:table/my-table-1/export/01580735656614-2c2f422e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4885080fc25a90e9b0f62fce459b37653bdef88c4deb4a4aef2a45f2d896d79a -->
+<!-- cache-key: cdktf-0.20.8 input-eb0ee678038118a6488f53b949048625abf309cf684df52abee3ae8309d4df48 -->

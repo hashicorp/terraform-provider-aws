@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -158,7 +157,7 @@ type Options struct {
 	ContinuousTargetOccurence int           // Number of times the Target state has to occur continuously
 }
 
-func (o Options) Apply(c *sdkretry.StateChangeConf) {
+func (o Options) Apply(c *retry.StateChangeConf) {
 	if o.Delay > 0 {
 		c.Delay = o.Delay
 	}

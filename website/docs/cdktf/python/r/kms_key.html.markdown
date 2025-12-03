@@ -357,8 +357,8 @@ resource "aws_kms_key" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS Keys using the `id`. For example:
 
@@ -383,4 +383,4 @@ Using `terraform import`, import KMS Keys using the `id`. For example:
 % terraform import aws_kms_key.a 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d361ca4a7f185ab8a97781c71f9e8e3e4b6d7cb7f972db032b819a1ce2b6c358 -->
+<!-- cache-key: cdktf-0.20.8 input-5da9b434d78337caf9d5608552520fe07aad9a14edf5ed112f8fb83960fc827e -->

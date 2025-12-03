@@ -12,6 +12,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
@@ -22,7 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	invocationResourceIDPartCount = 3
 )
 
 // @SDKResource("aws_lambda_invocation", name="Invocation")
@@ -39,6 +45,19 @@ func resourceInvocation() *schema.Resource {
 				Type:    resourceInvocationConfigV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: invocationStateUpgradeV0,
 				Version: 0,
+			},
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				functionName, qualifier, _, err := invocationParseResourceID(d.Id())
+				if err != nil {
+					return nil, err
+				}
+
+				d.Set("function_name", functionName)
+				d.Set("qualifier", qualifier)
+
+				return []*schema.ResourceData{d}, nil
 			},
 		},
 
@@ -68,6 +87,10 @@ func resourceInvocation() *schema.Resource {
 			"result": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"terraform_key": {
 				Type:     schema.TypeString,
@@ -194,6 +217,9 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 		Payload:        payload,
 		Qualifier:      aws.String(qualifier),
 	}
+	if v, ok := d.GetOk("tenant_id"); ok {
+		input.TenantId = aws.String(v.(string))
+	}
 
 	output, err := conn.Invoke(ctx, input)
 
@@ -205,7 +231,13 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, string(output.Payload))
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(payload)))
+	resultHash := fmt.Sprintf("%x", md5.Sum(payload))
+	id, err := flex.FlattenResourceId([]string{functionName, qualifier, resultHash}, invocationResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.SetId(id)
 	d.Set("result", string(output.Payload))
 
 	return diags
@@ -247,4 +279,27 @@ func customizeDiffInputChangeWithCRUDScope(_ context.Context, diff *schema.Resou
 		return diff.SetNewComputed("result")
 	}
 	return nil
+}
+
+func invocationParseResourceID(id string) (string, string, string, error) {
+	parts, err := flex.ExpandResourceId(id, invocationResourceIDPartCount, false)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	functionName := parts[0]
+	qualifier := parts[1]
+	resultHash := parts[2]
+
+	// Validate qualifier format
+	if qualifier != "$LATEST" && !regexache.MustCompile(`^[0-9]+$`).MatchString(qualifier) {
+		return "", "", "", fmt.Errorf("invalid qualifier format: %s, expected $LATEST or numeric version", qualifier)
+	}
+
+	// Validate hash format (should be MD5 - 32 hex chars)
+	if !regexache.MustCompile(`^[a-f0-9]{32}$`).MatchString(resultHash) {
+		return "", "", "", fmt.Errorf("invalid result hash format: %s, expected 32-character MD5 hash", resultHash)
+	}
+
+	return functionName, qualifier, resultHash, nil
 }

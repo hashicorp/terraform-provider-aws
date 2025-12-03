@@ -101,11 +101,13 @@ func resourcePortfolioShare() *schema.Resource {
 	}
 }
 
+const portfolioShareMutexKey = "aws_servicecatalog_portfolio_share"
+
 func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	input := &servicecatalog.CreatePortfolioShareInput{
+	input := servicecatalog.CreatePortfolioShareInput{
 		PortfolioId:     aws.String(d.Get("portfolio_id").(string)),
 		SharePrincipals: d.Get("share_principals").(bool),
 		AcceptLanguage:  aws.String(d.Get("accept_language").(string)),
@@ -131,11 +133,14 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 		input.ShareTagOptions = v.(bool)
 	}
 
+	conns.GlobalMutexKV.Lock(portfolioShareMutexKey)
+	defer conns.GlobalMutexKV.Unlock(portfolioShareMutexKey)
+
 	var output *servicecatalog.CreatePortfolioShareOutput
 	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
-		output, err = conn.CreatePortfolioShare(ctx, input)
+		output, err = conn.CreatePortfolioShare(ctx, &input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return tfresource.RetryableError(err)
@@ -219,7 +224,7 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	input := &servicecatalog.UpdatePortfolioShareInput{
+	input := servicecatalog.UpdatePortfolioShareInput{
 		PortfolioId:    aws.String(d.Get("portfolio_id").(string)),
 		AcceptLanguage: aws.String(d.Get("accept_language").(string)),
 	}
@@ -249,7 +254,7 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) *tfresource.RetryError {
-		_, err := conn.UpdatePortfolioShare(ctx, input)
+		_, err := conn.UpdatePortfolioShare(ctx, &input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
 			return tfresource.RetryableError(err)
@@ -273,7 +278,7 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	input := &servicecatalog.DeletePortfolioShareInput{
+	input := servicecatalog.DeletePortfolioShareInput{
 		PortfolioId: aws.String(d.Get("portfolio_id").(string)),
 	}
 
@@ -297,7 +302,10 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 		input.OrganizationNode = orgNode
 	}
 
-	output, err := conn.DeletePortfolioShare(ctx, input)
+	conns.GlobalMutexKV.Lock(portfolioShareMutexKey)
+	defer conns.GlobalMutexKV.Unlock(portfolioShareMutexKey)
+
+	output, err := conn.DeletePortfolioShare(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

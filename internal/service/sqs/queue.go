@@ -194,10 +194,12 @@ var (
 
 // @SDKResource("aws_sqs_queue", name="Queue")
 // @Tags(identifierAttribute="id")
+// @IdentityVersion(1)
+// @CustomInherentRegionIdentity("url", "parseQueueURL")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
-// @IdentityAttribute("url")
 // @Testing(preIdentityVersion="v6.9.0")
-// @Testing(idAttrDuplicates="url")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.19.0")
 func resourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
@@ -630,4 +632,16 @@ func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
+}
+
+func parseQueueURL(u string) (result inttypes.BaseIdentity, err error) {
+	re := regexache.MustCompile(`^https://sqs\.([a-z0-9-]+)\.[^/]+/([0-9]{12})/.+`)
+	match := re.FindStringSubmatch(u)
+	if match == nil {
+		return inttypes.BaseIdentity{}, fmt.Errorf("could not parse %q as SQS URL", u)
+	}
+	return inttypes.BaseIdentity{
+		AccountID: match[2],
+		Region:    match[1],
+	}, nil
 }

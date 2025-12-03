@@ -114,7 +114,7 @@ func resourceEBSVolume() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(125, 1000),
+				ValidateFunc: validation.IntBetween(125, 2000),
 			},
 			names.AttrType: {
 				Type:     schema.TypeString,

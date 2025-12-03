@@ -295,6 +295,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_metric_alarm.example
+  identity = {
+    alarm_name = "alarm-12345"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `alarm_name` (String) Name of the CloudWatch metric alarm.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Metric Alarm using the `alarm_name`. For example:
 
 ```python
@@ -309,13 +335,13 @@ from imports.aws.cloudwatch_metric_alarm import CloudwatchMetricAlarm
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        CloudwatchMetricAlarm.generate_config_for_import(self, "test", "alarm-12345")
+        CloudwatchMetricAlarm.generate_config_for_import(self, "example", "alarm-12345")
 ```
 
 Using `terraform import`, import CloudWatch Metric Alarm using the `alarm_name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_metric_alarm.test alarm-12345
+% terraform import aws_cloudwatch_metric_alarm.example alarm-12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ec34e5bd1ec06f864ba1db9a35923fb8bf61b18ce1016da6894ae10814363e02 -->
+<!-- cache-key: cdktf-0.20.8 input-9a7f272d9f320751461cd8357d42baaec6a411d01f769fa15ade05e4665110bd -->

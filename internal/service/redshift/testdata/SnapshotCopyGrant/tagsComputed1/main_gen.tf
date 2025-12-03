@@ -1,0 +1,25 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+provider "null" {}
+
+resource "aws_redshift_snapshot_copy_grant" "test" {
+  snapshot_copy_grant_name = var.rName
+
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+  }
+}
+
+resource "null_resource" "test" {}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "unknownTagKey" {
+  type     = string
+  nullable = false
+}

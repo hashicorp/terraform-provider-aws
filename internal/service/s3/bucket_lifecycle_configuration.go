@@ -110,12 +110,6 @@ func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, reque
 					listvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Validators: []validator.Object{
-						tfobjectvalidator.WarnExactlyOneOfChildren(
-							path.MatchRelative().AtName(names.AttrFilter),
-							path.MatchRelative().AtName(names.AttrPrefix),
-						),
-					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrID: schema.StringAttribute{
 							Required: true,
@@ -298,11 +292,6 @@ func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, reque
 								Attributes: map[string]schema.Attribute{
 									"newer_noncurrent_versions": schema.Int32Attribute{
 										Optional: true,
-										Computed: true, // Because of schema change
-										PlanModifiers: []planmodifier.Int32{
-											tfint32planmodifier.NullValue(),
-											int32planmodifier.UseStateForUnknown(),
-										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(1),
 										},
@@ -325,11 +314,6 @@ func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, reque
 								Attributes: map[string]schema.Attribute{
 									"newer_noncurrent_versions": schema.Int32Attribute{
 										Optional: true,
-										Computed: true, // Because of schema change
-										PlanModifiers: []planmodifier.Int32{
-											tfint32planmodifier.NullValue(),
-											int32planmodifier.UseStateForUnknown(),
-										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(1),
 										},
@@ -484,9 +468,6 @@ func (r *bucketLifecycleConfigurationResource) Read(ctx context.Context, request
 
 		return nil
 	})
-	if err != nil {
-		return
-	}
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)

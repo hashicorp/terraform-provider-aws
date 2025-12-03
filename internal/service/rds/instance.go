@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -2851,7 +2852,7 @@ func findDBInstances(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*types.DBInstanceNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -2871,8 +2872,8 @@ func findDBInstances(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 	return output, nil
 }
 
-func statusDBInstance(ctx context.Context, conn *rds.Client, id string, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBInstance(conn *rds.Client, id string, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id, optFns...)
 
 		if tfresource.NotFound(err) {
@@ -2912,11 +2913,13 @@ func waitDBInstanceAvailable(ctx context.Context, conn *rds.Client, id string, t
 			instanceStatusResettingMasterCredentials,
 			instanceStatusStarting,
 			instanceStatusStopping,
+			instanceStatusStorageConfigUpgrade,
 			instanceStatusStorageFull,
+			instanceStatusStorageInitialization,
 			instanceStatusUpgrading,
 		},
 		Target:  []string{instanceStatusAvailable, instanceStatusStorageOptimization},
-		Refresh: statusDBInstance(ctx, conn, id),
+		Refresh: statusDBInstance(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -2950,7 +2953,7 @@ func waitDBInstanceStopped(ctx context.Context, conn *rds.Client, id string, tim
 			instanceStatusUpgrading,
 		},
 		Target:                    []string{instanceStatusStopped},
-		Refresh:                   statusDBInstance(ctx, conn, id),
+		Refresh:                   statusDBInstance(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 		Delay:                     10 * time.Second,
@@ -2994,7 +2997,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.Client, id string, tim
 			instanceStatusStorageOptimization,
 		},
 		Target:  []string{},
-		Refresh: statusDBInstance(ctx, conn, id),
+		Refresh: statusDBInstance(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -3021,7 +3024,7 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds.Client, id strin
 
 	// Eventual consistency check.
 	if aws.ToString(output.BlueGreenDeploymentIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -3047,7 +3050,7 @@ func findBlueGreenDeployments(ctx context.Context, conn *rds.Client, input *rds.
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.BlueGreenDeploymentNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -3067,8 +3070,8 @@ func findBlueGreenDeployments(ctx context.Context, conn *rds.Client, input *rds.
 	return output, nil
 }
 
-func statusBlueGreenDeployment(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBlueGreenDeployment(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -3084,8 +3087,9 @@ func statusBlueGreenDeployment(ctx context.Context, conn *rds.Client, id string)
 
 func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
 	options := tfresource.Options{
-		PollInterval: 10 * time.Second,
-		Delay:        1 * time.Minute,
+		PollInterval:              10 * time.Second,
+		Delay:                     1 * time.Minute,
+		ContinuousTargetOccurence: 3,
 	}
 	for _, fn := range optFns {
 		fn(&options)
@@ -3094,7 +3098,7 @@ func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING"},
 		Target:  []string{"AVAILABLE"},
-		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Refresh: statusBlueGreenDeployment(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -3120,7 +3124,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds.C
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"AVAILABLE", "SWITCHOVER_IN_PROGRESS"},
 		Target:  []string{"SWITCHOVER_COMPLETED"},
-		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Refresh: statusBlueGreenDeployment(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -3150,7 +3154,7 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING", "AVAILABLE", "SWITCHOVER_IN_PROGRESS", "SWITCHOVER_COMPLETED", "INVALID_CONFIGURATION", "SWITCHOVER_FAILED", "DELETING"},
 		Target:  []string{},
-		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Refresh: statusBlueGreenDeployment(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)

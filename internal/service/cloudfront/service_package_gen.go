@@ -17,6 +17,17 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newCreateInvalidationAction,
+			TypeName: "aws_cloudfront_create_invalidation",
+			Name:     "Create Invalidation",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{

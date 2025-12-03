@@ -7,7 +7,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,7 +23,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_Identity_Basic(t *testing.T) {
 
 	var v awstypes.LogDeliveryConfigurationType
 	resourceName := "aws_cognito_log_delivery_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -112,7 +110,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_Identity_RegionOverride(t *testin
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cognito_log_delivery_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -190,64 +188,6 @@ func TestAccCognitoIDPLogDeliveryConfiguration_Identity_RegionOverride(t *testin
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrUserPoolID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
-				},
-			},
-		},
-	})
-}
-
-// Resource Identity was added after v6.3.0
-func TestAccCognitoIDPLogDeliveryConfiguration_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var v awstypes.LogDeliveryConfigurationType
-	resourceName := "aws_cognito_log_delivery_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.CognitoIDPServiceID),
-		CheckDestroy: testAccCheckLogDeliveryConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			// Step 1: Create pre-Identity
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogDeliveryConfiguration/basic_v6.3.0/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-
-			// Step 2: Current version
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogDeliveryConfiguration/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID:  tfknownvalue.AccountID(),
-						names.AttrRegion:     knownvalue.StringExact(acctest.Region()),
-						names.AttrUserPoolID: knownvalue.NotNull(),
-					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrUserPoolID)),
 				},
 			},
 		},

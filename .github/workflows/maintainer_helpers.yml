@@ -39,13 +39,13 @@ jobs:
       CURRENT_LABELS: ${{ github.event_name == 'issues' && toJSON(github.event.issue.labels.*.name) || toJSON(github.event.pull_request.labels.*.name) }}
       GH_CLI_SUBCOMMAND: ${{ github.event_name == 'pull_request_target' && 'pr' || 'issue' }}
     steps:
-      - uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.1
+      - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
         id: token
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PEM }}
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           sparse-checkout: .github/actions/
 
@@ -104,7 +104,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
         with:
           sparse-checkout: .github/actions/
 
@@ -134,7 +134,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ toJSON(format(':open: <{0}|{1}> opened <{2}|{3}>', env.AUTHOR_URL, env.AUTHOR, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                    "text": ${{ toJSON(format(':open-5403: <{0}|{1}> opened <{2}|{3}>', env.AUTHOR_URL, env.AUTHOR, env.ISSUE_URL, env.ISSUE_TITLE)) }}
                   }
                 }
               ]
@@ -153,7 +153,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ toJSON(format(':open: :aws: contributor <{0}|{1}> opened <{2}|{3}>', env.AUTHOR_URL, env.AUTHOR, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                    "text": ${{ toJSON(format(':open-5403: :aws: contributor <{0}|{1}> opened <{2}|{3}>', env.AUTHOR_URL, env.AUTHOR, env.ISSUE_URL, env.ISSUE_TITLE)) }}
                   }
                 }
               ]
@@ -214,13 +214,13 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ toJSON(format(':merged: <{0}|{1}> merged <{2}|{3}>', env.MERGED_BY_URL, env.MERGED_BY_LOGIN, env.ISSUE_URL, env.ISSUE_TITLE)) }}
+                    "text": ${{ toJSON(format(':merged-rounded: <{0}|{1}> merged <{2}|{3}>', env.MERGED_BY_URL, env.MERGED_BY_LOGIN, env.ISSUE_URL, env.ISSUE_TITLE)) }}
                   }
                 }
               ]
             }
 
-      - uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.1
+      - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
         if: github.event_name == 'schedule'
         id: token
         with:

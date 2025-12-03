@@ -27,7 +27,10 @@ func TestAccLakeFormationResource_basic(t *testing.T) {
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
@@ -53,7 +56,10 @@ func TestAccLakeFormationResource_disappears(t *testing.T) {
 	resourceName := "aws_lakeformation_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
@@ -79,7 +85,7 @@ func TestAccLakeFormationResource_serviceLinkedRole(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/lakeformation.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -108,7 +114,10 @@ func TestAccLakeFormationResource_updateRoleToRole(t *testing.T) {
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
@@ -144,7 +153,7 @@ func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/lakeformation.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -180,7 +189,7 @@ func TestAccLakeFormationResource_hybridAccessEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -207,7 +216,7 @@ func TestAccLakeFormationResource_withPrivilegedAccessEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

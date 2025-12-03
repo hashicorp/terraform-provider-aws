@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -25,7 +24,7 @@ func TestAccBCMDataExportsExport_Identity_Basic(t *testing.T) {
 
 	var v bcmdataexports.GetExportOutput
 	resourceName := "aws_bcmdataexports_export.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -108,7 +107,7 @@ func TestAccBCMDataExportsExport_Identity_ExistingResource_fromV5(t *testing.T) 
 
 	var v bcmdataexports.GetExportOutput
 	resourceName := "aws_bcmdataexports_export.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -166,7 +165,7 @@ func TestAccBCMDataExportsExport_Identity_ExistingResource_fromV6(t *testing.T) 
 
 	var v bcmdataexports.GetExportOutput
 	resourceName := "aws_bcmdataexports_export.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

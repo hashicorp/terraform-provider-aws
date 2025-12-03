@@ -660,7 +660,7 @@ The following arguments are optional:
 * `skipDestroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`.
 * `snapStart` - (Optional) Configuration block for snap start settings. [See below](#snap_start-configuration-block).
 * `sourceCodeHash` - (Optional) Base64-encoded SHA256 hash of the package file. Used to trigger updates when source code changes.
-* `source_kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package. Conflicts with `imageUri`.
+* `sourceKmsKeyArn` - (Optional) ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package. Conflicts with `imageUri`.
 * `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
 * `tracingConfig` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-configuration-block).
@@ -706,6 +706,8 @@ The following arguments are optional:
 
 ### vpc_config Configuration Block
 
+~> **NOTE:** If `subnetIds`, `securityGroupIds` and `ipv6AllowedForDualStack` are empty then `vpcConfig` is considered to be empty or unset.
+
 * `ipv6AllowedForDualStack` - (Optional) Whether to allow outbound IPv6 traffic on VPC functions connected to dual-stack subnets. Default: `false`.
 * `securityGroupIds` - (Required) List of security group IDs associated with the Lambda function.
 * `subnetIds` - (Required) List of subnet IDs associated with the Lambda function.
@@ -738,6 +740,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lambda_function.example
+  identity = {
+    function_name = "example"
+  }
+}
+
+resource "aws_lambda_function" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `functionName` (String) Name of the Lambda function.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Functions using the `functionName`. For example:
 
 ```typescript
@@ -764,4 +792,4 @@ Using `terraform import`, import Lambda Functions using the `functionName`. For 
 % terraform import aws_lambda_function.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b756c6f87fc0304f6fc7b40900cbabe80997f8f9d4c639dce1dab075ff7ce786 -->
+<!-- cache-key: cdktf-0.20.8 input-f7ee325f11c59546f1e13ab7fc593a4066f6bcb79cf2c09f42d3b474f1cf35fd -->

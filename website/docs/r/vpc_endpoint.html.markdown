@@ -42,6 +42,21 @@ resource "aws_vpc_endpoint" "s3" {
 }
 ```
 
+### Cross-region enabled AWS services
+
+```terraform
+resource "aws_vpc_endpoint" "s3" {
+  region         = "us-west-2"
+  vpc_id         = aws_vpc.main.id
+  service_name   = "com.amazonaws.us-east-2.s3"
+  service_region = "us-east-2"
+
+  tags = {
+    Environment = "test"
+  }
+}
+```
+
 ### Interface Endpoint Type
 
 ```terraform
@@ -241,8 +256,8 @@ resource "aws_vpc_endpoint" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoints using the VPC endpoint `id`. For example:
 

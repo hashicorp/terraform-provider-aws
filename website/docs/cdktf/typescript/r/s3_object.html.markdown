@@ -308,6 +308,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_object.example
+  identity = {
+    bucket = "some-bucket-name"
+    key    = "some/key.txt"
+  }
+}
+
+resource "aws_s3_object" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+* `key` (String) Object key.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import objects using the `id` or S3 URL. For example:
 
 Import using the `id`, which is the bucket name and the key together:
@@ -372,4 +400,4 @@ Import using S3 URL syntax:
 % terraform import aws_s3_object.example s3://some-bucket-name/some/key.txt
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c97164acb47185d674cef0f99b544a666c36e3b3e8e48130038c0e9d72db2b4d -->
+<!-- cache-key: cdktf-0.20.8 input-4e672472b8a5c24cb32a6d28460581a9529eb7460974bad2a8d9b59b012a454a -->

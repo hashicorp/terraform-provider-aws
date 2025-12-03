@@ -124,8 +124,8 @@ resource "aws_ecr_repository_policy" "example" {
 
 #### Optional
 
-- `accountId` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Repository Policy using the repository name. For example:
 
@@ -153,4 +153,4 @@ Using `terraform import`, import ECR Repository Policy using the repository name
 % terraform import aws_ecr_repository_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-03da7eae7e586047f4aad1a1cff8917110e7a13ade425657e1ec094aaab5d310 -->
+<!-- cache-key: cdktf-0.20.8 input-fc615a9bdefa1b0fd38c138a6d198181e857c6bafbc98c17913a8fea91cc9936 -->

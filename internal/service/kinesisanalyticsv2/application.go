@@ -1283,20 +1283,6 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 			}
 
-			if d.HasChange("application_configuration.0.run_configuration") {
-				application, err := findApplicationDetailByName(ctx, conn, applicationName)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", applicationName, err)
-				}
-
-				if actual, expected := application.ApplicationStatus, awstypes.ApplicationStatusRunning; actual == expected {
-					input.RunConfigurationUpdate = expandRunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]any))
-
-					updateApplication = true
-				}
-			}
-
 			input.ApplicationConfigurationUpdate = applicationConfigurationUpdate
 		}
 
@@ -1392,6 +1378,17 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if updateApplication {
+			// Always send 'run_configuration', else defaults are applied.
+			application, err := findApplicationDetailByName(ctx, conn, applicationName)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", applicationName, err)
+			}
+
+			if actual, expected := application.ApplicationStatus, awstypes.ApplicationStatusRunning; actual == expected {
+				input.RunConfigurationUpdate = expandRunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]any))
+			}
+
 			input.CurrentApplicationVersionId = aws.Int64(currentApplicationVersionID)
 
 			output, err := waitIAMPropagation(ctx, func() (*kinesisanalyticsv2.UpdateApplicationOutput, error) {

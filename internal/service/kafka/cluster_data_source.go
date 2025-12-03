@@ -216,12 +216,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	clusterName := d.Get(names.AttrClusterName).(string)
-	input := &kafka.ListClustersInput{
-		ClusterNameFilter: aws.String(clusterName),
-	}
-	cluster, err := findCluster(ctx, conn, input, func(v *types.ClusterInfo) bool {
-		return aws.ToString(v.ClusterName) == clusterName
-	})
+	cluster, err := findClusterByName(ctx, conn, clusterName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s): %s", clusterName, err)
@@ -265,8 +260,13 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
-func findCluster(ctx context.Context, conn *kafka.Client, input *kafka.ListClustersInput, filter tfslices.Predicate[*types.ClusterInfo]) (*types.ClusterInfo, error) {
-	output, err := findClusters(ctx, conn, input, filter)
+func findClusterByName(ctx context.Context, conn *kafka.Client, name string) (*types.ClusterInfo, error) {
+	input := kafka.ListClustersInput{
+		ClusterNameFilter: aws.String(name),
+	}
+	output, err := findClusters(ctx, conn, &input, func(v *types.ClusterInfo) bool {
+		return aws.ToString(v.ClusterName) == name
+	})
 
 	if err != nil {
 		return nil, err

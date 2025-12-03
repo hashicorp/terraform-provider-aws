@@ -188,7 +188,7 @@ func testAccCheckDirectoryBucketAccessPointScopeDestroy(ctx context.Context) res
 }
 
 func testAccAccessPointScopeConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAccessPointConfig_directoryBucket(rName), `
+	return acctest.ConfigCompose(testAccAccessPointConfig_directoryBucketBasic(rName), `
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3control_directory_bucket_access_point_scope" "test" {
@@ -204,7 +204,7 @@ resource "aws_s3control_directory_bucket_access_point_scope" "test" {
 }
 
 func testAccAccessPointScopeConfig_updated(rName string) string {
-	return acctest.ConfigCompose(testAccAccessPointConfig_directoryBucket(rName), `
+	return acctest.ConfigCompose(testAccAccessPointConfig_directoryBucketBasic(rName), `
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3control_directory_bucket_access_point_scope" "test" {

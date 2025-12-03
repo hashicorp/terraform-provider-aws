@@ -10,6 +10,8 @@ description: |-
 
 Get information on an EC2 Transit Gateway VPC Attachment.
 
+!> **Warning:** Using the `aws_ec2_transit_gateway_vpc_attachment` data source in combination with  `aws_ec2_transit_gateway_route_table_propagation` or `aws_ec2_transit_gateway_route_table_association` may result in lost connectivity due to unnecessary resource re-creation. To avoid this, use the `id` attribute directly from the `aws_ec2_transit_gateway_vpc_attachment` _resource_. For example, `transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.example.id`.
+
 ## Example Usage
 
 ### By Filter

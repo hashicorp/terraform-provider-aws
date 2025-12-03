@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -170,7 +171,7 @@ func handlerConfigBlock(ctx context.Context) schema.Block {
 
 func (r *channelNamespaceResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data channelNamespaceResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -179,7 +180,7 @@ func (r *channelNamespaceResource) Create(ctx context.Context, request resource.
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var input appsync.CreateChannelNamespaceInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -197,12 +198,12 @@ func (r *channelNamespaceResource) Create(ctx context.Context, request resource.
 	// Set values for unknowns.
 	data.ChannelNamespaceARN = fwflex.StringToFramework(ctx, output.ChannelNamespace.ChannelNamespaceArn)
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data), smerr.ID, name)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data), smerr.ID, name)
 }
 
 func (r *channelNamespaceResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data channelNamespaceResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -212,8 +213,8 @@ func (r *channelNamespaceResource) Read(ctx context.Context, request resource.Re
 	apiID, name := fwflex.StringValueFromFramework(ctx, data.ApiID), fwflex.StringValueFromFramework(ctx, data.Name)
 	output, err := findChannelNamespaceByTwoPartKey(ctx, conn, apiID, name)
 
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if intretry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -228,21 +229,21 @@ func (r *channelNamespaceResource) Read(ctx context.Context, request resource.Re
 	}
 
 	// Set attributes for import.
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data), smerr.ID, name)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data), smerr.ID, name)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data), smerr.ID, name)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data), smerr.ID, name)
 }
 
 func (r *channelNamespaceResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var new, old channelNamespaceResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -251,14 +252,14 @@ func (r *channelNamespaceResource) Update(ctx context.Context, request resource.
 
 	name := fwflex.StringValueFromFramework(ctx, new.Name)
 	diff, d := fwflex.Diff(ctx, new, old)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d, smerr.ID, name)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d, smerr.ID, name)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var input appsync.UpdateChannelNamespaceInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input), smerr.ID, name)
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input), smerr.ID, name)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -271,12 +272,12 @@ func (r *channelNamespaceResource) Update(ctx context.Context, request resource.
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new), smerr.ID, name)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new), smerr.ID, name)
 }
 
 func (r *channelNamespaceResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data channelNamespaceResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -307,13 +308,13 @@ func (r *channelNamespaceResource) ImportState(ctx context.Context, request reso
 	parts, err := intflex.ExpandResourceId(request.ID, channelNamespaceIDParts, true)
 
 	if err != nil {
-		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 
 		return
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("api_id"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), parts[1])...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("api_id"), parts[0]))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(names.AttrName), parts[1]))
 }
 
 func findChannelNamespaceByTwoPartKey(ctx context.Context, conn *appsync.Client, apiID, name string) (*awstypes.ChannelNamespace, error) {

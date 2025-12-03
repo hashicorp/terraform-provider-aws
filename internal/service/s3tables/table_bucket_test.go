@@ -61,12 +61,13 @@ func TestAccS3TablesTableBucket_basic(t *testing.T) {
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
@@ -143,7 +144,7 @@ func TestAccS3TablesTableBucket_encryptionConfiguration(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
@@ -214,7 +215,7 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
@@ -239,7 +240,7 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
@@ -264,7 +265,7 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
@@ -411,6 +412,10 @@ func testAccCheckTableBucketExists(ctx context.Context, n string, v *s3tables.Ge
 
 		return nil
 	}
+}
+
+func testAccTableBucketImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return acctest.AttrImportStateIdFunc(resourceName, names.AttrARN)
 }
 
 func testAccTableBucketConfig_basic(rName string) string {

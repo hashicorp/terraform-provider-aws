@@ -772,6 +772,13 @@ func TestAccRDSCluster_allocatedStorage_io1(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "100"),
 				),
 			},
+			{
+				Config: testAccClusterConfig_allocatedStorage(rName, "io1", 200, 1000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "200"),
+				),
+			},
 		},
 	})
 }
@@ -866,10 +873,17 @@ func TestAccRDSCluster_iops(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_iops(rName),
+				Config: testAccClusterConfig_iops(rName, 1000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_iops(rName, 2000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "2000"),
 				),
 			},
 		},
@@ -3363,6 +3377,46 @@ func TestAccRDSCluster_databaseInsightsMode_defaultKMSKey_create(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_GlobalClusterIdentifier_databaseInsightsMode_defaultKMSKey_create(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	kmsKeyIDExpectNoChange := statecheck.CompareValue(compare.ValuesSame())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_GlobalClusterIdentifier_databaseInsightsMode_defaultKMSKey(rName, "advanced", true, "465"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("advanced")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					kmsKeyIDExpectNoChange.AddStateValue("data.aws_kms_key.rds", tfjsonpath.New(names.AttrARN)),
+					kmsKeyIDExpectNoChange.AddStateValue(resourceName, tfjsonpath.New("performance_insights_kms_key_id")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(465)),
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_databaseInsightsMode_defaultKMSKey_Disable_PerformanceInsightsEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4550,7 +4604,7 @@ resource "aws_rds_cluster" "test" {
 `, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, storageType, allocatedStorage, iops))
 }
 
-func testAccClusterConfig_iops(rName string) string {
+func testAccClusterConfig_iops(rName string, iops int) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
@@ -4572,12 +4626,12 @@ resource "aws_rds_cluster" "test" {
   engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
   storage_type              = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage         = 100
-  iops                      = 1000
+  iops                      = %[4]d
   master_password           = "mustbeeightcharaters"
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName))
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, iops))
 }
 
 func testAccClusterConfig_dbClusterInstanceClass(rName string, oddClasses bool) string {
@@ -7213,6 +7267,48 @@ resource "aws_rds_cluster" "test" {
   database_insights_mode                = %[3]s
   performance_insights_enabled          = %[4]t
   performance_insights_retention_period = %[5]s
+}
+
+data "aws_kms_key" "rds" {
+  key_id = "alias/aws/rds"
+}
+`, rName, tfrds.ClusterEngineMySQL, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriod))
+}
+
+func testAccClusterConfig_GlobalClusterIdentifier_databaseInsightsMode_defaultKMSKey(rName, databaseInsightsMode string, performanceInsightsEnabled bool, performanceInsightsRetentionPeriod string) string {
+	if databaseInsightsMode != "null" {
+		databaseInsightsMode = strconv.Quote(databaseInsightsMode)
+	}
+
+	return acctest.ConfigCompose(
+		testAccClusterConfig_clusterSubnetGroup(rName),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier        = %[1]q
+  global_cluster_identifier = aws_rds_global_cluster.test.global_cluster_identifier
+
+  engine         = aws_rds_global_cluster.test.engine
+  engine_version = aws_rds_global_cluster.test.engine_version
+
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
+  skip_final_snapshot  = true
+  apply_immediately    = true
+  db_subnet_group_name = aws_db_subnet_group.test.name
+
+  database_insights_mode                = %[3]s
+  performance_insights_enabled          = %[4]t
+  performance_insights_retention_period = %[5]s
+}
+
+data "aws_rds_engine_version" "test" {
+  engine = "aurora-postgresql"
+}
+
+resource "aws_rds_global_cluster" "test" {
+  global_cluster_identifier = %[1]q
+  engine                    = data.aws_rds_engine_version.test.engine
+  engine_version            = data.aws_rds_engine_version.test.version
 }
 
 data "aws_kms_key" "rds" {

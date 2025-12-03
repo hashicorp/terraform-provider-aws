@@ -109,9 +109,15 @@ The `content_policy_config` configuration block supports the following arguments
 
 The `filters_config` configuration block supports the following arguments:
 
-* `input_strength` - (Optional) Strength for filters.
-* `output_strength` - (Optional) Strength for filters.
-* `type` - (Optional) Type of filter in content policy.
+* `input_action` - (Optional) Action to take when harmful content is detected. Valid values: `BLOCK`, `NONE`.
+* `input_enabled` - (Optional) Toggles guardrail evaluation on input.
+* `input_modalities` - (Optional) List of selected input modalities. Valid values: `IMAGE`, `TEXT`.
+* `input_strength` - (Optional) Strength for filters. Valid values: `NONE`, `LOW`, `MEDIUM`, `HIGH`.
+* `output_action` - (Optional) Action to take when harmful content is detected. Valid values: `BLOCK`, `NONE`.
+* `output_enabled` - (Optional) Toggles guardrail evaluation on output.
+* `output_modalities` - (Optional) List of selected output modalities. Valid values: `IMAGE`, `TEXT`.
+* `output_strength` - (Optional) Strength for filters. Valid values: `NONE`, `LOW`, `MEDIUM`, `HIGH`.
+* `type` - (Optional) Type of filter in content policy. Valid Values: `SEXUAL`, `VIOLENCE`, `HATE`, `INSULTS`, `MISCONDUCT`, `PROMPT_ATTACK`.
 
 #### Content Tier Config
 
@@ -121,7 +127,7 @@ The `tier_config` configuration block supports the following arguments:
 
 ### Contextual Grounding Policy Config
 
-* `filters_config` (Required) List of contextual grounding filter configs. See [Contextual Grounding Filters Config](#contextual-grounding-filters-config) for more information.
+* `filters_config` (Required) One or more blocks defining contextual grounding filter configs. See [Contextual Grounding Filters Config](#contextual-grounding-filters-config) for more information.
 
 #### Contextual Grounding Filters Config
 

@@ -12,10 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -65,6 +67,18 @@ func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.S
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"ipv4_addresses_per_eni": schema.Int32Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int32{
+					int32validator.AtLeast(1),
+					int32validator.AtMost(62),
+				},
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.RequiresReplace(),
+					int32planmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
@@ -135,6 +149,11 @@ func (r *resourceGatewayResource) Create(ctx context.Context, request resource.C
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 	input.VpcIdentifier = fwflex.StringFromFramework(ctx, data.VPCID)
+
+	// Ipv4AddressesPerEni is irrelevant if IPAddressType is IPv6
+	if data.IPAddressType.ValueEnum() != awstypes.ResourceGatewayIpAddressTypeIpv6 {
+		input.Ipv4AddressesPerEni = fwflex.Int32FromFramework(ctx, data.IPV4AddressesPerEni)
+	}
 
 	outputCRG, err := conn.CreateResourceGateway(ctx, &input)
 
@@ -354,15 +373,16 @@ func waitResourceGatewayDeleted(ctx context.Context, conn *vpclattice.Client, id
 
 type resourceGatewayResourceModel struct {
 	framework.WithRegionModel
-	ARN              types.String                                              `tfsdk:"arn"`
-	ID               types.String                                              `tfsdk:"id"`
-	IPAddressType    fwtypes.StringEnum[awstypes.ResourceGatewayIpAddressType] `tfsdk:"ip_address_type"`
-	Name             types.String                                              `tfsdk:"name"`
-	SecurityGroupIDs fwtypes.SetOfString                                       `tfsdk:"security_group_ids"`
-	Status           fwtypes.StringEnum[awstypes.ResourceGatewayStatus]        `tfsdk:"status"`
-	SubnetIDs        fwtypes.SetOfString                                       `tfsdk:"subnet_ids"`
-	Tags             tftags.Map                                                `tfsdk:"tags"`
-	TagsAll          tftags.Map                                                `tfsdk:"tags_all"`
-	Timeouts         timeouts.Value                                            `tfsdk:"timeouts"`
-	VPCID            types.String                                              `tfsdk:"vpc_id"`
+	ARN                 types.String                                              `tfsdk:"arn"`
+	ID                  types.String                                              `tfsdk:"id"`
+	IPAddressType       fwtypes.StringEnum[awstypes.ResourceGatewayIpAddressType] `tfsdk:"ip_address_type"`
+	IPV4AddressesPerEni types.Int32                                               `tfsdk:"ipv4_addresses_per_eni"`
+	Name                types.String                                              `tfsdk:"name"`
+	SecurityGroupIDs    fwtypes.SetOfString                                       `tfsdk:"security_group_ids"`
+	Status              fwtypes.StringEnum[awstypes.ResourceGatewayStatus]        `tfsdk:"status"`
+	SubnetIDs           fwtypes.SetOfString                                       `tfsdk:"subnet_ids"`
+	Tags                tftags.Map                                                `tfsdk:"tags"`
+	TagsAll             tftags.Map                                                `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value                                            `tfsdk:"timeouts"`
+	VPCID               types.String                                              `tfsdk:"vpc_id"`
 }

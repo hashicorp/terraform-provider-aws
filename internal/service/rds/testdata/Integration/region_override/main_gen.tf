@@ -166,11 +166,19 @@ resource "aws_db_subnet_group" "test" {
   subnet_ids = aws_subnet.test[*].id
 }
 
+data "aws_rds_engine_version" "test" {
+  region = var.region
+
+  engine  = "aurora-mysql"
+  version = "8.0"
+  latest  = true
+}
+
 resource "aws_rds_cluster_parameter_group" "test" {
   region = var.region
 
   name   = var.rName
-  family = "aurora-mysql8.0"
+  family = data.aws_rds_engine_version.test.parameter_group_family
 
   dynamic "parameter" {
     for_each = local.cluster_parameters
@@ -186,8 +194,8 @@ resource "aws_rds_cluster" "test" {
   region = var.region
 
   cluster_identifier  = var.rName
-  engine              = "aurora-mysql"
-  engine_version      = "8.0.mysql_aurora.3.05.2"
+  engine              = data.aws_rds_engine_version.test.engine
+  engine_version      = data.aws_rds_engine_version.test.version_actual
   database_name       = "test"
   master_username     = "tfacctest"
   master_password     = "avoid-plaintext-passwords"
@@ -200,14 +208,24 @@ resource "aws_rds_cluster" "test" {
   apply_immediately = true
 }
 
+data "aws_rds_orderable_db_instance" "test" {
+  region = var.region
+
+  engine                     = data.aws_rds_engine_version.test.engine
+  engine_version             = data.aws_rds_engine_version.test.version_actual
+  preferred_instance_classes = local.mainInstanceClasses
+  supports_clusters          = true
+  supports_global_databases  = true
+}
+
 resource "aws_rds_cluster_instance" "test" {
   region = var.region
 
   identifier         = var.rName
-  cluster_identifier = aws_rds_cluster.test.id
-  instance_class     = "db.r6g.large"
+  cluster_identifier = aws_rds_cluster.test.cluster_identifier
   engine             = aws_rds_cluster.test.engine
   engine_version     = aws_rds_cluster.test.engine_version
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
 
 resource "aws_redshift_cluster" "test" {
@@ -235,6 +253,8 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
+# acctest.ConfigSubnets(rName, 3)
+
 resource "aws_subnet" "test" {
   region = var.region
 
@@ -261,6 +281,60 @@ data "aws_availability_zones" "available" {
 
 locals {
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+}
+
+locals {
+  mainInstanceClasses = [
+    "db.t4g.micro",
+    "db.t3.micro",
+    "db.t4g.small",
+    "db.t3.small",
+    "db.t4g.medium",
+    "db.t3.medium",
+    "db.t4g.large",
+    "db.t3.large",
+    "db.m6g.large",
+    "db.m7g.large",
+    "db.m5.large",
+    "db.m6i.large",
+    "db.m6gd.large",
+    "db.m5d.large",
+    "db.r6g.large",
+    "db.m6id.large",
+    "db.r7g.large",
+    "db.r5.large",
+    "db.r6i.large",
+    "db.r6gd.large",
+    "db.m6in.large",
+    "db.t4g.xlarge",
+    "db.t3.xlarge",
+    "db.r5d.large",
+    "db.m6idn.large",
+    "db.r5b.large",
+    "db.r6id.large",
+    "db.m6g.xlarge",
+    "db.x2g.large",
+    "db.m7g.xlarge",
+    "db.m5.xlarge",
+    "db.m6i.xlarge",
+    "db.r6in.large",
+    "db.m6gd.xlarge",
+    "db.r6idn.large",
+    "db.m5d.xlarge",
+    "db.r6g.xlarge",
+    "db.m6id.xlarge",
+    "db.r7g.xlarge",
+    "db.r5.xlarge",
+    "db.r6i.xlarge",
+    "db.r6gd.xlarge",
+    "db.m6in.xlarge",
+    "db.t4g.2xlarge",
+    "db.t3.2xlarge",
+    "db.r5d.xlarge",
+    "db.m6idn.xlarge",
+    "db.r5b.xlarge",
+    "db.r6id.xlarge",
+  ]
 }
 
 variable "rName" {

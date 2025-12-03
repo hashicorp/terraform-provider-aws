@@ -24,9 +24,10 @@ func testAccMacie2ClassificationExportConfiguration_IdentitySerial(t *testing.T)
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccMacie2ClassificationExportConfiguration_Identity_Basic,
-		"ExistingResource": testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource,
-		"RegionOverride":   testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride,
+		acctest.CtBasic:             testAccMacie2ClassificationExportConfiguration_Identity_Basic,
+		"ExistingResource":          testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_NoRefresh_NoChange,
+		"RegionOverride":            testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -285,6 +286,50 @@ func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource(t 
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 					}),
 				},
+			},
+		},
+	})
+}
+
+func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v macie2.GetClassificationExportConfigurationOutput
+	resourceName := "aws_macie2_classification_export_configuration.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.Macie2ServiceID),
+		CheckDestroy: testAccCheckClassificationExportConfigurationDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ClassificationExportConfiguration/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ClassificationExportConfiguration/basic/"),
+				ConfigVariables:          config.Variables{},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &v),
+				),
 			},
 		},
 	})

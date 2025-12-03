@@ -24,6 +24,15 @@ func TestAccTransfer_serial(t *testing.T) {
 			acctest.CtDisappears: testAccAgreement_disappears,
 			"tags":               testAccAgreement_tags,
 		},
+		"HostKey": {
+			acctest.CtBasic:       testAccHostKey_basic,
+			acctest.CtDisappears:  testAccHostKey_disappears,
+			"tags":                testAccHostKey_tags,
+			"Description":         testAccHostKey_description,
+			"UpdateHostKeyBody":   testAccHostKey_updateHostKeyBody,
+			"HostKeyBodyWO":       testAccHostKey_hostKeyBodyWO,
+			"UpdateHostKeyBodyWO": testAccHostKey_updateHostKeyBodyWO,
+		},
 		"Server": {
 			acctest.CtBasic:                   testAccServer_basic,
 			acctest.CtDisappears:              testAccServer_disappears,

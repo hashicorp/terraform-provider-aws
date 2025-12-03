@@ -5,6 +5,7 @@ package pinpoint
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 )
@@ -13,7 +14,7 @@ func getAppsPages(ctx context.Context, conn *pinpoint.Client, input *pinpoint.Ge
 	for {
 		output, err := conn.GetApps(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.ApplicationsResponse.NextToken) == ""

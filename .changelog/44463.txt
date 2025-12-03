@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudfront_distribution: Add `ip_address_type` argument to `origin.custom_origin_config` block
+```

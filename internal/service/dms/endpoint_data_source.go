@@ -245,6 +245,54 @@ func dataSourceEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"mysql_settings": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"after_connect_script": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"authentication_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"clean_source_metadata_on_mismatch": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"events_poll_interval": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"execute_timeout": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"parallel_load_threads": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"server_timezone": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_access_role_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"target_db_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrPassword: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -642,6 +690,9 @@ func resourceEndpointDataSourceSetState(d *schema.ResourceData, endpoint *awstyp
 			d.Set("secrets_manager_arn", endpoint.MySQLSettings.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+		if err := d.Set("mysql_settings", flattenMySQLSettings(endpoint.MySQLSettings)); err != nil {
+			return fmt.Errorf("setting mysql_settings: %w", err)
 		}
 	case engineNameAuroraPostgresql, engineNamePostgres:
 		if endpoint.PostgreSQLSettings != nil {

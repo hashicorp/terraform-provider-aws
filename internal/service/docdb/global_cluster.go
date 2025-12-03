@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -377,7 +377,7 @@ func findGlobalClusters(ctx context.Context, conn *docdb.Client, input *docdb.De
 		}
 
 		for _, v := range page.GlobalClusters {
-			if !itypes.IsZero(&v) && filter(&v) {
+			if !inttypes.IsZero(&v) && filter(&v) {
 				output = append(output, v)
 			}
 		}

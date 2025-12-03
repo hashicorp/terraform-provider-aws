@@ -23,6 +23,18 @@ func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string
 		func(o *dynamodb.Options) {
 			retryables := []retry.IsErrorRetryable{
 				retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+					if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "Requested MaxReadRequestUnits for OnDemandThroughput for table exceeds TableMaxReadCapacityUnits") {
+						return aws.FalseTernary
+					}
+					return aws.UnknownTernary // Delegate to configured Retryer.
+				}),
+				retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+					if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "Requested MaxWriteRequestUnits for OnDemandThroughput for table exceeds TableMaxWriteCapacityUnits") {
+						return aws.FalseTernary
+					}
+					return aws.UnknownTernary // Delegate to configured Retryer.
+				}),
+				retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
 					if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "Subscriber limit exceeded:") {
 						return aws.TrueTernary
 					}

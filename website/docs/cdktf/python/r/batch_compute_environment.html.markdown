@@ -280,6 +280,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_batch_compute_environment.example
+  identity = {
+    "arn" = "arn:aws:batch:us-east-1:123456789012:compute-environment/sample"
+  }
+}
+
+resource "aws_batch_compute_environment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the compute environment.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Batch compute using the `name`. For example:
 
 ```python
@@ -307,4 +328,4 @@ Using `terraform import`, import AWS Batch compute using the `name`. For example
 [2]: http://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html
 [3]: http://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html
 
-<!-- cache-key: cdktf-0.20.8 input-bb12066d19c776fafa8e78537144c38048e4a233205cecfafb01673652651802 -->
+<!-- cache-key: cdktf-0.20.8 input-ec7057984e3deb58eea6a2d016e6da5041110cc020ee29ca0acc3cbf03ebeda1 -->
