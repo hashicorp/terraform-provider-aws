@@ -207,6 +207,8 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrComment, hostedZone.Config.Comment)
 	if v := hostedZone.Features; v != nil {
 		d.Set("enable_accelerated_recovery", v.AcceleratedRecoveryStatus == awstypes.AcceleratedRecoveryStatusEnabled)
+	} else {
+		d.Set("enable_accelerated_recovery", false)
 	}
 	if hostedZone.LinkedService != nil {
 		d.Set("linked_service_description", hostedZone.LinkedService.Description)
