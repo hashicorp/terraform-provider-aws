@@ -316,12 +316,13 @@ resource "aws_kinesis_firehose_delivery_stream" "dst" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `traffic_type` - (Required) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`.
+* `traffic_type` - (Optional) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`. Required if `eni_id`, `regional_nat_gateway_id`, `subnet_id`, or `vpc_id` is specified.
 * `deliver_cross_account_role` - (Optional) ARN of the IAM role in the destination account used for cross-account delivery of flow logs.
 * `eni_id` - (Optional) Elastic Network Interface ID to attach to.
 * `iam_role_arn` - (Optional) ARN of the IAM role used to post flow logs. Corresponds to `DeliverLogsPermissionArn` in the [AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateFlowLogs.html).
 * `log_destination_type` - (Optional) Logging destination type. Valid values: `cloud-watch-logs`, `s3`, `kinesis-data-firehose`. Default: `cloud-watch-logs`.
 * `log_destination` - (Optional) ARN of the logging destination.
+* `regional_nat_gateway_id` - (Optional) Regional NAT Gateway ID to attach to.
 * `subnet_id` - (Optional) Subnet ID to attach to.
 * `transit_gateway_id` - (Optional) Transit Gateway ID to attach to.
 * `transit_gateway_attachment_id` - (Optional) Transit Gateway Attachment ID to attach to.
@@ -333,7 +334,7 @@ This resource supports the following arguments:
 * `destination_options` - (Optional) Describes the destination options for a flow log. More details below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-~> **NOTE:** One of `eni_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
+~> **NOTE:** One of `eni_id`, `regional_nat_gateway_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
 
 ### destination_options
 
