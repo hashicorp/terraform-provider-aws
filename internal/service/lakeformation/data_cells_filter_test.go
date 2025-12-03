@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -183,7 +183,7 @@ func testAccCheckDataCellsFilterDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tflakeformation.FindDataCellsFilterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 

@@ -12,7 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 func statusProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string) sdkretry.StateRefreshFunc {
@@ -104,7 +104,7 @@ func statusPortfolioShare(ctx context.Context, conn *servicecatalog.Client, port
 	return func() (any, string, error) {
 		output, err := findPortfolioShare(ctx, conn, portfolioID, shareType, principalID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

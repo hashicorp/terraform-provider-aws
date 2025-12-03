@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -156,7 +157,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 	globalNetworkID := d.Get("global_network_id").(string)
 	connection, err := findConnectionByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Connection %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -306,7 +307,7 @@ func statusConnectionState(ctx context.Context, conn *networkmanager.Client, glo
 	return func() (any, string, error) {
 		output, err := findConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

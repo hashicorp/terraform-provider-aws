@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcomputeoptimizer "github.com/hashicorp/terraform-provider-aws/internal/service/computeoptimizer"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -308,7 +308,7 @@ func testAccCheckRecommendationPreferencesDestroy(ctx context.Context) resource.
 
 			_, err := tfcomputeoptimizer.FindRecommendationPreferencesByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrResourceType], rs.Primary.Attributes["scope.0.name"], rs.Primary.Attributes["scope.0.value"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

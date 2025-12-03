@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -142,7 +143,7 @@ func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData,
 	name := d.Id()
 
 	dataQualityRuleset, err := findDataQualityRulesetByName(ctx, conn, name)
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Glue Data Quality Ruleset (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

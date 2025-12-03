@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -151,7 +152,7 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	plugin, err := findCustomPluginByARN(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] MSK Connect Custom Plugin (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -246,7 +247,7 @@ func statusCustomPlugin(ctx context.Context, conn *kafkaconnect.Client, arn stri
 	return func() (any, string, error) {
 		output, err := findCustomPluginByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

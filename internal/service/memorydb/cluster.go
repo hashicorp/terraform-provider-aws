@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -397,7 +398,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	cluster, err := findClusterByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MemoryDB Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -651,7 +652,7 @@ func statusCluster(ctx context.Context, conn *memorydb.Client, name string) sdkr
 	return func() (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -667,7 +668,7 @@ func statusClusterParameterGroup(ctx context.Context, conn *memorydb.Client, nam
 	return func() (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -683,7 +684,7 @@ func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.Client, nam
 	return func() (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -74,7 +75,7 @@ func sweepGeneralPurposeBucketObjects(ctx context.Context, client *conns.AWSClie
 
 			var objectLockEnabled bool
 			objLockConfig, err := findObjectLockConfiguration(ctx, conn, bucketName, "")
-			if !tfresource.NotFound(err) {
+			if !retry.NotFound(err) {
 				if err != nil {
 					tflog.Warn(ctx, "Reading S3 Bucket Object Lock Configuration", map[string]any{
 						"error": err.Error(),

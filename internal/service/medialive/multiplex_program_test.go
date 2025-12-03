@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmedialive "github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -200,7 +200,7 @@ func testAccCheckMultiplexProgramDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfmedialive.FindMultiplexProgramByID(ctx, conn, attributes["multiplex_id"], attributes["program_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

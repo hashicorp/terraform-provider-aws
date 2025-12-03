@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @SDKResource("aws_vpc_peering_connection_options", name="VPC Peering Connection Options")
@@ -63,7 +63,7 @@ func resourceVPCPeeringConnectionOptionsRead(ctx context.Context, d *schema.Reso
 
 	vpcPeeringConnection, err := findVPCPeeringConnectionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC Peering Connection Options %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

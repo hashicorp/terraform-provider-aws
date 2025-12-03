@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1337,7 +1337,7 @@ func testAccCheckParameterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfssm.FindParameterByName(ctx, conn, rs.Primary.ID, false)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

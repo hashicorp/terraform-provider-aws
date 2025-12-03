@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -85,7 +86,7 @@ func resourceContainerPolicyRead(ctx context.Context, d *schema.ResourceData, me
 
 	resp, err := findContainerPolicyByContainerName(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		log.Printf("[WARN] MediaStore Container Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

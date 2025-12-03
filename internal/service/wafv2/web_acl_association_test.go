@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -89,7 +89,7 @@ func testAccCheckWebACLAssociationDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfwafv2.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -702,7 +702,7 @@ func statusEnvironment(conn *mwaa.Client, name string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		environment, err := findEnvironmentByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

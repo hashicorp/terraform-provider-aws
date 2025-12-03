@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -243,7 +244,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	userPoolID, username := d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrUsername).(string)
 	user, err := findUserByTwoPartKey(ctx, conn, userPoolID, username)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cognito User %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

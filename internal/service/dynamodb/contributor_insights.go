@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -107,7 +108,7 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 
 	output, err := findContributorInsightsByTwoPartKey(ctx, conn, tableName, indexName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DynamoDB Contributor Insights (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -230,7 +231,7 @@ func statusContributorInsights(ctx context.Context, conn *dynamodb.Client, table
 	return func() (any, string, error) {
 		output, err := findContributorInsightsByTwoPartKey(ctx, conn, tableName, indexName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

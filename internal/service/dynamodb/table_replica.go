@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -220,7 +221,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	table, err := findTableByName(ctx, conn, tableName, optFn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Dynamodb Table (%s) not found, removing replica from state", d.Id())
 		d.SetId("")
 		return diags
@@ -273,7 +274,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 
 	table, err := findTableByName(ctx, conn, tableName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Dynamodb Table Replica (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

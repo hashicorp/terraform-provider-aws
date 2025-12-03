@@ -42,6 +42,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -687,7 +688,7 @@ func (r *revisionAssetsResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	out, err := findRevisionByID(ctx, conn, state.DataSetID.ValueString(), state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -997,7 +998,7 @@ func statusJob(ctx context.Context, conn *dataexchange.Client, jobID string) sdk
 	return func() (any, string, error) {
 		output, err := findJobByID(ctx, conn, jobID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

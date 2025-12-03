@@ -671,7 +671,7 @@ func statusDomainDeleting(conn *cloudsearch.Client, name string) retry.StateRefr
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -687,7 +687,7 @@ func statusDomainProcessing(conn *cloudsearch.Client, name string) retry.StateRe
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

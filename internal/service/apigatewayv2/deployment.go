@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -97,7 +98,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	output, err := findDeploymentByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -208,7 +209,7 @@ func statusDeployment(ctx context.Context, conn *apigatewayv2.Client, apiID, dep
 	return func() (any, string, error) {
 		output, err := findDeploymentByTwoPartKey(ctx, conn, apiID, deploymentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

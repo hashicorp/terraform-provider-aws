@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -98,7 +99,7 @@ func resourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, met
 
 	consumer, err := findStreamConsumerByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kinesis Stream Consumer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -178,7 +179,7 @@ func statusStreamConsumer(ctx context.Context, conn *kinesis.Client, arn string)
 	return func() (any, string, error) {
 		output, err := findStreamConsumerByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

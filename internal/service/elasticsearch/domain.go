@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -710,7 +711,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	name := d.Get(names.AttrDomainName).(string)
 	ds, err := findDomainByName(ctx, conn, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Elasticsearch Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1107,7 +1108,7 @@ func statusDomainProcessing(ctx context.Context, conn *elasticsearch.Client, nam
 		}
 		output, err := findDomain(ctx, conn, input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1123,7 +1124,7 @@ func statusDomainUpgrade(ctx context.Context, conn *elasticsearch.Client, name s
 	return func() (any, string, error) {
 		output, err := findDomainUpgradeStatusByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

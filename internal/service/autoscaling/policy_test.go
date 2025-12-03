@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -583,7 +583,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfautoscaling.FindScalingPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

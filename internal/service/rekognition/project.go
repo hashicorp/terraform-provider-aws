@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -163,7 +164,7 @@ func (r *projectResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	out, err := findProjectByName(ctx, conn, state.ID.ValueString(), awstypes.CustomizationFeature(state.Feature.ValueString()))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -324,7 +325,7 @@ func findProjectByName(ctx context.Context, conn *rekognition.Client, name strin
 func statusProject(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findProjectByName(ctx, conn, name, feature)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

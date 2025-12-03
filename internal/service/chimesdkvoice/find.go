@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,7 +20,7 @@ func FindSIPResourceWithRetry[T any](ctx context.Context, isNewResource bool, f 
 	err := tfresource.Retry(ctx, sipResourcePropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		resp, err = f()
-		if isNewResource && tfresource.NotFound(err) {
+		if isNewResource && retry.NotFound(err) {
 			return tfresource.RetryableError(err)
 		}
 

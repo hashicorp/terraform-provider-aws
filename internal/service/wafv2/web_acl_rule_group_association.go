@@ -669,13 +669,12 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 
 	// Get the Web ACL and check if the rule group is associated
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
+	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		if retry.NotFound(err) {
-			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-			resp.State.RemoveResource(ctx)
-			return
-		}
-
 		resp.Diagnostics.AddError(
 			"Reading WAFv2 Web ACL Rule Group Association",
 			fmt.Sprintf("Error reading Web ACL: %s", err),
@@ -992,12 +991,11 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 
 	// Get the Web ACL
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
+	if retry.NotFound(err) {
+		// Web ACL is already gone, nothing to do
+		return
+	}
 	if err != nil {
-		if retry.NotFound(err) {
-			// Web ACL is already gone, nothing to do
-			return
-		}
-
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.WAFV2, create.ErrActionDeleting, ResNameWebACLRuleGroupAssociation, state.RuleName.String(), err),
 			err.Error(),

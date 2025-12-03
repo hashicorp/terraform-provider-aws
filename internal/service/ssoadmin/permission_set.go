@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -144,7 +145,7 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 
 	permissionSet, err := findPermissionSetByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSO Permission Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -337,7 +338,7 @@ func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.Client,
 	return func() (any, string, error) {
 		output, err := findPermissionSetProvisioningStatus(ctx, conn, instanceARN, requestID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -170,7 +171,7 @@ func (r *vpcOriginResource) Read(ctx context.Context, request resource.ReadReque
 
 	output, err := findVPCOriginByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -252,7 +253,7 @@ func (r *vpcOriginResource) Delete(ctx context.Context, request resource.DeleteR
 	id := data.ID.ValueString()
 	etag, err := vpcOriginETag(ctx, conn, id)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -276,7 +277,7 @@ func (r *vpcOriginResource) Delete(ctx context.Context, request resource.DeleteR
 	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
 		etag, err = vpcOriginETag(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return
 		}
 
@@ -351,7 +352,7 @@ func vpcOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) sd
 	return func() (any, string, error) {
 		output, err := findVPCOriginByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

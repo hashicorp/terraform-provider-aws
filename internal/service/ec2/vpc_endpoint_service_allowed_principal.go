@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @SDKResource("aws_vpc_endpoint_service_allowed_principal", name="Endpoint Service Allowed Principal")
@@ -74,7 +74,7 @@ func resourceVPCEndpointServiceAllowedPrincipalRead(ctx context.Context, d *sche
 
 	output, err := findVPCEndpointServicePermission(ctx, conn, serviceID, principalARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC Endpoint Service Allowed Principal %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -244,7 +245,7 @@ func resourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	output, err := findSigningJobByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Signer Signing Job (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -312,7 +313,7 @@ func statusSigningJob(ctx context.Context, conn *signer.Client, id string) sdkre
 	return func() (any, string, error) {
 		output, err := findSigningJobByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

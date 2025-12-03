@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -195,7 +195,7 @@ func testAccCheckServiceSpecificCredentialDestroy(ctx context.Context) resource.
 
 			output, err := tfiam.FindServiceSpecificCredentialByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrServiceName], rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["service_specific_credential_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

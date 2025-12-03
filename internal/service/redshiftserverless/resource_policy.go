@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -90,7 +91,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	out, err := findResourcePolicyByARN(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Resource Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

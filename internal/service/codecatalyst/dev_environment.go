@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -178,7 +179,7 @@ func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, met
 
 	out, err := findDevEnvironmentByID(ctx, conn, d.Id(), spaceName, projectName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Codecatalyst DevEnvironment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -306,7 +307,7 @@ func waitDevEnvironmentUpdated(ctx context.Context, conn *codecatalyst.Client, i
 func statusDevEnvironment(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findDevEnvironmentByID(ctx, conn, id, spaceName, projectName)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

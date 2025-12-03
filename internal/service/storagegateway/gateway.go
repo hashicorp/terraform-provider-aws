@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -484,7 +485,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	outputDGI, err := findGatewayByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Storage Gateway Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -928,7 +929,7 @@ func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, ga
 	return func() (any, string, error) {
 		output, err := findGatewayByARN(ctx, conn, gatewayARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -948,7 +949,7 @@ func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, g
 	return func() (any, string, error) {
 		output, err := findSMBSettingsByARN(ctx, conn, gatewayARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

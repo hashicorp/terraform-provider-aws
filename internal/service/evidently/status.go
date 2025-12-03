@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 func statusFeature(ctx context.Context, conn *evidently.Client, id string) sdkretry.StateRefreshFunc {
@@ -21,7 +21,7 @@ func statusFeature(ctx context.Context, conn *evidently.Client, id string) sdkre
 
 		output, err := FindFeatureWithProjectNameorARN(ctx, conn, featureName, projectNameOrARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -43,7 +43,7 @@ func statusLaunch(ctx context.Context, conn *evidently.Client, id string) sdkret
 
 		output, err := FindLaunchWithProjectNameorARN(ctx, conn, launchName, projectNameOrARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -59,7 +59,7 @@ func statusProject(ctx context.Context, conn *evidently.Client, id string) sdkre
 	return func() (any, string, error) {
 		output, err := FindProjectByNameOrARN(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

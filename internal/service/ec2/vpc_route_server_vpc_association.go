@@ -22,7 +22,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -111,7 +111,7 @@ func (r *vpcRouteServerVPCAssociationResource) Read(ctx context.Context, request
 	routeServerID, vpcID := fwflex.StringValueFromFramework(ctx, data.RouteServerID), fwflex.StringValueFromFramework(ctx, data.VpcID)
 	_, err := findRouteServerAssociationByTwoPartKey(ctx, conn, routeServerID, vpcID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 

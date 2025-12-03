@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 func statusScheduleGroup(ctx context.Context, conn *scheduler.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findScheduleGroupByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

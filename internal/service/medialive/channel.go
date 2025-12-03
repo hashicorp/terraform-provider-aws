@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -808,7 +809,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	out, err := findChannelByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MediaLive Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -959,7 +960,7 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	channel, err := findChannelByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -1115,7 +1116,7 @@ func waitChannelStopped(ctx context.Context, conn *medialive.Client, id string, 
 func statusChannel(ctx context.Context, conn *medialive.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findChannelByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

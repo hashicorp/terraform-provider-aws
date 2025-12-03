@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrekognition "github.com/hashicorp/terraform-provider-aws/internal/service/rekognition"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -436,7 +436,7 @@ func testAccCheckStreamProcessorDestroy(ctx context.Context) resource.TestCheckF
 
 			streamName := rs.Primary.Attributes[names.AttrName]
 			_, err := tfrekognition.FindStreamProcessorByName(ctx, conn, streamName)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

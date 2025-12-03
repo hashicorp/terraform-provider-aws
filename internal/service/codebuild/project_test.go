@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -3073,7 +3073,7 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodebuild.FindProjectByNameOrARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -3106,7 +3106,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }

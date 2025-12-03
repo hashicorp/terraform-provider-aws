@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -521,7 +522,7 @@ func (r *streamProcessorResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	out, err := findStreamProcessorByName(ctx, conn, state.Name.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -781,7 +782,7 @@ func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, n
 func statusStreamProcessor(ctx context.Context, conn *rekognition.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findStreamProcessorByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

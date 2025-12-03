@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -143,7 +144,7 @@ func resourceLifecycleHookRead(ctx context.Context, d *schema.ResourceData, meta
 
 	p, err := findLifecycleHookByTwoPartKey(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Lifecycle Hook %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
