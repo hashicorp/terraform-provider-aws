@@ -211,6 +211,8 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set("delegation_set_id", "")
 	if v := output.HostedZone.Features; v != nil {
 		d.Set("enable_accelerated_recovery", v.AcceleratedRecoveryStatus == awstypes.AcceleratedRecoveryStatusEnabled)
+	} else {
+		d.Set("enable_accelerated_recovery", false)
 	}
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API.
