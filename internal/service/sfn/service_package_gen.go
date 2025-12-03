@@ -25,6 +25,10 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 			Name:     "Start Execution",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  DataSourceStateMachines,
+			TypeName: "aws_sfn_state_machines",
+		},
 	}
 }
 
