@@ -14,13 +14,13 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_lambda_function: Add `capacity_provider_config` attribute ([#45342](https://github.com/hashicorp/terraform-provider-aws/issues/45342))
-* data-source/aws_vpc_nat_gateway: Support regional NAT Gateways by adding `auto_provision_zones`, `auto_scaling_ips`, `availability_mode`, `availability_zone_address`, `regional_nat_gateway_address`, and `route_table_id` attributes ([#45420](https://github.com/hashicorp/terraform-provider-aws/issues/45420))
+* data-source/aws_vpc_nat_gateway: Support regional NAT Gateways by adding `auto_provision_zones`, `auto_scaling_ips`, `availability_mode`, `availability_zone_address`, `regional_nat_gateway_address`, and `route_table_id` attributes ([#45240](https://github.com/hashicorp/terraform-provider-aws/issues/45240))
 * resource/aws_backup_plan: Add `target_logically_air_gapped_backup_vault_arn` argument to `rule` block ([#45321](https://github.com/hashicorp/terraform-provider-aws/issues/45321))
 * resource/aws_lambda_function: Add `capacity_provider_config` and `publish_to` arguments ([#45342](https://github.com/hashicorp/terraform-provider-aws/issues/45342))
 * resource/aws_resourceexplorer2_index: Deprecates `id`. Use `arn` instead. ([#45345](https://github.com/hashicorp/terraform-provider-aws/issues/45345))
 * resource/aws_resourceexplorer2_view: Deprecates `id`. Use `arn` instead. ([#45345](https://github.com/hashicorp/terraform-provider-aws/issues/45345))
 * resource/aws_vpc_nat_gateway: Make `subnet_id` argument optional to support regional NAT Gateways ([#45420](https://github.com/hashicorp/terraform-provider-aws/issues/45420))
-* resource/aws_vpc_nat_gateway: Support regional NAT Gateways by adding `availability_mode`, `availability_zone_address`, and `vpc_id` arguments, and `auto_provision_zones`, `auto_scaling_ips`, `regional_nat_gateway_address`, and `route_table_id` attributes. This functionality requires the `ec2:DescribeAvailabilityZones` IAM permission ([#45420](https://github.com/hashicorp/terraform-provider-aws/issues/45420))
+* resource/aws_vpc_nat_gateway: Support regional NAT Gateways by adding `availability_mode`, `availability_zone_address`, and `vpc_id` arguments, and `auto_provision_zones`, `auto_scaling_ips`, `regional_nat_gateway_address`, and `route_table_id` attributes. This functionality requires the `ec2:DescribeAvailabilityZones` IAM permission ([#45240](https://github.com/hashicorp/terraform-provider-aws/issues/45240))
 * resource/aws_vpn_connection: Add `bgp_log_enabled`, `bgp_log_group_arn`, and `bgp_log_stream_arn` arguments to `tunnel1_log_options.cloudwatch_log_options` and `tunnel2_log_options.cloudwatch_log_options` blocks ([#45271](https://github.com/hashicorp/terraform-provider-aws/issues/45271))
 
 ## 6.23.0 (November 26, 2025)
