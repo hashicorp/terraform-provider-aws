@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -856,7 +856,7 @@ func findFileSystems(ctx context.Context, conn *fsx.Client, input *fsx.DescribeF
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.FileSystemNotFound](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -876,7 +876,7 @@ func findFileSystems(ctx context.Context, conn *fsx.Client, input *fsx.DescribeF
 	return output, nil
 }
 
-func statusFileSystem(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
+func statusFileSystem(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFileSystemByID(ctx, conn, id)
 
@@ -893,7 +893,7 @@ func statusFileSystem(ctx context.Context, conn *fsx.Client, id string) retry.St
 }
 
 func waitFileSystemCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileSystemLifecycleCreating),
 		Target:  enum.Slice(awstypes.FileSystemLifecycleAvailable),
 		Refresh: statusFileSystem(ctx, conn, id),
@@ -918,7 +918,7 @@ func waitFileSystemCreated(ctx context.Context, conn *fsx.Client, id string, tim
 }
 
 func waitFileSystemUpdated(ctx context.Context, conn *fsx.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileSystemLifecycleUpdating),
 		Target:  enum.Slice(awstypes.FileSystemLifecycleAvailable),
 		Refresh: statusFileSystem(ctx, conn, id),
@@ -958,7 +958,7 @@ func waitFileSystemUpdated(ctx context.Context, conn *fsx.Client, id string, sta
 }
 
 func waitFileSystemDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.FileSystemLifecycleAvailable, awstypes.FileSystemLifecycleDeleting),
 		Target:       []string{},
 		Refresh:      statusFileSystem(ctx, conn, id),
@@ -997,7 +997,7 @@ func findFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client, f
 	return awstypes.AdministrativeAction{Status: awstypes.StatusCompleted}, nil
 }
 
-func statusFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client, fsID string, actionType awstypes.AdministrativeActionType) retry.StateRefreshFunc {
+func statusFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client, fsID string, actionType awstypes.AdministrativeActionType) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFileSystemAdministrativeAction(ctx, conn, fsID, actionType)
 
@@ -1014,7 +1014,7 @@ func statusFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client,
 }
 
 func waitFileSystemAdministrativeActionCompleted(ctx context.Context, conn *fsx.Client, fsID string, actionType awstypes.AdministrativeActionType, timeout time.Duration) (*awstypes.AdministrativeAction, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusInProgress, awstypes.StatusPending),
 		Target:  enum.Slice(awstypes.StatusCompleted, awstypes.StatusUpdatedOptimizing),
 		Refresh: statusFileSystemAdministrativeAction(ctx, conn, fsID, actionType),

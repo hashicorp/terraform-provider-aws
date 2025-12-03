@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -376,7 +376,7 @@ func findMetricStreamByName(ctx context.Context, conn *cloudwatch.Client, name s
 	output, err := conn.GetMetricStream(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		})
@@ -393,7 +393,7 @@ func findMetricStreamByName(ctx context.Context, conn *cloudwatch.Client, name s
 	return output, nil
 }
 
-func statusMetricStream(ctx context.Context, conn *cloudwatch.Client, name string) retry.StateRefreshFunc {
+func statusMetricStream(ctx context.Context, conn *cloudwatch.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findMetricStreamByName(ctx, conn, name)
 
@@ -415,7 +415,7 @@ const (
 )
 
 func waitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.Client, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{metricStreamStateRunning, metricStreamStateStopped},
 		Target:  []string{},
 		Refresh: statusMetricStream(ctx, conn, name),
@@ -432,7 +432,7 @@ func waitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.Client, name 
 }
 
 func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.Client, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{metricStreamStateStopped},
 		Target:  []string{metricStreamStateRunning},
 		Refresh: statusMetricStream(ctx, conn, name),

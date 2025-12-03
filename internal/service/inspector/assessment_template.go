@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -131,7 +131,7 @@ func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
 	template, err := FindAssessmentTemplateByID(ctx, conn, d.Id())
-	if errs.IsA[*retry.NotFoundError](err) {
+	if errs.IsA[*sdkretry.NotFoundError](err) {
 		log.Printf("[WARN] Inspector Classic Assessment Template (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -219,7 +219,7 @@ func FindAssessmentTemplateByID(ctx context.Context, conn *inspector.Client, arn
 	}
 
 	if len(out.AssessmentTemplates) == 0 {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: in,
 		}
 	}

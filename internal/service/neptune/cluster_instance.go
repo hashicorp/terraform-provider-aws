@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -403,7 +403,7 @@ func findDBInstanceByID(ctx context.Context, conn *neptune.Client, id string) (*
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBInstanceIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -429,7 +429,7 @@ func findDBInstances(ctx context.Context, conn *neptune.Client, input *neptune.D
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBInstanceNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -457,7 +457,7 @@ func findClusterMemberByInstanceByTwoPartKey(ctx context.Context, conn *neptune.
 	}))
 }
 
-func statusDBInstance(ctx context.Context, conn *neptune.Client, id string) retry.StateRefreshFunc {
+func statusDBInstance(ctx context.Context, conn *neptune.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id)
 
@@ -474,7 +474,7 @@ func statusDBInstance(ctx context.Context, conn *neptune.Client, id string) retr
 }
 
 func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.DBInstance, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			dbInstanceStatusBackingUp,
 			dbInstanceStatusConfiguringEnhancedMonitoring,
@@ -507,7 +507,7 @@ func waitDBInstanceAvailable(ctx context.Context, conn *neptune.Client, id strin
 }
 
 func waitDBInstanceDeleted(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration) (*awstypes.DBInstance, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			dbInstanceStatusModifying,
 			dbInstanceStatusDeleting,

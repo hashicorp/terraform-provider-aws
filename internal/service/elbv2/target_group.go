@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -943,7 +943,7 @@ func findTargetGroupByARN(ctx context.Context, conn *elasticloadbalancingv2.Clie
 
 	// Eventual consistency check.
 	if aws.ToString(output.TargetGroupArn) != arn {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -964,7 +964,7 @@ func findTargetGroupByName(ctx context.Context, conn *elasticloadbalancingv2.Cli
 
 	// Eventual consistency check.
 	if aws.ToString(output.TargetGroupName) != name {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -990,7 +990,7 @@ func findTargetGroups(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1014,7 +1014,7 @@ func findTargetGroupAttributesByARN(ctx context.Context, conn *elasticloadbalanc
 	output, err := conn.DescribeTargetGroupAttributes(ctx, input)
 
 	if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

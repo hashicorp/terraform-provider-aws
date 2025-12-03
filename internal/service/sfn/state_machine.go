@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -420,7 +420,7 @@ func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*
 	output, err := conn.DescribeStateMachine(ctx, input)
 
 	if errs.IsA[*awstypes.StateMachineDoesNotExist](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -437,7 +437,7 @@ func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*
 	return output, nil
 }
 
-func statusStateMachine(ctx context.Context, conn *sfn.Client, stateMachineArn string) retry.StateRefreshFunc {
+func statusStateMachine(ctx context.Context, conn *sfn.Client, stateMachineArn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findStateMachineByARN(ctx, conn, stateMachineArn)
 
@@ -454,7 +454,7 @@ func statusStateMachine(ctx context.Context, conn *sfn.Client, stateMachineArn s
 }
 
 func waitStateMachineDeleted(ctx context.Context, conn *sfn.Client, stateMachineArn string, timeout time.Duration) (*sfn.DescribeStateMachineOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateMachineStatusActive, awstypes.StateMachineStatusDeleting),
 		Target:  []string{},
 		Refresh: statusStateMachine(ctx, conn, stateMachineArn),

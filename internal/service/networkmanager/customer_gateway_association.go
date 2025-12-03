@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -224,7 +224,7 @@ func findCustomerGatewayAssociations(ctx context.Context, conn *networkmanager.C
 		page, err := pages.NextPage(ctx)
 
 		if globalNetworkIDNotFoundError(err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -253,7 +253,7 @@ func findCustomerGatewayAssociationByTwoPartKey(ctx context.Context, conn *netwo
 	}
 
 	if state := output.State; state == awstypes.CustomerGatewayAssociationStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -261,7 +261,7 @@ func findCustomerGatewayAssociationByTwoPartKey(ctx context.Context, conn *netwo
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.CustomerGatewayArn) != customerGatewayARN {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -269,7 +269,7 @@ func findCustomerGatewayAssociationByTwoPartKey(ctx context.Context, conn *netwo
 	return output, nil
 }
 
-func statusCustomerGatewayAssociationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, customerGatewayARN string) retry.StateRefreshFunc {
+func statusCustomerGatewayAssociationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, customerGatewayARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCustomerGatewayAssociationByTwoPartKey(ctx, conn, globalNetworkID, customerGatewayARN)
 
@@ -286,7 +286,7 @@ func statusCustomerGatewayAssociationState(ctx context.Context, conn *networkman
 }
 
 func waitCustomerGatewayAssociationCreated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, customerGatewayARN string, timeout time.Duration) (*awstypes.CustomerGatewayAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CustomerGatewayAssociationStatePending),
 		Target:  enum.Slice(awstypes.CustomerGatewayAssociationStateAvailable),
 		Timeout: timeout,
@@ -303,7 +303,7 @@ func waitCustomerGatewayAssociationCreated(ctx context.Context, conn *networkman
 }
 
 func waitCustomerGatewayAssociationDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, customerGatewayARN string, timeout time.Duration) (*awstypes.CustomerGatewayAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CustomerGatewayAssociationStateAvailable, awstypes.CustomerGatewayAssociationStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,

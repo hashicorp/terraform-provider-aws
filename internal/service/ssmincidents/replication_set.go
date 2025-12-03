@@ -17,7 +17,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssmincidents/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -275,7 +275,7 @@ func findReplicationSetByID(ctx context.Context, conn *ssmincidents.Client, arn 
 	output, err := conn.GetReplicationSet(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -292,7 +292,7 @@ func findReplicationSetByID(ctx context.Context, conn *ssmincidents.Client, arn 
 	return output.ReplicationSet, nil
 }
 
-func statusReplicationSet(ctx context.Context, conn *ssmincidents.Client, arn string) retry.StateRefreshFunc {
+func statusReplicationSet(ctx context.Context, conn *ssmincidents.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findReplicationSetByID(ctx, conn, arn)
 
@@ -309,7 +309,7 @@ func statusReplicationSet(ctx context.Context, conn *ssmincidents.Client, arn st
 }
 
 func waitReplicationSetCreated(ctx context.Context, conn *ssmincidents.Client, arn string, timeout time.Duration) (*awstypes.ReplicationSet, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ReplicationSetStatusCreating),
 		Target:     enum.Slice(awstypes.ReplicationSetStatusActive),
 		Refresh:    statusReplicationSet(ctx, conn, arn),
@@ -328,7 +328,7 @@ func waitReplicationSetCreated(ctx context.Context, conn *ssmincidents.Client, a
 }
 
 func waitReplicationSetUpdated(ctx context.Context, conn *ssmincidents.Client, arn string, timeout time.Duration) (*awstypes.ReplicationSet, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ReplicationSetStatusUpdating),
 		Target:     enum.Slice(awstypes.ReplicationSetStatusActive),
 		Refresh:    statusReplicationSet(ctx, conn, arn),
@@ -347,7 +347,7 @@ func waitReplicationSetUpdated(ctx context.Context, conn *ssmincidents.Client, a
 }
 
 func waitReplicationSetDeleted(ctx context.Context, conn *ssmincidents.Client, arn string, timeout time.Duration) (*awstypes.ReplicationSet, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ReplicationSetStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusReplicationSet(ctx, conn, arn),

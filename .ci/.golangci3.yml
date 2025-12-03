@@ -29,6 +29,8 @@ linters:
     importas:
       no-unaliased: true
       alias:
+        - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry
+          alias: sdkretry
         - pkg: github.com/hashicorp/terraform-provider-aws/internal/types
           alias: inttypes
     mnd:

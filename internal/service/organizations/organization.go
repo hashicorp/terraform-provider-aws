@@ -14,7 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -503,7 +503,7 @@ func findOrganization(ctx context.Context, conn *organizations.Client) (*awstype
 	output, err := conn.DescribeOrganization(ctx, &input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -656,7 +656,7 @@ func flattenRootPolicyTypeSummaries(apiObjects []awstypes.PolicyTypeSummary) []a
 	return tfList
 }
 
-func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) retry.StateRefreshFunc {
+func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		defaultRoot, err := findDefaultRoot(ctx, conn)
 
@@ -677,7 +677,7 @@ func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client
 const policyTypeStatusDisabled awstypes.PolicyTypeStatus = "DISABLED"
 
 func waitDefaultRootPolicyTypeDisabled(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) (*awstypes.PolicyTypeSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PolicyTypeStatusEnabled, awstypes.PolicyTypeStatusPendingDisable),
 		Target:  enum.Slice(policyTypeStatusDisabled),
 		Refresh: statusDefaultRootPolicyType(ctx, conn, policyType),
@@ -694,7 +694,7 @@ func waitDefaultRootPolicyTypeDisabled(ctx context.Context, conn *organizations.
 }
 
 func waitDefaultRootPolicyTypeEnabled(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) (*awstypes.PolicyTypeSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(policyTypeStatusDisabled, awstypes.PolicyTypeStatusPendingEnable),
 		Target:  enum.Slice(awstypes.PolicyTypeStatusEnabled),
 		Refresh: statusDefaultRootPolicyType(ctx, conn, policyType),

@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -275,7 +275,7 @@ func (r *inferenceProfileResource) Delete(ctx context.Context, req resource.Dele
 }
 
 func waitInferenceProfileCreated(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetInferenceProfileOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(string(awstypes.InferenceProfileStatusActive)),
 		Refresh:                   statusInferenceProfile(ctx, conn, id),
@@ -293,7 +293,7 @@ func waitInferenceProfileCreated(ctx context.Context, conn *bedrock.Client, id s
 }
 
 func waitInferenceProfileDeleted(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetInferenceProfileOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(string(awstypes.InferenceProfileStatusActive)),
 		Target:  []string{},
 		Refresh: statusInferenceProfile(ctx, conn, id),
@@ -308,7 +308,7 @@ func waitInferenceProfileDeleted(ctx context.Context, conn *bedrock.Client, id s
 	return nil, err
 }
 
-func statusInferenceProfile(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
+func statusInferenceProfile(ctx context.Context, conn *bedrock.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findInferenceProfileByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

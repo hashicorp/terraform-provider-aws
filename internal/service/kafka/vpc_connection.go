@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -164,7 +164,7 @@ func resourceVPCConnectionDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func waitVPCConnectionCreated(ctx context.Context, conn *kafka.Client, id string, timeout time.Duration) (*kafka.DescribeVpcConnectionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.VpcConnectionStateCreating),
 		Target:                    enum.Slice(types.VpcConnectionStateAvailable),
 		Refresh:                   statusVPCConnection(ctx, conn, id),
@@ -182,7 +182,7 @@ func waitVPCConnectionCreated(ctx context.Context, conn *kafka.Client, id string
 }
 
 func waitVPCConnectionDeleted(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*kafka.DescribeVpcConnectionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.VpcConnectionStateAvailable, types.VpcConnectionStateInactive, types.VpcConnectionStateDeactivating, types.VpcConnectionStateDeleting),
 		Target:  []string{},
 		Refresh: statusVPCConnection(ctx, conn, arn),
@@ -197,7 +197,7 @@ func waitVPCConnectionDeleted(ctx context.Context, conn *kafka.Client, arn strin
 	return nil, err
 }
 
-func statusVPCConnection(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
+func statusVPCConnection(ctx context.Context, conn *kafka.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCConnectionByARN(ctx, conn, arn)
 
@@ -221,7 +221,7 @@ func findVPCConnectionByARN(ctx context.Context, conn *kafka.Client, arn string)
 	output, err := conn.DescribeVpcConnection(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

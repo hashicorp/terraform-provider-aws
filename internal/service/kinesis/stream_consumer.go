@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -157,7 +157,7 @@ func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn stri
 	output, err := conn.DescribeStreamConsumer(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -174,7 +174,7 @@ func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn stri
 	return output.ConsumerDescription, nil
 }
 
-func statusStreamConsumer(ctx context.Context, conn *kinesis.Client, arn string) retry.StateRefreshFunc {
+func statusStreamConsumer(ctx context.Context, conn *kinesis.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findStreamConsumerByARN(ctx, conn, arn)
 
@@ -194,7 +194,7 @@ func waitStreamConsumerCreated(ctx context.Context, conn *kinesis.Client, arn st
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ConsumerStatusCreating),
 		Target:  enum.Slice(types.ConsumerStatusActive),
 		Refresh: statusStreamConsumer(ctx, conn, arn),
@@ -214,7 +214,7 @@ func waitStreamConsumerDeleted(ctx context.Context, conn *kinesis.Client, arn st
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ConsumerStatusDeleting),
 		Target:  []string{},
 		Refresh: statusStreamConsumer(ctx, conn, arn),

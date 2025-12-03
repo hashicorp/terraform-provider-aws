@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -22,7 +22,7 @@ func findClusters(ctx context.Context, conn *redshift.Client, input *redshift.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -69,7 +69,7 @@ func findClusterByID(ctx context.Context, conn *redshift.Client, id string) (*aw
 
 	// Eventual consistency check.
 	if aws.ToString(output.ClusterIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -85,7 +85,7 @@ func findScheduledActionByName(ctx context.Context, conn *redshift.Client, name 
 	output, err := conn.DescribeScheduledActions(ctx, input)
 
 	if errs.IsA[*awstypes.ScheduledActionNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -113,7 +113,7 @@ func findHSMClientCertificateByID(ctx context.Context, conn *redshift.Client, id
 
 	output, err := conn.DescribeHsmClientCertificates(ctx, &input)
 	if errs.IsA[*awstypes.HsmClientCertificateNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -141,7 +141,7 @@ func findHSMConfigurationByID(ctx context.Context, conn *redshift.Client, id str
 
 	output, err := conn.DescribeHsmConfigurations(ctx, &input)
 	if errs.IsA[*awstypes.HsmConfigurationNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -170,7 +170,7 @@ func findUsageLimitByID(ctx context.Context, conn *redshift.Client, id string) (
 	output, err := conn.DescribeUsageLimits(ctx, input)
 
 	if errs.IsA[*awstypes.UsageLimitNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -199,7 +199,7 @@ func findAuthenticationProfileByID(ctx context.Context, conn *redshift.Client, i
 	output, err := conn.DescribeAuthenticationProfiles(ctx, &input)
 
 	if errs.IsA[*awstypes.AuthenticationProfileNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -228,7 +228,7 @@ func findEventSubscriptionByName(ctx context.Context, conn *redshift.Client, nam
 	output, err := conn.DescribeEventSubscriptions(ctx, input)
 
 	if errs.IsA[*awstypes.SubscriptionNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -257,7 +257,7 @@ func findSubnetGroupByName(ctx context.Context, conn *redshift.Client, name stri
 	output, err := conn.DescribeClusterSubnetGroups(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterSubnetGroupNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -286,7 +286,7 @@ func findEndpointAccessByName(ctx context.Context, conn *redshift.Client, name s
 	output, err := conn.DescribeEndpointAccess(ctx, input)
 
 	if errs.IsA[*awstypes.EndpointNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -321,7 +321,7 @@ func findEndpointAuthorizationByID(ctx context.Context, conn *redshift.Client, i
 	output, err := conn.DescribeEndpointAuthorization(ctx, input)
 
 	if errs.IsA[*awstypes.EndpointAuthorizationNotFoundFault](err) || errs.IsA[*awstypes.ClusterNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -358,7 +358,7 @@ func findPartnerByID(ctx context.Context, conn *redshift.Client, id string) (*aw
 	output, err := conn.DescribePartners(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -387,7 +387,7 @@ func findClusterSnapshotByID(ctx context.Context, conn *redshift.Client, id stri
 	output, err := conn.DescribeClusterSnapshots(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundFault](err) || errs.IsA[*awstypes.ClusterSnapshotNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -406,7 +406,7 @@ func findClusterSnapshotByID(ctx context.Context, conn *redshift.Client, id stri
 	}
 
 	if status := aws.ToString(output.Snapshots[0].Status); status == clusterSnapshotStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -422,7 +422,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *redshift.Client, arn str
 
 	output, err := conn.GetResourcePolicy(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -447,7 +447,7 @@ func findIntegrations(ctx context.Context, conn *redshift.Client, input *redshif
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

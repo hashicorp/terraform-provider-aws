@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -229,7 +229,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func waitServiceCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.ServiceStatusCreateInProgress),
 		Target:                    enum.Slice(types.ServiceStatusActive),
 		Refresh:                   statusService(ctx, conn, id),
@@ -247,7 +247,7 @@ func waitServiceCreated(ctx context.Context, conn *vpclattice.Client, id string,
 }
 
 func waitServiceDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.ServiceStatusDeleteInProgress, types.ServiceStatusActive),
 		Target:  []string{},
 		Refresh: statusService(ctx, conn, id),
@@ -262,7 +262,7 @@ func waitServiceDeleted(ctx context.Context, conn *vpclattice.Client, id string,
 	return nil, err
 }
 
-func statusService(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+func statusService(ctx context.Context, conn *vpclattice.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findServiceByID(ctx, conn, id)
 
@@ -285,7 +285,7 @@ func findServiceByID(ctx context.Context, conn *vpclattice.Client, id string) (*
 	out, err := conn.GetService(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -274,7 +274,7 @@ func findDBClusterSnapshotByID(ctx context.Context, conn *rds.Client, id string)
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterSnapshotIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -300,7 +300,7 @@ func findDBClusterSnapshots(ctx context.Context, conn *rds.Client, input *rds.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBClusterSnapshotNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -320,7 +320,7 @@ func findDBClusterSnapshots(ctx context.Context, conn *rds.Client, input *rds.De
 	return output, nil
 }
 
-func statusDBClusterSnapshot(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
+func statusDBClusterSnapshot(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBClusterSnapshotByID(ctx, conn, id)
 
@@ -337,7 +337,7 @@ func statusDBClusterSnapshot(ctx context.Context, conn *rds.Client, id string) r
 }
 
 func waitDBClusterSnapshotCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBClusterSnapshot, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusCreating, clusterSnapshotStatusCopying},
 		Target:     []string{clusterSnapshotStatusAvailable},
 		Refresh:    statusDBClusterSnapshot(ctx, conn, id),
@@ -379,7 +379,7 @@ func findDBClusterSnapshotAttributes(ctx context.Context, conn *rds.Client, inpu
 	output, err := conn.DescribeDBClusterSnapshotAttributes(ctx, input)
 
 	if errs.IsA[*types.DBClusterSnapshotNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

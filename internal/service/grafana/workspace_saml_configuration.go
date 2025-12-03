@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/grafana"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -279,7 +279,7 @@ func findSAMLConfigurationByID(ctx context.Context, conn *grafana.Client, id str
 	output, err := conn.DescribeWorkspaceAuthentication(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -294,7 +294,7 @@ func findSAMLConfigurationByID(ctx context.Context, conn *grafana.Client, id str
 	}
 
 	if status := output.Authentication.Saml.Status; status == awstypes.SamlConfigurationStatusNotConfigured {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -303,7 +303,7 @@ func findSAMLConfigurationByID(ctx context.Context, conn *grafana.Client, id str
 	return output.Authentication.Saml, nil
 }
 
-func statusWorkspaceSAMLConfiguration(ctx context.Context, conn *grafana.Client, id string) retry.StateRefreshFunc {
+func statusWorkspaceSAMLConfiguration(ctx context.Context, conn *grafana.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSAMLConfigurationByID(ctx, conn, id)
 
@@ -320,7 +320,7 @@ func statusWorkspaceSAMLConfiguration(ctx context.Context, conn *grafana.Client,
 }
 
 func waitWorkspaceSAMLConfigurationCreated(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.SamlAuthentication, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.SamlConfigurationStatusConfigured),
 		Refresh: statusWorkspaceSAMLConfiguration(ctx, conn, id),

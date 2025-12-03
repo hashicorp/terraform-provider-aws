@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	"github.com/aws/aws-sdk-go-v2/service/glacier/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -169,7 +169,7 @@ func findVaultLockByName(ctx context.Context, conn *glacier.Client, name string)
 	output, err := conn.GetVaultLock(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -186,7 +186,7 @@ func findVaultLockByName(ctx context.Context, conn *glacier.Client, name string)
 	return output, nil
 }
 
-func statusLockState(ctx context.Context, conn *glacier.Client, name string) retry.StateRefreshFunc {
+func statusLockState(ctx context.Context, conn *glacier.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVaultLockByName(ctx, conn, name)
 
@@ -203,7 +203,7 @@ func statusLockState(ctx context.Context, conn *glacier.Client, name string) ret
 }
 
 func waitVaultLockLocked(ctx context.Context, conn *glacier.Client, name string) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{lockStateInProgress},
 		Target:  []string{lockStateLocked},
 		Refresh: statusLockState(ctx, conn, name),

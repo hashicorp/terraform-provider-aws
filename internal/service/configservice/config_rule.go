@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -352,7 +352,7 @@ func findConfigRules(ctx context.Context, conn *configservice.Client, input *con
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchConfigRuleException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -368,7 +368,7 @@ func findConfigRules(ctx context.Context, conn *configservice.Client, input *con
 	return output, nil
 }
 
-func statusConfigRule(ctx context.Context, conn *configservice.Client, name string) retry.StateRefreshFunc {
+func statusConfigRule(ctx context.Context, conn *configservice.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findConfigRuleByName(ctx, conn, name)
 
@@ -388,7 +388,7 @@ func waitConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			types.ConfigRuleStateActive,
 			types.ConfigRuleStateDeleting,

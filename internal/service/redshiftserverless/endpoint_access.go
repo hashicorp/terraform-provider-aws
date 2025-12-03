@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -254,7 +254,7 @@ func findEndpointAccessByName(ctx context.Context, conn *redshiftserverless.Clie
 	output, err := conn.GetEndpointAccess(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -271,7 +271,7 @@ func findEndpointAccessByName(ctx context.Context, conn *redshiftserverless.Clie
 	return output.Endpoint, nil
 }
 
-func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
+func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEndpointAccessByName(ctx, conn, name)
 
@@ -288,7 +288,7 @@ func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.Client, 
 }
 
 func waitEndpointAccessActive(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.EndpointAccess, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			"CREATING",
 			"MODIFYING",
@@ -310,7 +310,7 @@ func waitEndpointAccessActive(ctx context.Context, conn *redshiftserverless.Clie
 }
 
 func waitEndpointAccessDeleted(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.EndpointAccess, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			"DELETING",
 		},

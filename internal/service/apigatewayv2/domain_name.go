@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -264,7 +264,7 @@ func findDomainName(ctx context.Context, conn *apigatewayv2.Client, name string)
 	output, err := conn.GetDomainName(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -281,7 +281,7 @@ func findDomainName(ctx context.Context, conn *apigatewayv2.Client, name string)
 	return output, nil
 }
 
-func statusDomainName(ctx context.Context, conn *apigatewayv2.Client, name string) retry.StateRefreshFunc {
+func statusDomainName(ctx context.Context, conn *apigatewayv2.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDomainName(ctx, conn, name)
 
@@ -298,7 +298,7 @@ func statusDomainName(ctx context.Context, conn *apigatewayv2.Client, name strin
 }
 
 func waitDomainNameAvailable(ctx context.Context, conn *apigatewayv2.Client, name string, timeout time.Duration) (*apigatewayv2.GetDomainNameOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainNameStatusUpdating),
 		Target:  enum.Slice(awstypes.DomainNameStatusAvailable),
 		Refresh: statusDomainName(ctx, conn, name),

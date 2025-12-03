@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -130,7 +130,7 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 	output, err := conn.GetAdminAccount(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -145,7 +145,7 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 	}
 
 	if status := output.RoleStatus; status == awstypes.AccountRoleStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -154,7 +154,7 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 	return output, nil
 }
 
-func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountID string) retry.StateRefreshFunc {
+func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountID string) sdkretry.StateRefreshFunc {
 	// This is all wrapped in a StateRefreshFunc since AssociateAdminAccount returns
 	// success even though it failed if called too quickly after creating an Organization.
 	return func() (any, string, error) {
@@ -192,7 +192,7 @@ func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountI
 	}
 }
 
-func statusAdminAccount(ctx context.Context, conn *fms.Client) retry.StateRefreshFunc {
+func statusAdminAccount(ctx context.Context, conn *fms.Client) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAdminAccount(ctx, conn)
 
@@ -209,7 +209,7 @@ func statusAdminAccount(ctx context.Context, conn *fms.Client) retry.StateRefres
 }
 
 func waitAdminAccountCreated(ctx context.Context, conn *fms.Client, accountID string, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.AccountRoleStatusDeleted, // Recreating association can return this status.
 			awstypes.AccountRoleStatusCreating,
@@ -230,7 +230,7 @@ func waitAdminAccountCreated(ctx context.Context, conn *fms.Client, accountID st
 }
 
 func waitAdminAccountDeleted(ctx context.Context, conn *fms.Client, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.AccountRoleStatusDeleting,
 			awstypes.AccountRoleStatusPendingDeletion,

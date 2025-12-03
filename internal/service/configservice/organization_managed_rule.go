@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -336,14 +336,14 @@ func findOrganizationConfigRules(ctx context.Context, conn *configservice.Client
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
 		}
 
 		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -371,7 +371,7 @@ func findOrganizationConfigRuleStatusByName(ctx context.Context, conn *configser
 	}
 
 	if status := output.OrganizationRuleStatus; status == types.OrganizationRuleStatusDeleteSuccessful {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -403,7 +403,7 @@ func findOrganizationConfigRuleStatuses(ctx context.Context, conn *configservice
 		})
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -438,7 +438,7 @@ func findOrganizationConfigRuleDetailedStatuses(ctx context.Context, conn *confi
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -454,7 +454,7 @@ func findOrganizationConfigRuleDetailedStatuses(ctx context.Context, conn *confi
 	return output, nil
 }
 
-func statusOrganizationConfigRule(ctx context.Context, conn *configservice.Client, name string) retry.StateRefreshFunc {
+func statusOrganizationConfigRule(ctx context.Context, conn *configservice.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findOrganizationConfigRuleStatusByName(ctx, conn, name)
 
@@ -471,7 +471,7 @@ func statusOrganizationConfigRule(ctx context.Context, conn *configservice.Clien
 }
 
 func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        enum.Slice(types.OrganizationRuleStatusCreateInProgress),
 		Target:         enum.Slice(types.OrganizationRuleStatusCreateSuccessful),
 		Refresh:        statusOrganizationConfigRule(ctx, conn, name),
@@ -492,7 +492,7 @@ func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.
 }
 
 func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.OrganizationRuleStatusUpdateInProgress),
 		Target:  enum.Slice(types.OrganizationRuleStatusUpdateSuccessful),
 		Refresh: statusOrganizationConfigRule(ctx, conn, name),
@@ -512,7 +512,7 @@ func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.
 }
 
 func waitOrganizationConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationRuleStatusDeleteInProgress),
 		Target:                    []string{},
 		Refresh:                   statusOrganizationConfigRule(ctx, conn, name),

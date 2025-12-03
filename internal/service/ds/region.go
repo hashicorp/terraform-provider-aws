@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -287,7 +287,7 @@ func findRegions(ctx context.Context, conn *directoryservice.Client, input *dire
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -316,7 +316,7 @@ func findRegionByTwoPartKey(ctx context.Context, conn *directoryservice.Client, 
 	}
 
 	if status := output.Status; status == awstypes.DirectoryStageDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -325,7 +325,7 @@ func findRegionByTwoPartKey(ctx context.Context, conn *directoryservice.Client, 
 	return output, nil
 }
 
-func statusRegion(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, optFns ...func(*directoryservice.Options)) retry.StateRefreshFunc {
+func statusRegion(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, optFns ...func(*directoryservice.Options)) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findRegionByTwoPartKey(ctx, conn, directoryID, regionName, optFns...)
 
@@ -342,7 +342,7 @@ func statusRegion(ctx context.Context, conn *directoryservice.Client, directoryI
 }
 
 func waitRegionCreated(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, timeout time.Duration, optFns ...func(*directoryservice.Options)) (*awstypes.RegionDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectoryStageRequested, awstypes.DirectoryStageCreating, awstypes.DirectoryStageCreated),
 		Target:  enum.Slice(awstypes.DirectoryStageActive),
 		Refresh: statusRegion(ctx, conn, directoryID, regionName, optFns...),
@@ -359,7 +359,7 @@ func waitRegionCreated(ctx context.Context, conn *directoryservice.Client, direc
 }
 
 func waitRegionDeleted(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, timeout time.Duration, optFns ...func(*directoryservice.Options)) (*awstypes.RegionDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectoryStageActive, awstypes.DirectoryStageDeleting),
 		Target:  []string{},
 		Refresh: statusRegion(ctx, conn, directoryID, regionName, optFns...),
