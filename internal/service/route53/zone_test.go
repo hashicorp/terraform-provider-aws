@@ -45,6 +45,7 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "primary_name_server"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enable_accelerated_recovery", acctest.CtFalse),
 				),
 			},
 			{
@@ -574,8 +575,8 @@ func TestAccRoute53Zone_enableAcceleratedRecovery(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				// Disable accelerated recovery by omitting the argument
-				Config: testAccZoneConfig_basic(zoneName),
+				// Disable accelerated recovery
+				Config: testAccZoneConfig_enableAcceleratedRecovery(zoneName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile("hostedzone/.+")),
