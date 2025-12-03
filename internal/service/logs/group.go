@@ -56,6 +56,7 @@ func resourceGroup() *schema.Resource {
 			"deletion_protection_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
