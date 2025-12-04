@@ -199,6 +199,8 @@ func TestAccEC2Instance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", "stop"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_market_options"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface"), knownvalue.ListExact([]knownvalue.Check{
@@ -208,6 +210,7 @@ func TestAccEC2Instance_basic(t *testing.T) {
 						}),
 					})),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), knownvalue.StringExact("")),
 				},
 			},
 			{
