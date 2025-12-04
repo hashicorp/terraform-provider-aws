@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBatchJobDefinition_List_Basic(t *testing.T) {
+func TestAccBatchJobDefinition_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_batch_job_definition.test[0]"
