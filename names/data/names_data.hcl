@@ -655,8 +655,8 @@ service "arcregionswitch" {
   }
 
   sdk {
-    id             = "ARC Region Switch"
-    arn_namespace  = "arcregionswitch"
+    id            = "ARC Region Switch"
+    arn_namespace = "arcregionswitch"
   }
 
   names {
@@ -681,17 +681,14 @@ service "arcregionswitch" {
 }
 
 service "arczonalshift" {
-
-  cli_v2_command { 
+  cli_v2_command {
     aws_cli_v2_command           = "arc-zonal-shift"
     aws_cli_v2_command_no_dashes = "arczonalshift"
   }
 
-  // If any blocks below here have attirbutes with empty strings or false bools, they will be ommitted
-  // Blocks with zero attributes will be ommitted 
   sdk {
-    id             = "ARC Zonal Shift" 
-    client_version = 2 
+    id            = "ARC Zonal Shift"
+    arn_namespace = "arczonalswitch"
   }
 
   names {
@@ -700,15 +697,16 @@ service "arczonalshift" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListZonalShifts"
+    endpoint_api_call = "ListZonalShifts"
   }
 
   resource_prefix {
-    correct = "aws_arczonalshift"
+    correct = "aws_arczonalshift_"
   }
 
   provider_package_correct = "arczonalshift"
-  doc_prefix          = ["arczonalshift_"]
+  doc_prefix               = ["arczonalshift_"]
+  brand                    = "AWS"
 }
 
 service "athena" {
@@ -939,36 +937,36 @@ service "bedrockagent" {
 }
 
 service "bedrockagentcore" {
-   cli_v2_command {
-     aws_cli_v2_command           = "bedrock-agentcore-control"
-     aws_cli_v2_command_no_dashes = "bedrockagentcorecontrol"
-   }
+  cli_v2_command {
+    aws_cli_v2_command           = "bedrock-agentcore-control"
+    aws_cli_v2_command_no_dashes = "bedrockagentcorecontrol"
+  }
 
-   go_packages {
-     v2_package = "bedrockagentcorecontrol"
-   }
+  go_packages {
+    v2_package = "bedrockagentcorecontrol"
+  }
 
-   sdk {
-     id            = "Bedrock AgentCore Control"
-     arn_namespace = "bedrock-agentcore"
-   }
+  sdk {
+    id            = "Bedrock AgentCore Control"
+    arn_namespace = "bedrock-agentcore"
+  }
 
-   names {
-     provider_name_upper = "BedrockAgentCore"
-     human_friendly      = "Bedrock AgentCore"
-   }
+  names {
+    provider_name_upper = "BedrockAgentCore"
+    human_friendly      = "Bedrock AgentCore"
+  }
 
-   endpoint_info {
-     endpoint_api_call = "ListAgentRuntimes"
-   }
+  endpoint_info {
+    endpoint_api_call = "ListAgentRuntimes"
+  }
 
-   resource_prefix {
-     correct = "aws_bedrockagentcore_"
-   }
+  resource_prefix {
+    correct = "aws_bedrockagentcore_"
+  }
 
-   provider_package_correct = "bedrockagentcore"
-   doc_prefix               = ["bedrockagentcore_"]
-   brand                    = "Amazon"
+  provider_package_correct = "bedrockagentcore"
+  doc_prefix               = ["bedrockagentcore_"]
+  brand                    = "Amazon"
 }
 
 service "bcmdataexports" {
