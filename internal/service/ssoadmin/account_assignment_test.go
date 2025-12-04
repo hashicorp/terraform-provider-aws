@@ -6,7 +6,6 @@ package ssoadmin_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -24,13 +23,12 @@ func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_account_assignment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	groupName := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
+	groupName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_GROUP_NAME")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
-			testAccPreCheckIdentityStoreGroupName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -58,20 +56,19 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_account_assignment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	userName := os.Getenv("AWS_IDENTITY_STORE_USER_NAME")
+	userId := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_NAME")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
-			testAccPreCheckIdentityStoreUserName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountAssignmentConfig_basicUser(userName, rName),
+				Config: testAccAccountAssignmentConfig_basicUser(userId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountAssignmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
@@ -91,13 +88,12 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 func TestAccSSOAdminAccountAssignment_MissingPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	userName := os.Getenv("AWS_IDENTITY_STORE_USER_NAME")
+	userName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_NAME")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
-			testAccPreCheckIdentityStoreUserName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -116,13 +112,12 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_account_assignment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	groupName := os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME")
+	groupName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_GROUP_NAME")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
-			testAccPreCheckIdentityStoreGroupName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -262,20 +257,6 @@ resource "aws_ssoadmin_account_assignment" "test" {
   principal_id       = data.aws_identitystore_user.test.user_id
 }
 `, userName))
-}
-
-func testAccPreCheckIdentityStoreGroupName(t *testing.T) {
-	if os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME") == "" {
-		t.Skip("AWS_IDENTITY_STORE_GROUP_NAME env var must be set for AWS Identity Store Group acceptance test. " +
-			"This is required until ListGroups API returns results without filtering by name.")
-	}
-}
-
-func testAccPreCheckIdentityStoreUserName(t *testing.T) {
-	if os.Getenv("AWS_IDENTITY_STORE_USER_NAME") == "" {
-		t.Skip("AWS_IDENTITY_STORE_USER_NAME env var must be set for AWS Identity Store User acceptance test. " +
-			"This is required until ListUsers API returns results without filtering by name.")
-	}
 }
 
 func testAccAccountAssignmentConfig_withCustomerPolicy(userName, policyPath, policyName, rName string) string {

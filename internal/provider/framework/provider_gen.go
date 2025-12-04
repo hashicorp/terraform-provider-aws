@@ -170,6 +170,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// arczonalshift
+
+				"arczonalshift": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// athena
 
 				"athena": schema.StringAttribute{

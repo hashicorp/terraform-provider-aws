@@ -38,6 +38,10 @@ func dataSourceZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"enable_accelerated_recovery": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"linked_service_description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -201,6 +205,11 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrARN, zoneARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("caller_reference", hostedZone.CallerReference)
 	d.Set(names.AttrComment, hostedZone.Config.Comment)
+	if v := hostedZone.Features; v != nil {
+		d.Set("enable_accelerated_recovery", v.AcceleratedRecoveryStatus == awstypes.AcceleratedRecoveryStatusEnabled)
+	} else {
+		d.Set("enable_accelerated_recovery", false)
+	}
 	if hostedZone.LinkedService != nil {
 		d.Set("linked_service_description", hostedZone.LinkedService.Description)
 		d.Set("linked_service_principal", hostedZone.LinkedService.ServicePrincipal)

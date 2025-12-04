@@ -13,7 +13,7 @@ import (
 func Context(region string) context.Context {
 	ctx := context.Background()
 
-	ctx = tfsdklog.RegisterStdlogSink(ctx)
+	ctx = tfsdklog.ContextWithStandardLogging(ctx, "sweep")
 
 	ctx = log.Logger(ctx, "sweeper", region)
 

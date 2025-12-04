@@ -196,6 +196,68 @@ resource "aws_api_gateway_integration" "test" {
 }
 ```
 
+## VPC Link V2 with Application Load Balancer
+
+```terraform
+resource "aws_apigatewayv2_vpc_link" "example" {
+  name               = "example"
+  security_group_ids = [aws_security_group.example.id]
+  subnet_ids         = aws_subnet.example[*].id
+}
+
+resource "aws_lb" "example" {
+  name               = "example-alb"
+  internal           = true
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.example.id]
+  subnets            = aws_subnet.example[*].id
+}
+
+resource "aws_lb_listener" "example" {
+  load_balancer_arn = aws_lb.example.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "OK"
+      status_code  = "200"
+    }
+  }
+}
+
+resource "aws_api_gateway_rest_api" "example" {
+  name = "example"
+}
+
+resource "aws_api_gateway_resource" "example" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  parent_id   = aws_api_gateway_rest_api.example.root_resource_id
+  path_part   = "example"
+}
+
+resource "aws_api_gateway_method" "example" {
+  rest_api_id   = aws_api_gateway_rest_api.example.id
+  resource_id   = aws_api_gateway_resource.example.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "example" {
+  rest_api_id             = aws_api_gateway_rest_api.example.id
+  resource_id             = aws_api_gateway_resource.example.id
+  http_method             = aws_api_gateway_method.example.http_method
+  integration_http_method = "GET"
+  type                    = "HTTP_PROXY"
+  connection_type         = "VPC_LINK"
+  connection_id           = aws_apigatewayv2_vpc_link.example.id
+  integration_target      = aws_lb.example.arn
+  uri                     = "http://example.com"
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -205,6 +267,7 @@ This resource supports the following arguments:
 * `resource_id` - (Required) API resource ID.
 * `http_method` - (Required) HTTP method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTION`, `ANY`)
   when calling the associated resource.
+* `integration_target` - (Optional) The ALB or NLB ARN to send the request to. Used for private integrations with VPC Link V2. When using VPC Link V2, this parameter specifies the load balancer ARN, while `uri` is used to set the Host header.
 * `integration_http_method` - (Optional) Integration HTTP method
   (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONs`, `ANY`, `PATCH`) specifying how API Gateway will interact with the back end.
   **Required** if `type` is `AWS`, `AWS_PROXY`, `HTTP` or `HTTP_PROXY`.
@@ -220,6 +283,8 @@ This resource supports the following arguments:
 * `request_templates` - (Optional) Map of the integration's request templates.
 * `request_parameters` - (Optional) Map of request query string parameters and headers that should be passed to the backend responder.
   For example: `request_parameters = { "integration.request.header.X-Some-Other-Header" = "method.request.header.X-Some-Header" }`
+* `response_transfer_mode` – (Optional) Specifies the response transfer mode of the integration. Valid values are `BUFFERED` and `STREAM`. Default to `BUFFERED`.  
+  Once set, setting the value to `BUFFERED` requires explicitly specifying `BUFFERED`, rather than removing this argument.
 * `passthrough_behavior` - (Optional) Integration passthrough behavior (`WHEN_NO_MATCH`, `WHEN_NO_TEMPLATES`, `NEVER`).  **Required** if `request_templates` is used.
 * `cache_key_parameters` - (Optional) List of cache key parameters for the integration.
 * `cache_namespace` - (Optional) Integration's cache namespace.

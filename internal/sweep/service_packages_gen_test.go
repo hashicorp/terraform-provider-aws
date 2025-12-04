@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/arcregionswitch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/arczonalshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/athena"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
@@ -290,6 +291,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		appstream.ServicePackage(ctx),
 		appsync.ServicePackage(ctx),
 		arcregionswitch.ServicePackage(ctx),
+		arczonalshift.ServicePackage(ctx),
 		athena.ServicePackage(ctx),
 		auditmanager.ServicePackage(ctx),
 		autoscaling.ServicePackage(ctx),
