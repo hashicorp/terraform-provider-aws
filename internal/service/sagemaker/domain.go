@@ -5,6 +5,7 @@ package sagemaker
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -37,6 +39,22 @@ func resourceDomain() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				if domainSettings := diff.Get("domain_settings").([]any); len(domainSettings) > 0 {
+					if settings := domainSettings[0].(map[string]any); settings != nil {
+						if trustedIdentityEnabled, ok := settings["trusted_identity_propagation_enabled"].(bool); ok && trustedIdentityEnabled {
+							authMode := diff.Get("auth_mode").(string)
+							if authMode != string(awstypes.AuthModeSso) {
+								return fmt.Errorf("trusted_identity_propagation_enabled can only be true when auth_mode is 'SSO'")
+							}
+						}
+					}
+				}
+				return nil
+			},
+		),
 
 		Schema: map[string]*schema.Schema{
 			"app_network_access_type": {
@@ -1388,6 +1406,11 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 3,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"trusted_identity_propagation_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -1675,6 +1698,12 @@ func expandDomainSettings(l []any) *awstypes.DomainSettings {
 		config.RStudioServerProDomainSettings = expandRStudioServerProDomainSettings(v)
 	}
 
+	if v := m["trusted_identity_propagation_enabled"].(bool); v {
+		config.TrustedIdentityPropagationSettings = &awstypes.TrustedIdentityPropagationSettings{
+			Status: awstypes.FeatureStatusEnabled,
+		}
+	}
+
 	return config
 }
 
@@ -1749,6 +1778,12 @@ func expandDomainSettingsUpdate(l []any) *awstypes.DomainSettingsForUpdate {
 
 	if v, ok := m["r_studio_server_pro_domain_settings"].([]any); ok && len(v) > 0 {
 		config.RStudioServerProDomainSettingsForUpdate = expandRStudioServerProDomainSettingsUpdate(v)
+	}
+
+	if v := m["trusted_identity_propagation_enabled"].(bool); v {
+		config.TrustedIdentityPropagationSettings = &awstypes.TrustedIdentityPropagationSettings{
+			Status: awstypes.FeatureStatusEnabled,
+		}
 	}
 
 	return config
@@ -3024,10 +3059,11 @@ func flattenDomainSettings(config *awstypes.DomainSettings) []map[string]any {
 	}
 
 	m := map[string]any{
-		"docker_settings":                     flattenDockerSettings(config.DockerSettings),
-		"execution_role_identity_config":      config.ExecutionRoleIdentityConfig,
-		"r_studio_server_pro_domain_settings": flattenRStudioServerProDomainSettings(config.RStudioServerProDomainSettings),
-		names.AttrSecurityGroupIDs:            flex.FlattenStringValueSet(config.SecurityGroupIds),
+		"docker_settings":                      flattenDockerSettings(config.DockerSettings),
+		"execution_role_identity_config":       config.ExecutionRoleIdentityConfig,
+		"r_studio_server_pro_domain_settings":  flattenRStudioServerProDomainSettings(config.RStudioServerProDomainSettings),
+		names.AttrSecurityGroupIDs:             flex.FlattenStringValueSet(config.SecurityGroupIds),
+		"trusted_identity_propagation_enabled": config.TrustedIdentityPropagationSettings != nil && config.TrustedIdentityPropagationSettings.Status == awstypes.FeatureStatusEnabled,
 	}
 
 	return []map[string]any{m}

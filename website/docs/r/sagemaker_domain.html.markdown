@@ -282,6 +282,7 @@ The following arguments are optional:
 * `execution_role_identity_config` - (Optional) The configuration for attaching a SageMaker AI user profile name to the execution role as a sts:SourceIdentity key [AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html). Valid values are `USER_PROFILE_NAME` and `DISABLED`.
 * `r_studio_server_pro_domain_settings` - (Optional) A collection of settings that configure the RStudioServerPro Domain-level app. see [`r_studio_server_pro_domain_settings` Block](#r_studio_server_pro_domain_settings-block) below.
 * `security_group_ids` - (Optional) The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
+* `trusted_identity_propagation_enabled` - (Optional) Whether to enable Trusted Identity Propagation (TIP) for the domain. When enabled, user identities from IAM Identity Center are propagated through the domain to TIP enabled AWS services. Defaults to `false`. Can only be `true` when `auth_mode` is `SSO`.
 
 #### `docker_settings` Block
 
