@@ -97,8 +97,8 @@ github.com/aws/aws-sdk-go-v2/service/batch v1.58.9 h1:MNhKUdkPseKJLrpW75nV0SOLbO
 github.com/aws/aws-sdk-go-v2/service/batch v1.58.9/go.mod h1:uLTvHMRi2LnTeOY2a50pfi7Sog288kz1bNsc7OV0jXo=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.8 h1:miGeY8hYJ12QlcpHIX2p6f8T7fTov1vEVXlCeH3mfa8=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.8/go.mod h1:zNR+1l7sMqEb7Jlkgs5Z35fwgecmqSkawxY6eVPT4xI=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.51.0 h1:LOj20Fpho0mO8V3LbvJx5FyeTVOcBsgZ0JEj+J2CyVI=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.51.0/go.mod h1:xvbb+kVYeY1QbYaza/ljjh03f8SE8xdFTrstI9y2lKE=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.52.0 h1:tPsTBXZYWbigASMcjmocQAd7XdLIs+fr8/3i7PvlNqs=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.52.0/go.mod h1:xvbb+kVYeY1QbYaza/ljjh03f8SE8xdFTrstI9y2lKE=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.1 h1:3bes4u/HO/klW+u86559eG8GlFzpWEgFLlflmbu2W04=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.1/go.mod h1:AN1aWQCV7gA7RsCxtjHXplAFKu99LNgpJu2VXtPsBok=
 github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.15.0 h1:xo8UWUQ02ZCqMZ7wHNfsr94uI79W8BYfEd6oj99KHAA=
@@ -479,8 +479,8 @@ github.com/aws/aws-sdk-go-v2/service/s3tables v1.13.0 h1:w9HluXHeARI8AJKjys1vrFL
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.13.0/go.mod h1:Wkm+hGMXKNXSjx/Zv1iJmlp4aWB5UMuSy6O/gYorla4=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.0 h1:t6KBwfBdNjJ3NoAa/Ga35t9L+m2MpSNZuPhwJjpegkI=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.0/go.mod h1:cIiWSXO1+VC50MmSiXuvaxN+YU/pLEVBr22+yVq6vqQ=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.227.0 h1:NiLUiwZJ/RN3Hl4/m8NNs7gabbWysw3q5pnWiRGJ4L8=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.227.0/go.mod h1:o1lnonxK5TNak+WiC1fpiEe09kRQSs5FXZry7/tPWJM=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.228.0 h1:3y6j3mTEupe3sml4Z85Kps5uIkalX0/e2lXqv2br+Xg=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.228.0/go.mod h1:o1lnonxK5TNak+WiC1fpiEe09kRQSs5FXZry7/tPWJM=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.15 h1:E6WEaYCLOwjccsbp8ZQe6+pOc0gBIBYTAj7Nfgd/UOY=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.15/go.mod h1:+VAa3qzmF2MuWqmq0OkWpjr0CBekm/Cuf0fX1rDeWoc=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.34.6 h1:zzd9neMvQA2NfQS6JvhZGSa24c2Cew1+0S4+KswA160=
