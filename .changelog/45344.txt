@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_bedrockagentcore_gateway: Add `interceptor_configurations` argument
+resource/aws_bedrockagentcore_gateway: Add `interceptor_configuration` argument
 ```

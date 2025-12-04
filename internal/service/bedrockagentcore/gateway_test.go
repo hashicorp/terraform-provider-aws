@@ -241,7 +241,7 @@ func TestAccBedrockAgentCoreGateway_interceptorConfigurations(t *testing.T) {
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configurations"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configuration"), knownvalue.ListSizeExact(1)),
 				},
 			},
 			{
@@ -765,7 +765,7 @@ resource "aws_bedrockagentcore_gateway" "test" {
   authorizer_type = "AWS_IAM"
   protocol_type   = "MCP"
 
-  interceptor_configurations {
+  interceptor_configuration {
     interception_points = ["REQUEST", "RESPONSE"]
 
     interceptor {

@@ -93,7 +93,7 @@ resource "aws_bedrockagentcore_gateway" "example" {
   authorizer_type = "AWS_IAM"
   protocol_type   = "MCP"
 
-  interceptor_configurations {
+  interceptor_configuration {
     interception_points = ["REQUEST", "RESPONSE"]
 
     interceptor {
@@ -124,7 +124,7 @@ The following arguments are optional:
 * `authorizer_configuration` - (Optional) Configuration for request authorization. Required when `authorizer_type` is set to `CUSTOM_JWT`. See [`authorizer_configuration`](#authorizer_configuration) below.
 * `description` - (Optional) Description of the gateway.
 * `exception_level` - (Optional) Exception level for the gateway. Valid values: `INFO`, `WARN`, `ERROR`.
-* `interceptor_configurations` - (Optional) List of interceptor configurations for the gateway. Minimum of 1, maximum of 2. See [`interceptor_configurations`](#interceptor_configurations) below.
+* `interceptor_configuration` - (Optional) List of interceptor configurations for the gateway. Minimum of 1, maximum of 2. See [`interceptor_configuration`](#interceptor_configuration) below.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the gateway data.
 * `protocol_configuration` - (Optional) Protocol-specific configuration for the gateway. See [`protocol_configuration`](#protocol_configuration) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -143,9 +143,9 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 
-### `interceptor_configurations`
+### `interceptor_configuration`
 
-The `interceptor_configurations` block supports the following:
+The `interceptor_configuration` block supports the following:
 
 * `interception_points` - (Required) Set of interception points. Valid values: `REQUEST`, `RESPONSE`.
 * `interceptor` - (Required) Interceptor infrastructure configuration. See [`interceptor`](#interceptor) below.

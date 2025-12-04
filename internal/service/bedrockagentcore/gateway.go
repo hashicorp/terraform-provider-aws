@@ -145,7 +145,7 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 					},
 				},
 			},
-			"interceptor_configurations": schema.ListNestedBlock{
+			"interceptor_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[gatewayInterceptorConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeBetween(1, 2),
@@ -153,7 +153,7 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"interception_points": schema.SetAttribute{
-							CustomType: fwtypes.SetOfStringType,
+							CustomType: fwtypes.SetOfStringEnumType[awstypes.GatewayInterceptionPoint](),
 							Required:   true,
 						},
 					},
@@ -515,7 +515,7 @@ type gatewayResourceModel struct {
 	GatewayARN                types.String                                                          `tfsdk:"gateway_arn"`
 	GatewayID                 types.String                                                          `tfsdk:"gateway_id"`
 	GatewayURL                types.String                                                          `tfsdk:"gateway_url"`
-	InterceptorConfigurations fwtypes.ListNestedObjectValueOf[gatewayInterceptorConfigurationModel] `tfsdk:"interceptor_configurations"`
+	InterceptorConfigurations fwtypes.ListNestedObjectValueOf[gatewayInterceptorConfigurationModel] `tfsdk:"interceptor_configuration"`
 	KMSKeyARN                 fwtypes.ARN                                                           `tfsdk:"kms_key_arn"`
 	Name                      types.String                                                          `tfsdk:"name"`
 	ProtocolConfiguration     fwtypes.ListNestedObjectValueOf[gatewayProtocolConfigurationModel]    `tfsdk:"protocol_configuration"`
@@ -583,7 +583,7 @@ type mcpGatewayConfigurationModel struct {
 
 type gatewayInterceptorConfigurationModel struct {
 	InputConfiguration fwtypes.ListNestedObjectValueOf[interceptorInputConfigurationModel] `tfsdk:"input_configuration"`
-	InterceptionPoints fwtypes.SetOfString                                                 `tfsdk:"interception_points"`
+	InterceptionPoints fwtypes.SetOfStringEnum[awstypes.GatewayInterceptionPoint]          `tfsdk:"interception_points"`
 	Interceptor        fwtypes.ListNestedObjectValueOf[interceptorConfigurationModel]      `tfsdk:"interceptor"`
 }
 
