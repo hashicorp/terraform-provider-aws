@@ -211,7 +211,7 @@ func TestAccEC2Instance_basic(t *testing.T) {
 						}),
 					})),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), tfknownvalue.StringLegacyNull()),
 				},
 			},
 			{
@@ -6325,7 +6325,7 @@ func TestAccEC2Instance_spot_basic(t *testing.T) {
 									"instance_interruption_behavior": tfknownvalue.StringExact(awstypes.SpotInstanceInterruptionBehaviorTerminate),
 									"max_price":                      knownvalue.NotNull(),
 									"spot_instance_type":             tfknownvalue.StringExact(awstypes.SpotInstanceTypeOneTime),
-									"valid_until":                    knownvalue.StringExact(""),
+									"valid_until":                    tfknownvalue.StringLegacyNull(),
 								}),
 							}),
 						}),
