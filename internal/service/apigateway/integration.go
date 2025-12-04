@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"maps"
 	"strconv"
 	"strings"
 	"time"
@@ -69,11 +68,6 @@ func resourceIntegration() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"integration_target": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
 			"connection_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -101,6 +95,11 @@ func resourceIntegration() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validHTTPMethod(),
+			},
+			"integration_target": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"passthrough_behavior": {
 				Type:     schema.TypeString,
@@ -213,6 +212,10 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.IntegrationHttpMethod = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("integration_target"); ok {
+		input.IntegrationTarget = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("passthrough_behavior"); ok {
 		input.PassthroughBehavior = aws.String(v.(string))
 	}
@@ -235,9 +238,6 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("tls_config"); ok && len(v.([]any)) > 0 {
 		input.TlsConfig = expandTLSConfig(v.([]any))
-	}
-	if v, ok := d.GetOk("integration_target"); ok {
-		input.IntegrationTarget = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrURI); ok {
@@ -283,12 +283,9 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("integration_target", integration.IntegrationTarget)
 	d.Set("passthrough_behavior", integration.PassthroughBehavior)
 	d.Set("request_parameters", integration.RequestParameters)
-	// We need to explicitly convert key = nil values into key = "", which aws.ToStringMap() removes
-	requestTemplates := make(map[string]string)
-	maps.Copy(requestTemplates, integration.RequestTemplates)
-	d.Set("request_templates", requestTemplates)
+	d.Set("request_templates", integration.RequestTemplates)
 	if integration.ResponseTransferMode == "" {
-		d.Set("response_transfer_mode", string(types.ResponseTransferModeBuffered))
+		d.Set("response_transfer_mode", types.ResponseTransferModeBuffered)
 	} else {
 		d.Set("response_transfer_mode", integration.ResponseTransferMode)
 	}
@@ -432,25 +429,6 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		})
 	}
 
-	// The documentation https://docs.aws.amazon.com/apigateway/api-reference/link-relation/integration-update/ says
-	// that uri changes are only supported for non-mock types. Because the uri value is not used in mock
-	// resources, it means that the uri can always be updated
-	if d.HasChange(names.AttrURI) {
-		operations = append(operations, types.PatchOperation{
-			Op:    types.OpReplace,
-			Path:  aws.String("/uri"),
-			Value: aws.String(d.Get(names.AttrURI).(string)),
-		})
-	}
-
-	if d.HasChange("content_handling") {
-		operations = append(operations, types.PatchOperation{
-			Op:    types.OpReplace,
-			Path:  aws.String("/contentHandling"),
-			Value: aws.String(d.Get("content_handling").(string)),
-		})
-	}
-
 	if d.HasChange("connection_type") {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
@@ -464,6 +442,22 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			Op:    types.OpReplace,
 			Path:  aws.String("/connectionId"),
 			Value: aws.String(d.Get(names.AttrConnectionID).(string)),
+		})
+	}
+
+	if d.HasChange("content_handling") {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/contentHandling"),
+			Value: aws.String(d.Get("content_handling").(string)),
+		})
+	}
+
+	if d.HasChange("integration_target") {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/integrationTarget"),
+			Value: aws.String(d.Get("integration_target").(string)),
 		})
 	}
 
@@ -499,11 +493,14 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("integration_target") {
+	// The documentation https://docs.aws.amazon.com/apigateway/api-reference/link-relation/integration-update/ says
+	// that uri changes are only supported for non-mock types. Because the uri value is not used in mock
+	// resources, it means that the uri can always be updated
+	if d.HasChange(names.AttrURI) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
-			Path:  aws.String("/integrationTarget"),
-			Value: aws.String(d.Get("integration_target").(string)),
+			Path:  aws.String("/uri"),
+			Value: aws.String(d.Get(names.AttrURI).(string)),
 		})
 	}
 
@@ -679,7 +676,11 @@ func findIntegrationByThreePartKey(ctx context.Context, conn *apigateway.Client,
 		RestApiId:  aws.String(apiID),
 	}
 
-	output, err := conn.GetIntegration(ctx, &input)
+	return findIntegration(ctx, conn, &input)
+}
+
+func findIntegration(ctx context.Context, conn *apigateway.Client, input *apigateway.GetIntegrationInput) (*apigateway.GetIntegrationOutput, error) {
+	output, err := conn.GetIntegration(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -699,26 +700,27 @@ func findIntegrationByThreePartKey(ctx context.Context, conn *apigateway.Client,
 	return output, nil
 }
 
-func expandTLSConfig(vConfig []any) *types.TlsConfig {
-	config := &types.TlsConfig{}
+func expandTLSConfig(tfList []any) *types.TlsConfig {
+	apiObject := &types.TlsConfig{}
 
-	if len(vConfig) == 0 || vConfig[0] == nil {
-		return config
+	if len(tfList) == 0 || tfList[0] == nil {
+		return apiObject
 	}
-	mConfig := vConfig[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
 
-	if insecureSkipVerification, ok := mConfig["insecure_skip_verification"].(bool); ok {
-		config.InsecureSkipVerification = insecureSkipVerification
+	if insecureSkipVerification, ok := tfMap["insecure_skip_verification"].(bool); ok {
+		apiObject.InsecureSkipVerification = insecureSkipVerification
 	}
-	return config
+
+	return apiObject
 }
 
-func flattenTLSConfig(config *types.TlsConfig) []any {
-	if config == nil {
+func flattenTLSConfig(apiObject *types.TlsConfig) []any {
+	if apiObject == nil {
 		return nil
 	}
 
 	return []any{map[string]any{
-		"insecure_skip_verification": config.InsecureSkipVerification,
+		"insecure_skip_verification": apiObject.InsecureSkipVerification,
 	}}
 }
