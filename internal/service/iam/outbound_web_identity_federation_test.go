@@ -5,48 +5,92 @@ package iam_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMOutboundWebIdentityFederation_basic(t *testing.T) {
-	ctx := acctest.Context(t)
+func TestAccIAMOutboundWebIdentityFederation_serial(t *testing.T) {
+	t.Parallel()
 
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccOutboundWebIdentityFederation_basic,
+		acctest.CtDisappears: testAccOutboundWebIdentityFederation_disappears,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccOutboundWebIdentityFederation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iam_outbound_web_identity_federation.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOutboundWebIdentityFederationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutboundWebIdentityFederationConfig_basic(true),
+				Config: testAccOutboundWebIdentityFederationConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, "issuer_identifier"),
+					testAccCheckOutboundWebIdentityFederationExists(ctx, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("issuer_identifier"), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func testAccOutboundWebIdentityFederation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_iam_outbound_web_identity_federation.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOutboundWebIdentityFederationDestroy(ctx),
+		Steps: []resource.TestStep{
 			{
-				Config: testAccOutboundWebIdentityFederationConfig_basic(false),
+				Config: testAccOutboundWebIdentityFederationConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					testAccCheckOutboundWebIdentityFederationExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfiam.ResourceOutboundWebIdentityFederation, resourceName),
 				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -61,9 +105,9 @@ func testAccCheckOutboundWebIdentityFederationDestroy(ctx context.Context) resou
 				continue
 			}
 
-			out, err := tfiam.GetOutboundWebIdentityFederation(ctx, conn)
+			_, err := tfiam.FindOutboundWebIdentityFederation(ctx, conn)
 
-			if out == nil {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -71,30 +115,28 @@ func testAccCheckOutboundWebIdentityFederationDestroy(ctx context.Context) resou
 				return err
 			}
 
-			return fmt.Errorf("IAM Outbound Web Identity Federation still exists")
+			return errors.New("IAM Outbound Web Identity Federation still exists")
 		}
 
 		return nil
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+func testAccCheckOutboundWebIdentityFederationExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		_, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
-	_, err := tfiam.GetOutboundWebIdentityFederation(ctx, conn)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
+		_, err := tfiam.FindOutboundWebIdentityFederation(ctx, conn)
+
+		return err
 	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
 }
 
-func testAccOutboundWebIdentityFederationConfig_basic(enabled bool) string {
-	return fmt.Sprintf(`
-resource "aws_iam_outbound_web_identity_federation" "test" {
-  enabled = %[1]t
-}
-`, enabled)
-}
+const testAccOutboundWebIdentityFederationConfig_basic = `
+resource "aws_iam_outbound_web_identity_federation" "test" {}
+`
