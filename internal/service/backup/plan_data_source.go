@@ -104,6 +104,22 @@ func dataSourcePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"scan_action": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"malware_scanner": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"scan_mode": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 						names.AttrSchedule: {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -117,6 +133,29 @@ func dataSourcePlan() *schema.Resource {
 							Computed: true,
 						},
 						"target_vault_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"scan_setting": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"malware_scanner": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"resource_types": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"scanner_role_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -148,6 +187,9 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
 	if err := d.Set(names.AttrRule, flattenBackupRules(ctx, output.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+	}
+	if err := d.Set("scan_setting", flattenScanSettings(output.BackupPlan.ScanSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting scan_settings: %s", err)
 	}
 	d.Set(names.AttrVersion, output.VersionId)
 
