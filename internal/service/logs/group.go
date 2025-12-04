@@ -53,6 +53,11 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"deletion_protection_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -125,6 +130,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		LogGroupClass: awstypes.LogGroupClass(d.Get("log_group_class").(string)),
 		LogGroupName:  aws.String(name),
 		Tags:          getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+		input.DeletionProtectionEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
@@ -206,6 +215,29 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)
 			}
+		}
+	}
+
+	if d.HasChange("deletion_protection_enabled") {
+		var deletionProtectionEnabled bool
+		if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+			deletionProtectionEnabled = v.(bool)
+		} else {
+			deletionProtectionEnabled = false
+		}
+		loggroup, err := findLogGroupByName(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
+		}
+		input := cloudwatchlogs.PutLogGroupDeletionProtectionInput{
+			LogGroupIdentifier:        loggroup.LogGroupArn,
+			DeletionProtectionEnabled: aws.Bool(deletionProtectionEnabled),
+		}
+
+		_, err = conn.PutLogGroupDeletionProtection(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Logs Log Group (%s) deletion protection: %s", d.Id(), err)
 		}
 	}
 
@@ -384,6 +416,7 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 
 func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
 	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
+	d.Set("deletion_protection_enabled", lg.DeletionProtectionEnabled)
 	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
 	d.Set("log_group_class", lg.LogGroupClass)
 	d.Set(names.AttrName, lg.LogGroupName)

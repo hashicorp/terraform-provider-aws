@@ -769,6 +769,37 @@ func TestAccLogsLogGroup_requiredTags_disabled(t *testing.T) {
 	})
 }
 
+func TestAccLogsLogGroup_deletionProtectionEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_deletionProtectionEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				// Disable deletion protection
+				Config: testAccGroupConfig_deletionProtectionEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckLogGroupExists(ctx context.Context, t *testing.T, n string, v *types.LogGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -952,4 +983,14 @@ resource "aws_cloudwatch_log_group" "test" {
   }
 }
 `, rName, key1, value1)
+}
+
+func testAccGroupConfig_deletionProtectionEnabled(rName string, deletionProtectionEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+
+  deletion_protection_enabled = %[2]t
+}
+`, rName, deletionProtectionEnabled)
 }
