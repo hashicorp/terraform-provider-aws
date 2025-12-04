@@ -72,7 +72,7 @@ func resourceProfile() *schema.Resource {
 			},
 			"role_arns": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,

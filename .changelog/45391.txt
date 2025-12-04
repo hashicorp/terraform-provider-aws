@@ -5,3 +5,7 @@ resource/aws_rolesanywhere_profile: Add `accept_role_session_name` argument
 ```release-note:enhancement
 resource/aws_rolesanywhere_profile: Add plan-time validation of `managed_policy_arns` and `role_arns`
 ```
+
+```release-note:bug
+resource/aws_rolesanywhere_profile: `role_arns` is required
+```

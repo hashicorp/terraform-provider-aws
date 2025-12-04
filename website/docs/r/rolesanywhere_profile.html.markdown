@@ -35,7 +35,6 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_rolesanywhere_profile" "test" {
-
   name      = "example"
   role_arns = [aws_iam_role.test.arn]
 }
