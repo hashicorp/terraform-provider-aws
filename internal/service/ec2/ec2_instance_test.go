@@ -6336,7 +6336,7 @@ func TestAccEC2Instance_spot_basic(t *testing.T) {
 							}),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), knownvalue.StringRegexp(regexache.MustCompile(`^sir-[a-z0-9]{8}$`))),
 				},
 			},
 			{
@@ -6382,7 +6382,7 @@ func TestAccEC2Instance_spot_instanceMarketOptions(t *testing.T) {
 							}),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), knownvalue.StringRegexp(regexache.MustCompile(`^sir-[a-z0-9]{8}$`))),
 				},
 			},
 			{
