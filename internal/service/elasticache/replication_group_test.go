@@ -59,7 +59,7 @@ func TestAccElastiCacheReplicationGroup_Redis_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtFalse),
-					testCheckEngineStuffRedisDefault(ctx, t, resourceName),
+					testCheckEngineStuffRedisDefault(ctx, t, resourceName, "7.1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", acctest.CtFalse),
@@ -146,12 +146,13 @@ func TestAccElastiCacheReplicationGroup_Valkey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtFalse),
-					testCheckEngineStuffValkeyDefault(ctx, t, resourceName),
+					testCheckEngineStuffValkeyDefault(ctx, t, resourceName, "7.2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", ""),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -3142,7 +3143,7 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 				Config: testAccReplicationGroupConfig_dataTiering(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
-					testCheckEngineVersionLatest(ctx, t, "redis", &version),
+					testCheckEngineVersionLatest(ctx, t, "redis", "", &version),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 					func(s *terraform.State) error {
 						return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
@@ -3507,14 +3508,14 @@ func testAccCheckReplicationGroupNotRecreated(i, j *awstypes.ReplicationGroup) r
 	}
 }
 
-func testCheckEngineStuffRedisDefault(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
+func testCheckEngineStuffRedisDefault(ctx context.Context, t *testing.T, resourceName string, versionOpt string) resource.TestCheckFunc {
 	var (
 		version        awstypes.CacheEngineVersion
 		parameterGroup awstypes.CacheParameterGroup
 	)
 
 	checks := []resource.TestCheckFunc{
-		testCheckEngineVersionLatest(ctx, t, "redis", &version),
+		testCheckEngineVersionLatest(ctx, t, "redis", versionOpt, &version),
 		testCheckParameterGroupDefault(ctx, t, &version, &parameterGroup),
 		func(s *terraform.State) error {
 			return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
@@ -3530,14 +3531,14 @@ func testCheckEngineStuffRedisDefault(ctx context.Context, t *testing.T, resourc
 	return resource.ComposeAggregateTestCheckFunc(checks...)
 }
 
-func testCheckEngineStuffValkeyDefault(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
+func testCheckEngineStuffValkeyDefault(ctx context.Context, t *testing.T, resourceName string, versionOpt string) resource.TestCheckFunc {
 	var (
 		version        awstypes.CacheEngineVersion
 		parameterGroup awstypes.CacheParameterGroup
 	)
 
 	checks := []resource.TestCheckFunc{
-		testCheckEngineVersionLatest(ctx, t, "valkey", &version),
+		testCheckEngineVersionLatest(ctx, t, "valkey", versionOpt, &version),
 		testCheckParameterGroupDefault(ctx, t, &version, &parameterGroup),
 		func(s *terraform.State) error {
 			return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
@@ -3553,14 +3554,20 @@ func testCheckEngineStuffValkeyDefault(ctx context.Context, t *testing.T, resour
 	return resource.ComposeAggregateTestCheckFunc(checks...)
 }
 
-func testCheckEngineVersionLatest(ctx context.Context, t *testing.T, engine string, v *awstypes.CacheEngineVersion) resource.TestCheckFunc {
+func testCheckEngineVersionLatest(ctx context.Context, t *testing.T, engine string, version string, v *awstypes.CacheEngineVersion) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
 
-		versions, err := conn.DescribeCacheEngineVersions(ctx, &elasticache.DescribeCacheEngineVersionsInput{
+		input := elasticache.DescribeCacheEngineVersionsInput{
 			Engine:      aws.String(engine),
 			DefaultOnly: aws.Bool(true),
-		})
+		}
+		if version != "" {
+			input.EngineVersion = aws.String(version)
+		}
+
+		versions, err := conn.DescribeCacheEngineVersions(ctx, &input)
+
 		if err != nil {
 			return err
 		}
@@ -3608,7 +3615,7 @@ func testCheckEngineStuffClusterEnabledDefault(ctx context.Context, t *testing.T
 	)
 
 	checks := []resource.TestCheckFunc{
-		testCheckEngineVersionLatest(ctx, t, "redis", &version),
+		testCheckEngineVersionLatest(ctx, t, "redis", "", &version),
 		testCheckRedisParameterGroupClusterEnabledDefault(ctx, t, &version, &parameterGroup),
 		func(s *terraform.State) error {
 			return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
