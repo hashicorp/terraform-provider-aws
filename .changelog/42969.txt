@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: user groups can now be associated or removed in the same apply when (dis)enabling TLS
+```

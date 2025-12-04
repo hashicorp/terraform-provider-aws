@@ -295,7 +295,7 @@ The following arguments are optional:
   Valid values are `preferred` and `required`.
   When enabling encryption on an existing replication group, this must first be set to `preferred` before setting it to `required` in a subsequent apply.
   See the `TransitEncryptionMode` field in the [`CreateReplicationGroup` API documentation](https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_CreateReplicationGroup.html) for additional details.
-* `user_group_ids` - (Optional) User Group ID to associate with the replication group. Only a maximum of one (1) user group ID is valid. **NOTE:** This argument _is_ a set because the AWS specification allows for multiple IDs. However, in practice, AWS only allows a maximum size of one.
+* `user_group_ids` - (Optional) User Group ID to associate with the replication group. Only a maximum of one (1) user group ID is valid. **NOTE:** This argument _is_ a set because the AWS specification allows for multiple IDs. However, in practice, AWS only allows a maximum size of one. Requires `transit_encryption_enabled = true`. When enabling encryption on an existing replication group, it must be enabled prior to associating user groups.
 
 ### Log Delivery Configuration
 
