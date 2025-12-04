@@ -19,6 +19,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_log_group: Add `deletion_protection_enabled` argument ([#45298](https://github.com/hashicorp/terraform-provider-aws/issues/45298))
 * resource/aws_ec2_transit_gateway: Add `encryption_support` argument ([#45317](https://github.com/hashicorp/terraform-provider-aws/issues/45317))
 * resource/aws_flow_log: Add `regional_nat_gateway_id` argument ([#45380](https://github.com/hashicorp/terraform-provider-aws/issues/45380))
+* resource/aws_kms_ciphertext: Add `plaintext_wo` and `plaintext_wo_version` arguments to support write-only input ([#43592](https://github.com/hashicorp/terraform-provider-aws/issues/43592))
 * resource/aws_lambda_function: Add `durable_config` argument ([#45359](https://github.com/hashicorp/terraform-provider-aws/issues/45359))
 * resource/aws_lb: Add `health_check_logs` configuration block ([#45269](https://github.com/hashicorp/terraform-provider-aws/issues/45269))
 * resource/aws_lb_target_group: Add `target_control_port` argument to support the ALB Target Optimizer ([#45270](https://github.com/hashicorp/terraform-provider-aws/issues/45270))
