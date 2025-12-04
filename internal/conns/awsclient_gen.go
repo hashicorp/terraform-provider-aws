@@ -24,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
+	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -288,6 +289,10 @@ func (c *AWSClient) APIGatewayV2Client(ctx context.Context) *apigatewayv2.Client
 
 func (c *AWSClient) ARCRegionSwitchClient(ctx context.Context) *arcregionswitch.Client {
 	return errs.Must(client[*arcregionswitch.Client](ctx, c, names.ARCRegionSwitch, make(map[string]any)))
+}
+
+func (c *AWSClient) ARCZonalShiftClient(ctx context.Context) *arczonalshift.Client {
+	return errs.Must(client[*arczonalshift.Client](ctx, c, names.ARCZonalShift, make(map[string]any)))
 }
 
 func (c *AWSClient) AccessAnalyzerClient(ctx context.Context) *accessanalyzer.Client {
