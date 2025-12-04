@@ -35,7 +35,7 @@ The following example shows how to get a Hosted Zone from a unique combination o
 
 ```terraform
 data "aws_route53_zone" "selected" {
-  tags {
+  tags = {
     scope    = "local"
     category = "api"
   }
