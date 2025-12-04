@@ -25,7 +25,3 @@ list "aws_codebuild_project" "example" {
 This list resource supports the following arguments:
 
 * `region` - (Optional) Region to query. Defaults to provider region.
-
-## Attribute Reference
-
-This list resource exports the same attributes as the [`aws_codebuild_project`](/docs/resources/codebuild_project.html) resource.
