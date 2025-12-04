@@ -1340,6 +1340,8 @@ resource "aws_backup_plan" "test" {
 
 func testAccPlanConfig_malwareScanBase(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "assume_role_malware_protection_guardduty" {
   statement {
     effect = "Allow"
@@ -1369,7 +1371,7 @@ resource "aws_iam_role_policy" "malware_scanner_policy" {
             "ebs:ListChangedBlocks",
             "ebs:GetSnapshotBlock"
           ],
-          "Resource" : "arn:aws:ec2:*::snapshot/*",
+          "Resource" : "arn:${data.aws_partition.current.partition}:ec2:*::snapshot/*",
           "Condition" : {
             "Null" : {
               "aws:ResourceTag/aws:backup:source-resource" : "false"
@@ -1383,7 +1385,7 @@ resource "aws_iam_role_policy" "malware_scanner_policy" {
           "Sid" : "CreateGrantForEncryptedVolumeCreation",
           "Effect" : "Allow",
           "Action" : "kms:CreateGrant",
-          "Resource" : "arn:aws:kms:*:*:key/*",
+          "Resource" : "arn:${data.aws_partition.current.partition}:kms:*:*:key/*",
           "Condition" : {
             "StringLike" : {
               "kms:EncryptionContext:aws:guardduty:id" : "snap-*",
@@ -1412,7 +1414,7 @@ resource "aws_iam_role_policy" "malware_scanner_policy" {
           "Sid" : "CreateGrantForReEncryptAndEBSDirect",
           "Effect" : "Allow",
           "Action" : "kms:CreateGrant",
-          "Resource" : "arn:aws:kms:*:*:key/*",
+          "Resource" : "arn:${data.aws_partition.current.partition}:kms:*:*:key/*",
           "Condition" : {
             "StringLike" : {
               "kms:EncryptionContext:aws:ebs:id" : "snap-*",
@@ -1439,7 +1441,7 @@ resource "aws_iam_role_policy" "malware_scanner_policy" {
           "Sid" : "DescribeKeyPermissions",
           "Effect" : "Allow",
           "Action" : "kms:DescribeKey",
-          "Resource" : "arn:aws:kms:*:*:key/*"
+          "Resource" : "arn:${data.aws_partition.current.partition}:kms:*:*:key/*"
         },
         {
           "Sid" : "EC2ReadAPIPermissions",
@@ -1456,7 +1458,7 @@ resource "aws_iam_role_policy" "malware_scanner_policy" {
           "Action" : [
             "ec2:ModifySnapshotAttribute"
           ],
-          "Resource" : "arn:aws:ec2:*:*:snapshot/*",
+          "Resource" : "arn:${data.aws_partition.current.partition}:ec2:*:*:snapshot/*",
           "Condition" : {
             "Null" : {
               "aws:ResourceTag/aws:backup:source-resource" : "false"
@@ -1473,7 +1475,7 @@ resource "aws_iam_role_policy" "malware_scanner_policy" {
             "kms:ReEncryptTo",
             "kms:ReEncryptFrom"
           ],
-          "Resource" : "arn:aws:kms:*:*:key/*",
+          "Resource" : "arn:${data.aws_partition.current.partition}:kms:*:*:key/*",
           "Condition" : {
             "StringLike" : {
               "kms:EncryptionContext:aws:ebs:id" : [
@@ -1490,7 +1492,7 @@ resource "aws_iam_role_policy" "malware_scanner_policy" {
           "Action" : [
             "backup:CreateBackupAccessPoint"
           ],
-          "Resource" : "arn:aws:backup:*:*:recovery-point:*"
+          "Resource" : "arn:${data.aws_partition.current.partition}:backup:*:*:recovery-point:*"
         },
         {
           "Sid" : "ReadAndDeleteBackupAccessPointPermissions",
@@ -1507,7 +1509,7 @@ resource "aws_iam_role_policy" "malware_scanner_policy" {
           "Action" : [
             "backup:DescribeRecoveryPoint"
           ],
-          "Resource" : "arn:aws:backup:*:*:recovery-point:*"
+          "Resource" : "arn:${data.aws_partition.current.partition}:backup:*:*:recovery-point:*"
         },
         {
           "Sid" : "DecryptKMSEncryptedDataByAWSBackup",
@@ -1515,7 +1517,7 @@ resource "aws_iam_role_policy" "malware_scanner_policy" {
           "Action" : [
             "kms:Decrypt"
           ],
-          "Resource" : "arn:aws:kms:*:*:key/*",
+          "Resource" : "arn:${data.aws_partition.current.partition}:kms:*:*:key/*",
           "Condition" : {
             "StringLike" : {
               "kms:EncryptionContext:aws:backup:backup-vault" : "*",
