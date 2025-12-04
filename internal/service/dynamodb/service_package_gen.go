@@ -25,6 +25,10 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 			Name:     "Create Backup",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  DataSourceTableQuery,
+			TypeName: "aws_dynamodb_table_query",
+		},
 	}
 }
 
