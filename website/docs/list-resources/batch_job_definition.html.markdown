@@ -22,6 +22,8 @@ list "aws_batch_job_definition" "example" {
 
 ## Argument Reference
 
+This list resource supports the following arguments:
+
 * `region` - (Optional) Region to query. Defaults to provider region.
 
 ## Attribute Reference
