@@ -1767,7 +1767,6 @@ func flattenEKSVolumes(apiObjects []awstypes.EksVolume) []any {
 	return tfList
 }
 
-
 // @SDKListResource("aws_batch_job_definition")
 func jobDefinitionResourceAsListResource() inttypes.ListResourceForSDK {
 	l := jobDefinitionListResource{}
