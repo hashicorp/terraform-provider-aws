@@ -132,6 +132,10 @@ func dataSourcePlan() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"target_logically_air_gapped_backup_vault_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"target_vault_name": {
 							Type:     schema.TypeString,
 							Computed: true,
