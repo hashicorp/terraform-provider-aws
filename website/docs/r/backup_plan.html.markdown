@@ -43,6 +43,7 @@ This resource supports the following arguments:
 * `name` - (Required) The display name of a backup plan.
 * `rule` - (Required) A rule object that specifies a scheduled task that is used to back up a selection of resources.
 * `advanced_backup_setting` - (Optional) An object that specifies backup options for each resource type.
+* `scan_setting` - (Optional) Block for scanning configuration for the backup rule and includes the malware scanner, and scan mode of either full or incremental. Detailed below.
 * `tags` - (Optional) Metadata that you can assign to help organize the plans you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Rule Arguments
@@ -60,6 +61,7 @@ This resource supports the following arguments:
 * `lifecycle` - (Optional) The lifecycle defines when a protected resource is transitioned to cold storage and when it expires.  Fields documented below.
 * `recovery_point_tags` - (Optional) Metadata that you can assign to help organize the resources that you create.
 * `copy_action` - (Optional) Configuration block(s) with copy operation settings. Detailed below.
+* `scan_action` - (Optional) Block for scanning configuration for the backup rule and includes the malware scanner, and scan mode of either full or incremental.
 
 ### Lifecycle Arguments
 
@@ -76,12 +78,27 @@ This resource supports the following arguments:
 * `lifecycle` - (Optional) The lifecycle defines when a protected resource is copied over to a backup vault and when it expires.  Fields documented above.
 * `destination_vault_arn` - (Required) An Amazon Resource Name (ARN) that uniquely identifies the destination backup vault for the copied backup.
 
+### Scan Action Arguments
+
+`scan_action` supports the following attributes:
+
+* `malware_scanner` - (Required) Malware scanner to use for the scan action. Currently only `GUARDDUTY` is supported.
+* `scan_mode` - (Required) Scanning mode to use for the scan action. Valid values are `FULL_SCAN` and `INCREMENTAL_SCAN`.
+
 ### Advanced Backup Setting Arguments
 
 `advanced_backup_setting` supports the following arguments:
 
 * `backup_options` - (Required) Specifies the backup option for a selected resource. This option is only available for Windows VSS backup jobs. Set to `{ WindowsVSS = "enabled" }` to enable Windows VSS backup option and create a VSS Windows backup.
 * `resource_type` - (Required) The type of AWS resource to be backed up. For VSS Windows backups, the only supported resource type is Amazon EC2. Valid values: `EC2`.
+
+### Scan Setting Arguments
+
+`scan_setting` supports the following attributes:
+
+* `malware_scanner` - (Required) Malware scanner to use for the scan setting. Currently only `GUARDDUTY` is supported.
+* `resource_types` - (Required) List of resource types to apply the scan setting to. Valid values are `EBS`, `EC2`, `S3` and `ALL`.
+* `scanner_role_arn` - (Required) ARN of the IAM role that AWS Backup uses to scan resources. See [the AWS documentation](https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection-backup-iam-permissions.html) for details.
 
 ## Attribute Reference
 
