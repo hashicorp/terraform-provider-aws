@@ -4,11 +4,11 @@
 resource "aws_batch_job_definition" "test" {
   count = 2
 
-  name             = "${var.rName}-${count.index}"
-  type             = "container"
+  name = "${var.rName}-${count.index}"
+  type = "container"
   container_properties = jsonencode({
-    image = "busybox"
-    vcpus = 1
+    image  = "busybox"
+    vcpus  = 1
     memory = 128
   })
 }
