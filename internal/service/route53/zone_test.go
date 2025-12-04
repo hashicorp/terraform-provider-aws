@@ -45,6 +45,7 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "primary_name_server"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enable_accelerated_recovery", acctest.CtFalse),
 				),
 			},
 			{
@@ -542,6 +543,70 @@ func TestAccRoute53Zone_escapedSpace(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Zone_enableAcceleratedRecovery(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone route53.GetHostedZoneOutput
+	resourceName := "aws_route53_zone.test"
+	zoneName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneConfig_enableAcceleratedRecovery(zoneName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile("hostedzone/.+")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName),
+					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_name_server"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enable_accelerated_recovery", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				// Disable accelerated recovery
+				Config: testAccZoneConfig_enableAcceleratedRecovery(zoneName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile("hostedzone/.+")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName),
+					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_name_server"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enable_accelerated_recovery", acctest.CtFalse),
+				),
+			},
+			{
+				// Re-enable accelerated recovery
+				// Check a resource can be destroyed with it enabled
+				Config: testAccZoneConfig_enableAcceleratedRecovery(zoneName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile("hostedzone/.+")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName),
+					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_name_server"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enable_accelerated_recovery", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckZoneDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
@@ -818,4 +883,14 @@ resource "aws_route53_zone" "test" {
   }
 }
 `, rName, zoneName)
+}
+
+func testAccZoneConfig_enableAcceleratedRecovery(zoneName string, enableAcceleratedRecovery bool) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = "%[1]s."
+
+  enable_accelerated_recovery = %[2]t
+}
+`, zoneName, enableAcceleratedRecovery)
 }

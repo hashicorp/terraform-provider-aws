@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -576,6 +577,60 @@ func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayIntegration_responseTransferMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_responseTransferMode(rName, string(awstypes.ResponseTransferModeStream)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeStream)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				// Switch to Buffered
+				Config: testAccIntegrationConfig_responseTransferMode(rName, string(awstypes.ResponseTransferModeBuffered)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeBuffered)),
+				),
+			},
+			{
+				// Switch back to Stream
+				Config: testAccIntegrationConfig_responseTransferMode(rName, string(awstypes.ResponseTransferModeStream)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeStream)),
 				),
 			},
 		},
@@ -1362,6 +1417,38 @@ resource "aws_api_gateway_integration" "test" {
 `, rName, insecureSkipVerification)
 }
 
+func testAccIntegrationConfig_responseTransferMode(rName, responseTransferMode string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "api" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "resource" {
+  path_part   = "resource"
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "method" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.resource.id
+  http_method   = "ANY"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.resource.id
+  http_method             = aws_api_gateway_method.method.http_method
+  integration_http_method = "ANY"
+  type                    = "HTTP_PROXY"
+  uri                     = "https://example.com"
+
+  response_transfer_mode = %[2]q
+}
+`, rName, responseTransferMode)
+}
+
 func testAccIntegrationConfig_vpcLinkV2ALB(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
@@ -1446,7 +1533,6 @@ resource "aws_api_gateway_integration" "test" {
 }
 
 func testAccIntegrationConfig_vpcLinkV2ALBUpdated(rName string) string {
-	// Use a shorter name for test2 to avoid 32-character limit
 	rName2 := fmt.Sprintf("%.27s-alt", rName)
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),

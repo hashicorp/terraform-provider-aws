@@ -734,6 +734,175 @@ func TestAccS3Bucket_tags_ignoreTags(t *testing.T) {
 	})
 }
 
+// TestAccS3Bucket_tags_fallbackS3API exercises the bucket tagging "fallback" workflow
+//
+// To support ABAC (attribute based access control) in general purpose buckets,
+// the provider attempts using the S3 Control tagging APIs first. When a permissions
+// error is encountered, tag operations will fall back to the pre-existing S3 tagging
+// APIs instead.
+//
+// Ref: https://github.com/hashicorp/terraform-provider-aws/pull/45251
+//
+// This test expects the TF_ACC_ASSUME_ROLE_ARN to be set to a role ARN
+// which is missing permissions the S3 Control tagging APIs (s3:TagResource,
+// s3:UntagResource, and s3:ListTagsForResource), forcing the tag operations
+// to fall back to the S3 tagging APIs (s3:PutBucketTagging, s3:GetBucketTagging,
+// and s3:DeleteBucketTagging) instead.
+//
+// Use the following configuration to create the role to assume:
+//
+// ```
+//
+//	terraform {
+//	  required_providers {
+//	    aws = {
+//	      source  = "hashicorp/aws"
+//	      version = "~> 6.0"
+//	    }
+//	  }
+//	}
+//
+// # Configure the AWS Provider
+// provider "aws" {}
+//
+// data "aws_caller_identity" "current" {}
+//
+//	data "aws_iam_session_context" "current" {
+//	  arn = data.aws_caller_identity.current.arn
+//	}
+//
+//	data "aws_iam_policy_document" "test_assume_role" {
+//	  statement {
+//	    effect = "Allow"
+//	    actions = [
+//	      "sts:AssumeRole",
+//	      "sts:SetSourceIdentity",
+//	    ]
+//	    principals {
+//	      type = "AWS"
+//	      identifiers = [
+//	        data.aws_iam_session_context.current.issuer_arn,
+//	      ]
+//	    }
+//	  }
+//	}
+//
+//	data "aws_iam_policy_document" "test" {
+//	  statement {
+//	    sid    = "AllowAllS3"
+//	    effect = "Allow"
+//	    actions = [
+//	      "s3:*",
+//	    ]
+//	    resources = [
+//	      "arn:aws:s3:::*",
+//	    ]
+//	  }
+//	  statement {
+//	    sid    = "ForceTaggingFallback"
+//	    effect = "Deny"
+//	    actions = [
+//	      "s3:TagResource",
+//	      "s3:UntagResource",
+//	      "s3:ListTagsForResource",
+//	    ]
+//	    resources = [
+//	      "arn:aws:s3:::*",
+//	    ]
+//	  }
+//
+//	  statement {
+//	    actions = [
+//	      "sts:GetCallerIdentity",
+//	    ]
+//	    resources = [
+//	      "*",
+//	    ]
+//	  }
+//	}
+//
+//	resource "aws_iam_policy" "test" {
+//	  name   = "tfacctest-s3-bucket-no-tag-perms"
+//	  policy = data.aws_iam_policy_document.test.json
+//	}
+//
+//	resource "aws_iam_role" "test" {
+//	  name               = "tfacctest-s3-bucket-no-tag-perms"
+//	  assume_role_policy = data.aws_iam_policy_document.test_assume_role.json
+//	}
+//
+//	resource "aws_iam_role_policy_attachment" "test" {
+//	  role       = aws_iam_role.test.name
+//	  policy_arn = aws_iam_policy.test.arn
+//	}
+//
+//	output "role_arn" {
+//	  value = aws_iam_role.test.arn
+//	}
+//
+// ```
+//
+//	Once provisioned, use the role_arn output and run this test as follows:
+//
+//	TF_ACC_ASSUME_ROLE_ARN=<output> make t K=s3 T=TestAccS3Bucket_tags_fallbackS3API
+func TestAccS3Bucket_tags_fallbackS3API(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAssumeRoleARN(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigAssumeRole(),
+					testAccBucketConfig_tags(rName),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigAssumeRole(),
+					testAccBucketConfig_updatedTags(rName),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigAssumeRole(),
+					testAccBucketConfig_tags(rName),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3Bucket_Manage_lifecycleBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")

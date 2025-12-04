@@ -69,6 +69,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the Hosted Zone.
 * `caller_reference` - Caller Reference of the Hosted Zone.
 * `comment` - Comment field of the Hosted Zone.
+* `enable_accelerated_recovery` - Boolean to indicate whether to enable accelerated recovery for the hosted zone.
 * `linked_service_principal` - The service that created the Hosted Zone (e.g., `servicediscovery.amazonaws.com`).
 * `linked_service_description` - The description provided by the service that created the Hosted Zone (e.g., `arn:aws:servicediscovery:us-east-1:1234567890:namespace/ns-xxxxxxxxxxxxxxxx`).
 * `name` - The Hosted Zone name.

@@ -283,6 +283,8 @@ This resource supports the following arguments:
 * `request_templates` - (Optional) Map of the integration's request templates.
 * `request_parameters` - (Optional) Map of request query string parameters and headers that should be passed to the backend responder.
   For example: `request_parameters = { "integration.request.header.X-Some-Other-Header" = "method.request.header.X-Some-Header" }`
+* `response_transfer_mode` – (Optional) Specifies the response transfer mode of the integration. Valid values are `BUFFERED` and `STREAM`. Default to `BUFFERED`.  
+  Once set, setting the value to `BUFFERED` requires explicitly specifying `BUFFERED`, rather than removing this argument.
 * `passthrough_behavior` - (Optional) Integration passthrough behavior (`WHEN_NO_MATCH`, `WHEN_NO_TEMPLATES`, `NEVER`).  **Required** if `request_templates` is used.
 * `cache_key_parameters` - (Optional) List of cache key parameters for the integration.
 * `cache_namespace` - (Optional) Integration's cache namespace.
