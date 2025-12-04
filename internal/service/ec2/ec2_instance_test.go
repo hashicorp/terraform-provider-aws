@@ -6296,7 +6296,7 @@ func TestAccEC2Instance_CapacityReservation_modifyTarget(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_basicWithSpot(t *testing.T) {
+func TestAccEC2Instance_spot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -6310,7 +6310,7 @@ func TestAccEC2Instance_basicWithSpot(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_basicWithSpot(rName),
+				Config: testAccInstanceConfig_spot_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "spot_instance_request_id"),
@@ -10293,7 +10293,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_basicWithSpot(rName string) string {
+func testAccInstanceConfig_spot_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t4g.nano"),
