@@ -200,6 +200,12 @@ func TestAccEC2Instance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", "stop"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capacity_reservation_specification"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"capacity_reservation_preference": tfknownvalue.StringExact(awstypes.CapacityReservationPreferenceOpen),
+							"capacity_reservation_target":     knownvalue.ListExact([]knownvalue.Check{}),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_market_options"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{})),
