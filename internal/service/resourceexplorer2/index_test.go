@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfresourceexplorer2 "github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,7 +36,7 @@ func testAccIndex_basic(t *testing.T) {
 				Config: testAccIndexConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`index/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`index/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LOCAL"),
 				),
 			},

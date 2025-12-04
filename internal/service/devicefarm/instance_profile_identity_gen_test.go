@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -26,7 +25,7 @@ func TestAccDeviceFarmInstanceProfile_Identity_Basic(t *testing.T) {
 
 	var v awstypes.InstanceProfile
 	resourceName := "aws_devicefarm_instance_profile.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -115,7 +114,7 @@ func TestAccDeviceFarmInstanceProfile_Identity_ExistingResource(t *testing.T) {
 
 	var v awstypes.InstanceProfile
 	resourceName := "aws_devicefarm_instance_profile.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -197,7 +196,7 @@ func TestAccDeviceFarmInstanceProfile_Identity_ExistingResource_NoRefresh_NoChan
 
 	var v awstypes.InstanceProfile
 	resourceName := "aws_devicefarm_instance_profile.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

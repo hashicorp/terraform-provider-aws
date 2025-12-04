@@ -22,7 +22,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/dlclark/regexp2"
+	"github.com/dlclark/regexp2" // Regexps include Perl syntax.
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
@@ -526,7 +526,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		IdentityVersions:      make(map[int64]*version.Version, 0),
 	}
 	skip := false
-	generatorSeen := false
 	tlsKey := false
 	var tlsKeyCN string
 
@@ -606,11 +605,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
-				}
-
-				// This needs better handling
-				if _, ok := args.Keyword["generator"]; ok {
-					generatorSeen = true
 				}
 
 				if attr, ok := args.Keyword["idAttrDuplicates"]; ok {
@@ -749,6 +743,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if d.HasResourceIdentity() {
 		if !skip {
+			if err := tests.Configure(&d.CommonArgs); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+				return
+			}
 			if d.idAttrDuplicates != "" {
 				d.GoImports = append(d.GoImports,
 					common.GoImport{
@@ -759,28 +757,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					},
 				)
 			}
-			if d.Name == "" {
-				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				return
-			}
 			if d.HasV6_0NullValuesError {
 				d.PreIdentityVersion = v5_100_0
 			}
 			if !d.HasNoPreExistingResource && d.PreIdentityVersion == nil {
 				v.errs = append(v.errs, fmt.Errorf("preIdentityVersion is required when hasNoPreExistingResource is false: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
-			}
-			if !generatorSeen {
-				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
-				d.GoImports = append(d.GoImports,
-					common.GoImport{
-						Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
-						Alias: "sdkacctest",
-					},
-					common.GoImport{
-						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-					},
-				)
 			}
 			if d.IsARNIdentity() {
 				d.arnAttribute = d.IdentityAttributeName()
@@ -795,6 +777,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if d.IsSingletonIdentity() {
 				d.Serialize = true
 			}
+
 			v.identityResources = append(v.identityResources, d)
 		}
 	}

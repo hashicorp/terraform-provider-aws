@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -582,6 +583,60 @@ func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayIntegration_responseTransferMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_responseTransferMode(rName, string(awstypes.ResponseTransferModeStream)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeStream)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				// Switch to Buffered
+				Config: testAccIntegrationConfig_responseTransferMode(rName, string(awstypes.ResponseTransferModeBuffered)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeBuffered)),
+				),
+			},
+			{
+				// Switch back to Stream
+				Config: testAccIntegrationConfig_responseTransferMode(rName, string(awstypes.ResponseTransferModeStream)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "response_transfer_mode", string(awstypes.ResponseTransferModeStream)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetIntegrationOutput
@@ -662,6 +717,68 @@ func testAccIntegrationImportStateIdFunc(resourceName string) resource.ImportSta
 
 		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"]), nil
 	}
+}
+
+func TestAccAPIGatewayIntegration_vpcLinkV2WithALB(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_vpcLinkV2ALB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, "aws_apigatewayv2_vpc_link.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayIntegration_vpcLinkV2Update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_vpcLinkV2ALB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccIntegrationConfig_vpcLinkV2ALBUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_target", "aws_lb.test2", names.AttrARN),
+				),
+			},
+		},
+	})
 }
 
 func testAccIntegrationConfig_basic(rName string) string {
@@ -1268,4 +1385,226 @@ resource "aws_api_gateway_integration" "test" {
   }
 }
 `, rName, insecureSkipVerification)
+}
+
+func testAccIntegrationConfig_responseTransferMode(rName, responseTransferMode string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "api" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "resource" {
+  path_part   = "resource"
+  parent_id   = aws_api_gateway_rest_api.api.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.api.id
+}
+
+resource "aws_api_gateway_method" "method" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_resource.resource.id
+  http_method   = "ANY"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = aws_api_gateway_rest_api.api.id
+  resource_id             = aws_api_gateway_resource.resource.id
+  http_method             = aws_api_gateway_method.method.http_method
+  integration_http_method = "ANY"
+  type                    = "HTTP_PROXY"
+  uri                     = "https://example.com"
+
+  response_transfer_mode = %[2]q
+}
+`, rName, responseTransferMode)
+}
+
+func testAccIntegrationConfig_vpcLinkV2ALB(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_apigatewayv2_vpc_link" "test" {
+  name               = %[1]q
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id
+}
+
+resource "aws_lb" "test" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.test.id]
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "OK"
+      status_code  = "200"
+    }
+  }
+}
+
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = aws_api_gateway_rest_api.test.id
+  resource_id             = aws_api_gateway_resource.test.id
+  http_method             = aws_api_gateway_method.test.http_method
+  integration_http_method = "GET"
+  type                    = "HTTP_PROXY"
+  connection_type         = "VPC_LINK"
+  connection_id           = aws_apigatewayv2_vpc_link.test.id
+  integration_target      = aws_lb.test.arn
+  uri                     = "http://example.com"
+}
+`, rName))
+}
+
+func testAccIntegrationConfig_vpcLinkV2ALBUpdated(rName string) string {
+	rName2 := fmt.Sprintf("%.27s-alt", rName)
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_apigatewayv2_vpc_link" "test" {
+  name               = %[1]q
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id
+}
+
+resource "aws_lb" "test" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.test.id]
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "OK"
+      status_code  = "200"
+    }
+  }
+}
+
+resource "aws_lb" "test2" {
+  name               = %[2]q
+  internal           = true
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.test.id]
+  subnets            = aws_subnet.test[*].id
+}
+
+resource "aws_lb_listener" "test2" {
+  load_balancer_arn = aws_lb.test2.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "OK"
+      status_code  = "200"
+    }
+  }
+}
+
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id             = aws_api_gateway_rest_api.test.id
+  resource_id             = aws_api_gateway_resource.test.id
+  http_method             = aws_api_gateway_method.test.http_method
+  integration_http_method = "GET"
+  type                    = "HTTP_PROXY"
+  connection_type         = "VPC_LINK"
+  connection_id           = aws_apigatewayv2_vpc_link.test.id
+  integration_target      = aws_lb.test2.arn
+  uri                     = "http://example.com"
+}
+`, rName, rName2))
 }

@@ -21,7 +21,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/dlclark/regexp2"
+	"github.com/dlclark/regexp2" // Regexps include Perl syntax.
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
@@ -516,7 +516,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 	tagged := false
 	skip := false
-	generatorSeen := false
 	tlsKey := false
 	var tlsKeyCN string
 	hasIdentifierAttribute := false
@@ -580,11 +579,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
-				}
-
-				// This needs better handling
-				if _, ok := args.Keyword["generator"]; ok {
-					generatorSeen = true
 				}
 
 				if attr, ok := args.Keyword["tagsIdentifierAttribute"]; ok {
@@ -695,21 +689,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tagged {
 		if !skip {
-			if d.Name == "" {
-				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			if err := tests.Configure(&d.CommonArgs); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 				return
 			}
 			if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
 				v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
-			}
-			if !generatorSeen {
-				d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
-				d.GoImports = append(d.GoImports,
-					common.GoImport{
-						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-					},
-				)
 			}
 			if d.HasInherentRegionIdentity() {
 				if d.Implementation == common.ImplementationFramework {
@@ -721,6 +707,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if d.IsSingletonIdentity() {
 				d.Serialize = true
 			}
+
 			v.taggedResources = append(v.taggedResources, d)
 		}
 	}
