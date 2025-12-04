@@ -200,6 +200,48 @@ func TestAccRolesAnywhereProfile_enabled(t *testing.T) {
 	})
 }
 
+func TestAccRolesAnywhereProfile_acceptRoleSessionName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rolesanywhere_profile.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfileConfig_acceptRoleSessionName(rName, roleName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "accept_role_session_name", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProfileConfig_acceptRoleSessionName(rName, roleName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "accept_role_session_name", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccProfileConfig_acceptRoleSessionName(rName, roleName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "accept_role_session_name", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient(ctx)
@@ -331,4 +373,16 @@ resource "aws_rolesanywhere_profile" "test" {
   enabled   = %[2]t
 }
 `, rName, enabled))
+}
+
+func testAccProfileConfig_acceptRoleSessionName(rName, roleName string, acceptRoleSessionName bool) string {
+	return acctest.ConfigCompose(
+		testAccProfileConfig_base(roleName),
+		fmt.Sprintf(`
+resource "aws_rolesanywhere_profile" "test" {
+  name                     = %[1]q
+  role_arns                = [aws_iam_role.test.arn]
+  accept_role_session_name = %[2]t
+}
+`, rName, acceptRoleSessionName))
 }

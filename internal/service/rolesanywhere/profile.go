@@ -74,6 +74,10 @@ func resourceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"accept_role_session_name": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -109,6 +113,10 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if v, ok := d.GetOk("session_policy"); ok {
 		input.SessionPolicy = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("accept_role_session_name"); ok {
+		input.AcceptRoleSessionName = aws.Bool(v.(bool))
 	}
 
 	log.Printf("[DEBUG] Creating RolesAnywhere Profile: %#v", input)
@@ -147,6 +155,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("require_instance_properties", profile.RequireInstanceProperties)
 	d.Set("role_arns", profile.RoleArns)
 	d.Set("session_policy", profile.SessionPolicy)
+	d.Set("accept_role_session_name", profile.AcceptRoleSessionName)
 
 	return diags
 }
@@ -178,6 +187,10 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange("session_policy") {
 			input.SessionPolicy = aws.String(d.Get("session_policy").(string))
+		}
+
+		if d.HasChange("accept_role_session_name") {
+			input.AcceptRoleSessionName = aws.Bool(d.Get("accept_role_session_name").(bool))
 		}
 
 		log.Printf("[DEBUG] Updating RolesAnywhere Profile (%s): %#v", d.Id(), input)
