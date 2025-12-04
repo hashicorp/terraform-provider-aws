@@ -52,16 +52,23 @@ This resource supports the following arguments:
 
 * `rule_name` - (Required) An display name for a backup rule.
 * `target_vault_name` - (Required) The name of a logical container where backups are stored.
-* `target_logically_air_gapped_backup_vault_arn` - (Optional) The ARN of a logically air-gapped vault. ARN must be in the same account and region. If provided, supported fully managed resources back up directly to logically air-gapped vault, while other supported resources create a temporary (billable) snapshot in backup vault, then copy it to logically air-gapped vault. Unsupported resources only back up to the specified backup vault.
-* `schedule` - (Optional) A CRON expression specifying when AWS Backup initiates a backup job.
-* `schedule_expression_timezone` - (Optional) The timezone in which the schedule expression is set. Default value: `"Etc/UTC"`.
-* `enable_continuous_backup` - (Optional) Enable continuous backups for supported resources.
-* `start_window` - (Optional) The amount of time in minutes before beginning a backup.
 * `completion_window` - (Optional) The amount of time in minutes AWS Backup attempts a backup before canceling the job and returning an error.
+* `copy_action` - (Optional) Configuration block(s) with copy operation settings. Detailed below.
+* `enable_continuous_backup` - (Optional) Enable continuous backups for supported resources.
 * `lifecycle` - (Optional) The lifecycle defines when a protected resource is transitioned to cold storage and when it expires.  Fields documented below.
 * `recovery_point_tags` - (Optional) Metadata that you can assign to help organize the resources that you create.
-* `copy_action` - (Optional) Configuration block(s) with copy operation settings. Detailed below.
 * `scan_action` - (Optional) Block for scanning configuration for the backup rule and includes the malware scanner, and scan mode of either full or incremental.
+* `schedule` - (Optional) A CRON expression specifying when AWS Backup initiates a backup job.
+* `schedule_expression_timezone` - (Optional) The timezone in which the schedule expression is set. Default value: `"Etc/UTC"`.
+* `start_window` - (Optional) The amount of time in minutes before beginning a backup.
+* `target_logically_air_gapped_backup_vault_arn` - (Optional) The ARN of a logically air-gapped vault. ARN must be in the same account and region. If provided, supported fully managed resources back up directly to logically air-gapped vault, while other supported resources create a temporary (billable) snapshot in backup vault, then copy it to logically air-gapped vault. Unsupported resources only back up to the specified backup vault.
+
+### Copy Action Arguments
+
+`copy_action` supports the following attributes:
+
+* `destination_vault_arn` - (Required) An Amazon Resource Name (ARN) that uniquely identifies the destination backup vault for the copied backup.
+* `lifecycle` - (Optional) The lifecycle defines when a protected resource is copied over to a backup vault and when it expires.  Fields documented above.
 
 ### Lifecycle Arguments
 
@@ -70,13 +77,6 @@ This resource supports the following arguments:
 * `cold_storage_after` - (Optional) Specifies the number of days after creation that a recovery point is moved to cold storage.
 * `delete_after` - (Optional) Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `cold_storage_after`.
 * `opt_in_to_archive_for_supported_resources` - (Optional) This setting will instruct your backup plan to transition supported resources to archive (cold) storage tier in accordance with your lifecycle settings.
-
-### Copy Action Arguments
-
-`copy_action` supports the following attributes:
-
-* `lifecycle` - (Optional) The lifecycle defines when a protected resource is copied over to a backup vault and when it expires.  Fields documented above.
-* `destination_vault_arn` - (Required) An Amazon Resource Name (ARN) that uniquely identifies the destination backup vault for the copied backup.
 
 ### Scan Action Arguments
 
