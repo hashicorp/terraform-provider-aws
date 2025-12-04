@@ -6208,10 +6208,27 @@ func TestAccEC2Instance_CapacityReservation_targetID(t *testing.T) {
 				Config: testAccInstanceConfig_capacityReservationSpecificationTargetID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arn", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capacity_reservation_specification"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"capacity_reservation_preference": tfknownvalue.StringExact(""),
+							"capacity_reservation_target": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"capacity_reservation_id":                 knownvalue.NotNull(),
+									"capacity_reservation_resource_group_arn": tfknownvalue.StringLegacyNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("capacity_reservation_specification").AtSliceIndex(0).AtMapKey("capacity_reservation_target").AtSliceIndex(0).AtMapKey("capacity_reservation_id"),
+						"aws_ec2_capacity_reservation.test", tfjsonpath.New("id"),
+						compare.ValuesSame(),
+					),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringLegacyNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), tfknownvalue.StringLegacyNull()),
+				},
 			},
 			{
 				ResourceName:            resourceName,
