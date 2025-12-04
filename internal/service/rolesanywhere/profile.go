@@ -30,11 +30,16 @@ func resourceProfile() *schema.Resource {
 		ReadWithoutTimeout:   resourceProfileRead,
 		UpdateWithoutTimeout: resourceProfileUpdate,
 		DeleteWithoutTimeout: resourceProfileDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"accept_role_session_name": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -74,10 +79,6 @@ func resourceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"accept_role_session_name": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -89,10 +90,14 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &rolesanywhere.CreateProfileInput{
+	input := rolesanywhere.CreateProfileInput{
 		Name:     aws.String(name),
 		RoleArns: flex.ExpandStringValueSet(d.Get("role_arns").(*schema.Set)),
 		Tags:     getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("accept_role_session_name"); ok {
+		input.AcceptRoleSessionName = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("duration_seconds"); ok {
@@ -115,12 +120,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.SessionPolicy = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("accept_role_session_name"); ok {
-		input.AcceptRoleSessionName = aws.Bool(v.(bool))
-	}
-
-	log.Printf("[DEBUG] Creating RolesAnywhere Profile: %#v", input)
-	output, err := conn.CreateProfile(ctx, input)
+	output, err := conn.CreateProfile(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RolesAnywhere Profile (%s): %s", name, err)
@@ -147,6 +147,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading RolesAnywhere Profile (%s): %s", d.Id(), err)
 	}
 
+	d.Set("accept_role_session_name", profile.AcceptRoleSessionName)
 	d.Set(names.AttrARN, profile.ProfileArn)
 	d.Set("duration_seconds", profile.DurationSeconds)
 	d.Set(names.AttrEnabled, profile.Enabled)
@@ -155,7 +156,6 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("require_instance_properties", profile.RequireInstanceProperties)
 	d.Set("role_arns", profile.RoleArns)
 	d.Set("session_policy", profile.SessionPolicy)
-	d.Set("accept_role_session_name", profile.AcceptRoleSessionName)
 
 	return diags
 }
@@ -165,8 +165,12 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &rolesanywhere.UpdateProfileInput{
+		input := rolesanywhere.UpdateProfileInput{
 			ProfileId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("accept_role_session_name") {
+			input.AcceptRoleSessionName = aws.Bool(d.Get("accept_role_session_name").(bool))
 		}
 
 		if d.HasChange("duration_seconds") {
@@ -189,26 +193,21 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.SessionPolicy = aws.String(d.Get("session_policy").(string))
 		}
 
-		if d.HasChange("accept_role_session_name") {
-			input.AcceptRoleSessionName = aws.Bool(d.Get("accept_role_session_name").(bool))
-		}
+		_, err := conn.UpdateProfile(ctx, &input)
 
-		log.Printf("[DEBUG] Updating RolesAnywhere Profile (%s): %#v", d.Id(), input)
-		_, err := conn.UpdateProfile(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RolesAnywhere Profile (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange(names.AttrEnabled) {
-		_, n := d.GetChange(names.AttrEnabled)
-		if n == true {
-			err := enableProfile(ctx, d.Id(), meta)
+		if _, n := d.GetChange(names.AttrEnabled); n == true {
+			err := enableProfile(ctx, conn, d.Id())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
 		} else {
-			err := disableProfile(ctx, d.Id(), meta)
+			err := disableProfile(ctx, conn, d.Id())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
@@ -223,9 +222,10 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	log.Printf("[DEBUG] Deleting RolesAnywhere Profile (%s)", d.Id())
-	_, err := conn.DeleteProfile(ctx, &rolesanywhere.DeleteProfileInput{
+	input := rolesanywhere.DeleteProfileInput{
 		ProfileId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -239,16 +239,19 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func findProfileByID(ctx context.Context, conn *rolesanywhere.Client, id string) (*awstypes.ProfileDetail, error) {
-	in := &rolesanywhere.GetProfileInput{
+	input := rolesanywhere.GetProfileInput{
 		ProfileId: aws.String(id),
 	}
 
-	out, err := conn.GetProfile(ctx, in)
+	return findProfile(ctx, conn, &input)
+}
+
+func findProfile(ctx context.Context, conn *rolesanywhere.Client, input *rolesanywhere.GetProfileInput) (*awstypes.ProfileDetail, error) {
+	output, err := conn.GetProfile(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -256,31 +259,27 @@ func findProfileByID(ctx context.Context, conn *rolesanywhere.Client, id string)
 		return nil, err
 	}
 
-	if out == nil || out.Profile == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.Profile == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.Profile, nil
+	return output.Profile, nil
 }
 
-func disableProfile(ctx context.Context, profileId string, meta any) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
-
-	input := &rolesanywhere.DisableProfileInput{
-		ProfileId: aws.String(profileId),
+func disableProfile(ctx context.Context, conn *rolesanywhere.Client, id string) error {
+	input := rolesanywhere.DisableProfileInput{
+		ProfileId: aws.String(id),
 	}
 
-	_, err := conn.DisableProfile(ctx, input)
+	_, err := conn.DisableProfile(ctx, &input)
 	return err
 }
 
-func enableProfile(ctx context.Context, profileId string, meta any) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
-
-	input := &rolesanywhere.EnableProfileInput{
-		ProfileId: aws.String(profileId),
+func enableProfile(ctx context.Context, conn *rolesanywhere.Client, id string) error {
+	input := rolesanywhere.EnableProfileInput{
+		ProfileId: aws.String(id),
 	}
 
-	_, err := conn.EnableProfile(ctx, input)
+	_, err := conn.EnableProfile(ctx, &input)
 	return err
 }

@@ -268,27 +268,18 @@ func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckProfileExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckProfileExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Profile is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 		_, err := tfrolesanywhere.FindProfileByID(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return fmt.Errorf("Error describing Profile: %s", err.Error())
-		}
-
-		return nil
+		return err
 	}
 }
 
