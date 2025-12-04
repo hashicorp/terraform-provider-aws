@@ -35,7 +35,6 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_rolesanywhere_profile" "test" {
-
   name      = "example"
   role_arns = [aws_iam_role.test.arn]
 }
@@ -50,7 +49,7 @@ This resource supports the following arguments:
 * `managed_policy_arns` - (Optional) A list of managed policy ARNs that apply to the vended session credentials.
 * `name` - (Required) The name of the Profile.
 * `require_instance_properties` - (Optional) Specifies whether instance properties are required in [CreateSession](https://docs.aws.amazon.com/rolesanywhere/latest/APIReference/API_CreateSession.html) requests with this profile.
-* `role_arns` - (Required) A list of IAM roles that this profile can assume
+* `role_arns` - (Optional) A list of IAM roles that this profile can assume
 * `session_policy` - (Optional) A session policy that applies to the trust boundary of the vended session credentials.
 * `accept_role_session_name` - (Optional) Whether or not a custom role session name is accepted.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

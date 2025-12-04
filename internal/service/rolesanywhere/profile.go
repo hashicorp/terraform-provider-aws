@@ -95,7 +95,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any
 	name := d.Get(names.AttrName).(string)
 	input := rolesanywhere.CreateProfileInput{
 		Name:     aws.String(name),
-		RoleArns: flex.ExpandStringValueSet(d.Get("role_arns").(*schema.Set)),
+		RoleArns: flex.ExpandStringValueSet(d.Get("role_arns").(*schema.Set)), // Send [] if not configured.
 		Tags:     getTagsIn(ctx),
 	}
 
