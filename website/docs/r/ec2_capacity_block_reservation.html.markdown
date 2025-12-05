@@ -52,6 +52,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `end_date_type` - Indicates the way in which the Capacity Reservation ends.
 * `id` - The ID of the Capacity Block Reservation.
 * `instance_count` - The number of instances for which to reserve capacity.
+  This value will not be set until the Capacity Block Reservation is active.
+  The requested instance count is set in the tag `aws:ec2capacityreservation:incrementalRequestedQuantity`.
 * `instance_type` - The instance type for which to reserve capacity.
 * `outpost_arn` - The ARN of the Outpost on which to create the Capacity Block Reservation.
 * `placement_group_arn` - The ARN of the placement group in which to create the Capacity Block Reservation.
