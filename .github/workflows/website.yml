@@ -147,7 +147,7 @@ jobs:
       - run: |
           validate_file() {
             filename=$1
-            
+
             # Configure the rules for tflint.
             shared_rules=(
                 "--disable-rule=aws_cloudwatch_event_target_invalid_arn"
@@ -168,7 +168,7 @@ jobs:
                 "--disable-rule=terraform_unused_declarations"
                 "--disable-rule=terraform_typed_variables"
             )
-            
+
             rules=("${shared_rules[@]}")
             if [[ "$filename" == "./website/docs/guides/version-2-upgrade.html.markdown" ]]; then
                 rules+=(
