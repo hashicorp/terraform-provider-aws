@@ -8,8 +8,6 @@ description: |-
 
 # List Resource: aws_batch_job_definition
 
-~> **Note:** The `aws_batch_job_definition` List Resource is in beta and may change in future versions of the provider.
-
 Lists Batch Job Definition resources.
 
 ## Example Usage
