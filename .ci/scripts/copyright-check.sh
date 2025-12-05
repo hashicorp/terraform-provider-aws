@@ -2,6 +2,15 @@
 set -euo pipefail
 
 MISSING=0
+PKG="${PKG:-}"
+
+# Build path filter based on PKG
+if [[ -n "$PKG" ]]; then
+	PATH_FILTER="./internal/service/$PKG"
+	echo "Checking copyright headers for service: $PKG"
+else
+	PATH_FILTER="."
+fi
 
 check_file() {
 	local file="$1"
@@ -28,27 +37,30 @@ check_file() {
 # Check Go files
 while IFS= read -r file; do
 	check_file "$file" "//" "^// Copyright IBM Corp\. 2014, 2025$" || MISSING=$((MISSING + 1))
-done < <(find . -name "*.go" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*")
+done < <(find "$PATH_FILTER" -name "*.go" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" 2>/dev/null || true)
 
-# Check shell scripts
-while IFS= read -r file; do
-	check_file "$file" "#" "^# Copyright IBM Corp\. 2014, 2025$" || MISSING=$((MISSING + 1))
-done < <(find . -name "*.sh" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*")
+# Only check non-Go files if checking everything
+if [[ -z "$PKG" ]]; then
+	# Check shell scripts
+	while IFS= read -r file; do
+		check_file "$file" "#" "^# Copyright IBM Corp\. 2014, 2025$" || MISSING=$((MISSING + 1))
+	done < <(find . -name "*.sh" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*")
 
-# Check HCL/Terraform files
-while IFS= read -r file; do
-	check_file "$file" "#" "^# Copyright IBM Corp\. 2014, 2025$" || MISSING=$((MISSING + 1))
-done < <(find . \( -name "*.hcl" -o -name "*.tf" \) -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*")
+	# Check HCL/Terraform files
+	while IFS= read -r file; do
+		check_file "$file" "#" "^# Copyright IBM Corp\. 2014, 2025$" || MISSING=$((MISSING + 1))
+	done < <(find . \( -name "*.hcl" -o -name "*.tf" \) -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*")
 
-# Check Python files
-while IFS= read -r file; do
-	check_file "$file" "#" "^# Copyright IBM Corp\. 2014, 2025$" || MISSING=$((MISSING + 1))
-done < <(find . -name "*.py" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*")
+	# Check Python files
+	while IFS= read -r file; do
+		check_file "$file" "#" "^# Copyright IBM Corp\. 2014, 2025$" || MISSING=$((MISSING + 1))
+	done < <(find . -name "*.py" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*")
 
-# Check Markdown files (use HTML comments)
-while IFS= read -r file; do
-	check_file "$file" "<!--" "^<!-- Copyright IBM Corp\. 2014, 2025 -->$" || MISSING=$((MISSING + 1))
-done < <(find . -name "*.md" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*" ! -path "./website/*" ! -path "./CHANGELOG.md" ! -path "./README.md")
+	# Check Markdown files (use HTML comments)
+	while IFS= read -r file; do
+		check_file "$file" "<!--" "^<!-- Copyright IBM Corp\. 2014, 2025 -->$" || MISSING=$((MISSING + 1))
+	done < <(find . -name "*.md" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*" ! -path "./website/*" ! -path "./CHANGELOG.md" ! -path "./README.md")
+fi
 
 if [[ $MISSING -gt 0 ]]; then
 	echo ""

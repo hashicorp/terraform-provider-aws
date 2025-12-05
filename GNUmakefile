@@ -191,13 +191,13 @@ clean-tidy: prereq-go ## Clean up tidy
 	$$gover mod tidy
 	@echo "make: Go mods tidied"
 
-copyright: ## [CI] Copyright Checks / add headers check
+copyright: ## [CI] Copyright Checks / add headers check (supports PKG=<service>)
 	@echo "make: Copyright Checks / add headers check..."
-	@.ci/scripts/copyright-check.sh
+	@PKG=$(if $(PKG),$(PKG),$(K)) .ci/scripts/copyright-check.sh
 
-copyright-fix: ## Fix copyright headers (replaces HashiCorp with IBM format)
+copyright-fix: ## Fix copyright headers (supports PKG=<service>)
 	@echo "make: Fixing copyright headers..."
-	@.ci/scripts/copyright-fix.sh
+	@PKG=$(if $(PKG),$(PKG),$(K)) .ci/scripts/copyright-fix.sh
 
 deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
 	@echo "make: Dependency Checks / go_mod..."
