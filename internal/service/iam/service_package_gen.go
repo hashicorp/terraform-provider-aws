@@ -44,6 +44,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
+			Factory:  newOutboundWebIdentityFederationResource,
+			TypeName: "aws_iam_outbound_web_identity_federation",
+			Name:     "Outbound Web Identity Federation",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingletonIdentity(),
+		},
+		{
 			Factory:  newRolePoliciesExclusiveResource,
 			TypeName: "aws_iam_role_policies_exclusive",
 			Name:     "Role Policies Exclusive",
