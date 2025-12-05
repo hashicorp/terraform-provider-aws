@@ -39,6 +39,21 @@ resource "aws_bedrockagent_knowledge_base" "example" {
 }
 ```
 
+### Kendra Knowledge Base
+
+```hcl
+resource "aws_bedrockagent_knowledge_base" "kendra_example" {
+  name     = "example-kendra-kb"
+  role_arn = aws_iam_role.example.arn
+  knowledge_base_configuration {
+    type = "KENDRA"
+    kendra_knowledge_base_configuration {
+      kendra_index_arn = "arn:aws:kendra:us-east-1:123456789012:index/example-index-id"
+    }
+  }
+}
+```
+
 ### OpenSearch Managed Cluster Configuration
 
 ```terraform
@@ -118,20 +133,27 @@ The following arguments are required:
 * `knowledge_base_configuration` - (Required, Forces new resource) Details about the embeddings configuration of the knowledge base. See [`knowledge_base_configuration` block](#knowledge_base_configuration-block) for details.
 * `name` - (Required) Name of the knowledge base.
 * `role_arn` - (Required) ARN of the IAM role with permissions to invoke API operations on the knowledge base.
-* `storage_configuration` - (Required, Forces new resource) Details about the storage configuration of the knowledge base. See [`storage_configuration` block](#storage_configuration-block) for details.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the knowledge base.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `storage_configuration` - (Optional, Forces new resource) Details about the storage configuration of the knowledge base. See [`storage_configuration` block](#storage_configuration-block) for details.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `knowledge_base_configuration` block
 
 The `knowledge_base_configuration` configuration block supports the following arguments:
 
-* `type` - (Required) Type of data that the data source is converted into for the knowledge base. Valid Values: `VECTOR`.
+* `kendra_knowledge_base_configuration` - (Optional) Configuration for Kendra knowledge base. See [`kendra_knowledge_base_configuration` block](#kendra_knowledge_base_configuration-block) for details.
+* `type` - (Required) Type of data that the data source is converted into for the knowledge base. Valid Values: `VECTOR`, `KENDRA`, `SQL`.
 * `vector_knowledge_base_configuration` - (Optional) Details about the embeddings model that'sused to convert the data source. See [`vector_knowledge_base_configuration` block](#vector_knowledge_base_configuration-block) for details.
+
+### `kendra_knowledge_base_configuration` block
+
+The `kendra_knowledge_base_configuration` configuration block supports the following arguments:
+
+* `kendra_index_arn` - (Required) ARN of the Amazon Kendra index.
 
 ### `vector_knowledge_base_configuration` block
 
