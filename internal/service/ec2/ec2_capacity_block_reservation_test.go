@@ -83,15 +83,15 @@ func testAccCheckCapacityBlockReservationExists(ctx context.Context, n string, v
 func testAccCapacityBlockReservationConfig_basic(startDate, endDate string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_capacity_block_offering" "test" {
-  instance_type     = "p4d.24xlarge"
-  capacity_duration = 24
-  instance_count    = 1
-  start_date        = %[1]q
-  end_date          = %[2]q
+  instance_type           = "p4d.24xlarge"
+  capacity_duration_hours = 24
+  instance_count          = 1
+  start_date_range        = %[1]q
+  end_date_range          = %[2]q
 }
 
 resource "aws_ec2_capacity_block_reservation" "test" {
-  capacity_block_offering_id = data.aws_ec2_capacity_block_offering.test.id
+  capacity_block_offering_id = data.aws_ec2_capacity_block_offering.test.capacity_block_offering_id
   instance_platform          = "Linux/UNIX"
   tags = {
     "Environment" = "dev"
