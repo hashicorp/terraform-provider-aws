@@ -1113,6 +1113,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 }
 
 func testAccKnowledgeBaseConfig_baseOpenSearchManagedCluster(rName, model string) string {
+	// lintignore:AT004
 	return fmt.Sprintf(`
 terraform {
   required_providers {
