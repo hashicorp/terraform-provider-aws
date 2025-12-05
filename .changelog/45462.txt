@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_transit_gateway: Fix potential crash when setting `encryption_support`. This addresses a regression introduced in [v6.25.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6250-december-4-2025).
+```
