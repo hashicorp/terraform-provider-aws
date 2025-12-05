@@ -404,6 +404,35 @@ func testAccKnowledgeBase_OpenSearch_supplementalDataStorage(t *testing.T) {
 	})
 }
 
+func testAccKnowledgeBase_Kendra_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	kendraIndexArn := skipIfKendraIndexARNEnvVarNotSet(t)
+
+	var knowledgebase types.KnowledgeBase
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_knowledge_base.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKnowledgeBaseConfig_Kendra_basic(rName, kendraIndexArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.kendra_knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "KENDRA"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKnowledgeBaseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
@@ -484,6 +513,26 @@ func skipIfOSSCollectionNameEnvVarNotSet(t *testing.T) string {
 		acctest.Skip(t, "This test requires external configuration of an OpenSearch collection vector index. "+
 			"Set the TF_AWS_BEDROCK_OSS_COLLECTION_NAME environment variable to the OpenSearch collection name "+
 			"where the vector index is configured.")
+	}
+	return v
+}
+
+// skipIfKendraIndexARNEnvVarNotSet handles skipping tests when an environment
+// variable providing a valid Kendra index ARN is unset
+//
+// This should be called in all acceptance tests currently dependent on a Kendra index.
+//
+// To create a Kendra index to be used with this environment variable:
+// 1. In the AWS console, navigate to Amazon Kendra
+// 2. Create a new index with "GEN_AI_ENTERPRISE_EDITION" edition
+// 3. Wait for the index to be in "ACTIVE" status (this can take 20+ minutes)
+// 4. Copy the index ARN and set it as the TF_AWS_KENDRA_INDEX_ARN environment variable
+func skipIfKendraIndexARNEnvVarNotSet(t *testing.T) string {
+	t.Helper()
+	v := os.Getenv("TF_AWS_KENDRA_INDEX_ARN")
+	if v == "" {
+		acctest.Skip(t, "This test requires a pre-existing Kendra index. "+
+			"Set the TF_AWS_KENDRA_INDEX_ARN environment variable to the ARN of an existing Kendra index.")
 	}
 	return v
 }
@@ -945,4 +994,67 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   }
 }
 `, rName, model))
+}
+
+func testAccKnowledgeBaseConfig_Kendra_basic(rName, kendraIndexArn string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "bedrock.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+          ArnLike = {
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:knowledge-base/*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "%[1]s-bedrock"
+  role = aws_iam_role.test.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "kendra:Retrieve",
+          "kendra:DescribeIndex"
+        ]
+        Resource = %[2]q
+      }
+    ]
+  })
+}
+
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
+  depends_on = [aws_iam_role_policy.test]
+
+  knowledge_base_configuration {
+    type = "KENDRA"
+    kendra_knowledge_base_configuration {
+      kendra_index_arn = %[2]q
+    }
+  }
+}
+`, rName, kendraIndexArn)
 }

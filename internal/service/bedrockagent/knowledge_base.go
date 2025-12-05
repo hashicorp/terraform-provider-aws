@@ -115,8 +115,6 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 						"vector_knowledge_base_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[vectorKnowledgeBaseConfigurationModel](ctx),
 							Validators: []validator.List{
-								listvalidator.IsRequired(),
-								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
 							PlanModifiers: []planmodifier.List{
@@ -206,14 +204,32 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								},
 							},
 						},
+						"kendra_knowledge_base_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[kendraKnowledgeBaseConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"kendra_index_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 			"storage_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[storageConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				PlanModifiers: []planmodifier.List{
@@ -809,6 +825,7 @@ type knowledgeBaseResourceModel struct {
 type knowledgeBaseConfigurationModel struct {
 	Type                             types.String                                                           `tfsdk:"type"`
 	VectorKnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[vectorKnowledgeBaseConfigurationModel] `tfsdk:"vector_knowledge_base_configuration"`
+	KendraKnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[kendraKnowledgeBaseConfigurationModel] `tfsdk:"kendra_knowledge_base_configuration"`
 }
 
 type vectorKnowledgeBaseConfigurationModel struct {
@@ -833,6 +850,10 @@ type supplementalDataStorageConfigurationModel struct {
 type storageLocationModel struct {
 	Type       fwtypes.StringEnum[awstypes.SupplementalDataStorageLocationType] `tfsdk:"type"`
 	S3Location fwtypes.ListNestedObjectValueOf[s3LocationModel]                 `tfsdk:"s3_location"`
+}
+
+type kendraKnowledgeBaseConfigurationModel struct {
+	KendraIndexARN fwtypes.ARN `tfsdk:"kendra_index_arn"`
 }
 
 type storageConfigurationModel struct {
