@@ -90,13 +90,12 @@ type resourcePlanModel struct {
 	TagsAll                      tftags.Map                                           `tfsdk:"tags_all"`
 }
 
-// Custom expand to handle AssociatedAlarms set-to-map conversion
+// Custom expand to handle complex nested transformations
 // Expand converts the Terraform resource model to AWS API input.
 // Custom expansion is required because:
 // 1. Union Type Handling: ExecutionBlockConfiguration uses AWS SDK union types that AutoFlex cannot handle automatically
 // 2. Complex Nested Transformations: ScalingResources (list→map[string]map[string]) and RegionAndRoutingControls (list→map[string][]) require manual conversion
-// 3. Set-to-Map Conversions: AssociatedAlarms transforms from Terraform sets to AWS API maps with complex key generation
-// 4. Conditional Logic: Different execution block types require different field mappings and validations
+// 3. Conditional Logic: Different execution block types require different field mappings and validations
 // AutoFlex works well for simple field mappings but cannot handle these complex structural transformations.
 func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag.Diagnostics) {
 	var apiObject arcregionswitch.CreatePlanInput
@@ -109,29 +108,9 @@ func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag
 	diags.Append(flex.Expand(ctx, m.Description, &apiObject.Description)...)
 	diags.Append(flex.Expand(ctx, m.PrimaryRegion, &apiObject.PrimaryRegion)...)
 	diags.Append(flex.Expand(ctx, m.RecoveryTimeObjectiveMinutes, &apiObject.RecoveryTimeObjectiveMinutes)...)
+	diags.Append(flex.Expand(ctx, m.AssociatedAlarms, &apiObject.AssociatedAlarms)...)
 	diags.Append(flex.Expand(ctx, m.Triggers, &apiObject.Triggers)...)
 	diags.Append(flex.Expand(ctx, m.Tags, &apiObject.Tags)...)
-
-	// Handle AssociatedAlarms set-to-map conversion manually
-	if !m.AssociatedAlarms.IsNull() && !m.AssociatedAlarms.IsUnknown() {
-		var alarms []associatedAlarmModel
-		diags.Append(m.AssociatedAlarms.ElementsAs(ctx, &alarms, false)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		apiObject.AssociatedAlarms = make(map[string]awstypes.AssociatedAlarm, len(alarms))
-		for _, alarm := range alarms {
-			var apiAlarm awstypes.AssociatedAlarm
-			diags.Append(flex.Expand(ctx, alarm.AlarmType, &apiAlarm.AlarmType)...)
-			diags.Append(flex.Expand(ctx, alarm.ResourceIdentifier, &apiAlarm.ResourceIdentifier)...)
-			diags.Append(flex.Expand(ctx, alarm.CrossAccountRole, &apiAlarm.CrossAccountRole)...)
-			diags.Append(flex.Expand(ctx, alarm.ExternalId, &apiAlarm.ExternalId)...)
-
-			key := alarm.Name.ValueString()
-			apiObject.AssociatedAlarms[key] = apiAlarm
-		}
-	}
 
 	// Handle Workflows with complex nested ScalingResources transformation
 	if !m.Workflows.IsNull() && !m.Workflows.IsUnknown() {
@@ -405,9 +384,8 @@ func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag
 // Custom flattening is required because:
 // 1. Union Type Handling: ExecutionBlockConfiguration union types need manual type switching and field extraction
 // 2. Reverse Complex Transformations: Converting AWS API maps back to Terraform list structures for ScalingResources and RegionAndRoutingControls
-// 3. Map-to-Set Conversions: AssociatedAlarms must be converted from AWS API maps back to Terraform sets
-// 4. Workflow Ordering: AWS API returns workflows in non-deterministic order, requiring sorting for consistent Terraform state
-// 5. Nested Parallel Steps: Parallel execution block configurations require recursive flattening with proper initialization
+// 3. Workflow Ordering: AWS API returns workflows in non-deterministic order, requiring sorting for consistent Terraform state
+// 4. Nested Parallel Steps: Parallel execution block configurations require recursive flattening with proper initialization
 // AutoFlex cannot handle these reverse transformations and complex nested structures automatically.
 func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Diagnostics) {
 	plan, ok := v.(*awstypes.Plan)
@@ -437,22 +415,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 	diags.Append(flex.Flatten(ctx, plan.RecoveryTimeObjectiveMinutes, &m.RecoveryTimeObjectiveMinutes)...)
 	diags.Append(flex.Flatten(ctx, plan.Triggers, &m.Triggers)...)
 
-	// Handle AssociatedAlarms map-to-set conversion
-	if len(plan.AssociatedAlarms) > 0 {
-		alarms := make([]associatedAlarmModel, 0, len(plan.AssociatedAlarms))
-		for name, alarm := range plan.AssociatedAlarms {
-			var alarmModel associatedAlarmModel
-			alarmModel.Name = types.StringValue(name)
-			diags.Append(flex.Flatten(ctx, alarm.AlarmType, &alarmModel.AlarmType)...)
-			diags.Append(flex.Flatten(ctx, alarm.ResourceIdentifier, &alarmModel.ResourceIdentifier)...)
-			diags.Append(flex.Flatten(ctx, alarm.CrossAccountRole, &alarmModel.CrossAccountRole)...)
-			diags.Append(flex.Flatten(ctx, alarm.ExternalId, &alarmModel.ExternalId)...)
-			alarms = append(alarms, alarmModel)
-		}
-		var d fwdiag.Diagnostics
-		m.AssociatedAlarms, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, alarms)
-		diags.Append(d...)
-	}
+	diags.Append(flex.Flatten(ctx, plan.AssociatedAlarms, &m.AssociatedAlarms)...)
 
 	// Handle Workflows with complex nested transformations
 	if len(plan.Workflows) > 0 {
@@ -527,7 +490,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 										}
 
 										var d fwdiag.Diagnostics
-										scalingResources[i].Resources, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, resources)
+										scalingResources[i].Resources, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, resources)
 										diags.Append(d...)
 									}
 								}
@@ -566,7 +529,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 								}
 
 								var d fwdiag.Diagnostics
-								arcConfig.RegionAndRoutingControls, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, regionControls)
+								arcConfig.RegionAndRoutingControls, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, regionControls)
 								diags.Append(d...)
 							}
 
@@ -655,7 +618,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 }
 
 type associatedAlarmModel struct {
-	Name               types.String                           `tfsdk:"name"`
+	MapBlockKey        types.String                           `tfsdk:"map_block_key"`
 	AlarmType          fwtypes.StringEnum[awstypes.AlarmType] `tfsdk:"alarm_type"`
 	ResourceIdentifier types.String                           `tfsdk:"resource_identifier"`
 	CrossAccountRole   types.String                           `tfsdk:"cross_account_role"`
@@ -802,8 +765,8 @@ type eksClusterModel struct {
 }
 
 type scalingResourcesModel struct {
-	Namespace types.String                                                    `tfsdk:"namespace"`
-	Resources fwtypes.ListNestedObjectValueOf[kubernetesScalingResourceModel] `tfsdk:"resources"`
+	Namespace types.String                                                   `tfsdk:"namespace"`
+	Resources fwtypes.SetNestedObjectValueOf[kubernetesScalingResourceModel] `tfsdk:"resources"`
 }
 
 type kubernetesScalingResourceModel struct {
@@ -819,10 +782,10 @@ type eksUngracefulModel struct {
 
 // ARC Routing Control Configuration Models
 type arcRoutingControlConfigModel struct {
-	CrossAccountRole         types.String                                                   `tfsdk:"cross_account_role"`
-	ExternalId               types.String                                                   `tfsdk:"external_id"`
-	TimeoutMinutes           types.Int64                                                    `tfsdk:"timeout_minutes"`
-	RegionAndRoutingControls fwtypes.ListNestedObjectValueOf[regionAndRoutingControlsModel] `tfsdk:"region_and_routing_controls"`
+	CrossAccountRole         types.String                                                  `tfsdk:"cross_account_role"`
+	ExternalId               types.String                                                  `tfsdk:"external_id"`
+	TimeoutMinutes           types.Int64                                                   `tfsdk:"timeout_minutes"`
+	RegionAndRoutingControls fwtypes.SetNestedObjectValueOf[regionAndRoutingControlsModel] `tfsdk:"region_and_routing_controls"`
 }
 
 type regionAndRoutingControlsModel struct {
@@ -1056,7 +1019,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[associatedAlarmModel](ctx),
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
-						names.AttrName: fwschema.StringAttribute{
+						"map_block_key": fwschema.StringAttribute{
 							Required: true,
 						},
 						"alarm_type": fwschema.StringAttribute{
@@ -1399,8 +1362,8 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																		},
 																	},
 																	Blocks: map[string]fwschema.Block{
-																		names.AttrResources: fwschema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[kubernetesScalingResourceModel](ctx),
+																		names.AttrResources: fwschema.SetNestedBlock{
+																			CustomType: fwtypes.NewSetNestedObjectTypeOf[kubernetesScalingResourceModel](ctx),
 																			NestedObject: fwschema.NestedBlockObject{
 																				Attributes: map[string]fwschema.Attribute{
 																					"resource_name": fwschema.StringAttribute{
@@ -1449,8 +1412,8 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															},
 														},
 														Blocks: map[string]fwschema.Block{
-															"region_and_routing_controls": fwschema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[regionAndRoutingControlsModel](ctx),
+															"region_and_routing_controls": fwschema.SetNestedBlock{
+																CustomType: fwtypes.NewSetNestedObjectTypeOf[regionAndRoutingControlsModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
 																	Attributes: map[string]fwschema.Attribute{
 																		names.AttrRegion: fwschema.StringAttribute{

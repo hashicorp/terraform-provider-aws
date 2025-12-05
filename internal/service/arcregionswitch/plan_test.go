@@ -437,8 +437,6 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 						"timeout_minutes":    "15",
 					}),
 				),
-				// API returns EKS scaling resources in different order than specified
-				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -641,7 +639,7 @@ resource "aws_arcregionswitch_plan" "test" {
   recovery_time_objective_minutes = 60
 
   associated_alarms {
-    name                = "test-alarm-1"
+    map_block_key       = "test-alarm-1"
     alarm_type          = "applicationHealth"
     resource_identifier = "arn:aws:cloudwatch:%[2]s:123456789012:alarm:test-alarm-1"
   }
@@ -1277,7 +1275,7 @@ resource "aws_arcregionswitch_plan" "test" {
 func testAccPlanConfig_update(rName, description string, rto int) string {
 	alarms := fmt.Sprintf(`
   associated_alarms {
-    name                = "test-alarm-1"
+    map_block_key       = "test-alarm-1"
     alarm_type          = "applicationHealth"
     resource_identifier = "arn:aws:cloudwatch:%s:123456789012:alarm:test-alarm-1"
   }`, acctest.Region())
@@ -1285,7 +1283,7 @@ func testAccPlanConfig_update(rName, description string, rto int) string {
 	if rto == 60 {
 		alarms += fmt.Sprintf(`
   associated_alarms {
-    name                = "test-alarm-2"
+    map_block_key       = "test-alarm-2"
     alarm_type          = "applicationHealth"
     resource_identifier = "arn:aws:cloudwatch:%s:123456789012:alarm:test-alarm-2"
   }`, acctest.Region())
