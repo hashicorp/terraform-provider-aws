@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -19,10 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_iam_outbound_web_identity_federation", name="Outbound Web Identity Federation")
+// @SingletonIdentity
+// @WrappedImport(false)
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(serialize=true)
+// @Testing(identityTest=false)
 func newOutboundWebIdentityFederationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &outboundWebIdentityFederationResource{}
 
@@ -32,13 +37,11 @@ func newOutboundWebIdentityFederationResource(_ context.Context) (resource.Resou
 type outboundWebIdentityFederationResource struct {
 	framework.ResourceWithModel[outboundWebIdentityFederationResourceModel]
 	framework.WithNoUpdate
-	framework.WithImportByID
 }
 
 func (r *outboundWebIdentityFederationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			"issuer_identifier": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -66,7 +69,6 @@ func (r *outboundWebIdentityFederationResource) Create(ctx context.Context, req 
 	}
 
 	// Set values for unknowns.
-	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	data.IssuerIdentifier = fwflex.StringToFramework(ctx, out.IssuerIdentifier)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
@@ -93,7 +95,6 @@ func (r *outboundWebIdentityFederationResource) Read(ctx context.Context, req re
 	}
 
 	// Set attributes for import.
-	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	data.IssuerIdentifier = fwflex.StringToFramework(ctx, out.IssuerIdentifier)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -111,6 +112,11 @@ func (r *outboundWebIdentityFederationResource) Delete(ctx context.Context, req 
 		resp.Diagnostics.AddError("disabling IAM Outbound Web Identity Federation", err.Error())
 		return
 	}
+}
+
+func (w *outboundWebIdentityFederationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	// Something must be set in state to prevent "Missing Resource Import State" errors.
+	resource.ImportStatePassthroughID(ctx, path.Root("issuer_identifier"), request, response)
 }
 
 func findOutboundWebIdentityFederation(ctx context.Context, conn *iam.Client) (*iam.GetOutboundWebIdentityFederationInfoOutput, error) {
@@ -135,6 +141,5 @@ func findOutboundWebIdentityFederation(ctx context.Context, conn *iam.Client) (*
 }
 
 type outboundWebIdentityFederationResourceModel struct {
-	ID               types.String `tfsdk:"id"`
 	IssuerIdentifier types.String `tfsdk:"issuer_identifier"`
 }
