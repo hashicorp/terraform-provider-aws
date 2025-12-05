@@ -114,7 +114,7 @@ func (r *outboundWebIdentityFederationResource) Delete(ctx context.Context, req 
 	}
 }
 
-func (w *outboundWebIdentityFederationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *outboundWebIdentityFederationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	// Something must be set in state to prevent "Missing Resource Import State" errors.
 	resource.ImportStatePassthroughID(ctx, path.Root("issuer_identifier"), request, response)
 }
