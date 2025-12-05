@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -105,13 +106,38 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrType: schema.StringAttribute{
-							Required: true,
+							CustomType: fwtypes.StringEnumType[awstypes.KnowledgeBaseType](),
+							Required:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
 					},
 					Blocks: map[string]schema.Block{
+						"kendra_knowledge_base_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[kendraKnowledgeBaseConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("kendra_knowledge_base_configuration"),
+									path.MatchRelative().AtParent().AtName("vector_knowledge_base_configuration"),
+								),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"kendra_index_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
 						"vector_knowledge_base_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[vectorKnowledgeBaseConfigurationModel](ctx),
 							Validators: []validator.List{
@@ -133,14 +159,12 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								Blocks: map[string]schema.Block{
 									"embedding_model_configuration": schema.ListNestedBlock{
 										Validators: []validator.List{
-											listvalidator.SizeAtLeast(0),
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Blocks: map[string]schema.Block{
 												"bedrock_embedding_model_configuration": schema.ListNestedBlock{
 													Validators: []validator.List{
-														listvalidator.SizeAtLeast(0),
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
@@ -160,13 +184,13 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									},
 									"supplemental_data_storage_configuration": schema.ListNestedBlock{
 										Validators: []validator.List{
-											listvalidator.SizeAtLeast(0),
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Blocks: map[string]schema.Block{
 												"storage_location": schema.ListNestedBlock{
 													Validators: []validator.List{
+														listvalidator.IsRequired(),
 														listvalidator.SizeAtLeast(1),
 													},
 													NestedObject: schema.NestedBlockObject{
@@ -204,26 +228,6 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								},
 							},
 						},
-						"kendra_knowledge_base_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[kendraKnowledgeBaseConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"kendra_index_arn": schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Required:   true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
-									},
-								},
-							},
-						},
 					},
 				},
 			},
@@ -238,13 +242,155 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrType: schema.StringAttribute{
-							Required: true,
+							CustomType: fwtypes.StringEnumType[awstypes.KnowledgeBaseStorageType](),
+							Required:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
 					},
 					Blocks: map[string]schema.Block{
+						"opensearch_managed_cluster_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[openSearchManagedClusterConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("opensearch_managed_cluster_configuration"),
+									path.MatchRelative().AtParent().AtName("opensearch_serverless_configuration"),
+									path.MatchRelative().AtParent().AtName("pinecone_configuration"),
+									path.MatchRelative().AtParent().AtName("rds_configuration"),
+									path.MatchRelative().AtParent().AtName("redis_enterprise_cloud_configuration"),
+								),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"domain_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"domain_endpoint": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.String{
+											stringvalidator.RegexMatches(
+												regexache.MustCompile(`^https://.*$`),
+												"must be a valid HTTPS URL",
+											),
+										},
+									},
+									"vector_index_name": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"field_mapping": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchManagedClusterFieldMappingModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"metadata_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"text_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"vector_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"opensearch_serverless_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[openSearchServerlessConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"collection_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"vector_index_name": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"field_mapping": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[openSearchServerlessFieldMappingModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"metadata_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"text_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"vector_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"pinecone_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[pineconeConfigurationModel](ctx),
 							Validators: []validator.List{
@@ -279,6 +425,8 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									"field_mapping": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[pineconeFieldMappingModel](ctx),
 										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
 											listvalidator.SizeAtMost(1),
 										},
 										PlanModifiers: []planmodifier.List{
@@ -287,13 +435,13 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"metadata_field": schema.StringAttribute{
-													Optional: true,
+													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
 												},
 												"text_field": schema.StringAttribute{
-													Optional: true,
+													Required: true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
@@ -345,6 +493,8 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									"field_mapping": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[rdsFieldMappingModel](ctx),
 										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
 											listvalidator.SizeAtMost(1),
 										},
 										PlanModifiers: []planmodifier.List{
@@ -422,136 +572,8 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									"field_mapping": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[redisEnterpriseCloudFieldMappingModel](ctx),
 										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										PlanModifiers: []planmodifier.List{
-											listplanmodifier.RequiresReplace(),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"metadata_field": schema.StringAttribute{
-													Optional: true,
-													PlanModifiers: []planmodifier.String{
-														stringplanmodifier.RequiresReplace(),
-													},
-												},
-												"text_field": schema.StringAttribute{
-													Optional: true,
-													PlanModifiers: []planmodifier.String{
-														stringplanmodifier.RequiresReplace(),
-													},
-												},
-												"vector_field": schema.StringAttribute{
-													Optional: true,
-													PlanModifiers: []planmodifier.String{
-														stringplanmodifier.RequiresReplace(),
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"opensearch_managed_cluster_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchManagedClusterConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"domain_arn": schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Required:   true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
-									},
-									"domain_endpoint": schema.StringAttribute{
-										Required: true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
-										Validators: []validator.String{
-											stringvalidator.RegexMatches(
-												regexache.MustCompile(`^https://.*$`),
-												"must be a valid HTTPS URL",
-											),
-										},
-									},
-									"vector_index_name": schema.StringAttribute{
-										Required: true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"field_mapping": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchManagedClusterFieldMappingModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										PlanModifiers: []planmodifier.List{
-											listplanmodifier.RequiresReplace(),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"metadata_field": schema.StringAttribute{
-													Required: true,
-													PlanModifiers: []planmodifier.String{
-														stringplanmodifier.RequiresReplace(),
-													},
-												},
-												"text_field": schema.StringAttribute{
-													Required: true,
-													PlanModifiers: []planmodifier.String{
-														stringplanmodifier.RequiresReplace(),
-													},
-												},
-												"vector_field": schema.StringAttribute{
-													Required: true,
-													PlanModifiers: []planmodifier.String{
-														stringplanmodifier.RequiresReplace(),
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"opensearch_serverless_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchServerlessConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"collection_arn": schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Required:   true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
-									},
-									"vector_index_name": schema.StringAttribute{
-										Required: true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"field_mapping": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchServerlessFieldMappingModel](ctx),
-										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
 											listvalidator.SizeAtMost(1),
 										},
 										PlanModifiers: []planmodifier.List{
@@ -894,9 +916,9 @@ type knowledgeBaseResourceModel struct {
 }
 
 type knowledgeBaseConfigurationModel struct {
-	Type                             types.String                                                           `tfsdk:"type"`
-	VectorKnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[vectorKnowledgeBaseConfigurationModel] `tfsdk:"vector_knowledge_base_configuration"`
 	KendraKnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[kendraKnowledgeBaseConfigurationModel] `tfsdk:"kendra_knowledge_base_configuration"`
+	Type                             fwtypes.StringEnum[awstypes.KnowledgeBaseType]                         `tfsdk:"type"`
+	VectorKnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[vectorKnowledgeBaseConfigurationModel] `tfsdk:"vector_knowledge_base_configuration"`
 }
 
 type vectorKnowledgeBaseConfigurationModel struct {
@@ -915,12 +937,12 @@ type bedrockEmbeddingModelConfigurationModel struct {
 }
 
 type supplementalDataStorageConfigurationModel struct {
-	StorageLocation fwtypes.ListNestedObjectValueOf[storageLocationModel] `tfsdk:"storage_location"`
+	StorageLocations fwtypes.ListNestedObjectValueOf[storageLocationModel] `tfsdk:"storage_location"`
 }
 
 type storageLocationModel struct {
-	Type       fwtypes.StringEnum[awstypes.SupplementalDataStorageLocationType] `tfsdk:"type"`
 	S3Location fwtypes.ListNestedObjectValueOf[s3LocationModel]                 `tfsdk:"s3_location"`
+	Type       fwtypes.StringEnum[awstypes.SupplementalDataStorageLocationType] `tfsdk:"type"`
 }
 
 type kendraKnowledgeBaseConfigurationModel struct {
@@ -928,27 +950,15 @@ type kendraKnowledgeBaseConfigurationModel struct {
 }
 
 type storageConfigurationModel struct {
-	OpensearchManagedClusterConfiguration fwtypes.ListNestedObjectValueOf[opensearchManagedClusterConfigurationModel] `tfsdk:"opensearch_managed_cluster_configuration"`
-	OpensearchServerlessConfiguration     fwtypes.ListNestedObjectValueOf[opensearchServerlessConfigurationModel]     `tfsdk:"opensearch_serverless_configuration"`
+	OpensearchManagedClusterConfiguration fwtypes.ListNestedObjectValueOf[openSearchManagedClusterConfigurationModel] `tfsdk:"opensearch_managed_cluster_configuration"`
+	OpensearchServerlessConfiguration     fwtypes.ListNestedObjectValueOf[openSearchServerlessConfigurationModel]     `tfsdk:"opensearch_serverless_configuration"`
 	PineconeConfiguration                 fwtypes.ListNestedObjectValueOf[pineconeConfigurationModel]                 `tfsdk:"pinecone_configuration"`
 	RDSConfiguration                      fwtypes.ListNestedObjectValueOf[rdsConfigurationModel]                      `tfsdk:"rds_configuration"`
 	RedisEnterpriseCloudConfiguration     fwtypes.ListNestedObjectValueOf[redisEnterpriseCloudConfigurationModel]     `tfsdk:"redis_enterprise_cloud_configuration"`
-	Type                                  types.String                                                                `tfsdk:"type"`
+	Type                                  fwtypes.StringEnum[awstypes.KnowledgeBaseStorageType]                       `tfsdk:"type"`
 }
 
-type opensearchServerlessConfigurationModel struct {
-	CollectionARN   fwtypes.ARN                                                            `tfsdk:"collection_arn"`
-	FieldMapping    fwtypes.ListNestedObjectValueOf[opensearchServerlessFieldMappingModel] `tfsdk:"field_mapping"`
-	VectorIndexName types.String                                                           `tfsdk:"vector_index_name"`
-}
-
-type opensearchServerlessFieldMappingModel struct {
-	MetadataField types.String `tfsdk:"metadata_field"`
-	TextField     types.String `tfsdk:"text_field"`
-	VectorField   types.String `tfsdk:"vector_field"`
-}
-
-type opensearchManagedClusterConfigurationModel struct {
+type openSearchManagedClusterConfigurationModel struct {
 	DomainARN       fwtypes.ARN                                                                `tfsdk:"domain_arn"`
 	DomainEndpoint  types.String                                                               `tfsdk:"domain_endpoint"`
 	FieldMapping    fwtypes.ListNestedObjectValueOf[opensearchManagedClusterFieldMappingModel] `tfsdk:"field_mapping"`
@@ -956,6 +966,18 @@ type opensearchManagedClusterConfigurationModel struct {
 }
 
 type opensearchManagedClusterFieldMappingModel struct {
+	MetadataField types.String `tfsdk:"metadata_field"`
+	TextField     types.String `tfsdk:"text_field"`
+	VectorField   types.String `tfsdk:"vector_field"`
+}
+
+type openSearchServerlessConfigurationModel struct {
+	CollectionARN   fwtypes.ARN                                                            `tfsdk:"collection_arn"`
+	FieldMapping    fwtypes.ListNestedObjectValueOf[openSearchServerlessFieldMappingModel] `tfsdk:"field_mapping"`
+	VectorIndexName types.String                                                           `tfsdk:"vector_index_name"`
+}
+
+type openSearchServerlessFieldMappingModel struct {
 	MetadataField types.String `tfsdk:"metadata_field"`
 	TextField     types.String `tfsdk:"text_field"`
 	VectorField   types.String `tfsdk:"vector_field"`
