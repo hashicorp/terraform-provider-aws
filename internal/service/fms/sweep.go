@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.fms/sweep
+// Copyright IBM Corp. 2014, 2025fms/sweep
 // SPDX-License-Identifier: MPL-2.0
 
 package fms
