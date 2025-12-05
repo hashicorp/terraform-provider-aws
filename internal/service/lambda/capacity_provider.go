@@ -39,10 +39,10 @@ import (
 
 // @FrameworkResource("aws_lambda_capacity_provider", name="Capacity Provider")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda/types;types.CapacityProvider")
 // @Testing(importStateIdAttribute="name")
 // @Testing(importStateIdFunc=testAccCheckCapacityProviderImportStateID)
-// @IdentityAttribute("name")
 // @Testing(preIdentityVersion="v6.25.0")
 func newResourceCapacityProvider(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCapacityProvider{}
@@ -309,10 +309,6 @@ func (r *resourceCapacityProvider) Delete(ctx context.Context, request resource.
 		return
 	}
 }
-
-//func (r *resourceCapacityProvider) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-//	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
-//}
 
 func (r *resourceCapacityProvider) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
 	var data resourceCapacityProviderModel
