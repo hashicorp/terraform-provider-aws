@@ -193,7 +193,7 @@ clean-tidy: prereq-go ## Clean up tidy
 
 copyright: ## [CI] Copyright Checks / add headers check
 	@echo "make: Copyright Checks / add headers check..."
-	@copywrite headers
+	@.ci/scripts/copyright-check.sh
 
 deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
 	@echo "make: Dependency Checks / go_mod..."
