@@ -349,6 +349,27 @@ func ResourceDataSource() *schema.Resource {
 					},
 				},
 			},
+			names.AttrVPCConfiguration: {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrSecurityGroupIDs: {
+							Type:     schema.TypeSet,
+							Required: true,
+							MaxItems: 100,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						names.AttrSubnetIDs: {
+							Type:     schema.TypeSet,
+							Required: true,
+							MaxItems: 100,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"custom_document_enrichment_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -648,6 +669,10 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Schedule = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.VpcConfiguration = expandVPCConfiguration(v.([]any))
+	}
+
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func(ctx context.Context) (any, error) {
 			return conn.CreateDataSource(ctx, input)
@@ -739,6 +764,14 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if resp.VpcConfiguration != nil {
+		if err := d.Set(names.AttrVPCConfiguration, []any{flattenVPCConfiguration(resp.VpcConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
+		}
+	} else {
+		d.Set(names.AttrVPCConfiguration, nil)
+	}
+
 	return diags
 }
 
@@ -788,6 +821,10 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if d.HasChange(names.AttrSchedule) {
 			input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
+		}
+
+		if d.HasChange(names.AttrVPCConfiguration) {
+			input.VpcConfiguration = expandVPCConfiguration(d.Get(names.AttrVPCConfiguration).([]any))
 		}
 
 		log.Printf("[DEBUG] Updating Kendra Data Source (%s): %#v", d.Id(), input)
@@ -1755,4 +1792,42 @@ func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []an
 	}
 
 	return []any{tfMap}
+}
+
+func expandVPCConfiguration(vVpcConfiguration []any) *types.DataSourceVpcConfiguration {
+	if len(vVpcConfiguration) == 0 || vVpcConfiguration[0] == nil {
+		return nil
+	}
+
+	vpcConfiguration := &types.DataSourceVpcConfiguration{}
+
+	mVpcConfiguration := vVpcConfiguration[0].(map[string]any)
+
+	if vSecurityGroupIds, ok := mVpcConfiguration[names.AttrSecurityGroupIDs].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
+		vpcConfiguration.SecurityGroupIds = flex.ExpandStringValueSet(vSecurityGroupIds)
+	}
+
+	if vSubnetIds, ok := mVpcConfiguration[names.AttrSubnetIDs].(*schema.Set); ok && vSubnetIds.Len() > 0 {
+		vpcConfiguration.SubnetIds = flex.ExpandStringValueSet(vSubnetIds)
+	}
+
+	return vpcConfiguration
+}
+
+func flattenVPCConfiguration(apiObject *types.DataSourceVpcConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{}
+
+	if v := apiObject.SecurityGroupIds; v != nil {
+		m[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(v)
+	}
+
+	if v := apiObject.SubnetIds; v != nil {
+		m[names.AttrSubnetIDs] = flex.FlattenStringValueSet(v)
+	}
+
+	return []any{m}
 }
