@@ -55,6 +55,16 @@ func findGSIByTwoPartKey(ctx context.Context, conn *dynamodb.Client, tableName, 
 	return nil, &retry.NotFoundError{}
 }
 
+func findGSIFromTable(table *awstypes.TableDescription, indexName string) (*awstypes.GlobalSecondaryIndexDescription, error) {
+	for _, v := range table.GlobalSecondaryIndexes {
+		if aws.ToString(v.IndexName) == indexName {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
 func findPITRByTableName(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) (*awstypes.PointInTimeRecoveryDescription, error) {
 	input := &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),

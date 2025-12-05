@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	retryinternal "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -130,6 +131,32 @@ func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName 
 		}
 
 		return output, string(output.IndexStatus), nil
+	}
+}
+
+func statusAllGSI(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findTableByName(ctx, conn, tableName)
+
+		if retryinternal.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
+		}
+
+		for _, g := range output.GlobalSecondaryIndexes {
+			if g.IndexStatus != awstypes.IndexStatusActive {
+				return output, string(g.IndexStatus), nil
+			}
+		}
+
+		return output, string(awstypes.IndexStatusActive), nil
 	}
 }
 
