@@ -5,7 +5,7 @@ go 1.24.11
 require (
 	github.com/YakDriver/tfproviderdocs v0.23.3
 	github.com/client9/misspell v0.3.4
-	github.com/golangci/golangci-lint/v2 v2.7.0
+	github.com/golangci/golangci-lint/v2 v2.7.1
 	github.com/hashicorp/copywrite v0.22.0
 	github.com/hashicorp/go-changelog v0.0.0-20250127101332-effe3832fb0b
 	github.com/katbyte/terrafmt v0.5.5
