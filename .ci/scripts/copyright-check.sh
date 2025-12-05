@@ -1,28 +1,53 @@
 #!/bin/bash
 set -euo pipefail
 
-# Drop-in replacement for "copywrite headers"
-# Checks that all Go files have the IBM copyright header
-
-EXPECTED="// Copyright IBM Corp. 2014, 2025"
 MISSING=0
 
-while IFS= read -r file; do
-	FIRST_LINE=$(head -1 "$file")
+check_file() {
+	local file="$1"
+	local comment_style="$2"
+	local expected="$3"
+	
+	local first_line=$(head -1 "$file")
 	
 	# Skip generated files
-	[[ "$FIRST_LINE" =~ ^//\ Code\ generated ]] && continue
+	[[ "$first_line" =~ Code\ generated ]] && return 0
 	
-	if [[ ! "$FIRST_LINE" =~ ^//\ Copyright\ IBM\ Corp\.\ 2014,\ 2025$ ]]; then
-		echo "Missing or incorrect copyright header: $file"
-		MISSING=$((MISSING + 1))
+	# Skip shebang lines
+	if [[ "$first_line" =~ ^#! ]]; then
+		first_line=$(sed -n '2p' "$file")
 	fi
+	
+	if [[ ! "$first_line" =~ $expected ]]; then
+		echo "Missing or incorrect copyright header: $file"
+		return 1
+	fi
+	return 0
+}
+
+# Check Go files
+while IFS= read -r file; do
+	check_file "$file" "//" "^// Copyright IBM Corp\. 2014, 2025$" || MISSING=$((MISSING + 1))
 done < <(find . -name "*.go" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*")
+
+# Check shell scripts
+while IFS= read -r file; do
+	check_file "$file" "#" "^# Copyright IBM Corp\. 2014, 2025$" || MISSING=$((MISSING + 1))
+done < <(find . -name "*.sh" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*")
+
+# Check HCL/Terraform files
+while IFS= read -r file; do
+	check_file "$file" "#" "^# Copyright IBM Corp\. 2014, 2025$" || MISSING=$((MISSING + 1))
+done < <(find . \( -name "*.hcl" -o -name "*.tf" \) -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*")
+
+# Check Python files
+while IFS= read -r file; do
+	check_file "$file" "#" "^# Copyright IBM Corp\. 2014, 2025$" || MISSING=$((MISSING + 1))
+done < <(find . -name "*.py" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*")
 
 if [[ $MISSING -gt 0 ]]; then
 	echo ""
 	echo "Error: $MISSING files missing correct copyright header"
-	echo "Expected: $EXPECTED"
 	exit 1
 fi
 
