@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_bedrockagent_knowledge_base: Add support for OpenSearch managed clusters in `storage_configuration`
+resource/aws_bedrockagent_knowledge_base: Add `storage_configuration.opensearch_managed_cluster_configuration` argument
 ```
