@@ -6,7 +6,6 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -22,11 +21,8 @@ import (
 
 func TestAccEC2CapacityBlockReservation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "RUN_EC2_CAPACITY_BLOCK_RESERVATION_TESTS"
-	vifId := os.Getenv(key)
-	if vifId != acctest.CtTrue {
-		t.Skipf("Environment variable %s is not set to true", key)
-	}
+
+	acctest.SkipIfEnvVarNotSet(t, "TF_AWS_RUN_EC2_CAPACITY_BLOCK_RESERVATION_TESTS")
 
 	var reservation awstypes.CapacityReservation
 	resourceName := "aws_ec2_capacity_block_reservation.test"
