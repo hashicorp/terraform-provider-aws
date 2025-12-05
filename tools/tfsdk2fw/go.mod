@@ -48,6 +48,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.52.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.52.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.2.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/athena v1.56.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.62.2 // indirect
@@ -334,7 +335,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.29.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.10.0 // indirect
-	github.com/hashicorp/terraform-plugin-testing v1.14.0-beta.1.0.20251013071646-7ed2ee242705 // indirect
+	github.com/hashicorp/terraform-plugin-testing v1.14.0 // indirect
 	github.com/hashicorp/terraform-registry-address v0.4.0 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
