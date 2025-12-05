@@ -142,9 +142,9 @@ jobs:
 
       - run: tflint --config .ci/.tflint.hcl --init
 
-      - run: |
-          exit_code=0
+      - run: sudo apt-get update && sudo apt-get install -y parallel
 
+      - run: |
           # Configure the rules for tflint.
           # The *_invalid_* rules disabled here prevent evaluation of expressions.
           # Do not disable *_invalid_name rules, since these are good checks for e.g. "%s" formatting verbs
@@ -168,19 +168,18 @@ jobs:
               "--disable-rule=terraform_unused_declarations"
               "--disable-rule=terraform_typed_variables"
           )
-          while read -r filename; do
+          export -f validate_file
+          export shared_rules
+
+          validate_file() {
+            filename=$1
             rules=("${shared_rules[@]}")
             if [[ "$filename" == "./website/docs/guides/version-2-upgrade.html.markdown" ]]; then
-                # ./website/docs/guides/version-2-upgrade.html.markdown should still include pre-0.12 syntax,
-                # since v1.0 does not support Terraform 0.12.
                 rules+=(
                 "--disable-rule=terraform_deprecated_index"
                 "--disable-rule=terraform_deprecated_interpolation"
                 )
             elif [[ "$filename" == "./website/docs/guides/version-3-upgrade.html.markdown" ]]; then
-                # ./website/docs/guides/version-3-upgrade.html.markdown has one example showing migration from
-                # pre-0.12 syntax to 0.12 syntax. We can't customize rules per block, and adding a
-                # tflint-ignore directive to documentation is not ideal.
                 rules+=(
                 "--enable-rule=terraform_deprecated_index"
                 "--disable-rule=terraform_deprecated_interpolation"
@@ -192,10 +191,10 @@ jobs:
                 )
             fi
 
-            # We need to capture the output and error code here. We don't want to exit on the first error
-            set +e
-            ./.ci/scripts/validate-terraform-file.sh "$filename" "${rules[@]}" || exit_code=1
-            set -e
-          done < <(find ./website/docs -not \( -path ./website/docs/cdktf -prune \) -type f -name '*.markdown' | sort -u)
+            ./.ci/scripts/validate-terraform-file.sh "$filename" "${rules[@]}"
+          }
+          export -f validate_file
 
-          exit $exit_code
+          find ./website/docs -not \( -path ./website/docs/cdktf -prune \) -type f -name '*.markdown' | \
+            sort -u | \
+            parallel -j 16 --halt soon,fail=1 validate_file {}
