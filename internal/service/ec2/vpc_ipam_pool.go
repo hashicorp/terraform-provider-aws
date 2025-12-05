@@ -41,7 +41,8 @@ func resourceIPAMPool() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(3 * time.Minute),
+			// Cross-region resources take 20+ minutes to be managed by IPAM
+			Create: schema.DefaultTimeout(35 * time.Minute),
 			Update: schema.DefaultTimeout(3 * time.Minute),
 			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
@@ -138,6 +139,37 @@ func resourceIPAMPool() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"source_resource": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrResourceID: {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						names.AttrResourceOwner: {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"resource_region": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						names.AttrResourceType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.IpamPoolSourceResourceType](),
+						},
+					},
+				},
+			},
 			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -213,6 +245,48 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.SourceIpamPoolId = aws.String(v.(string))
 	}
 
+	var sourceResourceData map[string]any
+	if v, ok := d.GetOk("source_resource"); ok && len(v.([]any)) > 0 {
+		sourceResourceData = v.([]any)[0].(map[string]any)
+	}
+
+	if sourceResourceData != nil {
+		resourceID := sourceResourceData[names.AttrResourceID].(string)
+		resourceRegion := sourceResourceData["resource_region"].(string)
+		resourceOwner := aws.String(sourceResourceData[names.AttrResourceOwner].(string))
+		resourceType := awstypes.IpamPoolSourceResourceType(sourceResourceData[names.AttrResourceType].(string))
+
+		log.Printf("[DEBUG] Verifying resource %s exists in region %s before waiting for IPAM management", resourceID, resourceRegion)
+
+		resourceConn := conn
+		if resourceRegion != meta.(*conns.AWSClient).Region(ctx) {
+			resourceCtx := conns.NewResourceContext(ctx, names.EC2ServiceID, "aws_vpc_ipam_pool", resourceRegion)
+			resourceConn = meta.(*conns.AWSClient).EC2Client(resourceCtx)
+		}
+
+		if resourceType == awstypes.IpamPoolSourceResourceTypeVpc {
+			if _, err := findVPCByID(ctx, resourceConn, resourceID); err != nil {
+				return sdkdiag.AppendErrorf(diags, "source_resource VPC (%s) does not exist: %s", resourceID, err)
+			}
+		}
+
+		log.Printf("[DEBUG] Resource %s exists, waiting for IPAM to manage the resource", resourceID)
+
+		// Wait for the resource to be managed by IPAM - can take 20+ minutes
+		if _, err := waitIPAMResourceCIDRManaged(ctx, conn, scopeID, resourceID, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for resource %s to be managed by IPAM: %s", resourceID, err)
+		}
+
+		log.Printf("[DEBUG] Resource %s is now managed by IPAM", resourceID)
+
+		input.SourceResource = &awstypes.IpamPoolSourceResourceRequest{
+			ResourceId:     aws.String(resourceID),
+			ResourceOwner:  resourceOwner,
+			ResourceRegion: aws.String(resourceRegion),
+			ResourceType:   resourceType,
+		}
+	}
+
 	output, err := conn.CreateIpamPool(ctx, input)
 
 	if err != nil {
@@ -258,6 +332,17 @@ func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
 	d.Set("public_ip_source", pool.PublicIpSource)
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
+	if pool.SourceResource != nil {
+		tfMap := map[string]any{
+			names.AttrResourceID:    aws.ToString(pool.SourceResource.ResourceId),
+			names.AttrResourceOwner: aws.ToString(pool.SourceResource.ResourceOwner),
+			"resource_region":       aws.ToString(pool.SourceResource.ResourceRegion),
+			names.AttrResourceType:  string(pool.SourceResource.ResourceType),
+		}
+		d.Set("source_resource", []any{tfMap})
+	} else {
+		d.Set("source_resource", nil)
+	}
 	d.Set(names.AttrState, pool.State)
 
 	setTagsOut(ctx, pool.Tags)

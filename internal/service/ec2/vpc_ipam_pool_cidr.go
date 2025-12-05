@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -179,6 +180,33 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	ipamPool, err := findIPAMPoolByID(ctx, conn, poolID)
+	if intretry.NotFound(err) {
+		log.Printf("[DEBUG] IPAM Pool (%s) not found, skipping IPAM Pool CIDR (%s) delete", poolID, d.Id())
+		return diags
+	} else if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool (%s): %s", poolID, err)
+	}
+
+	// VPC / Subnet allocations take upto 20m to be released after resource deletion.
+	// Set up correct region/conn for checking allocations
+	var allocationCtx context.Context
+	var allocationConn *ec2.Client
+
+	poolLocale := aws.ToString(ipamPool.Locale)
+	if poolLocale != "" && poolLocale != "None" {
+		allocationCtx = conns.NewResourceContext(ctx, names.EC2ServiceID, "aws_vpc_ipam_pool_cidr", poolLocale)
+		allocationConn = meta.(*conns.AWSClient).EC2Client(allocationCtx)
+	} else {
+		allocationCtx = ctx
+		allocationConn = conn
+	}
+
+	// Wait for allocations to be released before deprovisioning
+	if err := waitIPAMPoolCIDRAllocationsReleased(allocationCtx, allocationConn, poolID, cidrBlock, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool (%s) allocations to be released: %s", poolID, err)
+	}
+
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR: %s", d.Id())
 	input := ec2.DeprovisionIpamPoolCidrInput{
 		Cidr:       aws.String(cidrBlock),
@@ -198,7 +226,6 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 	if _, err := waitIPAMPoolCIDRDeleted(ctx, conn, d.Get("ipam_pool_cidr_id").(string), poolID, cidrBlock, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR (%s) delete: %s", d.Id(), err)
 	}
-
 	return diags
 }
 

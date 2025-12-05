@@ -52,3 +52,32 @@ func CanonicalCIDRBlock(cidr string) string {
 
 	return ipnet.String()
 }
+
+// CIDRBlocksOverlap returns whether the first CIDR block overlaps with (fully or partially contains)
+// the second CIDR block. This works for both IPv4 and IPv6 CIDR blocks.
+// Returns false if either CIDR block cannot be parsed.
+func CIDRBlocksOverlap(cidr1, cidr2 string) bool {
+	_, net1, err := net.ParseCIDR(cidr1)
+	if err != nil {
+		return false
+	}
+
+	ip2, net2, err := net.ParseCIDR(cidr2)
+	if err != nil {
+		return false
+	}
+
+	return net1.Contains(ip2) || net1.Contains(getLastIP(net2))
+}
+
+// getLastIP returns the last IP address in a network
+func getLastIP(ipnet *net.IPNet) net.IP {
+	ip := make(net.IP, len(ipnet.IP))
+	copy(ip, ipnet.IP)
+
+	for i := range ip {
+		ip[i] |= ^ipnet.Mask[i]
+	}
+
+	return ip
+}
