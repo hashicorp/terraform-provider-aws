@@ -39,6 +39,49 @@ resource "aws_bedrockagent_knowledge_base" "example" {
 }
 ```
 
+### Kendra Knowledge Base
+
+```hcl
+resource "aws_bedrockagent_knowledge_base" "kendra_example" {
+  name     = "example-kendra-kb"
+  role_arn = aws_iam_role.example.arn
+  knowledge_base_configuration {
+    type = "KENDRA"
+    kendra_knowledge_base_configuration {
+      kendra_index_arn = "arn:aws:kendra:us-east-1:123456789012:index/example-index-id"
+    }
+  }
+}
+```
+
+### OpenSearch Managed Cluster Configuration
+
+```terraform
+resource "aws_bedrockagent_knowledge_base" "example" {
+  name     = "example"
+  role_arn = aws_iam_role.example.arn
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:aws:bedrock:us-west-2::foundation-model/amazon.titan-embed-text-v2:0"
+    }
+    type = "VECTOR"
+  }
+  storage_configuration {
+    type = "OPENSEARCH_MANAGED_CLUSTER"
+    opensearch_managed_cluster_configuration {
+      domain_arn        = "arn:aws:es:us-west-2:123456789012:domain/example-domain"
+      domain_endpoint   = "https://search-example-domain.us-west-2.es.amazonaws.com"
+      vector_index_name = "example_index"
+      field_mapping {
+        metadata_field = "metadata"
+        text_field     = "chunks"
+        vector_field   = "embedding"
+      }
+    }
+  }
+}
+```
+
 ### With Supplemental Data Storage Configuration
 
 ```terraform
@@ -90,20 +133,27 @@ The following arguments are required:
 * `knowledge_base_configuration` - (Required, Forces new resource) Details about the embeddings configuration of the knowledge base. See [`knowledge_base_configuration` block](#knowledge_base_configuration-block) for details.
 * `name` - (Required) Name of the knowledge base.
 * `role_arn` - (Required) ARN of the IAM role with permissions to invoke API operations on the knowledge base.
-* `storage_configuration` - (Required, Forces new resource) Details about the storage configuration of the knowledge base. See [`storage_configuration` block](#storage_configuration-block) for details.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the knowledge base.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `storage_configuration` - (Optional, Forces new resource) Details about the storage configuration of the knowledge base. See [`storage_configuration` block](#storage_configuration-block) for details.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `knowledge_base_configuration` block
 
 The `knowledge_base_configuration` configuration block supports the following arguments:
 
-* `type` - (Required) Type of data that the data source is converted into for the knowledge base. Valid Values: `VECTOR`.
+* `type` - (Required) Type of data that the data source is converted into for the knowledge base. Valid Values: `VECTOR`, `KENDRA`, `SQL`.
+* `kendra_knowledge_base_configuration` - (Optional) Configuration for Kendra knowledge base. See [`kendra_knowledge_base_configuration` block](#kendra_knowledge_base_configuration-block) for details.
 * `vector_knowledge_base_configuration` - (Optional) Details about the embeddings model that'sused to convert the data source. See [`vector_knowledge_base_configuration` block](#vector_knowledge_base_configuration-block) for details.
+
+### `kendra_knowledge_base_configuration` block
+
+The `kendra_knowledge_base_configuration` configuration block supports the following arguments:
+
+* `kendra_index_arn` - (Required) ARN of the Amazon Kendra index.
 
 ### `vector_knowledge_base_configuration` block
 
@@ -149,11 +199,24 @@ The `s3_location` configuration block supports the following arguments:
 
 The `storage_configuration` configuration block supports the following arguments:
 
-* `type` - (Required) Vector store service in which the knowledge base is stored. Valid Values: `OPENSEARCH_SERVERLESS`, `PINECONE`, `REDIS_ENTERPRISE_CLOUD`, `RDS`.
-* `opensearch_serverless_configuration` - (Optional) The storage configuration of the knowledge base in Amazon OpenSearch Service. See [`opensearch_serverless_configuration` block](#opensearch_serverless_configuration-block) for details.
+* `type` - (Required) Vector store service in which the knowledge base is stored. Valid Values: `OPENSEARCH_SERVERLESS`, `OPENSEARCH_MANAGED_CLUSTER`, `PINECONE`, `REDIS_ENTERPRISE_CLOUD`, `RDS`.
+* `opensearch_managed_cluster_configuration` - (Optional) The storage configuration of the knowledge base in Amazon OpenSearch Service Managed Cluster. See [`opensearch_managed_cluster_configuration` block](#opensearch_managed_cluster_configuration-block) for details.
+* `opensearch_serverless_configuration` - (Optional) The storage configuration of the knowledge base in Amazon OpenSearch Service Serverless. See [`opensearch_serverless_configuration` block](#opensearch_serverless_configuration-block) for details.
 * `pinecone_configuration` - (Optional)  The storage configuration of the knowledge base in Pinecone. See [`pinecone_configuration` block](#pinecone_configuration-block) for details.
 * `rds_configuration` - (Optional) Details about the storage configuration of the knowledge base in Amazon RDS. For more information, see [Create a vector index in Amazon RDS](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-setup.html). See [`rds_configuration` block](#rds_configuration-block) for details.
 * `redis_enterprise_cloud_configuration` - (Optional) The storage configuration of the knowledge base in Redis Enterprise Cloud. See [`redis_enterprise_cloud_configuration` block](#redis_enterprise_cloud_configuration-block) for details.
+
+### `opensearch_managed_cluster_configuration` block
+
+The `opensearch_managed_cluster_configuration` configuration block supports the following arguments:
+
+* `domain_arn` - (Required) ARN of the OpenSearch domain.
+* `domain_endpoint` - (Required) Endpoint URL of the OpenSearch domain.
+* `field_mapping` - (Required) The names of the fields to which to map information about the vector store. This block supports the following arguments:
+    * `metadata_field` - (Required) Name of the field in which Amazon Bedrock stores metadata about the vector store.
+    * `text_field` - (Required) Name of the field in which Amazon Bedrock stores the raw text from your data. The text is split according to the chunking strategy you choose.
+    * `vector_field` - (Required) Name of the field in which Amazon Bedrock stores the vector embeddings for your data sources.
+* `vector_index_name` - (Required) Name of the vector store.
 
 ### `opensearch_serverless_configuration` block
 

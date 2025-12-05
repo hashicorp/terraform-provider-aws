@@ -1122,7 +1122,7 @@ type intermediateStorageModel struct {
 }
 
 type s3LocationModel struct {
-	Uri types.String `tfsdk:"uri"`
+	URI types.String `tfsdk:"uri"`
 }
 
 type transformationModel struct {
