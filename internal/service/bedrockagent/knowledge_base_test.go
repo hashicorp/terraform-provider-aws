@@ -1136,7 +1136,7 @@ data "aws_iam_role" "opensearch" {
 
 resource "aws_iam_role" "bedrock_kb_role" {
   name = %[1]q
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -1150,9 +1150,6 @@ resource "aws_iam_role" "bedrock_kb_role" {
           StringEquals = {
             "aws:SourceAccount": data.aws_caller_identity.current.account_id
           },
-          ArnLike = {
-            "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:knowledge-base/*"
-          }
         }
       }
     ]
@@ -1160,9 +1157,9 @@ resource "aws_iam_role" "bedrock_kb_role" {
 }
 
 resource "aws_iam_policy" "bedrock_models_access" {
-  name		    = "bedrock-%[1]s"
+  name.       = "bedrock-%[1]s"
   description = "IAM policy for Amazon Bedrock to access embedding models"
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -1195,9 +1192,9 @@ resource "aws_iam_policy" "bedrock_models_access" {
 }
 
 resource "aws_iam_policy" "opensearch_access" {
-  name 		    = "os-%[1]s"
+  name        = "os-%[1]s"
   description = "IAM policy for Amazon Bedrock to access OpenSearch domain"
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -1217,7 +1214,7 @@ resource "aws_iam_policy" "opensearch_access" {
         Effect = "Allow"
         Action = [
           "es:DescribeDomain",
-		  "es:DescribeElasticsearchDomain"
+          "es:DescribeElasticsearchDomain"
         ]
         Resource = [
           "*"
@@ -1253,7 +1250,7 @@ resource "random_password" "opensearch_master" {
 }
 
 resource "aws_opensearch_domain" "knowledge_base" {
-  domain_name    = substr(%[1]q, 0, 28)
+  domain_name     = substr(%[1]q, 0, 28)
   engine_version  = "OpenSearch_3.1"
   access_policies = local.opensearch_access_policy
 
@@ -1291,6 +1288,7 @@ resource "aws_opensearch_domain" "knowledge_base" {
   advanced_security_options {
     enabled                        = true
     internal_user_database_enabled = true
+
     master_user_options {
       master_user_name     = "admin"
       master_user_password = random_password.opensearch_master.result
@@ -1372,7 +1370,7 @@ resource "opensearch_index" "vector_index" {
   number_of_shards   = "5"
   number_of_replicas = "1"
   index_knn          = true
-  
+
   # Mappings for Bedrock Knowledge Base compatibility
   mappings = jsonencode({
     "properties": {
