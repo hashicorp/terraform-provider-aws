@@ -6,6 +6,8 @@ package codebuild
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -128,6 +130,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  projectResourceAsListResource,
+			TypeName: "aws_codebuild_project",
+			Name:     "Project",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {
