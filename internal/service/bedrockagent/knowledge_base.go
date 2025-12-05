@@ -649,6 +649,11 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 			return tfresource.RetryableError(err)
 		}
 
+		// Kendra access propagation
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Encountered AccessDeniedException from Kendra") {
+			return tfresource.RetryableError(err)
+		}
+
 		// OpenSearch data access propagation
 		if tfawserr.ErrMessageContains(err, errCodeValidationException, "storage configuration provided is invalid") {
 			return tfresource.RetryableError(err)
