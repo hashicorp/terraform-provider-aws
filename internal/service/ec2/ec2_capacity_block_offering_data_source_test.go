@@ -16,7 +16,7 @@ import (
 func TestAccEC2CapacityBlockOfferingDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_capacity_block_offering.test"
-	startDate := time.Now().UTC().Add(25 * time.Hour).Format(time.RFC3339)
+	startDate := time.Now().UTC().Format(time.RFC3339)
 	endDate := time.Now().UTC().Add(720 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -40,7 +39,7 @@ func TestAccEC2CapacityBlockReservation_basic(t *testing.T) {
 	var reservation awstypes.CapacityReservation
 	resourceName := "aws_ec2_capacity_block_reservation.test"
 	dataSourceName := "data.aws_ec2_capacity_block_offering.test"
-	startDate := time.Now().UTC().Add(25 * time.Hour).Format(time.RFC3339)
+	startDate := time.Now().UTC().Format(time.RFC3339)
 	endDate := time.Now().UTC().Add(720 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -51,18 +50,21 @@ func TestAccEC2CapacityBlockReservation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityBlockReservationConfig_basic(startDate, endDate),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityBlockReservationExists(ctx, resourceName, &reservation),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`capacity-reservation/cr-:.+`)),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAvailabilityZone, resourceName, names.AttrAvailabilityZone),
-					resource.TestCheckResourceAttrPair(dataSourceName, "capacity_block_offering_id", resourceName, "capacity_block_offering_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "start_date", resourceName, "start_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "end_date", resourceName, "end_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrInstanceCount, resourceName, names.AttrInstanceCount),
-					resource.TestCheckResourceAttrPair(dataSourceName, "instance_platform", resourceName, "instance_platform"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tenancy", resourceName, "tenancy"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "capacity-reservation/{id}"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, dataSourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrPair(resourceName, "capacity_block_offering_id", dataSourceName, "capacity_block_offering_id"),
+					// TODO: `start_date` is after `start_date_range`
+					// TODO: `end_date` is before `end_date_range`
+					// TODO: `instance_count` is not populated until the CBR is active, but requested count is in tag `aws:ec2capacityreservation:incrementalRequestedQuantity`
+					// resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceCount, dataSourceName, names.AttrInstanceCount),
+					resource.TestCheckResourceAttr(resourceName, "instance_platform", "Linux/UNIX"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceType, dataSourceName, names.AttrInstanceType),
+					resource.TestCheckResourceAttrPair(resourceName, "tenancy", dataSourceName, "tenancy"),
 				),
+				// Because `aws_ec2_capacity_block_offering` is a data source, the `capacity_block_offering_id` changes on each run
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -102,9 +104,6 @@ data "aws_ec2_capacity_block_offering" "test" {
 resource "aws_ec2_capacity_block_reservation" "test" {
   capacity_block_offering_id = data.aws_ec2_capacity_block_offering.test.capacity_block_offering_id
   instance_platform          = "Linux/UNIX"
-  tags = {
-    "Environment" = "dev"
-  }
 }
 `, startDate, endDate)
 }
