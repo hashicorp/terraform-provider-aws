@@ -377,6 +377,53 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerModel_vpcVpcConfigUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_vpcBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+				),
+			},
+			{
+				Config: testAccModelConfig_vpcSubnetsUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+				),
+			},
+			{
+				Config: testAccModelConfig_vpcSecurityGroupsUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSageMakerModel_primaryContainerPrivateDockerRegistry(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -490,7 +537,7 @@ func testAccCheckModelExists(ctx context.Context, n string) resource.TestCheckFu
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No sagmaker model ID is set")
+			return fmt.Errorf("No sagemaker model ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -1086,6 +1133,66 @@ resource "aws_security_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccModelConfig_vpcSubnetsUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+  resource "aws_sagemaker_model" "test" {
+    name                     = %[1]q
+    execution_role_arn       = aws_iam_role.test.arn
+    enable_network_isolation = true
+
+    primary_container {
+      image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    }
+
+    vpc_config {
+      subnets            = aws_subnet.test[*].id
+      security_group_ids = aws_security_group.test[*].id
+    }
+  }
+
+  resource "aws_security_group" "test" {
+    count = 2
+
+    name   = "%[1]s-${count.index}"
+    vpc_id = aws_vpc.test.id
+
+    tags = {
+      Name = %[1]q
+    }
+  }
+  `, rName))
+}
+
+func testAccModelConfig_vpcSecurityGroupsUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+  resource "aws_sagemaker_model" "test" {
+    name                     = %[1]q
+    execution_role_arn       = aws_iam_role.test.arn
+    enable_network_isolation = true
+
+    primary_container {
+      image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    }
+
+    vpc_config {
+      subnets            = aws_subnet.test[*].id
+      security_group_ids = aws_security_group.test[*].id
+    }
+  }
+
+  resource "aws_security_group" "test" {
+    count = 3
+
+    name   = "%[1]s-${count.index}"
+    vpc_id = aws_vpc.test.id
+
+    tags = {
+      Name = %[1]q
+    }
+  }
+  `, rName))
 }
 
 // lintignore:AWSAT003,AWSAT005
