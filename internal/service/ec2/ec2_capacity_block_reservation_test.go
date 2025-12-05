@@ -19,6 +19,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// NOTE on pricing
+//
+// Due to pricing, Capacity Block Reservation tests are skipped by default.
+// They can be run by setting the environment variable TF_AWS_RUN_EC2_CAPACITY_BLOCK_RESERVATION_TESTS.
+//
+// https://aws.amazon.com/ec2/capacityblocks/pricing/
+//
+// As of 2025-12-04, the instance types available in more than one region have the following hourly costs:
+// p6-b200.48xlarge: $74.88  USD
+// p5.48xlarge:      $31.464 USD
+// p5.4xlarge:        $3.933 USD
+// p5e.48xlarge:     $34.608 USD
+
 func TestAccEC2CapacityBlockReservation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -79,7 +92,7 @@ func testAccCheckCapacityBlockReservationExists(ctx context.Context, n string, v
 func testAccCapacityBlockReservationConfig_basic(startDate, endDate string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_capacity_block_offering" "test" {
-  instance_type           = "p4d.24xlarge"
+  instance_type           = "p5.4xlarge"
   capacity_duration_hours = 24
   instance_count          = 1
   start_date_range        = %[1]q
