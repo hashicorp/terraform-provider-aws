@@ -48,6 +48,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.52.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.52.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.2.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/athena v1.56.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.62.2 // indirect
@@ -55,7 +56,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/batch v1.58.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.51.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.52.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.15.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.9.3 // indirect
@@ -173,7 +174,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.33.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.49.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.46.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.85.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.86.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.13.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.34.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.59.1 // indirect
@@ -246,7 +247,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.227.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.228.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.40.3 // indirect
@@ -334,7 +335,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.29.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.10.0 // indirect
-	github.com/hashicorp/terraform-plugin-testing v1.14.0-beta.1.0.20251013071646-7ed2ee242705 // indirect
+	github.com/hashicorp/terraform-plugin-testing v1.14.0 // indirect
 	github.com/hashicorp/terraform-registry-address v0.4.0 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
