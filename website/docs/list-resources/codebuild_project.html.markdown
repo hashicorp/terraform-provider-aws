@@ -8,8 +8,6 @@ description: |-
 
 # List Resource: aws_codebuild_project
 
-~> **Note:** The `aws_codebuild_project` List Resource is in beta and may change in future versions of the provider.
-
 Lists CodeBuild Project resources.
 
 ## Example Usage
