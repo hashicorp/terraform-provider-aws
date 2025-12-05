@@ -332,6 +332,11 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 }
 
 func updateEnableAcceleratedRecovery(ctx context.Context, conn *route53.Client, zoneID string, enabled bool, timeout time.Duration) error {
+	const zoneMutexKey = "aws_route53_zone_accelerated_recovery"
+
+	conns.GlobalMutexKV.Lock(zoneMutexKey)
+	defer conns.GlobalMutexKV.Unlock(zoneMutexKey)
+
 	input := route53.UpdateHostedZoneFeaturesInput{
 		HostedZoneId:              aws.String(zoneID),
 		EnableAcceleratedRecovery: aws.Bool(enabled),
