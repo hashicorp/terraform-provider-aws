@@ -453,6 +453,77 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								},
 							},
 						},
+						"opensearch_managed_cluster_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchManagedClusterConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"domain_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"domain_endpoint": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.String{
+											stringvalidator.RegexMatches(
+												regexache.MustCompile(`^https://.*$`),
+												"must be a valid HTTPS URL",
+											),
+										},
+									},
+									"vector_index_name": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"field_mapping": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchManagedClusterFieldMappingModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"metadata_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"text_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"vector_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"opensearch_serverless_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchServerlessConfigurationModel](ctx),
 							Validators: []validator.List{
@@ -857,11 +928,12 @@ type kendraKnowledgeBaseConfigurationModel struct {
 }
 
 type storageConfigurationModel struct {
-	OpensearchServerlessConfiguration fwtypes.ListNestedObjectValueOf[opensearchServerlessConfigurationModel] `tfsdk:"opensearch_serverless_configuration"`
-	PineconeConfiguration             fwtypes.ListNestedObjectValueOf[pineconeConfigurationModel]             `tfsdk:"pinecone_configuration"`
-	RDSConfiguration                  fwtypes.ListNestedObjectValueOf[rdsConfigurationModel]                  `tfsdk:"rds_configuration"`
-	RedisEnterpriseCloudConfiguration fwtypes.ListNestedObjectValueOf[redisEnterpriseCloudConfigurationModel] `tfsdk:"redis_enterprise_cloud_configuration"`
-	Type                              types.String                                                            `tfsdk:"type"`
+	OpensearchManagedClusterConfiguration fwtypes.ListNestedObjectValueOf[opensearchManagedClusterConfigurationModel] `tfsdk:"opensearch_managed_cluster_configuration"`
+	OpensearchServerlessConfiguration     fwtypes.ListNestedObjectValueOf[opensearchServerlessConfigurationModel]     `tfsdk:"opensearch_serverless_configuration"`
+	PineconeConfiguration                 fwtypes.ListNestedObjectValueOf[pineconeConfigurationModel]                 `tfsdk:"pinecone_configuration"`
+	RDSConfiguration                      fwtypes.ListNestedObjectValueOf[rdsConfigurationModel]                      `tfsdk:"rds_configuration"`
+	RedisEnterpriseCloudConfiguration     fwtypes.ListNestedObjectValueOf[redisEnterpriseCloudConfigurationModel]     `tfsdk:"redis_enterprise_cloud_configuration"`
+	Type                                  types.String                                                                `tfsdk:"type"`
 }
 
 type opensearchServerlessConfigurationModel struct {
@@ -871,6 +943,19 @@ type opensearchServerlessConfigurationModel struct {
 }
 
 type opensearchServerlessFieldMappingModel struct {
+	MetadataField types.String `tfsdk:"metadata_field"`
+	TextField     types.String `tfsdk:"text_field"`
+	VectorField   types.String `tfsdk:"vector_field"`
+}
+
+type opensearchManagedClusterConfigurationModel struct {
+	DomainARN       fwtypes.ARN                                                                `tfsdk:"domain_arn"`
+	DomainEndpoint  types.String                                                               `tfsdk:"domain_endpoint"`
+	FieldMapping    fwtypes.ListNestedObjectValueOf[opensearchManagedClusterFieldMappingModel] `tfsdk:"field_mapping"`
+	VectorIndexName types.String                                                               `tfsdk:"vector_index_name"`
+}
+
+type opensearchManagedClusterFieldMappingModel struct {
 	MetadataField types.String `tfsdk:"metadata_field"`
 	TextField     types.String `tfsdk:"text_field"`
 	VectorField   types.String `tfsdk:"vector_field"`
