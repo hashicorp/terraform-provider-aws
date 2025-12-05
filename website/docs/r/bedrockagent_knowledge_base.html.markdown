@@ -206,7 +206,6 @@ The `storage_configuration` configuration block supports the following arguments
 * `rds_configuration` - (Optional) Details about the storage configuration of the knowledge base in Amazon RDS. For more information, see [Create a vector index in Amazon RDS](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-setup.html). See [`rds_configuration` block](#rds_configuration-block) for details.
 * `redis_enterprise_cloud_configuration` - (Optional) The storage configuration of the knowledge base in Redis Enterprise Cloud. See [`redis_enterprise_cloud_configuration` block](#redis_enterprise_cloud_configuration-block) for details.
 
-
 ### `opensearch_managed_cluster_configuration` block
 
 The `opensearch_managed_cluster_configuration` configuration block supports the following arguments:
