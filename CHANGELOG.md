@@ -1,5 +1,9 @@
 ## 6.26.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_lambda_capacity_provider: Add resource identity support ([#45456](https://github.com/hashicorp/terraform-provider-aws/issues/45456))
+
 ## 6.25.0 (December 4, 2025)
 
 FEATURES:
