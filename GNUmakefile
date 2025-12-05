@@ -195,6 +195,10 @@ copyright: ## [CI] Copyright Checks / add headers check
 	@echo "make: Copyright Checks / add headers check..."
 	@.ci/scripts/copyright-check.sh
 
+copyright-fix: ## Fix copyright headers (replaces HashiCorp with IBM format)
+	@echo "make: Fixing copyright headers..."
+	@.ci/scripts/copyright-fix.sh
+
 deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
 	@echo "make: Dependency Checks / go_mod..."
 	@git diff --exit-code -- go.mod go.sum || \
