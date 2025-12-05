@@ -7,6 +7,19 @@
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfExpanderListNestedObject"
   },
   {
+    "@level": "debug",
+    "@message": "Checking XML wrapper special case",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpanderSinglePtr",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfExpanderListNestedObject",
+    "isXMLWrapper": false,
+    "sourceKind": "struct",
+    "sourceType": "flex.awsExpanderSinglePtr",
+    "toType": "*flex.tfExpanderListNestedObject"
+  },
+  {
     "@level": "info",
     "@message": "Converting",
     "@module": "provider.autoflex",

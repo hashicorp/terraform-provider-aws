@@ -1,0 +1,54 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+  },
+  {
+    "@level": "debug",
+    "@message": "Checking XML wrapper special case",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "isXMLWrapper": false,
+    "sourceKind": "struct",
+    "sourceType": "flex.sourceStruct",
+    "toType": "*flex.targetStruct"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "XMLWrapper",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.fieldname": "XMLWrapper",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+  },
+  {
+    "@level": "trace",
+    "@message": "Converting nil pointer to XML wrapper struct to null collection",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "XMLWrapper",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.fieldname": "XMLWrapper",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "wrapper_field": "Items"
+  }
+]

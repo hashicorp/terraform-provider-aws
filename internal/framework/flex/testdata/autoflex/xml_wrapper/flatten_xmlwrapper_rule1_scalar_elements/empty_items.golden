@@ -1,0 +1,112 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+  },
+  {
+    "@level": "debug",
+    "@message": "Checking XML wrapper special case",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "isXMLWrapper": false,
+    "sourceKind": "struct",
+    "sourceType": "flex.sourceStruct",
+    "toType": "*flex.targetStruct"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "XMLWrapper",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.fieldname": "XMLWrapper",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+  },
+  {
+    "@level": "trace",
+    "@message": "Converting pointer to XML wrapper struct to collection via wrapper tag",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "XMLWrapper",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.fieldname": "XMLWrapper",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "flexer_type": "*flex.autoFlattener",
+    "wrapper_field": "Items"
+  },
+  {
+    "@level": "trace",
+    "@message": "Starting XML wrapper flatten",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "source_type": "flex.testXMLWrapperScalar",
+    "target_type": "SetTypeOf[basetypes.StringValue]",
+    "wrapper_field": "Items"
+  },
+  {
+    "@level": "trace",
+    "@message": "Found Items field",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "items_is_nil": false,
+    "items_kind": "slice",
+    "items_len": 0,
+    "items_type": "[]string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Using target element type",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "element_type": "basetypes.StringType"
+  },
+  {
+    "@level": "trace",
+    "@message": "Converting items to set elements",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "items_count": 0,
+    "valid_count": 0
+  },
+  {
+    "@level": "trace",
+    "@message": "Creating set value",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "element_count": 0,
+    "element_type": "basetypes.StringType"
+  }
+]

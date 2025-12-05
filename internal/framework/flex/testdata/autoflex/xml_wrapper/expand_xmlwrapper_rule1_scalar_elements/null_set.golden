@@ -1,0 +1,27 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testXMLWrapperScalar"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testXMLWrapperScalar"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding null value",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testXMLWrapperScalar"
+  }
+]
