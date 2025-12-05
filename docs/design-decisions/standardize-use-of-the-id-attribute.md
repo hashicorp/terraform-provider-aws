@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Standardize Use of the `id` Attribute
 
 **Summary:** Define a standard for use of the `id` attribute given improvements to provider development and testing libraries have removed its requirement.  

@@ -45,6 +45,11 @@ while IFS= read -r file; do
 	check_file "$file" "#" "^# Copyright IBM Corp\. 2014, 2025$" || MISSING=$((MISSING + 1))
 done < <(find . -name "*.py" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*")
 
+# Check Markdown files (use HTML comments)
+while IFS= read -r file; do
+	check_file "$file" "<!--" "^<!-- Copyright IBM Corp\. 2014, 2025 -->$" || MISSING=$((MISSING + 1))
+done < <(find . -name "*.md" -type f ! -path "./vendor/*" ! -path "./.ci/*" ! -path "./.github/*" ! -path "./.teamcity/*" ! -path "./.release/*" ! -path "./examples/*" ! -path "./website/*" ! -path "./CHANGELOG.md" ! -path "./README.md")
+
 if [[ $MISSING -gt 0 ]]; then
 	echo ""
 	echo "Error: $MISSING files missing correct copyright header"

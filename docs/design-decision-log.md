@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Design Decision Log
 
 This serves as an index over the various decisions we make as a maintainer team over what is considered best practice, and
