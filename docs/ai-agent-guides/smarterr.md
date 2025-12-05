@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # smarterr Migration Guide
 
 **AI and Human Contributors:** Follow these exact patterns to migrate Terraform AWS Provider error handling to smarterr/smerr.

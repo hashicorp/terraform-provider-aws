@@ -191,9 +191,13 @@ clean-tidy: prereq-go ## Clean up tidy
 	$$gover mod tidy
 	@echo "make: Go mods tidied"
 
-copyright: ## [CI] Copyright Checks / add headers check
+copyright: ## [CI] Copyright Checks / add headers check (supports PKG=<service>)
 	@echo "make: Copyright Checks / add headers check..."
-	@copywrite headers
+	@PKG=$(if $(PKG),$(PKG),$(K)) .ci/scripts/copyright-check.sh
+
+copyright-fix: ## Fix copyright headers (supports PKG=<service>)
+	@echo "make: Fixing copyright headers..."
+	@PKG=$(if $(PKG),$(PKG),$(K)) .ci/scripts/copyright-fix.sh
 
 deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
 	@echo "make: Dependency Checks / go_mod..."
@@ -416,7 +420,7 @@ quick-fix-heading: ## Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix: quick-fix-heading fmt testacc-lint-fix fix-imports modern-fix semgrep-fix website-terrafmt-fix ## Some quick fixes
+quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports modern-fix semgrep-fix website-terrafmt-fix ## Some quick fixes
 
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."

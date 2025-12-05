@@ -1,6 +1,6 @@
-// Copyright (c) HashiCorp, Inc.
-// Copyright 2025 Twilio Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
+// Copyright 2025 Twilio Inc.
 
 package logs_test
 

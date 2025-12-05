@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate go run ../../generate/listpages/main.go -ListOps=DescribeListenerCertificates -InputPaginator=Marker -OutputPaginator=NextMarker -- list_listener_certificates_pages_gen.go
