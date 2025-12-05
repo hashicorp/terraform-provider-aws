@@ -7,24 +7,7 @@ set -euo pipefail
 FIXED=0
 ADDED=0
 
-# Explicit exemptions (same as copyright-check.sh)
-EXEMPT_FILES=(
-	"./internal/service/odb/cloud_vm_clusters_data_source_test.go"
-	"./internal/service/eks/token.go"
-)
-
-is_exempt() {
-	local file="$1"
-	for exempt in "${EXEMPT_FILES[@]}"; do
-		[[ "$file" == "$exempt" ]] && return 0
-	done
-	return 1
-}
-
 while IFS= read -r file; do
-	# Skip exempt files
-	is_exempt "$file" && continue
-	
 	FIRST_LINE=$(head -1 "$file")
 	
 	# Skip generated files
