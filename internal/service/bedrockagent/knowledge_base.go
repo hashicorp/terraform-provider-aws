@@ -17,7 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -496,6 +498,53 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								},
 							},
 						},
+						"s3_vectors_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3VectorsConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"index_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.String{
+											stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("index_name"), path.MatchRelative().AtParent().AtName("vector_bucket_arn")),
+										},
+									},
+									"index_name": schema.StringAttribute{
+										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.String{
+											stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("vector_bucket_arn")),
+											stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("index_arn")),
+										},
+									},
+									"vector_bucket_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.String{
+											stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("index_name")),
+											stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("index_arn")),
+										},
+									},
+								},
+								Validators: []validator.Object{
+									objectvalidator.AtLeastOneOf(path.MatchRelative().AtName("index_arn"), path.MatchRelative().AtName("index_name")),
+								},
+							},
+						},
 					},
 				},
 			},
@@ -840,6 +889,7 @@ type storageConfigurationModel struct {
 	PineconeConfiguration             fwtypes.ListNestedObjectValueOf[pineconeConfigurationModel]             `tfsdk:"pinecone_configuration"`
 	RDSConfiguration                  fwtypes.ListNestedObjectValueOf[rdsConfigurationModel]                  `tfsdk:"rds_configuration"`
 	RedisEnterpriseCloudConfiguration fwtypes.ListNestedObjectValueOf[redisEnterpriseCloudConfigurationModel] `tfsdk:"redis_enterprise_cloud_configuration"`
+	S3VectorsConfiguration            fwtypes.ListNestedObjectValueOf[s3VectorsConfigurationModel]            `tfsdk:"s3_vectors_configuration"`
 	Type                              types.String                                                            `tfsdk:"type"`
 }
 
@@ -894,4 +944,10 @@ type redisEnterpriseCloudFieldMappingModel struct {
 	MetadataField types.String `tfsdk:"metadata_field"`
 	TextField     types.String `tfsdk:"text_field"`
 	VectorField   types.String `tfsdk:"vector_field"`
+}
+
+type s3VectorsConfigurationModel struct {
+	IndexARN        fwtypes.ARN  `tfsdk:"index_arn"`
+	IndexName       types.String `tfsdk:"index_name"`
+	VectorBucketARN fwtypes.ARN  `tfsdk:"vector_bucket_arn"`
 }
