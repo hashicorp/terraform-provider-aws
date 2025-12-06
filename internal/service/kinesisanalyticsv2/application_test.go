@@ -4215,6 +4215,68 @@ func TestAccKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) 
 	})
 }
 
+func TestAccKinesisAnalyticsV2Application_ApplicationEncryptionConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ApplicationDetail
+	resourceName := "aws_kinesisanalyticsv2_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	kmsKey1ResourceName := "aws_kms_key.test.0"
+	kmsKey2ResourceName := "aws_kms_key.test.1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisAnalyticsV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_encryptionConfiguration(rName, "CUSTOMER_MANAGED_CMK", 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.0.key_type", "CUSTOMER_MANAGED_CMK"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_encryption_configuration.0.key_id", kmsKey1ResourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_encryptionConfiguration(rName, "CUSTOMER_MANAGED_CMK", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.0.key_type", "CUSTOMER_MANAGED_CMK"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_encryption_configuration.0.key_id", kmsKey2ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_encryptionConfiguration(rName, "AWS_OWNED_CMK", 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.0.key_type", "AWS_OWNED_CMK"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.0.key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
@@ -6156,4 +6218,41 @@ resource "aws_kinesisanalyticsv2_application" "test" {
   start_application = true
 }
 `, rName))
+}
+
+func testAccApplicationConfig_encryptionConfiguration(rName, keyType string, keyIndex int) string {
+	return acctest.ConfigCompose(
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
+		testAccApplicationConfig_baseKMSKeys(rName, 2),
+		fmt.Sprintf(`
+resource "aws_kinesisanalyticsv2_application" "test" {
+  name                   = %[1]q
+  runtime_environment    = "SQL-1_0"
+  service_execution_role = aws_iam_role.test[0].arn
+
+  application_configuration {
+    application_encryption_configuration {
+      key_type = %[2]q
+      %[3]s
+    }
+  }
+}
+`, rName, keyType,
+			func() string {
+				if keyType == "CUSTOMER_MANAGED_CMK" {
+					return fmt.Sprintf(`key_id = aws_kms_key.test[%d].arn`, keyIndex)
+				}
+				return ""
+			}()))
+}
+
+func testAccApplicationConfig_baseKMSKeys(rName string, count int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  count = %[2]d
+
+  description             = "%[1]s-${count.index}"
+  deletion_window_in_days = 7
+}
+`, rName, count)
 }

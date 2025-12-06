@@ -315,6 +315,26 @@ func resourceApplication() *schema.Resource {
 								},
 								ConflictsWith: []string{"application_configuration.0.sql_application_configuration"},
 							},
+							"application_encryption_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"key_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.KeyType](),
+										},
+										"key_id": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
 							"sql_application_configuration": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -1847,6 +1867,11 @@ func expandApplicationConfiguration(vApplicationConfiguration []any) *awstypes.A
 		applicationConfiguration.EnvironmentProperties = environmentProperties
 	}
 
+	// Handle application encryption configuration
+	if vApplicationEncryptionConfiguration, ok := mApplicationConfiguration["application_encryption_configuration"].([]any); ok && len(vApplicationEncryptionConfiguration) > 0 && vApplicationEncryptionConfiguration[0] != nil {
+		applicationConfiguration.ApplicationEncryptionConfiguration = expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguration)
+	}
+
 	if vFlinkApplicationConfiguration, ok := mApplicationConfiguration["flink_application_configuration"].([]any); ok && len(vFlinkApplicationConfiguration) > 0 && vFlinkApplicationConfiguration[0] != nil {
 		flinkApplicationConfiguration := &awstypes.FlinkApplicationConfiguration{}
 
@@ -2737,6 +2762,18 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 		mApplicationConfiguration["environment_properties"] = []any{mEnvironmentProperties}
 	}
 
+	// Add application encryption configuration if present
+	if appConfigDesc := applicationConfigurationDescription; appConfigDesc != nil {
+		if encConfig := appConfigDesc.ApplicationEncryptionConfigurationDescription; encConfig != nil {
+			// Convert the description to the format expected by the helper function
+			encryptionConfig := &awstypes.ApplicationEncryptionConfiguration{
+				KeyType: encConfig.KeyType,
+				KeyId:   encConfig.KeyId,
+			}
+			mApplicationConfiguration["application_encryption_configuration"] = flattenApplicationEncryptionConfiguration(encryptionConfig)
+		}
+	}
+
 	if flinkApplicationConfigurationDescription := applicationConfigurationDescription.FlinkApplicationConfigurationDescription; flinkApplicationConfigurationDescription != nil {
 		mFlinkApplicationConfiguration := map[string]any{}
 
@@ -3098,4 +3135,39 @@ func expandStopApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.Stop
 	}
 
 	return apiObject
+}
+
+func expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguration []any) *awstypes.ApplicationEncryptionConfiguration {
+	if len(vApplicationEncryptionConfiguration) == 0 || vApplicationEncryptionConfiguration[0] == nil {
+		return nil
+	}
+
+	mApplicationEncryptionConfiguration := vApplicationEncryptionConfiguration[0].(map[string]any)
+	applicationEncryptionConfiguration := &awstypes.ApplicationEncryptionConfiguration{}
+
+	if vKeyType, ok := mApplicationEncryptionConfiguration["key_type"].(string); ok && vKeyType != "" {
+		applicationEncryptionConfiguration.KeyType = awstypes.KeyType(vKeyType)
+	}
+
+	if vKeyID, ok := mApplicationEncryptionConfiguration["key_id"].(string); ok && vKeyID != "" {
+		applicationEncryptionConfiguration.KeyId = aws.String(vKeyID)
+	}
+
+	return applicationEncryptionConfiguration
+}
+
+func flattenApplicationEncryptionConfiguration(applicationEncryptionConfiguration *awstypes.ApplicationEncryptionConfiguration) []any {
+	if applicationEncryptionConfiguration == nil {
+		return []any{}
+	}
+
+	mApplicationEncryptionConfiguration := map[string]any{
+		"key_type": string(applicationEncryptionConfiguration.KeyType),
+	}
+
+	if applicationEncryptionConfiguration.KeyId != nil {
+		mApplicationEncryptionConfiguration["key_id"] = aws.ToString(applicationEncryptionConfiguration.KeyId)
+	}
+
+	return []any{mApplicationEncryptionConfiguration}
 }
