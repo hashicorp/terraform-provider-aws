@@ -106,7 +106,7 @@ func (r *indexResource) Schema(ctx context.Context, request resource.SchemaReque
 		},
 		Blocks: map[string]schema.Block{
 			"metadata_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[metadataConfigurationModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[indexMetadataConfigurationModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
@@ -289,7 +289,7 @@ type indexResourceModel struct {
 	EncryptionConfiguration fwtypes.ListNestedObjectValueOf[indexEncryptionConfigurationModel] `tfsdk:"encryption_configuration"`
 	IndexARN                types.String                                                       `tfsdk:"index_arn"`
 	IndexName               types.String                                                       `tfsdk:"index_name"`
-	MetadataConfiguration   fwtypes.ListNestedObjectValueOf[metadataConfigurationModel]        `tfsdk:"metadata_configuration"`
+	MetadataConfiguration   fwtypes.ListNestedObjectValueOf[indexMetadataConfigurationModel]   `tfsdk:"metadata_configuration"`
 	Tags                    tftags.Map                                                         `tfsdk:"tags"`
 	TagsAll                 tftags.Map                                                         `tfsdk:"tags_all"`
 	VectorBucketName        types.String                                                       `tfsdk:"vector_bucket_name"`
@@ -300,6 +300,6 @@ type indexEncryptionConfigurationModel struct {
 	SseType   fwtypes.StringEnum[awstypes.SseType] `tfsdk:"sse_type"`
 }
 
-type metadataConfigurationModel struct {
+type indexMetadataConfigurationModel struct {
 	NonFilterableMetadataKeys fwtypes.SetOfString `tfsdk:"non_filterable_metadata_keys"`
 }
