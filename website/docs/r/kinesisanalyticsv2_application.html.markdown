@@ -257,7 +257,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the application.
-* `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`, `FLINK-1_15`, `FLINK-1_18`, `FLINK-1_19`.
+* `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`, `FLINK-1_15`, `FLINK-1_18`, `FLINK-1_19`, `FLINK-1_20`.
 * `service_execution_role` - (Required) The ARN of the [IAM role](/docs/providers/aws/r/iam_role.html) used by the application to access Kinesis data streams, Kinesis Data Firehose delivery streams, Amazon S3 objects, and other external resources.
 * `application_configuration` - (Optional) The application's configuration
 * `application_mode` - (Optional) The application's mode. Valid values are `STREAMING`, `INTERACTIVE`.
@@ -270,6 +270,9 @@ This resource supports the following arguments:
 The `application_configuration` object supports the following:
 
 * `application_code_configuration` - (Required) The code location and type parameters for the application.
+* `application_encryption_configuration` - (Optional) The encryption configuration for the application. This can be used to encrypt data at rest in the application.
+  * `key_type` - (Required) The type of encryption key to use. Valid values: `CUSTOMER_MANAGED_CMK`, `AWS_OWNED_CMK`.
+  * `key_id` - (Optional) The ARN of the KMS key to use for encryption. Required when `key_type` is set to `CUSTOMER_MANAGED_CMK`. The KMS key must be in the same region as the application.
 * `application_snapshot_configuration` - (Optional) Describes whether snapshots are enabled for a Flink-based application.
 * `environment_properties` - (Optional) Describes execution properties for a Flink-based application.
 * `flink_application_configuration` - (Optional) The configuration of a Flink-based application.
