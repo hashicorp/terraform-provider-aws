@@ -114,8 +114,8 @@ func (r *dataCellsFilterResource) Schema(ctx context.Context, _ resource.SchemaR
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"excluded_column_names": schema.ListAttribute{
-										CustomType: fwtypes.ListOfStringType,
+									"excluded_column_names": schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringType,
 										Optional:   true,
 									},
 								},
@@ -433,7 +433,7 @@ type tableData struct {
 }
 
 type columnWildcard struct {
-	ExcludedColumnNames fwtypes.ListValueOf[types.String] `tfsdk:"excluded_column_names"`
+	ExcludedColumnNames fwtypes.SetValueOf[types.String] `tfsdk:"excluded_column_names"`
 }
 
 type rowFilter struct {
