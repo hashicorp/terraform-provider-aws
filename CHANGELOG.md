@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_bedrockagent_agent: Add `session_summary_configuration.max_recent_sessions` argument ([#45449](https://github.com/hashicorp/terraform-provider-aws/issues/45449))
+* resource/aws_kinesisanalyticsv2_application: Add `application_configuration.application_encryption_configuration` block with `key_type` and `key_id` arguments ([#45356](https://github.com/hashicorp/terraform-provider-aws/issues/45356))
 * resource/aws_lambda_capacity_provider: Add resource identity support ([#45456](https://github.com/hashicorp/terraform-provider-aws/issues/45456))
 
 BUG FIXES:
