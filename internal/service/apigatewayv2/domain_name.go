@@ -125,6 +125,12 @@ func resourceDomainName() *schema.Resource {
 					},
 				},
 			},
+			"routing_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(flattenRoutingModeValues(awstypes.RoutingMode("").Values()), true),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -141,6 +147,9 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 		DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]any)),
 		MutualTlsAuthentication:  expandMutualTLSAuthenticationInput(d.Get("mutual_tls_authentication").([]any)),
 		Tags:                     getTagsIn(ctx),
+	}
+	if v, ok := d.GetOk("routing_mode"); ok {
+		input.RoutingMode = awstypes.RoutingMode(v.(string))
 	}
 
 	output, err := conn.CreateDomainName(ctx, &input)
@@ -184,6 +193,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta an
 	if err := d.Set("mutual_tls_authentication", flattenMutualTLSAuthentication(output.MutualTlsAuthentication)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mutual_tls_authentication: %s", err)
 	}
+	d.Set("routing_mode", output.RoutingMode)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -194,7 +204,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication") {
+	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication", "routing_mode") {
 		input := apigatewayv2.UpdateDomainNameInput{
 			DomainName:               aws.String(d.Id()),
 			DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]any)),
@@ -219,6 +229,10 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					TruststoreUri: aws.String(""),
 				}
 			}
+		}
+
+		if d.HasChange("routing_mode") {
+			input.RoutingMode = awstypes.RoutingMode(d.Get("routing_mode").(string))
 		}
 
 		_, err := conn.UpdateDomainName(ctx, &input)
@@ -279,6 +293,16 @@ func findDomainName(ctx context.Context, conn *apigatewayv2.Client, name string)
 	}
 
 	return output, nil
+}
+
+func flattenRoutingModeValues(t []awstypes.RoutingMode) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
 }
 
 func statusDomainName(ctx context.Context, conn *apigatewayv2.Client, name string) retry.StateRefreshFunc {
