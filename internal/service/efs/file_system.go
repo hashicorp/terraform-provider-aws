@@ -138,7 +138,9 @@ func resourceFileSystem() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(enum.Slice(
 								awstypes.ReplicationOverwriteProtectionEnabled,
 								awstypes.ReplicationOverwriteProtectionDisabled,
+								awstypes.ReplicationOverwriteProtectionReplicating,
 							), false),
+							DiffSuppressFunc: SuppressReplicationOverwriteProtectionDiff,
 						},
 					},
 				},
@@ -608,4 +610,23 @@ func flattenFileSystemProtectionDescription(apiObject *awstypes.FileSystemProtec
 	tfMap["replication_overwrite"] = apiObject.ReplicationOverwriteProtection
 
 	return []any{tfMap}
+}
+
+func SuppressReplicationOverwriteProtectionDiff(k, old, new string, d *schema.ResourceData) bool {
+	// When a file system becomes a replication destination, AWS automatically
+	// sets replication_overwrite to "REPLICATING". This is a read-only state
+	// that cannot be changed while replication is active. AWS rejects all
+	// update attempts with: "ReplicationOverwriteProtection cannot be changed
+	// while the file system is a replication destination."
+	//
+	// Suppress diff when current state is REPLICATING to prevent perpetual
+	// drift and failed update attempts. When replication is removed, AWS
+	// automatically allows the protection setting to be changed again.
+
+	if old == string(awstypes.ReplicationOverwriteProtectionReplicating) {
+		// REPLICATING is AWS-managed and read-only; suppress any attempted change
+		return true
+	}
+
+	return false
 }
