@@ -106,7 +106,7 @@ func TestAccS3VectorsIndex_encryptionConfigurationAES256(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("encryption_configuration").AtSliceIndex(0).AtMapKey("sse_type"), tfknownvalue.StringExact(awstypes.SseTypeAes256)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration).AtSliceIndex(0).AtMapKey("sse_type"), tfknownvalue.StringExact(awstypes.SseTypeAes256)),
 				},
 			},
 			{
@@ -146,8 +146,8 @@ func TestAccS3VectorsIndex_encryptionConfigurationCMK(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("encryption_configuration").AtSliceIndex(0).AtMapKey("sse_type"), tfknownvalue.StringExact(awstypes.SseTypeAwsKms)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("encryption_configuration").AtSliceIndex(0).AtMapKey("kms_key_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration).AtSliceIndex(0).AtMapKey("sse_type"), tfknownvalue.StringExact(awstypes.SseTypeAwsKms)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration).AtSliceIndex(0).AtMapKey(names.AttrKMSKeyARN), knownvalue.NotNull()),
 				},
 			},
 			{

@@ -79,7 +79,7 @@ func (r *indexResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"encryption_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[indexEncryptionConfigurationModel](ctx, 1, nil,
+			names.AttrEncryptionConfiguration: framework.ResourceOptionalComputedListOfObjectsAttribute[indexEncryptionConfigurationModel](ctx, 1, nil,
 				listplanmodifier.UseStateForUnknown(),
 				listplanmodifier.RequiresReplace(),
 			),
