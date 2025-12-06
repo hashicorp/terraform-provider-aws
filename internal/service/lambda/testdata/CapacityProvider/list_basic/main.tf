@@ -166,7 +166,7 @@ variable "rName" {
 }
 
 variable "resource_count" {
-    description = "Number of resources to create"
-    type        = number
-    nullable    = false
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
 }
