@@ -8,6 +8,7 @@ var (
 	ResourceCachePolicy                 = resourceCachePolicy
 	ResourceContinuousDeploymentPolicy  = newContinuousDeploymentPolicyResource
 	ResourceDistribution                = resourceDistribution
+	ResourceDistributionTenant          = newDistributionTenantResource
 	ResourceFieldLevelEncryptionConfig  = resourceFieldLevelEncryptionConfig
 	ResourceFieldLevelEncryptionProfile = resourceFieldLevelEncryptionProfile
 	ResourceFunction                    = resourceFunction
@@ -23,6 +24,7 @@ var (
 
 	FindCachePolicyByID                        = findCachePolicyByID
 	FindContinuousDeploymentPolicyByID         = findContinuousDeploymentPolicyByID
+	FindDistributionTenantByIdentifier         = findDistributionTenantByIdentifier
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
 	FindFieldLevelEncryptionProfileByID        = findFieldLevelEncryptionProfileByID
 	FindFunctionByTwoPartKey                   = findFunctionByTwoPartKey
