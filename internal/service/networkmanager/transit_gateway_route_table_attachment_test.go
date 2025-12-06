@@ -80,6 +80,67 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_disappears(t *testi
 	})
 }
 
+func TestAccNetworkManagerTransitGatewayRouteTableAttachment_routingPolicyLabel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.TransitGatewayRouteTableAttachment
+	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	label := "testlabel"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayRouteTableAttachmentConfig_routingPolicyLabel(rName, label),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerTransitGatewayRouteTableAttachment_routingPolicyLabelUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.TransitGatewayRouteTableAttachment
+	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	label1 := "testlabel1"
+	label2 := "testlabel2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayRouteTableAttachmentConfig_routingPolicyLabel(rName, label1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label1),
+				),
+			},
+			{
+				Config: testAccTransitGatewayRouteTableAttachmentConfig_routingPolicyLabel(rName, label2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTransitGatewayRouteTableAttachmentExists(ctx context.Context, n string, v *awstypes.TransitGatewayRouteTableAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -169,4 +230,135 @@ resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
 }
 `)
+}
+
+func testAccTransitGatewayRouteTableAttachmentConfig_baseWithRoutingPolicy(rName, label string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_policy_table" "test" {
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    # Don't overlap with default TGW ASN: 64512.
+    asn_ranges = ["65022-65534"]
+
+    edge_locations {
+      location = data.aws_region.current.region
+    }
+  }
+
+  segments {
+    name = "test"
+  }
+
+  routing_policies {
+    routing_policy_name      = "policy1"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
+        }
+
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+
+  attachment_routing_policy_rules {
+    rule_number = 1
+
+    conditions {
+      type  = "routing-policy-label"
+      value = %[2]q
+    }
+
+    action {
+      associate_routing_policies = ["policy1"]
+    }
+  }
+}
+
+resource "aws_networkmanager_transit_gateway_peering" "test" {
+  core_network_id     = aws_networkmanager_core_network.test.id
+  transit_gateway_arn = aws_ec2_transit_gateway.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_ec2_transit_gateway_policy_table.test, aws_networkmanager_core_network_policy_attachment.test]
+}
+
+resource "aws_ec2_transit_gateway_route_table" "test" {
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_policy_table_association" "test" {
+  transit_gateway_attachment_id   = aws_networkmanager_transit_gateway_peering.test.transit_gateway_peering_attachment_id
+  transit_gateway_policy_table_id = aws_ec2_transit_gateway_policy_table.test.id
+}
+`, rName, label)
+}
+
+func testAccTransitGatewayRouteTableAttachmentConfig_routingPolicyLabel(rName, label string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayRouteTableAttachmentConfig_baseWithRoutingPolicy(rName, label), fmt.Sprintf(`
+resource "aws_networkmanager_transit_gateway_route_table_attachment" "test" {
+  peering_id                      = aws_networkmanager_transit_gateway_peering.test.id
+  transit_gateway_route_table_arn = aws_ec2_transit_gateway_route_table.test.arn
+  routing_policy_label            = %[1]q
+
+  depends_on = [aws_ec2_transit_gateway_policy_table_association.test]
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_transit_gateway_route_table_attachment.test.id
+  attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
+}
+`, label))
 }

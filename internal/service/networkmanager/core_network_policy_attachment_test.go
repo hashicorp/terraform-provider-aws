@@ -435,3 +435,1258 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
 }
 `, acctest.Region())
 }
+
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPolicies(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPolicies(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"version":"2025.11"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policies":`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-name":"testpolicy"`)),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_attachmentRoutingPolicyRules(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_attachmentRoutingPolicyRules(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"version":"2025.11"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"attachment-routing-policy-rules":`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-label"`)),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorRoutingPoliciesWrongVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesWrongVersion(),
+				ExpectError: regexache.MustCompile(`routing_policies requires version 2025.11`),
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorAttachmentRoutingPolicyRulesWrongVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCoreNetworkPolicyAttachmentConfig_attachmentRoutingPolicyRulesWrongVersion(),
+				ExpectError: regexache.MustCompile(`attachment_routing_policy_rules requires version 2025.11`),
+			},
+		},
+	})
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_routingPolicies() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name                          = "segment"
+    require_attachment_acceptance = true
+  }
+
+  attachment_policies {
+    rule_number     = 100
+    condition_logic = "or"
+
+    conditions {
+      type = "tag-exists"
+      key  = "segment"
+    }
+
+    action {
+      association_method = "tag"
+      tag_value_of_key   = "segment"
+    }
+  }
+
+  routing_policies {
+    routing_policy_name      = "testpolicy"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+
+      rule_definition {
+        condition_logic = "and"
+
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
+        }
+
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_attachmentRoutingPolicyRules() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name                          = "segment"
+    require_attachment_acceptance = true
+  }
+
+  attachment_policies {
+    rule_number     = 100
+    condition_logic = "or"
+
+    conditions {
+      type = "tag-exists"
+      key  = "segment"
+    }
+
+    action {
+      association_method = "tag"
+      tag_value_of_key   = "segment"
+    }
+  }
+
+  routing_policies {
+    routing_policy_name      = "policy1"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
+        }
+
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+
+  routing_policies {
+    routing_policy_name      = "policy2"
+    routing_policy_direction = "outbound"
+    routing_policy_number    = 200
+
+    routing_policy_rules {
+      rule_number = 1
+
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "192.168.0.0/16"
+        }
+
+        action {
+          type = "drop"
+        }
+      }
+    }
+  }
+
+  attachment_routing_policy_rules {
+    rule_number = 1
+
+    conditions {
+      type  = "routing-policy-label"
+      value = "production"
+    }
+
+    action {
+      associate_routing_policies = ["policy1", "policy2"]
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesWrongVersion() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2021.12"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  routing_policies {
+    routing_policy_name      = "testpolicy"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+
+      rule_definition {
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_attachmentRoutingPolicyRulesWrongVersion() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2021.12"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  attachment_routing_policy_rules {
+    rule_number = 1
+
+    conditions {
+      type  = "routing-policy-label"
+      value = "production"
+    }
+
+    action {
+      associate_routing_policies = ["policy1"]
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}
+
+// Routing Policies - All Condition Types
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesAllConditionTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesAllConditionTypes(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prefix-equals"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prefix-in-cidr"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prefix-in-prefix-list"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"asn-in-as-path"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"community-in-list"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"med-equals"`)),
+				),
+			},
+		},
+	})
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesAllConditionTypes() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  routing_policies {
+    routing_policy_name      = "testallconditions"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 2
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "192.168.0.0/16"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 3
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-prefix-list"
+          value = "pl-12345678"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 4
+      rule_definition {
+        match_conditions {
+          type  = "asn-in-as-path"
+          value = "64512"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 5
+      rule_definition {
+        match_conditions {
+          type  = "community-in-list"
+          value = "65000:100"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 6
+      rule_definition {
+        match_conditions {
+          type  = "med-equals"
+          value = "50"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}
+
+// Routing Policies - All Action Types
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesAllActionTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesAllActionTypes(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"drop"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"allow"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"summarize"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prepend-asn-list"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"set-med"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"set-local-preference"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"add-community"`)),
+				),
+			},
+		},
+	})
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesAllActionTypes() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  routing_policies {
+    routing_policy_name      = "testallactions"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
+        }
+        action {
+          type = "drop"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 2
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.1.0.0/16"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 3
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "10.2.0.0/16"
+        }
+        action {
+          type = "summarize"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 4
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.3.0.0/16"
+        }
+        action {
+          type  = "prepend-asn-list"
+          value = "65001,65002"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 5
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.4.0.0/16"
+        }
+        action {
+          type  = "remove-asn-list"
+          value = "65003"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 6
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.5.0.0/16"
+        }
+        action {
+          type  = "replace-asn-list"
+          value = "65004,65005"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 7
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.6.0.0/16"
+        }
+        action {
+          type  = "add-community"
+          value = "65000:200"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 8
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.7.0.0/16"
+        }
+        action {
+          type  = "remove-community"
+          value = "65000:100"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 9
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.8.0.0/16"
+        }
+        action {
+          type  = "set-med"
+          value = "100"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 10
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.9.0.0/16"
+        }
+        action {
+          type  = "set-local-preference"
+          value = "200"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}
+
+// Routing Policies - Condition Logic AND
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesConditionLogicAnd(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesConditionLogicAnd(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"condition-logic":"and"`)),
+				),
+			},
+		},
+	})
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesConditionLogicAnd() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  routing_policies {
+    routing_policy_name      = "testandlogic"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        condition_logic = "and"
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
+        }
+        match_conditions {
+          type  = "asn-in-as-path"
+          value = "64512"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}
+
+// Routing Policies - Condition Logic OR
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesConditionLogicOr(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesConditionLogicOr(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"condition-logic":"or"`)),
+				),
+			},
+		},
+	})
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesConditionLogicOr() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  routing_policies {
+    routing_policy_name      = "testorlogic"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        condition_logic = "or"
+        match_conditions {
+          type  = "community-in-list"
+          value = "65000:100"
+        }
+        match_conditions {
+          type  = "med-equals"
+          value = "50"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}
+
+// Routing Policies - Multiple Policies
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesMultiplePolicies(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesMultiplePolicies(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-name":"inboundpolicy"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-name":"outboundpolicy"`)),
+				),
+			},
+		},
+	})
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesMultiplePolicies() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  routing_policies {
+    routing_policy_name      = "inboundpolicy"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        condition_logic = "and"
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+
+  routing_policies {
+    routing_policy_name      = "outboundpolicy"
+    routing_policy_direction = "outbound"
+    routing_policy_number    = 200
+
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        condition_logic = "and"
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "192.168.0.0/16"
+        }
+        action {
+          type  = "summarize"
+          value = "192.0.0.0/8"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}
+
+// Routing Policies - Outbound Direction
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesOutbound(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesOutbound(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-direction":"outbound"`)),
+				),
+			},
+		},
+	})
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesOutbound() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  routing_policies {
+    routing_policy_name      = "outboundtest"
+    routing_policy_direction = "outbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}
+
+// Routing Policies - With Description
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesWithDescription(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesWithDescription(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"routing-policy-description":"Filter and control inbound routes"`)),
+				),
+			},
+		},
+	})
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_routingPoliciesWithDescription() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  routing_policies {
+    routing_policy_name        = "testwithdescription"
+    routing_policy_description = "Filter and control inbound routes"
+    routing_policy_direction   = "inbound"
+    routing_policy_number      = 100
+
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}
+
+// Routing Policies - Error Duplicate Name
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorDuplicateRoutingPolicyName(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCoreNetworkPolicyAttachmentConfig_duplicateRoutingPolicyName(),
+				ExpectError: regexache.MustCompile(`duplicate routing_policy_name`),
+			},
+		},
+	})
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_duplicateRoutingPolicyName() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  routing_policies {
+    routing_policy_name      = "duplicatename"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+
+  routing_policies {
+    routing_policy_name      = "duplicatename"
+    routing_policy_direction = "outbound"
+    routing_policy_number    = 200
+
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "192.168.0.0/16"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}
+
+// Routing Policies - Error Duplicate Rule Number
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectErrorDuplicateRuleNumber(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCoreNetworkPolicyAttachmentConfig_duplicateRuleNumber(),
+				ExpectError: regexache.MustCompile(`duplicate rule_number`),
+			},
+		},
+	})
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_duplicateRuleNumber() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  routing_policies {
+    routing_policy_name      = "testpolicy"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "10.0.0.0/16"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        match_conditions {
+          type  = "prefix-equals"
+          value = "192.168.0.0/16"
+        }
+        action {
+          type = "drop"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
+}

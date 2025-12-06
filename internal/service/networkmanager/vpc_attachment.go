@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -172,6 +173,12 @@ func resourceVPCAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"routing_policy_label": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
 			"segment_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -215,6 +222,10 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.Options = expandVpcOptions(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("routing_policy_label"); ok {
+		input.RoutingPolicyLabel = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateVpcAttachment(ctx, input)
@@ -264,6 +275,14 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
+
+	// Get routing policy label from ListAttachmentRoutingPolicyAssociations API
+	routingPolicyLabel, err := findRoutingPolicyLabelByAttachmentID(ctx, conn, d.Id(), aws.ToString(attachment.CoreNetworkId))
+	if err != nil && !tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager VPC Attachment (%s) routing policy label: %s", d.Id(), err)
+	}
+	d.Set("routing_policy_label", routingPolicyLabel)
+
 	d.Set("segment_name", attachment.SegmentName)
 	d.Set(names.AttrState, attachment.State)
 	d.Set("subnet_arns", vpcAttachment.SubnetArns)
@@ -401,6 +420,33 @@ func findVPCAttachmentByID(ctx context.Context, conn *networkmanager.Client, id 
 	return output.VpcAttachment, nil
 }
 
+func findRoutingPolicyLabelByAttachmentID(ctx context.Context, conn *networkmanager.Client, id string, coreNetworkId string) (*string, error) {
+	input := &networkmanager.ListAttachmentRoutingPolicyAssociationsInput{
+		AttachmentId:  aws.String(id),
+		CoreNetworkId: aws.String(coreNetworkId),
+	}
+
+	output, err := conn.ListAttachmentRoutingPolicyAssociations(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.AttachmentRoutingPolicyAssociations) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	// Return the routing policy label from the first association
+	return output.AttachmentRoutingPolicyAssociations[0].RoutingPolicyLabel, nil
+}
+
 func statusVPCAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCAttachmentByID(ctx, conn, id)
@@ -477,7 +523,7 @@ func waitVPCAttachmenRejected(ctx context.Context, conn *networkmanager.Client, 
 
 func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.VpcAttachment, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
+		Pending:        enum.Slice(awstypes.AttachmentStateDeleting, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusVPCAttachment(ctx, conn, id),

@@ -12,12 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -98,6 +100,15 @@ func (r *directConnectGatewayAttachmentResource) Schema(ctx context.Context, req
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"routing_policy_label": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 256),
 				},
 			},
 			"segment_name": schema.StringAttribute{
@@ -204,6 +215,14 @@ func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, reque
 
 	data.ARN = fwflex.StringValueToFramework(ctx, attachmentARN(ctx, r.Meta(), data.ID.ValueString()))
 	data.DirectConnectGatewayARN = fwflex.StringToFrameworkARN(ctx, dxgwAttachment.DirectConnectGatewayArn)
+
+	// Get routing policy label from ListAttachmentRoutingPolicyAssociations API
+	routingPolicyLabel, err := findRoutingPolicyLabelByAttachmentID(ctx, conn, data.ID.ValueString(), data.CoreNetworkID.ValueString())
+	if err != nil && !tfresource.NotFound(err) {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s) routing policy label", data.ID.ValueString()), err.Error())
+		return
+	}
+	data.RoutingPolicyLabel = fwflex.StringToFramework(ctx, routingPolicyLabel)
 
 	setTagsOut(ctx, dxgwAttachment.Attachment.Tags)
 
@@ -397,7 +416,7 @@ func waitDirectConnectGatewayAttachmentUpdated(ctx context.Context, conn *networ
 
 func waitDirectConnectGatewayAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
+		Pending:        enum.Slice(awstypes.AttachmentStateDeleting, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:         []string{},
 		Refresh:        statusDirectConnectGatewayAttachment(ctx, conn, id),
 		Timeout:        timeout,
@@ -465,6 +484,7 @@ type directConnectGatewayAttachmentResourceModel struct {
 	EdgeLocations              fwtypes.ListOfString `tfsdk:"edge_locations"`
 	ID                         types.String         `tfsdk:"id"`
 	OwnerAccountId             types.String         `tfsdk:"owner_account_id"`
+	RoutingPolicyLabel         types.String         `tfsdk:"routing_policy_label"`
 	SegmentName                types.String         `tfsdk:"segment_name"`
 	State                      types.String         `tfsdk:"state"`
 	Tags                       tftags.Map           `tfsdk:"tags"`

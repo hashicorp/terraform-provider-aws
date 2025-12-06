@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -83,6 +84,12 @@ func resourceTransitGatewayRouteTableAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"routing_policy_label": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
 			"segment_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -113,6 +120,10 @@ func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *sc
 		PeeringId:                   aws.String(peeringID),
 		Tags:                        getTagsIn(ctx),
 		TransitGatewayRouteTableArn: aws.String(transitGatewayRouteTableARN),
+	}
+
+	if v, ok := d.GetOk("routing_policy_label"); ok {
+		input.RoutingPolicyLabel = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateTransitGatewayRouteTableAttachment(ctx, input)
@@ -156,6 +167,14 @@ func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *sche
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set("peering_id", transitGatewayRouteTableAttachment.PeeringId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
+
+	// Get routing policy label from ListAttachmentRoutingPolicyAssociations API
+	routingPolicyLabel, err := findRoutingPolicyLabelByAttachmentID(ctx, conn, d.Id(), aws.ToString(attachment.CoreNetworkId))
+	if err != nil && !tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Transit Gateway Route Table Attachment (%s) routing policy label: %s", d.Id(), err)
+	}
+	d.Set("routing_policy_label", routingPolicyLabel)
+
 	d.Set("segment_name", attachment.SegmentName)
 	d.Set(names.AttrState, attachment.State)
 	d.Set("transit_gateway_route_table_arn", transitGatewayRouteTableAttachment.TransitGatewayRouteTableArn)
@@ -257,7 +276,7 @@ func waitTransitGatewayRouteTableAttachmentCreated(ctx context.Context, conn *ne
 
 func waitTransitGatewayRouteTableAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayRouteTableAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
+		Pending:        enum.Slice(awstypes.AttachmentStateDeleting, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusTransitGatewayRouteTableAttachment(ctx, conn, id),
