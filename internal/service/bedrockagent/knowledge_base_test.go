@@ -404,6 +404,69 @@ func testAccKnowledgeBase_OpenSearch_supplementalDataStorage(t *testing.T) {
 	})
 }
 
+func testAccKnowledgeBase_S3Vectors(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var knowledgebase types.KnowledgeBase
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_knowledge_base.test"
+	foundationModel := "amazon.titan-embed-text-v2:0"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKnowledgeBaseConfig_S3VectorsByIndexARN(rName, foundationModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "S3_VECTORS"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.s3_vectors_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_configuration.0.s3_vectors_configuration.0.index_arn", "aws_s3vectors_index.test", "index_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKnowledgeBaseConfig_S3VectorsByIndexName(rName, foundationModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "S3_VECTORS"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.s3_vectors_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_configuration.0.s3_vectors_configuration.0.index_name", "aws_s3vectors_index.test", "index_name"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKnowledgeBaseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
@@ -941,6 +1004,141 @@ resource "aws_bedrockagent_knowledge_base" "test" {
         text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
         metadata_field = "AMAZON_BEDROCK_METADATA"
       }
+    }
+  }
+}
+`, rName, model))
+}
+
+func testAccKnowledgeBaseConfig_S3VectorsBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+data "aws_iam_policy_document" "assume_role_bedrock" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+data "aws_iam_policy_document" "bedrock" {
+  statement {
+    effect    = "Allow"
+    actions   = ["bedrock:InvokeModel"]
+    resources = ["*"]
+  }
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:ListBucket", "s3:GetObject"]
+    resources = ["*"]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3vectors:GetIndex",
+      "s3vectors:QueryVectors",
+      "s3vectors:PutVectors",
+      "s3vectors:GetVectors",
+      "s3vectors:DeleteVectors"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role" "test" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role_bedrock.json
+  name               = %[1]q
+}
+
+resource "aws_iam_role_policy" "test" {
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.bedrock.json
+}
+
+resource "aws_s3vectors_vector_bucket" "test" {
+  vector_bucket_name = %[1]q
+  force_destroy      = true
+}
+
+resource "aws_s3vectors_index" "test" {
+  index_name         = %[1]q
+  vector_bucket_name = aws_s3vectors_vector_bucket.test.vector_bucket_name
+
+  data_type       = "float32"
+  dimension       = 256
+  distance_metric = "euclidean"
+}
+`, rName)
+}
+
+func testAccKnowledgeBaseConfig_S3VectorsByIndexARN(rName, model string) string {
+	return acctest.ConfigCompose(
+		testAccKnowledgeBaseConfig_S3VectorsBase(rName),
+		fmt.Sprintf(`
+resource "aws_bedrockagent_knowledge_base" "test" {
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
+      embedding_model_configuration {
+        bedrock_embedding_model_configuration {
+          dimensions          = 256
+          embedding_data_type = "FLOAT32"
+        }
+      }
+    }
+    type = "VECTOR"
+  }
+
+  storage_configuration {
+    type = "S3_VECTORS"
+    s3_vectors_configuration {
+      index_arn = aws_s3vectors_index.test.index_arn
+    }
+  }
+}
+`, rName, model))
+}
+
+func testAccKnowledgeBaseConfig_S3VectorsByIndexName(rName, model string) string {
+	return acctest.ConfigCompose(
+		testAccKnowledgeBaseConfig_S3VectorsBase(rName),
+		fmt.Sprintf(`
+resource "aws_bedrockagent_knowledge_base" "test" {
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
+      embedding_model_configuration {
+        bedrock_embedding_model_configuration {
+          dimensions          = 256
+          embedding_data_type = "FLOAT32"
+        }
+      }
+    }
+    type = "VECTOR"
+  }
+
+  storage_configuration {
+    type = "S3_VECTORS"
+    s3_vectors_configuration {
+      index_name        = aws_s3vectors_index.test.index_name
+      vector_bucket_arn = aws_s3vectors_vector_bucket.test.vector_bucket_arn
     }
   }
 }
