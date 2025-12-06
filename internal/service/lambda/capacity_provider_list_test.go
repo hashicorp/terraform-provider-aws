@@ -39,7 +39,8 @@ func TestAccLambdaCapacityProvider_List_Basic(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CapacityProvider/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("lambda", "capacity-provider:"+rName+"-0")),
@@ -53,7 +54,8 @@ func TestAccLambdaCapacityProvider_List_Basic(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CapacityProvider/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_lambda_capacity_provider.test", map[string]knownvalue.Check{
@@ -92,8 +94,9 @@ func TestAccLambdaCapacityProvider_List_RegionOverride(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CapacityProvider/list_region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:  config.StringVariable(rName),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("lambda", "capacity-provider:"+rName+"-0")),
@@ -107,8 +110,9 @@ func TestAccLambdaCapacityProvider_List_RegionOverride(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CapacityProvider/list_region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:  config.StringVariable(rName),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+					"resource_count": config.IntegerVariable(2),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					querycheck.ExpectIdentity("aws_lambda_capacity_provider.test", map[string]knownvalue.Check{

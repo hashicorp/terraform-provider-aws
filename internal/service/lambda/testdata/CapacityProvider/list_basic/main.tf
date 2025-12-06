@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_lambda_capacity_provider" "test" {
-  count = 2
+  count = var.resource_count
 
   name = "${var.rName}-${count.index}"
 
@@ -163,4 +163,10 @@ variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
+}
+
+variable "resource_count" {
+    description = "Number of resources to create"
+    type        = number
+    nullable    = false
 }
