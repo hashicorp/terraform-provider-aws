@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // Copyright 2025 Twilio Inc.
 // SPDX-License-Identifier: MPL-2.0
 
