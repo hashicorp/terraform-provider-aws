@@ -44,7 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/batch v1.58.9
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.8
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.51.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.9.3
@@ -157,7 +157,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/kms v1.49.2
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.46.2
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.85.0
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.86.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.13.15
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.59.1
@@ -230,7 +230,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.227.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.228.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.15
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.40.3
