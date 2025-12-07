@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -62,7 +63,7 @@ type coreNetworkPolicyRoutingPolicyRule struct {
 }
 
 type coreNetworkPolicyRoutingPolicyRuleDefinition struct {
-	ConditionLogic  string                                              `json:"condition-logic"`
+	ConditionLogic  string                                              `json:"condition-logic,omitempty"`
 	MatchConditions []*coreNetworkPolicyRoutingPolicyRuleMatchCondition `json:"match-conditions,omitempty"`
 	Action          *coreNetworkPolicyRoutingPolicyRuleAction           `json:"action,omitempty"`
 }
@@ -75,6 +76,36 @@ type coreNetworkPolicyRoutingPolicyRuleMatchCondition struct {
 type coreNetworkPolicyRoutingPolicyRuleAction struct {
 	Type  string `json:"type,omitempty"`
 	Value string `json:"value,omitempty"`
+}
+
+// MarshalJSON implements custom JSON marshaling for routing policy rule actions.
+// Some action types require arrays of integers: prepend-asn-list, remove-asn-list, replace-asn-list
+func (c coreNetworkPolicyRoutingPolicyRuleAction) MarshalJSON() ([]byte, error) {
+	// Types that require array of integers (ASN lists)
+	asnListTypes := map[string]bool{
+		"prepend-asn-list": true,
+		"remove-asn-list":  true,
+		"replace-asn-list": true,
+	}
+
+	if asnListTypes[c.Type] && c.Value != "" {
+		// Parse comma-separated ASN values into an array of integers
+		parts := strings.Split(c.Value, ",")
+		asnList := make([]int64, 0, len(parts))
+		for _, part := range parts {
+			if asn, err := strconv.ParseInt(strings.TrimSpace(part), 10, 64); err == nil {
+				asnList = append(asnList, asn)
+			}
+		}
+		return json.Marshal(map[string]any{
+			names.AttrType:  c.Type,
+			names.AttrValue: asnList,
+		})
+	}
+
+	// Default: marshal as strings
+	type Alias coreNetworkPolicyRoutingPolicyRuleAction
+	return json.Marshal((*Alias)(&c))
 }
 
 type coreNetworkPolicyNetworkFunctionGroup struct {
@@ -200,12 +231,11 @@ func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 }
 
 // MarshalJSON implements custom JSON marshaling for match conditions.
-// Some condition types (asn-in-as-path, med-equals) require the value to be a number, not a string.
+// Some condition types (asn-in-as-path) require the value to be a number, not a string.
 func (c coreNetworkPolicyRoutingPolicyRuleMatchCondition) MarshalJSON() ([]byte, error) {
 	// Types that require numeric values
 	numericTypes := map[string]bool{
 		"asn-in-as-path": true,
-		"med-equals":     true,
 	}
 
 	if numericTypes[c.Type] && c.Value != "" {

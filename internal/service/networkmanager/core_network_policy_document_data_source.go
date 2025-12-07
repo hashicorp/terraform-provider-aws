@@ -1151,6 +1151,15 @@ func expandCoreNetworkPolicyRoutingPolicies(tfList []any, version string) ([]*co
 		}
 		apiObject.RoutingPolicyRules = rules
 
+		// Validate that summarize action is only used with outbound policies
+		if apiObject.RoutingPolicyDirection == "inbound" {
+			for _, rule := range rules {
+				if rule.RuleDefinition != nil && rule.RuleDefinition.Action != nil && rule.RuleDefinition.Action.Type == "summarize" {
+					return nil, fmt.Errorf("summarize action cannot be used for inbound routing policies (routing_policy_name: %s, rule_number: %d)", apiObject.RoutingPolicyName, rule.RuleNumber)
+				}
+			}
+		}
+
 		apiObjects = append(apiObjects, apiObject)
 	}
 

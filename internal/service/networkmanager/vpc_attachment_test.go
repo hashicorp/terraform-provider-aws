@@ -553,17 +553,17 @@ func TestAccNetworkManagerVPCAttachment_routingPolicyLabelUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCAttachmentConfig_routingPolicyLabel(rName, "label-v1"),
+				Config: testAccVPCAttachmentConfig_routingPolicyLabel(rName, "labelv1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCAttachmentExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "label-v1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "labelv1"),
 				),
 			},
 			{
-				Config: testAccVPCAttachmentConfig_routingPolicyLabel(rName, "label-v2"),
+				Config: testAccVPCAttachmentConfig_routingPolicyLabel(rName, "labelv2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCAttachmentExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "label-v2"),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "labelv2"),
 					testAccCheckVPCAttachmentRecreated(&v1, &v2, true),
 				),
 			},
