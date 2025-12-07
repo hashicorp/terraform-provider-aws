@@ -36,6 +36,7 @@ func TestAccSSMAssociation_basic(t *testing.T) {
 					testAccCheckAssociationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`association/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "calendar_names.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "output_location.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "InstanceIds"),

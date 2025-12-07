@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_config_configuration_aggregator", name="Configuration Aggregator")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigurationAggregator")
 func resourceConfigurationAggregator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationAggregatorPut,

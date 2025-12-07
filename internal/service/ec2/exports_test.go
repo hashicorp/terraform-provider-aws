@@ -107,6 +107,7 @@ var (
 	ResourceVPCBlockPublicAccessOptions                   = newVPCBlockPublicAccessOptionsResource
 	ResourceVPCDHCPOptions                                = resourceVPCDHCPOptions
 	ResourceVPCDHCPOptionsAssociation                     = resourceVPCDHCPOptionsAssociation
+	ResourceVPCEncryptionControl                          = newResourceVPCEncryptionControl
 	ResourceVPCEndpoint                                   = resourceVPCEndpoint
 	ResourceVPCEndpointPolicy                             = resourceVPCEndpointPolicy
 	ResourceVPCEndpointRouteTableAssociation              = resourceVPCEndpointRouteTableAssociation
@@ -246,6 +247,7 @@ var (
 	FindVPCBlockPublicAccessExclusionByID                       = findVPCBlockPublicAccessExclusionByID
 	FindVPCCIDRBlockAssociationByID                             = findVPCCIDRBlockAssociationByID
 	FindVPCDHCPOptionsAssociation                               = findVPCDHCPOptionsAssociation
+	FindVPCEncryptionControlByID                                = findVPCEncryptionControlByID
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointID        = findVPCEndpointConnectionByServiceIDAndVPCEndpointID
 	FindVPCEndpointConnectionNotificationByID                   = findVPCEndpointConnectionNotificationByID
 	FindVPCEndpointRouteTableAssociationExists                  = findVPCEndpointRouteTableAssociationExists

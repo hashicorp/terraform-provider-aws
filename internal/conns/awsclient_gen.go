@@ -24,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
+	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -164,6 +165,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mgn"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mwaa"
+	"github.com/aws/aws-sdk-go-v2/service/mwaaserverless"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
@@ -194,6 +196,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rdsdata"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
@@ -286,6 +289,10 @@ func (c *AWSClient) APIGatewayV2Client(ctx context.Context) *apigatewayv2.Client
 
 func (c *AWSClient) ARCRegionSwitchClient(ctx context.Context) *arcregionswitch.Client {
 	return errs.Must(client[*arcregionswitch.Client](ctx, c, names.ARCRegionSwitch, make(map[string]any)))
+}
+
+func (c *AWSClient) ARCZonalShiftClient(ctx context.Context) *arczonalshift.Client {
+	return errs.Must(client[*arczonalshift.Client](ctx, c, names.ARCZonalShift, make(map[string]any)))
 }
 
 func (c *AWSClient) AccessAnalyzerClient(ctx context.Context) *accessanalyzer.Client {
@@ -864,6 +871,10 @@ func (c *AWSClient) MWAAClient(ctx context.Context) *mwaa.Client {
 	return errs.Must(client[*mwaa.Client](ctx, c, names.MWAA, make(map[string]any)))
 }
 
+func (c *AWSClient) MWAAServerlessClient(ctx context.Context) *mwaaserverless.Client {
+	return errs.Must(client[*mwaaserverless.Client](ctx, c, names.MWAAServerless, make(map[string]any)))
+}
+
 func (c *AWSClient) Macie2Client(ctx context.Context) *macie2.Client {
 	return errs.Must(client[*macie2.Client](ctx, c, names.Macie2, make(map[string]any)))
 }
@@ -1022,6 +1033,10 @@ func (c *AWSClient) RBinClient(ctx context.Context) *rbin.Client {
 
 func (c *AWSClient) RDSClient(ctx context.Context) *rds.Client {
 	return errs.Must(client[*rds.Client](ctx, c, names.RDS, make(map[string]any)))
+}
+
+func (c *AWSClient) RDSDataClient(ctx context.Context) *rdsdata.Client {
+	return errs.Must(client[*rdsdata.Client](ctx, c, names.RDSData, make(map[string]any)))
 }
 
 func (c *AWSClient) RUMClient(ctx context.Context) *rum.Client {

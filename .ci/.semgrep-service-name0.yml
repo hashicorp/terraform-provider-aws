@@ -1404,6 +1404,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)ARCRegionSwitch"
     severity: WARNING
+  - id: arczonalshift-in-func-name
+    languages:
+      - go
+    message: Do not use "ARCZonalShift" in func name inside arczonalshift package
+    paths:
+      include:
+        - "/internal/service/arczonalshift"
+      exclude:
+        - "/internal/service/arczonalshift/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ARCZonalShift"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: arczonalshift-in-test-name
+    languages:
+      - go
+    message: Include "ARCZonalShift" in test name
+    paths:
+      include:
+        - "/internal/service/arczonalshift/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccARCZonalShift"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: arczonalshift-in-const-name
+    languages:
+      - go
+    message: Do not use "ARCZonalShift" in const name inside arczonalshift package
+    paths:
+      include:
+        - "/internal/service/arczonalshift"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ARCZonalShift"
+    severity: WARNING
+  - id: arczonalshift-in-var-name
+    languages:
+      - go
+    message: Do not use "ARCZonalShift" in var name inside arczonalshift package
+    paths:
+      include:
+        - "/internal/service/arczonalshift"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ARCZonalShift"
+    severity: WARNING
   - id: athena-in-func-name
     languages:
       - go

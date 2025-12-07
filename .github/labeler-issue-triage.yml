@@ -79,6 +79,8 @@ service/appsync:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appsync_'
 service/arcregionswitch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_arcregionswitch_'
+service/arczonalshift:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_arczonalshift_'
 service/athena:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_athena_'
 service/auditmanager:
@@ -491,6 +493,8 @@ service/mturk:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mturk_'
 service/mwaa:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mwaa_'
+service/mwaaserverless:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mwaaserverless_'
 service/neptune:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptune_'
 service/neptunegraph:

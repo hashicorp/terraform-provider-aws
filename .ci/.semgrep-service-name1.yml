@@ -4460,3 +4460,65 @@ rules:
           patterns:
             - pattern-regex: "(?i)IoT"
     severity: WARNING
+  - id: iot-in-var-name
+    languages:
+      - go
+    message: Do not use "IoT" in var name inside iot package
+    paths:
+      include:
+        - "/internal/service/iot"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)IoT"
+    severity: WARNING
+  - id: ipam-in-test-name
+    languages:
+      - go
+    message: Include "IPAM" in test name
+    paths:
+      include:
+        - "/internal/service/ec2/ipam_*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccIPAM"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: ivs-in-func-name
+    languages:
+      - go
+    message: Do not use "IVS" in func name inside ivs package
+    paths:
+      include:
+        - "/internal/service/ivs"
+      exclude:
+        - "/internal/service/ivs/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)IVS"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: ivs-in-test-name
+    languages:
+      - go
+    message: Include "IVS" in test name
+    paths:
+      include:
+        - "/internal/service/ivs/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccIVS"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING

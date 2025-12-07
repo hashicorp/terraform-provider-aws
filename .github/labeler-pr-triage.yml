@@ -276,6 +276,12 @@ service/arcregionswitch:
           - any-glob-to-any-file:
               - 'internal/service/arcregionswitch/**/*'
               - 'website/**/arcregionswitch_*'
+service/arczonalshift:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/arczonalshift/**/*'
+              - 'website/**/arczonalshift_*'
 service/athena:
   - any:
       - changed-files:
@@ -1562,6 +1568,12 @@ service/mwaa:
           - any-glob-to-any-file:
               - 'internal/service/mwaa/**/*'
               - 'website/**/mwaa_*'
+service/mwaaserverless:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/mwaaserverless/**/*'
+              - 'website/**/mwaaserverless_*'
 service/neptune:
   - any:
       - changed-files:
@@ -2317,6 +2329,7 @@ service/vpc:
               - 'website/**/security_group*'
               - 'website/**/subnet*'
               - 'website/**/vpc_dhcp_*'
+              - 'website/**/vpc_encryption_*'
               - 'website/**/vpc_endpoint*'
               - 'website/**/vpc_ipv*'
               - 'website/**/vpc_network_performance*'

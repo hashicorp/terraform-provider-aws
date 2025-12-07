@@ -164,6 +164,18 @@ func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
 }
 
 const (
+	vpnTunnelCloudWatchLogBGPLogOutputFormatJSON = names.AttrJSON
+	vpnTunnelCloudWatchLogBGPLogOutputFormatText = "text"
+)
+
+func vpnTunnelCloudWatchLogBGPLogOutputFormat_Values() []string {
+	return []string{
+		vpnTunnelCloudWatchLogBGPLogOutputFormatJSON,
+		vpnTunnelCloudWatchLogBGPLogOutputFormatText,
+	}
+}
+
+const (
 	vpnTunnelOptionsPhase1EncryptionAlgorithmAES128        = "AES128"
 	vpnTunnelOptionsPhase1EncryptionAlgorithmAES256        = "AES256"
 	vpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16 = "AES128-GCM-16"

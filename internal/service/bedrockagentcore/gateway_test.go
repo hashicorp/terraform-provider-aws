@@ -219,6 +219,42 @@ func TestAccBedrockAgentCoreGateway_tags(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreGateway_interceptorConfigurations(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_interceptorConfigurations(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("interceptor_configuration"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreGateway_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway bedrockagentcorecontrol.GetGatewayOutput
@@ -695,4 +731,53 @@ resource "aws_bedrockagentcore_gateway" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccGatewayConfig_interceptorConfigurations(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "python3.12"
+}
+
+resource "aws_iam_role" "lambda" {
+  name = "%[1]s-lambda"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_bedrockagentcore_gateway" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  authorizer_type = "AWS_IAM"
+  protocol_type   = "MCP"
+
+  interceptor_configuration {
+    interception_points = ["REQUEST", "RESPONSE"]
+
+    interceptor {
+      lambda {
+        arn = aws_lambda_function.test.arn
+      }
+    }
+
+    input_configuration {
+      pass_request_headers = true
+    }
+  }
+}
+`, rName))
 }

@@ -170,6 +170,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// arczonalshift
+
+				"arczonalshift": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// athena
 
 				"athena": schema.StringAttribute{
@@ -1300,6 +1307,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// mwaaserverless
+
+				"mwaaserverless": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// neptune
 
 				"neptune": schema.StringAttribute{
@@ -1526,6 +1540,18 @@ func endpointsBlock() schema.SetNestedBlock {
 				// rds
 
 				"rds": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// rdsdata
+
+				"rdsdata": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				"rdsdataservice": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},

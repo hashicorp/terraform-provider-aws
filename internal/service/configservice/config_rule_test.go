@@ -328,52 +328,6 @@ func testAccConfigRule_Scope_TagValue(t *testing.T) {
 	})
 }
 
-func testAccConfigRule_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var cr types.ConfigRule
-	resourceName := "aws_config_config_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccConfigRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccConfigRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccConfigRuleConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccConfigRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cr types.ConfigRule
@@ -719,45 +673,6 @@ resource "aws_config_config_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test]
 }
 `, rName, tagValue))
-}
-
-func testAccConfigRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccConfigRuleConfig_base(rName), fmt.Sprintf(`
-resource "aws_config_config_rule" "test" {
-  name = %[1]q
-
-  source {
-    owner             = "AWS"
-    source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
-  }
-
-  tags = {
-    %[2]s = %[3]q
-  }
-
-  depends_on = [aws_config_configuration_recorder.test]
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccConfigRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccConfigRuleConfig_base(rName), fmt.Sprintf(`
-resource "aws_config_config_rule" "test" {
-  name = %[1]q
-
-  source {
-    owner             = "AWS"
-    source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
-  }
-
-  tags = {
-    %[2]s = %[3]q
-    %[4]s = %[5]q
-  }
-
-  depends_on = [aws_config_configuration_recorder.test]
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccConfigRuleConfig_evaluationMode(rName, evaluationMode string) string {
