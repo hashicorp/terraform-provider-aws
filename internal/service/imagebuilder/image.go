@@ -221,6 +221,20 @@ func resourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"deletion_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"execution_role": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 			"workflow": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -387,6 +401,9 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 	d.Set("platform", image.Platform)
 	d.Set(names.AttrVersion, image.Version)
+	if v, ok := d.GetOk("deletion_settings"); ok {
+		d.Set("deletion_settings", v)
+	}
 	if image.Workflows != nil {
 		if err := d.Set("workflow", flattenWorkflowConfigurations(image.Workflows)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting workflow: %s", err)
@@ -413,19 +430,84 @@ func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Image Builder Image: %s", d.Id())
-	_, err := conn.DeleteImage(ctx, &imagebuilder.DeleteImageInput{
-		ImageBuildVersionArn: aws.String(d.Id()),
-	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-		return diags
-	}
+	if v, ok := d.GetOk("deletion_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		deletionSettings := v.([]any)[0].(map[string]any)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Image Builder Image (%s): %s", d.Id(), err)
+		input := &imagebuilder.StartResourceStateUpdateInput{
+			ResourceArn: aws.String(d.Id()),
+			State: &awstypes.ResourceState{
+				Status: awstypes.ResourceStatusDeleted,
+			},
+		}
+
+		if executionRole, ok := deletionSettings["execution_role"].(string); ok && executionRole != "" {
+			input.ExecutionRole = aws.String(executionRole)
+		}
+
+		image, err := findImageByARN(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Image Builder Image (%s) for deletion: %s", d.Id(), err)
+		}
+
+		if image.Type == awstypes.ImageTypeDocker {
+			input.IncludeResources = &awstypes.ResourceStateUpdateIncludeResources{
+				Containers: true,
+			}
+		} else {
+			input.IncludeResources = &awstypes.ResourceStateUpdateIncludeResources{
+				Amis:      true,
+				Snapshots: true,
+			}
+		}
+
+		output, err := conn.StartResourceStateUpdate(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "starting resource state update for Image Builder Image (%s): %s", d.Id(), err)
+		}
+
+		if err := waitLifecycleExecution(ctx, conn, aws.ToString(output.LifecycleExecutionId)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Image Builder Image (%s) deletion: %s", d.Id(), err)
+		}
+	} else {
+		_, err := conn.DeleteImage(ctx, &imagebuilder.DeleteImageInput{
+			ImageBuildVersionArn: aws.String(d.Id()),
+		})
+
+		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+			return diags
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting Image Builder Image (%s): %s", d.Id(), err)
+		}
 	}
 
 	return diags
+}
+
+func waitLifecycleExecution(ctx context.Context, conn *imagebuilder.Client, id string) error {
+	for {
+		output, err := conn.GetLifecycleExecution(ctx, &imagebuilder.GetLifecycleExecutionInput{
+			LifecycleExecutionId: aws.String(id),
+		})
+		if err != nil {
+			return err
+		}
+
+		status := string(output.LifecycleExecution.State.Status)
+		if status == "SUCCESS" {
+			return nil
+		}
+		if status == "FAILED" {
+			return errors.New(aws.ToString(output.LifecycleExecution.State.Reason))
+		}
+		if status == "CANCELLED" {
+			return errors.New("lifecycle execution was cancelled")
+		}
+
+		time.Sleep(10 * time.Second)
+	}
 }
 
 func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.Image, error) {
