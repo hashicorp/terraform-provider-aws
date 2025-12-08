@@ -30,10 +30,12 @@ const (
 
 func waitTableActive(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.TableStatusCreating, awstypes.TableStatusUpdating),
-		Target:  enum.Slice(awstypes.TableStatusActive),
-		Refresh: statusTable(ctx, conn, tableName),
-		Timeout: max(createTableTimeout, timeout),
+		Pending:                   enum.Slice(awstypes.TableStatusCreating, awstypes.TableStatusUpdating),
+		Target:                    enum.Slice(awstypes.TableStatusActive),
+		Refresh:                   statusTable(ctx, conn, tableName),
+		Timeout:                   max(createTableTimeout, timeout),
+		Delay:                     5 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -43,6 +45,19 @@ func waitTableActive(ctx context.Context, conn *dynamodb.Client, tableName strin
 	}
 
 	return nil, err
+}
+
+func waitTableWarmThroughputActive(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TableStatusCreating, awstypes.TableStatusUpdating),
+		Target:  enum.Slice(awstypes.TableStatusActive),
+		Refresh: statusTableWarmThroughput(ctx, conn, tableName),
+		Timeout: max(createTableTimeout, timeout),
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }
 
 func waitTableDeleted(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) {
@@ -134,6 +149,19 @@ func waitGSIActive(ctx context.Context, conn *dynamodb.Client, tableName, indexN
 	}
 
 	return nil, err
+}
+
+func waitGSIWarmThroughputActive(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) error { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.IndexStatusCreating, awstypes.IndexStatusUpdating),
+		Target:  enum.Slice(awstypes.IndexStatusActive),
+		Refresh: statusGSIWarmThroughput(ctx, conn, tableName, indexName),
+		Timeout: max(updateTableTimeout, timeout),
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }
 
 func waitGSIDeleted(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*awstypes.GlobalSecondaryIndexDescription, error) {

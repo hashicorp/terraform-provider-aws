@@ -6,7 +6,6 @@ package sesv2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -115,13 +114,15 @@ func resourceEmailIdentity() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"verification_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"verified_for_sending_status": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -129,7 +130,7 @@ const (
 	resNameEmailIdentity = "Email Identity"
 )
 
-func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -142,8 +143,8 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 		in.ConfigurationSetName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("dkim_signing_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.DkimSigningAttributes = expandDKIMSigningAttributes(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("dkim_signing_attributes"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.DkimSigningAttributes = expandDKIMSigningAttributes(v.([]any)[0].(map[string]any))
 	}
 
 	out, err := conn.CreateEmailIdentity(ctx, in)
@@ -160,9 +161,10 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceEmailIdentityRead(ctx, d, meta)...)
 }
 
-func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESV2Client(ctx)
 
 	out, err := findEmailIdentityByID(ctx, conn, d.Id())
 
@@ -176,29 +178,28 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameEmailIdentity, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, emailIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, emailIdentityARN(ctx, c, d.Id()))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 	d.Set("email_identity", d.Id())
-
 	if out.DkimAttributes != nil {
 		tfMap := flattenDKIMAttributes(out.DkimAttributes)
 		tfMap["domain_signing_private_key"] = d.Get("dkim_signing_attributes.0.domain_signing_private_key").(string)
 		tfMap["domain_signing_selector"] = d.Get("dkim_signing_attributes.0.domain_signing_selector").(string)
 
-		if err := d.Set("dkim_signing_attributes", []interface{}{tfMap}); err != nil {
+		if err := d.Set("dkim_signing_attributes", []any{tfMap}); err != nil {
 			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameEmailIdentity, d.Id(), err)
 		}
 	} else {
 		d.Set("dkim_signing_attributes", nil)
 	}
-
-	d.Set("identity_type", string(out.IdentityType))
+	d.Set("identity_type", out.IdentityType)
+	d.Set("verification_status", out.VerificationStatus)
 	d.Set("verified_for_sending_status", out.VerifiedForSendingStatus)
 
 	return diags
 }
 
-func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -223,9 +224,9 @@ func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, me
 			SigningAttributesOrigin: types.DkimSigningAttributesOriginAwsSes,
 		}
 
-		if v, ok := d.GetOk("dkim_signing_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			in.SigningAttributes = expandDKIMSigningAttributes(v.([]interface{})[0].(map[string]interface{}))
-			in.SigningAttributesOrigin = getSigningAttributesOrigin(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("dkim_signing_attributes"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			in.SigningAttributes = expandDKIMSigningAttributes(v.([]any)[0].(map[string]any))
+			in.SigningAttributesOrigin = getSigningAttributesOrigin(v.([]any)[0].(map[string]any))
 		}
 
 		_, err := conn.PutEmailIdentityDkimSigningAttributes(ctx, in)
@@ -237,7 +238,7 @@ func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceEmailIdentityRead(ctx, d, meta)...)
 }
 
-func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -286,7 +287,7 @@ func findEmailIdentity(ctx context.Context, conn *sesv2.Client, input *sesv2.Get
 	return output, nil
 }
 
-func expandDKIMSigningAttributes(tfMap map[string]interface{}) *types.DkimSigningAttributes {
+func expandDKIMSigningAttributes(tfMap map[string]any) *types.DkimSigningAttributes {
 	if tfMap == nil {
 		return nil
 	}
@@ -308,7 +309,7 @@ func expandDKIMSigningAttributes(tfMap map[string]interface{}) *types.DkimSignin
 	return a
 }
 
-func getSigningAttributesOrigin(tfMap map[string]interface{}) types.DkimSigningAttributesOrigin {
+func getSigningAttributesOrigin(tfMap map[string]any) types.DkimSigningAttributesOrigin {
 	if tfMap == nil {
 		return types.DkimSigningAttributesOriginAwsSes
 	}
@@ -328,12 +329,12 @@ func getSigningAttributesOrigin(tfMap map[string]interface{}) types.DkimSigningA
 	return types.DkimSigningAttributesOriginAwsSes
 }
 
-func flattenDKIMAttributes(apiObject *types.DkimAttributes) map[string]interface{} {
+func flattenDKIMAttributes(apiObject *types.DkimAttributes) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"current_signing_key_length": string(apiObject.CurrentSigningKeyLength),
 		"next_signing_key_length":    string(apiObject.NextSigningKeyLength),
 		"signing_attributes_origin":  string(apiObject.SigningAttributesOrigin),
@@ -352,5 +353,5 @@ func flattenDKIMAttributes(apiObject *types.DkimAttributes) map[string]interface
 }
 
 func emailIdentityARN(ctx context.Context, c *conns.AWSClient, emailIdentityName string) string {
-	return c.RegionalARN(ctx, "ses", fmt.Sprintf("identity/%s", emailIdentityName))
+	return c.RegionalARN(ctx, "ses", "identity/"+emailIdentityName)
 }

@@ -22,4 +22,8 @@ var (
 	FindSingleSCRAMSecretAssociationByTwoPartKey = findSingleSCRAMSecretAssociationByTwoPartKey
 	FindServerlessClusterByARN                   = findServerlessClusterByARN
 	FindVPCConnectionByARN                       = findVPCConnectionByARN
+
+	ClusterUUIDFromARN    = clusterUUIDFromARN
+	NormalizeKafkaVersion = normalizeKafkaVersion // nosemgrep:ci.kafka-in-var-name
+	SortEndpointsString   = sortEndpointsString
 )

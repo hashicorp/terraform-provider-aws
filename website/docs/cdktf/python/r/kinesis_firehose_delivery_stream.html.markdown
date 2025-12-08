@@ -600,7 +600,7 @@ class MyConvertedCode(TerraformStack):
             iceberg_configuration=KinesisFirehoseDeliveryStreamIcebergConfiguration(
                 buffering_interval=400,
                 buffering_size=10,
-                catalog_arn="arn:${" + data_aws_partition_current.partition + "}:glue:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:catalog",
+                catalog_arn="arn:${" + data_aws_partition_current.partition + "}:glue:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:catalog",
                 destination_table_configuration=[KinesisFirehoseDeliveryStreamIcebergConfigurationDestinationTableConfiguration(
                     database_name=test.name,
                     table_name=Token.as_string(aws_glue_catalog_table_test.name)
@@ -751,14 +751,13 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in. When using for WAF logging, name must be prefixed with `aws-waf-logs-`. See [AWS Documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-logging-config) for more details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `kinesis_source_configuration` - (Optional) The stream and role Amazon Resource Names (ARNs) for a Kinesis data stream used as the source for a delivery stream. See [`kinesis_source_configuration` block](#kinesis_source_configuration-block) below for details.
 * `msk_source_configuration` - (Optional) The configuration for the Amazon MSK cluster to be used as the source for a delivery stream. See [`msk_source_configuration` block](#msk_source_configuration-block) below for details.
 * `server_side_encryption` - (Optional) Encrypt at rest options. See [`server_side_encryption` block](#server_side_encryption-block) below for details.
-
-  **NOTE:** Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
-* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch`, `opensearchserverless` and `snowflake`.
+* `destination` - (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch`, `opensearchserverless` and `snowflake`.
 * `elasticsearch_configuration` - (Optional) Configuration options when `destination` is `elasticsearch`. See [`elasticsearch_configuration` block](#elasticsearch_configuration-block) below for details.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. See [`extended_s3_configuration` block](#extended_s3_configuration-block) below for details.
 * `http_endpoint_configuration` - (Optional) Configuration options when `destination` is `http_endpoint`. Requires the user to also specify an `s3_configuration` block.  See [`http_endpoint_configuration` block](#http_endpoint_configuration-block) below for details.
@@ -768,6 +767,8 @@ This resource supports the following arguments:
 * `redshift_configuration` - (Optional) Configuration options when `destination` is `redshift`. Requires the user to also specify an `s3_configuration` block. See [`redshift_configuration` block](#redshift_configuration-block) below for details.
 * `snowflake_configuration` - (Optional) Configuration options when `destination` is `snowflake`. See [`snowflake_configuration` block](#snowflake_configuration-block) below for details.
 * `splunk_configuration` - (Optional) Configuration options when `destination` is `splunk`. See [`splunk_configuration` block](#splunk_configuration-block) below for details.
+
+**NOTE:** Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
 
 ### `kinesis_source_configuration` block
 
@@ -783,6 +784,7 @@ The `msk_source_configuration` configuration block supports the following argume
 * `authentication_configuration` - (Required) The authentication configuration of the Amazon MSK cluster. See [`authentication_configuration` block](#authentication_configuration-block) below for details.
 * `msk_cluster_arn` - (Required) The ARN of the Amazon MSK cluster.
 * `topic_name` - (Required) The topic name within the Amazon MSK cluster.
+* `read_from_timestamp` - (Optional) The start date and time in UTC for the offset position within your MSK topic from where Firehose begins to read. By default, this is set to timestamp when Firehose becomes Active. If you want to create a Firehose stream with Earliest start position set the `read_from_timestamp` parameter to Epoch (1970-01-01T00:00:00Z).
 
 ### `authentication_configuration` block
 
@@ -1242,4 +1244,4 @@ Using `terraform import`, import Kinesis Firehose Delivery streams using the str
 
 Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.
 
-<!-- cache-key: cdktf-0.20.8 input-e837d26f9629ec46e365d7b5e926c33056c691ccac2216e3820f311166e99d0d -->
+<!-- cache-key: cdktf-0.20.8 input-c3e045e5d90afe7d2a31ce2752436dc53ff3ec4b5f2398f0b95d5635443d5fef -->

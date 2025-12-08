@@ -120,13 +120,13 @@ func resourceMethodSettings() *schema.Resource {
 	}
 }
 
-func flattenMethodSettings(apiObject *types.MethodSetting) []interface{} {
+func flattenMethodSettings(apiObject *types.MethodSetting) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	return []interface{}{
-		map[string]interface{}{
+	return []any{
+		map[string]any{
 			"metrics_enabled":                            apiObject.MetricsEnabled,
 			"logging_level":                              apiObject.LoggingLevel,
 			"data_trace_enabled":                         apiObject.DataTraceEnabled,
@@ -141,7 +141,7 @@ func flattenMethodSettings(apiObject *types.MethodSetting) []interface{} {
 	}
 }
 
-func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -164,7 +164,7 @@ func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -265,7 +265,7 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceMethodSettingsRead(ctx, d, meta)...)
 }
 
-func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -298,7 +298,7 @@ func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceMethodSettingsImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceMethodSettingsImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 3)
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 		return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/STAGE-NAME/METHOD-PATH", d.Id())

@@ -22,16 +22,17 @@ import (
 )
 
 // @SDKResource("aws_iot_event_configurations", name="Event Configurations")
+// @SingletonIdentity
+// @V60SDKv2Fix
+// @Testing(hasExistsFunction=false)
+// @Testing(checkDestroyNoop=true)
+// @Testing(generator=false)
 func resourceEventConfigurations() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventConfigurationsPut,
 		ReadWithoutTimeout:   resourceEventConfigurationsRead,
 		UpdateWithoutTimeout: resourceEventConfigurationsPut,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"event_configurations": {
@@ -44,14 +45,14 @@ func resourceEventConfigurations() *schema.Resource {
 	}
 }
 
-func resourceEventConfigurationsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventConfigurationsPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	input := &iot.UpdateEventConfigurationsInput{}
 
-	if v, ok := d.GetOk("event_configurations"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EventConfigurations = tfmaps.ApplyToAllValues(v.(map[string]interface{}), func(v interface{}) awstypes.Configuration {
+	if v, ok := d.GetOk("event_configurations"); ok && len(v.(map[string]any)) > 0 {
+		input.EventConfigurations = tfmaps.ApplyToAllValues(v.(map[string]any), func(v any) awstypes.Configuration {
 			return awstypes.Configuration{
 				Enabled: v.(bool),
 			}
@@ -71,7 +72,7 @@ func resourceEventConfigurationsPut(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceEventConfigurationsRead(ctx, d, meta)...)
 }
 
-func resourceEventConfigurationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventConfigurationsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 

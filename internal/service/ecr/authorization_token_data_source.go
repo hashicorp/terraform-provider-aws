@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -54,7 +54,7 @@ func dataSourceAuthorizationToken() *schema.Resource {
 	}
 }
 
-func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -68,7 +68,7 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	authorizationToken := aws.ToString(authorizationData.AuthorizationToken)
 	expiresAt := aws.ToTime(authorizationData.ExpiresAt).Format(time.RFC3339)
 	proxyEndpoint := aws.ToString(authorizationData.ProxyEndpoint)
-	authBytes, err := itypes.Base64Decode(authorizationToken)
+	authBytes, err := inttypes.Base64Decode(authorizationToken)
 	if err != nil {
 		d.SetId("")
 		return sdkdiag.AppendErrorf(diags, "decoding ECR authorization token: %s", err)

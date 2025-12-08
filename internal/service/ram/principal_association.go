@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -67,7 +67,7 @@ const (
 	principalAssociationResourceIDPartCount = 2
 )
 
-func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -103,7 +103,7 @@ func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceD
 	d.SetId(id)
 
 	// AWS Account ID principals need to be accepted to become ASSOCIATED.
-	if itypes.IsAWSAccountID(principal) {
+	if inttypes.IsAWSAccountID(principal) {
 		return append(diags, resourcePrincipalAssociationRead(ctx, d, meta)...)
 	}
 
@@ -114,7 +114,7 @@ func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourcePrincipalAssociationRead(ctx, d, meta)...)
 }
 
-func resourcePrincipalAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrincipalAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -142,7 +142,7 @@ func resourcePrincipalAssociationRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourcePrincipalAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrincipalAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -197,7 +197,7 @@ func findPrincipalAssociationByTwoPartKey(ctx context.Context, conn *ram.Client,
 }
 
 func statusPrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)
 
 		if tfresource.NotFound(err) {

@@ -30,6 +30,16 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			acctest.CtBasic:  testAccDataLakeSettingsDataSource_basic,
 			"readOnlyAdmins": testAccDataLakeSettingsDataSource_readOnlyAdmins,
 		},
+		"IdentityCenterConfiguration": {
+			acctest.CtBasic:      testAccLakeFormationIdentityCenterConfiguration_basic,
+			acctest.CtDisappears: testAccLakeFormationIdentityCenterConfiguration_disappears,
+			"Identity":           testAccLakeFormationIdentityCenterConfiguration_IdentitySerial,
+		},
+		"OptIn": {
+			acctest.CtBasic:      testAccOptIn_basic,
+			acctest.CtDisappears: testAccOptIn_disappears,
+			"table":              testAccOptIn_table,
+		},
 		"PermissionsBasic": {
 			acctest.CtBasic:         testAccPermissions_basic,
 			"database":              testAccPermissions_database,
@@ -42,6 +52,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"lfTag":                 testAccPermissions_lfTag,
 			"lfTagPolicy":           testAccPermissions_lfTagPolicy,
 			"lfTagPolicyMultiple":   testAccPermissions_lfTagPolicyMultiple,
+			"nonIAMPrincipals":      testAccPermissions_catalogResource_nonIAMPrincipals,
 		},
 		"PermissionsDataSource": {
 			acctest.CtBasic:    testAccPermissionsDataSource_basic,
@@ -52,6 +63,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"lfTagPolicy":      testAccPermissionsDataSource_lfTagPolicy,
 			"table":            testAccPermissionsDataSource_table,
 			"tableWithColumns": testAccPermissionsDataSource_tableWithColumns,
+			"nonIAMPrincipals": testAccPermissionsDataSource_catalogResource_nonIAMPrincipals,
 		},
 		"PermissionsTable": {
 			acctest.CtBasic:      testAccPermissions_tableBasic,
@@ -64,6 +76,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"wildcardNoSelect":   testAccPermissions_tableWildcardNoSelect,
 			"wildcardSelectOnly": testAccPermissions_tableWildcardSelectOnly,
 			"wildcardSelectPlus": testAccPermissions_tableWildcardSelectPlus,
+			"nonIAMPrincipals":   testAccPermissions_table_nonIAMPrincipals,
 		},
 		"PermissionsTableWithColumns": {
 			acctest.CtBasic:           testAccPermissions_twcBasic,
@@ -78,6 +91,11 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"tagKeyComplex":      testAccLFTag_TagKey_complex,
 			"values":             testAccLFTag_Values,
 			"valuesOverFifty":    testAccLFTag_Values_overFifty,
+		},
+		"LFTagExpression": {
+			acctest.CtBasic:      testAccLFTagExpression_basic,
+			acctest.CtDisappears: testAccLFTagExpression_disappears,
+			"update":             testAccLFTagExpression_update,
 		},
 		"ResourceLFTag": {
 			acctest.CtBasic:      testAccResourceLFTag_basic,

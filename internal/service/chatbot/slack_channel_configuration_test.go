@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chatbot/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -46,6 +47,8 @@ func testAccSlackChannelConfiguration_basic(t *testing.T) {
 
 	var slackchannelconfiguration types.SlackChannelConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdated := rName + "-updated"
+	resourceName := testResourceSlackChannelConfiguration
 
 	// The slack workspace must be created via the AWS Console. It cannot be created via APIs or Terraform.
 	// Once it is created, export the name of the workspace in the env variable for this test
@@ -80,6 +83,24 @@ func testAccSlackChannelConfiguration_basic(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(testResourceSlackChannelConfiguration, "chat_configuration_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "chat_configuration_arn",
+			},
+			{
+				Config: testAccSlackChannelConfigurationConfig_basic(rNameUpdated, channelID, teamID),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSlackChannelConfigurationExists(ctx, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
+					resource.TestCheckResourceAttr(testResourceSlackChannelConfiguration, "configuration_name", rNameUpdated),
+					acctest.MatchResourceAttrGlobalARN(ctx, testResourceSlackChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/slack-channel/%s`, rName))),
+					resource.TestCheckResourceAttrPair(testResourceSlackChannelConfiguration, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(testResourceSlackChannelConfiguration, "slack_channel_id", channelID),
+					resource.TestCheckResourceAttrSet(testResourceSlackChannelConfiguration, "slack_channel_name"),
+					resource.TestCheckResourceAttr(testResourceSlackChannelConfiguration, "slack_team_id", teamID),
+					resource.TestCheckResourceAttrSet(testResourceSlackChannelConfiguration, "slack_team_name"),
+				),
 			},
 		},
 	})
@@ -167,7 +188,8 @@ func testAccCheckSlackChannelConfigurationExists(ctx context.Context, name strin
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ChatbotClient(ctx)
 
-	_, err := conn.DescribeSlackChannelConfigurations(ctx, &chatbot.DescribeSlackChannelConfigurationsInput{})
+	input := chatbot.DescribeSlackChannelConfigurationsInput{}
+	_, err := conn.DescribeSlackChannelConfigurations(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -44,17 +44,17 @@ const (
 )
 
 // @SDKResource("aws_comprehend_document_classifier", name="Document Classifier")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/comprehend/types;awstypes;awstypes.DocumentClassifierProperties")
+// @Testing(preCheck="testAccPreCheck")
 func ResourceDocumentClassifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentClassifierCreate,
 		ReadWithoutTimeout:   resourceDocumentClassifierRead,
 		UpdateWithoutTimeout: resourceDocumentClassifierUpdate,
 		DeleteWithoutTimeout: resourceDocumentClassifierDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -234,8 +234,7 @@ func ResourceDocumentClassifier() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				tfMap := getDocumentClassifierInputDataConfig(diff)
 				if tfMap == nil {
 					return nil
@@ -253,7 +252,7 @@ func ResourceDocumentClassifier() *schema.Resource {
 
 				return nil
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				mode := types.DocumentClassifierMode(diff.Get(names.AttrMode).(string))
 
 				if mode == types.DocumentClassifierModeMultiClass {
@@ -271,7 +270,7 @@ func ResourceDocumentClassifier() *schema.Resource {
 	}
 }
 
-func resourceDocumentClassifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentClassifierCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
 	conn := awsClient.ComprehendClient(ctx)
 
@@ -291,7 +290,7 @@ func resourceDocumentClassifierCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceDocumentClassifierRead(ctx, d, meta)...)
 }
 
-func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ComprehendClient(ctx)
@@ -339,7 +338,7 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceDocumentClassifierUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentClassifierUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
 	conn := awsClient.ComprehendClient(ctx)
 
@@ -362,16 +361,17 @@ func resourceDocumentClassifierUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceDocumentClassifierRead(ctx, d, meta)...)
 }
 
-func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ComprehendClient(ctx)
 
 	log.Printf("[INFO] Stopping Comprehend Document Classifier (%s)", d.Id())
 
-	_, err := conn.StopTrainingDocumentClassifier(ctx, &comprehend.StopTrainingDocumentClassifierInput{
+	input := comprehend.StopTrainingDocumentClassifierInput{
 		DocumentClassifierArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.StopTrainingDocumentClassifier(ctx, &input)
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -405,9 +405,10 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 	var g multierror.Group
 	for _, v := range versions {
 		g.Go(func() error {
-			_, err = conn.DeleteDocumentClassifier(ctx, &comprehend.DeleteDocumentClassifierInput{
+			input := comprehend.DeleteDocumentClassifierInput{
 				DocumentClassifierArn: v.DocumentClassifierArn,
-			})
+			}
+			_, err = conn.DeleteDocumentClassifier(ctx, &input)
 			if err != nil {
 				var nfe *types.ResourceNotFoundException
 				if !errors.As(err, &nfe) {
@@ -416,7 +417,7 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 			}
 
 			if _, err := waitDocumentClassifierDeleted(ctx, conn, aws.ToString(v.DocumentClassifierArn), d.Timeout(schema.TimeoutDelete)); err != nil {
-				return fmt.Errorf("waiting for version (%s) to be deleted: %s", aws.ToString(v.VersionName), err)
+				return fmt.Errorf("waiting for version (%s) to be deleted: %w", aws.ToString(v.VersionName), err)
 			}
 
 			ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -470,9 +471,9 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 		LanguageCode:           types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		DocumentClassifierName: aws.String(d.Get(names.AttrName).(string)),
 		Mode:                   types.DocumentClassifierMode(d.Get(names.AttrMode).(string)),
-		OutputDataConfig:       expandDocumentClassifierOutputDataConfig(d.Get("output_data_config").([]interface{})),
+		OutputDataConfig:       expandDocumentClassifierOutputDataConfig(d.Get("output_data_config").([]any)),
 		VersionName:            versionName,
-		VpcConfig:              expandVPCConfig(d.Get(names.AttrVPCConfig).([]interface{})),
+		VpcConfig:              expandVPCConfig(d.Get(names.AttrVPCConfig).([]any)),
 		ClientRequestToken:     aws.String(id.UniqueId()),
 		Tags:                   getTagsIn(ctx),
 	}
@@ -494,7 +495,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 	}
 
 	var out *comprehend.CreateDocumentClassifierOutput
-	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = conn.CreateDocumentClassifier(ctx, in)
 
@@ -502,20 +503,18 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 			var tmre *types.TooManyRequestsException
 			var qee ratelimit.QuotaExceededError // This is not a typo: the ratelimit.QuotaExceededError is returned as a struct, not a pointer
 			if errors.As(err, &tmre) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			} else if errors.As(err, &qee) {
 				// Unable to get a rate limit token
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			} else {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 		}
 
 		return nil
 	}, tfresource.WithPollInterval(documentClassifierPollInterval))
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateDocumentClassifier(ctx, in)
-	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Document Classifier (%s): %s", action, d.Get(names.AttrName).(string), err)
 	}
@@ -536,11 +535,12 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 	})
 
 	var tobe string
-	if action == create.ErrActionCreating {
+	switch action {
+	case create.ErrActionCreating:
 		tobe = "to be created"
-	} else if action == create.ErrActionUpdating {
+	case create.ErrActionUpdating:
 		tobe = "to be updated"
-	} else {
+	default:
 		tobe = "to complete action"
 	}
 
@@ -699,7 +699,7 @@ func waitDocumentClassifierDeleted(ctx context.Context, conn *comprehend.Client,
 }
 
 func statusDocumentClassifier(ctx context.Context, conn *comprehend.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindDocumentClassifierByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -713,12 +713,12 @@ func statusDocumentClassifier(ctx context.Context, conn *comprehend.Client, id s
 	}
 }
 
-func flattenDocumentClassifierInputDataConfig(apiObject *types.DocumentClassifierInputDataConfig) []interface{} {
+func flattenDocumentClassifierInputDataConfig(apiObject *types.DocumentClassifierInputDataConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"augmented_manifests": flattenAugmentedManifests(apiObject.AugmentedManifests),
 		"data_format":         apiObject.DataFormat,
 		"s3_uri":              aws.ToString(apiObject.S3Uri),
@@ -732,17 +732,17 @@ func flattenDocumentClassifierInputDataConfig(apiObject *types.DocumentClassifie
 		m["test_s3_uri"] = aws.ToString(apiObject.TestS3Uri)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenDocumentClassifierOutputDataConfig(apiObject *types.DocumentClassifierOutputDataConfig) []interface{} {
+func flattenDocumentClassifierOutputDataConfig(apiObject *types.DocumentClassifierOutputDataConfig) []any {
 	if apiObject == nil || apiObject.S3Uri == nil {
 		return nil
 	}
 
 	// On return, `S3Uri` contains the full path of the output documents, not the storage location
 	s3Uri := aws.ToString(apiObject.S3Uri)
-	m := map[string]interface{}{
+	m := map[string]any{
 		"output_s3_uri": s3Uri,
 	}
 
@@ -756,7 +756,7 @@ func flattenDocumentClassifierOutputDataConfig(apiObject *types.DocumentClassifi
 		m[names.AttrKMSKeyID] = aws.ToString(apiObject.KmsKeyId)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 func getDocumentClassifierInputDataConfig(d resourceGetter) map[string]any {
@@ -791,12 +791,12 @@ func expandDocumentClassifierInputDataConfig(d *schema.ResourceData) *types.Docu
 	return a
 }
 
-func expandDocumentClassifierOutputDataConfig(tfList []interface{}) *types.DocumentClassifierOutputDataConfig {
+func expandDocumentClassifierOutputDataConfig(tfList []any) *types.DocumentClassifierOutputDataConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.DocumentClassifierOutputDataConfig{
 		S3Uri: aws.String(tfMap["s3_uri"].(string)),

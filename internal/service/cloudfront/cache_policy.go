@@ -35,6 +35,10 @@ func resourceCachePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -166,7 +170,7 @@ func resourceCachePolicy() *schema.Resource {
 	}
 }
 
-func resourceCachePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCachePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -182,8 +186,8 @@ func resourceCachePolicyCreate(ctx context.Context, d *schema.ResourceData, meta
 		apiObject.Comment = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameters_in_cache_key_and_forwarded_to_origin"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.ParametersInCacheKeyAndForwardedToOrigin = expandParametersInCacheKeyAndForwardedToOrigin(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("parameters_in_cache_key_and_forwarded_to_origin"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ParametersInCacheKeyAndForwardedToOrigin = expandParametersInCacheKeyAndForwardedToOrigin(v.([]any)[0].(map[string]any))
 	}
 
 	input := &cloudfront.CreateCachePolicyInput{
@@ -201,7 +205,7 @@ func resourceCachePolicyCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceCachePolicyRead(ctx, d, meta)...)
 }
 
-func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -217,6 +221,7 @@ func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Cache Policy (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, cachePolicyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.CachePolicy.CachePolicyConfig
 	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("default_ttl", apiObject.DefaultTTL)
@@ -225,7 +230,7 @@ func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("min_ttl", apiObject.MinTTL)
 	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.ParametersInCacheKeyAndForwardedToOrigin != nil {
-		if err := d.Set("parameters_in_cache_key_and_forwarded_to_origin", []interface{}{flattenParametersInCacheKeyAndForwardedToOrigin(apiObject.ParametersInCacheKeyAndForwardedToOrigin)}); err != nil {
+		if err := d.Set("parameters_in_cache_key_and_forwarded_to_origin", []any{flattenParametersInCacheKeyAndForwardedToOrigin(apiObject.ParametersInCacheKeyAndForwardedToOrigin)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting parameters_in_cache_key_and_forwarded_to_origin: %s", err)
 		}
 	} else {
@@ -235,7 +240,7 @@ func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceCachePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCachePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -254,8 +259,8 @@ func resourceCachePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta
 		apiObject.Comment = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameters_in_cache_key_and_forwarded_to_origin"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.ParametersInCacheKeyAndForwardedToOrigin = expandParametersInCacheKeyAndForwardedToOrigin(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("parameters_in_cache_key_and_forwarded_to_origin"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ParametersInCacheKeyAndForwardedToOrigin = expandParametersInCacheKeyAndForwardedToOrigin(v.([]any)[0].(map[string]any))
 	}
 
 	input := &cloudfront.UpdateCachePolicyInput{
@@ -273,15 +278,16 @@ func resourceCachePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceCachePolicyRead(ctx, d, meta)...)
 }
 
-func resourceCachePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCachePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Cache Policy: (%s)", d.Id())
-	_, err := conn.DeleteCachePolicy(ctx, &cloudfront.DeleteCachePolicyInput{
+	input := cloudfront.DeleteCachePolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteCachePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchCachePolicy](err) {
 		return diags
@@ -319,15 +325,15 @@ func findCachePolicyByID(ctx context.Context, conn *cloudfront.Client, id string
 	return output, nil
 }
 
-func expandParametersInCacheKeyAndForwardedToOrigin(tfMap map[string]interface{}) *awstypes.ParametersInCacheKeyAndForwardedToOrigin {
+func expandParametersInCacheKeyAndForwardedToOrigin(tfMap map[string]any) *awstypes.ParametersInCacheKeyAndForwardedToOrigin {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.ParametersInCacheKeyAndForwardedToOrigin{}
 
-	if v, ok := tfMap["cookies_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CookiesConfig = expandCachePolicyCookiesConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["cookies_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CookiesConfig = expandCachePolicyCookiesConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["enable_accept_encoding_brotli"].(bool); ok {
@@ -338,18 +344,18 @@ func expandParametersInCacheKeyAndForwardedToOrigin(tfMap map[string]interface{}
 		apiObject.EnableAcceptEncodingGzip = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["headers_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.HeadersConfig = expandCachePolicyHeadersConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["headers_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.HeadersConfig = expandCachePolicyHeadersConfig(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["query_strings_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.QueryStringsConfig = expandCachePolicyQueryStringsConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["query_strings_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.QueryStringsConfig = expandCachePolicyQueryStringsConfig(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandCachePolicyCookiesConfig(tfMap map[string]interface{}) *awstypes.CachePolicyCookiesConfig {
+func expandCachePolicyCookiesConfig(tfMap map[string]any) *awstypes.CachePolicyCookiesConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -360,14 +366,14 @@ func expandCachePolicyCookiesConfig(tfMap map[string]interface{}) *awstypes.Cach
 		apiObject.CookieBehavior = awstypes.CachePolicyCookieBehavior(v)
 	}
 
-	if v, ok := tfMap["cookies"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Cookies = expandCookieNames(v[0].(map[string]interface{}))
+	if v, ok := tfMap["cookies"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Cookies = expandCookieNames(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandCookieNames(tfMap map[string]interface{}) *awstypes.CookieNames {
+func expandCookieNames(tfMap map[string]any) *awstypes.CookieNames {
 	if tfMap == nil {
 		return nil
 	}
@@ -383,7 +389,7 @@ func expandCookieNames(tfMap map[string]interface{}) *awstypes.CookieNames {
 	return apiObject
 }
 
-func expandCachePolicyHeadersConfig(tfMap map[string]interface{}) *awstypes.CachePolicyHeadersConfig {
+func expandCachePolicyHeadersConfig(tfMap map[string]any) *awstypes.CachePolicyHeadersConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -394,14 +400,14 @@ func expandCachePolicyHeadersConfig(tfMap map[string]interface{}) *awstypes.Cach
 		apiObject.HeaderBehavior = awstypes.CachePolicyHeaderBehavior(v)
 	}
 
-	if v, ok := tfMap["headers"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Headers = expandHeaders(v[0].(map[string]interface{}))
+	if v, ok := tfMap["headers"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Headers = expandHeaders(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandHeaders(tfMap map[string]interface{}) *awstypes.Headers {
+func expandHeaders(tfMap map[string]any) *awstypes.Headers {
 	if tfMap == nil {
 		return nil
 	}
@@ -417,7 +423,7 @@ func expandHeaders(tfMap map[string]interface{}) *awstypes.Headers {
 	return apiObject
 }
 
-func expandCachePolicyQueryStringsConfig(tfMap map[string]interface{}) *awstypes.CachePolicyQueryStringsConfig {
+func expandCachePolicyQueryStringsConfig(tfMap map[string]any) *awstypes.CachePolicyQueryStringsConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -428,14 +434,14 @@ func expandCachePolicyQueryStringsConfig(tfMap map[string]interface{}) *awstypes
 		apiObject.QueryStringBehavior = awstypes.CachePolicyQueryStringBehavior(v)
 	}
 
-	if v, ok := tfMap["query_strings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.QueryStrings = expandQueryStringNames(v[0].(map[string]interface{}))
+	if v, ok := tfMap["query_strings"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.QueryStrings = expandQueryStringNames(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandQueryStringNames(tfMap map[string]interface{}) *awstypes.QueryStringNames {
+func expandQueryStringNames(tfMap map[string]any) *awstypes.QueryStringNames {
 	if tfMap == nil {
 		return nil
 	}
@@ -451,15 +457,15 @@ func expandQueryStringNames(tfMap map[string]interface{}) *awstypes.QueryStringN
 	return apiObject
 }
 
-func flattenParametersInCacheKeyAndForwardedToOrigin(apiObject *awstypes.ParametersInCacheKeyAndForwardedToOrigin) map[string]interface{} {
+func flattenParametersInCacheKeyAndForwardedToOrigin(apiObject *awstypes.ParametersInCacheKeyAndForwardedToOrigin) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := flattenCachePolicyCookiesConfig(apiObject.CookiesConfig); len(v) > 0 {
-		tfMap["cookies_config"] = []interface{}{v}
+		tfMap["cookies_config"] = []any{v}
 	}
 
 	if v := apiObject.EnableAcceptEncodingBrotli; v != nil {
@@ -471,38 +477,38 @@ func flattenParametersInCacheKeyAndForwardedToOrigin(apiObject *awstypes.Paramet
 	}
 
 	if v := flattenCachePolicyHeadersConfig(apiObject.HeadersConfig); len(v) > 0 {
-		tfMap["headers_config"] = []interface{}{v}
+		tfMap["headers_config"] = []any{v}
 	}
 
 	if v := flattenCachePolicyQueryStringsConfig(apiObject.QueryStringsConfig); len(v) > 0 {
-		tfMap["query_strings_config"] = []interface{}{v}
+		tfMap["query_strings_config"] = []any{v}
 	}
 
 	return tfMap
 }
 
-func flattenCachePolicyCookiesConfig(apiObject *awstypes.CachePolicyCookiesConfig) map[string]interface{} {
+func flattenCachePolicyCookiesConfig(apiObject *awstypes.CachePolicyCookiesConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"cookie_behavior": apiObject.CookieBehavior,
 	}
 
 	if v := flattenCookieNames(apiObject.Cookies); len(v) > 0 {
-		tfMap["cookies"] = []interface{}{v}
+		tfMap["cookies"] = []any{v}
 	}
 
 	return tfMap
 }
 
-func flattenCookieNames(apiObject *awstypes.CookieNames) map[string]interface{} {
+func flattenCookieNames(apiObject *awstypes.CookieNames) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = v
@@ -511,28 +517,28 @@ func flattenCookieNames(apiObject *awstypes.CookieNames) map[string]interface{} 
 	return tfMap
 }
 
-func flattenCachePolicyHeadersConfig(apiObject *awstypes.CachePolicyHeadersConfig) map[string]interface{} {
+func flattenCachePolicyHeadersConfig(apiObject *awstypes.CachePolicyHeadersConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"header_behavior": apiObject.HeaderBehavior,
 	}
 
 	if v := flattenHeaders(apiObject.Headers); len(v) > 0 {
-		tfMap["headers"] = []interface{}{v}
+		tfMap["headers"] = []any{v}
 	}
 
 	return tfMap
 }
 
-func flattenHeaders(apiObject *awstypes.Headers) map[string]interface{} {
+func flattenHeaders(apiObject *awstypes.Headers) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = v
@@ -541,32 +547,37 @@ func flattenHeaders(apiObject *awstypes.Headers) map[string]interface{} {
 	return tfMap
 }
 
-func flattenCachePolicyQueryStringsConfig(apiObject *awstypes.CachePolicyQueryStringsConfig) map[string]interface{} {
+func flattenCachePolicyQueryStringsConfig(apiObject *awstypes.CachePolicyQueryStringsConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"query_string_behavior": apiObject.QueryStringBehavior,
 	}
 
 	if v := flattenQueryStringNames(apiObject.QueryStrings); len(v) > 0 {
-		tfMap["query_strings"] = []interface{}{v}
+		tfMap["query_strings"] = []any{v}
 	}
 
 	return tfMap
 }
 
-func flattenQueryStringNames(apiObject *awstypes.QueryStringNames) map[string]interface{} {
+func flattenQueryStringNames(apiObject *awstypes.QueryStringNames) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = v
 	}
 
 	return tfMap
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func cachePolicyARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "cache-policy/"+id)
 }

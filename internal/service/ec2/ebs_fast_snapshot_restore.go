@@ -34,14 +34,10 @@ func newEBSFastSnapshotRestoreResource(_ context.Context) (resource.ResourceWith
 }
 
 type ebsFastSnapshotRestoreResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[ebsFastSnapshotRestoreResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*ebsFastSnapshotRestoreResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ebs_fast_snapshot_restore"
 }
 
 func (r *ebsFastSnapshotRestoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -188,6 +184,7 @@ func (r *ebsFastSnapshotRestoreResource) Delete(ctx context.Context, request res
 }
 
 type ebsFastSnapshotRestoreResourceModel struct {
+	framework.WithRegionModel
 	AvailabilityZone types.String   `tfsdk:"availability_zone"`
 	ID               types.String   `tfsdk:"id"`
 	SnapshotID       types.String   `tfsdk:"snapshot_id"`

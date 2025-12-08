@@ -94,6 +94,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the knowledge base.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -183,6 +184,7 @@ The `pinecone_configuration` configuration block supports the following argument
 * `credentials_secret_arn` - (Required) ARN of the secret that you created in AWS Secrets Manager that is linked to your Amazon RDS database.
 * `database_name` - (Required) Name of your Amazon RDS database.
 * `field_mapping` - (Required) Names of the fields to which to map information about the vector store. This block supports the following arguments:
+    * `custom_metadata_field` - (Optional) Name for the universal metadata field where Amazon Bedrock will store any custom metadata from your data source.
     * `metadata_field` - (Required) Name of the field in which Amazon Bedrock stores metadata about the vector store.
     * `primary_key_field` - (Required) Name of the field in which Amazon Bedrock stores the ID for each entry.
     * `text_field` - (Required) Name of the field in which Amazon Bedrock stores the raw text from your data. The text is split according to the chunking strategy you choose.

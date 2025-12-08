@@ -12,6 +12,8 @@ description: |-
 
 Provides a CloudWatch Evidently Launch resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead.
+
 ## Example Usage
 
 ### Basic
@@ -321,6 +323,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Specifies the description of the launch.
 * `groups` - (Required) One or up to five blocks that contain the feature and variations that are to be used for the launch. [Detailed below](#groups).
 * `metric_monitors` - (Optional) One or up to three blocks that define the metrics that will be used to monitor the launch performance. [Detailed below](#metric_monitors).
@@ -456,4 +459,4 @@ Import using the `name` of the launch and `arn` of the project separated by a `:
 % terraform import aws_evidently_launch.example exampleLaunchName:arn:aws:evidently:us-east-1:123456789012:project/exampleProjectName
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-aae11bd8a9c8b5e230e84e3f211fbabba6612255938e01ceece5ed580fbee328 -->
+<!-- cache-key: cdktf-0.20.8 input-b70fb60af8c002beac65b08279063c774f31a988bbe214ad9ac1c20611785a92 -->

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -235,10 +236,22 @@ func TestAccGlacierVault_ignoreEquivalent(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "access_policy", regexache.MustCompile(fmt.Sprintf(`"Sid":"%s"`, rName))),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccVaultConfig_policyNewOrder(rName),
-				PlanOnly: true,
+				Config: testAccVaultConfig_policyNewOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -249,10 +262,6 @@ func testAccCheckVaultExists(ctx context.Context, n string, v *glacier.DescribeV
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Glacier Vault ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierClient(ctx)
@@ -345,7 +354,7 @@ resource "aws_glacier_vault" "test" {
              "glacier:AbortMultipartUpload",
              "glacier:CompleteMultipartUpload"
           ],
-          "Resource": "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"
+          "Resource": "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"
        }
     ]
 }
@@ -381,7 +390,7 @@ resource "aws_glacier_vault" "test" {
              "glacier:AbortMultipartUpload",
              "glacier:CompleteMultipartUpload"
           ],
-          "Resource": ["arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"]
+          "Resource": ["arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"]
        }
     ]
 }
@@ -440,7 +449,7 @@ resource "aws_glacier_vault" "test" {
         "glacier:CompleteMultipartUpload",
       ]
       Resource = [
-        "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s",
+        "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s",
       ]
     }]
   })
@@ -472,7 +481,7 @@ resource "aws_glacier_vault" "test" {
         "glacier:InitiateMultipartUpload",
         "glacier:AbortMultipartUpload",
       ]
-      Resource = "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"
+      Resource = "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"
     }]
   })
 }

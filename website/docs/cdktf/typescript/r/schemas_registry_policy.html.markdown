@@ -65,8 +65,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `registryName` - (Required) Name of EventBridge Schema Registry
 * `policy` - (Required) Resource Policy for EventBridge Schema Registry
 
@@ -110,4 +111,4 @@ Using `terraform import`, import EventBridge Schema Registry Policy using the `r
 % terraform import aws_schemas_registry_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-62f22e7b540422b32e9ccd82d0528f6eb0fb7caef34af87d1e13ddbc71adefb5 -->
+<!-- cache-key: cdktf-0.20.8 input-2a59c1aac05588dd1450cde7591240ec8d7587b637ac0dffc720e1a4b2bdba67 -->

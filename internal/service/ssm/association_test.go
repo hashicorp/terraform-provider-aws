@@ -36,7 +36,7 @@ func TestAccSSMAssociation_basic(t *testing.T) {
 					testAccCheckAssociationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`association/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", acctest.CtFalse),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_instance.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "calendar_names.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "output_location.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "InstanceIds"),
@@ -1055,8 +1055,12 @@ DOC
 }
 
 resource "aws_ssm_association" "test" {
-  name        = %[1]q
-  instance_id = aws_instance.test.id
+  name = %[1]q
+
+  targets {
+    key    = "InstanceIds"
+    values = [aws_instance.test.id]
+  }
 }
 `, rName)
 }

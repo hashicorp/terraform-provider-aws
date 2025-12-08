@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,12 +28,7 @@ func dataSourceDataSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: verify.ValidAccountID,
-				},
+				names.AttrAWSAccountID:          quicksightschema.AWSAccountIDDataSourceSchema(),
 				"column_groups":                 quicksightschema.DataSetColumnGroupsSchemaDataSourceSchema(),
 				"column_level_permission_rules": quicksightschema.DataSetColumnLevelPermissionRulesSchemaDataSourceSchema(),
 				"data_set_id": {
@@ -57,19 +51,12 @@ func dataSourceDataSet() *schema.Resource {
 				"row_level_permission_data_set":          quicksightschema.DataSetRowLevelPermissionDataSetSchemaDataSourceSchema(),
 				"row_level_permission_tag_configuration": quicksightschema.DataSetRowLevelPermissionTagConfigurationSchemaDataSourceSchema(),
 				names.AttrTags:                           tftags.TagsSchemaComputed(),
-				names.AttrTagsAll: {
-					Type:       schema.TypeMap,
-					Optional:   true,
-					Computed:   true,
-					Elem:       &schema.Schema{Type: schema.TypeString},
-					Deprecated: `this attribute has been deprecated`,
-				},
 			}
 		},
 	}
 }
 
-func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -130,10 +117,6 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	permissions, err := findDataSetPermissionsByTwoPartKey(ctx, conn, awsAccountID, dataSetID)

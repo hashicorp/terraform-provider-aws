@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of Pipeline.
 * `description` - (Optional) The description of Pipeline.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -81,4 +82,4 @@ Using `terraform import`, import `aws_datapipeline_pipeline` using the id (Pipel
 % terraform import aws_datapipeline_pipeline.default df-1234567890
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-900f2070a2090481270a42e79665c28c006980d650e7abfe29339b39fbd3a425 -->
+<!-- cache-key: cdktf-0.20.8 input-5100386d619c70e9c09bb1bc5127de91914c1040b5c2c425875cab7c0a711e74 -->

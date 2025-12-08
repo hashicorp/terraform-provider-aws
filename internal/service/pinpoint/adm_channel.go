@@ -56,7 +56,7 @@ func resourceADMChannel() *schema.Resource {
 	}
 }
 
-func resourceADMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceADMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -83,7 +83,7 @@ func resourceADMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceADMChannelRead(ctx, d, meta)...)
 }
 
-func resourceADMChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceADMChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -108,7 +108,7 @@ func resourceADMChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceADMChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceADMChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 

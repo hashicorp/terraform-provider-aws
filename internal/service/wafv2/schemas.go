@@ -57,6 +57,7 @@ func ruleGroupRootStatementSchema(level int) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"and_statement":                         statementSchema(level),
+				"asn_match_statement":                   asnMatchStatementSchema(),
 				"byte_match_statement":                  byteMatchStatementSchema(),
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
@@ -100,6 +101,7 @@ func (c *schemaCache) get(level int) *schema.Schema {
 						Required: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
+								"asn_match_statement":                   asnMatchStatementSchema(),
 								"byte_match_statement":                  byteMatchStatementSchema(),
 								"geo_match_statement":                   geoMatchStatementSchema(),
 								"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
@@ -131,6 +133,7 @@ func (c *schemaCache) get(level int) *schema.Schema {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"and_statement":                         previous,
+									"asn_match_statement":                   asnMatchStatementSchema(),
 									"byte_match_statement":                  byteMatchStatementSchema(),
 									"geo_match_statement":                   geoMatchStatementSchema(),
 									"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
@@ -379,7 +382,8 @@ var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 			"cookies":             cookiesSchema(),
 			"header_order":        headerOrderSchema(),
 			"headers":             headersSchema(),
-			"ja3_fingerprint":     ja3fingerprintSchema(),
+			"ja3_fingerprint":     jaFingerprintSchema(),
+			"ja4_fingerprint":     jaFingerprintSchema(),
 			"json_body":           jsonBodySchema(),
 			"method":              emptySchema(),
 			"query_string":        emptySchema(),
@@ -417,6 +421,21 @@ var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
 								validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 							),
+						},
+					},
+				},
+			},
+			"uri_fragment": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"fallback_behavior": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
 						},
 					},
 				},
@@ -498,6 +517,23 @@ var forwardedIPConfigSchema = sync.OnceValue(func() *schema.Schema {
 				"header_name": {
 					Type:     schema.TypeString,
 					Required: true,
+				},
+			},
+		},
+	}
+})
+
+var rateLimitJAFingerprintConfigSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"fallback_behavior": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
 				},
 			},
 		},
@@ -860,7 +896,7 @@ func cookiesMatchPatternSchema() *schema.Schema {
 	}
 }
 
-func ja3fingerprintSchema() *schema.Schema {
+func jaFingerprintSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -977,6 +1013,7 @@ func webACLRootStatementSchema(level int) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"and_statement":                         statementSchema(level),
+				"asn_match_statement":                   asnMatchStatementSchema(),
 				"byte_match_statement":                  byteMatchStatementSchema(),
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
@@ -1046,6 +1083,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 					MaxItems: 5,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"asn": emptySchema(),
 							"cookie": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -1078,7 +1116,9 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 									},
 								},
 							},
-							"ip": emptySchema(),
+							"ip":              emptySchema(),
+							"ja3_fingerprint": rateLimitJAFingerprintConfigSchema(),
+							"ja4_fingerprint": rateLimitJAFingerprintConfigSchema(),
 							"label_namespace": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -1160,6 +1200,7 @@ func scopeDownStatementSchema(level int) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"and_statement":                         statementSchema(level),
+				"asn_match_statement":                   asnMatchStatementSchema(),
 				"byte_match_statement":                  byteMatchStatementSchema(),
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"label_match_statement":                 labelMatchStatementSchema(),
@@ -1232,6 +1273,64 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 						},
 					},
 				},
+				"aws_managed_rules_anti_ddos_rule_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"client_side_action_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"challenge": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"exempt_uri_regular_expression": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 5,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"regex_string": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 512),
+																},
+															},
+														},
+													},
+													"sensitivity": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Default:          awstypes.SensitivityLevelHigh,
+														ValidateDiagFunc: enum.Validate[awstypes.SensitivityToAct](),
+													},
+													"usage_of_action": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.UsageOfAction](),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"sensitivity_to_block": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.SensitivityLevelLow,
+								ValidateDiagFunc: enum.Validate[awstypes.SensitivityToAct](),
+							},
+						},
+					},
+				},
 				"aws_managed_rules_atp_rule_set": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -1265,7 +1364,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 							"enable_machine_learning": {
 								Type:     schema.TypeBool,
 								Optional: true,
-								Default:  true,
+								Default:  false,
 							},
 							"inspection_level": {
 								Type:             schema.TypeString,
@@ -1614,3 +1713,25 @@ var managedRuleGroupConfigATPResponseInspectionSchema = sync.OnceValue(func() *s
 		},
 	}
 })
+
+func asnMatchStatementSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"asn_list": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 100,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type: schema.TypeInt,
+					},
+				},
+				"forwarded_ip_config": forwardedIPConfigSchema(),
+			},
+		},
+	}
+}

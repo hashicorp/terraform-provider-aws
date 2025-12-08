@@ -23,7 +23,7 @@ var (
 	keyIDResourceRegex = regexache.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `)$`)
 )
 
-func validGrantName(v interface{}, k string) (ws []string, es []error) {
+func validGrantName(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 
 	if len(value) > 256 {
@@ -37,17 +37,17 @@ func validGrantName(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func validNameForDataSource(v interface{}, k string) (ws []string, es []error) {
+func validNameForDataSource(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 
 	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and be comprised of only [0-9A-Za-z_/-]", k))
+			"%q must begin with 'alias/' and only contain [0-9A-Za-z_/-]", k))
 	}
 	return
 }
 
-func validNameForResource(v interface{}, k string) (ws []string, es []error) {
+func validNameForResource(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 
 	if regexache.MustCompile(`^(` + cmkAliasPrefix + `)`).MatchString(value) {
@@ -56,7 +56,7 @@ func validNameForResource(v interface{}, k string) (ws []string, es []error) {
 
 	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and be comprised of only [0-9A-Za-z_/-]", k))
+			"%q must begin with 'alias/' and only contain [0-9A-Za-z_/-]", k))
 	}
 	return
 }
@@ -87,7 +87,7 @@ func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	}
 
 	if _, err := arn.Parse(value); err != nil {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %w", k, value, err))
 		return
 	}
 
@@ -113,7 +113,7 @@ func validateKeyAliasARN(v any, k string) (ws []string, errors []error) {
 	}
 
 	if _, err := arn.Parse(value); err != nil {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %w", k, value, err))
 		return
 	}
 

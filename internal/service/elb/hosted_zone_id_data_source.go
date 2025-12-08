@@ -11,13 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region.
 var hostedZoneIDPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z268VQBMOI5EKX",
 	endpoints.ApEast1RegionID:      "Z3DQVH9N71FHZ0",
+	endpoints.ApEast2RegionID:      "Z02789141MW7T1WBU19PO",
 	endpoints.ApNortheast1RegionID: "Z14GRHDCWA56QT",
 	endpoints.ApNortheast2RegionID: "ZWKZPGTI48KDX",
 	endpoints.ApNortheast3RegionID: "Z5LXEXXYW11ES",
@@ -28,6 +28,7 @@ var hostedZoneIDPerRegionMap = map[string]string{
 	endpoints.ApSoutheast3RegionID: "Z08888821HLRG5A9ZRTER",
 	endpoints.ApSoutheast4RegionID: "Z09517862IB2WZLPXG76F",
 	endpoints.ApSoutheast5RegionID: "Z06010284QMVVW7WO5J",
+	endpoints.ApSoutheast6RegionID: "Z023301818UFJ50CIO0MV",
 	endpoints.ApSoutheast7RegionID: "Z0390008CMBRTHFGWBCB",
 	endpoints.CaCentral1RegionID:   "ZQSVJUPU6J1EY",
 	endpoints.CaWest1RegionID:      "Z06473681N0SF6OS049SD",
@@ -55,31 +56,23 @@ var hostedZoneIDPerRegionMap = map[string]string{
 }
 
 // @SDKDataSource("aws_elb_hosted_zone_id", name="Hosted Zone ID")
+// @Region(validateOverrideInPartition=false)
 func dataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneIDRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-		},
+		Schema: map[string]*schema.Schema{},
 	}
 }
 
-func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	region := meta.(*conns.AWSClient).Region(ctx)
-	if v, ok := d.GetOk(names.AttrRegion); ok {
-		region = v.(string)
-	}
-
 	if v, ok := hostedZoneIDPerRegionMap[region]; ok {
 		d.SetId(v)
 		return diags
 	}
 
-	return sdkdiag.AppendErrorf(diags, "unsupported AWS Region: %s", region)
+	return sdkdiag.AppendErrorf(diags, "unsupported ELB Region (%s)", region)
 }

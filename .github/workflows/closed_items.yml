@@ -1,0 +1,64 @@
+name: Closed Items
+
+on:
+  pull_request_target:
+    types:
+      - closed
+
+  issues:
+    types:
+      - closed
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  process:
+    name: Process Closed Items
+    env:
+      CURRENT_LABELS: ${{ github.event_name == 'issues' && toJSON(github.event.issue.labels.*.name) || toJSON(github.event.pull_request.labels.*.name) }}
+      GH_CLI_SUBCOMMAND: ${{ github.event_name == 'issues' && 'issue' || 'pr' }}
+      ISSUE_URL: ${{ github.event.issue.html_url ||  github.event.pull_request.html_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove Triage Labels
+        if: |
+          contains(fromJSON(env.CURRENT_LABELS), 'needs-triage')
+          || contains(fromJSON(env.CURRENT_LABELS), 'waiting-response')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh $GH_CLI_SUBCOMMAND edit $ISSUE_URL --remove-label needs-triage,waiting-response
+
+      - name: Add Note
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh $GH_CLI_SUBCOMMAND comment $ISSUE_URL --body "> [!WARNING]
+          > This Issue has been closed, meaning that any additional comments are much easier for the maintainers to miss. Please assume that the maintainers will not see them.
+          >
+          > Ongoing conversations amongst community members are welcome, however, the issue will be locked after 30 days. Moving conversations to another venue, such as the [AWS Provider forum](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33), is recommended. If you have additional concerns, please open a new issue, referencing this one where needed."
+
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        id: checkout
+        if: github.event.pull_request.merged
+        with:
+          sparse-checkout: .ci
+
+      - name: Get Current Milestone Name
+        id: get-current-milestone
+        if: steps.checkout.outcome != 'skipped'
+        shell: bash
+        run: echo "current_milestone=v$(head -1 CHANGELOG.md | cut -d " " -f 2)" >> "$GITHUB_OUTPUT"
+
+      - name: Add Items to Milestone
+        if: steps.checkout.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MILESTONE: ${{ steps.get-current-milestone.outputs.current_milestone }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: .ci/scripts/add-to-milestone.sh

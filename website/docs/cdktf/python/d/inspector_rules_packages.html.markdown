@@ -52,6 +52,12 @@ class MyConvertedCode(TerraformStack):
         aws_inspector_assessment_template_assessment.override_logical_id("assessment")
 ```
 
+## Argument Reference
+
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -59,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `arns` - List of the Amazon Inspector Classic Rules Packages arns available in the AWS region.
 
-<!-- cache-key: cdktf-0.20.8 input-b55f49ddc9bd6ffd45988906833e0338e052589bc49023e7487f89772927ed30 -->
+<!-- cache-key: cdktf-0.20.8 input-212dfb4c8615fea83c3e578b6c5169d1e3d7f29e3284ad9d16caba8a61225bdc -->

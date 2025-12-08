@@ -3,12 +3,14 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_connect_peer"
 description: |-
-  Terraform resource for managing an AWS Network Manager Connect Peer.
+  Manages an AWS Network Manager Connect Peer.
 ---
 
 # Resource: aws_networkmanager_connect_peer
 
-Terraform resource for managing an AWS Network Manager Connect Peer.
+Manages an AWS Network Manager Connect Peer.
+
+Use this resource to create a Connect peer in AWS Network Manager. Connect peers establish BGP sessions with your on-premises networks through Connect attachments, enabling dynamic routing between your core network and external networks.
 
 ## Example Usage
 
@@ -62,7 +64,7 @@ resource "aws_networkmanager_connect_attachment" "example" {
     protocol = "GRE"
   }
   depends_on = [
-    "aws_networkmanager_attachment_accepter.test"
+    aws_networkmanager_attachment_accepter.example
   ]
 }
 
@@ -79,7 +81,7 @@ resource "aws_networkmanager_connect_peer" "example" {
   }
   inside_cidr_blocks = ["172.16.0.0/16"]
   depends_on = [
-    "aws_networkmanager_attachment_accepter.example2"
+    aws_networkmanager_attachment_accepter.example2
   ]
 }
 ```
@@ -108,7 +110,7 @@ resource "aws_networkmanager_connect_peer" "example" {
   bgp_options {
     peer_asn = 65000
   }
-  subnet_arn = aws_subnet.test2.arn
+  subnet_arn = aws_subnet.example2.arn
 }
 ```
 
@@ -116,28 +118,40 @@ resource "aws_networkmanager_connect_peer" "example" {
 
 The following arguments are required:
 
-- `connect_attachment_id` - (Required) The ID of the connection attachment.
-- `peer_address` - (Required) The Connect peer address.
+* `connect_attachment_id` - (Required) ID of the connection attachment.
+* `peer_address` - (Required) Connect peer address.
 
 The following arguments are optional:
 
-- `bgp_options` (Optional) The Connect peer BGP options.
-- `core_network_address` (Optional) A Connect peer core network address.
-- `inside_cidr_blocks` - (Optional) The inside IP addresses used for BGP peering. Required when the Connect attachment protocol is `GRE`. See [`aws_networkmanager_connect_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.
-- `subnet_arn` - (Optional) The subnet ARN for the Connect peer. Required when the Connect attachment protocol is `NO_ENCAP`. See [`aws_networkmanager_connect_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.
-- `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `bgp_options` - (Optional) Connect peer BGP options. See [bgp_options](#bgp_options) for more information.
+* `core_network_address` - (Optional) Connect peer core network address.
+* `inside_cidr_blocks` - (Optional) Inside IP addresses used for BGP peering. Required when the Connect attachment protocol is `GRE`. See [`aws_networkmanager_connect_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.
+* `subnet_arn` - (Optional) Subnet ARN for the Connect peer. Required when the Connect attachment protocol is `NO_ENCAP`. See [`aws_networkmanager_connect_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.
+* `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### bgp_options
+
+* `peer_asn` - (Optional) Peer ASN.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-- `arn` - The ARN of the attachment.
-- `configuration` - The configuration of the Connect peer.
-- `core_network_id` - The ID of a core network.
-- `edge_location` - The Region where the peer is located.
-- `id` - The ID of the Connect peer.
-- `state` - The state of the Connect peer.
-- `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the Connect peer.
+* `configuration` - Configuration of the Connect peer.
+* `connect_peer_id` - ID of the Connect peer.
+* `core_network_id` - ID of a core network.
+* `created_at` - Timestamp when the Connect peer was created.
+* `edge_location` - Region where the peer is located.
+* `state` - State of the Connect peer.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `15m`)
 
 ## Import
 

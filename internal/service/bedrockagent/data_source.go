@@ -61,13 +61,9 @@ func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, e
 }
 
 type dataSourceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[dataSourceResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*dataSourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_data_source"
 }
 
 func (r *dataSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -814,7 +810,7 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 
 	input.ClientToken = aws.String(id.UniqueId())
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateDataSource(ctx, input)
 	}, errCodeValidationException, "cannot assume role")
 
@@ -902,7 +898,7 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 		return
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateDataSource(ctx, input)
 	}, errCodeValidationException, "cannot assume role")
 
@@ -974,7 +970,7 @@ func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 }
 
 func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, dataSourceID, knowledgeBaseID)
 
 		if tfresource.NotFound(err) {
@@ -1028,6 +1024,7 @@ func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataS
 }
 
 type dataSourceResourceModel struct {
+	framework.WithRegionModel
 	DataDeletionPolicy                fwtypes.StringEnum[awstypes.DataDeletionPolicy]                         `tfsdk:"data_deletion_policy"`
 	DataSourceConfiguration           fwtypes.ListNestedObjectValueOf[dataSourceConfigurationModel]           `tfsdk:"data_source_configuration"`
 	DataSourceID                      types.String                                                            `tfsdk:"data_source_id"`

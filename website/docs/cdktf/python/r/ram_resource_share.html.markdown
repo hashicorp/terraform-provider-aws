@@ -39,6 +39,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the resource share.
 * `allow_external_principals` - (Optional) Indicates whether principals outside your organization can be associated with a resource share.
 * `permission_arns` - (Optional) Specifies the Amazon Resource Names (ARNs) of the RAM permission to associate with the resource share. If you do not specify an ARN for the permission, RAM automatically attaches the default version of the permission for each resource type. You can associate only one permission with each resource type included in the resource share.
@@ -77,4 +78,4 @@ Using `terraform import`, import resource shares using the `arn` of the resource
 % terraform import aws_ram_resource_share.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d1b95a08fc3018c7477d3c340484bf53d1729e6c175ec03ca5c9a53c81d97b1e -->
+<!-- cache-key: cdktf-0.20.8 input-67e10c3d5bed7f1f546ec38ea169ba7aeb45775e8d8e6d2db1fbcffdaaa46a9a -->

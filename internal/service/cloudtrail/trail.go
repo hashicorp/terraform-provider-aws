@@ -29,16 +29,16 @@ import (
 
 // @SDKResource("aws_cloudtrail", name="Trail")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudtrail/types;awstypes;awstypes.Trail")
+// @Testing(serialize=true)
 func resourceTrail() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrailCreate,
 		ReadWithoutTimeout:   resourceTrailRead,
 		UpdateWithoutTimeout: resourceTrailUpdate,
 		DeleteWithoutTimeout: resourceTrailDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -264,12 +264,10 @@ func resourceTrail() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
@@ -314,7 +312,7 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateTrail(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -361,11 +359,11 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceTrailRead(ctx, d, meta)...)
 }
 
-func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	trail, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*types.Trail, error) {
 		return findTrailByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -379,7 +377,6 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading CloudTrail Trail (%s): %s", d.Id(), err)
 	}
 
-	trail := outputRaw.(*types.Trail)
 	d.Set(names.AttrARN, trail.TrailARN)
 	d.Set("cloud_watch_logs_group_arn", trail.CloudWatchLogsLogGroupArn)
 	d.Set("cloud_watch_logs_role_arn", trail.CloudWatchLogsRoleArn)
@@ -407,9 +404,10 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("sns_topic_name", nil)
 	}
 
-	if output, err := conn.GetTrailStatus(ctx, &cloudtrail.GetTrailStatusInput{
+	input := cloudtrail.GetTrailStatusInput{
 		Name: aws.String(d.Id()),
-	}); err != nil {
+	}
+	if output, err := conn.GetTrailStatus(ctx, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudTrail Trail (%s) status: %s", d.Id(), err)
 	} else {
 		d.Set("enable_logging", output.IsLogging)
@@ -454,7 +452,7 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
@@ -502,7 +500,7 @@ func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateTrail(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -547,14 +545,15 @@ func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceTrailRead(ctx, d, meta)...)
 }
 
-func resourceTrailDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrailDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudTrail Trail: %s", d.Id())
-	_, err := conn.DeleteTrail(ctx, &cloudtrail.DeleteTrailInput{
+	input := cloudtrail.DeleteTrailInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTrail(ctx, &input)
 
 	if errs.IsA[*types.TrailNotFoundException](err) {
 		return diags
@@ -660,7 +659,7 @@ func setEventSelectors(ctx context.Context, conn *cloudtrail.Client, d *schema.R
 		TrailName: aws.String(d.Id()),
 	}
 
-	eventSelectors := expandEventSelector(d.Get("event_selector").([]interface{}))
+	eventSelectors := expandEventSelector(d.Get("event_selector").([]any))
 	// If no defined selectors revert to the single default selector.
 	if len(eventSelectors) == 0 {
 		eventSelector := types.EventSelector{
@@ -673,18 +672,18 @@ func setEventSelectors(ctx context.Context, conn *cloudtrail.Client, d *schema.R
 	input.EventSelectors = eventSelectors
 
 	if _, err := conn.PutEventSelectors(ctx, input); err != nil {
-		return fmt.Errorf("setting CloudTrail Trail (%s) event selectors: %s", d.Id(), err)
+		return fmt.Errorf("setting CloudTrail Trail (%s) event selectors: %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandEventSelector(configured []interface{}) []types.EventSelector {
+func expandEventSelector(configured []any) []types.EventSelector {
 	eventSelectors := make([]types.EventSelector, 0, len(configured))
 
 	for _, raw := range configured {
-		data := raw.(map[string]interface{})
-		dataResources := expandEventSelectorDataResource(data["data_resource"].([]interface{}))
+		data := raw.(map[string]any)
+		dataResources := expandEventSelectorDataResource(data["data_resource"].([]any))
 
 		es := types.EventSelector{
 			IncludeManagementEvents: aws.Bool(data["include_management_events"].(bool)),
@@ -702,15 +701,15 @@ func expandEventSelector(configured []interface{}) []types.EventSelector {
 	return eventSelectors
 }
 
-func expandEventSelectorDataResource(configured []interface{}) []types.DataResource {
+func expandEventSelectorDataResource(configured []any) []types.DataResource {
 	dataResources := make([]types.DataResource, 0, len(configured))
 
 	for _, raw := range configured {
-		data := raw.(map[string]interface{})
+		data := raw.(map[string]any)
 
 		dataResource := types.DataResource{
 			Type:   aws.String(data[names.AttrType].(string)),
-			Values: flex.ExpandStringValueList(data[names.AttrValues].([]interface{})),
+			Values: flex.ExpandStringValueList(data[names.AttrValues].([]any)),
 		}
 
 		dataResources = append(dataResources, dataResource)
@@ -719,8 +718,8 @@ func expandEventSelectorDataResource(configured []interface{}) []types.DataResou
 	return dataResources
 }
 
-func flattenEventSelector(configured []types.EventSelector) []map[string]interface{} {
-	eventSelectors := make([]map[string]interface{}, 0, len(configured))
+func flattenEventSelector(configured []types.EventSelector) []map[string]any {
+	eventSelectors := make([]map[string]any, 0, len(configured))
 
 	// Prevent default configurations shows differences
 	if len(configured) == 1 && len(configured[0].DataResources) == 0 && configured[0].ReadWriteType == types.ReadWriteTypeAll && len(configured[0].ExcludeManagementEventSources) == 0 {
@@ -728,7 +727,7 @@ func flattenEventSelector(configured []types.EventSelector) []map[string]interfa
 	}
 
 	for _, raw := range configured {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item["read_write_type"] = raw.ReadWriteType
 		item["exclude_management_event_sources"] = raw.ExcludeManagementEventSources
 		item["include_management_events"] = aws.ToBool(raw.IncludeManagementEvents)
@@ -740,11 +739,11 @@ func flattenEventSelector(configured []types.EventSelector) []map[string]interfa
 	return eventSelectors
 }
 
-func flattenEventSelectorDataResource(configured []types.DataResource) []map[string]interface{} {
-	dataResources := make([]map[string]interface{}, 0, len(configured))
+func flattenEventSelectorDataResource(configured []types.DataResource) []map[string]any {
+	dataResources := make([]map[string]any, 0, len(configured))
 
 	for _, raw := range configured {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item[names.AttrType] = aws.ToString(raw.Type)
 		item[names.AttrValues] = raw.Values
 
@@ -756,7 +755,7 @@ func flattenEventSelectorDataResource(configured []types.DataResource) []map[str
 
 func setAdvancedEventSelectors(ctx context.Context, conn *cloudtrail.Client, d *schema.ResourceData) error {
 	input := &cloudtrail.PutEventSelectorsInput{
-		AdvancedEventSelectors: expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{})),
+		AdvancedEventSelectors: expandAdvancedEventSelector(d.Get("advanced_event_selector").([]any)),
 		TrailName:              aws.String(d.Id()),
 	}
 
@@ -767,11 +766,11 @@ func setAdvancedEventSelectors(ctx context.Context, conn *cloudtrail.Client, d *
 	return nil
 }
 
-func expandAdvancedEventSelector(configured []interface{}) []types.AdvancedEventSelector {
+func expandAdvancedEventSelector(configured []any) []types.AdvancedEventSelector {
 	advancedEventSelectors := make([]types.AdvancedEventSelector, 0, len(configured))
 
 	for _, raw := range configured {
-		data := raw.(map[string]interface{})
+		data := raw.(map[string]any)
 		fieldSelectors := expandAdvancedEventSelectorFieldSelector(data["field_selector"].(*schema.Set))
 
 		aes := types.AdvancedEventSelector{
@@ -789,32 +788,32 @@ func expandAdvancedEventSelectorFieldSelector(configured *schema.Set) []types.Ad
 	fieldSelectors := make([]types.AdvancedFieldSelector, 0, configured.Len())
 
 	for _, raw := range configured.List() {
-		data := raw.(map[string]interface{})
+		data := raw.(map[string]any)
 		fieldSelector := types.AdvancedFieldSelector{
 			Field: aws.String(data[names.AttrField].(string)),
 		}
 
-		if v, ok := data["equals"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data["equals"].([]any); ok && len(v) > 0 {
 			fieldSelector.Equals = flex.ExpandStringValueList(v)
 		}
 
-		if v, ok := data["not_equals"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data["not_equals"].([]any); ok && len(v) > 0 {
 			fieldSelector.NotEquals = flex.ExpandStringValueList(v)
 		}
 
-		if v, ok := data["starts_with"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data["starts_with"].([]any); ok && len(v) > 0 {
 			fieldSelector.StartsWith = flex.ExpandStringValueList(v)
 		}
 
-		if v, ok := data["not_starts_with"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data["not_starts_with"].([]any); ok && len(v) > 0 {
 			fieldSelector.NotStartsWith = flex.ExpandStringValueList(v)
 		}
 
-		if v, ok := data["ends_with"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data["ends_with"].([]any); ok && len(v) > 0 {
 			fieldSelector.EndsWith = flex.ExpandStringValueList(v)
 		}
 
-		if v, ok := data["not_ends_with"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data["not_ends_with"].([]any); ok && len(v) > 0 {
 			fieldSelector.NotEndsWith = flex.ExpandStringValueList(v)
 		}
 
@@ -824,11 +823,11 @@ func expandAdvancedEventSelectorFieldSelector(configured *schema.Set) []types.Ad
 	return fieldSelectors
 }
 
-func flattenAdvancedEventSelector(configured []types.AdvancedEventSelector) []map[string]interface{} {
-	advancedEventSelectors := make([]map[string]interface{}, 0, len(configured))
+func flattenAdvancedEventSelector(configured []types.AdvancedEventSelector) []map[string]any {
+	advancedEventSelectors := make([]map[string]any, 0, len(configured))
 
 	for _, raw := range configured {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item[names.AttrName] = aws.ToString(raw.Name)
 		item["field_selector"] = flattenAdvancedEventSelectorFieldSelector(raw.FieldSelectors)
 
@@ -838,11 +837,11 @@ func flattenAdvancedEventSelector(configured []types.AdvancedEventSelector) []ma
 	return advancedEventSelectors
 }
 
-func flattenAdvancedEventSelectorFieldSelector(configured []types.AdvancedFieldSelector) []map[string]interface{} {
-	fieldSelectors := make([]map[string]interface{}, 0, len(configured))
+func flattenAdvancedEventSelectorFieldSelector(configured []types.AdvancedFieldSelector) []map[string]any {
+	fieldSelectors := make([]map[string]any, 0, len(configured))
 
 	for _, raw := range configured {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item[names.AttrField] = aws.ToString(raw.Field)
 		if raw.Equals != nil {
 			item["equals"] = raw.Equals
@@ -882,11 +881,11 @@ func setInsightSelectors(ctx context.Context, conn *cloudtrail.Client, d *schema
 	return nil
 }
 
-func expandInsightSelector(configured []interface{}) []types.InsightSelector {
+func expandInsightSelector(configured []any) []types.InsightSelector {
 	insightSelectors := make([]types.InsightSelector, 0, len(configured))
 
 	for _, raw := range configured {
-		data := raw.(map[string]interface{})
+		data := raw.(map[string]any)
 
 		is := types.InsightSelector{
 			InsightType: types.InsightType(data["insight_type"].(string)),
@@ -897,11 +896,11 @@ func expandInsightSelector(configured []interface{}) []types.InsightSelector {
 	return insightSelectors
 }
 
-func flattenInsightSelector(configured []types.InsightSelector) []map[string]interface{} {
-	insightSelectors := make([]map[string]interface{}, 0, len(configured))
+func flattenInsightSelector(configured []types.InsightSelector) []map[string]any {
+	insightSelectors := make([]map[string]any, 0, len(configured))
 
 	for _, raw := range configured {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item["insight_type"] = raw.InsightType
 
 		insightSelectors = append(insightSelectors, item)
@@ -1111,9 +1110,9 @@ func resourceTrailV0() *schema.Resource {
 	}
 }
 
-func trailUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func trailUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
-		rawState = map[string]interface{}{}
+		rawState = map[string]any{}
 	}
 
 	if !arn.IsARN(rawState[names.AttrID].(string)) {

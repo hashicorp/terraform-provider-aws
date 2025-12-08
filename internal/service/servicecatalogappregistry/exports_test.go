@@ -9,7 +9,7 @@ var (
 	FindAttributeGroupByID                    = findAttributeGroupByID
 	FindAttributeGroupAssociationByTwoPartKey = findAttributeGroupAssociationByTwoPartKey
 
-	ResourceApplication               = newResourceApplication
-	ResourceAttributeGroup            = newResourceAttributeGroup
-	ResourceAttributeGroupAssociation = newResourceAttributeGroupAssociation
+	ResourceApplication               = newApplicationResource
+	ResourceAttributeGroup            = newAttributeGroupResource
+	ResourceAttributeGroupAssociation = newAttributeGroupAssociationResource
 )

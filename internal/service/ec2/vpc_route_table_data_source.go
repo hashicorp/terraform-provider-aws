@@ -5,13 +5,11 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -186,9 +184,10 @@ func dataSourceRouteTable() *schema.Resource {
 	}
 }
 
-func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	req := &ec2.DescribeRouteTablesInput{}
@@ -211,7 +210,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		},
 	)
 	req.Filters = append(req.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+		svcTags(tftags.New(ctx, tags.(map[string]any))),
 	)...)
 	req.Filters = append(req.Filters, newCustomFilterList(
 		filter.(*schema.Set),
@@ -233,14 +232,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(aws.ToString(rt.RouteTableId))
 
 	ownerID := aws.ToString(rt.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, routeTableARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrOwnerID, ownerID)
 
 	d.Set("route_table_id", rt.RouteTableId)
@@ -262,8 +254,8 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func dataSourceRoutesRead(ctx context.Context, conn *ec2.Client, ec2Routes []awstypes.Route) []map[string]interface{} {
-	routes := make([]map[string]interface{}, 0, len(ec2Routes))
+func dataSourceRoutesRead(ctx context.Context, conn *ec2.Client, ec2Routes []awstypes.Route) []map[string]any {
+	routes := make([]map[string]any, 0, len(ec2Routes))
 	// Loop through the routes and add them to the set
 	for _, r := range ec2Routes {
 		if gatewayID := aws.ToString(r.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
@@ -292,7 +284,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.Client, ec2Routes []aws
 			}
 		}
 
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 
 		if r.DestinationCidrBlock != nil {
 			m[names.AttrCIDRBlock] = aws.ToString(r.DestinationCidrBlock)
@@ -343,11 +335,11 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.Client, ec2Routes []aws
 	return routes
 }
 
-func dataSourceAssociationsRead(ec2Assocations []awstypes.RouteTableAssociation) []map[string]interface{} {
-	associations := make([]map[string]interface{}, 0, len(ec2Assocations))
+func dataSourceAssociationsRead(ec2Assocations []awstypes.RouteTableAssociation) []map[string]any {
+	associations := make([]map[string]any, 0, len(ec2Assocations))
 	// Loop through the routes and add them to the set
 	for _, a := range ec2Assocations {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m["route_table_id"] = aws.ToString(a.RouteTableId)
 		m["route_table_association_id"] = aws.ToString(a.RouteTableAssociationId)
 		// GH[11134]

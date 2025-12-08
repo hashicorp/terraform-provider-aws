@@ -15,8 +15,6 @@ bug:
   #   doesn't support update
   #   Invalid address to set
   - "(\\[Bug\\]:|doesn't support update|failed to satisfy constraint: Member must not be null|Invalid address to set|panic:|produced an (invalid|unexpected) new value|Provider produced inconsistent (final plan|result after apply))"
-crash:
-  - 'panic:'
 sweeper:
   - 'sweeper'
 skaff:
@@ -79,6 +77,10 @@ service/appstream:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appstream_'
 service/appsync:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appsync_'
+service/arcregionswitch:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_arcregionswitch_'
+service/arczonalshift:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_arczonalshift_'
 service/athena:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_athena_'
 service/auditmanager:
@@ -99,6 +101,8 @@ service/bedrock:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
 service/bedrockagent:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
+service/bedrockagentcore:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagentcore_'
 service/billing:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billing_'
 service/billingconductor:
@@ -172,7 +176,7 @@ service/codestarnotifications:
 service/cognitoidentity:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_identity_(?!provider)'
 service/cognitoidp:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_(identity_provider|resource|user|risk)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_(identity_provider|log|managed_login_branding|managed_user|resource|risk|user)'
 service/cognitosync:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognitosync_'
 service/comprehend:
@@ -235,6 +239,8 @@ service/drs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_drs_'
 service/ds:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_directory_service_'
+service/dsql:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dsql_'
 service/dynamodb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dynamodb_'
 service/dynamodbstreams:
@@ -242,7 +248,7 @@ service/dynamodbstreams:
 service/ebs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ebs_'
 service/ec2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ami|availability_zone|ec2_(allowed_images_settings|availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)'
 service/ec2ebs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ebs_|volume_attach|snapshot_create)'
 service/ec2instanceconnect:
@@ -283,6 +289,8 @@ service/events:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudwatch_event_'
 service/evidently:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_evidently_'
+service/evs:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_evs_'
 service/finspace:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_finspace_'
 service/finspacedata:
@@ -485,20 +493,32 @@ service/mturk:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mturk_'
 service/mwaa:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mwaa_'
+service/mwaaserverless:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mwaaserverless_'
 service/neptune:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptune_'
 service/neptunegraph:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptunegraph_'
 service/networkfirewall:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkfirewall_'
+service/networkflowmonitor:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkflowmonitor_'
 service/networkmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmanager_'
 service/networkmonitor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmonitor_'
 service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
+service/notifications:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_notifications_'
+service/notificationscontacts:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_notificationscontacts_'
 service/oam:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_oam_'
+service/observabilityadmin:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_observabilityadmin_'
+service/odb:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_odb_'
 service/opensearch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opensearch_'
 service/opensearchserverless:
@@ -605,6 +625,8 @@ service/s3outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3outposts_'
 service/s3tables:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3tables_'
+service/s3vectors:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3vectors_'
 service/sagemaker:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_sagemaker_'
 service/sagemakera2iruntime:

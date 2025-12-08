@@ -49,7 +49,7 @@ func resourceReceiptRuleSet() *schema.Resource {
 	}
 }
 
-func resourceReceiptRuleSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReceiptRuleSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -69,7 +69,7 @@ func resourceReceiptRuleSetCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceReceiptRuleSetRead(ctx, d, meta)...)
 }
 
-func resourceReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -99,7 +99,7 @@ func resourceReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 

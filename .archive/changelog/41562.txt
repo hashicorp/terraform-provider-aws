@@ -1,0 +1,27 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `RequiredWith` validation `password_wo` and `password_wo_version`. Remove `PreferWriteOnlyAttribute` validation
+```
+
+```release-note:enhancement
+resource/aws_secretsmanager_secret_version: Add `RequiredWith` validation `secret_string_wo` and `secret_string_wo_version`. Remove `PreferWriteOnlyAttribute` validation
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster: Add `RequiredWith` validation `master_password_wo` and `master_password_wo_version`. Remove `PreferWriteOnlyAttribute` validation
+```
+
+```release-note:enhancement
+resource/aws_redshift_cluster: Add `RequiredWith` validation `master_password_wo` and `master_password_wo_version`. Remove `PreferWriteOnlyAttribute` validation
+```
+
+```release-note:enhancement
+resource/aws_redshiftseverless_namespace: Add `RequiredWith` validation `admin_user_password_wo` and `admin_user_password_wo_version`. Remove `PreferWriteOnlyAttribute` validation
+```
+
+```release-note:enhancement
+resource/aws_docdb_cluster: Add `RequiredWith` validation `master_password_wo` and `master_password_wo_version`. Remove `PreferWriteOnlyAttribute` validation
+```
+
+```release-note:enhancement
+resource/aws_ssm_parameter: Remove `PreferWriteOnlyAttribute` validation
+```

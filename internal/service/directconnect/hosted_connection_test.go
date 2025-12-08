@@ -37,10 +37,12 @@ func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 				Config: testAccHostedConnectionConfig_basic(connectionName, connectionID, ownerAccountID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedConnectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, connectionName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrOwnerAccountID, ownerAccountID),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth", "100Mbps"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionID),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_region"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, connectionName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOwnerAccountID, ownerAccountID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRegion),
 					resource.TestCheckResourceAttr(resourceName, "vlan", "4094"),
 				),
 			},
@@ -58,7 +60,9 @@ func testAccCheckHostedConnectionDestroy(ctx context.Context, providerFunc func(
 				continue
 			}
 
-			_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID)
+			// Get the parent connection ID from the resource attributes
+			parentConnectionID := rs.Primary.Attributes[names.AttrConnectionID]
+			_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID, parentConnectionID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -84,7 +88,10 @@ func testAccCheckHostedConnectionExists(ctx context.Context, n string) resource.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID)
+		// Get the parent connection ID from the resource state
+		parentConnectionID := rs.Primary.Attributes[names.AttrConnectionID]
+
+		_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID, parentConnectionID)
 
 		return err
 	}

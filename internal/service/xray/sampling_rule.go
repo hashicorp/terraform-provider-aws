@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,8 +36,6 @@ func resourceSamplingRule() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -114,7 +111,7 @@ func resourceSamplingRule() *schema.Resource {
 	}
 }
 
-func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
@@ -133,8 +130,8 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		Version:       aws.Int32(int32(d.Get(names.AttrVersion).(int))),
 	}
 
-	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.(map[string]interface{})) > 0 {
-		samplingRule.Attributes = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.(map[string]any)) > 0 {
+		samplingRule.Attributes = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	input := xray.CreateSamplingRuleInput{
@@ -153,7 +150,7 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSamplingRuleRead(ctx, d, meta)...)
 }
 
-func resourceSamplingRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSamplingRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
@@ -186,7 +183,7 @@ func resourceSamplingRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceSamplingRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSamplingRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
@@ -205,7 +202,7 @@ func resourceSamplingRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange(names.AttrAttributes) {
-			samplingRuleUpdate.Attributes = flex.ExpandStringValueMap(d.Get(names.AttrAttributes).(map[string]interface{}))
+			samplingRuleUpdate.Attributes = flex.ExpandStringValueMap(d.Get(names.AttrAttributes).(map[string]any))
 		}
 
 		input := xray.UpdateSamplingRuleInput{
@@ -222,7 +219,7 @@ func resourceSamplingRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSamplingRuleRead(ctx, d, meta)...)
 }
 
-func resourceSamplingRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSamplingRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 

@@ -233,6 +233,10 @@ func testAccIdentityProviderBaseConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "eks" {
+  service_name = "eks"
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -241,7 +245,7 @@ resource "aws_iam_role" "test" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "eks.${data.aws_partition.current.dns_suffix}"
+        Service = data.aws_service_principal.eks.name
       }
     }]
     Version = "2012-10-17"

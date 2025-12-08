@@ -74,8 +74,9 @@ var (
 
 // @FrameworkResource("aws_rekognition_stream_processor", name="Stream Processor")
 // @Tags(identifierAttribute="arn")
-func newResourceStreamProcessor(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceStreamProcessor{}
+func newStreamProcessorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &streamProcessorResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -87,17 +88,14 @@ const (
 	ResNameStreamProcessor = "Stream Processor"
 )
 
-type resourceStreamProcessor struct {
-	framework.ResourceWithConfigure
+type streamProcessorResource struct {
+	framework.ResourceWithModel[streamProcessorResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceStreamProcessor) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_rekognition_stream_processor"
-}
-
-func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *streamProcessorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrKMSKeyID: schema.StringAttribute{
@@ -217,45 +215,42 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						objectvalidator.AtLeastOneOf(path.MatchRelative().AtName("bounding_box"), path.MatchRelative().AtName("polygon")),
 					},
 					Blocks: map[string]schema.Block{
-						"bounding_box": schema.SingleNestedBlock{
-							CustomType:  fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
+						"bounding_box": schema.ListNestedBlock{
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[boundingBoxModel](ctx),
 							Description: "The box representing a region of interest on screen.",
-							Validators: []validator.Object{
-								objectvalidator.AlsoRequires(
-									path.MatchRelative().AtName("height"),
-									path.MatchRelative().AtName("left"),
-									path.MatchRelative().AtName("top"),
-									path.MatchRelative().AtName("width"),
-								),
-								objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("polygon")),
+							Validators: []validator.List{
+								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("polygon")),
+								listvalidator.SizeBetween(1, 1),
 							},
-							Attributes: map[string]schema.Attribute{
-								"height": schema.Float64Attribute{
-									Optional:    true,
-									Description: "Height of the bounding box as a ratio of the overall image height.",
-									Validators: []validator.Float64{
-										float64validator.Between(0.0, 1.0),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"height": schema.Float64Attribute{
+										Description: "Height of the bounding box as a ratio of the overall image height.",
+										Optional:    true,
+										Validators: []validator.Float64{
+											float64validator.Between(0.0, 1.0),
+										},
 									},
-								},
-								"left": schema.Float64Attribute{
-									Description: "Left coordinate of the bounding box as a ratio of overall image width.",
-									Optional:    true,
-									Validators: []validator.Float64{
-										float64validator.Between(0.0, 1.0),
+									"left": schema.Float64Attribute{
+										Description: "Left coordinate of the bounding box as a ratio of overall image width.",
+										Optional:    true,
+										Validators: []validator.Float64{
+											float64validator.Between(0.0, 1.0),
+										},
 									},
-								},
-								"top": schema.Float64Attribute{
-									Description: "Top coordinate of the bounding box as a ratio of overall image height.",
-									Optional:    true,
-									Validators: []validator.Float64{
-										float64validator.Between(0.0, 1.0),
+									"top": schema.Float64Attribute{
+										Description: "Top coordinate of the bounding box as a ratio of overall image height.",
+										Optional:    true,
+										Validators: []validator.Float64{
+											float64validator.Between(0.0, 1.0),
+										},
 									},
-								},
-								"width": schema.Float64Attribute{
-									Description: "Width of the bounding box as a ratio of the overall image width.",
-									Optional:    true,
-									Validators: []validator.Float64{
-										float64validator.Between(0.0, 1.0),
+									"width": schema.Float64Attribute{
+										Description: "Width of the bounding box as a ratio of the overall image width.",
+										Optional:    true,
+										Validators: []validator.Float64{
+											float64validator.Between(0.0, 1.0),
+										},
 									},
 								},
 							},
@@ -268,12 +263,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("bounding_box")),
 							},
 							NestedObject: schema.NestedBlockObject{
-								CustomType: fwtypes.NewObjectTypeOf[polygonModel](ctx),
-								Validators: []validator.Object{
-									objectvalidator.AlsoRequires(
-										path.MatchRelative().AtName("x"),
-										path.MatchRelative().AtName("y"),
-									)},
 								Attributes: map[string]schema.Attribute{
 									"x": schema.Float64Attribute{
 										Description: "The value of the X coordinate for a point on a Polygon.",
@@ -452,10 +441,21 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *streamProcessorResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := streamProcessorSchema0(ctx)
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeStreamProcessorStateV0toV1,
+		},
+	}
+}
+
+func (r *streamProcessorResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var plan resourceStreamProcessorDataModel
+	var plan streamProcessorResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -511,10 +511,10 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *streamProcessorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var state resourceStreamProcessorDataModel
+	var state streamProcessorResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -543,10 +543,10 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *streamProcessorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var plan, state resourceStreamProcessorDataModel
+	var plan, state streamProcessorResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -614,7 +614,7 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 
 			plannedRegions := make([]awstypes.RegionOfInterest, len(planRegions))
 
-			for i := 0; i < len(planRegions); i++ {
+			for i := range planRegions {
 				planRegion := planRegions[i]
 				plannedRegions[i] = awstypes.RegionOfInterest{}
 
@@ -636,7 +636,7 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 
 					plannedPolygons := make([]awstypes.Point, len(polygons))
 
-					for i := 0; i < len(polygons); i++ {
+					for i := range polygons {
 						polygon := polygons[i]
 						plannedPolygons[i] = awstypes.Point{
 							X: aws.Float32(float32(polygon.X.ValueFloat64())),
@@ -678,10 +678,10 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 	}
 }
 
-func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *streamProcessorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var state resourceStreamProcessorDataModel
+	var state streamProcessorResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -715,12 +715,8 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-func (r *resourceStreamProcessor) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *streamProcessorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
-}
-
-func (r *resourceStreamProcessor) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
@@ -783,7 +779,7 @@ func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, n
 }
 
 func statusStreamProcessor(ctx context.Context, conn *rekognition.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findStreamProcessorByName(ctx, conn, name)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -831,7 +827,8 @@ func unwrapListNestedObjectValueOf[T any](ctx context.Context, diagnostics diag.
 	return ptrPlan, ptrState
 }
 
-type resourceStreamProcessorDataModel struct {
+type streamProcessorResourceModel struct {
+	framework.WithRegionModel
 	ARN                   types.String                                                `tfsdk:"arn"`
 	DataSharingPreference fwtypes.ListNestedObjectValueOf[dataSharingPreferenceModel] `tfsdk:"data_sharing_preference"`
 	Input                 fwtypes.ListNestedObjectValueOf[inputModel]                 `tfsdk:"input"`
@@ -879,8 +876,8 @@ type s3DestinationModel struct {
 }
 
 type regionOfInterestModel struct {
-	BoundingBox fwtypes.ObjectValueOf[boundingBoxModel]       `tfsdk:"bounding_box"`
-	Polygon     fwtypes.ListNestedObjectValueOf[polygonModel] `tfsdk:"polygon"`
+	BoundingBox fwtypes.ListNestedObjectValueOf[boundingBoxModel] `tfsdk:"bounding_box"`
+	Polygon     fwtypes.ListNestedObjectValueOf[polygonModel]     `tfsdk:"polygon"`
 }
 
 type boundingBoxModel struct {

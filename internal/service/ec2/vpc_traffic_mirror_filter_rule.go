@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -122,7 +121,7 @@ func resourceTrafficMirrorFilterRule() *schema.Resource {
 	}
 }
 
-func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -140,16 +139,16 @@ func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.Resour
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("destination_port_range"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DestinationPortRange = expandTrafficMirrorPortRangeRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("destination_port_range"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DestinationPortRange = expandTrafficMirrorPortRangeRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrProtocol); ok {
 		input.Protocol = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("source_port_range"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SourcePortRange = expandTrafficMirrorPortRangeRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("source_port_range"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SourcePortRange = expandTrafficMirrorPortRangeRequest(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateTrafficMirrorFilterRule(ctx, input)
@@ -163,9 +162,10 @@ func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceTrafficMirrorFilterRuleRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	rule, err := findTrafficMirrorFilterRuleByTwoPartKey(ctx, conn, d.Get("traffic_mirror_filter_id").(string), d.Id())
 
@@ -179,18 +179,11 @@ func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Traffic Mirror Filter Rule (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "traffic-mirror-filter-rule/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, trafficMirrorFilterRuleARN(ctx, c, d.Id()))
 	d.Set(names.AttrDescription, rule.Description)
 	d.Set("destination_cidr_block", rule.DestinationCidrBlock)
 	if rule.DestinationPortRange != nil {
-		if err := d.Set("destination_port_range", []interface{}{flattenTrafficMirrorPortRange(rule.DestinationPortRange)}); err != nil {
+		if err := d.Set("destination_port_range", []any{flattenTrafficMirrorPortRange(rule.DestinationPortRange)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination_port_range: %s", err)
 		}
 	} else {
@@ -201,7 +194,7 @@ func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.Resource
 	d.Set("rule_number", rule.RuleNumber)
 	d.Set("source_cidr_block", rule.SourceCidrBlock)
 	if rule.SourcePortRange != nil {
-		if err := d.Set("source_port_range", []interface{}{flattenTrafficMirrorPortRange(rule.SourcePortRange)}); err != nil {
+		if err := d.Set("source_port_range", []any{flattenTrafficMirrorPortRange(rule.SourcePortRange)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting source_port_range: %s", err)
 		}
 	} else {
@@ -213,7 +206,7 @@ func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -236,8 +229,8 @@ func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	if d.HasChange("destination_port_range") {
-		if v, ok := d.GetOk("destination_port_range"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.DestinationPortRange = expandTrafficMirrorPortRangeRequest(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("destination_port_range"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.DestinationPortRange = expandTrafficMirrorPortRangeRequest(v.([]any)[0].(map[string]any))
 			// Modify request that adds port range seems to fail if protocol is not set in the request.
 			input.Protocol = aws.Int32(int32(d.Get(names.AttrProtocol).(int)))
 		} else {
@@ -266,8 +259,8 @@ func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	if d.HasChange("source_port_range") {
-		if v, ok := d.GetOk("source_port_range"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.SourcePortRange = expandTrafficMirrorPortRangeRequest(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("source_port_range"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.SourcePortRange = expandTrafficMirrorPortRangeRequest(v.([]any)[0].(map[string]any))
 			// Modify request that adds port range seems to fail if protocol is not set in the request.
 			input.Protocol = aws.Int32(int32(d.Get(names.AttrProtocol).(int)))
 		} else {
@@ -292,7 +285,7 @@ func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceTrafficMirrorFilterRuleRead(ctx, d, meta)...)
 }
 
-func resourceTrafficMirrorFilterRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficMirrorFilterRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -313,7 +306,7 @@ func resourceTrafficMirrorFilterRuleDelete(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceTrafficMirrorFilterRuleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceTrafficMirrorFilterRuleImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.SplitN(d.Id(), ":", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return nil, fmt.Errorf("unexpected format (%q), expected <filter-id>:<rule-id>", d.Id())
@@ -325,7 +318,11 @@ func resourceTrafficMirrorFilterRuleImport(ctx context.Context, d *schema.Resour
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandTrafficMirrorPortRangeRequest(tfMap map[string]interface{}) *awstypes.TrafficMirrorPortRangeRequest {
+func trafficMirrorFilterRuleARN(ctx context.Context, c *conns.AWSClient, trafficMirrorFilterRuleID string) string {
+	return c.RegionalARN(ctx, names.EC2, "traffic-mirror-filter-rule/"+trafficMirrorFilterRuleID)
+}
+
+func expandTrafficMirrorPortRangeRequest(tfMap map[string]any) *awstypes.TrafficMirrorPortRangeRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -343,12 +340,12 @@ func expandTrafficMirrorPortRangeRequest(tfMap map[string]interface{}) *awstypes
 	return apiObject
 }
 
-func flattenTrafficMirrorPortRange(apiObject *awstypes.TrafficMirrorPortRange) map[string]interface{} {
+func flattenTrafficMirrorPortRange(apiObject *awstypes.TrafficMirrorPortRange) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FromPort; v != nil {
 		tfMap["from_port"] = aws.ToInt32(v)

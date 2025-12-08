@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -73,17 +74,32 @@ func resourceManagedScalingPolicy() *schema.Resource {
 					},
 				},
 			},
+			"scaling_strategy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ScalingStrategy](),
+			},
+			"utilization_performance_index": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntInSlice([]int{1, 25, 50, 75, 100}),
+			},
 		},
 	}
 }
 
-func resourceManagedScalingPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedScalingPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	clusterID := d.Get("cluster_id").(string)
+	input := &emr.PutManagedScalingPolicyInput{
+		ClusterId: aws.String(clusterID),
+	}
 	if v := d.Get("compute_limits").(*schema.Set).List(); len(v) > 0 && v[0] != nil {
-		tfMap := v[0].(map[string]interface{})
+		tfMap := v[0].(map[string]any)
 		computeLimits := &awstypes.ComputeLimits{
 			UnitType:             awstypes.ComputeLimitsUnitType(tfMap["unit_type"].(string)),
 			MinimumCapacityUnits: aws.Int32(int32(tfMap["minimum_capacity_units"].(int))),
@@ -98,18 +114,22 @@ func resourceManagedScalingPolicyCreate(ctx context.Context, d *schema.ResourceD
 		} else if v, ok := tfMap["maximum_ondemand_capacity_units"].(int); ok && v >= 0 {
 			computeLimits.MaximumOnDemandCapacityUnits = aws.Int32(int32(v))
 		}
-		input := &emr.PutManagedScalingPolicyInput{
-			ClusterId: aws.String(clusterID),
-			ManagedScalingPolicy: &awstypes.ManagedScalingPolicy{
-				ComputeLimits: computeLimits,
-			},
+		input.ManagedScalingPolicy = &awstypes.ManagedScalingPolicy{
+			ComputeLimits: computeLimits,
 		}
+	}
+	if v, ok := d.GetOk("scaling_strategy"); ok {
+		input.ManagedScalingPolicy.ScalingStrategy = awstypes.ScalingStrategy(v.(string))
+	}
 
-		_, err := conn.PutManagedScalingPolicy(ctx, input)
+	if v, ok := d.GetOk("utilization_performance_index"); ok {
+		input.ManagedScalingPolicy.UtilizationPerformanceIndex = aws.Int32(int32(v.(int)))
+	}
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "putting EMR Managed Scaling Policy: %s", err)
-		}
+	_, err := conn.PutManagedScalingPolicy(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "putting EMR Managed Scaling Policy: %s", err)
 	}
 
 	d.SetId(clusterID)
@@ -117,7 +137,7 @@ func resourceManagedScalingPolicyCreate(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceManagedScalingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedScalingPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -138,10 +158,14 @@ func resourceManagedScalingPolicyRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "setting compute_limits: %s", err)
 	}
 
+	if managedScalingPolicy.ScalingStrategy != "" {
+		d.Set("scaling_strategy", managedScalingPolicy.ScalingStrategy)
+		d.Set("utilization_performance_index", managedScalingPolicy.UtilizationPerformanceIndex)
+	}
 	return diags
 }
 
-func resourceManagedScalingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedScalingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -194,12 +218,12 @@ func findManagedScalingPolicy(ctx context.Context, conn *emr.Client, input *emr.
 	return output.ManagedScalingPolicy, nil
 }
 
-func flattenComputeLimits(apiObject *awstypes.ComputeLimits) []interface{} {
+func flattenComputeLimits(apiObject *awstypes.ComputeLimits) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["unit_type"] = string(apiObject.UnitType)
 
@@ -219,5 +243,5 @@ func flattenComputeLimits(apiObject *awstypes.ComputeLimits) []interface{} {
 		tfMap["minimum_capacity_units"] = aws.ToInt32(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

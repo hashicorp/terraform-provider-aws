@@ -78,6 +78,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` (String) Description of Resiliency Policy.
 * `dataLocationConstraint` (String) Data Location Constraint of the Policy.
   Valid values are `AnyLocation`, `SameContinent`, and `SameCountry`.
@@ -93,6 +94,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `region` - (Attributes) Specifies Region failure policy. [`policy.region`](#policyregion)
 
 ### `policy.az`
@@ -179,4 +181,4 @@ Using `terraform import`, import Resilience Hub Resiliency Policy using the `arn
 % terraform import aws_resiliencehub_resiliency_policy.example arn:aws:resiliencehub:us-east-1:123456789012:resiliency-policy/8c1cfa29-d1dd-4421-aa68-c9f64cced4c2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f38fb122e47bc068b7886f155c869cfc5a16286b8c9f316d838875c6cb821ede -->
+<!-- cache-key: cdktf-0.20.8 input-a467a1c99259ae266ae0e08b3a22e4464c6a3cebe99a250802ecc2ebc2f32509 -->

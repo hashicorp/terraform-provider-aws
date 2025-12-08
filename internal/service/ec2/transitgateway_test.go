@@ -76,6 +76,8 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"securityGroupReferencingSupport":                    testAccTransitGateway_securityGroupReferencingSupport,
 			"securityGroupReferencingSupportExistingResource":    testAccTransitGateway_securityGroupReferencingSupportExistingResource,
 			"vpnEcmpSupport":                                     testAccTransitGateway_vpnECMPSupport,
+			"encryptionSupportWhenCreated":                       testAccTransitGateway_encryptionSupportWhenCreated,
+			"encryptionSupportWhenUpdated":                       testAccTransitGateway_encryptionSupportWhenUpdated,
 		},
 		"MulticastDomain": {
 			acctest.CtBasic:      testAccTransitGatewayMulticastDomain_basic,
@@ -145,11 +147,14 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			acctest.CtBasic:              testAccTransitGatewayRouteTableAssociation_basic,
 			acctest.CtDisappears:         testAccTransitGatewayRouteTableAssociation_disappears,
 			"replaceExistingAssociation": testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation,
-			"notRecreatedDXGateway":      testAccTransitGatewayRouteTableAssociation_notRecreatedDXGateway,
+			"attachmentChange":           testAccTransitGatewayRouteTableAssociation_attachmentChange,
+			"recreatedDXGateway":         testAccTransitGatewayRouteTableAssociation_recreatedDXGateway,
 		},
 		"RouteTablePropagation": {
 			acctest.CtBasic:      testAccTransitGatewayRouteTablePropagation_basic,
 			acctest.CtDisappears: testAccTransitGatewayRouteTablePropagation_disappears,
+			"attachmentChange":   testAccTransitGatewayRouteTablePropagation_attachmentChange,
+			"recreatedDXGateway": testAccTransitGatewayRouteTablePropagtion_recreatedDXGateway,
 		},
 		"VPCAttachment": {
 			acctest.CtBasic:                   testAccTransitGatewayVPCAttachment_basic,
@@ -730,6 +735,77 @@ func testAccTransitGateway_description(t *testing.T, semaphore tfsync.Semaphore)
 	})
 }
 
+// Encryption support is enabled when creating a transit gateway
+func testAccTransitGateway_encryptionSupportWhenCreated(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGateway1 awstypes.TransitGateway
+	resourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfig_encryptionSupport(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_support", string(awstypes.EncryptionSupportOptionValueEnable)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// A transit gateway is created without encryption support, then updated to enable it
+func testAccTransitGateway_encryptionSupportWhenUpdated(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGateway1 awstypes.TransitGateway
+	resourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_support", string(awstypes.EncryptionSupportOptionValueDisable)),
+				),
+			},
+			{
+				Config: testAccTransitGatewayConfig_encryptionSupport(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_support", string(awstypes.EncryptionSupportOptionValueEnable)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccTransitGateway_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2, transitGateway3 awstypes.TransitGateway
@@ -852,7 +928,7 @@ func testAccCheckTransitGatewayRecreated(i, j *awstypes.TransitGateway) resource
 	}
 }
 
-func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		transitGatewayRouteTableID := aws.ToString(transitGateway.Options.AssociationDefaultRouteTableId)
 
@@ -880,7 +956,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(
 	}
 }
 
-func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		transitGatewayRouteTableID := aws.ToString(transitGateway.Options.AssociationDefaultRouteTableId)
 
@@ -912,7 +988,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociat
 	}
 }
 
-func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		transitGatewayRouteTableID := aws.ToString(transitGateway.Options.PropagationDefaultRouteTableId)
 
@@ -940,7 +1016,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(
 	}
 }
 
-func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		transitGatewayRouteTableID := aws.ToString(transitGateway.Options.PropagationDefaultRouteTableId)
 
@@ -1184,4 +1260,12 @@ resource "aws_ec2_transit_gateway" "test" {
   }
 }
 `, rName)
+}
+
+func testAccTransitGatewayConfig_encryptionSupport() string {
+	return `
+resource "aws_ec2_transit_gateway" "test" {
+  encryption_support = "enable"
+}
+`
 }

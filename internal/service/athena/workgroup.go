@@ -40,6 +40,8 @@ func resourceWorkGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		CustomizeDiff: managedQueryResultsValidation,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -87,6 +89,51 @@ func resourceWorkGroup() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"identity_center_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enable_identity_center": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"identity_center_instance_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+						"managed_query_results_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									names.AttrEncryptionConfiguration: {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrKMSKey: {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 						"publish_cloudwatch_metrics_enabled": {
 							Type:     schema.TypeBool,
@@ -179,18 +226,16 @@ func resourceWorkGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &athena.CreateWorkGroupInput{
-		Configuration: expandWorkGroupConfiguration(d.Get(names.AttrConfiguration).([]interface{})),
+	input := athena.CreateWorkGroupInput{
+		Configuration: expandWorkGroupConfiguration(d.Get(names.AttrConfiguration).([]any)),
 		Name:          aws.String(name),
 		Tags:          getTagsIn(ctx),
 	}
@@ -199,7 +244,7 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateWorkGroup(ctx, input)
+	_, err := conn.CreateWorkGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Athena WorkGroup (%s): %s", name, err)
@@ -208,12 +253,12 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(name)
 
 	if v := types.WorkGroupState(d.Get(names.AttrState).(string)); v == types.WorkGroupStateDisabled {
-		input := &athena.UpdateWorkGroupInput{
+		input := athena.UpdateWorkGroupInput{
 			State:     v,
 			WorkGroup: aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateWorkGroup(ctx, input)
+		_, err := conn.UpdateWorkGroup(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "disabling Athena WorkGroup (%s): %s", d.Id(), err)
@@ -223,7 +268,7 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceWorkGroupRead(ctx, d, meta)...)
 }
 
-func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -258,17 +303,17 @@ func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &athena.UpdateWorkGroupInput{
+		input := athena.UpdateWorkGroupInput{
 			WorkGroup: aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if d.HasChange(names.AttrConfiguration) {
-			input.ConfigurationUpdates = expandWorkGroupConfigurationUpdates(d.Get(names.AttrConfiguration).([]interface{}))
+			input.ConfigurationUpdates = expandWorkGroupConfigurationUpdates(d.Get(names.AttrConfiguration).([]any))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -279,7 +324,7 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.State = types.WorkGroupState(d.Get(names.AttrState).(string))
 		}
 
-		_, err := conn.UpdateWorkGroup(ctx, input)
+		_, err := conn.UpdateWorkGroup(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Athena WorkGroup (%s): %s", d.Id(), err)
@@ -289,20 +334,18 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceWorkGroupRead(ctx, d, meta)...)
 }
 
-func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	input := &athena.DeleteWorkGroupInput{
+	log.Printf("[DEBUG] Deleting Athena WorkGroup (%s)", d.Id())
+	input := athena.DeleteWorkGroupInput{
 		WorkGroup: aws.String(d.Id()),
 	}
-
 	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		input.RecursiveDeleteOption = aws.Bool(v.(bool))
 	}
-
-	log.Printf("[DEBUG] Deleting Athena WorkGroup (%s)", d.Id())
-	_, err := conn.DeleteWorkGroup(ctx, input)
+	_, err := conn.DeleteWorkGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena WorkGroup (%s): %s", d.Id(), err)
@@ -312,11 +355,11 @@ func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func findWorkGroupByName(ctx context.Context, conn *athena.Client, name string) (*types.WorkGroup, error) {
-	input := &athena.GetWorkGroupInput{
+	input := athena.GetWorkGroupInput{
 		WorkGroup: aws.String(name),
 	}
 
-	output, err := conn.GetWorkGroup(ctx, input)
+	output, err := conn.GetWorkGroup(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "is not found") {
 		return nil, &retry.NotFoundError{
@@ -336,12 +379,12 @@ func findWorkGroupByName(ctx context.Context, conn *athena.Client, name string) 
 	return output.WorkGroup, nil
 }
 
-func expandWorkGroupConfiguration(l []interface{}) *types.WorkGroupConfiguration {
+func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	configuration := &types.WorkGroupConfiguration{}
 
@@ -353,7 +396,7 @@ func expandWorkGroupConfiguration(l []interface{}) *types.WorkGroupConfiguration
 		configuration.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
 
-	if v, ok := m[names.AttrEngineVersion].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[names.AttrEngineVersion].([]any); ok && len(v) > 0 && v[0] != nil {
 		configuration.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
@@ -361,12 +404,20 @@ func expandWorkGroupConfiguration(l []interface{}) *types.WorkGroupConfiguration
 		configuration.ExecutionRole = aws.String(v)
 	}
 
+	if v, ok := m["identity_center_configuration"]; ok {
+		configuration.IdentityCenterConfiguration = expandWorkGroupIdentityCenterConfiguration(v.([]any))
+	}
+
+	if v, ok := m["managed_query_results_configuration"]; ok {
+		configuration.ManagedQueryResultsConfiguration = expandWorkGroupManagedQueryResultsConfiguration(v.([]any))
+	}
+
 	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
 		configuration.PublishCloudWatchMetricsEnabled = aws.Bool(v)
 	}
 
 	if v, ok := m["result_configuration"]; ok {
-		configuration.ResultConfiguration = expandWorkGroupResultConfiguration(v.([]interface{}))
+		configuration.ResultConfiguration = expandWorkGroupResultConfiguration(v.([]any))
 	}
 
 	if v, ok := m["requester_pays_enabled"].(bool); ok {
@@ -376,12 +427,12 @@ func expandWorkGroupConfiguration(l []interface{}) *types.WorkGroupConfiguration
 	return configuration
 }
 
-func expandWorkGroupEngineVersion(l []interface{}) *types.EngineVersion {
+func expandWorkGroupEngineVersion(l []any) *types.EngineVersion {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	engineVersion := &types.EngineVersion{}
 
@@ -392,12 +443,12 @@ func expandWorkGroupEngineVersion(l []interface{}) *types.EngineVersion {
 	return engineVersion
 }
 
-func expandWorkGroupConfigurationUpdates(l []interface{}) *types.WorkGroupConfigurationUpdates {
+func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationUpdates {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	configurationUpdates := &types.WorkGroupConfigurationUpdates{}
 
@@ -411,7 +462,7 @@ func expandWorkGroupConfigurationUpdates(l []interface{}) *types.WorkGroupConfig
 		configurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
 
-	if v, ok := m[names.AttrEngineVersion].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[names.AttrEngineVersion].([]any); ok && len(v) > 0 && v[0] != nil {
 		configurationUpdates.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
@@ -419,12 +470,16 @@ func expandWorkGroupConfigurationUpdates(l []interface{}) *types.WorkGroupConfig
 		configurationUpdates.ExecutionRole = aws.String(v)
 	}
 
+	if v, ok := m["managed_query_results_configuration"]; ok {
+		configurationUpdates.ManagedQueryResultsConfigurationUpdates = expandWorkGroupManagedQueryResultsConfigurationUpdates(v.([]any))
+	}
+
 	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
 		configurationUpdates.PublishCloudWatchMetricsEnabled = aws.Bool(v)
 	}
 
 	if v, ok := m["result_configuration"]; ok {
-		configurationUpdates.ResultConfigurationUpdates = expandWorkGroupResultConfigurationUpdates(v.([]interface{}))
+		configurationUpdates.ResultConfigurationUpdates = expandWorkGroupResultConfigurationUpdates(v.([]any))
 	}
 
 	if v, ok := m["requester_pays_enabled"].(bool); ok {
@@ -434,17 +489,37 @@ func expandWorkGroupConfigurationUpdates(l []interface{}) *types.WorkGroupConfig
 	return configurationUpdates
 }
 
-func expandWorkGroupResultConfiguration(l []interface{}) *types.ResultConfiguration {
+func expandWorkGroupIdentityCenterConfiguration(l []any) *types.IdentityCenterConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
+
+	identityCenterConfiguration := &types.IdentityCenterConfiguration{}
+
+	if v, ok := m["enable_identity_center"].(bool); ok {
+		identityCenterConfiguration.EnableIdentityCenter = aws.Bool(v)
+	}
+
+	if v, ok := m["identity_center_instance_arn"].(string); ok && v != "" {
+		identityCenterConfiguration.IdentityCenterInstanceArn = aws.String(v)
+	}
+
+	return identityCenterConfiguration
+}
+
+func expandWorkGroupResultConfiguration(l []any) *types.ResultConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
 
 	resultConfiguration := &types.ResultConfiguration{}
 
 	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
-		resultConfiguration.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]interface{}))
+		resultConfiguration.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]any))
 	}
 
 	if v, ok := m["output_location"].(string); ok && v != "" {
@@ -456,23 +531,23 @@ func expandWorkGroupResultConfiguration(l []interface{}) *types.ResultConfigurat
 	}
 
 	if v, ok := m["acl_configuration"]; ok {
-		resultConfiguration.AclConfiguration = expandResultConfigurationACLConfig(v.([]interface{}))
+		resultConfiguration.AclConfiguration = expandResultConfigurationACLConfig(v.([]any))
 	}
 
 	return resultConfiguration
 }
 
-func expandWorkGroupResultConfigurationUpdates(l []interface{}) *types.ResultConfigurationUpdates {
+func expandWorkGroupResultConfigurationUpdates(l []any) *types.ResultConfigurationUpdates {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	resultConfigurationUpdates := &types.ResultConfigurationUpdates{}
 
 	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
-		resultConfigurationUpdates.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]interface{}))
+		resultConfigurationUpdates.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]any))
 	} else {
 		resultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
 	}
@@ -490,7 +565,7 @@ func expandWorkGroupResultConfigurationUpdates(l []interface{}) *types.ResultCon
 	}
 
 	if v, ok := m["acl_configuration"]; ok {
-		resultConfigurationUpdates.AclConfiguration = expandResultConfigurationACLConfig(v.([]interface{}))
+		resultConfigurationUpdates.AclConfiguration = expandResultConfigurationACLConfig(v.([]any))
 	} else {
 		resultConfigurationUpdates.RemoveAclConfiguration = aws.Bool(true)
 	}
@@ -498,12 +573,12 @@ func expandWorkGroupResultConfigurationUpdates(l []interface{}) *types.ResultCon
 	return resultConfigurationUpdates
 }
 
-func expandWorkGroupEncryptionConfiguration(l []interface{}) *types.EncryptionConfiguration {
+func expandWorkGroupEncryptionConfiguration(l []any) *types.EncryptionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	encryptionConfiguration := &types.EncryptionConfiguration{}
 
@@ -518,43 +593,121 @@ func expandWorkGroupEncryptionConfiguration(l []interface{}) *types.EncryptionCo
 	return encryptionConfiguration
 }
 
-func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) []interface{} {
-	if configuration == nil {
-		return []interface{}{}
+func expandWorkGroupManagedQueryResultsConfiguration(l []any) *types.ManagedQueryResultsConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"bytes_scanned_cutoff_per_query":     aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
-		"enforce_workgroup_configuration":    aws.ToBool(configuration.EnforceWorkGroupConfiguration),
-		names.AttrEngineVersion:              flattenWorkGroupEngineVersion(configuration.EngineVersion),
-		"execution_role":                     aws.ToString(configuration.ExecutionRole),
-		"publish_cloudwatch_metrics_enabled": aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
-		"result_configuration":               flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
-		"requester_pays_enabled":             aws.ToBool(configuration.RequesterPaysEnabled),
+	m := l[0].(map[string]any)
+	managedQueryResultsConfiguration := &types.ManagedQueryResultsConfiguration{}
+
+	if v, ok := m[names.AttrEnabled].(bool); ok {
+		managedQueryResultsConfiguration.Enabled = v
 	}
 
-	return []interface{}{m}
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
+		managedQueryResultsConfiguration.EncryptionConfiguration = expandManagedQueryResultsEncryptionConfiguration(v.([]any))
+	}
+
+	return managedQueryResultsConfiguration
 }
 
-func flattenWorkGroupEngineVersion(engineVersion *types.EngineVersion) []interface{} {
-	if engineVersion == nil {
-		return []interface{}{}
+func expandManagedQueryResultsEncryptionConfiguration(l []any) *types.ManagedQueryResultsEncryptionConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
+	m := l[0].(map[string]any)
+
+	if v, ok := m[names.AttrKMSKey].(string); !ok || v == "" {
+		return nil
+	}
+	managedQueryResultsEncryptionConfiguration := &types.ManagedQueryResultsEncryptionConfiguration{}
+	managedQueryResultsEncryptionConfiguration.KmsKey = aws.String(m[names.AttrKMSKey].(string))
+
+	return managedQueryResultsEncryptionConfiguration
+}
+
+func expandWorkGroupManagedQueryResultsConfigurationUpdates(l []any) *types.ManagedQueryResultsConfigurationUpdates {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	managedQueryResultsConfigurationUpdates := &types.ManagedQueryResultsConfigurationUpdates{}
+	if v, ok := m[names.AttrEnabled].(bool); ok {
+		managedQueryResultsConfigurationUpdates.Enabled = aws.Bool(v)
+		if !v {
+			managedQueryResultsConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
+			return managedQueryResultsConfigurationUpdates
+		}
+	}
+
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
+		encConfig := expandManagedQueryResultsEncryptionConfiguration(v.([]any))
+		if encConfig != nil {
+			managedQueryResultsConfigurationUpdates.EncryptionConfiguration = encConfig
+		} else {
+			managedQueryResultsConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
+		}
+	}
+
+	return managedQueryResultsConfigurationUpdates
+}
+
+func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) []any {
+	if configuration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		"bytes_scanned_cutoff_per_query":      aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
+		"enforce_workgroup_configuration":     aws.ToBool(configuration.EnforceWorkGroupConfiguration),
+		names.AttrEngineVersion:               flattenWorkGroupEngineVersion(configuration.EngineVersion),
+		"execution_role":                      aws.ToString(configuration.ExecutionRole),
+		"identity_center_configuration":       flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
+		"managed_query_results_configuration": flattenWorkGroupManagedQueryResultsConfiguration(configuration.ManagedQueryResultsConfiguration),
+		"publish_cloudwatch_metrics_enabled":  aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
+		"result_configuration":                flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
+		"requester_pays_enabled":              aws.ToBool(configuration.RequesterPaysEnabled),
+	}
+
+	return []any{m}
+}
+
+func flattenWorkGroupEngineVersion(engineVersion *types.EngineVersion) []any {
+	if engineVersion == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
 		"effective_engine_version": aws.ToString(engineVersion.EffectiveEngineVersion),
 		"selected_engine_version":  aws.ToString(engineVersion.SelectedEngineVersion),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenWorkGroupResultConfiguration(resultConfiguration *types.ResultConfiguration) []interface{} {
-	if resultConfiguration == nil {
-		return []interface{}{}
+func flattenWorkGroupIdentityCenterConfiguration(identityCenterConfiguration *types.IdentityCenterConfiguration) []any {
+	if identityCenterConfiguration == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
+		"enable_identity_center":       aws.ToBool(identityCenterConfiguration.EnableIdentityCenter),
+		"identity_center_instance_arn": aws.ToString(identityCenterConfiguration.IdentityCenterInstanceArn),
+	}
+
+	return []any{m}
+}
+
+func flattenWorkGroupResultConfiguration(resultConfiguration *types.ResultConfiguration) []any {
+	if resultConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
 		names.AttrEncryptionConfiguration: flattenWorkGroupEncryptionConfiguration(resultConfiguration.EncryptionConfiguration),
 		"output_location":                 aws.ToString(resultConfiguration.OutputLocation),
 	}
@@ -567,30 +720,96 @@ func flattenWorkGroupResultConfiguration(resultConfiguration *types.ResultConfig
 		m["acl_configuration"] = flattenWorkGroupACLConfiguration(resultConfiguration.AclConfiguration)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenWorkGroupEncryptionConfiguration(encryptionConfiguration *types.EncryptionConfiguration) []interface{} {
+func flattenWorkGroupEncryptionConfiguration(encryptionConfiguration *types.EncryptionConfiguration) []any {
 	if encryptionConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"encryption_option": encryptionConfiguration.EncryptionOption,
 		names.AttrKMSKeyARN: aws.ToString(encryptionConfiguration.KmsKey),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenWorkGroupACLConfiguration(aclConfig *types.AclConfiguration) []interface{} {
+func flattenWorkGroupACLConfiguration(aclConfig *types.AclConfiguration) []any {
 	if aclConfig == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"s3_acl_option": aclConfig.S3AclOption,
 	}
 
-	return []interface{}{m}
+	return []any{m}
+}
+
+func flattenWorkGroupManagedQueryResultsConfiguration(managedQueryResultsConfiguration *types.ManagedQueryResultsConfiguration) []any {
+	if managedQueryResultsConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		names.AttrEnabled:                 aws.ToBool(&managedQueryResultsConfiguration.Enabled),
+		names.AttrEncryptionConfiguration: flattenWorkGroupManagedQueryResultsEncryptionConfiguration(managedQueryResultsConfiguration.EncryptionConfiguration),
+	}
+
+	return []any{m}
+}
+
+func flattenWorkGroupManagedQueryResultsEncryptionConfiguration(managedQueryResultsEncryptionConfiguration *types.ManagedQueryResultsEncryptionConfiguration) []any {
+	if managedQueryResultsEncryptionConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		names.AttrKMSKey: aws.ToString(managedQueryResultsEncryptionConfiguration.KmsKey),
+	}
+
+	return []any{m}
+}
+
+func managedQueryResultsValidation(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+	configRaw, configOk := diff.GetOk(names.AttrConfiguration)
+	if !configOk {
+		return nil
+	}
+
+	configList, ok := configRaw.([]any)
+	if !ok || len(configList) == 0 || configList[0] == nil {
+		return nil
+	}
+
+	config := configList[0].(map[string]any)
+
+	mqrEnabled := false
+	if mqrRaw, mqrOk := config["managed_query_results_configuration"]; mqrOk {
+		if mqrList, ok := mqrRaw.([]any); ok && len(mqrList) > 0 && mqrList[0] != nil {
+			if mqrConfig, ok := mqrList[0].(map[string]any); ok {
+				if enabled, ok := mqrConfig[names.AttrEnabled].(bool); ok {
+					mqrEnabled = enabled
+				}
+			}
+		}
+	}
+
+	if !mqrEnabled {
+		return nil
+	}
+
+	if rcRaw, rcOk := config["result_configuration"]; rcOk {
+		if rcList, ok := rcRaw.([]any); ok && len(rcList) > 0 && rcList[0] != nil {
+			if rcConfig, ok := rcList[0].(map[string]any); ok {
+				if outputLoc, ok := rcConfig["output_location"].(string); ok && outputLoc != "" {
+					return fmt.Errorf("configuration.result_configuration.output_location cannot be specified when configuration.managed_query_results_configuration.enabled is true")
+				}
+			}
+		}
+	}
+
+	return nil
 }

@@ -59,6 +59,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_dx_gateway.example
+  identity = {
+    id = "abcd1234-dcba-5678-be23-cdef9876ab45"
+  }
+}
+
+resource "aws_dx_gateway" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the Direct Connect Gateway.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Direct Connect Gateways using the gateway `id`. For example:
 
 ```typescript
@@ -75,7 +101,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     DxGateway.generateConfigForImport(
       this,
-      "test",
+      "example",
       "abcd1234-dcba-5678-be23-cdef9876ab45"
     );
   }
@@ -86,7 +112,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import Direct Connect Gateways using the gateway `id`. For example:
 
 ```console
-% terraform import aws_dx_gateway.test abcd1234-dcba-5678-be23-cdef9876ab45
+% terraform import aws_dx_gateway.example abcd1234-dcba-5678-be23-cdef9876ab45
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-937a99996f75cdfad22e1dcd2f4e954143b19f0c74ea61e8a19bf19965acd50f -->
+<!-- cache-key: cdktf-0.20.8 input-10956b5aed625e74feb555b67ddc2ddad9c57aa616fb3b1f810cc3dbdeecc08f -->

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	smithyendpoints "github.com/aws/smithy-go/endpoints"
@@ -46,7 +47,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params rolesanywhere.En
 
 		endpoint, err = r.defaultResolver.ResolveEndpoint(ctx, params)
 		if err != nil {
-			return endpoint, err
+			return endpoint, smarterr.NewError(err)
 		}
 
 		tflog.Debug(ctx, "endpoint resolved", map[string]any{
@@ -62,11 +63,11 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params rolesanywhere.En
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up rolesanywhere endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up rolesanywhere endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {
-			return endpoint, err
+			return endpoint, smarterr.NewError(err)
 		}
 	}
 

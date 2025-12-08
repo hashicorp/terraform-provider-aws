@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_bedrockagentcore_agent_runtime
+```
+
+```release-note:new-resource
+aws_bedrockagentcore_agent_runtime_endpoint
+```

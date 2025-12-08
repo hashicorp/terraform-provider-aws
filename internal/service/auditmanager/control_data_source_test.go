@@ -18,7 +18,7 @@ func TestAccAuditManagerControlDataSource_standard(t *testing.T) {
 	// Standard controls are managed by AWS and will exist in the account automatically
 	// once AuditManager is enabled.
 	ctx := acctest.Context(t)
-	name := "1. Risk Management"
+	name := "RA-3: Risk Assessment (FedRAMP-r4)"
 	dataSourceName := "data.aws_auditmanager_control.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -33,7 +33,7 @@ func TestAccAuditManagerControlDataSource_standard(t *testing.T) {
 				Config: testAccControlDataSourceConfig_standard(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", "1"),
 				),
 			},
 		},

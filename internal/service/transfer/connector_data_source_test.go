@@ -4,7 +4,6 @@
 package transfer_test
 
 import (
-	"fmt"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -15,10 +14,6 @@ import (
 
 func TestAccTransferConnectorDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_transfer_connector.test"
 	resourceName := "aws_transfer_connector.test"
@@ -32,7 +27,6 @@ func TestAccTransferConnectorDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorDataSourceConfig_basic(rName, url),
@@ -43,7 +37,7 @@ func TestAccTransferConnectorDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(dataSourceName, "service_managed_egress_ip_addresses.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "sftp_config.#", resourceName, "sftp_config.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrURL, resourceName, names.AttrURL),
 				),
 			},
@@ -51,72 +45,52 @@ func TestAccTransferConnectorDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccTransferConnectorDataSource_egressConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_transfer_connector.test"
+	resourceName := "aws_transfer_connector.test"
+	publicKey := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz" // nosemgrep:ci.ssh-key
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectorDataSourceConfig_egressConfig(rName, publicKey),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "access_role", resourceName, "access_role"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "egress_config.#", resourceName, "egress_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "egress_config.0.vpc_lattice.#", resourceName, "egress_config.0.vpc_lattice.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "egress_config.0.vpc_lattice.0.resource_configuration_arn", resourceName, "egress_config.0.vpc_lattice.0.resource_configuration_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "egress_config.0.vpc_lattice.0.port_number", resourceName, "egress_config.0.vpc_lattice.0.port_number"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "sftp_config.#", resourceName, "sftp_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+				),
+			},
+		},
+	})
+}
+
 func testAccConnectorDataSourceConfig_basic(rName, url string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "transfer.amazonaws.com"
-    },
-    "Action": "sts:AssumeRole"
-  }]
- }
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<POLICY
-{
-  "Version":"2012-10-17",
-  "Statement":[{
-    "Sid":"AllowFullAccesstoS3",
-    "Effect":"Allow",
-    "Action":[
-      "s3:*"
-    ],
-    "Resource":"*"
-  }]
-}
-POLICY
-}
-resource "aws_transfer_profile" "local" {
-  as2_id       = %[1]q
-  profile_type = "LOCAL"
-}
-
-resource "aws_transfer_profile" "partner" {
-  as2_id       = %[1]q
-  profile_type = "PARTNER"
-}
-
-resource "aws_transfer_connector" "test" {
-  access_role = aws_iam_role.test.arn
-
-  as2_config {
-    compression           = "DISABLED"
-    encryption_algorithm  = "AES128_CBC"
-    message_subject       = %[1]q
-    local_profile_id      = aws_transfer_profile.local.profile_id
-    mdn_response          = "NONE"
-    mdn_signing_algorithm = "NONE"
-    partner_profile_id    = aws_transfer_profile.partner.profile_id
-    signing_algorithm     = "NONE"
-  }
-
-  url = %[2]q
-}
+	return acctest.ConfigCompose(testAccConnectorConfig_basic(rName, url), `
 data "aws_transfer_connector" "test" {
   id = aws_transfer_connector.test.id
 }
+`)
+}
 
-
-`, rName, url)
+func testAccConnectorDataSourceConfig_egressConfig(rName, publickey string) string {
+	return acctest.ConfigCompose(testAccConnectorConfig_egressConfig(rName, publickey), `
+data "aws_transfer_connector" "test" {
+  id = aws_transfer_connector.test.id
+}
+`)
 }

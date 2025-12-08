@@ -443,12 +443,10 @@ func resourceSpace() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -460,56 +458,56 @@ func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:      getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("ownership_settings"); ok && len(v.([]interface{})) > 0 {
-		input.OwnershipSettings = expandOwnershipSettings(v.([]interface{}))
+	if v, ok := d.GetOk("ownership_settings"); ok && len(v.([]any)) > 0 {
+		input.OwnershipSettings = expandOwnershipSettings(v.([]any))
 	}
 
-	if v, ok := d.GetOk("space_settings"); ok && len(v.([]interface{})) > 0 {
-		input.SpaceSettings = expandSpaceSettings(v.([]interface{}))
+	if v, ok := d.GetOk("space_settings"); ok && len(v.([]any)) > 0 {
+		input.SpaceSettings = expandSpaceSettings(v.([]any))
 	}
 
-	if v, ok := d.GetOk("space_sharing_settings"); ok && len(v.([]interface{})) > 0 {
-		input.SpaceSharingSettings = expandSpaceSharingSettings(v.([]interface{}))
+	if v, ok := d.GetOk("space_sharing_settings"); ok && len(v.([]any)) > 0 {
+		input.SpaceSharingSettings = expandSpaceSharingSettings(v.([]any))
 	}
 
 	if v, ok := d.GetOk("space_display_name"); ok {
 		input.SpaceDisplayName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] SageMaker Space create config: %#v", *input)
+	log.Printf("[DEBUG] SageMaker AI Space create config: %#v", *input)
 	out, err := conn.CreateSpace(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Space: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Space: %s", err)
 	}
 
 	d.SetId(aws.ToString(out.SpaceArn))
 
 	if err := waitSpaceInService(ctx, conn, domainId, spaceName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Space (%s) to create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceSpaceRead(ctx, d, meta)...)
 }
 
-func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	domainID, name, err := decodeSpaceName(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	space, err := findSpaceByName(ctx, conn, domainID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		log.Printf("[WARN] Unable to find SageMaker Space (%s), removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Space (%s), removing from state", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, space.SpaceArn)
@@ -520,21 +518,21 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrURL, space.Url)
 
 	if err := d.Set("ownership_settings", flattenOwnershipSettings(space.OwnershipSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ownership_settings for SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting ownership_settings for SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("space_settings", flattenSpaceSettings(space.SpaceSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("space_sharing_settings", flattenSpaceSharingSettings(space.SpaceSharingSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting space_sharing_settings for SageMaker Space (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting space_sharing_settings for SageMaker AI Space (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -548,28 +546,28 @@ func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChanges("space_settings") {
-			input.SpaceSettings = expandSpaceSettings(d.Get("space_settings").([]interface{}))
+			input.SpaceSettings = expandSpaceSettings(d.Get("space_settings").([]any))
 		}
 
 		if d.HasChange("space_display_name") {
 			input.SpaceDisplayName = aws.String(d.Get("space_display_name").(string))
 		}
 
-		log.Printf("[DEBUG] SageMaker Space update config: %#v", *input)
+		log.Printf("[DEBUG] SageMaker AI Space update config: %#v", *input)
 		_, err := conn.UpdateSpace(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Space: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Space: %s", err)
 		}
 
 		if err := waitSpaceInService(ctx, conn, domainID, name); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Space (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceSpaceRead(ctx, d, meta)...)
 }
 
-func resourceSpaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -583,13 +581,13 @@ func resourceSpaceDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if _, err := conn.DeleteSpace(ctx, input); err != nil {
 		if !errs.IsA[*awstypes.ResourceNotFound](err) {
-			return sdkdiag.AppendErrorf(diags, "deleting SageMaker Space (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Space (%s): %s", d.Id(), err)
 		}
 	}
 
 	if _, err := waitSpaceDeleted(ctx, conn, domainID, name); err != nil {
 		if !errs.IsA[*awstypes.ResourceNotFound](err) {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Space (%s) to delete: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Space (%s) to delete: %s", d.Id(), err)
 		}
 	}
 
@@ -648,12 +646,12 @@ func decodeSpaceName(id string) (string, string, error) {
 	return domainID, spaceName, nil
 }
 
-func expandSpaceSettings(l []interface{}) *awstypes.SpaceSettings {
+func expandSpaceSettings(l []any) *awstypes.SpaceSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SpaceSettings{}
 
@@ -661,39 +659,39 @@ func expandSpaceSettings(l []interface{}) *awstypes.SpaceSettings {
 		config.AppType = awstypes.AppType(v)
 	}
 
-	if v, ok := m["code_editor_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["code_editor_app_settings"].([]any); ok && len(v) > 0 {
 		config.CodeEditorAppSettings = expandSpaceCodeEditorAppSettings(v)
 	}
 
-	if v, ok := m["custom_file_system"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["custom_file_system"].([]any); ok && len(v) > 0 {
 		config.CustomFileSystems = expandCustomFileSystems(v)
 	}
 
-	if v, ok := m["jupyter_lab_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["jupyter_lab_app_settings"].([]any); ok && len(v) > 0 {
 		config.JupyterLabAppSettings = expandSpaceJupyterLabAppSettings(v)
 	}
 
-	if v, ok := m["jupyter_server_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["jupyter_server_app_settings"].([]any); ok && len(v) > 0 {
 		config.JupyterServerAppSettings = expandDomainJupyterServerAppSettings(v)
 	}
 
-	if v, ok := m["kernel_gateway_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["kernel_gateway_app_settings"].([]any); ok && len(v) > 0 {
 		config.KernelGatewayAppSettings = expandDomainKernelGatewayAppSettings(v)
 	}
 
-	if v, ok := m["space_storage_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["space_storage_settings"].([]any); ok && len(v) > 0 {
 		config.SpaceStorageSettings = expandSpaceStorageSettings(v)
 	}
 
 	return config
 }
 
-func flattenSpaceSettings(config *awstypes.SpaceSettings) []map[string]interface{} {
+func flattenSpaceSettings(config *awstypes.SpaceSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"app_type": config.AppType,
 	}
 
@@ -721,35 +719,35 @@ func flattenSpaceSettings(config *awstypes.SpaceSettings) []map[string]interface
 		m["space_storage_settings"] = flattenSpaceStorageSettings(config.SpaceStorageSettings)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandSpaceCodeEditorAppSettings(l []interface{}) *awstypes.SpaceCodeEditorAppSettings {
+func expandSpaceCodeEditorAppSettings(l []any) *awstypes.SpaceCodeEditorAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SpaceCodeEditorAppSettings{}
 
-	if v, ok := m["app_lifecycle_management"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["app_lifecycle_management"].([]any); ok && len(v) > 0 {
 		config.AppLifecycleManagement = expandSpaceAppLifecycleManagement(v)
 	}
 
-	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
 	return config
 }
 
-func flattenSpaceCodeEditorAppSettings(config *awstypes.SpaceCodeEditorAppSettings) []map[string]interface{} {
+func flattenSpaceCodeEditorAppSettings(config *awstypes.SpaceCodeEditorAppSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.AppLifecycleManagement != nil {
 		m["app_lifecycle_management"] = flattenSpaceAppLifecycleManagement(config.AppLifecycleManagement)
@@ -759,19 +757,19 @@ func flattenSpaceCodeEditorAppSettings(config *awstypes.SpaceCodeEditorAppSettin
 		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandSpaceJupyterLabAppSettings(l []interface{}) *awstypes.SpaceJupyterLabAppSettings {
+func expandSpaceJupyterLabAppSettings(l []any) *awstypes.SpaceJupyterLabAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SpaceJupyterLabAppSettings{}
 
-	if v, ok := m["app_lifecycle_management"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["app_lifecycle_management"].([]any); ok && len(v) > 0 {
 		config.AppLifecycleManagement = expandSpaceAppLifecycleManagement(v)
 	}
 
@@ -779,19 +777,19 @@ func expandSpaceJupyterLabAppSettings(l []interface{}) *awstypes.SpaceJupyterLab
 		config.CodeRepositories = expandCodeRepositories(v.List())
 	}
 
-	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
 	return config
 }
 
-func flattenSpaceJupyterLabAppSettings(config *awstypes.SpaceJupyterLabAppSettings) []map[string]interface{} {
+func flattenSpaceJupyterLabAppSettings(config *awstypes.SpaceJupyterLabAppSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.AppLifecycleManagement != nil {
 		m["app_lifecycle_management"] = flattenSpaceAppLifecycleManagement(config.AppLifecycleManagement)
@@ -805,45 +803,45 @@ func flattenSpaceJupyterLabAppSettings(config *awstypes.SpaceJupyterLabAppSettin
 		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandSpaceStorageSettings(l []interface{}) *awstypes.SpaceStorageSettings {
+func expandSpaceStorageSettings(l []any) *awstypes.SpaceStorageSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SpaceStorageSettings{}
 
-	if v, ok := m["ebs_storage_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ebs_storage_settings"].([]any); ok && len(v) > 0 {
 		config.EbsStorageSettings = expandEBSStorageSettings(v)
 	}
 
 	return config
 }
 
-func flattenSpaceStorageSettings(config *awstypes.SpaceStorageSettings) []map[string]interface{} {
+func flattenSpaceStorageSettings(config *awstypes.SpaceStorageSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.EbsStorageSettings != nil {
 		m["ebs_storage_settings"] = flattenEBSStorageSettings(config.EbsStorageSettings)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandEBSStorageSettings(l []interface{}) *awstypes.EbsStorageSettings {
+func expandEBSStorageSettings(l []any) *awstypes.EbsStorageSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.EbsStorageSettings{}
 
@@ -854,35 +852,35 @@ func expandEBSStorageSettings(l []interface{}) *awstypes.EbsStorageSettings {
 	return config
 }
 
-func flattenEBSStorageSettings(config *awstypes.EbsStorageSettings) []map[string]interface{} {
+func flattenEBSStorageSettings(config *awstypes.EbsStorageSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.EbsVolumeSizeInGb != nil {
 		m["ebs_volume_size_in_gb"] = aws.ToInt32(config.EbsVolumeSizeInGb)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandCustomFileSystem(tfMap map[string]interface{}) awstypes.CustomFileSystem {
+func expandCustomFileSystem(tfMap map[string]any) awstypes.CustomFileSystem {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.CustomFileSystemMemberEFSFileSystem{}
 
-	if v, ok := tfMap["efs_file_system"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Value = expandEFSFileSystem(v[0].(map[string]interface{}))
+	if v, ok := tfMap["efs_file_system"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Value = expandEFSFileSystem(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandCustomFileSystems(tfList []interface{}) []awstypes.CustomFileSystem {
+func expandCustomFileSystems(tfList []any) []awstypes.CustomFileSystem {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -890,7 +888,7 @@ func expandCustomFileSystems(tfList []interface{}) []awstypes.CustomFileSystem {
 	var apiObjects []awstypes.CustomFileSystem
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -908,7 +906,7 @@ func expandCustomFileSystems(tfList []interface{}) []awstypes.CustomFileSystem {
 	return apiObjects
 }
 
-func expandEFSFileSystem(tfMap map[string]interface{}) awstypes.EFSFileSystem {
+func expandEFSFileSystem(tfMap map[string]any) awstypes.EFSFileSystem {
 	apiObject := awstypes.EFSFileSystem{}
 
 	if v, ok := tfMap[names.AttrFileSystemID].(string); ok {
@@ -918,8 +916,8 @@ func expandEFSFileSystem(tfMap map[string]interface{}) awstypes.EFSFileSystem {
 	return apiObject
 }
 
-func flattenCustomFileSystem(apiObject awstypes.CustomFileSystem) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenCustomFileSystem(apiObject awstypes.CustomFileSystem) map[string]any {
+	tfMap := map[string]any{}
 
 	if apiObject, ok := apiObject.(*awstypes.CustomFileSystemMemberEFSFileSystem); ok {
 		tfMap["efs_file_system"] = flattenEFSFileSystem(apiObject)
@@ -928,12 +926,12 @@ func flattenCustomFileSystem(apiObject awstypes.CustomFileSystem) map[string]int
 	return tfMap
 }
 
-func flattenCustomFileSystems(apiObjects []awstypes.CustomFileSystem) []interface{} {
+func flattenCustomFileSystems(apiObjects []awstypes.CustomFileSystem) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == nil {
@@ -946,22 +944,22 @@ func flattenCustomFileSystems(apiObjects []awstypes.CustomFileSystem) []interfac
 	return tfList
 }
 
-func flattenEFSFileSystem(apiObject *awstypes.CustomFileSystemMemberEFSFileSystem) []map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenEFSFileSystem(apiObject *awstypes.CustomFileSystemMemberEFSFileSystem) []map[string]any {
+	tfMap := map[string]any{}
 
 	if apiObject.Value.FileSystemId != nil {
 		tfMap[names.AttrFileSystemID] = aws.ToString(apiObject.Value.FileSystemId)
 	}
 
-	return []map[string]interface{}{tfMap}
+	return []map[string]any{tfMap}
 }
 
-func expandOwnershipSettings(l []interface{}) *awstypes.OwnershipSettings {
+func expandOwnershipSettings(l []any) *awstypes.OwnershipSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.OwnershipSettings{}
 
@@ -972,26 +970,26 @@ func expandOwnershipSettings(l []interface{}) *awstypes.OwnershipSettings {
 	return config
 }
 
-func flattenOwnershipSettings(config *awstypes.OwnershipSettings) []map[string]interface{} {
+func flattenOwnershipSettings(config *awstypes.OwnershipSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.OwnerUserProfileName != nil {
 		m["owner_user_profile_name"] = aws.ToString(config.OwnerUserProfileName)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandSpaceSharingSettings(l []interface{}) *awstypes.SpaceSharingSettings {
+func expandSpaceSharingSettings(l []any) *awstypes.SpaceSharingSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SpaceSharingSettings{}
 
@@ -1002,40 +1000,40 @@ func expandSpaceSharingSettings(l []interface{}) *awstypes.SpaceSharingSettings 
 	return config
 }
 
-func flattenSpaceSharingSettings(config *awstypes.SpaceSharingSettings) []map[string]interface{} {
+func flattenSpaceSharingSettings(config *awstypes.SpaceSharingSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"sharing_type": config.SharingType,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandSpaceAppLifecycleManagement(l []interface{}) *awstypes.SpaceAppLifecycleManagement {
+func expandSpaceAppLifecycleManagement(l []any) *awstypes.SpaceAppLifecycleManagement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SpaceAppLifecycleManagement{}
 
-	if v, ok := m["idle_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["idle_settings"].([]any); ok && len(v) > 0 {
 		config.IdleSettings = expandSpaceIdleSettings(v)
 	}
 
 	return config
 }
 
-func expandSpaceIdleSettings(l []interface{}) *awstypes.SpaceIdleSettings {
+func expandSpaceIdleSettings(l []any) *awstypes.SpaceIdleSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SpaceIdleSettings{}
 
@@ -1046,30 +1044,30 @@ func expandSpaceIdleSettings(l []interface{}) *awstypes.SpaceIdleSettings {
 	return config
 }
 
-func flattenSpaceAppLifecycleManagement(config *awstypes.SpaceAppLifecycleManagement) []map[string]interface{} {
+func flattenSpaceAppLifecycleManagement(config *awstypes.SpaceAppLifecycleManagement) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.IdleSettings != nil {
 		m["idle_settings"] = flattenSpaceIdleSettings(config.IdleSettings)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenSpaceIdleSettings(config *awstypes.SpaceIdleSettings) []map[string]interface{} {
+func flattenSpaceIdleSettings(config *awstypes.SpaceIdleSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.IdleTimeoutInMinutes != nil {
 		m["idle_timeout_in_minutes"] = aws.ToInt32(config.IdleTimeoutInMinutes)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

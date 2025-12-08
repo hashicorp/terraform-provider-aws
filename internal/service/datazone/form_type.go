@@ -37,8 +37,9 @@ import (
 )
 
 // @FrameworkResource("aws_datazone_form_type", name="Form Type")
-func newResourceFormType(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceFormType{}
+func newFormTypeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &formTypeResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Second)
 
 	return r, nil
@@ -48,16 +49,13 @@ const (
 	ResNameFormType = "Form Type"
 )
 
-type resourceFormType struct {
-	framework.ResourceWithConfigure
+type formTypeResource struct {
+	framework.ResourceWithModel[formTypeResourceModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
 }
 
-func (r *resourceFormType) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_form_type"
-}
-func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *formTypeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedAt: schema.StringAttribute{
@@ -157,10 +155,10 @@ func (r *resourceFormType) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (r *resourceFormType) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *formTypeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan resourceFormTypeData
+	var plan formTypeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -189,7 +187,7 @@ func (r *resourceFormType) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*datazone.GetFormTypeOutput, error) {
 		return findFormTypeByID(ctx, conn, *out.DomainId, *out.Name, *out.Revision)
 	})
 	if err != nil {
@@ -200,7 +198,6 @@ func (r *resourceFormType) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	output := outputRaws.(*datazone.GetFormTypeOutput)
 	option := flex.WithIgnoredFieldNames([]string{"Model"})
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan, option)...)
 	if resp.Diagnostics.HasError() {
@@ -210,10 +207,10 @@ func (r *resourceFormType) Create(ctx context.Context, req resource.CreateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceFormType) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *formTypeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceFormTypeData
+	var state formTypeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -243,10 +240,10 @@ func (r *resourceFormType) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceFormType) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *formTypeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceFormTypeData
+	var state formTypeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -269,7 +266,7 @@ func (r *resourceFormType) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 }
-func (r *resourceFormType) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *formTypeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 3 {
@@ -320,7 +317,8 @@ func (m modelData) Expand(ctx context.Context) (result any, diags diag.Diagnosti
 	return
 }
 
-type resourceFormTypeData struct {
+type formTypeResourceModel struct {
+	framework.WithRegionModel
 	CreatedAt               timetypes.RFC3339                           `tfsdk:"created_at"`
 	CreatedBy               types.String                                `tfsdk:"created_by"`
 	Description             types.String                                `tfsdk:"description"`

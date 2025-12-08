@@ -29,6 +29,7 @@ resource "aws_sesv2_email_identity_feedback_attributes" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `email_identity` - (Required) The email identity.
 * `email_forwarding_enabled` - (Optional) Sets the feedback forwarding configuration for the identity.
 

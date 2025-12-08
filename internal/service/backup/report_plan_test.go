@@ -377,7 +377,7 @@ resource "aws_backup_report_plan" "test" {
       data.aws_caller_identity.current.id
     ]
     regions = [
-      data.aws_region.current.name
+      data.aws_region.current.region
     ]
     report_template = "RESTORE_JOB_REPORT"
   }

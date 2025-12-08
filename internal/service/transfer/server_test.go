@@ -267,6 +267,13 @@ func testAccServer_securityPolicy(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-2025-03"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2025-03"),
+				),
+			},
+			{
 				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
@@ -287,6 +294,20 @@ func testAccServer_securityPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-Restricted-2020-06"),
 				),
 			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-SshAuditCompliant-2025-02"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-SshAuditCompliant-2025-02"),
+				),
+			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-AS2Restricted-2025-07"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-AS2Restricted-2025-07"),
+				),
+			},
 			/*
 				{
 					Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-Restricted-2024-06"),
@@ -296,6 +317,13 @@ func testAccServer_securityPolicy(t *testing.T) {
 					),
 				},
 			*/
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-AS2Restricted-2025-07"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-AS2Restricted-2025-07"),
+				),
+			},
 		},
 	})
 }
@@ -344,6 +372,13 @@ func testAccServer_securityPolicyFIPS(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-FIPS-2024-05"),
+				),
+			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-FIPS-2025-03"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-FIPS-2025-03"),
 				),
 			},
 			{

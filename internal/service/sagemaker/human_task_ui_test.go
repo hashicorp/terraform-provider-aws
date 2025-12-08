@@ -141,7 +141,7 @@ func testAccCheckHumanTaskUIDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			return fmt.Errorf("SageMaker HumanTaskUi %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI HumanTaskUi %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -156,7 +156,7 @@ func testAccCheckHumanTaskUIExists(ctx context.Context, n string, humanTaskUi *s
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker HumanTaskUi ID is set")
+			return fmt.Errorf("No SageMaker AI HumanTaskUi ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

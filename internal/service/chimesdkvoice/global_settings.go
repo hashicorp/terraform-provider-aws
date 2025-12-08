@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -27,6 +26,7 @@ const (
 )
 
 // @SDKResource("aws_chimesdkvoice_global_settings", name="Global Settings")
+// @Region(global=true)
 func ResourceGlobalSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalSettingsUpdate,
@@ -56,23 +56,24 @@ func ResourceGlobalSettings() *schema.Resource {
 	}
 }
 
-func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	// Include retry handling to allow for propagation of the Global Settings
 	// logging bucket configuration
 	var out *chimesdkvoice.GetGlobalSettingsOutput
-	err := tfresource.Retry(ctx, globalSettingsPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, globalSettingsPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var getErr error
-		out, getErr = conn.GetGlobalSettings(ctx, &chimesdkvoice.GetGlobalSettingsInput{})
+		input := chimesdkvoice.GetGlobalSettingsInput{}
+		out, getErr = conn.GetGlobalSettings(ctx, &input)
 
 		if getErr != nil {
-			return retry.NonRetryableError(getErr)
+			return tfresource.NonRetryableError(getErr)
 		}
 
 		if out.VoiceConnector == nil || out.VoiceConnector.CdrBucket == nil {
-			return retry.RetryableError(tfresource.NewEmptyResultError(&chimesdkvoice.GetGlobalSettingsInput{}))
+			return tfresource.RetryableError(tfresource.NewEmptyResultError(&chimesdkvoice.GetGlobalSettingsInput{}))
 		}
 
 		return nil
@@ -95,13 +96,13 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	if d.HasChange("voice_connector") {
 		input := &chimesdkvoice.UpdateGlobalSettingsInput{
-			VoiceConnector: expandVoiceConnectorSettings(d.Get("voice_connector").([]interface{})),
+			VoiceConnector: expandVoiceConnectorSettings(d.Get("voice_connector").([]any)),
 		}
 
 		_, err := conn.UpdateGlobalSettings(ctx, input)
@@ -114,13 +115,14 @@ func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceGlobalSettingsRead(ctx, d, meta)...)
 }
 
-func resourceGlobalSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalSettingsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-	_, err := conn.UpdateGlobalSettings(ctx, &chimesdkvoice.UpdateGlobalSettingsInput{
+	input := chimesdkvoice.UpdateGlobalSettingsInput{
 		VoiceConnector: &awstypes.VoiceConnectorSettings{},
-	})
+	}
+	_, err := conn.UpdateGlobalSettings(ctx, &input)
 	if err != nil {
 		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionDeleting, ResNameGlobalSettings, d.Id(), err)
 	}
@@ -128,12 +130,12 @@ func resourceGlobalSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func expandVoiceConnectorSettings(tfList []interface{}) *awstypes.VoiceConnectorSettings {
+func expandVoiceConnectorSettings(tfList []any) *awstypes.VoiceConnectorSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -143,9 +145,9 @@ func expandVoiceConnectorSettings(tfList []interface{}) *awstypes.VoiceConnector
 	}
 }
 
-func flattenVoiceConnectorSettings(apiObject *awstypes.VoiceConnectorSettings) []interface{} {
-	m := map[string]interface{}{
+func flattenVoiceConnectorSettings(apiObject *awstypes.VoiceConnectorSettings) []any {
+	m := map[string]any{
 		"cdr_bucket": aws.ToString(apiObject.CdrBucket),
 	}
-	return []interface{}{m}
+	return []any{m}
 }

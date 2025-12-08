@@ -22,6 +22,7 @@ data "aws_db_proxy" "proxy" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the DB proxy.
 
 ## Attribute Reference
@@ -31,6 +32,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the DB Proxy.
 * `auth` - Configuration(s) with authorization mechanisms to connect to the associated instance or cluster.
 * `debug_logging` - Whether the proxy includes detailed information about SQL statements in its logs.
+* `default_auth_scheme` - Default authentication scheme that the proxy uses for client connections to the proxy and connections from the proxy to the underlying database.
 * `endpoint` - Endpoint that you can use to connect to the DB proxy.
 * `engine_family` - Kinds of databases that the proxy can connect to.
 * `idle_client_timeout` - Number of seconds a connection to the proxy can have no activity before the proxy drops the client connection.

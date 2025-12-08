@@ -45,14 +45,9 @@ func newServiceNetworkResourceAssociationResource(_ context.Context) (resource.R
 }
 
 type serviceNetworkResourceAssociationResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[serviceNetworkResourceAssociationResourceModel]
+	framework.ResourceWithModel[serviceNetworkResourceAssociationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*serviceNetworkResourceAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpclattice_service_network_resource_association"
 }
 
 func (r *serviceNetworkResourceAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -198,10 +193,6 @@ func (r *serviceNetworkResourceAssociationResource) Delete(ctx context.Context, 
 	}
 }
 
-func (r *serviceNetworkResourceAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
 	input := vpclattice.GetServiceNetworkResourceAssociationInput{
 		ServiceNetworkResourceAssociationIdentifier: aws.String(id),
@@ -228,7 +219,7 @@ func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclat
 }
 
 func statusServiceNetworkResourceAssociation(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findServiceNetworkResourceAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -283,6 +274,7 @@ func waitServiceNetworkResourceAssociationDeleted(ctx context.Context, conn *vpc
 }
 
 type serviceNetworkResourceAssociationResourceModel struct {
+	framework.WithRegionModel
 	ARN                     types.String                                   `tfsdk:"arn"`
 	ID                      types.String                                   `tfsdk:"id"`
 	DNSEntry                fwtypes.ListNestedObjectValueOf[dnsEntryModel] `tfsdk:"dns_entry"`

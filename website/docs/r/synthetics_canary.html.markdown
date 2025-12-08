@@ -36,23 +36,24 @@ The following arguments are required:
 * `artifact_s3_location` - (Required) Location in Amazon S3 where Synthetics stores artifacts from the test runs of this canary.
 * `execution_role_arn` - (Required) ARN of the IAM role to be used to run the canary. see [AWS Docs](https://docs.aws.amazon.com/AmazonSynthetics/latest/APIReference/API_CreateCanary.html#API_CreateCanary_RequestSyntax) for permissions needs for IAM Role.
 * `handler` - (Required) Entry point to use for the source code when running the canary. This value must end with the string `.handler` .
-* `name` - (Required) Name for this canary. Has a maximum length of 21 characters. Valid characters are lowercase alphanumeric, hyphen, or underscore.
+* `name` - (Required) Name for this canary. Has a maximum length of 255 characters. Valid characters are lowercase alphanumeric, hyphen, or underscore.
 * `runtime_version` - (Required) Runtime version to use for the canary. Versions change often so consult the [Amazon CloudWatch documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html) for the latest valid versions. Values include `syn-python-selenium-1.0`, `syn-nodejs-puppeteer-3.0`, `syn-nodejs-2.2`, `syn-nodejs-2.1`, `syn-nodejs-2.0`, and `syn-1.0`.
-* `schedule` -  (Required) Configuration block providing how often the canary is to run and when these test runs are to stop. Detailed below.
+* `schedule` -  (Required) Configuration block providing how often the canary is to run and when these test runs are to stop. Detailed [below](#schedule).
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `artifact_config` - (Optional) configuration for canary artifacts, including the encryption-at-rest settings for artifacts that the canary uploads to Amazon S3. See [Artifact Config](#artifact_config).
 * `delete_lambda` - (Optional)  Specifies whether to also delete the Lambda functions and layers used by this canary. The default is `false`.
-* `vpc_config` - (Optional) Configuration block. Detailed below.
 * `failure_retention_period` - (Optional) Number of days to retain data about failed runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
-* `run_config` - (Optional) Configuration block for individual canary runs. Detailed below.
+* `run_config` - (Optional) Configuration block for individual canary runs. Detailed [below](#run_config).
 * `s3_bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. **Conflicts with `zip_file`.**
 * `s3_key` - (Optional) S3 key of your script. **Conflicts with `zip_file`.**
 * `s3_version` - (Optional) S3 version ID of your script. **Conflicts with `zip_file`.**
 * `start_canary` - (Optional) Whether to run or stop the canary.
 * `success_retention_period` - (Optional) Number of days to retain data about successful runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `artifact_config` - (Optional) configuration for canary artifacts, including the encryption-at-rest settings for artifacts that the canary uploads to Amazon S3. See [Artifact Config](#artifact_config).
+* `vpc_config` - (Optional) Configuration block. Detailed [below](#vpc_config).
 * `zip_file` - (Optional) ZIP file that contains the script, if you input your canary script directly into the canary instead of referring to an S3 location. It can be up to 225KB. **Conflicts with `s3_bucket`, `s3_key`, and `s3_version`.**
 
 ### artifact_config
@@ -68,6 +69,11 @@ The following arguments are optional:
 
 * `expression` - (Required) Rate expression or cron expression that defines how often the canary is to run. For rate expression, the syntax is `rate(number unit)`. _unit_ can be `minute`, `minutes`, or `hour`. For cron expression, the syntax is `cron(expression)`. For more information about the syntax for cron expressions, see [Scheduling canary runs using cron](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_cron.html).
 * `duration_in_seconds` - (Optional) Duration in seconds, for the canary to continue making regular runs according to the schedule in the Expression value.
+* `retry_config` - (Optional) Configuration block for canary retries. Detailed [below](#retry_config).
+
+### retry_config
+
+* `max_retries` - (Required) Maximum number of retries. The value must be less than or equal to `2`. If `max_retries` is `2`, `run_config.timeout_in_seconds` should be less than 600 seconds. Defaults to `0`.
 
 ### run_config
 
@@ -75,6 +81,7 @@ The following arguments are optional:
 * `memory_in_mb` - (Optional) Maximum amount of memory available to the canary while it is running, in MB. The value you specify must be a multiple of 64.
 * `active_tracing` - (Optional) Whether this canary is to use active AWS X-Ray tracing when it runs. You can enable active tracing only for canaries that use version syn-nodejs-2.0 or later for their canary runtime.
 * `environment_variables` - (Optional) Map of environment variables that are accessible from the canary during execution. Please see [AWS Docs](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-runtime) for variables reserved for Lambda.
+* `ephemeral_storage` - (Optional) Amount of ephemeral storage (in MB) allocated for the canary run during execution. Defaults to 1024.
 
 ### vpc_config
 
@@ -82,6 +89,7 @@ If this canary tests an endpoint in a VPC, this structure contains information a
 
 * `subnet_ids` - (Required) IDs of the subnets where this canary is to run.
 * `security_group_ids` - (Required) IDs of the security groups for this canary.
+* `ipv6_allowed_for_dual_stack` - (Optional)  If `true`, allow outbound IPv6 traffic on VPC canaries that are connected to dual-stack subnets. The default is `false`.
 
 ## Attribute Reference
 

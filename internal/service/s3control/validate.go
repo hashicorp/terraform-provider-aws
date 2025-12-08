@@ -9,7 +9,7 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-func validateS3MultiRegionAccessPointName(v interface{}, k string) (ws []string, errors []error) {
+func validateS3MultiRegionAccessPointName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 3 || len(value) > 50 {
 		errors = append(errors, fmt.Errorf(

@@ -13,24 +13,38 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	fdiag "github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // @SDKResource("aws_subnet", name="Subnet")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.Subnet")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Subnet")
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="v6.8.0")
 func resourceSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -38,11 +52,6 @@ func resourceSubnet() *schema.Resource {
 		ReadWithoutTimeout:   resourceSubnetRead,
 		UpdateWithoutTimeout: resourceSubnetUpdate,
 		DeleteWithoutTimeout: resourceSubnetDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -161,7 +170,15 @@ func resourceSubnet() *schema.Resource {
 	}
 }
 
-func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+// @SDKListResource("aws_subnet")
+func subnetResourceAsListResource() inttypes.ListResourceForSDK {
+	l := subnetListResource{}
+	l.SetResourceSchema(resourceSubnet())
+
+	return &l
+}
+
+func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -229,11 +246,11 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSubnetRead(ctx, d, meta)...)
 }
 
-func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	subnet, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.Subnet, error) {
 		return findSubnetByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -247,51 +264,12 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", d.Id(), err)
 	}
 
-	subnet := outputRaw.(*awstypes.Subnet)
-
-	d.Set(names.AttrARN, subnet.SubnetArn)
-	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
-	d.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
-	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
-	d.Set(names.AttrCIDRBlock, subnet.CidrBlock)
-	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
-	d.Set("enable_dns64", subnet.EnableDns64)
-	d.Set("enable_lni_at_device_index", subnet.EnableLniAtDeviceIndex)
-	d.Set("ipv6_native", subnet.Ipv6Native)
-	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
-	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
-	d.Set("outpost_arn", subnet.OutpostArn)
-	d.Set(names.AttrOwnerID, subnet.OwnerId)
-	d.Set(names.AttrVPCID, subnet.VpcId)
-
-	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
-	d.Set("ipv6_cidr_block_association_id", nil)
-	d.Set("ipv6_cidr_block", nil)
-
-	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
-		if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
-			d.Set("ipv6_cidr_block_association_id", v.AssociationId)
-			d.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
-			break
-		}
-	}
-
-	if subnet.PrivateDnsNameOptionsOnLaunch != nil {
-		d.Set("enable_resource_name_dns_aaaa_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord)
-		d.Set("enable_resource_name_dns_a_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord)
-		d.Set("private_dns_hostname_type_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.HostnameType)
-	} else {
-		d.Set("enable_resource_name_dns_aaaa_record_on_launch", nil)
-		d.Set("enable_resource_name_dns_a_record_on_launch", nil)
-		d.Set("private_dns_hostname_type_on_launch", nil)
-	}
-
-	setTagsOut(ctx, subnet.Tags)
+	resourceSubnetFlatten(ctx, subnet, d)
 
 	return diags
 }
 
-func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -365,7 +343,7 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSubnetRead(ctx, d, meta)...)
 }
 
-func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -377,7 +355,7 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs for EC2 Subnet (%s): %s", d.Id(), err)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{
 			SubnetId: aws.String(d.Id()),
 		})
@@ -685,4 +663,202 @@ func modifySubnetPrivateDNSHostnameTypeOnLaunch(ctx context.Context, conn *ec2.C
 	}
 
 	return nil
+}
+
+func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *schema.ResourceData) {
+	rd.Set(names.AttrARN, subnet.SubnetArn)
+	rd.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
+	rd.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
+	rd.Set("availability_zone_id", subnet.AvailabilityZoneId)
+	rd.Set(names.AttrCIDRBlock, subnet.CidrBlock)
+	rd.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
+	rd.Set("enable_dns64", subnet.EnableDns64)
+	rd.Set("enable_lni_at_device_index", subnet.EnableLniAtDeviceIndex)
+	rd.Set("ipv6_native", subnet.Ipv6Native)
+	rd.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
+	rd.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
+	rd.Set("outpost_arn", subnet.OutpostArn)
+	rd.Set(names.AttrOwnerID, subnet.OwnerId)
+	rd.Set(names.AttrVPCID, subnet.VpcId)
+
+	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
+	rd.Set("ipv6_cidr_block_association_id", nil)
+	rd.Set("ipv6_cidr_block", nil)
+
+	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
+		if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
+			rd.Set("ipv6_cidr_block_association_id", v.AssociationId)
+			rd.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
+			break
+		}
+	}
+
+	if subnet.PrivateDnsNameOptionsOnLaunch != nil {
+		rd.Set("enable_resource_name_dns_aaaa_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord)
+		rd.Set("enable_resource_name_dns_a_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord)
+		rd.Set("private_dns_hostname_type_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.HostnameType)
+	} else {
+		rd.Set("enable_resource_name_dns_aaaa_record_on_launch", nil)
+		rd.Set("enable_resource_name_dns_a_record_on_launch", nil)
+		rd.Set("private_dns_hostname_type_on_launch", nil)
+	}
+
+	setTagsOut(ctx, subnet.Tags)
+}
+
+var _ list.ListResourceWithRawV5Schemas = &subnetListResource{}
+
+type subnetListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+	framework.ListResourceWithSDKv2Tags
+}
+
+type subnetListResourceModel struct {
+	framework.WithRegionModel
+	SubnetIDs fwtypes.ListValueOf[types.String] `tfsdk:"subnet_ids"`
+	Filters   customListFilters                 `tfsdk:"filter"`
+}
+
+func (l *subnetListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			names.AttrSubnetIDs: listschema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+			},
+		},
+		Blocks: map[string]listschema.Block{
+			names.AttrFilter: listschema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customListFilterModel](ctx),
+				NestedObject: listschema.NestedBlockObject{
+					Attributes: map[string]listschema.Attribute{
+						names.AttrName: listschema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								notDefaultForAZValidator{},
+							},
+						},
+						names.AttrValues: listschema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Required:    true,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+var _ validator.String = notDefaultForAZValidator{}
+
+type notDefaultForAZValidator struct{}
+
+func (v notDefaultForAZValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
+}
+
+func (v notDefaultForAZValidator) MarkdownDescription(_ context.Context) string {
+	return ""
+}
+
+func (v notDefaultForAZValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+		return
+	}
+
+	value := request.ConfigValue
+
+	if value.ValueString() == "default-for-az" {
+		response.Diagnostics.Append(fdiag.NewAttributeErrorDiagnostic(
+			request.Path,
+			"Invalid Attribute Value",
+			`The filter "default-for-az" is not supported. To list default Subnets, use the resource type "aws_default_subnet".`,
+		))
+	}
+}
+
+func (l *subnetListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.EC2Client(ctx)
+
+	attributes := []attribute.KeyValue{
+		otelaws.RegionAttr(awsClient.Region(ctx)),
+	}
+	for _, attribute := range attributes {
+		ctx = tflog.SetField(ctx, string(attribute.Key), attribute.Value.AsInterface())
+	}
+
+	var query subnetListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	var input ec2.DescribeSubnetsInput
+	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
+	}
+
+	input.Filters = append(input.Filters, awstypes.Filter{
+		Name:   aws.String("default-for-az"),
+		Values: []string{"false"},
+	})
+
+	tflog.Info(ctx, "Listing resources")
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		pages := ec2.NewDescribeSubnetsPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			for _, subnet := range page.Subnets {
+				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), aws.ToString(subnet.SubnetId))
+
+				result := request.NewListResult(ctx)
+
+				tags := keyValueTags(ctx, subnet.Tags)
+
+				rd := l.ResourceData()
+				rd.SetId(aws.ToString(subnet.SubnetId))
+
+				tflog.Info(ctx, "Reading resource")
+				resourceSubnetFlatten(ctx, &subnet, rd)
+
+				// set tags
+				err = l.SetTags(ctx, awsClient, rd)
+				if err != nil {
+					result = fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+
+				if v, ok := tags["Name"]; ok {
+					result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), aws.ToString(subnet.SubnetId))
+				} else {
+					result.DisplayName = aws.ToString(subnet.SubnetId)
+				}
+
+				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				if !yield(result) {
+					return
+				}
+			}
+		}
+	}
 }

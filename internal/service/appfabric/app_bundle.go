@@ -29,9 +29,12 @@ import (
 
 // @FrameworkResource("aws_appfabric_app_bundle", name="App Bundle")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(serialize=true)
 // @Testing(generator=false)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.AppBundle")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;awstypes;awstypes.AppBundle")
+// @Testing(preCheckRegion="us-east-1;ap-northeast-1;eu-west-1")
+// @Testing(preIdentityVersion="v5.100.0")
 func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appBundleResource{}
 
@@ -39,13 +42,8 @@ func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, erro
 }
 
 type appBundleResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[appBundleResourceModel]
-	framework.WithImportByID
-}
-
-func (*appBundleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_app_bundle"
+	framework.ResourceWithModel[appBundleResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *appBundleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -107,11 +105,6 @@ func (r *appBundleResource) Read(ctx context.Context, request resource.ReadReque
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
 
 	conn := r.Meta().AppFabricClient(ctx)
 
@@ -163,10 +156,6 @@ func (r *appBundleResource) Delete(ctx context.Context, request resource.DeleteR
 	}
 }
 
-func (r *appBundleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAppBundleByID(ctx context.Context, conn *appfabric.Client, arn string) (*awstypes.AppBundle, error) {
 	input := &appfabric.GetAppBundleInput{
 		AppBundleIdentifier: aws.String(arn),
@@ -193,17 +182,12 @@ func findAppBundleByID(ctx context.Context, conn *appfabric.Client, arn string) 
 }
 
 type appBundleResourceModel struct {
+	framework.WithRegionModel
 	ARN                   types.String `tfsdk:"arn"`
 	CustomerManagedKeyARN fwtypes.ARN  `tfsdk:"customer_managed_key_arn"`
 	ID                    types.String `tfsdk:"id"`
 	Tags                  tftags.Map   `tfsdk:"tags"`
 	TagsAll               tftags.Map   `tfsdk:"tags_all"`
-}
-
-func (data *appBundleResourceModel) InitFromID() error {
-	data.ARN = data.ID
-
-	return nil
 }
 
 func (data *appBundleResourceModel) setID() {

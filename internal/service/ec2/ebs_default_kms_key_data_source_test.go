@@ -29,7 +29,10 @@ func testAccEBSDefaultKMSKeyDataSource_basic(t *testing.T) {
 }
 
 const testAccEBSDefaultKMSKeyDataSourceConfig_basic = `
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_ebs_default_kms_key" "test" {
   key_arn = aws_kms_key.test.arn

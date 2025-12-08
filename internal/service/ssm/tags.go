@@ -23,17 +23,17 @@ func listTags(ctx context.Context, conn *ssm.Client, identifier, resourceType st
 		return activationTags(ctx, conn, identifier)
 
 	default:
-		input := &ssm.ListTagsForResourceInput{
+		input := ssm.ListTagsForResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: awstypes.ResourceTypeForTagging(resourceType),
 		}
 
-		output, err := conn.ListTagsForResource(ctx, input, optFns...)
+		output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 		if err != nil {
 			return tftags.New(ctx, nil), err
 		}
 
-		return KeyValueTags(ctx, output.TagList), nil
+		return keyValueTags(ctx, output.TagList), nil
 	}
 }
 
@@ -58,5 +58,5 @@ func activationTags(ctx context.Context, client *ssm.Client, id string) (tftags.
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, out.Tags), nil
+	return keyValueTags(ctx, out.Tags), nil
 }

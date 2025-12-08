@@ -42,6 +42,12 @@ import (
 
 // @FrameworkResource("aws_networkfirewall_tls_inspection_configuration", name="TLS Inspection Configuration")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnFormat("tls-configuration/{name}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkfirewall;networkfirewall.DescribeTLSInspectionConfigurationOutput")
+// @Testing(subdomainTfVar="common_name;certificate_domain")
+// @Testing(importIgnore="update_token", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v5.100.0")
 func newTLSInspectionConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &tlsInspectionConfigurationResource{}
 
@@ -53,13 +59,9 @@ func newTLSInspectionConfigurationResource(_ context.Context) (resource.Resource
 }
 
 type tlsInspectionConfigurationResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[tlsInspectionConfigurationResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
-}
-
-func (*tlsInspectionConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkfirewall_tls_inspection_configuration"
 }
 
 func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -336,12 +338,6 @@ func (r *tlsInspectionConfigurationResource) Read(ctx context.Context, request r
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().NetworkFirewallClient(ctx)
 
 	output, err := findTLSInspectionConfigurationByARN(ctx, conn, data.ID.ValueString())
@@ -465,10 +461,6 @@ func (r *tlsInspectionConfigurationResource) ConfigValidators(context.Context) [
 	}
 }
 
-func (r *tlsInspectionConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
 	input := &networkfirewall.DescribeTLSInspectionConfigurationInput{
 		TLSInspectionConfigurationArn: aws.String(arn),
@@ -495,7 +487,7 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 }
 
 func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -515,7 +507,7 @@ const (
 )
 
 func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -610,6 +602,7 @@ func flattenDescribeTLSInspectionConfigurationOutput(ctx context.Context, data *
 }
 
 type tlsInspectionConfigurationResourceModel struct {
+	framework.WithRegionModel
 	CertificateAuthority           fwtypes.ListNestedObjectValueOf[tlsCertificateDataModel]         `tfsdk:"certificate_authority"`
 	Certificates                   fwtypes.ListNestedObjectValueOf[tlsCertificateDataModel]         `tfsdk:"certificates"`
 	Description                    types.String                                                     `tfsdk:"description"`
@@ -624,12 +617,6 @@ type tlsInspectionConfigurationResourceModel struct {
 	TLSInspectionConfigurationID   types.String                                                     `tfsdk:"tls_inspection_configuration_id"`
 	TLSInspectionConfigurationName types.String                                                     `tfsdk:"name"`
 	UpdateToken                    types.String                                                     `tfsdk:"update_token"`
-}
-
-func (model *tlsInspectionConfigurationResourceModel) InitFromID() error {
-	model.TLSInspectionConfigurationARN = model.ID
-
-	return nil
 }
 
 func (model *tlsInspectionConfigurationResourceModel) setID() {

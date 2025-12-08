@@ -93,7 +93,7 @@ func resourceSchedule() *schema.Resource {
 	}
 }
 
-func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -155,7 +155,7 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceScheduleRead(ctx, d, meta)...)
 }
 
-func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -200,7 +200,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -222,7 +222,7 @@ func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceScheduleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceScheduleImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	splitId := strings.Split(d.Id(), "/")
 	if len(splitId) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'asg-name/action-name'", d.Id())
@@ -286,7 +286,7 @@ func findScheduleByTwoPartKey(ctx context.Context, conn *autoscaling.Client, asg
 	return findSchedule(ctx, conn, input)
 }
 
-func validScheduleTimestamp(v interface{}, k string) (ws []string, errors []error) {
+func validScheduleTimestamp(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := time.Parse(ScheduleTimeLayout, value)
 	if err != nil {

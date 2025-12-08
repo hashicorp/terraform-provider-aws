@@ -5,15 +5,16 @@ package cloudfront
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 )
 
-func listRealtimeLogConfigsPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListRealtimeLogConfigsInput, fn func(*cloudfront.ListRealtimeLogConfigsOutput, bool) bool) error {
+func listRealtimeLogConfigsPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListRealtimeLogConfigsInput, fn func(*cloudfront.ListRealtimeLogConfigsOutput, bool) bool, optFns ...func(*cloudfront.Options)) error {
 	for {
-		output, err := conn.ListRealtimeLogConfigs(ctx, input)
+		output, err := conn.ListRealtimeLogConfigs(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.RealtimeLogConfigs.NextMarker) == ""

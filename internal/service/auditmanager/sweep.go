@@ -4,14 +4,14 @@
 package auditmanager
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -19,284 +19,195 @@ import (
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_auditmanager_assessment", &resource.Sweeper{
-		Name: "aws_auditmanager_assessment",
-		F:    sweepAssessments,
-		Dependencies: []string{
-			"aws_auditmanager_control",
-			"aws_auditmanager_framework",
-			"aws_iam_role",
-			"aws_s3_bucket",
-		},
-	})
-	resource.AddTestSweepers("aws_auditmanager_assessment_delegation", &resource.Sweeper{
-		Name: "aws_auditmanager_assessment_delegation",
-		F:    sweepAssessmentDelegations,
-	})
-	resource.AddTestSweepers("aws_auditmanager_assessment_report", &resource.Sweeper{
-		Name: "aws_auditmanager_assessment_report",
-		F:    sweepAssessmentReports,
-	})
-	resource.AddTestSweepers("aws_auditmanager_control", &resource.Sweeper{
-		Name: "aws_auditmanager_control",
-		F:    sweepControls,
-	})
-	resource.AddTestSweepers("aws_auditmanager_framework", &resource.Sweeper{
-		Name: "aws_auditmanager_framework",
-		F:    sweepFrameworks,
-	})
-	resource.AddTestSweepers("aws_auditmanager_framework_share", &resource.Sweeper{
-		Name: "aws_auditmanager_framework_share",
-		F:    sweepFrameworkShares,
-	})
+	awsv2.Register("aws_auditmanager_assessment", sweepAssessments, "aws_auditmanager_assessment_delegation", "aws_auditmanager_assessment_report")
+	awsv2.Register("aws_auditmanager_assessment_delegation", sweepAssessmentDelegations)
+	awsv2.Register("aws_auditmanager_assessment_report", sweepAssessmentReports)
+	awsv2.Register("aws_auditmanager_control", sweepControls, "aws_auditmanager_framework")
+	awsv2.Register("aws_auditmanager_framework", sweepFrameworks, "aws_auditmanager_assessment", "aws_auditmanager_framework_share")
+	awsv2.Register("aws_auditmanager_framework_share", sweepFrameworkShares)
 }
 
-// isCompleteSetupError checks whether the returned error message indicates
-// AuditManager isn't yet enabled in the current region.
-//
-// For example:
-// AccessDeniedException: Please complete AWS Audit Manager setup from home page to enable this action in this account.
-func isCompleteSetupError(err error) bool {
-	var ade *types.AccessDeniedException
-	return errors.As(err, &ade)
-}
-
-func sweepAssessments(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
+func sweepAssessments(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.AuditManagerClient(ctx)
+	var input auditmanager.ListAssessmentsInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	in := &auditmanager.ListAssessmentsInput{}
 
-	pages := auditmanager.NewListAssessmentsPaginator(conn, in)
-
+	pages := auditmanager.NewListAssessmentsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) || isCompleteSetupError(err) {
-			log.Printf("[WARN] Skipping AuditManager Assessments sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving AuditManager Assessments: %w", err)
+
+		if errs.IsA[*types.AccessDeniedException](err) {
+			break
 		}
 
-		for _, assessment := range page.AssessmentMetadata {
-			id := aws.ToString(assessment.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.AssessmentMetadata {
+			id := aws.ToString(v.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Assessment: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessment, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAssessmentResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("error sweeping AuditManager Assessments for %s: %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepAssessmentDelegations(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
+func sweepAssessmentDelegations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.AuditManagerClient(ctx)
+	var input auditmanager.GetDelegationsInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	in := &auditmanager.GetDelegationsInput{}
 
-	pages := auditmanager.NewGetDelegationsPaginator(conn, in)
-
+	pages := auditmanager.NewGetDelegationsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) || isCompleteSetupError(err) {
-			log.Printf("[WARN] Skipping AuditManager Assesment Delegations sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving AuditManager Assessment Delegations: %w", err)
+
+		if errs.IsA[*types.AccessDeniedException](err) {
+			break
 		}
 
-		for _, d := range page.Delegations {
-			log.Printf("[INFO] Deleting AuditManager Assessment Delegation: %s", aws.ToString(d.Id))
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessmentDelegation, client,
-				framework.NewAttribute("assessment_id", aws.ToString(d.AssessmentId)),
-				framework.NewAttribute("delegation_id", aws.ToString(d.Id)),
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Delegations {
+			id := aws.ToString(v.Id)
+
+			log.Printf("[INFO] Deleting AuditManager Assessment Delegation: %s", id)
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAssessmentDelegationResource, client,
+				framework.NewAttribute("assessment_id", aws.ToString(v.AssessmentId)),
+				framework.NewAttribute("delegation_id", id),
 			))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("error sweeping AuditManager Assessment Delegations for %s: %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepAssessmentReports(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
+func sweepAssessmentReports(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.AuditManagerClient(ctx)
+	var input auditmanager.ListAssessmentReportsInput
 	sweepResources := make([]sweep.Sweepable, 0)
-	in := &auditmanager.ListAssessmentReportsInput{}
 
-	pages := auditmanager.NewListAssessmentReportsPaginator(conn, in)
-
+	pages := auditmanager.NewListAssessmentReportsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) || isCompleteSetupError(err) {
-			log.Printf("[WARN] Skipping AuditManager Assesment Reports sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving AuditManager Assessment Reports: %w", err)
+
+		if errs.IsA[*types.AccessDeniedException](err) {
+			break
 		}
 
-		for _, report := range page.AssessmentReports {
-			id := aws.ToString(report.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.AssessmentReports {
+			id := aws.ToString(v.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Assessment Report: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAssessmentReport, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAssessmentReportResource, client,
 				framework.NewAttribute(names.AttrID, id),
-				framework.NewAttribute("assessment_id", aws.ToString(report.AssessmentId)),
+				framework.NewAttribute("assessment_id", aws.ToString(v.AssessmentId)),
 			))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("error sweeping AuditManager Assessment Reports for %s: %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepControls(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
+func sweepControls(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.AuditManagerClient(ctx)
+	var input auditmanager.ListControlsInput
+	input.ControlType = types.ControlTypeCustom
 	sweepResources := make([]sweep.Sweepable, 0)
-	in := &auditmanager.ListControlsInput{ControlType: types.ControlTypeCustom}
 
-	pages := auditmanager.NewListControlsPaginator(conn, in)
-
+	pages := auditmanager.NewListControlsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) || isCompleteSetupError(err) {
-			log.Printf("[WARN] Skipping AuditManager Controls sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving AuditManager Controls: %w", err)
+
+		if errs.IsA[*types.AccessDeniedException](err) {
+			break
 		}
 
-		for _, control := range page.ControlMetadataList {
-			id := aws.ToString(control.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ControlMetadataList {
+			id := aws.ToString(v.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Control: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceControl, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newControlResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("error sweeping AuditManager Controls for %s: %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepFrameworks(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
+func sweepFrameworks(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.AuditManagerClient(ctx)
+	var input auditmanager.ListAssessmentFrameworksInput
+	input.FrameworkType = types.FrameworkTypeCustom
 	sweepResources := make([]sweep.Sweepable, 0)
-	in := &auditmanager.ListAssessmentFrameworksInput{FrameworkType: types.FrameworkTypeCustom}
 
-	pages := auditmanager.NewListAssessmentFrameworksPaginator(conn, in)
-
+	pages := auditmanager.NewListAssessmentFrameworksPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) || isCompleteSetupError(err) {
-			log.Printf("[WARN] Skipping AuditManager Frameworks sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving AuditManager Frameworks: %w", err)
+
+		if errs.IsA[*types.AccessDeniedException](err) {
+			break
 		}
 
-		for _, f := range page.FrameworkMetadataList {
-			id := aws.ToString(f.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.FrameworkMetadataList {
+			id := aws.ToString(v.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Framework: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceFramework, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newFrameworkResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("error sweeping AuditManager Frameworks for %s: %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepFrameworkShares(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
+func sweepFrameworkShares(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.AuditManagerClient(ctx)
+	var input auditmanager.ListAssessmentFrameworkShareRequestsInput
+	input.RequestType = types.ShareRequestTypeSent
 	sweepResources := make([]sweep.Sweepable, 0)
-	in := &auditmanager.ListAssessmentFrameworkShareRequestsInput{RequestType: types.ShareRequestTypeSent}
 
-	pages := auditmanager.NewListAssessmentFrameworkShareRequestsPaginator(conn, in)
-
+	pages := auditmanager.NewListAssessmentFrameworkShareRequestsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) || isCompleteSetupError(err) {
-			log.Printf("[WARN] Skipping AuditManager Framework Shares sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving AuditManager Framework Shares: %w", err)
+
+		if errs.IsA[*types.AccessDeniedException](err) {
+			break
 		}
 
-		for _, share := range page.AssessmentFrameworkShareRequests {
-			id := aws.ToString(share.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.AssessmentFrameworkShareRequests {
+			id := aws.ToString(v.Id)
 
 			log.Printf("[INFO] Deleting AuditManager Framework Share: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceFrameworkShare, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newFrameworkShareResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("error sweeping AuditManager Framework Shares for %s: %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

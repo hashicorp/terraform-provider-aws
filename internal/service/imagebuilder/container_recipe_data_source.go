@@ -197,7 +197,7 @@ func dataSourceContainerRecipe() *schema.Resource {
 	}
 }
 
-func dataSourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -220,7 +220,7 @@ func dataSourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("dockerfile_template_data", containerRecipe.DockerfileTemplateData)
 	d.Set(names.AttrEncrypted, containerRecipe.Encrypted)
 	if containerRecipe.InstanceConfiguration != nil {
-		if err := d.Set("instance_configuration", []interface{}{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)}); err != nil {
+		if err := d.Set("instance_configuration", []any{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting instance_configuration: %s", err)
 		}
 	} else {
@@ -231,7 +231,7 @@ func dataSourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrOwner, containerRecipe.Owner)
 	d.Set("parent_image", containerRecipe.ParentImage)
 	d.Set("platform", containerRecipe.Platform)
-	if err := d.Set("target_repository", []interface{}{flattenTargetContainerRepository(containerRecipe.TargetRepository)}); err != nil {
+	if err := d.Set("target_repository", []any{flattenTargetContainerRepository(containerRecipe.TargetRepository)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target_repository: %s", err)
 	}
 	d.Set(names.AttrVersion, containerRecipe.Version)

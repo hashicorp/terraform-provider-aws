@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -51,8 +52,11 @@ func resourceQueryDefinition() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validLogGroupName,
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						validLogGroupName,
+						verify.ValidARN,
+					),
 				},
 			},
 			"query_definition_id": {
@@ -67,7 +71,7 @@ func resourceQueryDefinition() *schema.Resource {
 	}
 }
 
-func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -77,8 +81,8 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 		QueryString: aws.String(d.Get("query_string").(string)),
 	}
 
-	if v, ok := d.GetOk("log_group_names"); ok && len(v.([]interface{})) > 0 {
-		input.LogGroupNames = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("log_group_names"); ok && len(v.([]any)) > 0 {
+		input.LogGroupNames = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if !d.IsNewResource() {
@@ -98,13 +102,13 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceQueryDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	result, err := findQueryDefinitionByTwoPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Query Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -122,7 +126,7 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -142,7 +146,7 @@ func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	arn, err := arn.Parse(d.Id())
 	if err != nil {
 		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())
@@ -175,7 +179,7 @@ func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.C
 }
 
 func findQueryDefinition(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, filter tfslices.Predicate[*awstypes.QueryDefinition]) (*awstypes.QueryDefinition, error) {
-	output, err := findQueryDefinitions(ctx, conn, input, filter)
+	output, err := findQueryDefinitions(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
 
 	if err != nil {
 		return nil, err
@@ -184,8 +188,9 @@ func findQueryDefinition(ctx context.Context, conn *cloudwatchlogs.Client, input
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, filter tfslices.Predicate[*awstypes.QueryDefinition]) ([]awstypes.QueryDefinition, error) {
+func findQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, filter tfslices.Predicate[*awstypes.QueryDefinition], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.QueryDefinition, error) {
 	var output []awstypes.QueryDefinition
+	opts := tfslices.NewFinderOptions(optFns)
 
 	err := describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -195,6 +200,9 @@ func findQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, inpu
 		for _, v := range page.QueryDefinitions {
 			if filter(&v) {
 				output = append(output, v)
+				if opts.ReturnFirstMatch() {
+					return false
+				}
 			}
 		}
 

@@ -5,13 +5,18 @@ package amp
 
 // Exports for use in tests only.
 var (
-	ResourceAlertManagerDefinition = resourceAlertManagerDefinition
-	ResourceRuleGroupNamespace     = resourceRuleGroupNamespace
-	ResourceScraper                = newScraperResource
-	ResourceWorkspace              = resourceWorkspace
+	ResourceAlertManagerDefinition    = resourceAlertManagerDefinition
+	ResourceQueryLoggingConfiguration = newQueryLoggingConfigurationResource
+	ResourceRuleGroupNamespace        = resourceRuleGroupNamespace
+	ResourceScraper                   = newScraperResource
+	ResourceWorkspace                 = resourceWorkspace
+	ResourceResourcePolicy            = newResourcePolicyResource
 
-	FindAlertManagerDefinitionByID = findAlertManagerDefinitionByID
-	FindRuleGroupNamespaceByARN    = findRuleGroupNamespaceByARN
-	FindScraperByID                = findScraperByID
-	FindWorkspaceByID              = findWorkspaceByID
+	FindAlertManagerDefinitionByID    = findAlertManagerDefinitionByID
+	FindQueryLoggingConfigurationByID = findQueryLoggingConfigurationByID
+	FindResourcePolicyByWorkspaceID   = findResourcePolicyByWorkspaceID
+	FindRuleGroupNamespaceByARN       = findRuleGroupNamespaceByARN
+	FindScraperByID                   = findScraperByID
+	FindWorkspaceByID                 = findWorkspaceByID
+	FindWorkspaceConfigurationByID    = findWorkspaceConfigurationByID
 )

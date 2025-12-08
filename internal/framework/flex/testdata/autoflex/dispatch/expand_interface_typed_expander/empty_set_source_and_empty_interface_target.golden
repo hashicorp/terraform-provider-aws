@@ -1,0 +1,48 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSetNestedObject[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceTypedExpander]",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceSlice"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSetNestedObject[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceTypedExpander]",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceSlice"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field1",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSetNestedObject[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceTypedExpander]",
+    "autoflex.target.fieldname": "Field1",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceSlice"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceTypedExpander]",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceInterface"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding nested object collection",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.size": 0,
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceTypedExpander]",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceInterface"
+  }
+]

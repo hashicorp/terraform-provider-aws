@@ -20,7 +20,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -128,12 +127,10 @@ func resourceReservedInstance() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -165,7 +162,7 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceReservedInstanceRead(ctx, d, meta)...)
 }
 
-func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -201,7 +198,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceReservedInstanceRead(ctx, d, meta)
 }
@@ -265,7 +262,7 @@ func findReservedDBInstances(ctx context.Context, conn *rds.Client, input *rds.D
 }
 
 func statusReservedInstance(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findReservedDBInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -300,14 +297,14 @@ func waitReservedInstanceCreated(ctx context.Context, conn *rds.Client, id strin
 	return nil, err
 }
 
-func flattenRecurringCharges(apiObjects []types.RecurringCharge) []interface{} {
+func flattenRecurringCharges(apiObjects []types.RecurringCharge) []any {
 	if len(apiObjects) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	var tfList []interface{}
+	var tfList []any
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"recurring_charge_amount":    aws.ToFloat64(apiObject.RecurringChargeAmount),
 			"recurring_charge_frequency": aws.ToString(apiObject.RecurringChargeFrequency),
 		}

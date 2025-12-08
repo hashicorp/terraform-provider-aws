@@ -84,7 +84,7 @@ func ResourceVoiceConnectorOrigination() *schema.Resource {
 	}
 }
 
-func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -111,7 +111,7 @@ func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceVoiceConnectorOriginationRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -119,10 +119,6 @@ func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.Resour
 	resp, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*awstypes.Origination, error) {
 		return findVoiceConnectorOriginationByID(ctx, conn, d.Id())
 	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = findVoiceConnectorOriginationByID(ctx, conn, d.Id())
-	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector (%s) origination not found, removing from state", d.Id())
@@ -144,7 +140,7 @@ func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceVoiceConnectorOriginationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorOriginationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -171,7 +167,7 @@ func resourceVoiceConnectorOriginationUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceVoiceConnectorOriginationRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorOriginationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorOriginationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -193,11 +189,11 @@ func resourceVoiceConnectorOriginationDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func expandOriginationRoutes(data []interface{}) []awstypes.OriginationRoute {
+func expandOriginationRoutes(data []any) []awstypes.OriginationRoute {
 	var originationRoutes []awstypes.OriginationRoute
 
 	for _, rItem := range data {
-		item := rItem.(map[string]interface{})
+		item := rItem.(map[string]any)
 		originationRoutes = append(originationRoutes, awstypes.OriginationRoute{
 			Host:     aws.String(item["host"].(string)),
 			Port:     aws.Int32(int32(item[names.AttrPort].(int))),
@@ -210,11 +206,11 @@ func expandOriginationRoutes(data []interface{}) []awstypes.OriginationRoute {
 	return originationRoutes
 }
 
-func flattenOriginationRoutes(routes []awstypes.OriginationRoute) []interface{} {
-	var rawRoutes []interface{}
+func flattenOriginationRoutes(routes []awstypes.OriginationRoute) []any {
+	var rawRoutes []any
 
 	for _, route := range routes {
-		r := map[string]interface{}{
+		r := map[string]any{
 			"host":             aws.ToString(route.Host),
 			names.AttrPort:     aws.ToInt32(route.Port),
 			names.AttrPriority: aws.ToInt32(route.Priority),

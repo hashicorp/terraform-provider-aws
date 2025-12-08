@@ -13,16 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesisvideo"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisvideo/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,8 +37,6 @@ func resourceStream() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -95,7 +92,7 @@ func resourceStream() *schema.Resource {
 	}
 }
 
-func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
@@ -133,13 +130,13 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
-func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
 	stream, err := findStreamByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kinesis Video Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -161,7 +158,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
@@ -193,7 +190,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
-func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
@@ -231,8 +228,7 @@ func findStream(ctx context.Context, conn *kinesisvideo.Client, input *kinesisvi
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -247,8 +243,8 @@ func findStream(ctx context.Context, conn *kinesisvideo.Client, input *kinesisvi
 	return output.StreamInfo, nil
 }
 
-func statusStream(ctx context.Context, conn *kinesisvideo.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusStream(conn *kinesisvideo.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStreamByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -267,7 +263,7 @@ func waitStreamCreated(ctx context.Context, conn *kinesisvideo.Client, arn strin
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusCreating),
 		Target:     enum.Slice(awstypes.StatusActive),
-		Refresh:    statusStream(ctx, conn, arn),
+		Refresh:    statusStream(conn, arn),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -286,7 +282,7 @@ func waitStreamUpdated(ctx context.Context, conn *kinesisvideo.Client, arn strin
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusUpdating),
 		Target:     enum.Slice(awstypes.StatusActive),
-		Refresh:    statusStream(ctx, conn, arn),
+		Refresh:    statusStream(conn, arn),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -305,7 +301,7 @@ func waitStreamDeleted(ctx context.Context, conn *kinesisvideo.Client, arn strin
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusDeleting),
 		Target:     []string{},
-		Refresh:    statusStream(ctx, conn, arn),
+		Refresh:    statusStream(conn, arn),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,

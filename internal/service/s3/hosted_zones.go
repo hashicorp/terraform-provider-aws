@@ -13,6 +13,7 @@ import (
 var hostedZoneIDsMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z83WF9RJE8B12",
 	endpoints.ApEast1RegionID:      "ZNB98KWMFR0R6",
+	endpoints.ApEast2RegionID:      "Z064739330DAH7WJVOO93",
 	endpoints.ApNortheast1RegionID: "Z2M4EHUR26P7ZW",
 	endpoints.ApNortheast2RegionID: "Z3W03O7B5YMIYP",
 	endpoints.ApNortheast3RegionID: "Z2YQB5RD63NC85",
@@ -23,6 +24,7 @@ var hostedZoneIDsMap = map[string]string{
 	endpoints.ApSoutheast3RegionID: "Z01846753K324LI26A3VV",
 	endpoints.ApSoutheast4RegionID: "Z0312387243XT5FE14WFO",
 	endpoints.ApSoutheast5RegionID: "Z08660063OXLMA7F1FJHU",
+	endpoints.ApSoutheast6RegionID: "Z05686083R66JX5C163TC",
 	endpoints.ApSoutheast7RegionID: "Z0031014GXUMRZG6I14G",
 	endpoints.CaCentral1RegionID:   "Z1QDHH18159H29",
 	endpoints.CaWest1RegionID:      "Z03565811Z33SLEZTHOUL",

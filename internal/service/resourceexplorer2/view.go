@@ -37,18 +37,18 @@ import (
 )
 
 // @FrameworkResource("aws_resourceexplorer2_view", name="View")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resourceexplorer2;resourceexplorer2.GetViewOutput")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &viewResource{}, nil
 }
 
 type viewResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
-}
-
-func (*viewResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_resourceexplorer2_view"
+	framework.ResourceWithModel[viewResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *viewResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -65,7 +65,7 @@ func (r *viewResource) Schema(ctx context.Context, request resource.SchemaReques
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -172,7 +172,7 @@ func (r *viewResource) Read(ctx context.Context, request resource.ReadRequest, r
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
+	if err := data.initFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
 
 		return
@@ -299,7 +299,7 @@ func (r *viewResource) Delete(ctx context.Context, request resource.DeleteReques
 
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
-	tflog.Debug(ctx, "deleting Resource Explorer View", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Resource Explorer View", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 	_, err := conn.DeleteView(ctx, &resourceexplorer2.DeleteViewInput{
@@ -317,12 +317,9 @@ func (r *viewResource) Delete(ctx context.Context, request resource.DeleteReques
 	}
 }
 
-func (r *viewResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 // See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_View.html.
 type viewResourceModel struct {
+	framework.WithRegionModel
 	DefaultView        types.Bool                                             `tfsdk:"default_view"`
 	Filters            fwtypes.ListNestedObjectValueOf[searchFilterModel]     `tfsdk:"filters"`
 	ID                 types.String                                           `tfsdk:"id"`
@@ -334,7 +331,7 @@ type viewResourceModel struct {
 	ViewName           types.String                                           `tfsdk:"name"`
 }
 
-func (data *viewResourceModel) InitFromID() error {
+func (data *viewResourceModel) initFromID() error {
 	data.ViewARN = data.ID
 	arn, err := arn.Parse(data.ViewARN.ValueString())
 	if err != nil {

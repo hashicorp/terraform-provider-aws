@@ -25,8 +25,9 @@ resource "aws_opensearch_authorize_vpc_endpoint_access" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account` - (Required) AWS account ID to grant access to.
 * `domain_name` - (Required) Name of OpenSearch Service domain to provide access to.
 
@@ -43,17 +44,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Authorize Vpc Endpoint Access using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Authorize Vpc Endpoint Access using the `domain_name` and `account` separated by a comma (,). For example:
 
 ```terraform
 import {
   to = aws_opensearch_authorize_vpc_endpoint_access.example
-  id = "authorize_vpc_endpoint_access-id-12345678"
+  id = "authorize_vpc_endpoint_access-id-12345678,123456789012"
 }
 ```
 
-Using `terraform import`, import OpenSearch Authorize Vpc Endpoint Access using the `example_id_arg`. For example:
+Using `terraform import`, import OpenSearch Authorize Vpc Endpoint Access using the `domain_name` and `account` separated by a comma (,). For example:
 
 ```console
-% terraform import aws_opensearch_authorize_vpc_endpoint_access.example authorize_vpc_endpoint_access-id-12345678
+% terraform import aws_opensearch_authorize_vpc_endpoint_access.example authorize_vpc_endpoint_access-id-12345678,123456789012
 ```

@@ -33,7 +33,7 @@ func resourceMethod() *schema.Resource {
 		DeleteWithoutTimeout: resourceMethodDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD", d.Id())
@@ -106,7 +106,7 @@ func resourceMethod() *schema.Resource {
 	}
 }
 
-func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -130,12 +130,12 @@ func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.OperationName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("request_models"); ok && len(v.(map[string]interface{})) > 0 {
-		input.RequestModels = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("request_models"); ok && len(v.(map[string]any)) > 0 {
+		input.RequestModels = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("request_parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.RequestParameters = flex.ExpandBoolValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("request_parameters"); ok && len(v.(map[string]any)) > 0 {
+		input.RequestParameters = flex.ExpandBoolValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("request_validator_id"); ok {
@@ -153,7 +153,7 @@ func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -181,7 +181,7 @@ func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -303,7 +303,7 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceMethodRead(ctx, d, meta)...)
 }
 
-func resourceMethodDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 

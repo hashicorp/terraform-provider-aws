@@ -23,6 +23,10 @@ func ResourceStaticIPAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceStaticIPAttachmentRead,
 		DeleteWithoutTimeout: resourceStaticIPAttachmentDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"static_ip_name": {
 				Type:     schema.TypeString,
@@ -42,7 +46,7 @@ func ResourceStaticIPAttachment() *schema.Resource {
 	}
 }
 
-func resourceStaticIPAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStaticIPAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
@@ -61,11 +65,11 @@ func resourceStaticIPAttachmentCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceStaticIPAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceStaticIPAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStaticIPAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	staticIpName := d.Get("static_ip_name").(string)
+	staticIpName := d.Id()
 	log.Printf("[INFO] Reading Lightsail Static IP Attachment: %q", staticIpName)
 	out, err := conn.GetStaticIp(ctx, &lightsail.GetStaticIpInput{
 		StaticIpName: aws.String(staticIpName),
@@ -86,11 +90,12 @@ func resourceStaticIPAttachmentRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("instance_name", out.StaticIp.AttachedTo)
 	d.Set(names.AttrIPAddress, out.StaticIp.IpAddress)
+	d.Set("static_ip_name", out.StaticIp.Name)
 
 	return diags
 }
 
-func resourceStaticIPAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStaticIPAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 

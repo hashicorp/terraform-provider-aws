@@ -5,15 +5,16 @@ package dax
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 )
 
-func describeClustersPages(ctx context.Context, conn *dax.Client, input *dax.DescribeClustersInput, fn func(*dax.DescribeClustersOutput, bool) bool) error {
+func describeClustersPages(ctx context.Context, conn *dax.Client, input *dax.DescribeClustersInput, fn func(*dax.DescribeClustersOutput, bool) bool, optFns ...func(*dax.Options)) error {
 	for {
-		output, err := conn.DescribeClusters(ctx, input)
+		output, err := conn.DescribeClusters(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

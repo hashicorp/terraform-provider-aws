@@ -56,12 +56,20 @@ service "cloudhsmv2" {
   vpc_lock = true
 }
 
+service "cloudtrail" {
+  parallelism = 5
+}
+
 service "comprehend" {
   parallelism = 10
 }
 
 service "cur" {
   region = "us-east-1"
+}
+
+service "dataexchange" {
+  parallelism = 10
 }
 
 service "datasync" {
@@ -134,6 +142,10 @@ service "elasticsearch" {
   vpc_lock = true
 }
 
+service "elastictranscoder" {
+  skip = true
+}
+
 service "elb" {
   vpc_lock = true
 }
@@ -144,6 +156,14 @@ service "elbv2" {
 
 service "emr" {
   vpc_lock = true
+}
+
+service "evidently" {
+  skip = true
+}
+
+service "finspace" {
+  skip = true
 }
 
 service "fms" {
@@ -184,8 +204,16 @@ service "lambda" {
   vpc_lock = true
 }
 
+service "lexmodels" {
+  skip = true
+}
+
 service "lightsail" {
   region = "us-east-1"
+}
+
+service "m2" {
+  skip = true
 }
 
 service "mq" {
@@ -214,6 +242,10 @@ service "opsworks" {
 
 service "pricing" {
   region = "us-east-1"
+}
+
+service "qldb" {
+  skip = true
 }
 
 service "rds" {
@@ -301,7 +333,11 @@ service "vpnsite" {
 }
 
 service "waf" {
-  region = "us-east-1"
+  skip = true
+}
+
+service "wafregional" {
+  skip = true
 }
 
 service "wavelength" {

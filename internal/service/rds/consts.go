@@ -111,7 +111,9 @@ const (
 	instanceStatusStarting                                     = "starting"
 	instanceStatusStopped                                      = "stopped"
 	instanceStatusStopping                                     = "stopping"
+	instanceStatusStorageConfigUpgrade                         = "storage-config-upgrade"
 	instanceStatusStorageFull                                  = "storage-full"
+	instanceStatusStorageInitialization                        = "storage-initialization"
 	instanceStatusStorageOptimization                          = "storage-optimization"
 	instanceStatusUpgrading                                    = "upgrading"
 )
@@ -249,6 +251,7 @@ func instanceExportableLogType_Values() []string {
 		exportableLogTypeDiagLog,
 		exportableLogTypeError,
 		exportableLogTypeGeneral,
+		exportableLogTypeIAMDBAuthError,
 		exportableLogTypeListener,
 		exportableLogTypeNotifyLog,
 		exportableLogTypeOEMAgent,

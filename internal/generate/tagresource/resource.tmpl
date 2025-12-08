@@ -46,7 +46,7 @@ func resourceTag() *schema.Resource {
 	}
 }
 
-func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { {{ if not (eq .ServicePackage "ec2") }}// nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create{{- end }}
+func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { {{ if not (eq .ServicePackage "ec2") }}// nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create{{- end }}
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Client(ctx)
 
@@ -55,7 +55,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	value := d.Get(names.AttrValue).(string)
 
 	{{ if eq .ServicePackage "ec2" }}
-	if err := createTags(ctx, conn, identifier, Tags(tftags.New(ctx, map[string]string{key: value}))); err != nil {
+	if err := createTags(ctx, conn, identifier, svcTags(tftags.New(ctx, map[string]string{key: value}))); err != nil {
 	{{- else }}
 	if err := {{ .UpdateTagsFunc }}(ctx, conn, identifier, nil, map[string]string{key: value}); err != nil {
 	{{- end }}
@@ -67,7 +67,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceTagRead(ctx, d, meta)...)
 }
 
-func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Client(ctx)
 
@@ -95,7 +95,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Client(ctx)
 
@@ -111,7 +111,7 @@ func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceTagRead(ctx, d, meta)...)
 }
 
-func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Client(ctx)
 

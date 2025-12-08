@@ -6,7 +6,6 @@ package route53
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -41,7 +40,7 @@ func dataSourceDelegationSet() *schema.Resource {
 	}
 }
 
-func dataSourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -53,12 +52,7 @@ func dataSourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(id)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "route53",
-		Resource:  "delegationset/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, delegationSetARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("caller_reference", set.CallerReference)
 	d.Set("name_servers", set.NameServers)
 

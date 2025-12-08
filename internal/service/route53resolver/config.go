@@ -53,7 +53,7 @@ func resourceConfig() *schema.Resource {
 	}
 }
 
-func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -78,7 +78,7 @@ func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceConfigRead(ctx, d, meta)...)
 }
 
-func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -107,7 +107,7 @@ func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -160,7 +160,7 @@ func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, i
 }
 
 func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findResolverConfigByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

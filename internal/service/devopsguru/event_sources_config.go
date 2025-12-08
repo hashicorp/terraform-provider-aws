@@ -25,26 +25,28 @@ import (
 )
 
 // @FrameworkResource("aws_devopsguru_event_sources_config", name="Event Sources Config")
-func newResourceEventSourcesConfig(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceEventSourcesConfig{}, nil
+// @SingletonIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devopsguru;devopsguru.DescribeEventSourcesConfigOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(generator=false)
+// @Testing(preIdentityVersion="v5.100.0")
+func newEventSourcesConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &eventSourcesConfigResource{}, nil
 }
 
 const (
 	ResNameEventSourcesConfig = "Event Sources Config"
 )
 
-type resourceEventSourcesConfig struct {
-	framework.ResourceWithConfigure
+type eventSourcesConfigResource struct {
+	framework.ResourceWithModel[eventSourcesConfigResourceModel]
+	framework.WithImportByIdentity
 }
 
-func (r *resourceEventSourcesConfig) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_devopsguru_event_sources_config"
-}
-
-func (r *resourceEventSourcesConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *eventSourcesConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 		},
 		Blocks: map[string]schema.Block{
 			"event_sources": schema.ListNestedBlock{
@@ -78,10 +80,10 @@ func (r *resourceEventSourcesConfig) Schema(ctx context.Context, req resource.Sc
 	}
 }
 
-func (r *resourceEventSourcesConfig) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *eventSourcesConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DevOpsGuruClient(ctx)
 
-	var plan resourceEventSourcesConfigData
+	var plan eventSourcesConfigResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,10 +108,10 @@ func (r *resourceEventSourcesConfig) Create(ctx context.Context, req resource.Cr
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceEventSourcesConfig) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *eventSourcesConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DevOpsGuruClient(ctx)
 
-	var state resourceEventSourcesConfigData
+	var state eventSourcesConfigResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -132,14 +134,14 @@ func (r *resourceEventSourcesConfig) Read(ctx context.Context, req resource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceEventSourcesConfig) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *eventSourcesConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Update is a no-op
 }
 
-func (r *resourceEventSourcesConfig) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *eventSourcesConfigResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DevOpsGuruClient(ctx)
 
-	var state resourceEventSourcesConfigData
+	var state eventSourcesConfigResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -163,10 +165,6 @@ func (r *resourceEventSourcesConfig) Delete(ctx context.Context, req resource.De
 	}
 }
 
-func (r *resourceEventSourcesConfig) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func findEventSourcesConfig(ctx context.Context, conn *devopsguru.Client) (*devopsguru.DescribeEventSourcesConfigOutput, error) {
 	in := &devopsguru.DescribeEventSourcesConfigInput{}
 
@@ -182,7 +180,8 @@ func findEventSourcesConfig(ctx context.Context, conn *devopsguru.Client) (*devo
 	return out, nil
 }
 
-type resourceEventSourcesConfigData struct {
+type eventSourcesConfigResourceModel struct {
+	framework.WithRegionModel
 	EventSources fwtypes.ListNestedObjectValueOf[eventSourcesData] `tfsdk:"event_sources"`
 	ID           types.String                                      `tfsdk:"id"`
 }

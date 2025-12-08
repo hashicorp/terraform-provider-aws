@@ -23,23 +23,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cleanrooms_configured_table", name="Configured Table")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="v6.14.1")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetConfiguredTableOutput")
 func ResourceConfiguredTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfiguredTableCreate,
 		ReadWithoutTimeout:   resourceConfiguredTableRead,
 		UpdateWithoutTimeout: resourceConfiguredTableUpdate,
 		DeleteWithoutTimeout: resourceConfiguredTableDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
@@ -103,7 +101,6 @@ func ResourceConfiguredTable() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -111,7 +108,7 @@ const (
 	ResNameConfiguredTable = "Configured Table"
 )
 
-func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
@@ -119,7 +116,7 @@ func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &cleanrooms.CreateConfiguredTableInput{
 		Name:           aws.String(d.Get(names.AttrName).(string)),
 		AllowedColumns: flex.ExpandStringValueSet(d.Get("allowed_columns").(*schema.Set)),
-		TableReference: expandTableReference(d.Get("table_reference").([]interface{})),
+		TableReference: expandTableReference(d.Get("table_reference").([]any)),
 		Tags:           getTagsIn(ctx),
 	}
 
@@ -146,7 +143,7 @@ func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceConfiguredTableRead(ctx, d, meta)...)
 }
 
-func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
@@ -179,7 +176,7 @@ func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceConfiguredTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfiguredTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
@@ -205,7 +202,7 @@ func resourceConfiguredTableUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceConfiguredTableRead(ctx, d, meta)...)
 }
 
-func resourceConfiguredTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfiguredTableDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
@@ -262,8 +259,8 @@ func expandAnalysisMethod(analysisMethod string) (awstypes.AnalysisMethod, error
 	}
 }
 
-func expandTableReference(data []interface{}) awstypes.TableReference {
-	tableReference := data[0].(map[string]interface{})
+func expandTableReference(data []any) awstypes.TableReference {
+	tableReference := data[0].(map[string]any)
 	return &awstypes.TableReferenceMemberGlue{
 		Value: awstypes.GlueTableReference{
 			DatabaseName: aws.String(tableReference[names.AttrDatabaseName].(string)),
@@ -272,14 +269,14 @@ func expandTableReference(data []interface{}) awstypes.TableReference {
 	}
 }
 
-func flattenTableReference(tableReference awstypes.TableReference) []interface{} {
+func flattenTableReference(tableReference awstypes.TableReference) []any {
 	switch v := tableReference.(type) {
 	case *awstypes.TableReferenceMemberGlue:
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrDatabaseName: v.Value.DatabaseName,
 			names.AttrTableName:    v.Value.TableName,
 		}
-		return []interface{}{m}
+		return []any{m}
 	default:
 		return nil
 	}

@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,7 +79,7 @@ const (
 	userPoolUICustomizationResourceIDPartCount = 2
 )
 
-func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -99,7 +99,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("image_file"); ok {
-		v, err := itypes.Base64Decode(v.(string))
+		v, err := inttypes.Base64Decode(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -115,7 +115,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceUserPoolUICustomizationRead(ctx, d, meta)...)
 }
 
-func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -148,7 +148,7 @@ func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -159,10 +159,11 @@ func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.Resour
 	userPoolID, clientID := parts[0], parts[1]
 
 	log.Printf("[DEBUG] Deleting Cognito User Pool UI Customization: %s", d.Id())
-	_, err = conn.SetUICustomization(ctx, &cognitoidentityprovider.SetUICustomizationInput{
+	input := cognitoidentityprovider.SetUICustomizationInput{
 		ClientId:   aws.String(clientID),
 		UserPoolId: aws.String(userPoolID),
-	})
+	}
+	_, err = conn.SetUICustomization(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -196,7 +197,7 @@ func findUserPoolUICustomizationByTwoPartKey(ctx context.Context, conn *cognitoi
 
 	// The GetUICustomization API operation will return an empty struct
 	// if nothing is present rather than nil or an error, so we equate that with nil.
-	if output == nil || output.UICustomization == nil || itypes.IsZero(output.UICustomization) {
+	if output == nil || output.UICustomization == nil || inttypes.IsZero(output.UICustomization) {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

@@ -48,3 +48,23 @@ func TestSemVerGreaterThanOrEqual(t *testing.T) {
 		}
 	}
 }
+
+func TestSemVerMajorMinor(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		s1 string
+		s2 string
+	}{
+		{"1.0", "1.0"},
+		{"2.3.4", "2.3"},
+		{"4", "4.0"},
+		{"v5.6.7", "5.6"},
+		{"bloop", ""},
+	} {
+		got, _ := MajorMinor(tc.s1)
+		if got != tc.s2 {
+			t.Fatalf("MajorMinor(%q) should be: %q", tc.s1, tc.s2)
+		}
+	}
+}

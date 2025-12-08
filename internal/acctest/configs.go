@@ -14,6 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 )
 
+// Only include configuration that is used in 3+ or more services.
+// Go idiom: "A little copying is better than a little dependency."
+
 // ConfigCompose can be called to concatenate multiple strings to build test configurations
 func ConfigCompose(config ...string) string {
 	var str strings.Builder
@@ -64,6 +67,16 @@ func ConfigMultipleAccountProvider(t *testing.T, accounts int) string {
 			),
 		)
 	}
+	if accounts == 4 {
+		config.WriteString(
+			ConfigNamedAccountProvider(
+				ProviderNameFourth,
+				os.Getenv(envvar.FourthAccessKeyId),
+				os.Getenv(envvar.FourthProfile),
+				os.Getenv(envvar.FourthSecretAccessKey),
+			),
+		)
+	}
 
 	return config.String()
 }
@@ -92,8 +105,12 @@ func ConfigMultipleRegionProvider(regions int) string {
 
 	config.WriteString(ConfigNamedRegionalProvider(ProviderNameAlternate, AlternateRegion()))
 
-	if regions >= 3 {
+	if regions == 3 {
 		config.WriteString(ConfigNamedRegionalProvider(ProviderNameThird, ThirdRegion()))
+	}
+
+	if regions == 4 {
+		config.WriteString(ConfigNamedRegionalProvider(ProviderNameFourth, FourthRegion()))
 	}
 
 	return config.String()
@@ -163,6 +180,33 @@ provider "aws" {
   }
 }
 `, key1)
+}
+
+// ConfigTagPolicyCompliance enables tag policy enforcement with the provided severity
+func ConfigTagPolicyCompliance(severity string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  tag_policy_compliance = %[1]q
+}
+`, severity)
+}
+
+// ConfigTagPolicyComplianceAndDefaultTags1 enables tag policy enforcement with the
+// provided severity and a default tag
+func ConfigTagPolicyComplianceAndDefaultTags1(severity, key1, value1 string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  tag_policy_compliance = %[1]q
+
+  default_tags {
+    tags = {
+      %[2]s = %[3]q
+    }
+  }
+}
+`, severity, key1, value1)
 }
 
 func ConfigWithEchoProvider(ephemeralResourceData string) string {
@@ -251,6 +295,17 @@ provider "aws" {
 `, tag1, value1, tag2, value2))
 }
 
+func ConfigAssumeRole() string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  assume_role {
+    role_arn = %[1]q
+  }
+}
+`, os.Getenv(envvar.AccAssumeRoleARN))
+}
+
 func ConfigAssumeRolePolicy(policy string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
@@ -268,7 +323,7 @@ data "aws_region" "provider_test" {}
 
 # Required to initialize the provider.
 data "aws_service" "provider_test" {
-  region     = data.aws_region.provider_test.name
+  region     = data.aws_region.provider_test.region
   service_id = "s3"
 }
 `
@@ -303,6 +358,27 @@ data "aws_availability_zones" "available" {
   }
 }
 `, strings.Join(excludeZoneIds, "\", \""))
+}
+
+func ConfigAvailableAZsNoOptInDefaultExclude_RegionOverride(region string) string {
+	// Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+	return ConfigAvailableAZsNoOptInExclude_RegionOverride(region, "usw2-az4", "usgw1-az2")
+}
+
+func ConfigAvailableAZsNoOptInExclude_RegionOverride(region string, excludeZoneIds ...string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  region = %[2]q
+
+  exclude_zone_ids = ["%[1]s"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+`, strings.Join(excludeZoneIds, "\", \""), region)
 }
 
 // AvailableEC2InstanceTypeForAvailabilityZone returns the configuration for a data source that describes
@@ -485,9 +561,11 @@ resource "aws_vpc" "vpc_for_lambda" {
 
 resource "aws_subnet" "subnet_for_lambda" {
   vpc_id                          = aws_vpc.vpc_for_lambda.id
-  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
   availability_zone               = data.aws_availability_zones.available.names[1]
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
+
+  cidr_block      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
+
   assign_ipv6_address_on_creation = true
 
   tags = {
@@ -499,9 +577,11 @@ resource "aws_subnet" "subnet_for_lambda" {
 # prevent a timeout issue when fully removing Lambda Filesystems
 resource "aws_subnet" "subnet_for_lambda_az2" {
   vpc_id                          = aws_vpc.vpc_for_lambda.id
-  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 2)
   availability_zone               = data.aws_availability_zones.available.names[1]
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 2)
+
+  cidr_block      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 2)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 2)
+
   assign_ipv6_address_on_creation = true
 
   tags = {
@@ -537,7 +617,7 @@ resource "aws_security_group" "sg_for_lambda" {
 
 func ConfigVPCWithSubnets(rName string, subnetCount int) string {
 	return ConfigCompose(
-		ConfigAvailableAZsNoOptInDefaultExclude(),
+		ConfigSubnets(rName, subnetCount),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -546,25 +626,36 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
+`, rName),
+	)
+}
+
+func ConfigVPCWithSubnets_RegionOverride(rName string, subnetCount int, region string) string {
+	return ConfigCompose(
+		ConfigAvailableAZsNoOptInDefaultExclude_RegionOverride(region),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  region = %[3]q
+
+  cidr_block = "10.0.0.0/16"
+}
 
 resource "aws_subnet" "test" {
   count = %[2]d
 
+  region = %[3]q
+
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-
-  tags = {
-    Name = %[1]q
-  }
 }
-`, rName, subnetCount),
+`, rName, subnetCount, region),
 	)
 }
 
 func ConfigVPCWithSubnetsEnableDNSHostnames(rName string, subnetCount int) string {
 	return ConfigCompose(
-		ConfigAvailableAZsNoOptInDefaultExclude(),
+		ConfigSubnets(rName, subnetCount),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
@@ -574,25 +665,13 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
-
-resource "aws_subnet" "test" {
-  count = %[2]d
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, subnetCount),
+`, rName),
 	)
 }
 
 func ConfigVPCWithSubnetsIPv6(rName string, subnetCount int) string {
 	return ConfigCompose(
-		ConfigAvailableAZsNoOptInDefaultExclude(),
+		ConfigSubnetsIPv6(rName, subnetCount),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -603,7 +682,14 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
+`, rName),
+	)
+}
 
+func ConfigSubnets(rName string, subnetCount int) string {
+	return ConfigCompose(
+		ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
 resource "aws_subnet" "test" {
   count = %[2]d
 
@@ -611,7 +697,27 @@ resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, subnetCount),
+	)
+}
+
+func ConfigSubnetsIPv6(rName string, subnetCount int) string {
+	return ConfigCompose(
+		ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_subnet" "test" {
+  count = %[2]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  cidr_block      = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+
   assign_ipv6_address_on_creation = true
 
   tags = {
@@ -668,7 +774,7 @@ resource "aws_iam_role_policy" "test" {
         "bedrock:InvokeModel"
       ],
       "Resource": [
-        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
       ]
     }
   ]
@@ -686,17 +792,22 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_read_write" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
 }
 
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = "aurora-postgresql"
+  engine_latest_version      = true
+  preferred_instance_classes = ["db.serverless"]
+}
+
 resource "aws_rds_cluster" "test" {
   cluster_identifier          = %[1]q
-  engine                      = "aurora-postgresql"
-  engine_mode                 = "provisioned"
-  engine_version              = "15.4"
-  database_name               = "test"
   master_username             = "test"
   manage_master_user_password = true
+  database_name               = "test"
+  skip_final_snapshot         = true
+  engine                      = data.aws_rds_orderable_db_instance.test.engine
+  engine_version              = data.aws_rds_orderable_db_instance.test.engine_version
   enable_http_endpoint        = true
   vpc_security_group_ids      = [aws_security_group.test.id]
-  skip_final_snapshot         = true
   db_subnet_group_name        = aws_db_subnet_group.test.name
 
   serverlessv2_scaling_configuration {
@@ -774,14 +885,16 @@ resource "null_resource" "db_setup" {
   provisioner "local-exec" {
     command = <<EOT
       sleep 60
-      export PGPASSWORD=$(aws secretsmanager get-secret-value --secret-id '${aws_rds_cluster.test.master_user_secret[0].secret_arn}' --version-stage AWSCURRENT --region ${data.aws_region.current.name} --query SecretString --output text | jq -r '."password"')
+      export PGPASSWORD=$(aws secretsmanager get-secret-value --secret-id '${aws_rds_cluster.test.master_user_secret[0].secret_arn}' --version-stage AWSCURRENT --region ${data.aws_region.current.region} --query SecretString --output text | jq -r '."password"')
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE EXTENSION IF NOT EXISTS vector;"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_integration;"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_new;"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE ROLE bedrock_user WITH PASSWORD '$PGPASSWORD' LOGIN;"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "GRANT ALL ON SCHEMA bedrock_integration TO bedrock_user;"
-      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json);"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json, custom_metadata jsonb);"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING hnsw (embedding vector_cosine_ops);"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING gin (to_tsvector('simple', chunks));"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING gin (custom_metadata);"
     EOT
   }
 }
@@ -831,7 +944,7 @@ resource "aws_iam_role_policy" "test_update" {
         "bedrock:InvokeModel"
       ],
       "Resource": [
-        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
       ]
     }
   ]
@@ -849,4 +962,88 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_read_write_update" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
 }
 `, rName, model))
+}
+
+// ConfigRandomPassword returns the configuration for an ephemeral resource that
+// describes a random password.
+//
+// The ephemeral resource is named 'test'. Use
+// ephemeral.aws_secretsmanager_random_password.test.random_password to
+// reference the password value, assigning it to a write-only argument ("_wo").
+//
+// The function accepts a variable number of string arguments in the format
+// "key=value". The following keys are supported:
+//   - password_length: The length of the password. Default is 20.
+//   - exclude_punctuation: Whether to exclude punctuation characters. Default is true.
+//   - exclude_characters: A string of characters to exclude from the password.
+//   - exclude_lowercase: Whether to exclude lowercase letters. Default is false.
+//   - exclude_numbers: Whether to exclude numbers. Default is false.
+//   - exclude_uppercase: Whether to exclude uppercase letters. Default is false.
+//   - include_space: Whether to include a space character. Default is false.
+//   - require_each_included_type: Whether to require at least one character from each included type. Default is false.
+//
+// Called without overrides, the function returns the default configuration:
+//
+//	ephemeral "aws_secretsmanager_random_password" "test" {
+//	  password_length     = 20
+//	  exclude_punctuation = true
+//	}
+func ConfigRandomPassword(overrides ...string) string {
+	// Default configuration values
+	config := map[string]string{
+		"password_length":     "20",
+		"exclude_punctuation": "true",
+	}
+
+	// Additional keys without defaults
+	optionalKeys := []string{
+		"exclude_characters",
+		"exclude_lowercase",
+		"exclude_numbers",
+		"exclude_uppercase",
+		"include_space",
+		"require_each_included_type",
+	}
+
+	// Parse overrides and update the config map
+	for _, override := range overrides {
+		parts := strings.SplitN(override, "=", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+			config[key] = value
+		}
+	}
+
+	// Build the Terraform configuration string
+	var builder strings.Builder
+	builder.WriteString(`
+ephemeral "aws_secretsmanager_random_password" "test" {
+`)
+
+	// Add default keys
+	fmt.Fprintf(&builder, "  password_length     = %s\n", config["password_length"])
+	fmt.Fprintf(&builder, "  exclude_punctuation = %s\n", config["exclude_punctuation"])
+
+	// Add optional keys in a consistent order
+	for _, key := range optionalKeys {
+		if value, exists := config[key]; exists {
+			if key == "exclude_characters" {
+				// Special handling for exclude_characters
+				if strings.HasPrefix(value, `"`) && strings.HasSuffix(value, `"`) {
+					// Trim surrounding quotes
+					value = value[1 : len(value)-1]
+				}
+				value = strings.ReplaceAll(value, `\"`, `"`)
+				fmt.Fprintf(&builder, "  %s = %q\n", key, value)
+				continue
+			}
+
+			// Default handling for other keys
+			fmt.Fprintf(&builder, "  %s = %s\n", key, value)
+		}
+	}
+
+	builder.WriteString("}\n")
+	return builder.String()
 }

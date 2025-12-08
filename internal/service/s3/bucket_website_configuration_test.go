@@ -941,7 +941,7 @@ resource "aws_s3_bucket_website_configuration" "test" {
 }
 
 func testAccBucketWebsiteConfigurationConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

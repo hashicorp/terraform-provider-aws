@@ -48,12 +48,12 @@ func resourceDomainIdentityVerification() *schema.Resource {
 	}
 }
 
-func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	domainName := d.Get(names.AttrDomain).(string)
-	_, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutCreate), awstypes.VerificationStatusSuccess, func() (awstypes.VerificationStatus, error) {
+	_, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutCreate), awstypes.VerificationStatusSuccess, func(ctx context.Context) (awstypes.VerificationStatus, error) {
 		att, err := findIdentityVerificationAttributesByIdentity(ctx, conn, domainName)
 
 		if err != nil {
@@ -72,7 +72,7 @@ func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceDomainIdentityVerificationRead(ctx, d, meta)...)
 }
 
-func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 

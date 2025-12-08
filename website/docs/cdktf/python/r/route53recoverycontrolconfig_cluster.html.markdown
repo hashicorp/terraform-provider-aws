@@ -33,9 +33,10 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) Unique name describing the cluster.
+* `network_type` - (Optional) Network type of cluster. Valid values are `IPV4` and `DUALSTACK`. Defaults to `IPV4`.
 
 ## Attribute Reference
 
@@ -75,4 +76,4 @@ Using `terraform import`, import Route53 Recovery Control Config cluster using t
 % terraform import aws_route53recoverycontrolconfig_cluster.mycluster arn:aws:route53-recovery-control::313517334327:cluster/f9ae13be-a11e-4ec7-8522-94a70468e6ea
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4f9ee8256b3a92970727893900eccbfd348f2d0fcefd370211ce5756a28dbab1 -->
+<!-- cache-key: cdktf-0.20.8 input-a6168d332ceb21d7f691d32d193b9eeab949f9620487facc847587b93c05f803 -->

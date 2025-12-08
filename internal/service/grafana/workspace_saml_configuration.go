@@ -109,7 +109,7 @@ func resourceWorkspaceSAMLConfiguration() *schema.Resource {
 	}
 }
 
-func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -122,11 +122,11 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 
 	authenticationProviders := workspace.Authentication.Providers
 	roleValues := &awstypes.RoleValues{
-		Editor: flex.ExpandStringValueList(d.Get("editor_role_values").([]interface{})),
+		Editor: flex.ExpandStringValueList(d.Get("editor_role_values").([]any)),
 	}
 
 	if v, ok := d.GetOk("admin_role_values"); ok {
-		roleValues.Admin = flex.ExpandStringValueList(v.([]interface{}))
+		roleValues.Admin = flex.ExpandStringValueList(v.([]any))
 	}
 
 	samlConfiguration := &awstypes.SamlConfiguration{
@@ -134,7 +134,7 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 	}
 
 	if v, ok := d.GetOk("allowed_organizations"); ok {
-		samlConfiguration.AllowedOrganizations = flex.ExpandStringValueList(v.([]interface{}))
+		samlConfiguration.AllowedOrganizations = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("login_validity_duration"); ok {
@@ -232,7 +232,7 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 	return append(diags, resourceWorkspaceSAMLConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceWorkspaceSAMLConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceSAMLConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -304,7 +304,7 @@ func findSAMLConfigurationByID(ctx context.Context, conn *grafana.Client, id str
 }
 
 func statusWorkspaceSAMLConfiguration(ctx context.Context, conn *grafana.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSAMLConfigurationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

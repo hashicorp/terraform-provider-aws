@@ -37,13 +37,9 @@ func newVPCBlockPublicAccessOptionsResource(context.Context) (resource.ResourceW
 }
 
 type vpcBlockPublicAccessOptionsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcBlockPublicAccessOptionsResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (*vpcBlockPublicAccessOptionsResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpc_block_public_access_options"
 }
 
 func (r *vpcBlockPublicAccessOptionsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -206,6 +202,7 @@ func (r *vpcBlockPublicAccessOptionsResource) Delete(ctx context.Context, reques
 }
 
 type vpcBlockPublicAccessOptionsResourceModel struct {
+	framework.WithRegionModel
 	AWSAccountID             types.String                                          `tfsdk:"aws_account_id"`
 	AWSRegion                types.String                                          `tfsdk:"aws_region"`
 	ID                       types.String                                          `tfsdk:"id"`

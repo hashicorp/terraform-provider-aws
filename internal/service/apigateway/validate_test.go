@@ -73,7 +73,7 @@ func TestValidUsagePlanQuotaSettings(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m["offset"] = tc.Offset
 		m["period"] = tc.Period
 

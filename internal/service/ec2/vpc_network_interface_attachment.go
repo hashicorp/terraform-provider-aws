@@ -7,6 +7,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +23,7 @@ func resourceNetworkInterfaceAttachment() *schema.Resource {
 		CreateWithoutTimeout: resourceNetworkInterfaceAttachmentCreate,
 		ReadWithoutTimeout:   resourceNetworkInterfaceAttachmentRead,
 		DeleteWithoutTimeout: resourceNetworkInterfaceAttachmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -40,6 +43,12 @@ func resourceNetworkInterfaceAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"network_card_index": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -53,16 +62,23 @@ func resourceNetworkInterfaceAttachment() *schema.Resource {
 	}
 }
 
-func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	attachmentID, err := attachNetworkInterface(ctx, conn,
-		d.Get(names.AttrNetworkInterfaceID).(string),
-		d.Get(names.AttrInstanceID).(string),
-		d.Get("device_index").(int),
-		networkInterfaceAttachedTimeout,
-	)
+	input := ec2.AttachNetworkInterfaceInput{
+		NetworkInterfaceId: aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
+		InstanceId:         aws.String(d.Get(names.AttrInstanceID).(string)),
+		DeviceIndex:        aws.Int32(int32(d.Get("device_index").(int))),
+	}
+
+	if v, ok := d.GetOk("network_card_index"); ok {
+		if v, ok := v.(int); ok {
+			input.NetworkCardIndex = aws.Int32(int32(v))
+		}
+	}
+
+	attachmentID, err := attachNetworkInterface(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -75,11 +91,11 @@ func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceNetworkInterfaceAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	network_interface, err := findNetworkInterfaceByAttachmentID(ctx, conn, d.Id())
+	eni, err := findNetworkInterfaceByAttachmentID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Interface Attachment (%s) not found, removing from state", d.Id())
@@ -91,16 +107,18 @@ func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface Attachment (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrNetworkInterfaceID, network_interface.NetworkInterfaceId)
-	d.Set("attachment_id", network_interface.Attachment.AttachmentId)
-	d.Set("device_index", network_interface.Attachment.DeviceIndex)
-	d.Set(names.AttrInstanceID, network_interface.Attachment.InstanceId)
-	d.Set(names.AttrStatus, network_interface.Attachment.Status)
+	attachment := eni.Attachment
+	d.Set("attachment_id", attachment.AttachmentId)
+	d.Set("device_index", attachment.DeviceIndex)
+	d.Set(names.AttrInstanceID, attachment.InstanceId)
+	d.Set("network_card_index", attachment.NetworkCardIndex)
+	d.Set(names.AttrNetworkInterfaceID, eni.NetworkInterfaceId)
+	d.Set(names.AttrStatus, eni.Attachment.Status)
 
 	return diags
 }
 
-func resourceNetworkInterfaceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkInterfaceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

@@ -26,16 +26,17 @@ import (
 
 // @SDKResource("aws_devicefarm_network_profile", name="Network Profile")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.NetworkProfile")
+// @Testing(preCheckRegion="us-west-2")
+// @Testing(identityRegionOverrideTest=false)
 func resourceNetworkProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkProfileCreate,
 		ReadWithoutTimeout:   resourceNetworkProfileRead,
 		UpdateWithoutTimeout: resourceNetworkProfileUpdate,
 		DeleteWithoutTimeout: resourceNetworkProfileDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -108,11 +109,10 @@ func resourceNetworkProfile() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceNetworkProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -177,7 +177,7 @@ func resourceNetworkProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceNetworkProfileRead(ctx, d, meta)...)
 }
 
-func resourceNetworkProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -217,7 +217,7 @@ func resourceNetworkProfileRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceNetworkProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -280,7 +280,7 @@ func resourceNetworkProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceNetworkProfileRead(ctx, d, meta)...)
 }
 
-func resourceNetworkProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 

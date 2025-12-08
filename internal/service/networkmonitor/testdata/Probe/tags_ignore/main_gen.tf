@@ -29,11 +29,9 @@ resource "aws_networkmonitor_monitor" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = var.rName
-  }
 }
+
+# acctest.ConfigSubnets(rName, 1)
 
 resource "aws_subnet" "test" {
   count = 1
@@ -43,7 +41,7 @@ resource "aws_subnet" "test" {
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 }
 
-# acctest.ConfigAvailableAZsNoOptInDefaultExclude()
+# acctest.ConfigAvailableAZsNoOptInDefaultExclude
 
 data "aws_availability_zones" "available" {
   exclude_zone_ids = local.default_exclude_zone_ids

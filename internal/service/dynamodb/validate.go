@@ -12,7 +12,7 @@ import (
 )
 
 // http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateGlobalTable.html
-func validGlobalTableName(v interface{}, k string) (ws []string, errors []error) {
+func validGlobalTableName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if (len(value) > 255) || (len(value) < 3) {
 		errors = append(errors, fmt.Errorf("%s length must be between 3 and 255 characters: %q", k, value))
@@ -40,7 +40,7 @@ func validStreamSpec(d *schema.ResourceDiff) error {
 }
 
 // checkIfNonKeyAttributesChanged returns true if non_key_attributes between old map and new map are different
-func checkIfNonKeyAttributesChanged(oldMap, newMap map[string]interface{}) bool {
+func checkIfNonKeyAttributesChanged(oldMap, newMap map[string]any) bool {
 	oldNonKeyAttributes, oldNkaExists := oldMap["non_key_attributes"].(*schema.Set)
 	newNonKeyAttributes, newNkaExists := newMap["non_key_attributes"].(*schema.Set)
 

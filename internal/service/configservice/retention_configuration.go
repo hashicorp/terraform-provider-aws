@@ -32,12 +32,8 @@ func newRetentionConfigurationResource(context.Context) (resource.ResourceWithCo
 }
 
 type retentionConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[retentionConfigurationResourceModel]
 	framework.WithImportByID
-}
-
-func (r *retentionConfigurationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_config_retention_configuration"
 }
 
 func (r *retentionConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -70,7 +66,7 @@ func (r *retentionConfigurationResource) Create(ctx context.Context, request res
 	conn := r.Meta().ConfigServiceClient(ctx)
 
 	input := &configservice.PutRetentionConfigurationInput{
-		RetentionPeriodInDays: fwflex.Int32FromFramework(ctx, data.RetentionPeriodInDays),
+		RetentionPeriodInDays: fwflex.Int32FromFrameworkInt64(ctx, data.RetentionPeriodInDays),
 	}
 
 	output, err := conn.PutRetentionConfiguration(ctx, input)
@@ -119,7 +115,7 @@ func (r *retentionConfigurationResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	data.RetentionPeriodInDays = fwflex.Int32ToFramework(ctx, retentionConfiguration.RetentionPeriodInDays)
+	data.RetentionPeriodInDays = fwflex.Int32ToFrameworkInt64(ctx, retentionConfiguration.RetentionPeriodInDays)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -134,7 +130,7 @@ func (r *retentionConfigurationResource) Update(ctx context.Context, request res
 	conn := r.Meta().ConfigServiceClient(ctx)
 
 	input := &configservice.PutRetentionConfigurationInput{
-		RetentionPeriodInDays: fwflex.Int32FromFramework(ctx, new.RetentionPeriodInDays),
+		RetentionPeriodInDays: fwflex.Int32FromFrameworkInt64(ctx, new.RetentionPeriodInDays),
 	}
 
 	_, err := conn.PutRetentionConfiguration(ctx, input)
@@ -158,9 +154,10 @@ func (r *retentionConfigurationResource) Delete(ctx context.Context, request res
 	conn := r.Meta().ConfigServiceClient(ctx)
 
 	name := data.ID.ValueString()
-	_, err := conn.DeleteRetentionConfiguration(ctx, &configservice.DeleteRetentionConfigurationInput{
+	input := configservice.DeleteRetentionConfigurationInput{
 		RetentionConfigurationName: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteRetentionConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchRetentionConfigurationException](err) {
 		return
@@ -216,6 +213,7 @@ func findRetentionConfigurations(ctx context.Context, conn *configservice.Client
 }
 
 type retentionConfigurationResourceModel struct {
+	framework.WithRegionModel
 	ID                    types.String `tfsdk:"id"`
 	Name                  types.String `tfsdk:"name"`
 	RetentionPeriodInDays types.Int64  `tfsdk:"retention_period_in_days"`

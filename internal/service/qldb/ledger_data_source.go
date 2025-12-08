@@ -52,7 +52,7 @@ func dataSourceLedger() *schema.Resource {
 	}
 }
 
-func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -67,8 +67,9 @@ func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.ToString(ledger.Name))
 	d.Set(names.AttrARN, ledger.Arn)
 	d.Set(names.AttrDeletionProtection, ledger.DeletionProtection)
-	if ledger.EncryptionDescription != nil {
-		d.Set(names.AttrKMSKey, ledger.EncryptionDescription.KmsKeyArn)
+	encryptionDescription := ledger.EncryptionDescription
+	if encryptionDescription != nil {
+		d.Set(names.AttrKMSKey, encryptionDescription.KmsKeyArn)
 	} else {
 		d.Set(names.AttrKMSKey, nil)
 	}

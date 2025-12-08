@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -66,7 +66,7 @@ func dataSourceOrderableDBInstance() *schema.Resource {
 	}
 }
 
-func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -94,7 +94,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 
 	var orderableDBInstance *awstypes.OrderableDBInstanceOption
 	var err error
-	if preferredInstanceClasses := flex.ExpandStringValueList(d.Get("preferred_instance_classes").([]interface{})); len(preferredInstanceClasses) > 0 {
+	if preferredInstanceClasses := flex.ExpandStringValueList(d.Get("preferred_instance_classes").([]any)); len(preferredInstanceClasses) > 0 {
 		var orderableDBInstances []awstypes.OrderableDBInstanceOption
 
 		orderableDBInstances, err = findOrderableDBInstances(ctx, conn, input)
@@ -156,7 +156,7 @@ func findOrderableDBInstances(ctx context.Context, conn *docdb.Client, input *do
 		}
 
 		for _, v := range page.OrderableDBInstanceOptions {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}

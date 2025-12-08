@@ -12,7 +12,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -95,14 +94,14 @@ func resourceServiceAction() *schema.Resource {
 	}
 }
 
-func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.CreateServiceActionInput{
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(d.Get(names.AttrName).(string)),
-		Definition:       expandServiceActionDefinition(d.Get("definition").([]interface{})[0].(map[string]interface{})),
+		Definition:       expandServiceActionDefinition(d.Get("definition").([]any)[0].(map[string]any)),
 		DefinitionType:   awstypes.ServiceActionDefinitionType(d.Get("definition.0.type").(string)),
 	}
 
@@ -115,25 +114,21 @@ func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	var output *servicecatalog.CreateServiceActionOutput
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		output, err = conn.CreateServiceAction(ctx, input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateServiceAction(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Service Action: %s", err)
@@ -148,7 +143,7 @@ func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceServiceActionRead(ctx, d, meta)...)
 }
 
-func resourceServiceActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceActionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -174,7 +169,7 @@ func resourceServiceActionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrName, sas.Name)
 
 	if output.Definition != nil {
-		d.Set("definition", []interface{}{flattenServiceActionDefinition(output.Definition, sas.DefinitionType)})
+		d.Set("definition", []any{flattenServiceActionDefinition(output.Definition, sas.DefinitionType)})
 	} else {
 		d.Set("definition", nil)
 	}
@@ -182,7 +177,7 @@ func resourceServiceActionRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceServiceActionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceActionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -195,7 +190,7 @@ func resourceServiceActionUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if d.HasChange("definition") {
-		input.Definition = expandServiceActionDefinition(d.Get("definition").([]interface{})[0].(map[string]interface{}))
+		input.Definition = expandServiceActionDefinition(d.Get("definition").([]any)[0].(map[string]any))
 	}
 
 	if d.HasChange(names.AttrDescription) {
@@ -206,23 +201,19 @@ func resourceServiceActionUpdate(ctx context.Context, d *schema.ResourceData, me
 		input.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.UpdateServiceAction(ctx, input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateServiceAction(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Service Action (%s): %s", d.Id(), err)
@@ -231,7 +222,7 @@ func resourceServiceActionUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceServiceActionRead(ctx, d, meta)...)
 }
 
-func resourceServiceActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceActionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -239,23 +230,19 @@ func resourceServiceActionDelete(ctx context.Context, d *schema.ResourceData, me
 		Id: aws.String(d.Id()),
 	}
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DeleteServiceAction(ctx, input)
 
 		if errs.IsA[*awstypes.ResourceInUseException](err) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteServiceAction(ctx, input)
-	}
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[INFO] Attempted to delete Service Action (%s) but does not exist", d.Id())
@@ -273,7 +260,7 @@ func resourceServiceActionDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func expandServiceActionDefinition(tfMap map[string]interface{}) map[string]string {
+func expandServiceActionDefinition(tfMap map[string]any) map[string]string {
 	if tfMap == nil {
 		return nil
 	}
@@ -299,12 +286,12 @@ func expandServiceActionDefinition(tfMap map[string]interface{}) map[string]stri
 	return apiObject
 }
 
-func flattenServiceActionDefinition(apiObject map[string]string, definitionType awstypes.ServiceActionDefinitionType) map[string]interface{} {
+func flattenServiceActionDefinition(apiObject map[string]string, definitionType awstypes.ServiceActionDefinitionType) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v, ok := apiObject[string(awstypes.ServiceActionDefinitionKeyAssumeRole)]; ok && v != "" {
 		tfMap["assume_role"] = v

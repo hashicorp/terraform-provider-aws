@@ -120,7 +120,7 @@ func resourceFunctionURL() *schema.Resource {
 	}
 }
 
-func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -138,8 +138,8 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Qualifier = aws.String(qualifier)
 	}
 
-	if v, ok := d.GetOk("cors"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Cors = expandCors(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("cors"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Cors = expandCors(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.CreateFunctionUrlConfig(ctx, input)
@@ -177,7 +177,7 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceFunctionURLRead(ctx, d, meta)...)
 }
 
-func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -201,7 +201,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	functionURL := aws.ToString(output.FunctionUrl)
 	d.Set("authorization_type", output.AuthType)
 	if output.Cors != nil {
-		if err := d.Set("cors", []interface{}{flattenCors(output.Cors)}); err != nil {
+		if err := d.Set("cors", []any{flattenCors(output.Cors)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cors: %s", err)
 		}
 	} else {
@@ -226,7 +226,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -248,8 +248,8 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("cors") {
-		if v, ok := d.GetOk("cors"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Cors = expandCors(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("cors"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Cors = expandCors(v.([]any)[0].(map[string]any))
 		} else {
 			input.Cors = &awstypes.Cors{}
 		}
@@ -268,7 +268,7 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceFunctionURLRead(ctx, d, meta)...)
 }
 
-func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -357,7 +357,7 @@ func functionURLParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected FUNCTION-NAME%[2]sQUALIFIER or FUNCTION-NAME", id, functionURLResourceIDSeparator)
 }
 
-func expandCors(tfMap map[string]interface{}) *awstypes.Cors {
+func expandCors(tfMap map[string]any) *awstypes.Cors {
 	if tfMap == nil {
 		return nil
 	}
@@ -391,12 +391,12 @@ func expandCors(tfMap map[string]interface{}) *awstypes.Cors {
 	return apiObject
 }
 
-func flattenCors(apiObject *awstypes.Cors) map[string]interface{} {
+func flattenCors(apiObject *awstypes.Cors) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AllowCredentials; v != nil {
 		tfMap["allow_credentials"] = aws.ToBool(v)

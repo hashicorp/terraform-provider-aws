@@ -684,7 +684,7 @@ resource "aws_bedrockagent_data_source" "test" {
     parsing_configuration {
       parsing_strategy = "BEDROCK_FOUNDATION_MODEL"
       bedrock_foundation_model_configuration {
-        model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+        model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
         parsing_prompt {
           parsing_prompt_string = "Transcribe the text content from an image page and output in Markdown syntax (not code blocks)."
         }

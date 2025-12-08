@@ -68,7 +68,7 @@ func ResourceLFTag() *schema.Resource {
 	}
 }
 
-func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -118,7 +118,7 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceLFTagRead(ctx, d, meta)...)
 }
 
-func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -152,7 +152,7 @@ func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -167,7 +167,7 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	toAdd := ns.Difference(os)
 	toDelete := os.Difference(ns)
 
-	var toAddChunks, toDeleteChunks [][]interface{}
+	var toAddChunks, toDeleteChunks [][]any
 	if len(toAdd.List()) > 0 {
 		toAddChunks = slices.Collect(slices.Chunk(toAdd.List(), lfTagsValuesMaxBatchSize))
 	}
@@ -209,7 +209,7 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceLFTagRead(ctx, d, meta)...)
 }
 
-func resourceLFTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLFTagDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 

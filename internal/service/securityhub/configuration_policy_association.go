@@ -63,7 +63,7 @@ func resourceConfigurationPolicyAssociation() *schema.Resource {
 	}
 }
 
-func resourceConfigurationPolicyAssociationCreateOrUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationPolicyAssociationCreateOrUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -93,7 +93,7 @@ func resourceConfigurationPolicyAssociationCreateOrUpdate(ctx context.Context, d
 	return append(diags, resourceConfigurationPolicyAssociationRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationPolicyAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationPolicyAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -115,7 +115,7 @@ func resourceConfigurationPolicyAssociationRead(ctx context.Context, d *schema.R
 	return diags
 }
 
-func resourceConfigurationPolicyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationPolicyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -166,7 +166,7 @@ func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.C
 }
 
 func statusConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findConfigurationPolicyAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

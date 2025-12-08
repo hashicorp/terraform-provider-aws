@@ -20,23 +20,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_openid_connect_provider", name="OIDC Provider")
 // @Tags(identifierAttribute="arn", resourceType="OIDCProvider")
 // @Testing(name="OpenIDConnectProvider")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
 func resourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenIDConnectProviderCreate,
 		ReadWithoutTimeout:   resourceOpenIDConnectProviderRead,
 		UpdateWithoutTimeout: resourceOpenIDConnectProviderUpdate,
 		DeleteWithoutTimeout: resourceOpenIDConnectProviderDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -70,12 +67,10 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 				DiffSuppressFunc: suppressOpenIDURL,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -86,7 +81,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	}
 
 	if v, ok := d.GetOk("thumbprint_list"); ok {
-		input.ThumbprintList = flex.ExpandStringValueList(v.([]interface{}))
+		input.ThumbprintList = flex.ExpandStringValueList(v.([]any))
 	}
 
 	output, err := conn.CreateOpenIDConnectProvider(ctx, input)
@@ -110,7 +105,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 		err := openIDConnectProviderCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
 		}
 
@@ -122,7 +117,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
 }
 
-func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -148,12 +143,12 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChange("thumbprint_list") {
-		if v := d.Get("thumbprint_list").([]interface{}); len(v) > 0 {
+		if v := d.Get("thumbprint_list").([]any); len(v) > 0 {
 			// Issues with an update to clear the thumbprint_list:
 			// - A cleared thumbprint_list will have a length of 0, and not enter this block.
 			// - Setting it to empty triggers an API error (the API requires either no thumbprints at
@@ -208,7 +203,7 @@ func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
 }
 
-func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -229,10 +224,14 @@ func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.Resource
 }
 
 func findOpenIDConnectProviderByARN(ctx context.Context, conn *iam.Client, arn string) (*iam.GetOpenIDConnectProviderOutput, error) {
-	input := &iam.GetOpenIDConnectProviderInput{
+	input := iam.GetOpenIDConnectProviderInput{
 		OpenIDConnectProviderArn: aws.String(arn),
 	}
 
+	return findOpenIDConnectProvider(ctx, conn, &input)
+}
+
+func findOpenIDConnectProvider(ctx context.Context, conn *iam.Client, input *iam.GetOpenIDConnectProviderInput) (*iam.GetOpenIDConnectProviderOutput, error) {
 	output, err := conn.GetOpenIDConnectProvider(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
@@ -241,6 +240,7 @@ func findOpenIDConnectProviderByARN(ctx context.Context, conn *iam.Client, arn s
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -252,13 +252,22 @@ func findOpenIDConnectProviderByARN(ctx context.Context, conn *iam.Client, arn s
 	return output, nil
 }
 
-func openIDConnectProviderTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
-	output, err := conn.ListOpenIDConnectProviderTags(ctx, &iam.ListOpenIDConnectProviderTagsInput{
+func openIDConnectProviderTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListOpenIDConnectProviderTagsInput{
 		OpenIDConnectProviderArn: aws.String(identifier),
-	})
-	if err != nil {
-		return nil, err
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListOpenIDConnectProviderTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return output.Tags, nil
+	return output, nil
 }

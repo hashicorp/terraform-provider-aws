@@ -612,7 +612,7 @@ func testAccCheckUserCreatesAccessKey(ctx context.Context, user *awstypes.User) 
 		}
 
 		if _, err := conn.CreateAccessKey(ctx, input); err != nil {
-			return fmt.Errorf("error creating IAM User (%s) Access Key: %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("error creating IAM User (%s) Access Key: %w", aws.ToString(user.UserName), err)
 		}
 
 		return nil
@@ -632,7 +632,7 @@ func testAccCheckUserCreatesLoginProfile(ctx context.Context, user *awstypes.Use
 		}
 
 		if _, err := conn.CreateLoginProfile(ctx, input); err != nil {
-			return fmt.Errorf("error creating IAM User (%s) Login Profile: %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("error creating IAM User (%s) Login Profile: %w", aws.ToString(user.UserName), err)
 		}
 
 		return nil
@@ -650,17 +650,17 @@ func testAccCheckUserCreatesMFADevice(ctx context.Context, user *awstypes.User) 
 
 		createVirtualMFADeviceOutput, err := conn.CreateVirtualMFADevice(ctx, createVirtualMFADeviceInput)
 		if err != nil {
-			return fmt.Errorf("error creating IAM User (%s) Virtual MFA Device: %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("error creating IAM User (%s) Virtual MFA Device: %w", aws.ToString(user.UserName), err)
 		}
 
 		secret := string(createVirtualMFADeviceOutput.VirtualMFADevice.Base32StringSeed)
 		authenticationCode1, err := totp.GenerateCode(secret, time.Now().Add(-30*time.Second))
 		if err != nil {
-			return fmt.Errorf("error generating Virtual MFA Device authentication code 1: %s", err)
+			return fmt.Errorf("error generating Virtual MFA Device authentication code 1: %w", err)
 		}
 		authenticationCode2, err := totp.GenerateCode(secret, time.Now())
 		if err != nil {
-			return fmt.Errorf("error generating Virtual MFA Device authentication code 2: %s", err)
+			return fmt.Errorf("error generating Virtual MFA Device authentication code 2: %w", err)
 		}
 
 		enableVirtualMFADeviceInput := &iam.EnableMFADeviceInput{
@@ -671,7 +671,7 @@ func testAccCheckUserCreatesMFADevice(ctx context.Context, user *awstypes.User) 
 		}
 
 		if _, err := conn.EnableMFADevice(ctx, enableVirtualMFADeviceInput); err != nil {
-			return fmt.Errorf("error enabling IAM User (%s) Virtual MFA Device: %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("error enabling IAM User (%s) Virtual MFA Device: %w", aws.ToString(user.UserName), err)
 		}
 
 		return nil
@@ -734,7 +734,7 @@ func testAccCheckUserUploadSigningCertificate(ctx context.Context, t *testing.T,
 		}
 
 		if _, err := conn.UploadSigningCertificate(ctx, input); err != nil {
-			return fmt.Errorf("error uploading IAM User (%s) Signing Certificate : %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("error uploading IAM User (%s) Signing Certificate : %w", aws.ToString(user.UserName), err)
 		}
 
 		return nil
@@ -754,18 +754,18 @@ func testAccCheckUserAttachPolicy(ctx context.Context, user *awstypes.User) reso
 
 		output, err := conn.CreatePolicy(ctx, input)
 		if err != nil {
-			return fmt.Errorf("externally creating IAM Policy (%s): %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("externally creating IAM Policy (%s): %w", aws.ToString(user.UserName), err)
 		}
 
-		_, err = tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute, func(ctx context.Context) (any, error) {
 			return tfiam.FindPolicyByARN(ctx, conn, aws.ToString(output.Policy.Arn))
 		}, true)
 		if err != nil {
-			return fmt.Errorf("waiting for external creation of IAM Policy (%s): %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("waiting for external creation of IAM Policy (%s): %w", aws.ToString(user.UserName), err)
 		}
 
 		if err := tfiam.AttachPolicyToUser(ctx, conn, aws.ToString(user.UserName), aws.ToString(output.Policy.Arn)); err != nil {
-			return fmt.Errorf("externally attaching IAM User (%s) to policy (%s): %s", aws.ToString(user.UserName), aws.ToString(output.Policy.Arn), err)
+			return fmt.Errorf("externally attaching IAM User (%s) to policy (%s): %w", aws.ToString(user.UserName), aws.ToString(output.Policy.Arn), err)
 		}
 
 		return nil
@@ -786,14 +786,14 @@ func testAccCheckUserInlinePolicy(ctx context.Context, user *awstypes.User) reso
 
 		_, err := conn.PutUserPolicy(ctx, input)
 		if err != nil {
-			return fmt.Errorf("externally putting IAM User (%s) policy: %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("externally putting IAM User (%s) policy: %w", aws.ToString(user.UserName), err)
 		}
 
-		_, err = tfresource.RetryWhenNotFound(ctx, 2*time.Minute, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, 2*time.Minute, func(ctx context.Context) (any, error) {
 			return tfiam.FindUserPolicyByTwoPartKey(ctx, conn, aws.ToString(user.UserName), aws.ToString(user.UserName))
 		})
 		if err != nil {
-			return fmt.Errorf("waiting for external creation of inline IAM User Policy (%s): %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("waiting for external creation of inline IAM User Policy (%s): %w", aws.ToString(user.UserName), err)
 		}
 
 		return nil

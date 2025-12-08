@@ -65,6 +65,10 @@ func dataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"checksum_crc64nvme": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"checksum_sha1": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -160,7 +164,7 @@ func dataSourceObject() *schema.Resource {
 	}
 }
 
-func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -216,6 +220,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("cache_control", output.CacheControl)
 	d.Set("checksum_crc32", output.ChecksumCRC32)
 	d.Set("checksum_crc32c", output.ChecksumCRC32C)
+	d.Set("checksum_crc64nvme", output.ChecksumCRC64NVME)
 	d.Set("checksum_sha1", output.ChecksumSHA1)
 	d.Set("checksum_sha256", output.ChecksumSHA256)
 	d.Set("content_disposition", output.ContentDisposition)
@@ -288,6 +293,7 @@ func isContentTypeAllowed(contentType *string) bool {
 		regexache.MustCompile(`^application/xhtml\+xml$`),
 		regexache.MustCompile(`^application/xml$`),
 		regexache.MustCompile(`^application/x-sql$`),
+		regexache.MustCompile(`^application/yaml$`),
 		regexache.MustCompile(`^text/.+`),
 	}
 	for _, r := range allowedContentTypes {

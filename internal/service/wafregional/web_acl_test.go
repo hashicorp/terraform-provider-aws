@@ -407,15 +407,15 @@ func TestAccWAFRegionalWebACL_logging(t *testing.T) {
 func computeWebACLRuleIndex(ruleId **string, priority int, ruleType string, actionType string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ruleResource := tfwafregional.ResourceWebACL().SchemaMap()[names.AttrRule].Elem.(*schema.Resource)
-		actionMap := map[string]interface{}{
+		actionMap := map[string]any{
 			names.AttrType: actionType,
 		}
-		m := map[string]interface{}{
+		m := map[string]any{
 			"rule_id":          **ruleId,
 			names.AttrType:     ruleType,
 			names.AttrPriority: priority,
-			names.AttrAction:   []interface{}{actionMap},
-			"override_action":  []interface{}{},
+			names.AttrAction:   []any{actionMap},
+			"override_action":  []any{},
 		}
 
 		f := schema.HashResource(ruleResource)

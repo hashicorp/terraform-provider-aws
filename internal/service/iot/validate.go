@@ -11,7 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-func validThingTypeDescription(v interface{}, k string) (ws []string, errors []error) {
+func validThingTypeDescription(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 2028 {
 		errors = append(errors, fmt.Errorf(
@@ -24,7 +24,7 @@ func validThingTypeDescription(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func validThingTypeName(v interface{}, k string) (ws []string, errors []error) {
+func validThingTypeName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`[0-9A-Za-z_:-]+`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -33,7 +33,7 @@ func validThingTypeName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validThingTypeSearchableAttribute(v interface{}, k string) (ws []string, errors []error) {
+func validThingTypeSearchableAttribute(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 128 {
 		errors = append(errors, fmt.Errorf(
@@ -46,7 +46,7 @@ func validThingTypeSearchableAttribute(v interface{}, k string) (ws []string, er
 	return
 }
 
-func validTopicRuleCloudWatchAlarmStateValue(v interface{}, s string) ([]string, []error) {
+func validTopicRuleCloudWatchAlarmStateValue(v any, s string) ([]string, []error) {
 	switch v.(string) {
 	case
 		"OK",
@@ -58,7 +58,7 @@ func validTopicRuleCloudWatchAlarmStateValue(v interface{}, s string) ([]string,
 	return nil, []error{fmt.Errorf("State must be one of OK, ALARM, or INSUFFICIENT_DATA")}
 }
 
-func validTopicRuleElasticsearchEndpoint(v interface{}, k string) (ws []string, errors []error) {
+func validTopicRuleElasticsearchEndpoint(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	// https://docs.aws.amazon.com/iot/latest/apireference/API_ElasticsearchAction.html
@@ -70,7 +70,7 @@ func validTopicRuleElasticsearchEndpoint(v interface{}, k string) (ws []string, 
 	return
 }
 
-func validTopicRuleFirehoseSeparator(v interface{}, s string) ([]string, []error) {
+func validTopicRuleFirehoseSeparator(v any, s string) ([]string, []error) {
 	switch v.(string) {
 	case
 		",",
@@ -83,7 +83,7 @@ func validTopicRuleFirehoseSeparator(v interface{}, s string) ([]string, []error
 	return nil, []error{fmt.Errorf(`Separator must be one of ',' (comma), '\t' (tab) '\n' (newline) or '\r\n' (Windows newline)`)}
 }
 
-func validTopicRuleName(v interface{}, s string) ([]string, []error) {
+func validTopicRuleName(v any, s string) ([]string, []error) {
 	name := v.(string)
 	if len(name) < 1 || len(name) > 128 {
 		return nil, []error{fmt.Errorf("Name must between 1 and 128 characters long")}

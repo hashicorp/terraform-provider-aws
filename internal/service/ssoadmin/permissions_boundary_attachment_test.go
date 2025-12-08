@@ -174,7 +174,7 @@ func testAccCheckPermissionsBoundaryAttachmentDestroy(ctx context.Context) resou
 				return err
 			}
 
-			_, err = tfssoadmin.FindPermissionsBoundary(ctx, conn, permissionSetARN, instanceARN)
+			_, err = tfssoadmin.FindPermissionsBoundaryByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -205,7 +205,7 @@ func testAccCheckPermissionsBoundaryAttachmentExists(ctx context.Context, n stri
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 
-		_, err = tfssoadmin.FindPermissionsBoundary(ctx, conn, permissionSetARN, instanceARN)
+		_, err = tfssoadmin.FindPermissionsBoundaryByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 		return err
 	}

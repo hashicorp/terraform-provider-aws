@@ -50,6 +50,7 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "retain_stack", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "stack_id"),
 					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_instance_region", acctest.Region()),
 					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", cloudformationStackSetResourceName, names.AttrName),
 				),
 			},
@@ -418,6 +419,80 @@ func TestAccCloudFormationStackSetInstance_delegatedAdministrator(t *testing.T) 
 	})
 }
 
+func TestAccCloudFormationStackSetInstance_stackSetInstanceRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackInstance awstypes.StackInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckStackSet(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetInstanceConfig_stackSetInstanceRegion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_instance_region", acctest.AlternateRegion()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_stack",
+					"call_as",
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStackSetInstance_deprecatedRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackInstance awstypes.StackInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckStackSet(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetInstanceConfig_deprecatedRegion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_instance_region", acctest.AlternateRegion()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_stack",
+					"call_as",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckStackSetInstanceExists(ctx context.Context, resourceName string, v *awstypes.StackInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -561,7 +636,7 @@ func testAccCheckStackSetInstanceNotRecreated(i, j *awstypes.StackInstance) reso
 	}
 }
 
-func testAccStackSetInstanceBaseConfig(rName string) string {
+func testAccStackSetInstanceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "Administration" {
   assume_role_policy = <<EOF
@@ -692,7 +767,7 @@ TEMPLATE
 }
 
 func testAccStackSetInstanceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig(rName), `
+	return acctest.ConfigCompose(testAccStackSetInstanceConfig_base(rName), `
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
@@ -702,7 +777,7 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 }
 
 func testAccStackSetInstanceConfig_parameterOverrides1(rName, value1 string) string {
-	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStackSetInstanceConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
@@ -716,7 +791,7 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 }
 
 func testAccStackSetInstanceConfig_parameterOverrides2(rName, value1, value2 string) string {
-	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStackSetInstanceConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
@@ -934,4 +1009,26 @@ resource "aws_cloudformation_stack_set_instance" "test" {
   stack_set_name = aws_cloudformation_stack_set.test.name
 }
 `)
+}
+
+func testAccStackSetInstanceConfig_stackSetInstanceRegion(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  stack_set_instance_region = %[1]q
+  stack_set_name            = aws_cloudformation_stack_set.test.name
+}
+`, acctest.AlternateRegion()))
+}
+
+func testAccStackSetInstanceConfig_deprecatedRegion(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  region         = %[1]q
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`, acctest.AlternateRegion()))
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -44,6 +45,7 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "primary_name_server"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enable_accelerated_recovery", acctest.CtFalse),
 				),
 			},
 			{
@@ -541,6 +543,60 @@ func TestAccRoute53Zone_escapedSpace(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Zone_enableAcceleratedRecovery(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone1, zone2 route53.GetHostedZoneOutput
+	resourceName1 := "aws_route53_zone.test1"
+	resourceName2 := "aws_route53_zone.test2"
+	zoneName1 := acctest.RandomDomainName()
+	zoneName2 := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneConfig_enableAcceleratedRecovery(zoneName1, zoneName2, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName1, &zone1),
+					testAccCheckZoneExists(ctx, resourceName2, &zone2),
+					resource.TestCheckResourceAttr(resourceName1, "enable_accelerated_recovery", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName2, "enable_accelerated_recovery", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName1,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				// Disable accelerated recovery
+				Config: testAccZoneConfig_enableAcceleratedRecovery(zoneName1, zoneName2, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName1, &zone1),
+					testAccCheckZoneExists(ctx, resourceName2, &zone2),
+					resource.TestCheckResourceAttr(resourceName1, "enable_accelerated_recovery", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName2, "enable_accelerated_recovery", acctest.CtFalse),
+				),
+			},
+			{
+				// Re-enable accelerated recovery
+				// Check a resource can be destroyed with it enabled
+				Config: testAccZoneConfig_enableAcceleratedRecovery(zoneName1, zoneName2, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName1, &zone1),
+					testAccCheckZoneExists(ctx, resourceName2, &zone2),
+					resource.TestCheckResourceAttr(resourceName1, "enable_accelerated_recovery", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName2, "enable_accelerated_recovery", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckZoneDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
@@ -575,7 +631,7 @@ func testAccCreateRandomRecordsInZoneID(ctx context.Context, zone *route53.GetHo
 		if recordsCount > 100 {
 			return fmt.Errorf("Route53 API only allows 100 record sets in a single batch")
 		}
-		for i := 0; i < recordsCount; i++ {
+		for range recordsCount {
 			changes = append(changes, awstypes.Change{
 				Action: awstypes.ChangeActionUpsert,
 				ResourceRecordSet: &awstypes.ResourceRecordSet{
@@ -602,8 +658,9 @@ func testAccCreateRandomRecordsInZoneID(ctx context.Context, zone *route53.GetHo
 			return err
 		}
 
+		timeout := 30 * time.Minute
 		if output.ChangeInfo != nil {
-			if _, err := tfroute53.WaitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+			if _, err := tfroute53.WaitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), timeout); err != nil {
 				return err
 			}
 		}
@@ -816,4 +873,19 @@ resource "aws_route53_zone" "test" {
   }
 }
 `, rName, zoneName)
+}
+
+func testAccZoneConfig_enableAcceleratedRecovery(zoneName1, zoneName2 string, enableAcceleratedRecovery bool) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test1" {
+  name = "%[1]s."
+
+  enable_accelerated_recovery = %[3]t
+}
+resource "aws_route53_zone" "test2" {
+  name = "%[2]s."
+
+  enable_accelerated_recovery = %[3]t
+}
+`, zoneName1, zoneName2, enableAcceleratedRecovery)
 }

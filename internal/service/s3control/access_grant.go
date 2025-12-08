@@ -33,7 +33,7 @@ import (
 )
 
 // @FrameworkResource("aws_s3control_access_grant", name="Access Grant")
-// @Tags
+// @Tags(identifierAttribute="access_grant_arn")
 func newAccessGrantResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantResource{}
 
@@ -41,12 +41,8 @@ func newAccessGrantResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type accessGrantResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accessGrantResourceModel]
 	framework.WithImportByID
-}
-
-func (r *accessGrantResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grant"
 }
 
 func (r *accessGrantResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -86,6 +82,7 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrID: framework.IDAttribute(),
 			"permission": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.Permission](),
 				Required:   true,
@@ -93,7 +90,6 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"s3_prefix_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.S3PrefixType](),
 				Optional:   true,
@@ -157,29 +153,28 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 
 func (r *accessGrantResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data accessGrantResourceModel
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
+	}
+	if data.AccountID.IsUnknown() {
+		data.AccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
 
 	conn := r.Meta().S3ControlClient(ctx)
 
-	if data.AccountID.ValueString() == "" {
-		data.AccountID = types.StringValue(r.Meta().AccountID(ctx))
-	}
-	input := &s3control.CreateAccessGrantInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	var input s3control.CreateAccessGrantInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
 	// "InvalidRequest: Invalid Grantee in the request".
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, s3PropagationTimeout, func() (interface{}, error) {
-		return conn.CreateAccessGrant(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, s3PropagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.CreateAccessGrant(ctx, &input)
 	}, errCodeInvalidRequest, "Invalid Grantee in the request")
 
 	if err != nil {
@@ -190,30 +185,29 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 
 	// Set values for unknowns.
 	output := outputRaw.(*s3control.CreateAccessGrantOutput)
-	data.AccessGrantARN = fwflex.StringToFramework(ctx, output.AccessGrantArn)
-	data.AccessGrantID = fwflex.StringToFramework(ctx, output.AccessGrantId)
-	data.GrantScope = fwflex.StringToFramework(ctx, output.GrantScope)
-	id, err := data.setID()
-	if err != nil {
-		response.Diagnostics.AddError("creating S3 Access Grant", err.Error())
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	data.ID = types.StringValue(id)
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewCreatingResourceIDErrorDiagnostic(err))
+		return
+	}
+	data.ID = fwflex.StringValueToFramework(ctx, id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *accessGrantResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data accessGrantResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 
 		return
 	}
@@ -245,62 +239,23 @@ func (r *accessGrantResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	tags, err := listTags(ctx, conn, data.AccessGrantARN.ValueString(), data.AccountID.ValueString())
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("listing tags for S3 Access Grant (%s)", data.ID.ValueString()), err.Error())
-
-		return
-	}
-
-	setTagsOut(ctx, Tags(tags))
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-}
-
-func (r *accessGrantResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new accessGrantResourceModel
-
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().S3ControlClient(ctx)
-
-	if oldTagsAll, newTagsAll := old.TagsAll, new.TagsAll; !newTagsAll.Equal(oldTagsAll) {
-		if err := updateTags(ctx, conn, new.AccessGrantARN.ValueString(), new.AccountID.ValueString(), oldTagsAll, newTagsAll); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating tags for S3 Access Grant (%s)", new.ID.ValueString()), err.Error())
-
-			return
-		}
-	}
-
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *accessGrantResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data accessGrantResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().S3ControlClient(ctx)
 
-	_, err := conn.DeleteAccessGrant(ctx, &s3control.DeleteAccessGrantInput{
+	input := s3control.DeleteAccessGrantInput{
 		AccessGrantId: fwflex.StringFromFramework(ctx, data.AccessGrantID),
 		AccountId:     fwflex.StringFromFramework(ctx, data.AccountID),
-	})
+	}
+	_, err := conn.DeleteAccessGrant(ctx, &input)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
 		return
@@ -313,16 +268,16 @@ func (r *accessGrantResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *accessGrantResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAccessGrantByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, grantID string) (*s3control.GetAccessGrantOutput, error) {
-	input := &s3control.GetAccessGrantInput{
+	input := s3control.GetAccessGrantInput{
 		AccessGrantId: aws.String(grantID),
 		AccountId:     aws.String(accountID),
 	}
 
+	return findAccessGrant(ctx, conn, &input)
+}
+
+func findAccessGrant(ctx context.Context, conn *s3control.Client, input *s3control.GetAccessGrantInput) (*s3control.GetAccessGrantOutput, error) {
 	output, err := conn.GetAccessGrant(ctx, input)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
@@ -344,6 +299,7 @@ func findAccessGrantByTwoPartKey(ctx context.Context, conn *s3control.Client, ac
 }
 
 type accessGrantResourceModel struct {
+	framework.WithRegionModel
 	AccessGrantARN                    types.String                                                            `tfsdk:"access_grant_arn"`
 	AccessGrantID                     types.String                                                            `tfsdk:"access_grant_id"`
 	AccessGrantsLocationConfiguration fwtypes.ListNestedObjectValueOf[accessGrantsLocationConfigurationModel] `tfsdk:"access_grants_location_configuration"`

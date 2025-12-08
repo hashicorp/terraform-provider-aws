@@ -15,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -89,7 +89,7 @@ func resourceArchiveRule() *schema.Resource {
 	}
 }
 
-func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
@@ -118,7 +118,7 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceArchiveRuleRead(ctx, d, meta)...)
 }
 
-func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
@@ -131,7 +131,7 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	archiveRule, err := findArchiveRuleByTwoPartKey(ctx, conn, analyzerName, ruleName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Access Analyzer Archive Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -148,7 +148,7 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
@@ -178,7 +178,7 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceArchiveRuleRead(ctx, d, meta)...)
 }
 
-func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
@@ -218,8 +218,7 @@ func findArchiveRuleByTwoPartKey(ctx context.Context, conn *accessanalyzer.Clien
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -234,15 +233,15 @@ func findArchiveRuleByTwoPartKey(ctx context.Context, conn *accessanalyzer.Clien
 	return output.ArchiveRule, nil
 }
 
-func flattenFilter(filter map[string]types.Criterion) []interface{} {
+func flattenFilter(filter map[string]types.Criterion) []any {
 	if filter == nil {
 		return nil
 	}
 
-	l := make([]interface{}, 0)
+	l := make([]any, 0)
 
 	for key, value := range filter {
-		val := make(map[string]interface{})
+		val := make(map[string]any)
 		val["criteria"] = key
 		val["contains"] = value.Contains
 		val["eq"] = value.Eq
@@ -268,28 +267,28 @@ func expandFilter(l *schema.Set) map[string]types.Criterion {
 
 	for _, value := range l.List() {
 		c := types.Criterion{}
-		if v, ok := value.(map[string]interface{})["contains"]; ok {
-			if len(v.([]interface{})) > 0 {
-				c.Contains = flex.ExpandStringValueList(v.([]interface{}))
+		if v, ok := value.(map[string]any)["contains"]; ok {
+			if len(v.([]any)) > 0 {
+				c.Contains = flex.ExpandStringValueList(v.([]any))
 			}
 		}
-		if v, ok := value.(map[string]interface{})["eq"]; ok {
-			if len(v.([]interface{})) > 0 {
-				c.Eq = flex.ExpandStringValueList(v.([]interface{}))
+		if v, ok := value.(map[string]any)["eq"]; ok {
+			if len(v.([]any)) > 0 {
+				c.Eq = flex.ExpandStringValueList(v.([]any))
 			}
 		}
-		if v, ok := value.(map[string]interface{})["neq"]; ok {
-			if len(v.([]interface{})) > 0 {
-				c.Neq = flex.ExpandStringValueList(v.([]interface{}))
+		if v, ok := value.(map[string]any)["neq"]; ok {
+			if len(v.([]any)) > 0 {
+				c.Neq = flex.ExpandStringValueList(v.([]any))
 			}
 		}
-		if v, ok := value.(map[string]interface{})["exists"]; ok {
+		if v, ok := value.(map[string]any)["exists"]; ok {
 			if val, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 				c.Exists = aws.Bool(val)
 			}
 		}
 
-		a[value.(map[string]interface{})["criteria"].(string)] = c
+		a[value.(map[string]any)["criteria"].(string)] = c
 	}
 
 	return a

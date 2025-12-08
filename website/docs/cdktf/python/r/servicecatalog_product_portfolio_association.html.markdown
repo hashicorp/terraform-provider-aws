@@ -43,6 +43,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `source_portfolio_id` - (Optional) Identifier of the source portfolio.
 
@@ -83,4 +84,4 @@ Using `terraform import`, import `aws_servicecatalog_product_portfolio_associati
 % terraform import aws_servicecatalog_product_portfolio_association.example en:port-68656c6c6f:prod-dnigbtea24ste
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a3af1254e2031bb30383dd299c3aac7b7de830390f5b4d5f6d57c3f44312464e -->
+<!-- cache-key: cdktf-0.20.8 input-eb4b5bd2cfe0d4edba3dca4addd7d5ad61a20ee3c47451f08cd59d952df09d79 -->

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func secretRotationStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func secretRotationStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if v, ok := rawState["rotate_immediately"]; !ok || v == nil {
 		rawState["rotate_immediately"] = "true"
 	}

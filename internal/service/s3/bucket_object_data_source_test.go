@@ -441,6 +441,7 @@ resource "aws_s3_bucket" "object_bucket" {
 resource "aws_kms_key" "example" {
   description             = "TF Acceptance Test KMS key"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_object" "object" {
@@ -467,6 +468,7 @@ resource "aws_s3_bucket" "object_bucket" {
 resource "aws_kms_key" "example" {
   description             = "TF Acceptance Test KMS key"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_object" "object" {

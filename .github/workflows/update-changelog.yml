@@ -1,0 +1,114 @@
+name: Update Changelog
+
+on:
+  workflow_dispatch:
+    inputs:
+      previous_version:
+        description: 'Previous semver version (e.g., 1.2.3)'
+        required: true
+        type: string
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Calculate next minor version
+        id: version
+        run: |
+          PREV_VERSION="${{ github.event.inputs.previous_version }}"
+
+          # Remove 'v' prefix if present
+          PREV_VERSION=${PREV_VERSION#v}
+
+          # Split version into parts
+          IFS='.' read -ra VERSION_PARTS <<< "$PREV_VERSION"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+
+          # Increment minor version and reset patch to 0
+          NEXT_MINOR=$((MINOR + 1))
+          NEXT_VERSION="${MAJOR}.${NEXT_MINOR}.0"
+
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "branch_name=changelog_update_after_${PREV_VERSION}_release" >> $GITHUB_OUTPUT
+
+      - name: Create and checkout new branch
+        run: |
+          git config --local user.email "changelogbot@hashicorp.com"
+          git config --local user.name "changelogbot"
+          git checkout -b ${{ steps.version.outputs.branch_name }}
+
+      - name: Update CHANGELOG.md
+        run: |
+          NEXT_VERSION="${{ steps.version.outputs.next_version }}"
+
+          # Check if CHANGELOG.md exists
+          if [ ! -f "CHANGELOG.md" ]; then
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+          fi
+
+          # Create a temporary file with the new entry at the top
+          {
+            echo "## $NEXT_VERSION (Unreleased)"
+            echo ""
+
+            # Add the existing content, skipping the first line if it's just "# Changelog"
+            if head -1 CHANGELOG.md | grep -q "^# Changelog$"; then
+              tail -n +2 CHANGELOG.md
+            else
+              cat CHANGELOG.md
+            fi
+          } > CHANGELOG.tmp
+
+          # Replace the original file
+          mv CHANGELOG.tmp CHANGELOG.md
+
+      - name: Commit changes
+        run: |
+          git add CHANGELOG.md
+          git commit -m "Add changelog entry for v${{ steps.version.outputs.next_version }}"
+
+      - name: Push branch
+        run: |
+          git push origin ${{ steps.version.outputs.branch_name }}
+
+      - name: Create PR description
+        id: create_pr_description
+        run: |
+          cat > pr_description.md << 'EOF'
+          <!-- heimdall_github_prtemplate:grc-pci_dss-2024-01-05 -->
+
+          ## Rollback Plan
+
+          If a change needs to be reverted, we will publish an updated version of the library.
+
+          ## Changes to Security Controls
+
+          Are there any changes to security controls (access controls, encryption, logging) in this pull request? If so, explain.
+
+          ## Description
+
+          This PR adds a changelog entry for the next minor version v${{ steps.version.outputs.next_version }} following the release of v${{ github.event.inputs.previous_version }}.
+
+          - Added changelog section for v${{ steps.version.outputs.next_version }} (Unreleased)
+
+          ### Relations
+          EOF
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --title "Add CHANGELOG entry for v${{ steps.version.outputs.next_version }}" \
+            --body-file pr_description.md \
+            --base main \
+            --head ${{ steps.version.outputs.branch_name }}

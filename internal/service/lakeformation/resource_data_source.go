@@ -31,6 +31,10 @@ func DataSourceResource() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"hybrid_access_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -39,11 +43,19 @@ func DataSourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"with_federation": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"with_privileged_access": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -71,10 +83,13 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.ToString(input.ResourceArn))
 	// d.Set("arn", output.ResourceInfo.ResourceArn) // output not including resource arn currently
-	d.Set(names.AttrRoleARN, output.ResourceInfo.RoleArn)
+	d.Set("hybrid_access_enabled", output.ResourceInfo.HybridAccessEnabled)
 	if output.ResourceInfo.LastModified != nil { // output not including last modified currently
 		d.Set("last_modified", output.ResourceInfo.LastModified.Format(time.RFC3339))
 	}
+	d.Set(names.AttrRoleARN, output.ResourceInfo.RoleArn)
+	d.Set("with_federation", output.ResourceInfo.WithFederation)
+	d.Set("with_privileged_access", output.ResourceInfo.WithPrivilegedAccess)
 
 	return diags
 }

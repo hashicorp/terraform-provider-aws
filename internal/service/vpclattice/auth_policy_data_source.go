@@ -9,18 +9,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @SDKDataSource("aws_vpclattice_auth_policy", name="Auth Policy")
-func DataSourceAuthPolicy() *schema.Resource {
+func dataSourceAuthPolicy() *schema.Resource {
 	return &schema.Resource{
-
 		ReadWithoutTimeout: dataSourceAuthPolicyRead,
 
 		Schema: map[string]*schema.Schema{
@@ -29,8 +26,9 @@ func DataSourceAuthPolicy() *schema.Resource {
 				Optional: true,
 			},
 			"resource_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			names.AttrState: {
 				Type:     schema.TypeString,
@@ -40,38 +38,25 @@ func DataSourceAuthPolicy() *schema.Resource {
 	}
 }
 
-const (
-	DSNameAuthPolicy = "Auth Policy Data Source"
-)
-
-func dataSourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	resourceID := d.Get("resource_identifier").(string)
-	out, err := findAuthPolicy(ctx, conn, resourceID)
+	output, err := findAuthPolicyByID(ctx, conn, resourceID)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, DSNameAuthPolicy, resourceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading VPCLattice Auth Policy (%s): %s", resourceID, err)
+	}
+
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(output.Policy))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.SetId(resourceID)
-
-	d.Set(names.AttrPolicy, out.Policy)
+	d.Set(names.AttrPolicy, policyToSet)
 	d.Set("resource_identifier", resourceID)
-
-	// TIP: Setting a JSON string to avoid errorneous diffs.
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(out.Policy))
-	if err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, DSNameAuthPolicy, d.Id(), err)
-	}
-
-	p, err = structure.NormalizeJsonString(p)
-	if err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, DSNameAuthPolicy, d.Id(), err)
-	}
-
-	d.Set(names.AttrPolicy, p)
 
 	return diags
 }

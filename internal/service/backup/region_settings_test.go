@@ -21,6 +21,7 @@ func TestAccBackupRegionSettings_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccRegionSettings_basic,
+		"Identity":      testAccBackupRegionSettings_IdentitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -44,8 +45,8 @@ func testAccRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccRegionSettingsConfig_1(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, &settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "16"),
+					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "18"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", acctest.CtTrue),
@@ -55,6 +56,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.FSx", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Neptune", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.RDS", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Redshift Serverless", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.S3", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Storage Gateway", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.VirtualMachine", acctest.CtTrue),
@@ -71,8 +73,8 @@ func testAccRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccRegionSettingsConfig_2(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, &settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "16"),
+					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "18"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", acctest.CtTrue),
@@ -93,8 +95,8 @@ func testAccRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccRegionSettingsConfig_3(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, &settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "16"),
+					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "18"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", acctest.CtTrue),
@@ -116,7 +118,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckRegionSettingsExists(ctx context.Context, v *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
+func testAccCheckRegionSettingsExists(ctx context.Context, n string, v *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
@@ -139,6 +141,7 @@ resource "aws_backup_region_settings" "test" {
     "Aurora"                 = true
     "CloudFormation"         = true
     "DocumentDB"             = true
+    "DSQL"                   = true
     "DynamoDB"               = true
     "EBS"                    = true
     "EC2"                    = true
@@ -147,6 +150,7 @@ resource "aws_backup_region_settings" "test" {
     "Neptune"                = true
     "RDS"                    = true
     "Redshift"               = true
+    "Redshift Serverless"    = true
     "S3"                     = true
     "SAP HANA on Amazon EC2" = true
     "Storage Gateway"        = true
@@ -164,6 +168,7 @@ resource "aws_backup_region_settings" "test" {
     "Aurora"                 = false
     "CloudFormation"         = true
     "DocumentDB"             = true
+    "DSQL"                   = true
     "DynamoDB"               = true
     "EBS"                    = true
     "EC2"                    = true
@@ -172,6 +177,7 @@ resource "aws_backup_region_settings" "test" {
     "Neptune"                = true
     "RDS"                    = true
     "Redshift"               = true
+    "Redshift Serverless"    = true
     "S3"                     = true
     "SAP HANA on Amazon EC2" = true
     "Storage Gateway"        = true
@@ -194,6 +200,7 @@ resource "aws_backup_region_settings" "test" {
     "Aurora"                 = false
     "CloudFormation"         = true
     "DocumentDB"             = true
+    "DSQL"                   = true
     "DynamoDB"               = true
     "EBS"                    = true
     "EC2"                    = true
@@ -202,6 +209,7 @@ resource "aws_backup_region_settings" "test" {
     "Neptune"                = true
     "RDS"                    = true
     "Redshift"               = true
+    "Redshift Serverless"    = true
     "S3"                     = true
     "SAP HANA on Amazon EC2" = true
     "Storage Gateway"        = true

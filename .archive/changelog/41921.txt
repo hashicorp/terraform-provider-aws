@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagent_agent: Fix `instruction` validator to consider multi-byte chars so not to artificially limit instruction length
+```

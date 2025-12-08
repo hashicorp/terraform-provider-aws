@@ -67,6 +67,7 @@ func TestAccBudgetsBudget_basic(t *testing.T) {
 					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "budgets", fmt.Sprintf(`budget/%s`, rName)),
+					resource.TestCheckResourceAttr(resourceName, "billing_view_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_UTILIZATION"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
@@ -508,6 +509,51 @@ func TestAccBudgetsBudget_plannedLimits(t *testing.T) {
 	})
 }
 
+func TestAccBudgetsBudget_billingViewARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var budget awstypes.Budget
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_budgets_budget.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBudgetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBudgetConfig_billingViewARN(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "budgets", fmt.Sprintf(`budget/%s`, rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "billing_view_arn", "billing", "billingview/primary"),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_UTILIZATION"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
+						names.AttrName: "Service",
+						"values.#":     "1",
+						"values.0":     "Amazon Redshift",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_start"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "QUARTERLY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckBudgetExists(ctx context.Context, resourceName string, v *awstypes.Budget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -798,6 +844,29 @@ resource "aws_budgets_budget" "test" {
 `, rName, config)
 }
 
+func testAccBudgetConfig_billingViewARN(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "RI_UTILIZATION"
+  limit_amount = "100.0"
+  limit_unit   = "PERCENTAGE"
+  time_unit    = "QUARTERLY"
+
+  cost_filter {
+    name   = "Service"
+    values = ["Amazon Redshift"]
+  }
+
+  billing_view_arn = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
+
+}
+`, rName)
+}
+
 func generateStartTimes(resourceName, amount string, now time.Time) (string, []resource.TestCheckFunc) {
 	startTimes := make([]time.Time, 12)
 
@@ -809,18 +878,18 @@ func generateStartTimes(resourceName, amount string, now time.Time) (string, []r
 	}
 
 	configBuilder := strings.Builder{}
-	for i := 0; i < len(startTimes); i++ {
-		configBuilder.WriteString(fmt.Sprintf(`
+	for i := range startTimes {
+		fmt.Fprintf(&configBuilder, `
 planned_limit {
   start_time = %[1]q
   amount     = %[2]q
   unit       = "USD"
 }
-`, tfbudgets.TimePeriodTimestampToString(&startTimes[i]), amount))
+`, tfbudgets.TimePeriodTimestampToString(&startTimes[i]), amount)
 	}
 
 	testCheckFuncs := make([]resource.TestCheckFunc, len(startTimes))
-	for i := 0; i < len(startTimes); i++ {
+	for i := range startTimes {
 		testCheckFuncs[i] = resource.TestCheckTypeSetElemNestedAttrs(resourceName, "planned_limit.*", map[string]string{
 			names.AttrStartTime: tfbudgets.TimePeriodTimestampToString(&startTimes[i]),
 			"amount":            amount,

@@ -51,7 +51,7 @@ func ResourceVoiceConnectorLogging() *schema.Resource {
 	}
 }
 
-func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -73,7 +73,7 @@ func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceVoiceConnectorLoggingRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -81,10 +81,6 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 	resp, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*awstypes.LoggingConfiguration, error) {
 		return findVoiceConnectorLoggingByID(ctx, conn, d.Id())
 	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = findVoiceConnectorLoggingByID(ctx, conn, d.Id())
-	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector logging configuration %s not found", d.Id())
@@ -103,7 +99,7 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -125,7 +121,7 @@ func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceVoiceConnectorLoggingRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)

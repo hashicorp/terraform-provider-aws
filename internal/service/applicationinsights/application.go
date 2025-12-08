@@ -80,12 +80,10 @@ func resourceApplication() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
@@ -106,7 +104,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.OpsItemSNSTopicArn = aws.String(v.(string))
 	}
 
-	output, err := tfresource.RetryGWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (*applicationinsights.CreateApplicationOutput, error) {
+	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func(ctx context.Context) (*applicationinsights.CreateApplicationOutput, error) {
 		return conn.CreateApplication(ctx, input)
 	})
 	if err != nil {
@@ -122,7 +120,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
@@ -156,7 +154,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
@@ -195,7 +193,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
@@ -246,7 +244,7 @@ func findApplicationByName(ctx context.Context, conn *applicationinsights.Client
 }
 
 func statusApplication(ctx context.Context, conn *applicationinsights.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findApplicationByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

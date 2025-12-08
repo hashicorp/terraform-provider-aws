@@ -153,7 +153,7 @@ const (
 	dsNameConfigurationSet = "Configuration Set Data Source"
 )
 
-func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -170,42 +170,42 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrARN, configurationSetARN(ctx, meta.(*conns.AWSClient), aws.ToString(output.ConfigurationSetName)))
 	d.Set("configuration_set_name", output.ConfigurationSetName)
 	if output.DeliveryOptions != nil {
-		if err := d.Set("delivery_options", []interface{}{flattenDeliveryOptions(output.DeliveryOptions)}); err != nil {
+		if err := d.Set("delivery_options", []any{flattenDeliveryOptions(output.DeliveryOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting delivery_options: %s", err)
 		}
 	} else {
 		d.Set("delivery_options", nil)
 	}
 	if output.ReputationOptions != nil {
-		if err := d.Set("reputation_options", []interface{}{flattenReputationOptions(output.ReputationOptions)}); err != nil {
+		if err := d.Set("reputation_options", []any{flattenReputationOptions(output.ReputationOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting reputation_options: %s", err)
 		}
 	} else {
 		d.Set("reputation_options", nil)
 	}
 	if output.SendingOptions != nil {
-		if err := d.Set("sending_options", []interface{}{flattenSendingOptions(output.SendingOptions)}); err != nil {
+		if err := d.Set("sending_options", []any{flattenSendingOptions(output.SendingOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting sending_options: %s", err)
 		}
 	} else {
 		d.Set("sending_options", nil)
 	}
 	if output.SuppressionOptions != nil {
-		if err := d.Set("suppression_options", []interface{}{flattenSuppressionOptions(output.SuppressionOptions)}); err != nil {
+		if err := d.Set("suppression_options", []any{flattenSuppressionOptions(output.SuppressionOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting suppression_options: %s", err)
 		}
 	} else {
 		d.Set("suppression_options", nil)
 	}
 	if output.TrackingOptions != nil {
-		if err := d.Set("tracking_options", []interface{}{flattenTrackingOptions(output.TrackingOptions)}); err != nil {
+		if err := d.Set("tracking_options", []any{flattenTrackingOptions(output.TrackingOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tracking_options: %s", err)
 		}
 	} else {
 		d.Set("tracking_options", nil)
 	}
 	if output.VdmOptions != nil {
-		if err := d.Set("vdm_options", []interface{}{flattenVDMOptions(output.VdmOptions)}); err != nil {
+		if err := d.Set("vdm_options", []any{flattenVDMOptions(output.VdmOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vdm_options: %s", err)
 		}
 	} else {

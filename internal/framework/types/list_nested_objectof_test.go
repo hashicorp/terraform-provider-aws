@@ -91,11 +91,11 @@ func TestListNestedObjectTypeOfValueFromTerraform(t *testing.T) {
 		},
 		"valid value": {
 			tfVal:   objectAListValue,
-			wantVal: fwtypes.NewListNestedObjectValueOfPtrMust[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &objectA),
 		},
 		"invalid Terraform value": {
 			tfVal:   objectBListValue,
-			wantVal: fwtypes.NewListNestedObjectValueOfPtrMust[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &objectA),
 			wantErr: true,
 		},
 	}
@@ -177,7 +177,7 @@ func TestListNestedObjectValueOfEqual(t *testing.T) {
 func TestListNestedObjectValueOfListSemanticEquals(t *testing.T) {
 	t.Parallel()
 
-	semanticallyEqual := func(ctx context.Context, a, b fwtypes.ListNestedObjectValueOf[ObjectA]) (bool, diag.Diagnostics) {
+	semanticallyEqual := func(ctx context.Context, a, b fwtypes.NestedCollectionValue[ObjectA]) (bool, diag.Diagnostics) {
 		var diags diag.Diagnostics
 
 		if a.Equal(b) {

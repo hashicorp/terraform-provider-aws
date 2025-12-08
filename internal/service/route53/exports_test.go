@@ -30,13 +30,13 @@ var (
 	FindKeySigningKeyByTwoPartKey               = findKeySigningKeyByTwoPartKey
 	FindQueryLoggingConfigByID                  = findQueryLoggingConfigByID
 	FindResourceRecordSetByFourPartKey          = findResourceRecordSetByFourPartKey
+	FindResourceRecordSetsForHostedZone         = findResourceRecordSetsForHostedZone
 	FindTrafficPolicyByID                       = findTrafficPolicyByID
 	FindTrafficPolicyInstanceByID               = findTrafficPolicyInstanceByID
 	FindVPCAssociationAuthorizationByTwoPartKey = findVPCAssociationAuthorizationByTwoPartKey
 	FindZoneAssociationByThreePartKey           = findZoneAssociationByThreePartKey
 	KeySigningKeyStatusActive                   = keySigningKeyStatusActive
 	KeySigningKeyStatusInactive                 = keySigningKeyStatusInactive
-	RecordParseResourceID                       = recordParseResourceID
 	ServeSignatureNotSigning                    = serveSignatureNotSigning
 	ServeSignatureSigning                       = serveSignatureSigning
 	WaitChangeInsync                            = waitChangeInsync

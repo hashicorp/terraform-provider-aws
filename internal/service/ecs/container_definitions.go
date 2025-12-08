@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 func containerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, error) {
@@ -192,7 +192,7 @@ func compactArray[S ~[]E, E any](s S) S {
 	}
 
 	return tfslices.Filter(s, func(e E) bool {
-		return !itypes.IsZero(&e)
+		return !inttypes.IsZero(&e)
 	})
 }
 
@@ -221,7 +221,7 @@ func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition
 	}
 
 	for i, apiObject := range apiObjects {
-		if itypes.IsZero(&apiObject) {
+		if inttypes.IsZero(&apiObject) {
 			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
 		}
 		if !isValidVersionConsistency(apiObject) {
@@ -239,11 +239,5 @@ func isValidVersionConsistency(cd awstypes.ContainerDefinition) bool {
 		return true
 	}
 
-	for _, v := range enum.EnumValues[awstypes.VersionConsistency]() {
-		if cd.VersionConsistency == v {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(enum.EnumValues[awstypes.VersionConsistency](), cd.VersionConsistency)
 }

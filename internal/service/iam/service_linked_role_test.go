@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestDecodeServiceLinkedRoleID(t *testing.T) {
+func TestServiceLinkedRoleParseResourceID(t *testing.T) {
 	t.Parallel()
 
 	var testCases = []struct {
@@ -60,7 +60,7 @@ func TestDecodeServiceLinkedRoleID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		serviceName, roleName, customSuffix, err := tfiam.DecodeServiceLinkedRoleID(tc.Input)
+		serviceName, roleName, customSuffix, err := tfiam.ServiceLinkedRoleParseResourceID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -259,8 +259,7 @@ func testAccCheckServiceLinkedRoleDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			_, roleName, _, err := tfiam.DecodeServiceLinkedRoleID(rs.Primary.ID)
-
+			_, roleName, _, err := tfiam.ServiceLinkedRoleParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
@@ -291,8 +290,7 @@ func testAccCheckServiceLinkedRoleExists(ctx context.Context, n string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		_, roleName, _, err := tfiam.DecodeServiceLinkedRoleID(rs.Primary.ID)
-
+		_, roleName, _, err := tfiam.ServiceLinkedRoleParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

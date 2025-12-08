@@ -38,6 +38,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the project
 * `default_job_timeout_minutes` - (Optional) Sets the execution timeout value (in minutes) for a project. All test runs in this project use the specified execution timeout value unless overridden when scheduling a run.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -52,6 +55,27 @@ This resource exports the following attributes in addition to the arguments abov
 [aws-get-project]: http://docs.aws.amazon.com/devicefarm/latest/APIReference/API_GetProject.html
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_devicefarm_project.example
+  identity = {
+    "arn" = "arn:aws:devicefarm:us-west-2:123456789012:project:4e7e7e7e-7e7e-7e7e-7e7e-7e7e7e7e7e7e"
+  }
+}
+
+resource "aws_devicefarm_project" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Device Farm project.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DeviceFarm Projects using their ARN. For example:
 
@@ -76,4 +100,4 @@ Using `terraform import`, import DeviceFarm Projects using their ARN. For exampl
 % terraform import aws_devicefarm_project.example arn:aws:devicefarm:us-west-2:123456789012:project:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fea501aea933ca5c661b1980e1f92d94c086b5241762d0510490c8478e31499d -->
+<!-- cache-key: cdktf-0.20.8 input-c1a6601d3df4edf70c177c5733b7c9a5ac5400e196cca37b7a60fc3d46c7670d -->

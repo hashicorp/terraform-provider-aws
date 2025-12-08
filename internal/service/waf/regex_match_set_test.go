@@ -196,7 +196,7 @@ func testAccRegexMatchSet_disappears(t *testing.T) {
 
 func computeRegexMatchSetTuple(patternSet *awstypes.RegexPatternSet, fieldToMatch *awstypes.FieldToMatch, textTransformation string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"field_to_match":       tfwaf.FlattenFieldToMatch(fieldToMatch),
 			"regex_pattern_set_id": *patternSet.RegexPatternSetId,
 			"text_transformation":  textTransformation,

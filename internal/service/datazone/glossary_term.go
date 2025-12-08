@@ -38,8 +38,8 @@ import (
 )
 
 // @FrameworkResource("aws_datazone_glossary_term", name="Glossary Term")
-func newResourceGlossaryTerm(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceGlossaryTerm{}
+func newGlossaryTermResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &glossaryTermResource{}
 	r.SetDefaultCreateTimeout(30 * time.Second)
 
 	return r, nil
@@ -49,16 +49,12 @@ const (
 	ResNameGlossaryTerm = "Glossary Term"
 )
 
-type resourceGlossaryTerm struct {
-	framework.ResourceWithConfigure
+type glossaryTermResource struct {
+	framework.ResourceWithModel[glossaryTermResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceGlossaryTerm) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_glossary_term"
-}
-
-func (r *resourceGlossaryTerm) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *glossaryTermResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedAt: schema.StringAttribute{
@@ -136,10 +132,10 @@ func (r *resourceGlossaryTerm) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func (r *resourceGlossaryTerm) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *glossaryTermResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan resourceGlossaryTermData
+	var plan glossaryTermResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -175,7 +171,7 @@ func (r *resourceGlossaryTerm) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*datazone.GetGlossaryTermOutput, error) {
 		return findGlossaryTermByID(ctx, conn, *out.Id, *out.DomainId)
 	})
 
@@ -187,7 +183,6 @@ func (r *resourceGlossaryTerm) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	output := outputRaws.(*datazone.GetGlossaryTermOutput)
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
 
 	if resp.Diagnostics.HasError() {
@@ -197,9 +192,9 @@ func (r *resourceGlossaryTerm) Create(ctx context.Context, req resource.CreateRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceGlossaryTerm) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *glossaryTermResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var state resourceGlossaryTermData
+	var state glossaryTermResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -228,10 +223,10 @@ func (r *resourceGlossaryTerm) Read(ctx context.Context, req resource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceGlossaryTerm) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *glossaryTermResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan, state resourceGlossaryTermData
+	var plan, state glossaryTermResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -275,9 +270,9 @@ func (r *resourceGlossaryTerm) Update(ctx context.Context, req resource.UpdateRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceGlossaryTerm) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *glossaryTermResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var state resourceGlossaryTermData
+	var state glossaryTermResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -328,7 +323,7 @@ func (r *resourceGlossaryTerm) Delete(ctx context.Context, req resource.DeleteRe
 	}
 }
 
-func (r *resourceGlossaryTerm) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *glossaryTermResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 3 {
@@ -366,7 +361,8 @@ func findGlossaryTermByID(ctx context.Context, conn *datazone.Client, id string,
 	return out, nil
 }
 
-type resourceGlossaryTermData struct {
+type glossaryTermResourceModel struct {
+	framework.WithRegionModel
 	CreatedAt          timetypes.RFC3339                                          `tfsdk:"created_at"`
 	CreatedBy          types.String                                               `tfsdk:"created_by"`
 	DomainIdentifier   types.String                                               `tfsdk:"domain_identifier"`

@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -36,12 +35,6 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIntegrationConfig_baseClusterWithInstance(rName),
-				Check: resource.ComposeTestCheckFunc(
-					waitUntilDBInstanceRebooted(ctx, rName),
-				),
-			},
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -79,12 +72,6 @@ func TestAccRDSIntegration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig_baseClusterWithInstance(rName),
-				Check: resource.ComposeTestCheckFunc(
-					waitUntilDBInstanceRebooted(ctx, rName),
-				),
-			},
-			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &integration),
@@ -113,12 +100,6 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIntegrationConfig_baseClusterWithInstance(rName),
-				Check: resource.ComposeTestCheckFunc(
-					waitUntilDBInstanceRebooted(ctx, rName),
-				),
-			},
 			{
 				Config: testAccIntegrationConfig_optional(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -189,17 +170,6 @@ func testAccCheckIntegrationExists(ctx context.Context, n string, v *awstypes.In
 	}
 }
 
-func waitUntilDBInstanceRebooted(ctx context.Context, instanceIdentifier string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// Wait for rebooting.
-		time.Sleep(60 * time.Second)
-
-		_, err := tfrds.WaitDBInstanceAvailable(ctx, acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx), instanceIdentifier, 30*time.Minute)
-
-		return err
-	}
-}
-
 func testAccIntegrationConfig_baseClusterWithInstance(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
 locals {
@@ -266,9 +236,15 @@ resource "aws_db_subnet_group" "test" {
   }
 }
 
+data "aws_rds_engine_version" "test" {
+  engine  = "aurora-mysql"
+  version = "8.0"
+  latest  = true
+}
+
 resource "aws_rds_cluster_parameter_group" "test" {
   name   = %[1]q
-  family = "aurora-mysql8.0"
+  family = data.aws_rds_engine_version.test.parameter_group_family
 
   dynamic "parameter" {
     for_each = local.cluster_parameters
@@ -282,8 +258,8 @@ resource "aws_rds_cluster_parameter_group" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
-  engine              = "aurora-mysql"
-  engine_version      = "8.0.mysql_aurora.3.05.2"
+  engine              = data.aws_rds_engine_version.test.engine
+  engine_version      = data.aws_rds_engine_version.test.version_actual
   database_name       = "test"
   master_username     = "tfacctest"
   master_password     = "avoid-plaintext-passwords"
@@ -296,12 +272,20 @@ resource "aws_rds_cluster" "test" {
   apply_immediately = true
 }
 
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.test.engine
+  engine_version             = data.aws_rds_engine_version.test.version_actual
+  preferred_instance_classes = [%[2]s]
+  supports_clusters          = true
+  supports_global_databases  = true
+}
+
 resource "aws_rds_cluster_instance" "test" {
   identifier         = %[1]q
-  cluster_identifier = aws_rds_cluster.test.id
-  instance_class     = "db.r6g.large"
+  cluster_identifier = aws_rds_cluster.test.cluster_identifier
   engine             = aws_rds_cluster.test.engine
   engine_version     = aws_rds_cluster.test.engine_version
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
 
 resource "aws_redshift_cluster" "test" {
@@ -310,11 +294,16 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "mydb"
   master_username     = "foo"
   master_password     = "Mustbe8characters"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
+
+  # For v5.100.0
+  availability_zone_relocation_enabled = true
+  publicly_accessible                  = false
+  encrypted                            = true
 }
-`, rName))
+`, rName, mainInstanceClasses))
 }
 
 func testAccIntegrationConfig_base(rName string) string {
@@ -357,7 +346,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
   }
   config_parameter {
     parameter_key   = "require_ssl"
-    parameter_value = "false"
+    parameter_value = "true"
   }
   config_parameter {
     parameter_key   = "search_path"
@@ -409,6 +398,7 @@ resource "aws_rds_integration" "test" {
 
   depends_on = [
     aws_rds_cluster.test,
+    aws_rds_cluster_instance.test,
     aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
@@ -422,6 +412,7 @@ func testAccIntegrationConfig_optional(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
+  enable_key_rotation     = true
   policy                  = data.aws_iam_policy_document.key_policy.json
 }
 
@@ -463,6 +454,7 @@ resource "aws_rds_integration" "test" {
 
   depends_on = [
     aws_rds_cluster.test,
+    aws_rds_cluster_instance.test,
     aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,

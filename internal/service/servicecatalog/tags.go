@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build !generate
-// +build !generate
 
 package servicecatalog
 
@@ -66,7 +65,7 @@ func portfolioKeyValueTags(ctx context.Context, conn *servicecatalog.Client, ide
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 func productKeyValueTags(ctx context.Context, conn *servicecatalog.Client, identifier string) (tftags.KeyValueTags, error) {
@@ -75,7 +74,7 @@ func productKeyValueTags(ctx context.Context, conn *servicecatalog.Client, ident
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 func provisionedProductKeyValueTags(ctx context.Context, conn *servicecatalog.Client, identifier string) (tftags.KeyValueTags, error) {

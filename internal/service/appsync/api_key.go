@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
@@ -20,7 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -72,7 +75,7 @@ func resourceAPIKey() *schema.Resource {
 	}
 }
 
-func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -90,33 +93,33 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	output, err := conn.CreateApiKey(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Appsync API Key: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	d.SetId(apiKeyCreateResourceID(apiID, aws.ToString(output.ApiKey.Id)))
 
-	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceAPIKeyRead(ctx, d, meta))
 }
 
-func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	apiID, keyID, err := apiKeyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	key, err := findAPIKeyByTwoPartKey(ctx, conn, apiID, keyID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AppSync API Key (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && intretry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Appsync API Key (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set("api_id", apiID)
@@ -128,13 +131,13 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	apiID, keyID, err := apiKeyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	input := &appsync.UpdateApiKeyInput{
@@ -154,19 +157,19 @@ func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	_, err = conn.UpdateApiKey(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Appsync API Key (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceAPIKeyRead(ctx, d, meta))
 }
 
-func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	apiID, keyID, err := apiKeyParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	log.Printf("[INFO] Deleting Appsync API Key: %s", d.Id())
@@ -181,7 +184,7 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Appsync API Key (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -200,7 +203,7 @@ func apiKeyParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, apiKeyResourceIDSeparator)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected API-ID%[2]sAPI-KEY-ID", id, apiKeyResourceIDSeparator)
+		return "", "", smarterr.NewError(fmt.Errorf("unexpected format for ID (%[1]s), expected API-ID%[2]sAPI-KEY-ID", id, apiKeyResourceIDSeparator))
 	}
 
 	return parts[0], parts[1], nil
@@ -210,10 +213,10 @@ func findAPIKey(ctx context.Context, conn *appsync.Client, input *appsync.ListAp
 	output, err := findAPIKeys(ctx, conn, input, filter)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
 func findAPIKeys(ctx context.Context, conn *appsync.Client, input *appsync.ListApiKeysInput, filter tfslices.Predicate[*awstypes.ApiKey]) ([]awstypes.ApiKey, error) {
@@ -234,14 +237,11 @@ func findAPIKeys(ctx context.Context, conn *appsync.Client, input *appsync.ListA
 	})
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	return output, nil

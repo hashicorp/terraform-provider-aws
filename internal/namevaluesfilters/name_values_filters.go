@@ -16,7 +16,7 @@ type NameValuesFilters map[string][]string
 
 // Add adds missing and updates existing filters from common Terraform Provider SDK types.
 // Supports map[string]string, map[string][]string, *schema.Set.
-func (filters NameValuesFilters) Add(v interface{}) NameValuesFilters {
+func (filters NameValuesFilters) Add(v any) NameValuesFilters {
 	switch v := v.(type) {
 	case map[string]string:
 		for name, v := range v {
@@ -46,7 +46,7 @@ func (filters NameValuesFilters) Add(v interface{}) NameValuesFilters {
 	case *schema.Set:
 		// The set of filters described by Schema().
 		for _, tfMapRaw := range v.List() {
-			tfMap := tfMapRaw.(map[string]interface{})
+			tfMap := tfMapRaw.(map[string]any)
 			name := tfMap[names.AttrName].(string)
 
 			for _, v := range tfMap[names.AttrValues].(*schema.Set).List() {
@@ -99,7 +99,7 @@ func (filters NameValuesFilters) Map() map[string][]string {
 
 // New creates NameValuesFilters from common Terraform Provider SDK types.
 // Supports map[string]string, map[string][]string, *schema.Set.
-func New(v interface{}) NameValuesFilters {
+func New(v any) NameValuesFilters {
 	return make(NameValuesFilters).Add(v)
 }
 

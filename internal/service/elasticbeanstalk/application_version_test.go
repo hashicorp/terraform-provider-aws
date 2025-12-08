@@ -220,8 +220,8 @@ resource "aws_elastic_beanstalk_application" "default" {
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = aws_elastic_beanstalk_application.default.name
   name        = "tf-test-version-label-%d"
-  bucket      = aws_s3_bucket.default.id
-  key         = aws_s3_object.default.id
+  bucket      = aws_s3_object.default.bucket
+  key         = aws_s3_object.default.key
 }
 `, randInt, randInt, randInt)
 }
@@ -246,8 +246,8 @@ resource "aws_elastic_beanstalk_application" "first" {
 resource "aws_elastic_beanstalk_application_version" "first" {
   application = aws_elastic_beanstalk_application.first.name
   name        = "tf-test-version-label-%d"
-  bucket      = aws_s3_bucket.default.id
-  key         = aws_s3_object.default.id
+  bucket      = aws_s3_object.default.bucket
+  key         = aws_s3_object.default.key
 }
 
 resource "aws_elastic_beanstalk_application" "second" {
@@ -258,8 +258,8 @@ resource "aws_elastic_beanstalk_application" "second" {
 resource "aws_elastic_beanstalk_application_version" "second" {
   application = aws_elastic_beanstalk_application.second.name
   name        = "tf-test-version-label-%d"
-  bucket      = aws_s3_bucket.default.id
-  key         = aws_s3_object.default.id
+  bucket      = aws_s3_object.default.bucket
+  key         = aws_s3_object.default.key
 }
 `, randInt, randInt, randInt, randInt, randInt)
 }
@@ -284,8 +284,8 @@ resource "aws_elastic_beanstalk_application" "default" {
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = aws_elastic_beanstalk_application.default.name
   name        = "tf-test-version-label-%[1]d"
-  bucket      = aws_s3_bucket.default.id
-  key         = aws_s3_object.default.id
+  bucket      = aws_s3_object.default.bucket
+  key         = aws_s3_object.default.key
 
   tags = {
     firstTag  = "%[2]s"
@@ -315,8 +315,8 @@ resource "aws_elastic_beanstalk_application" "default" {
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = aws_elastic_beanstalk_application.default.name
   name        = "tf-test-version-label-%[1]d"
-  bucket      = aws_s3_bucket.default.id
-  key         = aws_s3_object.default.id
+  bucket      = aws_s3_object.default.bucket
+  key         = aws_s3_object.default.key
 
   tags = {
     firstTag  = "%[2]s"
@@ -347,8 +347,8 @@ resource "aws_elastic_beanstalk_application" "default" {
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = aws_elastic_beanstalk_application.default.name
   name        = "tf-test-version-label-%d"
-  bucket      = aws_s3_bucket.default.id
-  key         = aws_s3_object.default.id
+  bucket      = aws_s3_object.default.bucket
+  key         = aws_s3_object.default.key
   process     = %s
 }
 `, randInt, randInt, randInt, process)

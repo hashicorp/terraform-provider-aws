@@ -1,0 +1,9 @@
+rules:
+  - id: knownvalue_account_id
+    languages: [go]
+    message: BLAH
+    pattern: |
+      knownvalue.StringExact(acctest.AccountID($CTX))
+    fix: |
+      tfknownvalue.AccountID()
+    severity: ERROR

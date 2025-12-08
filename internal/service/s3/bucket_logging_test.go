@@ -135,13 +135,14 @@ func TestAccS3BucketLogging_TargetGrantByID(t *testing.T) {
 						"permission":     string(types.BucketLogsPermissionFullControl),
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.id", "data.aws_canonical_user_id.current", names.AttrID),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.display_name", "data.aws_canonical_user_id.current", names.AttrDisplayName),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// DisplayName is deprecated and will be inconsistently returned between July and November 2025.
+				ImportStateVerifyIgnore: []string{"target_grant.0.grantee.0.display_name"},
 			},
 			{
 				Config: testAccBucketLoggingConfig_targetGrantByID(rName, string(types.BucketLogsPermissionRead)),
@@ -153,13 +154,15 @@ func TestAccS3BucketLogging_TargetGrantByID(t *testing.T) {
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.BucketLogsPermissionRead),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.display_name", "data.aws_canonical_user_id.current", names.AttrDisplayName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.id", "data.aws_canonical_user_id.current", names.AttrID),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// DisplayName is deprecated and will be inconsistently returned between July and November 2025.
+				ImportStateVerifyIgnore: []string{"target_grant.0.grantee.0.display_name"},
 			},
 			{
 				Config: testAccBucketLoggingConfig_basic(rName),
@@ -705,7 +708,7 @@ resource "aws_s3_bucket_logging" "test" {
 }
 
 func testAccBucketLoggingConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), testAccDirectoryBucketConfig_baseAZ(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
   location {

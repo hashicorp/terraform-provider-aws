@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -52,7 +53,7 @@ var (
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      SuppressEquivalentTopicSubscriptionDeliveryPolicy,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -67,17 +68,7 @@ var (
 			Optional: true,
 			Default:  false,
 		},
-		"filter_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
+		"filter_policy": sdkv2.JSONDocumentSchemaOptional(),
 		"filter_policy_scope": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -103,28 +94,8 @@ var (
 			Optional: true,
 			Default:  false,
 		},
-		"redrive_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
-		"replay_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
+		"redrive_policy": sdkv2.JSONDocumentSchemaOptional(),
+		"replay_policy":  sdkv2.JSONDocumentSchemaOptional(),
 		"subscription_role_arn": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -157,6 +128,10 @@ var (
 )
 
 // @SDKResource("aws_sns_topic_subscription", name="Topic Subscription")
+// @ArnIdentity
+// @Testing(existsType="map[string]string")
+// @Testing(preIdentityVersion="v6.8.0")
+// @Testing(importIgnore="confirmation_timeout_in_minutes;endpoint_auto_confirms")
 func resourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicSubscriptionCreate,
@@ -164,17 +139,13 @@ func resourceTopicSubscription() *schema.Resource {
 		UpdateWithoutTimeout: resourceTopicSubscriptionUpdate,
 		DeleteWithoutTimeout: resourceTopicSubscriptionDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		CustomizeDiff: resourceTopicSubscriptionCustomizeDiff,
 
 		Schema: subscriptionSchema,
 	}
 }
 
-func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -205,17 +176,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.ToString(output.SubscriptionArn))
 
-	waitForConfirmation := true
-
-	if !d.Get("endpoint_auto_confirms").(bool) && strings.Contains(protocol, "http") {
-		waitForConfirmation = false
-	}
-
-	if strings.Contains(protocol, names.AttrEmail) {
-		waitForConfirmation = false
-	}
-
-	if waitForConfirmation {
+	if waitForConfirmation(d.Get("endpoint_auto_confirms").(bool), protocol) {
 		timeout := subscriptionPendingConfirmationTimeout
 		if strings.Contains(protocol, "http") {
 			timeout = time.Duration(int64(d.Get("confirmation_timeout_in_minutes").(int)) * int64(time.Minute))
@@ -229,11 +190,40 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceTopicSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
+	// Do not remove.
+	// Though seemingly redundant with the finder below, GetSubscriptionAttributes is
+	// eventually consistent and may not reflect cases where the topic or subscription
+	// was modified or deleted out of band.
+	//
+	// This check is skipped if topic_arn is unset (e.g. during import), or if the
+	// subscription does not wait for confirmation during the create operation (to
+	// avoid errant removals from state on subsequent applies).
+	if v, ok := d.GetOk(names.AttrTopicARN); ok && waitForConfirmation(d.Get("endpoint_auto_confirms").(bool), d.Get(names.AttrProtocol).(string)) {
+		_, err := findSubscriptionInTopic(ctx, conn, v.(string), d.Id())
+		if !d.IsNewResource() && tfresource.NotFound(err) {
+			log.Printf("[WARN] SNS Topic Subscription %s not found, removing from state", d.Id())
+			d.SetId("")
+			return diags
+		}
+
+		if err != nil {
+			switch {
+			// ListSubscriptionsByTopic requires IAM permissions which were not
+			// required in minor versions prior to `v5.94.0`, so AuthorizationError
+			// exceptions are not surfaced.
+			case errs.IsAErrorMessageContains[*types.AuthorizationErrorException](err, "not authorized to perform"):
+				break
+			default:
+				return sdkdiag.AppendErrorf(diags, "reading SNS Topic Subscription (%s): %s", d.Id(), err)
+			}
+		}
+	}
+
+	attributes, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func(ctx context.Context) (map[string]string, error) {
 		return findSubscriptionAttributesByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -247,12 +237,10 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
 
-	attributes := outputRaw.(map[string]string)
-
 	return sdkdiag.AppendFromErr(diags, subscriptionAttributeMap.APIAttributesToResourceData(attributes, d))
 }
 
-func resourceTopicSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -270,7 +258,7 @@ func resourceTopicSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceTopicSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
@@ -383,8 +371,56 @@ func findSubscriptionAttributesByARN(ctx context.Context, conn *sns.Client, arn 
 	return output.Attributes, nil
 }
 
+func findSubscriptionInTopic(ctx context.Context, conn *sns.Client, topicARN, subscriptionARN string) (*types.Subscription, error) {
+	input := sns.ListSubscriptionsByTopicInput{
+		TopicArn: aws.String(topicARN),
+	}
+
+	paginator := sns.NewListSubscriptionsByTopicPaginator(conn, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if errs.IsA[*types.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, subscription := range page.Subscriptions {
+			if aws.ToString(subscription.SubscriptionArn) == subscriptionARN {
+				return &subscription, nil
+			}
+		}
+	}
+
+	return nil, &retry.NotFoundError{
+		LastRequest: input,
+	}
+}
+
+// waitForConfirmation indicates whether the subscription should wait for confirmation
+// during the create operation.
+//
+// The subscription should wait unless:
+//   - protocol contains http (http or https) and endpoint_auto_confirms is false
+//   - protocol contains email (email or email-json)
+func waitForConfirmation(endpointAutoConfirms bool, protocol string) bool {
+	switch {
+	case strings.Contains(protocol, "http") && !endpointAutoConfirms:
+		return false
+	case strings.Contains(protocol, names.AttrEmail):
+		return false
+	}
+
+	return true
+}
+
 func statusSubscriptionPendingConfirmation(ctx context.Context, conn *sns.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSubscriptionAttributesByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -526,24 +562,24 @@ func normalizeTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
 	var deliveryPolicy TopicSubscriptionDeliveryPolicy
 
 	if err := json.Unmarshal([]byte(policy), &deliveryPolicy); err != nil {
-		return nil, fmt.Errorf("[WARN] Unable to unmarshal SNS Topic Subscription delivery policy JSON: %s", err)
+		return nil, fmt.Errorf("[WARN] Unable to unmarshal SNS Topic Subscription delivery policy JSON: %w", err)
 	}
 
 	normalizedDeliveryPolicy, err := json.Marshal(deliveryPolicy)
 
 	if err != nil {
-		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %s", err)
+		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %w", err)
 	}
 
 	b := bytes.NewBufferString("")
 	if err := json.Compact(b, normalizedDeliveryPolicy); err != nil {
-		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %s", err)
+		return nil, fmt.Errorf("[WARN] Unable to marshal SNS Topic Subscription delivery policy back to JSON: %w", err)
 	}
 
 	return b.Bytes(), nil
 }
 
-func resourceTopicSubscriptionCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+func resourceTopicSubscriptionCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	hasPolicy := diff.Get("filter_policy").(string) != ""
 	hasScope := !diff.GetRawConfig().GetAttr("filter_policy_scope").IsNull()
 	hadScope := diff.Get("filter_policy_scope").(string) != ""

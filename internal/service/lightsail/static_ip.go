@@ -25,6 +25,10 @@ func ResourceStaticIP() *schema.Resource {
 		ReadWithoutTimeout:   resourceStaticIPRead,
 		DeleteWithoutTimeout: resourceStaticIPDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrName: {
 				Type:     schema.TypeString,
@@ -47,7 +51,7 @@ func ResourceStaticIP() *schema.Resource {
 	}
 }
 
-func resourceStaticIPCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStaticIPCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
@@ -65,11 +69,11 @@ func resourceStaticIPCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceStaticIPRead(ctx, d, meta)...)
 }
 
-func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Id()
 	log.Printf("[INFO] Reading Lightsail Static IP: %q", name)
 	out, err := conn.GetStaticIp(ctx, &lightsail.GetStaticIpInput{
 		StaticIpName: aws.String(name),
@@ -85,12 +89,13 @@ func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrARN, out.StaticIp.Arn)
 	d.Set(names.AttrIPAddress, out.StaticIp.IpAddress)
+	d.Set(names.AttrName, out.StaticIp.Name)
 	d.Set("support_code", out.StaticIp.SupportCode)
 
 	return diags
 }
 
-func resourceStaticIPDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStaticIPDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 

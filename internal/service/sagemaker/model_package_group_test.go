@@ -163,7 +163,7 @@ func testAccCheckModelPackageGroupDestroy(ctx context.Context) resource.TestChec
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Model Package Group (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Model Package Group (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Model Package Group %s still exists", rs.Primary.ID)

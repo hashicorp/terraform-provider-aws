@@ -22,10 +22,10 @@ type IAMPolicyDoc struct {
 type IAMPolicyStatement struct {
 	Sid           string
 	Effect        string                         `json:",omitempty"`
-	Actions       interface{}                    `json:"Action,omitempty"`
-	NotActions    interface{}                    `json:"NotAction,omitempty"`
-	Resources     interface{}                    `json:"Resource,omitempty"`
-	NotResources  interface{}                    `json:"NotResource,omitempty"`
+	Actions       any                            `json:"Action,omitempty"`
+	NotActions    any                            `json:"NotAction,omitempty"`
+	Resources     any                            `json:"Resource,omitempty"`
+	NotResources  any                            `json:"NotResource,omitempty"`
 	Principals    IAMPolicyStatementPrincipalSet `json:"Principal,omitempty"`
 	NotPrincipals IAMPolicyStatementPrincipalSet `json:"NotPrincipal,omitempty"`
 	Conditions    IAMPolicyStatementConditionSet `json:"Condition,omitempty"`
@@ -33,13 +33,13 @@ type IAMPolicyStatement struct {
 
 type IAMPolicyStatementPrincipal struct {
 	Type        string
-	Identifiers interface{}
+	Identifiers any
 }
 
 type IAMPolicyStatementCondition struct {
 	Test     string
 	Variable string
-	Values   interface{}
+	Values   any
 }
 
 type IAMPolicyStatementPrincipalSet []IAMPolicyStatementPrincipal
@@ -78,7 +78,7 @@ func (s *IAMPolicyDoc) Merge(newDoc *IAMPolicyDoc) {
 }
 
 func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
-	raw := map[string]interface{}{}
+	raw := map[string]any{}
 
 	// Although IAM documentation says that "*" and {"AWS": "*"} are equivalent
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html),
@@ -135,7 +135,7 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 	var out IAMPolicyStatementPrincipalSet
 
-	var data interface{}
+	var data any
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
@@ -143,14 +143,14 @@ func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 	switch t := data.(type) {
 	case string:
 		out = append(out, IAMPolicyStatementPrincipal{Type: "*", Identifiers: []string{"*"}})
-	case map[string]interface{}:
-		for key, value := range data.(map[string]interface{}) {
+	case map[string]any:
+		for key, value := range data.(map[string]any) {
 			switch vt := value.(type) {
 			case string:
 				out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: value.(string)})
-			case []interface{}:
+			case []any:
 				values := []string{}
-				for _, v := range value.([]interface{}) {
+				for _, v := range value.([]any) {
 					values = append(values, v.(string))
 				}
 				out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: values})
@@ -167,11 +167,11 @@ func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 }
 
 func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
-	raw := map[string]map[string]interface{}{}
+	raw := map[string]map[string]any{}
 
 	for _, c := range cs {
 		if _, ok := raw[c.Test]; !ok {
-			raw[c.Test] = map[string]interface{}{}
+			raw[c.Test] = map[string]any{}
 		}
 		switch i := c.Values.(type) {
 		case []string:
@@ -193,7 +193,7 @@ func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
 func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 	var out IAMPolicyStatementConditionSet
 
-	var data map[string]map[string]interface{}
+	var data map[string]map[string]any
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
@@ -203,7 +203,7 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 			switch var_values := var_values.(type) {
 			case string:
 				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: []string{var_values}})
-			case []interface{}:
+			case []any:
 				values := []string{}
 				for _, v := range var_values {
 					values = append(values, v.(string))

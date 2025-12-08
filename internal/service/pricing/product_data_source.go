@@ -54,7 +54,7 @@ func dataSourceProduct() *schema.Resource {
 	}
 }
 
-func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PricingClient(ctx)
 
@@ -64,8 +64,8 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	filters := d.Get("filters")
-	for _, v := range filters.([]interface{}) {
-		m := v.(map[string]interface{})
+	for _, v := range filters.([]any) {
+		m := v.(map[string]any)
 		input.Filters = append(input.Filters, types.Filter{
 			Field: aws.String(m[names.AttrField].(string)),
 			Type:  types.FilterTypeTermMatch,

@@ -41,8 +41,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resourceId` - (Required) Resource identifier.
 * `tagOptionId` - (Required) Tag Option identifier.
 
@@ -96,4 +97,4 @@ Using `terraform import`, import `aws_servicecatalog_tag_option_resource_associa
 % terraform import aws_servicecatalog_tag_option_resource_association.example tag-pjtvyakdlyo3m:prod-dnigbtea24ste
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ae36ed874f6f516a2530c784f0fe767eaadd12cbb9e4007a768baa831153ddc9 -->
+<!-- cache-key: cdktf-0.20.8 input-188b933a3ce17e5e89d6874786a9050d005df8062084e54bc070423c5b80f230 -->

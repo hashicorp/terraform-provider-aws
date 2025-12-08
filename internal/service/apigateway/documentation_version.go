@@ -53,7 +53,7 @@ func resourceDocumentationVersion() *schema.Resource {
 	}
 }
 
-func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -78,7 +78,7 @@ func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceDocumentationVersionRead(ctx, d, meta)...)
 }
 
-func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -106,7 +106,7 @@ func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -135,7 +135,7 @@ func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceDocumentationVersionRead(ctx, d, meta)...)
 }
 
-func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 

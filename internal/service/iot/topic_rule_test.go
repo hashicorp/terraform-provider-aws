@@ -2721,7 +2721,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   elasticsearch {
-    endpoint = "https://domain.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
+    endpoint = "https://domain.${data.aws_region.current.region}.es.${data.aws_partition.current.dns_suffix}"
     id       = "myIdentifier"
     index    = %[2]q
     type     = "mydocument"
@@ -2968,7 +2968,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   kafka {
-    destination_arn = "arn:${data.aws_partition.current.partition}:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:ruledestination/vpc/pretend-this-is-a-uuid"
+    destination_arn = "arn:${data.aws_partition.current.partition}:iot:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:ruledestination/vpc/pretend-this-is-a-uuid"
     topic           = %[2]q
 
     client_properties = {
@@ -3027,7 +3027,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   lambda {
-    function_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:123456789012:function:ProcessKinesisRecords"
+    function_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:123456789012:function:ProcessKinesisRecords"
   }
 }
 `, rName)
@@ -3105,7 +3105,7 @@ resource "aws_iot_topic_rule" "test" {
   sns {
     message_format = %[2]q
     role_arn       = aws_iam_role.test.arn
-    target_arn     = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:123456789012:my_corporate_topic"
+    target_arn     = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}:123456789012:my_corporate_topic"
   }
 }
 `, rName, messageFormat))

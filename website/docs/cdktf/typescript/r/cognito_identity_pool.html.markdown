@@ -65,8 +65,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The Cognito Identity Pool argument layout is a structure composed of several sub-resources - these resources are laid out below.
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identityPoolName` (Required) - The Cognito Identity Pool name.
 * `allowUnauthenticatedIdentities` (Required) - Whether the identity pool supports unauthenticated logins or not.
 * `allowClassicFlow` (Optional) - Enables or disables the classic / basic authentication flow. Default is `false`.
@@ -124,4 +125,4 @@ Using `terraform import`, import Cognito Identity Pool using its ID. For example
 % terraform import aws_cognito_identity_pool.mypool us-west-2:1a234567-8901-234b-5cde-f6789g01h2i3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6cea6e360281bc475ea8b2d012b8c1df933a00c36975d5e9256c0c0610277b76 -->
+<!-- cache-key: cdktf-0.20.8 input-2fc512dd1174ad8e5eba72c55c06d3f6d4b2a3b52a37ede5a857ec9a9be63bfb -->

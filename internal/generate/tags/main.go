@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -21,7 +20,13 @@ import (
 )
 
 const (
+	defaultCreateTagsFunc         = "createTags"
+	defaultGetTagFunc             = "findTag"
+	defaultGetTagsInFunc          = "getTagsIn"
+	defaultKeyValueTagsFunc       = "keyValueTags"
 	defaultListTagsFunc           = "listTags"
+	defaultSetTagsOutFunc         = "setTagsOut"
+	defaultTagsFunc               = "svcTags"
 	defaultUpdateTagsFunc         = "updateTags"
 	defaultWaitTagsPropagatedFunc = "waitTagsPropagated"
 )
@@ -30,9 +35,9 @@ var (
 	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
 
 	createTags               = flag.Bool("CreateTags", false, "whether to generate CreateTags")
-	createTagsFunc           = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
+	createTagsFunc           = flag.String("CreateTagsFunc", defaultCreateTagsFunc, "createTagsFunc")
 	getTag                   = flag.Bool("GetTag", false, "whether to generate GetTag")
-	getTagFunc               = flag.String("GetTagFunc", "findTag", "getTagFunc")
+	getTagFunc               = flag.String("GetTagFunc", defaultGetTagFunc, "getTagFunc")
 	listTags                 = flag.Bool("ListTags", false, "whether to generate ListTags")
 	listTagsFunc             = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
 	updateTags               = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
@@ -44,10 +49,10 @@ var (
 	emptyMap         = flag.Bool("EmptyMap", false, "Whether KVT string map should be empty for no tags")
 	serviceTagsSlice = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
 
-	keyValueTagsFunc = flag.String("KeyValueTagsFunc", "KeyValueTags", "keyValueTagsFunc")
-	tagsFunc         = flag.String("TagsFunc", "Tags", "tagsFunc")
-	getTagsInFunc    = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
-	setTagsOutFunc   = flag.String("SetTagsOutFunc", "setTagsOut", "setTagsOutFunc")
+	keyValueTagsFunc = flag.String("KeyValueTagsFunc", defaultKeyValueTagsFunc, "keyValueTagsFunc")
+	tagsFunc         = flag.String("TagsFunc", defaultTagsFunc, "tagsFunc")
+	getTagsInFunc    = flag.String("GetTagsInFunc", defaultGetTagsInFunc, "getTagsInFunc")
+	setTagsOutFunc   = flag.String("SetTagsOutFunc", defaultSetTagsOutFunc, "setTagsOutFunc")
 
 	waitForPropagation      = flag.Bool("Wait", false, "whether to generate WaitTagsPropagated")
 	waitTagsPropagatedFunc  = flag.String("WaitFunc", defaultWaitTagsPropagatedFunc, "waitFunc")
@@ -63,7 +68,14 @@ var (
 	listTagsInIDNeedValueSlice = flag.Bool("ListTagsInIDNeedValueSlice", false, "listTagsInIDNeedSlice")
 	listTagsOp                 = flag.String("ListTagsOp", "ListTagsForResource", "listTagsOp")
 	listTagsOpPaginated        = flag.Bool("ListTagsOpPaginated", false, "whether ListTagsOp is paginated")
+	listTagsOpPaginatorCustom  = flag.Bool("ListTagsOpPaginatorCustom", false, "whether ListTagsOp has a custom paginator")
 	listTagsOutTagsElem        = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
+
+	retryErrorCode        = flag.String("RetryErrorCode", "", "error code to retry, must be used with RetryTagOps")
+	retryErrorMessage     = flag.String("RetryErrorMessage", "", "error message to retry, must be used with RetryTagOps")
+	retryTagOps           = flag.Bool("RetryTagOps", false, "whether to retry tag operations")
+	retryTagsListTagsType = flag.String("RetryTagsListTagsType", "", "type of the first ListTagsOp return value such as ListTagsForResourceOutput, must be used with RetryTagOps")
+	retryTimeout          = flag.Duration("RetryTimeout", 1*time.Minute, "amount of time tag operations should retry")
 
 	tagInCustomVal        = flag.String("TagInCustomVal", "", "tagInCustomVal")
 	tagInIDElem           = flag.String("TagInIDElem", "ResourceArn", "tagInIDElem")
@@ -74,6 +86,7 @@ var (
 	tagOpBatchSize        = flag.Int("TagOpBatchSize", 0, "tagOpBatchSize")
 	tagResTypeElem        = flag.String("TagResTypeElem", "", "tagResTypeElem")
 	tagResTypeElemType    = flag.String("TagResTypeElemType", "", "tagResTypeElemType")
+	tagResTypeIsAccountID = flag.Bool("TagResTypeIsAccountID", false, "tagResTypeIsAccountID")
 	tagType               = flag.String("TagType", "Tag", "tagType")
 	tagType2              = flag.String("TagType2", "", "tagType")
 	tagTypeAddBoolElem    = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
@@ -149,9 +162,15 @@ type TemplateData struct {
 	ListTagsInIDNeedValueSlice bool
 	ListTagsOp                 string
 	ListTagsOpPaginated        bool
+	ListTagsOpPaginatorCustom  bool
 	ListTagsOutTagsElem        string
 	ParentNotFoundErrCode      string
 	ParentNotFoundErrMsg       string
+	RetryErrorCode             string
+	RetryErrorMessage          string
+	RetryTagOps                bool
+	RetryTagsListTagsType      string
+	RetryTimeout               string
 	ServiceTagsMap             bool
 	SetTagsOutFunc             string
 	TagInCustomVal             string
@@ -161,9 +180,9 @@ type TemplateData struct {
 	TagKeyType                 string
 	TagOp                      string
 	TagOpBatchSize             int
-	TagPackage                 string
 	TagResTypeElem             string
 	TagResTypeElemType         string
+	TagResTypeIsAccountID      bool
 	TagType                    string
 	TagType2                   string
 	TagTypeAddBoolElem         string
@@ -224,8 +243,11 @@ func main() {
 		createTagsFunc = ""
 	}
 
+	if *tagResTypeIsAccountID && *tagResTypeElem == "" {
+		g.Errorf("TagResTypeIsAccountID requires TagResTypeElem")
+	}
+
 	clientType := fmt.Sprintf("*%s.Client", awsPkg)
-	tagPackage := awsPkg
 	providerNameUpper := service.ProviderNameUpper()
 	templateData := TemplateData{
 		AWSService:        awsPkg,
@@ -244,9 +266,15 @@ func main() {
 		ListTagsInIDNeedValueSlice: *listTagsInIDNeedValueSlice,
 		ListTagsOp:                 *listTagsOp,
 		ListTagsOpPaginated:        *listTagsOpPaginated,
+		ListTagsOpPaginatorCustom:  *listTagsOpPaginatorCustom,
 		ListTagsOutTagsElem:        *listTagsOutTagsElem,
 		ParentNotFoundErrCode:      *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:       *parentNotFoundErrMsg,
+		RetryErrorCode:             *retryErrorCode,
+		RetryErrorMessage:          *retryErrorMessage,
+		RetryTagOps:                *retryTagOps,
+		RetryTagsListTagsType:      *retryTagsListTagsType,
+		RetryTimeout:               formatDuration(*retryTimeout),
 		ServiceTagsMap:             *serviceTagsMap,
 		SetTagsOutFunc:             *setTagsOutFunc,
 		TagInCustomVal:             *tagInCustomVal,
@@ -256,9 +284,9 @@ func main() {
 		TagKeyType:                 *tagKeyType,
 		TagOp:                      *tagOp,
 		TagOpBatchSize:             *tagOpBatchSize,
-		TagPackage:                 tagPackage,
 		TagResTypeElem:             *tagResTypeElem,
 		TagResTypeElemType:         *tagResTypeElemType,
+		TagResTypeIsAccountID:      *tagResTypeIsAccountID,
 		TagType:                    *tagType,
 		TagType2:                   *tagType2,
 		TagTypeAddBoolElem:         *tagTypeAddBoolElem,
@@ -293,13 +321,6 @@ func main() {
 	d := g.NewGoFileDestination(filename)
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
-		// If you intend to only generate Tags and KeyValueTags helper methods,
-		// the corresponding aws-sdk-go	service package does not need to be imported
-		if !*getTag && !*listTags && !*serviceTagsSlice && !*updateTags {
-			templateData.AWSService = ""
-			templateData.TagPackage = ""
-		}
-
 		if err := d.BufferTemplate("header", templateBody.header, templateData, templateFuncMap); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}

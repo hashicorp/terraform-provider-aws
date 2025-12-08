@@ -35,12 +35,8 @@ func newAccessGrantsInstanceResourcePolicyResource(context.Context) (resource.Re
 }
 
 type accessGrantsInstanceResourcePolicyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accessGrantsInstanceResourcePolicyResourceModel]
 	framework.WithImportByID
-}
-
-func (r *accessGrantsInstanceResourcePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grants_instance_resource_policy"
 }
 
 func (r *accessGrantsInstanceResourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -224,6 +220,7 @@ func findAccessGrantsInstanceResourcePolicy(ctx context.Context, conn *s3control
 }
 
 type accessGrantsInstanceResourcePolicyResourceModel struct {
+	framework.WithRegionModel
 	AccountID types.String      `tfsdk:"account_id"`
 	ID        types.String      `tfsdk:"id"`
 	Policy    fwtypes.IAMPolicy `tfsdk:"policy"`

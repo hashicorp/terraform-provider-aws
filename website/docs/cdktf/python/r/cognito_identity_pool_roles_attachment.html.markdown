@@ -107,8 +107,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The Cognito Identity Pool Roles Attachment argument layout is a structure composed of several sub-resources - these resources are laid out below.
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identity_pool_id` (Required) - An identity pool ID in the format `REGION_GUID`.
 * `role_mapping` (Optional) - A List of [Role Mapping](#role-mappings).
 * `roles` (Required) - The map of roles associated with this pool. For a given role, the key will be either "authenticated" or "unauthenticated" and the value will be the Role ARN.
@@ -158,4 +159,4 @@ Using `terraform import`, import Cognito Identity Pool Roles Attachment using th
 % terraform import aws_cognito_identity_pool_roles_attachment.example us-west-2:b64805ad-cb56-40ba-9ffc-f5d8207e6d42
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-74c6734db32e60310fb7b71d1ef7e57fff3eb57e2065822e5e2535d8f77e6646 -->
+<!-- cache-key: cdktf-0.20.8 input-09d3323e69f0ea59bcfed2b03e6889f9fdced16fb2644fe9beb0066897bf4d9f -->

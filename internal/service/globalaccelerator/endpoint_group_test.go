@@ -153,7 +153,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckEndpointGroupDeleteSecurityGroup(ctx, &vpc),
 				),
 			},
@@ -206,7 +206,7 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckEndpointGroupDeleteSecurityGroup(ctx, &vpc),
 				),
 			},
@@ -863,7 +863,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
     weight      = 10
   }
 
-  endpoint_group_region         = data.aws_region.current.name
+  endpoint_group_region         = data.aws_region.current.region
   health_check_interval_seconds = 30
   health_check_port             = 1234
   health_check_protocol         = "TCP"

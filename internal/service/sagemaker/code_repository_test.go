@@ -212,7 +212,7 @@ func testAccCheckCodeRepositoryDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Code Repository (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Code Repository (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Code Repository %q still exists", rs.Primary.ID)

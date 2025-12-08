@@ -167,6 +167,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accounts` - (Optional) Accounts where you want to create stack instances in the specified `regions`. You can specify either `accounts` or `deploymentTargets`, but not both.
 * `deploymentTargets` - (Optional) AWS Organizations accounts for which to create stack instances in the `regions`. stack sets doesn't deploy stack instances to the organization management account, even if the organization management account is in your organization or in an OU in your organization. Drift detection is not possible for most of this argument. See [deployment_targets](#deployment_targets) below.
 * `parameterOverrides` - (Optional) Key-value map of input parameters to override from the stack set for these instances. This argument's drift detection is limited to the first account and region since each instance can have unique parameters.
@@ -285,4 +286,4 @@ Using `terraform import`, Import CloudFormation stack instances that target OUs,
 % terraform import aws_cloudformation_stack_instances.example example,SELF,OU
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f76d28e08fd46f1219f4805bc6c2793606ee1348a2100c340fefa252d23d85f7 -->
+<!-- cache-key: cdktf-0.20.8 input-45bab170d52aea240c1200a3dd65ca514359e46326497ae8453b0144325c2e9c -->

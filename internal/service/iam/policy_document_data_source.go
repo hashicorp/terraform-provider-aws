@@ -73,7 +73,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsEmpty,
-					Deprecated:   "Not used",
+					Deprecated: "override_json is deprecated. This argument is retained only for " +
+						"backward compatibility with previous versions of this data source.",
 				},
 				"override_policy_documents": {
 					Type:     schema.TypeList,
@@ -92,7 +93,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsEmpty,
-					Deprecated:   "Not used",
+					Deprecated: "source_json is deprecated. This argument is retained only for " +
+						"backward compatibility with previous versions of this data source.",
 				},
 				"source_policy_documents": {
 					Type:     schema.TypeList,
@@ -165,11 +167,11 @@ func dataSourcePolicyDocument() *schema.Resource {
 	}
 }
 
-func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	mergedDoc := &IAMPolicyDoc{}
+	mergedDoc := &iamPolicyDoc{}
 
-	if v, ok := d.GetOk("source_policy_documents"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("source_policy_documents"); ok && len(v.([]any)) > 0 {
 		// generate sid map to assure there are no duplicates in source jsons
 		sidMap := make(map[string]struct{})
 		for _, stmt := range mergedDoc.Statements {
@@ -179,12 +181,12 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		// merge sourceDocs in order specified
-		for sourceJSONIndex, sourceJSON := range v.([]interface{}) {
+		for sourceJSONIndex, sourceJSON := range v.([]any) {
 			if sourceJSON == nil {
 				continue
 			}
 
-			sourceDoc := &IAMPolicyDoc{}
+			sourceDoc := &iamPolicyDoc{}
 			if err := json.Unmarshal([]byte(sourceJSON.(string)), sourceDoc); err != nil {
 				return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: merging source document %d: %s", sourceJSONIndex, err)
 			}
@@ -204,7 +206,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// process the current document
-	doc := &IAMPolicyDoc{
+	doc := &iamPolicyDoc{
 		Version: d.Get(names.AttrVersion).(string),
 	}
 
@@ -213,13 +215,13 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if cfgStmts, hasCfgStmts := d.GetOk("statement"); hasCfgStmts {
-		var cfgStmtIntf = cfgStmts.([]interface{})
-		stmts := make([]*IAMPolicyStatement, len(cfgStmtIntf))
+		var cfgStmtIntf = cfgStmts.([]any)
+		stmts := make([]*iamPolicyStatement, len(cfgStmtIntf))
 		sidMap := make(map[string]struct{})
 
 		for i, stmtI := range cfgStmtIntf {
-			cfgStmt := stmtI.(map[string]interface{})
-			stmt := &IAMPolicyStatement{
+			cfgStmt := stmtI.(map[string]any)
+			stmt := &iamPolicyStatement{
 				Effect: cfgStmt["effect"].(string),
 			}
 
@@ -293,12 +295,12 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	mergedDoc.Merge(doc)
 
 	// merge override_policy_documents policies into mergedDoc in order specified
-	if v, ok := d.GetOk("override_policy_documents"); ok && len(v.([]interface{})) > 0 {
-		for overrideJSONIndex, overrideJSON := range v.([]interface{}) {
+	if v, ok := d.GetOk("override_policy_documents"); ok && len(v.([]any)) > 0 {
+		for overrideJSONIndex, overrideJSON := range v.([]any) {
 			if overrideJSON == nil {
 				continue
 			}
-			overrideDoc := &IAMPolicyDoc{}
+			overrideDoc := &iamPolicyDoc{}
 			if err := json.Unmarshal([]byte(overrideJSON.(string)), overrideDoc); err != nil {
 				return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: merging override document %d: %s", overrideJSONIndex, err)
 			}
@@ -330,7 +332,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func dataSourcePolicyDocumentReplaceVarsInList(in interface{}, version string) (interface{}, error) {
+func dataSourcePolicyDocumentReplaceVarsInList(in any, version string) (any, error) {
 	switch v := in.(type) {
 	case string:
 		if version == "2008-10-17" && strings.Contains(v, "&{") {
@@ -351,17 +353,17 @@ func dataSourcePolicyDocumentReplaceVarsInList(in interface{}, version string) (
 	}
 }
 
-func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (IAMPolicyStatementConditionSet, error) {
-	out := make([]IAMPolicyStatementCondition, len(in))
+func dataSourcePolicyDocumentMakeConditions(in []any, version string) (iamPolicyStatementConditionSet, error) {
+	out := make([]iamPolicyStatementCondition, len(in))
 	for i, itemI := range in {
 		var err error
-		item := itemI.(map[string]interface{})
-		out[i] = IAMPolicyStatementCondition{
+		item := itemI.(map[string]any)
+		out[i] = iamPolicyStatementCondition{
 			Test:     item["test"].(string),
 			Variable: item["variable"].(string),
 		}
 		out[i].Values, err = dataSourcePolicyDocumentReplaceVarsInList(
-			aws.ToStringSlice(expandStringListKeepEmpty(item[names.AttrValues].([]interface{}))),
+			aws.ToStringSlice(expandStringListKeepEmpty(item[names.AttrValues].([]any))),
 			version,
 		)
 		if err != nil {
@@ -372,15 +374,15 @@ func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (I
 			out[i].Values = itemValues[0]
 		}
 	}
-	return IAMPolicyStatementConditionSet(out), nil
+	return iamPolicyStatementConditionSet(out), nil
 }
 
-func dataSourcePolicyDocumentMakePrincipals(in []interface{}, version string) (IAMPolicyStatementPrincipalSet, error) {
-	out := make([]IAMPolicyStatementPrincipal, len(in))
+func dataSourcePolicyDocumentMakePrincipals(in []any, version string) (iamPolicyStatementPrincipalSet, error) {
+	out := make([]iamPolicyStatementPrincipal, len(in))
 	for i, itemI := range in {
 		var err error
-		item := itemI.(map[string]interface{})
-		out[i] = IAMPolicyStatementPrincipal{
+		item := itemI.(map[string]any)
+		out[i] = iamPolicyStatementPrincipal{
 			Type: item[names.AttrType].(string),
 		}
 		out[i].Identifiers, err = dataSourcePolicyDocumentReplaceVarsInList(
@@ -392,5 +394,5 @@ func dataSourcePolicyDocumentMakePrincipals(in []interface{}, version string) (I
 			return nil, fmt.Errorf("reading identifiers: %w", err)
 		}
 	}
-	return IAMPolicyStatementPrincipalSet(out), nil
+	return iamPolicyStatementPrincipalSet(out), nil
 }

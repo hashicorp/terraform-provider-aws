@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_connect_queue: Fix API limitation when assigning more than 50 Quick Connects to a queue
+```

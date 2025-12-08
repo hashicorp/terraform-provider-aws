@@ -18,6 +18,16 @@ func TestAccControlTower_serial(t *testing.T) {
 			acctest.CtDisappears: testAccLandingZone_disappears,
 			"tags":               testAccLandingZone_tags,
 		},
+		"Control": {
+			acctest.CtBasic:      testAccControl_basic,
+			acctest.CtDisappears: testAccControl_disappears,
+			"parameters":         testAccControl_parameters,
+		},
+		"Baseline": {
+			acctest.CtBasic:      testAccBaseline_basic,
+			acctest.CtDisappears: testAccBaseline_disappears,
+			"tags":               testAccBaseline_tags,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

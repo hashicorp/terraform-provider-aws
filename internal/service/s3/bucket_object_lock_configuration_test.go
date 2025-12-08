@@ -345,7 +345,7 @@ resource "aws_s3_bucket_object_lock_configuration" "test" {
 }
 
 func testAccBucketObjectLockConfigurationConfig_directoryBucket(bucketName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucketName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

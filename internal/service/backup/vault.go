@@ -81,12 +81,10 @@ func resourceVault() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -111,7 +109,7 @@ func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceVaultRead(ctx, d, meta)...)
 }
 
-func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -135,7 +133,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -143,7 +141,7 @@ func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceVaultRead(ctx, d, meta)...)
 }
 
-func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -220,11 +218,11 @@ func findBackupVaultByName(ctx context.Context, conn *backup.Client, name string
 }
 
 func findVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) {
-	input := &backup.DescribeBackupVaultInput{
+	input := backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(name),
 	}
 
-	output, err := findVault(ctx, conn, input)
+	output, err := findVault(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -285,7 +283,7 @@ func findRecoveryPoint(ctx context.Context, conn *backup.Client, input *backup.D
 }
 
 func statusRecoveryPoint(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findRecoveryPointByTwoPartKey(ctx, conn, backupVaultName, recoveryPointARN)
 
 		if tfresource.NotFound(err) {

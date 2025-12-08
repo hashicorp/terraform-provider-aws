@@ -48,6 +48,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `names` - (Optional) List of autoscaling group names
 * `filter` - (Optional) Filter used to scope the list e.g., by tags. See [related docs](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_Filter.html).
     * `name` - (Required) Name of the DescribeAutoScalingGroup filter. The recommended values are: `tag-key`, `tag-value`, and `tag:<tag name>`
@@ -61,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `names` - List of the Autoscaling Groups in the current region.
 
-<!-- cache-key: cdktf-0.20.8 input-20b7e19884e3bc895f27ed095f08d88d8a126a02daa27f2150766b85f3e730ed -->
+<!-- cache-key: cdktf-0.20.8 input-02ddb0e88b76eab173cc5e691a173f42be863328c51e02f8a0d602539cccf5e6 -->

@@ -267,7 +267,7 @@ resource "aws_s3_bucket_request_payment_configuration" "test" {
 }
 
 func testAccBucketRequestPaymentConfigurationConfig_directoryBucket(rName, payer string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

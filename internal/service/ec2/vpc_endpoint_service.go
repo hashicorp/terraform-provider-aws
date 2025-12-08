@@ -5,12 +5,10 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -156,12 +154,10 @@ func resourceVPCEndpointService() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -217,9 +213,10 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceVPCEndpointServiceRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	svcCfg, err := findVPCEndpointServiceConfigurationByID(ctx, conn, d.Id())
 
@@ -234,14 +231,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, vpcEndpointServiceARN(ctx, c, d.Id()))
 	d.Set(names.AttrAvailabilityZones, svcCfg.AvailabilityZones)
 	d.Set("base_endpoint_dns_names", svcCfg.BaseEndpointDnsNames)
 	d.Set("gateway_load_balancer_arns", svcCfg.GatewayLoadBalancerArns)
@@ -250,7 +240,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("private_dns_name", svcCfg.PrivateDnsName)
 	// The EC2 API can return a XML structure with no elements.
 	if tfMap := flattenPrivateDNSNameConfiguration(svcCfg.PrivateDnsNameConfiguration); len(tfMap) > 0 {
-		if err := d.Set("private_dns_name_configuration", []interface{}{tfMap}); err != nil {
+		if err := d.Set("private_dns_name_configuration", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting private_dns_name_configuration: %s", err)
 		}
 	} else {
@@ -279,7 +269,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -328,7 +318,7 @@ func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceVPCEndpointServiceRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointServiceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -367,12 +357,12 @@ func flattenAllowedPrincipals(apiObjects []awstypes.AllowedPrincipal) []string {
 	})
 }
 
-func flattenPrivateDNSNameConfiguration(apiObject *awstypes.PrivateDnsNameConfiguration) map[string]interface{} {
+func flattenPrivateDNSNameConfiguration(apiObject *awstypes.PrivateDnsNameConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)
@@ -405,4 +395,12 @@ func flattenSupportedRegionDetails(apiObjects []awstypes.SupportedRegionDetail) 
 	return tfslices.ApplyToAll(apiObjects, func(v awstypes.SupportedRegionDetail) string {
 		return aws.ToString(v.Region)
 	})
+}
+
+func vpcEndpointServiceARN(ctx context.Context, c *conns.AWSClient, serviceID string) string {
+	return c.RegionalARN(ctx, names.EC2, "vpc-endpoint-service/"+serviceID)
+}
+
+func vpcEndpointServiceARNWithRegion(ctx context.Context, c *conns.AWSClient, region, serviceID string) string {
+	return c.RegionalARNWithRegion(ctx, names.EC2, region, "vpc-endpoint-service/"+serviceID)
 }

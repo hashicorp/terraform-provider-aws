@@ -5,15 +5,16 @@ package licensemanager
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 )
 
-func listDistributedGrantsPages(ctx context.Context, conn *licensemanager.Client, input *licensemanager.ListDistributedGrantsInput, fn func(*licensemanager.ListDistributedGrantsOutput, bool) bool) error {
+func listDistributedGrantsPages(ctx context.Context, conn *licensemanager.Client, input *licensemanager.ListDistributedGrantsInput, fn func(*licensemanager.ListDistributedGrantsOutput, bool) bool, optFns ...func(*licensemanager.Options)) error {
 	for {
-		output, err := conn.ListDistributedGrants(ctx, input)
+		output, err := conn.ListDistributedGrants(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -25,11 +26,11 @@ func listDistributedGrantsPages(ctx context.Context, conn *licensemanager.Client
 	}
 	return nil
 }
-func listLicenseConfigurationsPages(ctx context.Context, conn *licensemanager.Client, input *licensemanager.ListLicenseConfigurationsInput, fn func(*licensemanager.ListLicenseConfigurationsOutput, bool) bool) error {
+func listLicenseConfigurationsPages(ctx context.Context, conn *licensemanager.Client, input *licensemanager.ListLicenseConfigurationsInput, fn func(*licensemanager.ListLicenseConfigurationsOutput, bool) bool, optFns ...func(*licensemanager.Options)) error {
 	for {
-		output, err := conn.ListLicenseConfigurations(ctx, input)
+		output, err := conn.ListLicenseConfigurations(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -41,11 +42,11 @@ func listLicenseConfigurationsPages(ctx context.Context, conn *licensemanager.Cl
 	}
 	return nil
 }
-func listLicenseSpecificationsForResourcePages(ctx context.Context, conn *licensemanager.Client, input *licensemanager.ListLicenseSpecificationsForResourceInput, fn func(*licensemanager.ListLicenseSpecificationsForResourceOutput, bool) bool) error {
+func listLicenseSpecificationsForResourcePages(ctx context.Context, conn *licensemanager.Client, input *licensemanager.ListLicenseSpecificationsForResourceInput, fn func(*licensemanager.ListLicenseSpecificationsForResourceOutput, bool) bool, optFns ...func(*licensemanager.Options)) error {
 	for {
-		output, err := conn.ListLicenseSpecificationsForResource(ctx, input)
+		output, err := conn.ListLicenseSpecificationsForResource(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -57,11 +58,11 @@ func listLicenseSpecificationsForResourcePages(ctx context.Context, conn *licens
 	}
 	return nil
 }
-func listReceivedGrantsPages(ctx context.Context, conn *licensemanager.Client, input *licensemanager.ListReceivedGrantsInput, fn func(*licensemanager.ListReceivedGrantsOutput, bool) bool) error {
+func listReceivedGrantsPages(ctx context.Context, conn *licensemanager.Client, input *licensemanager.ListReceivedGrantsInput, fn func(*licensemanager.ListReceivedGrantsOutput, bool) bool, optFns ...func(*licensemanager.Options)) error {
 	for {
-		output, err := conn.ListReceivedGrants(ctx, input)
+		output, err := conn.ListReceivedGrants(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -73,11 +74,11 @@ func listReceivedGrantsPages(ctx context.Context, conn *licensemanager.Client, i
 	}
 	return nil
 }
-func listReceivedLicensesPages(ctx context.Context, conn *licensemanager.Client, input *licensemanager.ListReceivedLicensesInput, fn func(*licensemanager.ListReceivedLicensesOutput, bool) bool) error {
+func listReceivedLicensesPages(ctx context.Context, conn *licensemanager.Client, input *licensemanager.ListReceivedLicensesInput, fn func(*licensemanager.ListReceivedLicensesOutput, bool) bool, optFns ...func(*licensemanager.Options)) error {
 	for {
-		output, err := conn.ListReceivedLicenses(ctx, input)
+		output, err := conn.ListReceivedLicenses(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

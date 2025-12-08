@@ -42,10 +42,9 @@ func resourceApplication() *schema.Resource {
 		DeleteWithoutTimeout: resourceApplicationDelete,
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			customdiff.ForceNewIfChange("application_configuration.0.sql_application_configuration.0.input", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("application_configuration.0.sql_application_configuration.0.input", func(_ context.Context, old, new, meta any) bool {
 				// An existing input configuration cannot be deleted.
-				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
+				return len(old.([]any)) == 1 && len(new.([]any)) == 0
 			}),
 		),
 
@@ -117,6 +116,26 @@ func resourceApplication() *schema.Resource {
 											Type:             schema.TypeString,
 											Required:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.CodeContentType](),
+										},
+									},
+								},
+							},
+							"application_encryption_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKeyID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"key_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.KeyType](),
 										},
 									},
 								},
@@ -847,7 +866,6 @@ func resourceApplication() *schema.Resource {
 				"runtime_environment": {
 					Type:             schema.TypeString,
 					Required:         true,
-					ForceNew:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.RuntimeEnvironment](),
 				},
 				"service_execution_role": {
@@ -874,16 +892,16 @@ func resourceApplication() *schema.Resource {
 	}
 }
 
-func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
 	applicationName := d.Get(names.AttrName).(string)
 	input := &kinesisanalyticsv2.CreateApplicationInput{
-		ApplicationConfiguration: expandApplicationConfiguration(d.Get("application_configuration").([]interface{})),
+		ApplicationConfiguration: expandApplicationConfiguration(d.Get("application_configuration").([]any)),
 		ApplicationDescription:   aws.String(d.Get(names.AttrDescription).(string)),
 		ApplicationName:          aws.String(applicationName),
-		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
+		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]any)),
 		RuntimeEnvironment:       awstypes.RuntimeEnvironment(d.Get("runtime_environment").(string)),
 		ServiceExecutionRole:     aws.String(d.Get("service_execution_role").(string)),
 		Tags:                     getTagsIn(ctx),
@@ -914,7 +932,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
@@ -950,12 +968,12 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 	applicationName := d.Get(names.AttrName).(string)
 
-	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
+	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "runtime_environment", "service_execution_role") {
 		currentApplicationVersionID := int64(d.Get("version_id").(int))
 		updateApplication := false
 
@@ -967,25 +985,31 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			applicationConfigurationUpdate := &awstypes.ApplicationConfigurationUpdate{}
 
 			if d.HasChange("application_configuration.0.application_code_configuration") {
-				applicationConfigurationUpdate.ApplicationCodeConfigurationUpdate = expandApplicationCodeConfigurationUpdate(d.Get("application_configuration.0.application_code_configuration").([]interface{}))
+				applicationConfigurationUpdate.ApplicationCodeConfigurationUpdate = expandApplicationCodeConfigurationUpdate(d.Get("application_configuration.0.application_code_configuration").([]any))
+
+				updateApplication = true
+			}
+
+			if d.HasChange("application_configuration.0.application_encryption_configuration") {
+				applicationConfigurationUpdate.ApplicationEncryptionConfigurationUpdate = expandApplicationEncryptionConfigurationUpdate(d.Get("application_configuration.0.application_encryption_configuration").([]any))
 
 				updateApplication = true
 			}
 
 			if d.HasChange("application_configuration.0.application_snapshot_configuration") {
-				applicationConfigurationUpdate.ApplicationSnapshotConfigurationUpdate = expandApplicationSnapshotConfigurationUpdate(d.Get("application_configuration.0.application_snapshot_configuration").([]interface{}))
+				applicationConfigurationUpdate.ApplicationSnapshotConfigurationUpdate = expandApplicationSnapshotConfigurationUpdate(d.Get("application_configuration.0.application_snapshot_configuration").([]any))
 
 				updateApplication = true
 			}
 
 			if d.HasChange("application_configuration.0.environment_properties") {
-				applicationConfigurationUpdate.EnvironmentPropertyUpdates = expandEnvironmentPropertyUpdates(d.Get("application_configuration.0.environment_properties").([]interface{}))
+				applicationConfigurationUpdate.EnvironmentPropertyUpdates = expandEnvironmentPropertyUpdates(d.Get("application_configuration.0.environment_properties").([]any))
 
 				updateApplication = true
 			}
 
 			if d.HasChange("application_configuration.0.flink_application_configuration") {
-				applicationConfigurationUpdate.FlinkApplicationConfigurationUpdate = expandApplicationFlinkApplicationConfigurationUpdate(d.Get("application_configuration.0.flink_application_configuration").([]interface{}))
+				applicationConfigurationUpdate.FlinkApplicationConfigurationUpdate = expandApplicationFlinkApplicationConfigurationUpdate(d.Get("application_configuration.0.flink_application_configuration").([]any))
 
 				updateApplication = true
 			}
@@ -996,12 +1020,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				if d.HasChange("application_configuration.0.sql_application_configuration.0.input") {
 					o, n := d.GetChange("application_configuration.0.sql_application_configuration.0.input")
 
-					if len(o.([]interface{})) == 0 {
+					if len(o.([]any)) == 0 {
 						// Add new input.
 						input := &kinesisanalyticsv2.AddApplicationInputInput{
 							ApplicationName:             aws.String(applicationName),
 							CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
-							Input:                       expandInput(n.([]interface{})),
+							Input:                       expandInput(n.([]any)),
 						}
 
 						output, err := waitIAMPropagation(ctx, func() (*kinesisanalyticsv2.AddApplicationInputOutput, error) {
@@ -1017,26 +1041,26 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 						}
 
 						currentApplicationVersionID = aws.ToInt64(output.ApplicationVersionId)
-					} else if len(n.([]interface{})) == 0 {
+					} else if len(n.([]any)) == 0 {
 						// The existing input cannot be deleted.
 						// This should be handled by the CustomizeDiff function above.
 						return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s) input", d.Id())
 					} else {
 						// Update existing input.
-						inputUpdate := expandInputUpdate(n.([]interface{}))
+						inputUpdate := expandInputUpdate(n.([]any))
 
 						if d.HasChange("application_configuration.0.sql_application_configuration.0.input.0.input_processing_configuration") {
 							o, n := d.GetChange("application_configuration.0.sql_application_configuration.0.input.0.input_processing_configuration")
 
 							// Update of existing input processing configuration is handled via the updating of the existing input.
 
-							if len(o.([]interface{})) == 0 {
+							if len(o.([]any)) == 0 {
 								// Add new input processing configuration.
 								input := &kinesisanalyticsv2.AddApplicationInputProcessingConfigurationInput{
 									ApplicationName:              aws.String(applicationName),
 									CurrentApplicationVersionId:  aws.Int64(currentApplicationVersionID),
 									InputId:                      inputUpdate.InputId,
-									InputProcessingConfiguration: expandInputProcessingConfiguration(n.([]interface{})),
+									InputProcessingConfiguration: expandInputProcessingConfiguration(n.([]any)),
 								}
 
 								output, err := waitIAMPropagation(ctx, func() (*kinesisanalyticsv2.AddApplicationInputProcessingConfigurationOutput, error) {
@@ -1052,7 +1076,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 								}
 
 								currentApplicationVersionID = aws.ToInt64(output.ApplicationVersionId)
-							} else if len(n.([]interface{})) == 0 {
+							} else if len(n.([]any)) == 0 {
 								// Delete existing input processing configuration.
 								input := &kinesisanalyticsv2.DeleteApplicationInputProcessingConfigurationInput{
 									ApplicationName:             aws.String(applicationName),
@@ -1086,12 +1110,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 					o, n := d.GetChange("application_configuration.0.sql_application_configuration.0.output")
 					os, ns := o.(*schema.Set), n.(*schema.Set)
 
-					additions := []interface{}{}
+					additions := []any{}
 					deletions := []string{}
 
 					// Additions.
 					for _, vOutput := range ns.Difference(os).List() {
-						if v, ok := vOutput.(map[string]interface{})["output_id"].(string); ok && v != "" {
+						if v, ok := vOutput.(map[string]any)["output_id"].(string); ok && v != "" {
 							// Shouldn't be attempting to add an output with an ID.
 							log.Printf("[WARN] Attempting to add invalid Kinesis Analytics v2 Application (%s) output: %#v", d.Id(), vOutput)
 						} else {
@@ -1101,7 +1125,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 					// Deletions.
 					for _, vOutput := range os.Difference(ns).List() {
-						if v, ok := vOutput.(map[string]interface{})["output_id"].(string); ok && v != "" {
+						if v, ok := vOutput.(map[string]any)["output_id"].(string); ok && v != "" {
 							deletions = append(deletions, v)
 						} else {
 							// Shouldn't be attempting to delete an output without an ID.
@@ -1159,12 +1183,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				if d.HasChange("application_configuration.0.sql_application_configuration.0.reference_data_source") {
 					o, n := d.GetChange("application_configuration.0.sql_application_configuration.0.reference_data_source")
 
-					if len(o.([]interface{})) == 0 {
+					if len(o.([]any)) == 0 {
 						// Add new reference data source.
 						input := &kinesisanalyticsv2.AddApplicationReferenceDataSourceInput{
 							ApplicationName:             aws.String(applicationName),
 							CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
-							ReferenceDataSource:         expandReferenceDataSource(n.([]interface{})),
+							ReferenceDataSource:         expandReferenceDataSource(n.([]any)),
 						}
 
 						output, err := waitIAMPropagation(ctx, func() (*kinesisanalyticsv2.AddApplicationReferenceDataSourceOutput, error) {
@@ -1180,9 +1204,9 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 						}
 
 						currentApplicationVersionID = aws.ToInt64(output.ApplicationVersionId)
-					} else if len(n.([]interface{})) == 0 {
+					} else if len(n.([]any)) == 0 {
 						// Delete existing reference data source.
-						mOldReferenceDataSource := o.([]interface{})[0].(map[string]interface{})
+						mOldReferenceDataSource := o.([]any)[0].(map[string]any)
 
 						input := &kinesisanalyticsv2.DeleteApplicationReferenceDataSourceInput{
 							ApplicationName:             aws.String(applicationName),
@@ -1205,7 +1229,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 						currentApplicationVersionID = aws.ToInt64(output.ApplicationVersionId)
 					} else {
 						// Update existing reference data source.
-						referenceDataSourceUpdate := expandReferenceDataSourceUpdate(n.([]interface{}))
+						referenceDataSourceUpdate := expandReferenceDataSourceUpdate(n.([]any))
 
 						sqlApplicationConfigurationUpdate.ReferenceDataSourceUpdates = []awstypes.ReferenceDataSourceUpdate{referenceDataSourceUpdate}
 
@@ -1219,12 +1243,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			if d.HasChange("application_configuration.0.vpc_configuration") {
 				o, n := d.GetChange("application_configuration.0.vpc_configuration")
 
-				if len(o.([]interface{})) == 0 {
+				if len(o.([]any)) == 0 {
 					// Add new VPC configuration.
 					input := &kinesisanalyticsv2.AddApplicationVpcConfigurationInput{
 						ApplicationName:             aws.String(applicationName),
 						CurrentApplicationVersionId: aws.Int64(currentApplicationVersionID),
-						VpcConfiguration:            expandVPCConfiguration(n.([]interface{})),
+						VpcConfiguration:            expandVPCConfiguration(n.([]any)),
 					}
 
 					output, err := waitIAMPropagation(ctx, func() (*kinesisanalyticsv2.AddApplicationVpcConfigurationOutput, error) {
@@ -1246,9 +1270,9 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 					}
 
 					currentApplicationVersionID = aws.ToInt64(output.ApplicationVersionId)
-				} else if len(n.([]interface{})) == 0 {
+				} else if len(n.([]any)) == 0 {
 					// Delete existing VPC configuration.
-					mOldVpcConfiguration := o.([]interface{})[0].(map[string]interface{})
+					mOldVpcConfiguration := o.([]any)[0].(map[string]any)
 
 					input := &kinesisanalyticsv2.DeleteApplicationVpcConfigurationInput{
 						ApplicationName:             aws.String(applicationName),
@@ -1277,23 +1301,9 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 					currentApplicationVersionID = aws.ToInt64(output.ApplicationVersionId)
 				} else {
 					// Update existing VPC configuration.
-					vpcConfigurationUpdate := expandVPCConfigurationUpdate(n.([]interface{}))
+					vpcConfigurationUpdate := expandVPCConfigurationUpdate(n.([]any))
 
 					applicationConfigurationUpdate.VpcConfigurationUpdates = []awstypes.VpcConfigurationUpdate{vpcConfigurationUpdate}
-
-					updateApplication = true
-				}
-			}
-
-			if d.HasChange("application_configuration.0.run_configuration") {
-				application, err := findApplicationDetailByName(ctx, conn, applicationName)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", applicationName, err)
-				}
-
-				if actual, expected := application.ApplicationStatus, awstypes.ApplicationStatusRunning; actual == expected {
-					input.RunConfigurationUpdate = expandRunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]interface{}))
 
 					updateApplication = true
 				}
@@ -1305,9 +1315,9 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if d.HasChange("cloudwatch_logging_options") {
 			o, n := d.GetChange("cloudwatch_logging_options")
 
-			if len(o.([]interface{})) == 0 {
+			if len(o.([]any)) == 0 {
 				// Add new CloudWatch logging options.
-				mNewCloudWatchLoggingOption := n.([]interface{})[0].(map[string]interface{})
+				mNewCloudWatchLoggingOption := n.([]any)[0].(map[string]any)
 
 				input := &kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionInput{
 					ApplicationName: aws.String(applicationName),
@@ -1336,9 +1346,9 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 
 				currentApplicationVersionID = aws.ToInt64(output.ApplicationVersionId)
-			} else if len(n.([]interface{})) == 0 {
+			} else if len(n.([]any)) == 0 {
 				// Delete existing CloudWatch logging options.
-				mOldCloudWatchLoggingOption := o.([]interface{})[0].(map[string]interface{})
+				mOldCloudWatchLoggingOption := o.([]any)[0].(map[string]any)
 
 				input := &kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionInput{
 					ApplicationName:             aws.String(applicationName),
@@ -1367,8 +1377,8 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				currentApplicationVersionID = aws.ToInt64(output.ApplicationVersionId)
 			} else {
 				// Update existing CloudWatch logging options.
-				mOldCloudWatchLoggingOption := o.([]interface{})[0].(map[string]interface{})
-				mNewCloudWatchLoggingOption := n.([]interface{})[0].(map[string]interface{})
+				mOldCloudWatchLoggingOption := o.([]any)[0].(map[string]any)
+				mNewCloudWatchLoggingOption := n.([]any)[0].(map[string]any)
 
 				input.CloudWatchLoggingOptionUpdates = []awstypes.CloudWatchLoggingOptionUpdate{
 					{
@@ -1387,7 +1397,24 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			updateApplication = true
 		}
 
+		if d.HasChange("runtime_environment") {
+			input.RuntimeEnvironmentUpdate = awstypes.RuntimeEnvironment(d.Get("runtime_environment").(string))
+
+			updateApplication = true
+		}
+
 		if updateApplication {
+			// Always send 'run_configuration', else defaults are applied.
+			application, err := findApplicationDetailByName(ctx, conn, applicationName)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", applicationName, err)
+			}
+
+			if actual, expected := application.ApplicationStatus, awstypes.ApplicationStatusRunning; actual == expected {
+				input.RunConfigurationUpdate = expandRunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]any))
+			}
+
 			input.CurrentApplicationVersionId = aws.Int64(currentApplicationVersionID)
 
 			output, err := waitIAMPropagation(ctx, func() (*kinesisanalyticsv2.UpdateApplicationOutput, error) {
@@ -1425,7 +1452,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
@@ -1457,7 +1484,7 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceApplicationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceApplicationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	arn, err := arn.Parse(d.Id())
 	if err != nil {
 		return []*schema.ResourceData{}, fmt.Errorf("parsing ARN %q: %w", d.Id(), err)
@@ -1584,7 +1611,7 @@ func findApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.Client,
 }
 
 func statusApplication(ctx context.Context, conn *kinesisanalyticsv2.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findApplicationDetailByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -1698,7 +1725,7 @@ func findApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Clie
 }
 
 func statusApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, operationID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findApplicationOperationByTwoPartKey(ctx, conn, applicationName, operationID)
 
 		if tfresource.NotFound(err) {
@@ -1736,7 +1763,7 @@ func waitApplicationOperationSucceeded(ctx context.Context, conn *kinesisanalyti
 
 func waitIAMPropagation[T any](ctx context.Context, f func() (*T, error)) (*T, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return f()
 		},
 		func(err error) (bool, error) {
@@ -1771,29 +1798,29 @@ func waitIAMPropagation[T any](ctx context.Context, f func() (*T, error)) (*T, e
 	return outputRaw.(*T), nil
 }
 
-func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *awstypes.ApplicationConfiguration {
+func expandApplicationConfiguration(vApplicationConfiguration []any) *awstypes.ApplicationConfiguration {
 	if len(vApplicationConfiguration) == 0 || vApplicationConfiguration[0] == nil {
 		return nil
 	}
 
 	applicationConfiguration := &awstypes.ApplicationConfiguration{}
 
-	mApplicationConfiguration := vApplicationConfiguration[0].(map[string]interface{})
+	mApplicationConfiguration := vApplicationConfiguration[0].(map[string]any)
 
-	if vApplicationCodeConfiguration, ok := mApplicationConfiguration["application_code_configuration"].([]interface{}); ok && len(vApplicationCodeConfiguration) > 0 && vApplicationCodeConfiguration[0] != nil {
+	if vApplicationCodeConfiguration, ok := mApplicationConfiguration["application_code_configuration"].([]any); ok && len(vApplicationCodeConfiguration) > 0 && vApplicationCodeConfiguration[0] != nil {
 		applicationCodeConfiguration := &awstypes.ApplicationCodeConfiguration{}
 
-		mApplicationCodeConfiguration := vApplicationCodeConfiguration[0].(map[string]interface{})
+		mApplicationCodeConfiguration := vApplicationCodeConfiguration[0].(map[string]any)
 
-		if vCodeContent, ok := mApplicationCodeConfiguration["code_content"].([]interface{}); ok && len(vCodeContent) > 0 && vCodeContent[0] != nil {
+		if vCodeContent, ok := mApplicationCodeConfiguration["code_content"].([]any); ok && len(vCodeContent) > 0 && vCodeContent[0] != nil {
 			codeContent := &awstypes.CodeContent{}
 
-			mCodeContent := vCodeContent[0].(map[string]interface{})
+			mCodeContent := vCodeContent[0].(map[string]any)
 
-			if vS3ContentLocation, ok := mCodeContent["s3_content_location"].([]interface{}); ok && len(vS3ContentLocation) > 0 && vS3ContentLocation[0] != nil {
+			if vS3ContentLocation, ok := mCodeContent["s3_content_location"].([]any); ok && len(vS3ContentLocation) > 0 && vS3ContentLocation[0] != nil {
 				s3ContentLocation := &awstypes.S3ContentLocation{}
 
-				mS3ContentLocation := vS3ContentLocation[0].(map[string]interface{})
+				mS3ContentLocation := vS3ContentLocation[0].(map[string]any)
 
 				if vBucketArn, ok := mS3ContentLocation["bucket_arn"].(string); ok && vBucketArn != "" {
 					s3ContentLocation.BucketARN = aws.String(vBucketArn)
@@ -1822,10 +1849,14 @@ func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *aw
 		applicationConfiguration.ApplicationCodeConfiguration = applicationCodeConfiguration
 	}
 
-	if vApplicationSnapshotConfiguration, ok := mApplicationConfiguration["application_snapshot_configuration"].([]interface{}); ok && len(vApplicationSnapshotConfiguration) > 0 && vApplicationSnapshotConfiguration[0] != nil {
+	if vApplicationEncryptionConfiguration, ok := mApplicationConfiguration["application_encryption_configuration"].([]any); ok && len(vApplicationEncryptionConfiguration) > 0 && vApplicationEncryptionConfiguration[0] != nil {
+		applicationConfiguration.ApplicationEncryptionConfiguration = expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguration)
+	}
+
+	if vApplicationSnapshotConfiguration, ok := mApplicationConfiguration["application_snapshot_configuration"].([]any); ok && len(vApplicationSnapshotConfiguration) > 0 && vApplicationSnapshotConfiguration[0] != nil {
 		applicationSnapshotConfiguration := &awstypes.ApplicationSnapshotConfiguration{}
 
-		mApplicationSnapshotConfiguration := vApplicationSnapshotConfiguration[0].(map[string]interface{})
+		mApplicationSnapshotConfiguration := vApplicationSnapshotConfiguration[0].(map[string]any)
 
 		if vSnapshotsEnabled, ok := mApplicationSnapshotConfiguration["snapshots_enabled"].(bool); ok {
 			applicationSnapshotConfiguration.SnapshotsEnabled = aws.Bool(vSnapshotsEnabled)
@@ -1834,10 +1865,10 @@ func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *aw
 		applicationConfiguration.ApplicationSnapshotConfiguration = applicationSnapshotConfiguration
 	}
 
-	if vEnvironmentProperties, ok := mApplicationConfiguration["environment_properties"].([]interface{}); ok && len(vEnvironmentProperties) > 0 && vEnvironmentProperties[0] != nil {
+	if vEnvironmentProperties, ok := mApplicationConfiguration["environment_properties"].([]any); ok && len(vEnvironmentProperties) > 0 && vEnvironmentProperties[0] != nil {
 		environmentProperties := &awstypes.EnvironmentProperties{}
 
-		mEnvironmentProperties := vEnvironmentProperties[0].(map[string]interface{})
+		mEnvironmentProperties := vEnvironmentProperties[0].(map[string]any)
 
 		if vPropertyGroups, ok := mEnvironmentProperties["property_group"].(*schema.Set); ok && vPropertyGroups.Len() > 0 {
 			environmentProperties.PropertyGroups = expandPropertyGroups(vPropertyGroups.List())
@@ -1846,15 +1877,15 @@ func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *aw
 		applicationConfiguration.EnvironmentProperties = environmentProperties
 	}
 
-	if vFlinkApplicationConfiguration, ok := mApplicationConfiguration["flink_application_configuration"].([]interface{}); ok && len(vFlinkApplicationConfiguration) > 0 && vFlinkApplicationConfiguration[0] != nil {
+	if vFlinkApplicationConfiguration, ok := mApplicationConfiguration["flink_application_configuration"].([]any); ok && len(vFlinkApplicationConfiguration) > 0 && vFlinkApplicationConfiguration[0] != nil {
 		flinkApplicationConfiguration := &awstypes.FlinkApplicationConfiguration{}
 
-		mFlinkApplicationConfiguration := vFlinkApplicationConfiguration[0].(map[string]interface{})
+		mFlinkApplicationConfiguration := vFlinkApplicationConfiguration[0].(map[string]any)
 
-		if vCheckpointConfiguration, ok := mFlinkApplicationConfiguration["checkpoint_configuration"].([]interface{}); ok && len(vCheckpointConfiguration) > 0 && vCheckpointConfiguration[0] != nil {
+		if vCheckpointConfiguration, ok := mFlinkApplicationConfiguration["checkpoint_configuration"].([]any); ok && len(vCheckpointConfiguration) > 0 && vCheckpointConfiguration[0] != nil {
 			checkpointConfiguration := &awstypes.CheckpointConfiguration{}
 
-			mCheckpointConfiguration := vCheckpointConfiguration[0].(map[string]interface{})
+			mCheckpointConfiguration := vCheckpointConfiguration[0].(map[string]any)
 
 			if vConfigurationType, ok := mCheckpointConfiguration["configuration_type"].(string); ok && vConfigurationType != "" {
 				vConfigurationType := awstypes.ConfigurationType(vConfigurationType)
@@ -1876,10 +1907,10 @@ func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *aw
 			flinkApplicationConfiguration.CheckpointConfiguration = checkpointConfiguration
 		}
 
-		if vMonitoringConfiguration, ok := mFlinkApplicationConfiguration["monitoring_configuration"].([]interface{}); ok && len(vMonitoringConfiguration) > 0 && vMonitoringConfiguration[0] != nil {
+		if vMonitoringConfiguration, ok := mFlinkApplicationConfiguration["monitoring_configuration"].([]any); ok && len(vMonitoringConfiguration) > 0 && vMonitoringConfiguration[0] != nil {
 			monitoringConfiguration := &awstypes.MonitoringConfiguration{}
 
-			mMonitoringConfiguration := vMonitoringConfiguration[0].(map[string]interface{})
+			mMonitoringConfiguration := vMonitoringConfiguration[0].(map[string]any)
 
 			if vConfigurationType, ok := mMonitoringConfiguration["configuration_type"].(string); ok && vConfigurationType != "" {
 				vConfigurationType := awstypes.ConfigurationType(vConfigurationType)
@@ -1898,10 +1929,10 @@ func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *aw
 			flinkApplicationConfiguration.MonitoringConfiguration = monitoringConfiguration
 		}
 
-		if vParallelismConfiguration, ok := mFlinkApplicationConfiguration["parallelism_configuration"].([]interface{}); ok && len(vParallelismConfiguration) > 0 && vParallelismConfiguration[0] != nil {
+		if vParallelismConfiguration, ok := mFlinkApplicationConfiguration["parallelism_configuration"].([]any); ok && len(vParallelismConfiguration) > 0 && vParallelismConfiguration[0] != nil {
 			parallelismConfiguration := &awstypes.ParallelismConfiguration{}
 
-			mParallelismConfiguration := vParallelismConfiguration[0].(map[string]interface{})
+			mParallelismConfiguration := vParallelismConfiguration[0].(map[string]any)
 
 			if vConfigurationType, ok := mParallelismConfiguration["configuration_type"].(string); ok && vConfigurationType != "" {
 				vConfigurationType := awstypes.ConfigurationType(vConfigurationType)
@@ -1926,12 +1957,12 @@ func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *aw
 		applicationConfiguration.FlinkApplicationConfiguration = flinkApplicationConfiguration
 	}
 
-	if vSqlApplicationConfiguration, ok := mApplicationConfiguration["sql_application_configuration"].([]interface{}); ok && len(vSqlApplicationConfiguration) > 0 && vSqlApplicationConfiguration[0] != nil {
+	if vSqlApplicationConfiguration, ok := mApplicationConfiguration["sql_application_configuration"].([]any); ok && len(vSqlApplicationConfiguration) > 0 && vSqlApplicationConfiguration[0] != nil {
 		sqlApplicationConfiguration := &awstypes.SqlApplicationConfiguration{}
 
-		mSqlApplicationConfiguration := vSqlApplicationConfiguration[0].(map[string]interface{})
+		mSqlApplicationConfiguration := vSqlApplicationConfiguration[0].(map[string]any)
 
-		if vInput, ok := mSqlApplicationConfiguration["input"].([]interface{}); ok && len(vInput) > 0 && vInput[0] != nil {
+		if vInput, ok := mSqlApplicationConfiguration["input"].([]any); ok && len(vInput) > 0 && vInput[0] != nil {
 			sqlApplicationConfiguration.Inputs = []awstypes.Input{*expandInput(vInput)}
 		}
 
@@ -1939,38 +1970,38 @@ func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *aw
 			sqlApplicationConfiguration.Outputs = expandOutputs(vOutputs.List())
 		}
 
-		if vReferenceDataSource, ok := mSqlApplicationConfiguration["reference_data_source"].([]interface{}); ok && len(vReferenceDataSource) > 0 && vReferenceDataSource[0] != nil {
+		if vReferenceDataSource, ok := mSqlApplicationConfiguration["reference_data_source"].([]any); ok && len(vReferenceDataSource) > 0 && vReferenceDataSource[0] != nil {
 			sqlApplicationConfiguration.ReferenceDataSources = []awstypes.ReferenceDataSource{*expandReferenceDataSource(vReferenceDataSource)}
 		}
 
 		applicationConfiguration.SqlApplicationConfiguration = sqlApplicationConfiguration
 	}
 
-	if vVpcConfiguration, ok := mApplicationConfiguration[names.AttrVPCConfiguration].([]interface{}); ok && len(vVpcConfiguration) > 0 && vVpcConfiguration[0] != nil {
+	if vVpcConfiguration, ok := mApplicationConfiguration[names.AttrVPCConfiguration].([]any); ok && len(vVpcConfiguration) > 0 && vVpcConfiguration[0] != nil {
 		applicationConfiguration.VpcConfigurations = []awstypes.VpcConfiguration{*expandVPCConfiguration(vVpcConfiguration)}
 	}
 
 	return applicationConfiguration
 }
 
-func expandApplicationCodeConfigurationUpdate(vApplicationCodeConfiguration []interface{}) *awstypes.ApplicationCodeConfigurationUpdate {
+func expandApplicationCodeConfigurationUpdate(vApplicationCodeConfiguration []any) *awstypes.ApplicationCodeConfigurationUpdate {
 	if len(vApplicationCodeConfiguration) == 0 || vApplicationCodeConfiguration[0] == nil {
 		return nil
 	}
 
 	applicationCodeConfigurationUpdate := &awstypes.ApplicationCodeConfigurationUpdate{}
 
-	mApplicationCodeConfiguration := vApplicationCodeConfiguration[0].(map[string]interface{})
+	mApplicationCodeConfiguration := vApplicationCodeConfiguration[0].(map[string]any)
 
-	if vCodeContent, ok := mApplicationCodeConfiguration["code_content"].([]interface{}); ok && len(vCodeContent) > 0 && vCodeContent[0] != nil {
+	if vCodeContent, ok := mApplicationCodeConfiguration["code_content"].([]any); ok && len(vCodeContent) > 0 && vCodeContent[0] != nil {
 		codeContentUpdate := &awstypes.CodeContentUpdate{}
 
-		mCodeContent := vCodeContent[0].(map[string]interface{})
+		mCodeContent := vCodeContent[0].(map[string]any)
 
-		if vS3ContentLocation, ok := mCodeContent["s3_content_location"].([]interface{}); ok && len(vS3ContentLocation) > 0 && vS3ContentLocation[0] != nil {
+		if vS3ContentLocation, ok := mCodeContent["s3_content_location"].([]any); ok && len(vS3ContentLocation) > 0 && vS3ContentLocation[0] != nil {
 			s3ContentLocationUpdate := &awstypes.S3ContentLocationUpdate{}
 
-			mS3ContentLocation := vS3ContentLocation[0].(map[string]interface{})
+			mS3ContentLocation := vS3ContentLocation[0].(map[string]any)
 
 			if vBucketArn, ok := mS3ContentLocation["bucket_arn"].(string); ok && vBucketArn != "" {
 				s3ContentLocationUpdate.BucketARNUpdate = aws.String(vBucketArn)
@@ -1999,19 +2030,19 @@ func expandApplicationCodeConfigurationUpdate(vApplicationCodeConfiguration []in
 	return applicationCodeConfigurationUpdate
 }
 
-func expandApplicationFlinkApplicationConfigurationUpdate(vFlinkApplicationConfiguration []interface{}) *awstypes.FlinkApplicationConfigurationUpdate {
+func expandApplicationFlinkApplicationConfigurationUpdate(vFlinkApplicationConfiguration []any) *awstypes.FlinkApplicationConfigurationUpdate {
 	if len(vFlinkApplicationConfiguration) == 0 || vFlinkApplicationConfiguration[0] == nil {
 		return nil
 	}
 
 	flinkApplicationConfigurationUpdate := &awstypes.FlinkApplicationConfigurationUpdate{}
 
-	mFlinkApplicationConfiguration := vFlinkApplicationConfiguration[0].(map[string]interface{})
+	mFlinkApplicationConfiguration := vFlinkApplicationConfiguration[0].(map[string]any)
 
-	if vCheckpointConfiguration, ok := mFlinkApplicationConfiguration["checkpoint_configuration"].([]interface{}); ok && len(vCheckpointConfiguration) > 0 && vCheckpointConfiguration[0] != nil {
+	if vCheckpointConfiguration, ok := mFlinkApplicationConfiguration["checkpoint_configuration"].([]any); ok && len(vCheckpointConfiguration) > 0 && vCheckpointConfiguration[0] != nil {
 		checkpointConfigurationUpdate := &awstypes.CheckpointConfigurationUpdate{}
 
-		mCheckpointConfiguration := vCheckpointConfiguration[0].(map[string]interface{})
+		mCheckpointConfiguration := vCheckpointConfiguration[0].(map[string]any)
 
 		if vConfigurationType, ok := mCheckpointConfiguration["configuration_type"].(string); ok && vConfigurationType != "" {
 			vConfigurationType := awstypes.ConfigurationType(vConfigurationType)
@@ -2033,10 +2064,10 @@ func expandApplicationFlinkApplicationConfigurationUpdate(vFlinkApplicationConfi
 		flinkApplicationConfigurationUpdate.CheckpointConfigurationUpdate = checkpointConfigurationUpdate
 	}
 
-	if vMonitoringConfiguration, ok := mFlinkApplicationConfiguration["monitoring_configuration"].([]interface{}); ok && len(vMonitoringConfiguration) > 0 && vMonitoringConfiguration[0] != nil {
+	if vMonitoringConfiguration, ok := mFlinkApplicationConfiguration["monitoring_configuration"].([]any); ok && len(vMonitoringConfiguration) > 0 && vMonitoringConfiguration[0] != nil {
 		monitoringConfigurationUpdate := &awstypes.MonitoringConfigurationUpdate{}
 
-		mMonitoringConfiguration := vMonitoringConfiguration[0].(map[string]interface{})
+		mMonitoringConfiguration := vMonitoringConfiguration[0].(map[string]any)
 
 		if vConfigurationType, ok := mMonitoringConfiguration["configuration_type"].(string); ok && vConfigurationType != "" {
 			vConfigurationType := awstypes.ConfigurationType(vConfigurationType)
@@ -2055,10 +2086,10 @@ func expandApplicationFlinkApplicationConfigurationUpdate(vFlinkApplicationConfi
 		flinkApplicationConfigurationUpdate.MonitoringConfigurationUpdate = monitoringConfigurationUpdate
 	}
 
-	if vParallelismConfiguration, ok := mFlinkApplicationConfiguration["parallelism_configuration"].([]interface{}); ok && len(vParallelismConfiguration) > 0 && vParallelismConfiguration[0] != nil {
+	if vParallelismConfiguration, ok := mFlinkApplicationConfiguration["parallelism_configuration"].([]any); ok && len(vParallelismConfiguration) > 0 && vParallelismConfiguration[0] != nil {
 		parallelismConfigurationUpdate := &awstypes.ParallelismConfigurationUpdate{}
 
-		mParallelismConfiguration := vParallelismConfiguration[0].(map[string]interface{})
+		mParallelismConfiguration := vParallelismConfiguration[0].(map[string]any)
 
 		if vConfigurationType, ok := mParallelismConfiguration["configuration_type"].(string); ok && vConfigurationType != "" {
 			vConfigurationType := awstypes.ConfigurationType(vConfigurationType)
@@ -2083,14 +2114,14 @@ func expandApplicationFlinkApplicationConfigurationUpdate(vFlinkApplicationConfi
 	return flinkApplicationConfigurationUpdate
 }
 
-func expandApplicationSnapshotConfigurationUpdate(vApplicationSnapshotConfiguration []interface{}) *awstypes.ApplicationSnapshotConfigurationUpdate {
+func expandApplicationSnapshotConfigurationUpdate(vApplicationSnapshotConfiguration []any) *awstypes.ApplicationSnapshotConfigurationUpdate {
 	if len(vApplicationSnapshotConfiguration) == 0 || vApplicationSnapshotConfiguration[0] == nil {
 		return nil
 	}
 
 	applicationSnapshotConfigurationUpdate := &awstypes.ApplicationSnapshotConfigurationUpdate{}
 
-	mApplicationSnapshotConfiguration := vApplicationSnapshotConfiguration[0].(map[string]interface{})
+	mApplicationSnapshotConfiguration := vApplicationSnapshotConfiguration[0].(map[string]any)
 
 	if vSnapshotsEnabled, ok := mApplicationSnapshotConfiguration["snapshots_enabled"].(bool); ok {
 		applicationSnapshotConfigurationUpdate.SnapshotsEnabledUpdate = aws.Bool(vSnapshotsEnabled)
@@ -2099,14 +2130,14 @@ func expandApplicationSnapshotConfigurationUpdate(vApplicationSnapshotConfigurat
 	return applicationSnapshotConfigurationUpdate
 }
 
-func expandCloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []awstypes.CloudWatchLoggingOption {
+func expandCloudWatchLoggingOptions(vCloudWatchLoggingOptions []any) []awstypes.CloudWatchLoggingOption {
 	if len(vCloudWatchLoggingOptions) == 0 || vCloudWatchLoggingOptions[0] == nil {
 		return nil
 	}
 
 	cloudWatchLoggingOption := awstypes.CloudWatchLoggingOption{}
 
-	mCloudWatchLoggingOption := vCloudWatchLoggingOptions[0].(map[string]interface{})
+	mCloudWatchLoggingOption := vCloudWatchLoggingOptions[0].(map[string]any)
 
 	if vLogStreamArn, ok := mCloudWatchLoggingOption["log_stream_arn"].(string); ok && vLogStreamArn != "" {
 		cloudWatchLoggingOption.LogStreamARN = aws.String(vLogStreamArn)
@@ -2115,7 +2146,7 @@ func expandCloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []a
 	return []awstypes.CloudWatchLoggingOption{cloudWatchLoggingOption}
 }
 
-func expandEnvironmentPropertyUpdates(vEnvironmentProperties []interface{}) *awstypes.EnvironmentPropertyUpdates {
+func expandEnvironmentPropertyUpdates(vEnvironmentProperties []any) *awstypes.EnvironmentPropertyUpdates {
 	if len(vEnvironmentProperties) == 0 || vEnvironmentProperties[0] == nil {
 		// Return empty updates to remove all existing property groups.
 		return &awstypes.EnvironmentPropertyUpdates{PropertyGroups: []awstypes.PropertyGroup{}}
@@ -2123,7 +2154,7 @@ func expandEnvironmentPropertyUpdates(vEnvironmentProperties []interface{}) *aws
 
 	environmentPropertyUpdates := &awstypes.EnvironmentPropertyUpdates{}
 
-	mEnvironmentProperties := vEnvironmentProperties[0].(map[string]interface{})
+	mEnvironmentProperties := vEnvironmentProperties[0].(map[string]any)
 
 	if vPropertyGroups, ok := mEnvironmentProperties["property_group"].(*schema.Set); ok && vPropertyGroups.Len() > 0 {
 		environmentPropertyUpdates.PropertyGroups = expandPropertyGroups(vPropertyGroups.List())
@@ -2132,19 +2163,19 @@ func expandEnvironmentPropertyUpdates(vEnvironmentProperties []interface{}) *aws
 	return environmentPropertyUpdates
 }
 
-func expandInput(vInput []interface{}) *awstypes.Input {
+func expandInput(vInput []any) *awstypes.Input {
 	if len(vInput) == 0 || vInput[0] == nil {
 		return nil
 	}
 
 	input := &awstypes.Input{}
 
-	mInput := vInput[0].(map[string]interface{})
+	mInput := vInput[0].(map[string]any)
 
-	if vInputParallelism, ok := mInput["input_parallelism"].([]interface{}); ok && len(vInputParallelism) > 0 && vInputParallelism[0] != nil {
+	if vInputParallelism, ok := mInput["input_parallelism"].([]any); ok && len(vInputParallelism) > 0 && vInputParallelism[0] != nil {
 		inputParallelism := &awstypes.InputParallelism{}
 
-		mInputParallelism := vInputParallelism[0].(map[string]interface{})
+		mInputParallelism := vInputParallelism[0].(map[string]any)
 
 		if vCount, ok := mInputParallelism["count"].(int); ok {
 			inputParallelism.Count = aws.Int32(int32(vCount))
@@ -2153,18 +2184,18 @@ func expandInput(vInput []interface{}) *awstypes.Input {
 		input.InputParallelism = inputParallelism
 	}
 
-	if vInputProcessingConfiguration, ok := mInput["input_processing_configuration"].([]interface{}); ok {
+	if vInputProcessingConfiguration, ok := mInput["input_processing_configuration"].([]any); ok {
 		input.InputProcessingConfiguration = expandInputProcessingConfiguration(vInputProcessingConfiguration)
 	}
 
-	if vInputSchema, ok := mInput["input_schema"].([]interface{}); ok {
+	if vInputSchema, ok := mInput["input_schema"].([]any); ok {
 		input.InputSchema = expandSourceSchema(vInputSchema)
 	}
 
-	if vKinesisFirehoseInput, ok := mInput["kinesis_firehose_input"].([]interface{}); ok && len(vKinesisFirehoseInput) > 0 && vKinesisFirehoseInput[0] != nil {
+	if vKinesisFirehoseInput, ok := mInput["kinesis_firehose_input"].([]any); ok && len(vKinesisFirehoseInput) > 0 && vKinesisFirehoseInput[0] != nil {
 		kinesisFirehoseInput := &awstypes.KinesisFirehoseInput{}
 
-		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]interface{})
+		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]any)
 
 		if vResourceArn, ok := mKinesisFirehoseInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseInput.ResourceARN = aws.String(vResourceArn)
@@ -2173,10 +2204,10 @@ func expandInput(vInput []interface{}) *awstypes.Input {
 		input.KinesisFirehoseInput = kinesisFirehoseInput
 	}
 
-	if vKinesisStreamsInput, ok := mInput["kinesis_streams_input"].([]interface{}); ok && len(vKinesisStreamsInput) > 0 && vKinesisStreamsInput[0] != nil {
+	if vKinesisStreamsInput, ok := mInput["kinesis_streams_input"].([]any); ok && len(vKinesisStreamsInput) > 0 && vKinesisStreamsInput[0] != nil {
 		kinesisStreamsInput := &awstypes.KinesisStreamsInput{}
 
-		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]interface{})
+		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]any)
 
 		if vResourceArn, ok := mKinesisStreamsInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsInput.ResourceARN = aws.String(vResourceArn)
@@ -2192,19 +2223,19 @@ func expandInput(vInput []interface{}) *awstypes.Input {
 	return input
 }
 
-func expandInputProcessingConfiguration(vInputProcessingConfiguration []interface{}) *awstypes.InputProcessingConfiguration {
+func expandInputProcessingConfiguration(vInputProcessingConfiguration []any) *awstypes.InputProcessingConfiguration {
 	if len(vInputProcessingConfiguration) == 0 || vInputProcessingConfiguration[0] == nil {
 		return nil
 	}
 
 	inputProcessingConfiguration := &awstypes.InputProcessingConfiguration{}
 
-	mInputProcessingConfiguration := vInputProcessingConfiguration[0].(map[string]interface{})
+	mInputProcessingConfiguration := vInputProcessingConfiguration[0].(map[string]any)
 
-	if vInputLambdaProcessor, ok := mInputProcessingConfiguration["input_lambda_processor"].([]interface{}); ok && len(vInputLambdaProcessor) > 0 && vInputLambdaProcessor[0] != nil {
+	if vInputLambdaProcessor, ok := mInputProcessingConfiguration["input_lambda_processor"].([]any); ok && len(vInputLambdaProcessor) > 0 && vInputLambdaProcessor[0] != nil {
 		inputLambdaProcessor := &awstypes.InputLambdaProcessor{}
 
-		mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
+		mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]any)
 
 		if vResourceArn, ok := mInputLambdaProcessor[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			inputLambdaProcessor.ResourceARN = aws.String(vResourceArn)
@@ -2216,23 +2247,23 @@ func expandInputProcessingConfiguration(vInputProcessingConfiguration []interfac
 	return inputProcessingConfiguration
 }
 
-func expandInputUpdate(vInput []interface{}) awstypes.InputUpdate {
+func expandInputUpdate(vInput []any) awstypes.InputUpdate {
 	if len(vInput) == 0 || vInput[0] == nil {
 		return awstypes.InputUpdate{}
 	}
 
 	inputUpdate := awstypes.InputUpdate{}
 
-	mInput := vInput[0].(map[string]interface{})
+	mInput := vInput[0].(map[string]any)
 
 	if vInputId, ok := mInput["input_id"].(string); ok && vInputId != "" {
 		inputUpdate.InputId = aws.String(vInputId)
 	}
 
-	if vInputParallelism, ok := mInput["input_parallelism"].([]interface{}); ok && len(vInputParallelism) > 0 && vInputParallelism[0] != nil {
+	if vInputParallelism, ok := mInput["input_parallelism"].([]any); ok && len(vInputParallelism) > 0 && vInputParallelism[0] != nil {
 		inputParallelismUpdate := &awstypes.InputParallelismUpdate{}
 
-		mInputParallelism := vInputParallelism[0].(map[string]interface{})
+		mInputParallelism := vInputParallelism[0].(map[string]any)
 
 		if vCount, ok := mInputParallelism["count"].(int); ok {
 			inputParallelismUpdate.CountUpdate = aws.Int32(int32(vCount))
@@ -2241,15 +2272,15 @@ func expandInputUpdate(vInput []interface{}) awstypes.InputUpdate {
 		inputUpdate.InputParallelismUpdate = inputParallelismUpdate
 	}
 
-	if vInputProcessingConfiguration, ok := mInput["input_processing_configuration"].([]interface{}); ok && len(vInputProcessingConfiguration) > 0 && vInputProcessingConfiguration[0] != nil {
+	if vInputProcessingConfiguration, ok := mInput["input_processing_configuration"].([]any); ok && len(vInputProcessingConfiguration) > 0 && vInputProcessingConfiguration[0] != nil {
 		inputProcessingConfigurationUpdate := &awstypes.InputProcessingConfigurationUpdate{}
 
-		mInputProcessingConfiguration := vInputProcessingConfiguration[0].(map[string]interface{})
+		mInputProcessingConfiguration := vInputProcessingConfiguration[0].(map[string]any)
 
-		if vInputLambdaProcessor, ok := mInputProcessingConfiguration["input_lambda_processor"].([]interface{}); ok && len(vInputLambdaProcessor) > 0 && vInputLambdaProcessor[0] != nil {
+		if vInputLambdaProcessor, ok := mInputProcessingConfiguration["input_lambda_processor"].([]any); ok && len(vInputLambdaProcessor) > 0 && vInputLambdaProcessor[0] != nil {
 			inputLambdaProcessorUpdate := &awstypes.InputLambdaProcessorUpdate{}
 
-			mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
+			mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]any)
 
 			if vResourceArn, ok := mInputLambdaProcessor[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 				inputLambdaProcessorUpdate.ResourceARNUpdate = aws.String(vResourceArn)
@@ -2261,12 +2292,12 @@ func expandInputUpdate(vInput []interface{}) awstypes.InputUpdate {
 		inputUpdate.InputProcessingConfigurationUpdate = inputProcessingConfigurationUpdate
 	}
 
-	if vInputSchema, ok := mInput["input_schema"].([]interface{}); ok && len(vInputSchema) > 0 && vInputSchema[0] != nil {
+	if vInputSchema, ok := mInput["input_schema"].([]any); ok && len(vInputSchema) > 0 && vInputSchema[0] != nil {
 		inputSchemaUpdate := &awstypes.InputSchemaUpdate{}
 
-		mInputSchema := vInputSchema[0].(map[string]interface{})
+		mInputSchema := vInputSchema[0].(map[string]any)
 
-		if vRecordColumns, ok := mInputSchema["record_column"].([]interface{}); ok {
+		if vRecordColumns, ok := mInputSchema["record_column"].([]any); ok {
 			inputSchemaUpdate.RecordColumnUpdates = expandRecordColumns(vRecordColumns)
 		}
 
@@ -2274,17 +2305,17 @@ func expandInputUpdate(vInput []interface{}) awstypes.InputUpdate {
 			inputSchemaUpdate.RecordEncodingUpdate = aws.String(vRecordEncoding)
 		}
 
-		if vRecordFormat, ok := mInputSchema["record_format"].([]interface{}); ok {
+		if vRecordFormat, ok := mInputSchema["record_format"].([]any); ok {
 			inputSchemaUpdate.RecordFormatUpdate = expandRecordFormat(vRecordFormat)
 		}
 
 		inputUpdate.InputSchemaUpdate = inputSchemaUpdate
 	}
 
-	if vKinesisFirehoseInput, ok := mInput["kinesis_firehose_input"].([]interface{}); ok && len(vKinesisFirehoseInput) > 0 && vKinesisFirehoseInput[0] != nil {
+	if vKinesisFirehoseInput, ok := mInput["kinesis_firehose_input"].([]any); ok && len(vKinesisFirehoseInput) > 0 && vKinesisFirehoseInput[0] != nil {
 		kinesisFirehoseInputUpdate := &awstypes.KinesisFirehoseInputUpdate{}
 
-		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]interface{})
+		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]any)
 
 		if vResourceArn, ok := mKinesisFirehoseInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseInputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
@@ -2293,10 +2324,10 @@ func expandInputUpdate(vInput []interface{}) awstypes.InputUpdate {
 		inputUpdate.KinesisFirehoseInputUpdate = kinesisFirehoseInputUpdate
 	}
 
-	if vKinesisStreamsInput, ok := mInput["kinesis_streams_input"].([]interface{}); ok && len(vKinesisStreamsInput) > 0 && vKinesisStreamsInput[0] != nil {
+	if vKinesisStreamsInput, ok := mInput["kinesis_streams_input"].([]any); ok && len(vKinesisStreamsInput) > 0 && vKinesisStreamsInput[0] != nil {
 		kinesisStreamsInputUpdate := &awstypes.KinesisStreamsInputUpdate{}
 
-		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]interface{})
+		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]any)
 
 		if vResourceArn, ok := mKinesisStreamsInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsInputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
@@ -2312,19 +2343,19 @@ func expandInputUpdate(vInput []interface{}) awstypes.InputUpdate {
 	return inputUpdate
 }
 
-func expandOutput(vOutput interface{}) *awstypes.Output {
+func expandOutput(vOutput any) *awstypes.Output {
 	if vOutput == nil {
 		return nil
 	}
 
 	output := &awstypes.Output{}
 
-	mOutput := vOutput.(map[string]interface{})
+	mOutput := vOutput.(map[string]any)
 
-	if vDestinationSchema, ok := mOutput["destination_schema"].([]interface{}); ok && len(vDestinationSchema) > 0 && vDestinationSchema[0] != nil {
+	if vDestinationSchema, ok := mOutput["destination_schema"].([]any); ok && len(vDestinationSchema) > 0 && vDestinationSchema[0] != nil {
 		destinationSchema := &awstypes.DestinationSchema{}
 
-		mDestinationSchema := vDestinationSchema[0].(map[string]interface{})
+		mDestinationSchema := vDestinationSchema[0].(map[string]any)
 
 		if vRecordFormatType, ok := mDestinationSchema["record_format_type"].(string); ok && vRecordFormatType != "" {
 			destinationSchema.RecordFormatType = awstypes.RecordFormatType(vRecordFormatType)
@@ -2333,10 +2364,10 @@ func expandOutput(vOutput interface{}) *awstypes.Output {
 		output.DestinationSchema = destinationSchema
 	}
 
-	if vKinesisFirehoseOutput, ok := mOutput["kinesis_firehose_output"].([]interface{}); ok && len(vKinesisFirehoseOutput) > 0 && vKinesisFirehoseOutput[0] != nil {
+	if vKinesisFirehoseOutput, ok := mOutput["kinesis_firehose_output"].([]any); ok && len(vKinesisFirehoseOutput) > 0 && vKinesisFirehoseOutput[0] != nil {
 		kinesisFirehoseOutput := &awstypes.KinesisFirehoseOutput{}
 
-		mKinesisFirehoseOutput := vKinesisFirehoseOutput[0].(map[string]interface{})
+		mKinesisFirehoseOutput := vKinesisFirehoseOutput[0].(map[string]any)
 
 		if vResourceArn, ok := mKinesisFirehoseOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseOutput.ResourceARN = aws.String(vResourceArn)
@@ -2345,10 +2376,10 @@ func expandOutput(vOutput interface{}) *awstypes.Output {
 		output.KinesisFirehoseOutput = kinesisFirehoseOutput
 	}
 
-	if vKinesisStreamsOutput, ok := mOutput["kinesis_streams_output"].([]interface{}); ok && len(vKinesisStreamsOutput) > 0 && vKinesisStreamsOutput[0] != nil {
+	if vKinesisStreamsOutput, ok := mOutput["kinesis_streams_output"].([]any); ok && len(vKinesisStreamsOutput) > 0 && vKinesisStreamsOutput[0] != nil {
 		kinesisStreamsOutput := &awstypes.KinesisStreamsOutput{}
 
-		mKinesisStreamsOutput := vKinesisStreamsOutput[0].(map[string]interface{})
+		mKinesisStreamsOutput := vKinesisStreamsOutput[0].(map[string]any)
 
 		if vResourceArn, ok := mKinesisStreamsOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsOutput.ResourceARN = aws.String(vResourceArn)
@@ -2357,10 +2388,10 @@ func expandOutput(vOutput interface{}) *awstypes.Output {
 		output.KinesisStreamsOutput = kinesisStreamsOutput
 	}
 
-	if vLambdaOutput, ok := mOutput["lambda_output"].([]interface{}); ok && len(vLambdaOutput) > 0 && vLambdaOutput[0] != nil {
+	if vLambdaOutput, ok := mOutput["lambda_output"].([]any); ok && len(vLambdaOutput) > 0 && vLambdaOutput[0] != nil {
 		lambdaOutput := &awstypes.LambdaOutput{}
 
-		mLambdaOutput := vLambdaOutput[0].(map[string]interface{})
+		mLambdaOutput := vLambdaOutput[0].(map[string]any)
 
 		if vResourceArn, ok := mLambdaOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			lambdaOutput.ResourceARN = aws.String(vResourceArn)
@@ -2376,7 +2407,7 @@ func expandOutput(vOutput interface{}) *awstypes.Output {
 	return output
 }
 
-func expandOutputs(vOutputs []interface{}) []awstypes.Output {
+func expandOutputs(vOutputs []any) []awstypes.Output {
 	if len(vOutputs) == 0 {
 		return nil
 	}
@@ -2394,13 +2425,13 @@ func expandOutputs(vOutputs []interface{}) []awstypes.Output {
 	return outputs
 }
 
-func expandPropertyGroups(vPropertyGroups []interface{}) []awstypes.PropertyGroup {
+func expandPropertyGroups(vPropertyGroups []any) []awstypes.PropertyGroup {
 	propertyGroups := []awstypes.PropertyGroup{}
 
 	for _, vPropertyGroup := range vPropertyGroups {
 		propertyGroup := awstypes.PropertyGroup{}
 
-		mPropertyGroup := vPropertyGroup.(map[string]interface{})
+		mPropertyGroup := vPropertyGroup.(map[string]any)
 
 		if vPropertyGroupID, ok := mPropertyGroup["property_group_id"].(string); ok && vPropertyGroupID != "" {
 			propertyGroup.PropertyGroupId = aws.String(vPropertyGroupID)
@@ -2409,7 +2440,7 @@ func expandPropertyGroups(vPropertyGroups []interface{}) []awstypes.PropertyGrou
 			continue
 		}
 
-		if vPropertyMap, ok := mPropertyGroup["property_map"].(map[string]interface{}); ok && len(vPropertyMap) > 0 {
+		if vPropertyMap, ok := mPropertyGroup["property_map"].(map[string]any); ok && len(vPropertyMap) > 0 {
 			propertyGroup.PropertyMap = flex.ExpandStringValueMap(vPropertyMap)
 		}
 
@@ -2419,13 +2450,13 @@ func expandPropertyGroups(vPropertyGroups []interface{}) []awstypes.PropertyGrou
 	return propertyGroups
 }
 
-func expandRecordColumns(vRecordColumns []interface{}) []awstypes.RecordColumn {
+func expandRecordColumns(vRecordColumns []any) []awstypes.RecordColumn {
 	recordColumns := []awstypes.RecordColumn{}
 
 	for _, vRecordColumn := range vRecordColumns {
 		recordColumn := awstypes.RecordColumn{}
 
-		mRecordColumn := vRecordColumn.(map[string]interface{})
+		mRecordColumn := vRecordColumn.(map[string]any)
 
 		if vMapping, ok := mRecordColumn["mapping"].(string); ok && vMapping != "" {
 			recordColumn.Mapping = aws.String(vMapping)
@@ -2443,24 +2474,24 @@ func expandRecordColumns(vRecordColumns []interface{}) []awstypes.RecordColumn {
 	return recordColumns
 }
 
-func expandRecordFormat(vRecordFormat []interface{}) *awstypes.RecordFormat {
+func expandRecordFormat(vRecordFormat []any) *awstypes.RecordFormat {
 	if len(vRecordFormat) == 0 || vRecordFormat[0] == nil {
 		return nil
 	}
 
 	recordFormat := &awstypes.RecordFormat{}
 
-	mRecordFormat := vRecordFormat[0].(map[string]interface{})
+	mRecordFormat := vRecordFormat[0].(map[string]any)
 
-	if vMappingParameters, ok := mRecordFormat["mapping_parameters"].([]interface{}); ok && len(vMappingParameters) > 0 && vMappingParameters[0] != nil {
+	if vMappingParameters, ok := mRecordFormat["mapping_parameters"].([]any); ok && len(vMappingParameters) > 0 && vMappingParameters[0] != nil {
 		mappingParameters := &awstypes.MappingParameters{}
 
-		mMappingParameters := vMappingParameters[0].(map[string]interface{})
+		mMappingParameters := vMappingParameters[0].(map[string]any)
 
-		if vCsvMappingParameters, ok := mMappingParameters["csv_mapping_parameters"].([]interface{}); ok && len(vCsvMappingParameters) > 0 && vCsvMappingParameters[0] != nil {
+		if vCsvMappingParameters, ok := mMappingParameters["csv_mapping_parameters"].([]any); ok && len(vCsvMappingParameters) > 0 && vCsvMappingParameters[0] != nil {
 			csvMappingParameters := &awstypes.CSVMappingParameters{}
 
-			mCsvMappingParameters := vCsvMappingParameters[0].(map[string]interface{})
+			mCsvMappingParameters := vCsvMappingParameters[0].(map[string]any)
 
 			if vRecordColumnDelimiter, ok := mCsvMappingParameters["record_column_delimiter"].(string); ok && vRecordColumnDelimiter != "" {
 				csvMappingParameters.RecordColumnDelimiter = aws.String(vRecordColumnDelimiter)
@@ -2472,10 +2503,10 @@ func expandRecordFormat(vRecordFormat []interface{}) *awstypes.RecordFormat {
 			mappingParameters.CSVMappingParameters = csvMappingParameters
 		}
 
-		if vJsonMappingParameters, ok := mMappingParameters["json_mapping_parameters"].([]interface{}); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
+		if vJsonMappingParameters, ok := mMappingParameters["json_mapping_parameters"].([]any); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
 			jsonMappingParameters := &awstypes.JSONMappingParameters{}
 
-			mJsonMappingParameters := vJsonMappingParameters[0].(map[string]interface{})
+			mJsonMappingParameters := vJsonMappingParameters[0].(map[string]any)
 
 			if vRecordRowPath, ok := mJsonMappingParameters["record_row_path"].(string); ok && vRecordRowPath != "" {
 				jsonMappingParameters.RecordRowPath = aws.String(vRecordRowPath)
@@ -2494,23 +2525,23 @@ func expandRecordFormat(vRecordFormat []interface{}) *awstypes.RecordFormat {
 	return recordFormat
 }
 
-func expandReferenceDataSource(vReferenceDataSource []interface{}) *awstypes.ReferenceDataSource {
+func expandReferenceDataSource(vReferenceDataSource []any) *awstypes.ReferenceDataSource {
 	if len(vReferenceDataSource) == 0 || vReferenceDataSource[0] == nil {
 		return nil
 	}
 
 	referenceDataSource := &awstypes.ReferenceDataSource{}
 
-	mReferenceDataSource := vReferenceDataSource[0].(map[string]interface{})
+	mReferenceDataSource := vReferenceDataSource[0].(map[string]any)
 
-	if vReferenceSchema, ok := mReferenceDataSource["reference_schema"].([]interface{}); ok {
+	if vReferenceSchema, ok := mReferenceDataSource["reference_schema"].([]any); ok {
 		referenceDataSource.ReferenceSchema = expandSourceSchema(vReferenceSchema)
 	}
 
-	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3_reference_data_source"].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
+	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3_reference_data_source"].([]any); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
 		s3ReferenceDataSource := &awstypes.S3ReferenceDataSource{}
 
-		mS3ReferenceDataSource := vS3ReferenceDataSource[0].(map[string]interface{})
+		mS3ReferenceDataSource := vS3ReferenceDataSource[0].(map[string]any)
 
 		if vBucketArn, ok := mS3ReferenceDataSource["bucket_arn"].(string); ok && vBucketArn != "" {
 			s3ReferenceDataSource.BucketARN = aws.String(vBucketArn)
@@ -2529,27 +2560,27 @@ func expandReferenceDataSource(vReferenceDataSource []interface{}) *awstypes.Ref
 	return referenceDataSource
 }
 
-func expandReferenceDataSourceUpdate(vReferenceDataSource []interface{}) awstypes.ReferenceDataSourceUpdate {
+func expandReferenceDataSourceUpdate(vReferenceDataSource []any) awstypes.ReferenceDataSourceUpdate {
 	if len(vReferenceDataSource) == 0 || vReferenceDataSource[0] == nil {
 		return awstypes.ReferenceDataSourceUpdate{}
 	}
 
 	referenceDataSourceUpdate := awstypes.ReferenceDataSourceUpdate{}
 
-	mReferenceDataSource := vReferenceDataSource[0].(map[string]interface{})
+	mReferenceDataSource := vReferenceDataSource[0].(map[string]any)
 
 	if vReferenceId, ok := mReferenceDataSource["reference_id"].(string); ok && vReferenceId != "" {
 		referenceDataSourceUpdate.ReferenceId = aws.String(vReferenceId)
 	}
 
-	if vReferenceSchema, ok := mReferenceDataSource["reference_schema"].([]interface{}); ok {
+	if vReferenceSchema, ok := mReferenceDataSource["reference_schema"].([]any); ok {
 		referenceDataSourceUpdate.ReferenceSchemaUpdate = expandSourceSchema(vReferenceSchema)
 	}
 
-	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3_reference_data_source"].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
+	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3_reference_data_source"].([]any); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
 		s3ReferenceDataSourceUpdate := &awstypes.S3ReferenceDataSourceUpdate{}
 
-		mS3ReferenceDataSource := vS3ReferenceDataSource[0].(map[string]interface{})
+		mS3ReferenceDataSource := vS3ReferenceDataSource[0].(map[string]any)
 
 		if vBucketArn, ok := mS3ReferenceDataSource["bucket_arn"].(string); ok && vBucketArn != "" {
 			s3ReferenceDataSourceUpdate.BucketARNUpdate = aws.String(vBucketArn)
@@ -2568,16 +2599,16 @@ func expandReferenceDataSourceUpdate(vReferenceDataSource []interface{}) awstype
 	return referenceDataSourceUpdate
 }
 
-func expandSourceSchema(vSourceSchema []interface{}) *awstypes.SourceSchema {
+func expandSourceSchema(vSourceSchema []any) *awstypes.SourceSchema {
 	if len(vSourceSchema) == 0 || vSourceSchema[0] == nil {
 		return nil
 	}
 
 	sourceSchema := &awstypes.SourceSchema{}
 
-	mSourceSchema := vSourceSchema[0].(map[string]interface{})
+	mSourceSchema := vSourceSchema[0].(map[string]any)
 
-	if vRecordColumns, ok := mSourceSchema["record_column"].([]interface{}); ok {
+	if vRecordColumns, ok := mSourceSchema["record_column"].([]any); ok {
 		sourceSchema.RecordColumns = expandRecordColumns(vRecordColumns)
 	}
 
@@ -2585,21 +2616,21 @@ func expandSourceSchema(vSourceSchema []interface{}) *awstypes.SourceSchema {
 		sourceSchema.RecordEncoding = aws.String(vRecordEncoding)
 	}
 
-	if vRecordFormat, ok := mSourceSchema["record_format"].([]interface{}); ok && len(vRecordFormat) > 0 && vRecordFormat[0] != nil {
+	if vRecordFormat, ok := mSourceSchema["record_format"].([]any); ok && len(vRecordFormat) > 0 && vRecordFormat[0] != nil {
 		sourceSchema.RecordFormat = expandRecordFormat(vRecordFormat)
 	}
 
 	return sourceSchema
 }
 
-func expandVPCConfiguration(vVpcConfiguration []interface{}) *awstypes.VpcConfiguration {
+func expandVPCConfiguration(vVpcConfiguration []any) *awstypes.VpcConfiguration {
 	if len(vVpcConfiguration) == 0 || vVpcConfiguration[0] == nil {
 		return nil
 	}
 
 	vpcConfiguration := &awstypes.VpcConfiguration{}
 
-	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
+	mVpcConfiguration := vVpcConfiguration[0].(map[string]any)
 
 	if vSecurityGroupIds, ok := mVpcConfiguration[names.AttrSecurityGroupIDs].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
 		vpcConfiguration.SecurityGroupIds = flex.ExpandStringValueSet(vSecurityGroupIds)
@@ -2612,14 +2643,14 @@ func expandVPCConfiguration(vVpcConfiguration []interface{}) *awstypes.VpcConfig
 	return vpcConfiguration
 }
 
-func expandVPCConfigurationUpdate(vVpcConfiguration []interface{}) awstypes.VpcConfigurationUpdate {
+func expandVPCConfigurationUpdate(vVpcConfiguration []any) awstypes.VpcConfigurationUpdate {
 	if len(vVpcConfiguration) == 0 || vVpcConfiguration[0] == nil {
 		return awstypes.VpcConfigurationUpdate{}
 	}
 
 	vpcConfigurationUpdate := awstypes.VpcConfigurationUpdate{}
 
-	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
+	mVpcConfiguration := vVpcConfiguration[0].(map[string]any)
 
 	if vSecurityGroupIds, ok := mVpcConfiguration[names.AttrSecurityGroupIDs].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
 		vpcConfigurationUpdate.SecurityGroupIdUpdates = flex.ExpandStringValueSet(vSecurityGroupIds)
@@ -2636,19 +2667,19 @@ func expandVPCConfigurationUpdate(vVpcConfiguration []interface{}) awstypes.VpcC
 	return vpcConfigurationUpdate
 }
 
-func expandRunConfigurationUpdate(vRunConfigurationUpdate []interface{}) *awstypes.RunConfigurationUpdate {
+func expandRunConfigurationUpdate(vRunConfigurationUpdate []any) *awstypes.RunConfigurationUpdate {
 	if len(vRunConfigurationUpdate) == 0 || vRunConfigurationUpdate[0] == nil {
 		return nil
 	}
 
 	runConfigurationUpdate := &awstypes.RunConfigurationUpdate{}
 
-	mRunConfiguration := vRunConfigurationUpdate[0].(map[string]interface{})
+	mRunConfiguration := vRunConfigurationUpdate[0].(map[string]any)
 
-	if vApplicationRestoreConfiguration, ok := mRunConfiguration["application_restore_configuration"].([]interface{}); ok && len(vApplicationRestoreConfiguration) > 0 && vApplicationRestoreConfiguration[0] != nil {
+	if vApplicationRestoreConfiguration, ok := mRunConfiguration["application_restore_configuration"].([]any); ok && len(vApplicationRestoreConfiguration) > 0 && vApplicationRestoreConfiguration[0] != nil {
 		applicationRestoreConfiguration := &awstypes.ApplicationRestoreConfiguration{}
 
-		mApplicationRestoreConfiguration := vApplicationRestoreConfiguration[0].(map[string]interface{})
+		mApplicationRestoreConfiguration := vApplicationRestoreConfiguration[0].(map[string]any)
 
 		if vApplicationRestoreType, ok := mApplicationRestoreConfiguration["application_restore_type"].(string); ok && vApplicationRestoreType != "" {
 			applicationRestoreConfiguration.ApplicationRestoreType = awstypes.ApplicationRestoreType(vApplicationRestoreType)
@@ -2661,10 +2692,10 @@ func expandRunConfigurationUpdate(vRunConfigurationUpdate []interface{}) *awstyp
 		runConfigurationUpdate.ApplicationRestoreConfiguration = applicationRestoreConfiguration
 	}
 
-	if vFlinkRunConfiguration, ok := mRunConfiguration["flink_run_configuration"].([]interface{}); ok && len(vFlinkRunConfiguration) > 0 && vFlinkRunConfiguration[0] != nil {
+	if vFlinkRunConfiguration, ok := mRunConfiguration["flink_run_configuration"].([]any); ok && len(vFlinkRunConfiguration) > 0 && vFlinkRunConfiguration[0] != nil {
 		flinkRunConfiguration := &awstypes.FlinkRunConfiguration{}
 
-		mFlinkRunConfiguration := vFlinkRunConfiguration[0].(map[string]interface{})
+		mFlinkRunConfiguration := vFlinkRunConfiguration[0].(map[string]any)
 
 		if vAllowNonRestoredState, ok := mFlinkRunConfiguration["allow_non_restored_state"].(bool); ok {
 			flinkRunConfiguration.AllowNonRestoredState = aws.Bool(vAllowNonRestoredState)
@@ -2676,54 +2707,58 @@ func expandRunConfigurationUpdate(vRunConfigurationUpdate []interface{}) *awstyp
 	return runConfigurationUpdate
 }
 
-func flattenApplicationConfigurationDescription(applicationConfigurationDescription *awstypes.ApplicationConfigurationDescription) []interface{} {
+func flattenApplicationConfigurationDescription(applicationConfigurationDescription *awstypes.ApplicationConfigurationDescription) []any {
 	if applicationConfigurationDescription == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	mApplicationConfiguration := map[string]interface{}{}
+	mApplicationConfiguration := map[string]any{}
 
 	if applicationCodeConfigurationDescription := applicationConfigurationDescription.ApplicationCodeConfigurationDescription; applicationCodeConfigurationDescription != nil {
-		mApplicationCodeConfiguration := map[string]interface{}{
+		mApplicationCodeConfiguration := map[string]any{
 			"code_content_type": applicationCodeConfigurationDescription.CodeContentType,
 		}
 
 		if codeContentDescription := applicationCodeConfigurationDescription.CodeContentDescription; codeContentDescription != nil {
-			mCodeContent := map[string]interface{}{
+			mCodeContent := map[string]any{
 				"text_content": aws.ToString(codeContentDescription.TextContent),
 			}
 
 			if s3ApplicationCodeLocationDescription := codeContentDescription.S3ApplicationCodeLocationDescription; s3ApplicationCodeLocationDescription != nil {
-				mS3ContentLocation := map[string]interface{}{
+				mS3ContentLocation := map[string]any{
 					"bucket_arn":     aws.ToString(s3ApplicationCodeLocationDescription.BucketARN),
 					"file_key":       aws.ToString(s3ApplicationCodeLocationDescription.FileKey),
 					"object_version": aws.ToString(s3ApplicationCodeLocationDescription.ObjectVersion),
 				}
 
-				mCodeContent["s3_content_location"] = []interface{}{mS3ContentLocation}
+				mCodeContent["s3_content_location"] = []any{mS3ContentLocation}
 			}
 
-			mApplicationCodeConfiguration["code_content"] = []interface{}{mCodeContent}
+			mApplicationCodeConfiguration["code_content"] = []any{mCodeContent}
 		}
 
-		mApplicationConfiguration["application_code_configuration"] = []interface{}{mApplicationCodeConfiguration}
+		mApplicationConfiguration["application_code_configuration"] = []any{mApplicationCodeConfiguration}
+	}
+
+	if applicationEncryptionConfigurationDescription := applicationConfigurationDescription.ApplicationEncryptionConfigurationDescription; applicationEncryptionConfigurationDescription != nil {
+		mApplicationConfiguration["application_encryption_configuration"] = flattenApplicationEncryptionConfigurationDescription(applicationEncryptionConfigurationDescription)
 	}
 
 	if applicationSnapshotConfigurationDescription := applicationConfigurationDescription.ApplicationSnapshotConfigurationDescription; applicationSnapshotConfigurationDescription != nil {
-		mApplicationSnapshotConfiguration := map[string]interface{}{
+		mApplicationSnapshotConfiguration := map[string]any{
 			"snapshots_enabled": aws.ToBool(applicationSnapshotConfigurationDescription.SnapshotsEnabled),
 		}
 
-		mApplicationConfiguration["application_snapshot_configuration"] = []interface{}{mApplicationSnapshotConfiguration}
+		mApplicationConfiguration["application_snapshot_configuration"] = []any{mApplicationSnapshotConfiguration}
 	}
 
 	if environmentPropertyDescriptions := applicationConfigurationDescription.EnvironmentPropertyDescriptions; environmentPropertyDescriptions != nil && len(environmentPropertyDescriptions.PropertyGroupDescriptions) > 0 {
-		mEnvironmentProperties := map[string]interface{}{}
+		mEnvironmentProperties := map[string]any{}
 
-		vPropertyGroups := []interface{}{}
+		vPropertyGroups := []any{}
 
 		for _, propertyGroup := range environmentPropertyDescriptions.PropertyGroupDescriptions {
-			mPropertyGroup := map[string]interface{}{
+			mPropertyGroup := map[string]any{
 				"property_group_id": aws.ToString(propertyGroup.PropertyGroupId),
 				"property_map":      flex.FlattenStringValueMap(propertyGroup.PropertyMap),
 			}
@@ -2733,88 +2768,88 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 		mEnvironmentProperties["property_group"] = vPropertyGroups
 
-		mApplicationConfiguration["environment_properties"] = []interface{}{mEnvironmentProperties}
+		mApplicationConfiguration["environment_properties"] = []any{mEnvironmentProperties}
 	}
 
 	if flinkApplicationConfigurationDescription := applicationConfigurationDescription.FlinkApplicationConfigurationDescription; flinkApplicationConfigurationDescription != nil {
-		mFlinkApplicationConfiguration := map[string]interface{}{}
+		mFlinkApplicationConfiguration := map[string]any{}
 
 		if checkpointConfigurationDescription := flinkApplicationConfigurationDescription.CheckpointConfigurationDescription; checkpointConfigurationDescription != nil {
-			mCheckpointConfiguration := map[string]interface{}{
+			mCheckpointConfiguration := map[string]any{
 				"checkpointing_enabled":         aws.ToBool(checkpointConfigurationDescription.CheckpointingEnabled),
 				"checkpoint_interval":           aws.ToInt64(checkpointConfigurationDescription.CheckpointInterval),
 				"configuration_type":            checkpointConfigurationDescription.ConfigurationType,
 				"min_pause_between_checkpoints": aws.ToInt64(checkpointConfigurationDescription.MinPauseBetweenCheckpoints),
 			}
 
-			mFlinkApplicationConfiguration["checkpoint_configuration"] = []interface{}{mCheckpointConfiguration}
+			mFlinkApplicationConfiguration["checkpoint_configuration"] = []any{mCheckpointConfiguration}
 		}
 
 		if monitoringConfigurationDescription := flinkApplicationConfigurationDescription.MonitoringConfigurationDescription; monitoringConfigurationDescription != nil {
-			mMonitoringConfiguration := map[string]interface{}{
+			mMonitoringConfiguration := map[string]any{
 				"configuration_type": monitoringConfigurationDescription.ConfigurationType,
 				"log_level":          monitoringConfigurationDescription.LogLevel,
 				"metrics_level":      monitoringConfigurationDescription.MetricsLevel,
 			}
 
-			mFlinkApplicationConfiguration["monitoring_configuration"] = []interface{}{mMonitoringConfiguration}
+			mFlinkApplicationConfiguration["monitoring_configuration"] = []any{mMonitoringConfiguration}
 		}
 
 		if parallelismConfigurationDescription := flinkApplicationConfigurationDescription.ParallelismConfigurationDescription; parallelismConfigurationDescription != nil {
-			mParallelismConfiguration := map[string]interface{}{
+			mParallelismConfiguration := map[string]any{
 				"auto_scaling_enabled": aws.ToBool(parallelismConfigurationDescription.AutoScalingEnabled),
 				"configuration_type":   parallelismConfigurationDescription.ConfigurationType,
 				"parallelism":          aws.ToInt32(parallelismConfigurationDescription.Parallelism),
 				"parallelism_per_kpu":  aws.ToInt32(parallelismConfigurationDescription.ParallelismPerKPU),
 			}
 
-			mFlinkApplicationConfiguration["parallelism_configuration"] = []interface{}{mParallelismConfiguration}
+			mFlinkApplicationConfiguration["parallelism_configuration"] = []any{mParallelismConfiguration}
 		}
 
-		mApplicationConfiguration["flink_application_configuration"] = []interface{}{mFlinkApplicationConfiguration}
+		mApplicationConfiguration["flink_application_configuration"] = []any{mFlinkApplicationConfiguration}
 	}
 
 	if runConfigurationDescription := applicationConfigurationDescription.RunConfigurationDescription; runConfigurationDescription != nil {
-		mRunConfiguration := map[string]interface{}{}
+		mRunConfiguration := map[string]any{}
 
 		if applicationRestoreConfigurationDescription := runConfigurationDescription.ApplicationRestoreConfigurationDescription; applicationRestoreConfigurationDescription != nil {
-			mApplicationRestoreConfiguration := map[string]interface{}{
+			mApplicationRestoreConfiguration := map[string]any{
 				"application_restore_type": applicationRestoreConfigurationDescription.ApplicationRestoreType,
 				"snapshot_name":            aws.ToString(applicationRestoreConfigurationDescription.SnapshotName),
 			}
 
-			mRunConfiguration["application_restore_configuration"] = []interface{}{mApplicationRestoreConfiguration}
+			mRunConfiguration["application_restore_configuration"] = []any{mApplicationRestoreConfiguration}
 		}
 
 		if flinkRunConfigurationDescription := runConfigurationDescription.FlinkRunConfigurationDescription; flinkRunConfigurationDescription != nil {
-			mFlinkRunConfiguration := map[string]interface{}{
+			mFlinkRunConfiguration := map[string]any{
 				"allow_non_restored_state": aws.ToBool(flinkRunConfigurationDescription.AllowNonRestoredState),
 			}
 
-			mRunConfiguration["flink_run_configuration"] = []interface{}{mFlinkRunConfiguration}
+			mRunConfiguration["flink_run_configuration"] = []any{mFlinkRunConfiguration}
 		}
 
-		mApplicationConfiguration["run_configuration"] = []interface{}{mRunConfiguration}
+		mApplicationConfiguration["run_configuration"] = []any{mRunConfiguration}
 	}
 
 	if sqlApplicationConfigurationDescription := applicationConfigurationDescription.SqlApplicationConfigurationDescription; sqlApplicationConfigurationDescription != nil {
-		mSqlApplicationConfiguration := map[string]interface{}{}
+		mSqlApplicationConfiguration := map[string]any{}
 
 		if inputDescriptions := sqlApplicationConfigurationDescription.InputDescriptions; len(inputDescriptions) > 0 {
 			inputDescription := inputDescriptions[0]
 
-			mInput := map[string]interface{}{
+			mInput := map[string]any{
 				"in_app_stream_names": inputDescription.InAppStreamNames,
 				"input_id":            aws.ToString(inputDescription.InputId),
 				names.AttrNamePrefix:  aws.ToString(inputDescription.NamePrefix),
 			}
 
 			if inputParallelism := inputDescription.InputParallelism; inputParallelism != nil {
-				mInputParallelism := map[string]interface{}{
+				mInputParallelism := map[string]any{
 					"count": aws.ToInt32(inputParallelism.Count),
 				}
 
-				mInput["input_parallelism"] = []interface{}{mInputParallelism}
+				mInput["input_parallelism"] = []any{mInputParallelism}
 			}
 
 			if inputSchema := inputDescription.InputSchema; inputSchema != nil {
@@ -2822,85 +2857,85 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			}
 
 			if inputProcessingConfigurationDescription := inputDescription.InputProcessingConfigurationDescription; inputProcessingConfigurationDescription != nil {
-				mInputProcessingConfiguration := map[string]interface{}{}
+				mInputProcessingConfiguration := map[string]any{}
 
 				if inputLambdaProcessorDescription := inputProcessingConfigurationDescription.InputLambdaProcessorDescription; inputLambdaProcessorDescription != nil {
-					mInputLambdaProcessor := map[string]interface{}{
+					mInputLambdaProcessor := map[string]any{
 						names.AttrResourceARN: aws.ToString(inputLambdaProcessorDescription.ResourceARN),
 					}
 
-					mInputProcessingConfiguration["input_lambda_processor"] = []interface{}{mInputLambdaProcessor}
+					mInputProcessingConfiguration["input_lambda_processor"] = []any{mInputLambdaProcessor}
 				}
 
-				mInput["input_processing_configuration"] = []interface{}{mInputProcessingConfiguration}
+				mInput["input_processing_configuration"] = []any{mInputProcessingConfiguration}
 			}
 
 			if inputStartingPositionConfiguration := inputDescription.InputStartingPositionConfiguration; inputStartingPositionConfiguration != nil {
-				mInputStartingPositionConfiguration := map[string]interface{}{
+				mInputStartingPositionConfiguration := map[string]any{
 					"input_starting_position": inputStartingPositionConfiguration.InputStartingPosition,
 				}
 
-				mInput["input_starting_position_configuration"] = []interface{}{mInputStartingPositionConfiguration}
+				mInput["input_starting_position_configuration"] = []any{mInputStartingPositionConfiguration}
 			}
 
 			if kinesisFirehoseInputDescription := inputDescription.KinesisFirehoseInputDescription; kinesisFirehoseInputDescription != nil {
-				mKinesisFirehoseInput := map[string]interface{}{
+				mKinesisFirehoseInput := map[string]any{
 					names.AttrResourceARN: aws.ToString(kinesisFirehoseInputDescription.ResourceARN),
 				}
 
-				mInput["kinesis_firehose_input"] = []interface{}{mKinesisFirehoseInput}
+				mInput["kinesis_firehose_input"] = []any{mKinesisFirehoseInput}
 			}
 
 			if kinesisStreamsInputDescription := inputDescription.KinesisStreamsInputDescription; kinesisStreamsInputDescription != nil {
-				mKinesisStreamsInput := map[string]interface{}{
+				mKinesisStreamsInput := map[string]any{
 					names.AttrResourceARN: aws.ToString(kinesisStreamsInputDescription.ResourceARN),
 				}
 
-				mInput["kinesis_streams_input"] = []interface{}{mKinesisStreamsInput}
+				mInput["kinesis_streams_input"] = []any{mKinesisStreamsInput}
 			}
 
-			mSqlApplicationConfiguration["input"] = []interface{}{mInput}
+			mSqlApplicationConfiguration["input"] = []any{mInput}
 		}
 
 		if outputDescriptions := sqlApplicationConfigurationDescription.OutputDescriptions; len(outputDescriptions) > 0 {
-			vOutputs := []interface{}{}
+			vOutputs := []any{}
 
 			for _, outputDescription := range outputDescriptions {
-				mOutput := map[string]interface{}{
+				mOutput := map[string]any{
 					names.AttrName: aws.ToString(outputDescription.Name),
 					"output_id":    aws.ToString(outputDescription.OutputId),
 				}
 
 				if destinationSchema := outputDescription.DestinationSchema; destinationSchema != nil {
-					mDestinationSchema := map[string]interface{}{
+					mDestinationSchema := map[string]any{
 						"record_format_type": destinationSchema.RecordFormatType,
 					}
 
-					mOutput["destination_schema"] = []interface{}{mDestinationSchema}
+					mOutput["destination_schema"] = []any{mDestinationSchema}
 				}
 
 				if kinesisFirehoseOutputDescription := outputDescription.KinesisFirehoseOutputDescription; kinesisFirehoseOutputDescription != nil {
-					mKinesisFirehoseOutput := map[string]interface{}{
+					mKinesisFirehoseOutput := map[string]any{
 						names.AttrResourceARN: aws.ToString(kinesisFirehoseOutputDescription.ResourceARN),
 					}
 
-					mOutput["kinesis_firehose_output"] = []interface{}{mKinesisFirehoseOutput}
+					mOutput["kinesis_firehose_output"] = []any{mKinesisFirehoseOutput}
 				}
 
 				if kinesisStreamsOutputDescription := outputDescription.KinesisStreamsOutputDescription; kinesisStreamsOutputDescription != nil {
-					mKinesisStreamsOutput := map[string]interface{}{
+					mKinesisStreamsOutput := map[string]any{
 						names.AttrResourceARN: aws.ToString(kinesisStreamsOutputDescription.ResourceARN),
 					}
 
-					mOutput["kinesis_streams_output"] = []interface{}{mKinesisStreamsOutput}
+					mOutput["kinesis_streams_output"] = []any{mKinesisStreamsOutput}
 				}
 
 				if lambdaOutputDescription := outputDescription.LambdaOutputDescription; lambdaOutputDescription != nil {
-					mLambdaOutput := map[string]interface{}{
+					mLambdaOutput := map[string]any{
 						names.AttrResourceARN: aws.ToString(lambdaOutputDescription.ResourceARN),
 					}
 
-					mOutput["lambda_output"] = []interface{}{mLambdaOutput}
+					mOutput["lambda_output"] = []any{mLambdaOutput}
 				}
 
 				vOutputs = append(vOutputs, mOutput)
@@ -2912,7 +2947,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 		if referenceDataSourceDescriptions := sqlApplicationConfigurationDescription.ReferenceDataSourceDescriptions; len(referenceDataSourceDescriptions) > 0 {
 			referenceDataSourceDescription := referenceDataSourceDescriptions[0]
 
-			mReferenceDataSource := map[string]interface{}{
+			mReferenceDataSource := map[string]any{
 				"reference_id":      aws.ToString(referenceDataSourceDescription.ReferenceId),
 				names.AttrTableName: aws.ToString(referenceDataSourceDescription.TableName),
 			}
@@ -2922,65 +2957,65 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			}
 
 			if s3ReferenceDataSource := referenceDataSourceDescription.S3ReferenceDataSourceDescription; s3ReferenceDataSource != nil {
-				mS3ReferenceDataSource := map[string]interface{}{
+				mS3ReferenceDataSource := map[string]any{
 					"bucket_arn": aws.ToString(s3ReferenceDataSource.BucketARN),
 					"file_key":   aws.ToString(s3ReferenceDataSource.FileKey),
 				}
 
-				mReferenceDataSource["s3_reference_data_source"] = []interface{}{mS3ReferenceDataSource}
+				mReferenceDataSource["s3_reference_data_source"] = []any{mS3ReferenceDataSource}
 			}
 
-			mSqlApplicationConfiguration["reference_data_source"] = []interface{}{mReferenceDataSource}
+			mSqlApplicationConfiguration["reference_data_source"] = []any{mReferenceDataSource}
 		}
 
-		mApplicationConfiguration["sql_application_configuration"] = []interface{}{mSqlApplicationConfiguration}
+		mApplicationConfiguration["sql_application_configuration"] = []any{mSqlApplicationConfiguration}
 	}
 
 	if vpcConfigurationDescriptions := applicationConfigurationDescription.VpcConfigurationDescriptions; len(vpcConfigurationDescriptions) > 0 {
 		vpcConfigurationDescription := vpcConfigurationDescriptions[0]
 
-		mVpcConfiguration := map[string]interface{}{
+		mVpcConfiguration := map[string]any{
 			names.AttrSecurityGroupIDs: vpcConfigurationDescription.SecurityGroupIds,
 			names.AttrSubnetIDs:        vpcConfigurationDescription.SubnetIds,
 			"vpc_configuration_id":     aws.ToString(vpcConfigurationDescription.VpcConfigurationId),
 			names.AttrVPCID:            aws.ToString(vpcConfigurationDescription.VpcId),
 		}
 
-		mApplicationConfiguration[names.AttrVPCConfiguration] = []interface{}{mVpcConfiguration}
+		mApplicationConfiguration[names.AttrVPCConfiguration] = []any{mVpcConfiguration}
 	}
 
-	return []interface{}{mApplicationConfiguration}
+	return []any{mApplicationConfiguration}
 }
 
-func flattenCloudWatchLoggingOptionDescriptions(cloudWatchLoggingOptionDescriptions []awstypes.CloudWatchLoggingOptionDescription) []interface{} {
+func flattenCloudWatchLoggingOptionDescriptions(cloudWatchLoggingOptionDescriptions []awstypes.CloudWatchLoggingOptionDescription) []any {
 	if len(cloudWatchLoggingOptionDescriptions) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
 	cloudWatchLoggingOptionDescription := cloudWatchLoggingOptionDescriptions[0]
 
-	mCloudWatchLoggingOption := map[string]interface{}{
+	mCloudWatchLoggingOption := map[string]any{
 		"cloudwatch_logging_option_id": aws.ToString(cloudWatchLoggingOptionDescription.CloudWatchLoggingOptionId),
 		"log_stream_arn":               aws.ToString(cloudWatchLoggingOptionDescription.LogStreamARN),
 	}
 
-	return []interface{}{mCloudWatchLoggingOption}
+	return []any{mCloudWatchLoggingOption}
 }
 
-func flattenSourceSchema(sourceSchema *awstypes.SourceSchema) []interface{} {
+func flattenSourceSchema(sourceSchema *awstypes.SourceSchema) []any {
 	if sourceSchema == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	mSourceSchema := map[string]interface{}{
+	mSourceSchema := map[string]any{
 		"record_encoding": aws.ToString(sourceSchema.RecordEncoding),
 	}
 
 	if len(sourceSchema.RecordColumns) > 0 {
-		vRecordColumns := []interface{}{}
+		vRecordColumns := []any{}
 
 		for _, recordColumn := range sourceSchema.RecordColumns {
-			mRecordColumn := map[string]interface{}{
+			mRecordColumn := map[string]any{
 				"mapping":      aws.ToString(recordColumn.Mapping),
 				names.AttrName: aws.ToString(recordColumn.Name),
 				"sql_type":     aws.ToString(recordColumn.SqlType),
@@ -2993,37 +3028,37 @@ func flattenSourceSchema(sourceSchema *awstypes.SourceSchema) []interface{} {
 	}
 
 	if recordFormat := sourceSchema.RecordFormat; recordFormat != nil {
-		mRecordFormat := map[string]interface{}{
+		mRecordFormat := map[string]any{
 			"record_format_type": recordFormat.RecordFormatType,
 		}
 
 		if mappingParameters := recordFormat.MappingParameters; mappingParameters != nil {
-			mMappingParameters := map[string]interface{}{}
+			mMappingParameters := map[string]any{}
 
 			if csvMappingParameters := mappingParameters.CSVMappingParameters; csvMappingParameters != nil {
-				mCsvMappingParameters := map[string]interface{}{
+				mCsvMappingParameters := map[string]any{
 					"record_column_delimiter": aws.ToString(csvMappingParameters.RecordColumnDelimiter),
 					"record_row_delimiter":    aws.ToString(csvMappingParameters.RecordRowDelimiter),
 				}
 
-				mMappingParameters["csv_mapping_parameters"] = []interface{}{mCsvMappingParameters}
+				mMappingParameters["csv_mapping_parameters"] = []any{mCsvMappingParameters}
 			}
 
 			if jsonMappingParameters := mappingParameters.JSONMappingParameters; jsonMappingParameters != nil {
-				mJsonMappingParameters := map[string]interface{}{
+				mJsonMappingParameters := map[string]any{
 					"record_row_path": aws.ToString(jsonMappingParameters.RecordRowPath),
 				}
 
-				mMappingParameters["json_mapping_parameters"] = []interface{}{mJsonMappingParameters}
+				mMappingParameters["json_mapping_parameters"] = []any{mJsonMappingParameters}
 			}
 
-			mRecordFormat["mapping_parameters"] = []interface{}{mMappingParameters}
+			mRecordFormat["mapping_parameters"] = []any{mMappingParameters}
 		}
 
-		mSourceSchema["record_format"] = []interface{}{mRecordFormat}
+		mSourceSchema["record_format"] = []any{mRecordFormat}
 	}
 
-	return []interface{}{mSourceSchema}
+	return []any{mSourceSchema}
 }
 
 func expandStartApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.StartApplicationInput {
@@ -3032,17 +3067,17 @@ func expandStartApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.Sta
 		RunConfiguration: &awstypes.RunConfiguration{},
 	}
 
-	if v, ok := d.GetOk("application_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("application_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 
-		if v, ok := tfMap["sql_application_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			tfMap := v[0].(map[string]interface{})
+		if v, ok := tfMap["sql_application_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]any)
 
-			if v, ok := tfMap["input"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				tfMap := v[0].(map[string]interface{})
+			if v, ok := tfMap["input"].([]any); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]any)
 
-				if v, ok := tfMap["input_starting_position_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-					tfMap := v[0].(map[string]interface{})
+				if v, ok := tfMap["input_starting_position_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+					tfMap := v[0].(map[string]any)
 
 					if v, ok := tfMap["input_starting_position"].(string); ok && v != "" {
 						apiObject.RunConfiguration.SqlRunConfigurations = []awstypes.SqlRunConfiguration{{
@@ -3055,11 +3090,11 @@ func expandStartApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.Sta
 			}
 		}
 
-		if v, ok := tfMap["run_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			tfMap := v[0].(map[string]interface{})
+		if v, ok := tfMap["run_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]any)
 
-			if v, ok := tfMap["application_restore_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				tfMap := v[0].(map[string]interface{})
+			if v, ok := tfMap["application_restore_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]any)
 
 				apiObject.RunConfiguration.ApplicationRestoreConfiguration = &awstypes.ApplicationRestoreConfiguration{}
 
@@ -3072,8 +3107,8 @@ func expandStartApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.Sta
 				}
 			}
 
-			if v, ok := tfMap["flink_run_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				tfMap := v[0].(map[string]interface{})
+			if v, ok := tfMap["flink_run_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]any)
 
 				if v, ok := tfMap["allow_non_restored_state"].(bool); ok {
 					apiObject.RunConfiguration.FlinkRunConfiguration = &awstypes.FlinkRunConfiguration{
@@ -3097,4 +3132,58 @@ func expandStopApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.Stop
 	}
 
 	return apiObject
+}
+
+func expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguration []any) *awstypes.ApplicationEncryptionConfiguration {
+	if len(vApplicationEncryptionConfiguration) == 0 || vApplicationEncryptionConfiguration[0] == nil {
+		return nil
+	}
+
+	mApplicationEncryptionConfiguration := vApplicationEncryptionConfiguration[0].(map[string]any)
+	applicationEncryptionConfiguration := &awstypes.ApplicationEncryptionConfiguration{}
+
+	if vKeyType, ok := mApplicationEncryptionConfiguration["key_type"].(string); ok && vKeyType != "" {
+		applicationEncryptionConfiguration.KeyType = awstypes.KeyType(vKeyType)
+	}
+
+	if vKeyID, ok := mApplicationEncryptionConfiguration[names.AttrKeyID].(string); ok && vKeyID != "" {
+		applicationEncryptionConfiguration.KeyId = aws.String(vKeyID)
+	}
+
+	return applicationEncryptionConfiguration
+}
+
+func expandApplicationEncryptionConfigurationUpdate(vApplicationEncryptionConfiguration []any) *awstypes.ApplicationEncryptionConfigurationUpdate {
+	if len(vApplicationEncryptionConfiguration) == 0 || vApplicationEncryptionConfiguration[0] == nil {
+		return nil
+	}
+
+	mApplicationEncryptionConfiguration := vApplicationEncryptionConfiguration[0].(map[string]any)
+	applicationEncryptionConfiguration := &awstypes.ApplicationEncryptionConfigurationUpdate{}
+
+	if vKeyType, ok := mApplicationEncryptionConfiguration["key_type"].(string); ok && vKeyType != "" {
+		applicationEncryptionConfiguration.KeyTypeUpdate = awstypes.KeyType(vKeyType)
+	}
+
+	if vKeyID, ok := mApplicationEncryptionConfiguration[names.AttrKeyID].(string); ok && vKeyID != "" {
+		applicationEncryptionConfiguration.KeyIdUpdate = aws.String(vKeyID)
+	}
+
+	return applicationEncryptionConfiguration
+}
+
+func flattenApplicationEncryptionConfigurationDescription(applicationEncryptionConfiguration *awstypes.ApplicationEncryptionConfigurationDescription) []any {
+	if applicationEncryptionConfiguration == nil {
+		return []any{}
+	}
+
+	mApplicationEncryptionConfiguration := map[string]any{
+		"key_type": applicationEncryptionConfiguration.KeyType,
+	}
+
+	if applicationEncryptionConfiguration.KeyId != nil {
+		mApplicationEncryptionConfiguration[names.AttrKeyID] = aws.ToString(applicationEncryptionConfiguration.KeyId)
+	}
+
+	return []any{mApplicationEncryptionConfiguration}
 }

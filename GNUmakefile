@@ -23,16 +23,45 @@ TEST_COUNT                   ?= 1
 #    - docs/makefile-cheat-sheet.md
 #    - docs/continuous-integration.md
 
+# VARIABLE REFERENCE:
+# Service-specific variables (interchangeable for user convenience):
+#   PKG=<service>     - Service name (e.g., ses, lambda, s3) - traditional usage
+#   K=<service>       - Service name (e.g., ses, lambda, s3) - shorter alias
+# 
+# Test-specific variables:
+#   T=<pattern>       - Test name pattern (e.g., TestAccLambda) - preferred
+#   TESTS=<pattern>   - Test name pattern - legacy alias for T
+#
+# Derived variables (set automatically based on above):
+#   PKG_NAME          - Full package path (e.g., internal/service/ses)
+#   SVC_DIR           - Service directory path (e.g., ./internal/service/ses)  
+#   TEST              - Test path pattern (e.g., ./internal/service/ses/...)
+#
+# Examples:
+#   make quick-fix PKG=ses     # Fix code in SES service
+#   make quick-fix K=lambda    # Same as above, but shorter (both work)
+#   make t T=TestAccRole PKG=iam  # Run specific test in IAM service
+
+# Variable consolidation for backward compatibility and user convenience:
+# - PKG and K both refer to service names (e.g., 'ses', 'lambda')  
+# - If one is provided, automatically set the other for consistency
+# - This allows 'make quick-fix PKG=ses' and 'make quick-fix K=ses' to work identically
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
 	SVC_DIR = ./internal/service/$(PKG)
 	TEST = ./$(PKG_NAME)/...
+	# Auto-set K for compatibility
+	K = $(PKG)
 endif
 
 ifneq ($(origin K), undefined)
 	PKG_NAME = internal/service/$(K)
-	SVC_DIR = ./internal/service/$(PKG)
+	SVC_DIR = ./internal/service/$(K)
 	TEST = ./$(PKG_NAME)/...
+	# Auto-set PKG for compatibility (only if not already set)
+	ifeq ($(origin PKG), undefined)
+		PKG = $(K)
+	endif
 endif
 
 ifneq ($(origin TESTS), undefined)
@@ -178,6 +207,7 @@ docs-check: ## Check provider documentation (Legacy, use caution)
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-enable-contents-check \
+		-ignore-contents-check-data-sources aws_kms_secrets,aws_kms_secret \
 		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
 		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
 		-provider-name=aws \
@@ -234,7 +264,7 @@ fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
-	@find internal -name "*.go" -type f -exec goimports -w {} \;
+	@find ./$(PKG_NAME) -name "*.go" -type f -exec goimports -w {} \;
 
 fmt: ## Fix Go source formatting
 	@echo "make: Fixing source code with gofmt..."
@@ -253,7 +283,7 @@ gen: prereq-go ## Run all Go generators
 	@echo "make: Running Go generators..."
 	$(GO_VER) generate ./...
 	# Generate service package lists last as they may depend on output of earlier generators.
-	$(GO_VER) generate ./internal/provider
+	$(GO_VER) generate ./internal/provider/...
 	$(GO_VER) generate ./internal/sweep
 
 gen-check: gen ## [CI] Provider Checks / go_generate
@@ -326,6 +356,24 @@ lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix acceptance test
 
 misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
 
+modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
+	@echo "make: Checking for modern Go code..."
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test $(TEST)
+
+modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individual services)
+	@echo "make: Fixing checks for modern Go code..."
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test $(TEST)
+
+pr-target-check: ## [CI] Check for pull request target
+	@echo "make: Checking for pull request target..."
+	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment).yml' || true); \
+	if [ -n "$$disallowed_files" ]; then \
+		echo "Error: 'pull_request_target' found in disallowed files:"; \
+		echo "$$disallowed_files"; \
+		exit 1; \
+	fi
+	@echo "make: pr-target-check passed."
+
 prereq-go: ## If $(GO_VER) is not installed, install it
 	@if ! type "$(GO_VER)" > /dev/null 2>&1 ; then \
 		echo "make: $(GO_VER) not found" ; \
@@ -364,6 +412,12 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
 
+quick-fix-heading: ## Just a heading for quick-fix
+	@echo "make: Quick fixes..."
+	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
+
+quick-fix: quick-fix-heading fmt testacc-lint-fix fix-imports modern-fix semgrep-fix website-terrafmt-fix ## Some quick fixes
+
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
 	@docker run --rm \
@@ -389,7 +443,7 @@ sane: prereq-go ## Run sane check
 		./internal/service/ecs/... \
 		./internal/service/elbv2/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsGroup_basic$$|^TestAccLogsGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -416,7 +470,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/ecs/... \
 		./internal/service/elbv2/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsGroup_basic$$|^TestAccLogsGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
 	passes=$$(( 33-$$tot_fails )) ; \
@@ -482,8 +536,7 @@ semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-constants.yml \
-		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-test-constants-temp.yml
+		--config .ci/.semgrep-test-constants.yml
 
 semgrep-docker: semgrep-validate ## Run Semgrep (Legacy, use caution)
 	@echo "make: Legacy target, use caution..."
@@ -555,6 +608,14 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
 
+semgrep-vcr: ## Enable VCR support with Semgrep --autofix
+	@echo "make: Enable VCR support with Semgrep --autofix"
+	@echo "WARNING: Because some autofixes are inside code blocks replaced by other rules,"
+	@echo "this target may need to be run twice."
+	@semgrep $(SEMGREP_ARGS) --autofix \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config internal/vcr/.semgrep-vcr.yml
+
 skaff: prereq-go ## Install skaff
 	@echo "make: Installing skaff..."
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
@@ -597,11 +658,14 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 		(echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
 
 test: prereq-go fmt-check ## Run unit tests
-	@echo "make: Running unit tests..."
-	$(GO_VER) test -count $(TEST_COUNT) $(TEST) $(TESTARGS) -timeout=15m -vet=off
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	printf "make: Running unit tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
+	$(GO_VER) test $(TEST) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout 15m -vet=off
 
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -612,6 +676,8 @@ test-compile: prereq-go ## Test package compilation
 	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off
 
 testacc: prereq-go fmt-check ## Run acceptance tests
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
 		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
@@ -673,12 +739,17 @@ tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
 	tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-enable-contents-check \
+		-ignore-contents-check-data-sources aws_kms_secrets,aws_kms_secret \
 		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_alb_trust_store,aws_alb_trust_store_revocation,aws_albs \
 		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment,aws_alb_trust_store,aws_alb_trust_store_revocation \
 		-provider-source registry.terraform.io/hashicorp/aws \
 		-providers-schema-json terraform-providers-schema/schema.json \
 		-require-resource-subcategory \
-		-ignore-cdktf-missing-files
+		-ignore-cdktf-missing-files \
+		-ignore-enhanced-region-check-subcategories-file website/ignore-enhanced-region-check-subcategories.txt \
+		-ignore-enhanced-region-check-data-sources-file website/ignore-enhanced-region-check-data-sources.txt \
+		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt \
+		-enable-enhanced-region-check
 
 tfsdk2fw: prereq-go ## Install tfsdk2fw
 	@echo "make: Installing tfsdk2fw..."
@@ -689,34 +760,41 @@ tools: prereq-go ## Install tools
 	cd .ci/providerlint && $(GO_VER) install .
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
-	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/copywrite
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
 	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
+	cd .ci/tools && $(GO_VER) install golang.org/x/tools/cmd/stringer
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
 ts: testacc-short ## Alias to testacc-short
 
-update: ## Update dependencies
+update: prereq-go ## Update dependencies
 	@echo "make: Updating dependencies..."
 	$(GO_VER) get -u ./...
-	go mod tidy	
-	cd ./tools/literally && $(GO_VER) get -u ./... && go mod tidy
-	cd ./tools/tfsdk2fw && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/tools && $(GO_VER) get -u && go mod tidy
-	cd .ci/providerlint && $(GO_VER) get -u && go mod tidy
-	cd .ci/providerlint/passes/AWSAT005/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSAT002/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSAT003/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSAT004/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSV001/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSR001/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSAT001/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && go mod tidy
-	cd ./skaff && $(GO_VER) get -u ./... && go mod tidy
+	$(GO_VER) mod tidy
+	cd ./tools/literally && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd ./tools/tfsdk2fw && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/tools && $(GO_VER) get -u && $(GO_VER) mod tidy
+	cd .ci/providerlint && $(GO_VER) get -u && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSAT005/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSAT002/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSAT003/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSAT004/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSV001/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSR001/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSAT001/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+	cd ./skaff && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+
+vcr-enable: ## Enable VCR testing
+	$(MAKE) semgrep-vcr || true
+	$(MAKE) semgrep-vcr || true
+	$(MAKE) fmt
+	goimports -w ./$(PKG_NAME)/
 
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
@@ -792,6 +870,15 @@ website-terrafmt: ## [CI] Website Checks / terrafmt
 	@echo "make: Website Checks / terrafmt..."
 	@terrafmt diff ./website --check --pattern '*.markdown'
 
+website-terrafmt-fix: ## [CI] Fix Website / terrafmt
+	@echo "make: Fix Website / terrafmt..."
+	@echo "make: Fixing website/docs root files with terrafmt..."
+	@find ./website/docs -maxdepth 1 -type f -name '*.markdown' -exec terrafmt fmt {} \;
+	@for dir in $$(find ./website/docs -maxdepth 1 -type d ! -name docs ! -name cdktf | sort); do \
+		echo "make: Fixing $$dir with terrafmt..."; \
+		terrafmt fmt $$dir --pattern '*.markdown'; \
+	done
+
 website-tflint: tflint-init ## [CI] Website Checks / tflint
 	@echo "make: Website Checks / tflint..."
 	@exit_code=0 ; \
@@ -811,7 +898,6 @@ website-tflint: tflint-init ## [CI] Website Checks / tflint
 		"--disable-rule=aws_s3_object_copy_invalid_source" \
 		"--disable-rule=aws_servicecatalog_portfolio_share_invalid_type" \
 		"--disable-rule=aws_transfer_ssh_key_invalid_body" \
-		"--disable-rule=aws_worklink_website_certificate_authority_association_invalid_certificate" \
 		"--disable-rule=terraform_unused_declarations" \
 		"--disable-rule=terraform_typed_variables" \
 	) ; \
@@ -848,94 +934,102 @@ yamllint: ## [CI] YAML Linting / yamllint
 	acctest-lint \
 	build \
 	changelog-misspell \
-	ci-quick \
 	ci \
+	ci-quick \
+	clean \
 	clean-go \
 	clean-make-tests \
 	clean-tidy \
-	clean \
 	copyright \
 	default \
 	deps-check \
+	docs \
 	docs-check \
 	docs-link-check \
-	docs-lint-fix \
 	docs-lint \
+	docs-lint-fix \
 	docs-markdown-lint \
 	docs-misspell \
-	docs \
 	examples-tflint \
 	fix-constants \
 	fix-imports \
-	fmt-check \
 	fmt \
+	fmt-check \
 	fumpt \
-	gen-check \
 	gen \
+	gen-check \
 	generate-changelog \
 	gh-workflows-lint \
 	go-build \
 	go-misspell \
+	golangci-lint \
 	golangci-lint1 \
 	golangci-lint2 \
 	golangci-lint3 \
 	golangci-lint4 \
 	golangci-lint5 \
-	golangci-lint \
 	help \
 	import-lint \
 	install \
-	lint-fix \
 	lint \
+	lint-fix \
 	misspell \
+	modern-check \
+	modern-fix \
+	pr-target-check \
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \
+	quick-fix \
+	quick-fix-heading \
 	sane \
 	sanity \
+	semgrep \
 	semgrep-all \
 	semgrep-code-quality \
 	semgrep-constants \
 	semgrep-docker \
 	semgrep-fix \
-	semgrep-naming-cae \
 	semgrep-naming \
+	semgrep-naming-cae \
 	semgrep-service-naming \
 	semgrep-validate \
-	semgrep \
-	skaff-check-compile \
+	semgrep-vcr \
 	skaff \
+	skaff-check-compile \
 	smoke \
 	sweep \
+	sweeper \
 	sweeper-check \
 	sweeper-linked \
 	sweeper-unlinked \
-	sweeper \
 	t \
-	test-compile \
 	test \
-	testacc-lint-fix \
+	test-compile \
+	testacc \
 	testacc-lint \
+	testacc-lint-fix \
 	testacc-short \
 	testacc-tflint \
 	testacc-tflint-dir \
 	testacc-tflint-embedded \
-	testacc \
 	tflint-init \
 	tfproviderdocs \
 	tfsdk2fw \
 	tools \
 	ts \
 	update \
+	vcr-enable \
+	website \
+	website-link-check \
 	website-link-check-ghrc \
 	website-link-check-markdown \
 	website-link-check-md \
-	website-link-check \
-	website-lint-fix \
 	website-lint \
+	website-lint-fix \
 	website-markdown-lint \
 	website-misspell \
 	website-terrafmt \
+	website-terrafmt-fix \
 	website-tflint \
-	website \
 	yamllint

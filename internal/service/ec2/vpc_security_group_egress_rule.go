@@ -15,7 +15,10 @@ import (
 
 // @FrameworkResource("aws_vpc_security_group_egress_rule", name="Security Group Egress Rule")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.SecurityGroupRule")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroupRule")
+// @Testing(idAttrDuplicates="security_group_rule_id")
+// @Testing(preIdentityVersion="v6.12.0")
 func newSecurityGroupEgressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupEgressRuleResource{}
 	r.securityGroupRule = r
@@ -25,10 +28,6 @@ func newSecurityGroupEgressRuleResource(context.Context) (resource.ResourceWithC
 
 type securityGroupEgressRuleResource struct {
 	securityGroupRuleResource
-}
-
-func (*securityGroupEgressRuleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_egress_rule"
 }
 
 func (*securityGroupEgressRuleResource) MoveState(ctx context.Context) []resource.StateMover {

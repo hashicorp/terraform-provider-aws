@@ -64,7 +64,7 @@ func ResourceBucketAccessKey() *schema.Resource {
 	}
 }
 
-func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -98,7 +98,7 @@ func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceBucketAccessKeyRead(ctx, d, meta)...)
 }
 
-func resourceBucketAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -123,7 +123,7 @@ func resourceBucketAccessKeyRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceBucketAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)

@@ -777,7 +777,7 @@ resource "aws_eip" "test" {
 
 resource "aws_shield_protection" "test" {
   name         = %[1]q
-  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
+  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
 }
 `, rName)
 }

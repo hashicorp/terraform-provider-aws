@@ -108,11 +108,16 @@ func resourceDatabase() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"workgroup": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
 
-func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -126,9 +131,9 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		queryString.WriteString(commentStmt)
 	}
 
-	if v, ok := d.GetOk(names.AttrProperties); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrProperties); ok && len(v.(map[string]any)) > 0 {
 		var props []string
-		for k, v := range v.(map[string]interface{}) {
+		for k, v := range v.(map[string]any) {
 			prop := fmt.Sprintf(" '%[1]s' = '%[2]s' ", k, v.(string))
 			props = append(props, prop)
 		}
@@ -139,12 +144,16 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	queryString.WriteString(";")
 
-	input := &athena.StartQueryExecutionInput{
+	input := athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString.String()),
 		ResultConfiguration: expandResultConfiguration(d),
 	}
 
-	output, err := conn.StartQueryExecution(ctx, input)
+	if v, ok := d.GetOk("workgroup"); ok {
+		input.WorkGroup = aws.String(v.(string))
+	}
+
+	output, err := conn.StartQueryExecution(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Athena Database (%s): %s", name, err)
@@ -159,7 +168,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceDatabaseRead(ctx, d, meta)...)
 }
 
-func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -182,7 +191,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -192,19 +201,28 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	queryString += ";"
 
-	input := &athena.StartQueryExecutionInput{
+	log.Printf("[DEBUG] Deleting Athena Database (%s)", d.Id())
+	input := athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString),
 		ResultConfiguration: expandResultConfiguration(d),
 	}
-
-	log.Printf("[DEBUG] Deleting Athena Database (%s)", d.Id())
-	output, err := conn.StartQueryExecution(ctx, input)
+	if v, ok := d.GetOk("workgroup"); ok {
+		input.WorkGroup = aws.String(v.(string))
+	}
+	output, err := conn.StartQueryExecution(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Database (%s): %s", d.Id(), err)
 	}
 
-	if err := executeAndExpectNoRows(ctx, conn, aws.ToString(output.QueryExecutionId)); err != nil {
+	err = executeAndExpectNoRows(ctx, conn, aws.ToString(output.QueryExecutionId))
+
+	// "reason: FAILED: SemanticException [Error 10072]: Database does not exist: ...".
+	if errs.Contains(err, "does not exist") {
+		return diags
+	}
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Database (%s): %s", d.Id(), err)
 	}
 
@@ -212,12 +230,12 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (*types.Database, error) {
-	input := &athena.GetDatabaseInput{
+	input := athena.GetDatabaseInput{
 		CatalogName:  aws.String("AwsDataCatalog"),
 		DatabaseName: aws.String(name),
 	}
 
-	output, err := conn.GetDatabase(ctx, input)
+	output, err := conn.GetDatabase(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*types.MetadataException](err, "not found") {
 		return nil, &retry.NotFoundError{
@@ -240,26 +258,26 @@ func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (
 func expandResultConfiguration(d *schema.ResourceData) *types.ResultConfiguration {
 	resultConfig := &types.ResultConfiguration{
 		OutputLocation:          aws.String("s3://" + d.Get(names.AttrBucket).(string)),
-		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
+		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get(names.AttrEncryptionConfiguration).([]any)),
 	}
 
 	if v, ok := d.GetOk(names.AttrExpectedBucketOwner); ok {
 		resultConfig.ExpectedBucketOwner = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("acl_configuration"); ok && len(v.([]interface{})) > 0 {
-		resultConfig.AclConfiguration = expandResultConfigurationACLConfig(v.([]interface{}))
+	if v, ok := d.GetOk("acl_configuration"); ok && len(v.([]any)) > 0 {
+		resultConfig.AclConfiguration = expandResultConfigurationACLConfig(v.([]any))
 	}
 
 	return resultConfig
 }
 
-func expandResultConfigurationEncryptionConfig(config []interface{}) *types.EncryptionConfiguration {
+func expandResultConfigurationEncryptionConfig(config []any) *types.EncryptionConfiguration {
 	if len(config) == 0 {
 		return nil
 	}
 
-	data := config[0].(map[string]interface{})
+	data := config[0].(map[string]any)
 
 	encryptionConfig := &types.EncryptionConfiguration{
 		EncryptionOption: types.EncryptionOption(data["encryption_option"].(string)),
@@ -272,12 +290,12 @@ func expandResultConfigurationEncryptionConfig(config []interface{}) *types.Encr
 	return encryptionConfig
 }
 
-func expandResultConfigurationACLConfig(config []interface{}) *types.AclConfiguration {
+func expandResultConfigurationACLConfig(config []any) *types.AclConfiguration {
 	if len(config) == 0 {
 		return nil
 	}
 
-	data := config[0].(map[string]interface{})
+	data := config[0].(map[string]any)
 
 	encryptionConfig := &types.AclConfiguration{
 		S3AclOption: types.S3AclOption(data["s3_acl_option"].(string)),
@@ -323,7 +341,7 @@ func queryExecutionResult(ctx context.Context, conn *athena.Client, qeid string)
 }
 
 func queryExecutionStateRefreshFunc(ctx context.Context, conn *athena.Client, qeid string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &athena.GetQueryExecutionInput{
 			QueryExecutionId: aws.String(qeid),
 		}

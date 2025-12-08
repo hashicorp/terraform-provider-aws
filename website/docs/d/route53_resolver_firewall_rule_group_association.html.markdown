@@ -24,9 +24,14 @@ data "aws_route53_resolver_firewall_rule_group_association" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `firewall_rule_group_association_id` - (Required) The identifier for the association.
 
-The following attribute is additionally exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the firewall rule group association.
 * `creation_time` - The date and time that the association was created, in Unix time format and Coordinated Universal Time (UTC).

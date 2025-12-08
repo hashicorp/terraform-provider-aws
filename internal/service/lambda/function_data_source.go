@@ -37,6 +37,34 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"capacity_provider_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"lambda_managed_instances_capacity_provider_config": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_provider_arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"execution_environment_memory_gib_per_vcpu": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"per_execution_environment_max_concurrency": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"code_sha256": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -60,6 +88,22 @@ func dataSourceFunction() *schema.Resource {
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"durable_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"execution_timeout": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						names.AttrRetentionPeriod: {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
 			},
 			names.AttrEnvironment: {
 				Type:     schema.TypeList,
@@ -194,16 +238,32 @@ func dataSourceFunction() *schema.Resource {
 			"source_code_hash": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "This attribute is deprecated and will be removed in a future major version. Use `code_sha256` instead.",
+				Deprecated: "source_code_hash is deprecated. Use code_sha256 instead.",
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"source_kms_key_arn": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			names.AttrTimeout: {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"tenancy_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tenant_isolation_mode": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"tracing_config": {
 				Type:     schema.TypeList,
@@ -251,7 +311,7 @@ func dataSourceFunction() *schema.Resource {
 	}
 }
 
-func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -282,7 +342,22 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s): %s", functionName, err)
 	}
 
+	// If Qualifier is specified, GetFunction will return nil for Concurrency.
+	// Need to fetch it separately using GetFunctionConcurrency.
+	if output.Concurrency == nil && input.Qualifier != nil {
+		outputGFC, err := findFunctionConcurrencyByName(ctx, conn, functionName)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) concurrency: %s", functionName, err)
+		}
+
+		output.Concurrency = &awstypes.Concurrency{
+			ReservedConcurrentExecutions: outputGFC.ReservedConcurrentExecutions,
+		}
+	}
+
 	function := output.Configuration
+	functionCode := output.Code
 	functionARN := aws.ToString(function.FunctionArn)
 	qualifierSuffix := fmt.Sprintf(":%s", aws.ToString(input.Qualifier))
 	versionSuffix := fmt.Sprintf(":%s", aws.ToString(function.Version))
@@ -295,19 +370,27 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(functionName)
 	d.Set("architectures", function.Architectures)
 	d.Set(names.AttrARN, unqualifiedARN)
+	if err := d.Set("capacity_provider_config", flattenCapacityProviderConfig(function.CapacityProviderConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_config: %s", err)
+	}
 	d.Set("code_sha256", function.CodeSha256)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
-		if err := d.Set("dead_letter_config", []interface{}{
-			map[string]interface{}{
+		if err := d.Set("dead_letter_config", []any{
+			map[string]any{
 				names.AttrTargetARN: aws.ToString(function.DeadLetterConfig.TargetArn),
 			},
 		}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
 		}
 	} else {
-		d.Set("dead_letter_config", []interface{}{})
+		d.Set("dead_letter_config", []any{})
 	}
 	d.Set(names.AttrDescription, function.Description)
+	if function.DurableConfig != nil {
+		if err := d.Set("durable_config", flattenDurableConfig(function.DurableConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting durable_config: %s", err)
+		}
+	}
 	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
@@ -344,13 +427,23 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
+	d.Set("source_kms_key_arn", functionCode.SourceKMSKeyArn)
 	d.Set(names.AttrTimeout, function.Timeout)
+	if function.TenancyConfig != nil {
+		if err := d.Set("tenancy_config", []any{
+			map[string]any{
+				"tenant_isolation_mode": string(function.TenancyConfig.TenantIsolationMode),
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tenancy_config: %s", err)
+		}
+	}
 	tracingConfigMode := awstypes.TracingModePassThrough
 	if function.TracingConfig != nil {
 		tracingConfigMode = function.TracingConfig.Mode
 	}
-	if err := d.Set("tracing_config", []interface{}{
-		map[string]interface{}{
+	if err := d.Set("tracing_config", []any{
+		map[string]any{
 			names.AttrMode: string(tracingConfigMode),
 		},
 	}); err != nil {

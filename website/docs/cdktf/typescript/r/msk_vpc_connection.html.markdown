@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authentication` - (Required) The authentication type for the client VPC connection. Specify one of these auth type strings: SASL_IAM, SASL_SCRAM, or TLS.
 * `clientSubnets` - (Required) The list of subnets in the client VPC to connect to.
 * `securityGroups` - (Required) The security groups to attach to the ENIs for the broker nodes.
@@ -95,4 +96,4 @@ Using `terraform import`, import MSK configurations using the configuration ARN.
 % terraform import aws_msk_vpc_connection.example arn:aws:kafka:eu-west-2:123456789012:vpc-connection/123456789012/example/38173259-79cd-4ee8-87f3-682ea6023f48-2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b1983aad22e07fb109f5b2adb453a2e83d036de6685d43ca610e71d747466b69 -->
+<!-- cache-key: cdktf-0.20.8 input-fd7789452b90caa572c1956f350e52a9aafbb4a4859cc6e76b5036f3c0ff4132 -->

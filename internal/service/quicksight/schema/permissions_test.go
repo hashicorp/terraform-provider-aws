@@ -19,33 +19,33 @@ func TestDiffPermissions(t *testing.T) {
 
 	testCases := []struct {
 		name            string
-		oldPermissions  []interface{}
-		newPermissions  []interface{}
+		oldPermissions  []any
+		newPermissions  []any
 		expectedGrants  []awstypes.ResourcePermission
 		expectedRevokes []awstypes.ResourcePermission
 	}{
 		{
 			name:            "no changes;empty",
-			oldPermissions:  []interface{}{},
-			newPermissions:  []interface{}{},
+			oldPermissions:  []any{},
+			newPermissions:  []any{},
 			expectedGrants:  nil,
 			expectedRevokes: nil,
 		},
 		{
 			name: "no changes;same",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
+			oldPermissions: []any{
+				map[string]any{
 					names.AttrPrincipal: "principal1",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"action1",
 						"action2",
 					}),
 				},
 			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
+			newPermissions: []any{
+				map[string]any{
 					names.AttrPrincipal: "principal1",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"action1",
 						"action2",
 					}),
@@ -56,11 +56,11 @@ func TestDiffPermissions(t *testing.T) {
 		},
 		{
 			name:           "grant only",
-			oldPermissions: []interface{}{},
-			newPermissions: []interface{}{
-				map[string]interface{}{
+			oldPermissions: []any{},
+			newPermissions: []any{
+				map[string]any{
 					names.AttrPrincipal: "principal1",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"action1",
 						"action2",
 					}),
@@ -76,16 +76,16 @@ func TestDiffPermissions(t *testing.T) {
 		},
 		{
 			name: "revoke only",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
+			oldPermissions: []any{
+				map[string]any{
 					names.AttrPrincipal: "principal1",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"action1",
 						"action2",
 					}),
 				},
 			},
-			newPermissions: []interface{}{},
+			newPermissions: []any{},
 			expectedGrants: nil,
 			expectedRevokes: []awstypes.ResourcePermission{
 				{
@@ -96,18 +96,18 @@ func TestDiffPermissions(t *testing.T) {
 		},
 		{
 			name: "grant new action",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
+			oldPermissions: []any{
+				map[string]any{
 					names.AttrPrincipal: "principal1",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"action1",
 					}),
 				},
 			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
+			newPermissions: []any{
+				map[string]any{
 					names.AttrPrincipal: "principal1",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"action1",
 						"action2",
 					}),
@@ -123,19 +123,19 @@ func TestDiffPermissions(t *testing.T) {
 		},
 		{
 			name: "revoke old action",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
+			oldPermissions: []any{
+				map[string]any{
 					names.AttrPrincipal: "principal1",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"oldAction",
 						"onlyOldAction",
 					}),
 				},
 			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
+			newPermissions: []any{
+				map[string]any{
 					names.AttrPrincipal: "principal1",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"oldAction",
 					}),
 				},
@@ -155,40 +155,40 @@ func TestDiffPermissions(t *testing.T) {
 		},
 		{
 			name: "multiple permissions",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
+			oldPermissions: []any{
+				map[string]any{
 					names.AttrPrincipal: "principal1",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"action1",
 						"action2",
 					}),
 				},
-				map[string]interface{}{
+				map[string]any{
 					names.AttrPrincipal: "principal2",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"action1",
 						"action3",
 						"action4",
 					}),
 				},
-				map[string]interface{}{
+				map[string]any{
 					names.AttrPrincipal: "principal3",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"action5",
 					}),
 				},
 			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
+			newPermissions: []any{
+				map[string]any{
 					names.AttrPrincipal: "principal1",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"action1",
 						"action2",
 					}),
 				},
-				map[string]interface{}{
+				map[string]any{
 					names.AttrPrincipal: "principal2",
-					names.AttrActions: schema.NewSet(schema.HashString, []interface{}{
+					names.AttrActions: schema.NewSet(schema.HashString, []any{
 						"action3",
 						"action5",
 					}),

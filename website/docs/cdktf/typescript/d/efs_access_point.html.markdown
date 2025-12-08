@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessPointId` - (Required) ID that identifies the file system.
 
 ## Attribute Reference
@@ -60,4 +61,4 @@ This data source exports the following attributes in addition to the arguments a
     * `path` - Path exposed as the root directory
 * `tags` - Key-value mapping of resource tags.
 
-<!-- cache-key: cdktf-0.20.8 input-0a6eb33b78fe37cb122bdb76da99c518922b10eb75fae54fd07c18509d2e4a50 -->
+<!-- cache-key: cdktf-0.20.8 input-fe36f97834cf046d65b4069945ea6d1fc0b563aec79732b5050f141633a705e0 -->

@@ -11,5 +11,7 @@ var (
 
 	FindScalingPolicyByFourPartKey   = findScalingPolicyByFourPartKey
 	FindScheduledActionByFourPartKey = findScheduledActionByFourPartKey
-	ValidPolicyImportInput           = validPolicyImportInput
+	FindTargetByThreePartKey         = findTargetByThreePartKey
+
+	PolicyParseImportID = policyParseImportID
 )

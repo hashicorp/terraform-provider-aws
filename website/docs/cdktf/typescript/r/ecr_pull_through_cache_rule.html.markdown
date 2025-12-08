@@ -44,9 +44,12 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `credentialArn` - (Optional) ARN of the Secret which will be used to authenticate against the registry.
-* `ecrRepositoryPrefix` - (Required, Forces new resource) The repository name prefix to use when caching images from the source registry.
-* `upstreamRegistryUrl` - (Required, Forces new resource) The registry URL of the upstream public registry to use as the source.
+* `customRoleArn` - (Optional) The ARN of the IAM role associated with the pull through cache rule. Must be specified if the upstream registry is a cross-account ECR private registry. See [AWS Document - Setting up permissions for cross-account ECR to ECR PTC](https://docs.aws.amazon.com/AmazonECR/latest/userguide/pull-through-cache-private.html).
+* `ecrRepositoryPrefix` - (Required, Forces new resource) The repository name prefix to use when caching images from the source registry. Use `ROOT` as the prefix to apply a template to all repositories in your registry that don't have an associated pull through cache rule.
+* `upstreamRegistryUrl` - (Required, Forces new resource) The registry URL of the upstream registry to use as the source.
+* `upstreamRepositoryPrefix` - (Optional, Forces new resource) The upstream repository prefix associated with the pull through cache rule. Used if the upstream registry is an ECR private registry. If not specified, it's set to `ROOT`, which allows matching with any upstream repository. See [AWS Document - Customizing repository prefixes for ECR to ECR pull through cache](https://docs.aws.amazon.com/AmazonECR/latest/userguide/pull-through-cache-private-wildcards.html).
 
 ## Attribute Reference
 
@@ -86,4 +89,4 @@ Using `terraform import`, import a pull-through cache rule using the `ecrReposit
 % terraform import aws_ecr_pull_through_cache_rule.example ecr-public
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-77d631b6c1d1bb98f7a86171d386d0798201bb4f64ec08a93c7983727ec7dec9 -->
+<!-- cache-key: cdktf-0.20.8 input-38bb519f2672932a495e8c1f710bfbef7d32baf453da44ac5f877ab9c0a9f9ae -->

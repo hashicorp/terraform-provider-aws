@@ -82,6 +82,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `diskId` - (Optional) Local disk identifier. For example, `pci-0000:03:00.0-scsi-0:0:0:0`.
 * `diskPath` - (Optional) Local disk path. For example, `/dev/nvme1n1`.
 * `gatewayArn` - (Required) The Amazon Resource Name (ARN) of the gateway.
@@ -124,4 +125,4 @@ Using `terraform import`, import `aws_storagegateway_upload_buffer` using the ga
 % terraform import aws_storagegateway_upload_buffer.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ae944e6e1a1a59199a21cc4f4ff9f7913523ee122e7485caccc7b645c0699488 -->
+<!-- cache-key: cdktf-0.20.8 input-b0af0afe875976ec7840026599cb6afae2ba25fa1e765fc7e2c96e4eaea75db7 -->

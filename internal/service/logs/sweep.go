@@ -10,8 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -19,6 +21,8 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_cloudwatch_log_account_policy", sweepAccountPolicies)
+
 	awsv2.Register("aws_cloudwatch_log_anomaly_detector", sweepAnomalyDetectors)
 
 	awsv2.Register("aws_cloudwatch_log_delivery", sweepDeliveries)
@@ -64,6 +68,45 @@ func RegisterSweepers() {
 		Name: "aws_cloudwatch_log_resource_policy",
 		F:    sweepResourcePolicies,
 	})
+
+	awsv2.Register("aws_logs_transformer", sweepTransformers)
+}
+
+func sweepAccountPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.LogsClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	// Make one Describe call per policy type
+	var inputs []*cloudwatchlogs.DescribeAccountPoliciesInput
+	for _, pt := range enum.EnumValues[awstypes.PolicyType]() {
+		inputs = append(inputs, &cloudwatchlogs.DescribeAccountPoliciesInput{
+			PolicyType: pt,
+		})
+	}
+
+	for _, input := range inputs {
+		err := describeAccountPoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeAccountPoliciesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, v := range page.AccountPolicies {
+				r := resourceAccountPolicy()
+				d := r.Data(nil)
+				d.SetId(aws.ToString(v.PolicyName))
+				d.Set("policy_type", v.PolicyType)
+
+				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			}
+
+			return !lastPage
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepAnomalyDetectors(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -183,7 +226,7 @@ func sweepGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &cloudwatchlogs.DescribeLogGroupsInput{}
 	conn := client.LogsClient(ctx)
@@ -224,7 +267,7 @@ func sweepQueryDefinitions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
 	conn := client.LogsClient(ctx)
@@ -268,7 +311,7 @@ func sweepResourcePolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
 	conn := client.LogsClient(ctx)
@@ -306,4 +349,37 @@ func sweepResourcePolicies(region string) error {
 	}
 
 	return nil
+}
+
+func sweepTransformers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.LogsClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, &cloudwatchlogs.DescribeLogGroupsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.LogGroups {
+			input := cloudwatchlogs.GetTransformerInput{
+				LogGroupIdentifier: v.LogGroupName,
+			}
+			transformer, err := conn.GetTransformer(ctx, &input)
+			if err != nil {
+				return nil, err
+			}
+
+			if transformer == nil || len(transformer.TransformerConfig) == 0 {
+				continue
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newTransformerResource, client,
+				framework.NewAttribute("log_group_identifier", aws.ToString(transformer.LogGroupIdentifier))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }

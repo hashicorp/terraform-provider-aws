@@ -5,7 +5,6 @@ package lexv2models_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +22,6 @@ import (
 
 func TestAccLexV2ModelsBot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var bot lexmodelsv2.DescribeBotOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_bot.test"
@@ -113,10 +110,6 @@ func TestAccLexV2ModelsBot_tags(t *testing.T) {
 
 func TestAccLexV2ModelsBot_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var bot lexmodelsv2.DescribeBotOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_bot.test"
@@ -144,7 +137,6 @@ func TestAccLexV2ModelsBot_disappears(t *testing.T) {
 
 func TestAccLexV2ModelsBot_type(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var bot lexmodelsv2.DescribeBotOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_bot.test"
@@ -186,6 +178,7 @@ func testAccCheckBotDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tflexv2models.FindBotByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -194,31 +187,29 @@ func testAccCheckBotDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return create.Error(names.LexV2Models, create.ErrActionCheckingDestroyed, tflexv2models.ResNameBot, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Lex v2 Bot %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckBotExists(ctx context.Context, name string, bot *lexmodelsv2.DescribeBotOutput) resource.TestCheckFunc {
+func testAccCheckBotExists(ctx context.Context, n string, v *lexmodelsv2.DescribeBotOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.LexV2Models, create.ErrActionCheckingExistence, tflexv2models.ResNameBot, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.LexV2Models, create.ErrActionCheckingExistence, tflexv2models.ResNameBot, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
-		resp, err := tflexv2models.FindBotByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tflexv2models.FindBotByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.LexV2Models, create.ErrActionCheckingExistence, tflexv2models.ResNameBot, rs.Primary.ID, err)
+			return err
 		}
 
-		*bot = *resp
+		*v = *output
 
 		return nil
 	}
@@ -238,7 +229,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccBotBaseConfig(rName string) string {
+func testAccBotConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -268,7 +259,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 func testAccBotConfig_basic(rName string, ttl int, dp bool) string {
 	return acctest.ConfigCompose(
-		testAccBotBaseConfig(rName),
+		testAccBotConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
@@ -284,7 +275,7 @@ resource "aws_lexv2models_bot" "test" {
 
 func testAccBotConfig_tags1(rName string, ttl int, dp bool, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccBotBaseConfig(rName),
+		testAccBotConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
@@ -304,7 +295,7 @@ resource "aws_lexv2models_bot" "test" {
 
 func testAccBotConfig_tags2(rName string, ttl int, dp bool, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccBotBaseConfig(rName),
+		testAccBotConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
@@ -325,7 +316,7 @@ resource "aws_lexv2models_bot" "test" {
 
 func testAccBotConfig_type(rName string, ttl int, dp bool, botType string) string {
 	return acctest.ConfigCompose(
-		testAccBotBaseConfig(rName),
+		testAccBotConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q

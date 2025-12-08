@@ -29,6 +29,8 @@ See the AWS Docs on [RDS Instance Maintenance][instance-maintenance] for more in
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data instate](https://www.terraform.io/docs/state/sensitive-data.html).
 
+-> **Note:** Write-Only argument `passwordWo` is available to use in place of `password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
+
 > **Hands-on:** Try the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds) tutorial on HashiCorp Learn.
 
 ## RDS Instance Class Types
@@ -391,11 +393,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to the [AWS official
-documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allocatedStorage` - (Required unless a `snapshotIdentifier` or `replicateSourceDb` is provided) The allocated storage in gibibytes. If `maxAllocatedStorage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs. If `replicateSourceDb` is set, the value is ignored during the creation of the instance.
 * `allowMajorVersionUpgrade` - (Optional) Indicates that major version
 upgrades are allowed. Changing this parameter does not result in an outage and
@@ -425,8 +425,9 @@ Defaults to true.
   See [Oracle Character Sets Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html) or
   [Server-Level Collation for Microsoft SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.CommonDBATasks.Collation.html) for more information.
   Cannot be set  with `replicateSourceDb`, `restoreToPointInTime`, `s3Import`, or `snapshotIdentifier`.
-* `copyTagsToSnapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
+* `copyTagsToSnapshot` - (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `customIamInstanceProfile` - (Optional) The instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
+* `databaseInsightsMode` - (Optional) The mode of Database Insights that is enabled for the instance. Valid values: `standard`, `advanced` .
 * `dbName` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
 * `dbSubnetGroupName` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html).
   DB instance will be created in the VPC associated with the DB subnet group.
@@ -472,7 +473,7 @@ Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
 docs](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html#AdjustingTheMaintenanceWindow)
 for more information.
-* `manageMasterUserPassword` - (Optional) Set to true to allow RDS to manage the master user password in Secrets Manager. Cannot be set if `password` is provided.
+* `manageMasterUserPassword` - (Optional) Set to true to allow RDS to manage the master user password in Secrets Manager. Cannot be set if `password` or `passwordWo` is provided.
 * `masterUserSecretKmsKeyId` - (Optional) The Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
 * `maxAllocatedStorage` - (Optional) Specifies the maximum storage (in GiB) that Amazon RDS can automatically scale to for this DB instance. By default, Storage Autoscaling is disabled. To enable Storage Autoscaling, set `maxAllocatedStorage` to **greater than or equal to** `allocatedStorage`. Setting `maxAllocatedStorage` to 0 explicitly disables Storage Autoscaling. When configured, changes to `allocatedStorage` will be automatically ignored as the storage can dynamically scale.
 * `monitoringInterval` - (Optional) The interval, in seconds, between points
@@ -490,9 +491,9 @@ Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/
 * `networkType` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
 * `optionGroupName` - (Optional) Name of the DB option group to associate.
 * `parameterGroupName` - (Optional) Name of the DB parameter group to associate.
-* `password` - (Required unless `manageMasterUserPassword` is set to true or unless a `snapshotIdentifier` or `replicateSourceDb`
-is provided or `manageMasterUserPassword` is set.) Password for the master DB user. Note that this may show up in
-logs, and it will be stored in the state file. Cannot be set if `manageMasterUserPassword` is set to `true`.
+* `password` - (Optional required unless `manageMasterUserPassword` is set to true, `snapshotIdentifier`, `replicateSourceDb`, or `passwordWo` is provided) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Cannot be set if `manageMasterUserPassword` is set to `true`.
+* `passwordWo` - (Optional, Write-Only required unless `manageMasterUserPassword` is set to true, `snapshotIdentifier`, `replicateSourceDb`, or `password` is provided) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Cannot be set if `manageMasterUserPassword` is set to `true`.
+* `passwordWoVersion` - (Optional) Used together with `passwordWo` to trigger an update. Increment this value when an update to `passwordWo` is required.
 * `performanceInsightsEnabled` - (Optional) Specifies whether Performance Insights are enabled. Defaults to false.
 * `performanceInsightsKmsKeyId` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performanceInsightsKmsKeyId`, `performanceInsightsEnabled` needs to be set to true. Once KMS key is set, it can never be changed.
 * `performanceInsightsRetentionPeriod` - (Optional) Amount of time in days to retain Performance Insights data. Valid values are `7`, `731` (2 years) or a multiple of `31`. When specifying `performanceInsightsRetentionPeriod`, `performanceInsightsEnabled` needs to be set to true. Defaults to '7'.
@@ -540,6 +541,9 @@ is provided) Username for the master DB user. Cannot be specified for a replica.
 * `vpcSecurityGroupIds` - (Optional) List of VPC security groups to
 associate.
 * `customerOwnedIpEnabled` - (Optional) Indicates whether to enable a customer-owned IP address (CoIP) for an RDS on Outposts DB instance. See [CoIP for RDS on Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html#rds-on-outposts.coip) for more information.
+
+For more detailed documentation about each argument, refer to the [AWS official
+documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 
 ~> **NOTE:** Removing the `replicateSourceDb` attribute from an existing RDS
 Replicate database managed by Terraform will promote the database to a fully
@@ -706,4 +710,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9d8c66464529cae26ca26a78732ac6f2b6463d0b64d0432126b2b1165d518a5a -->
+<!-- cache-key: cdktf-0.20.8 input-5194d49f83a3376b016e42732753974ef27e44990a6c121c565184c0f14b69e7 -->

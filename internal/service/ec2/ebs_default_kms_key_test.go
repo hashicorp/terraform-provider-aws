@@ -19,6 +19,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestAccEC2EBSDefaultKMSKey_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"Resource": {
+			acctest.CtBasic: testAccEBSDefaultKMSKey_basic,
+		},
+		"DataSource": {
+			acctest.CtBasic: testAccEBSDefaultKMSKeyDataSource_basic,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
 func testAccEBSDefaultKMSKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ebs_default_kms_key.test"
@@ -129,7 +144,10 @@ func testAccEBSManagedDefaultKey(ctx context.Context) (*arn.ARN, error) {
 }
 
 const testAccEBSDefaultKMSKeyConfig_basic = `
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_ebs_default_kms_key" "test" {
   key_arn = aws_kms_key.test.arn

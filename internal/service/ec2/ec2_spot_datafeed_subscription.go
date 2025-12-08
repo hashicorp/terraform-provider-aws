@@ -43,7 +43,7 @@ func resourceSpotDataFeedSubscription() *schema.Resource {
 	}
 }
 
-func resourceSpotDataFeedSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpotDataFeedSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -66,7 +66,7 @@ func resourceSpotDataFeedSubscriptionCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceSpotDataFeedSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceSpotDataFeedSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpotDataFeedSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -88,7 +88,7 @@ func resourceSpotDataFeedSubscriptionRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceSpotDataFeedSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpotDataFeedSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

@@ -42,8 +42,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `observabilityConfigurationName` - (Required, Forces new resource) Name of the observability configuration.
 * `traceConfiguration` - (Optional) Configuration of the tracing feature within this observability configuration. If you don't specify it, App Runner doesn't enable tracing. See [Trace Configuration](#trace-configuration) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -65,6 +66,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_apprunner_observability_configuration.example
+  identity = {
+    "arn" = "arn:aws:apprunner:us-east-1:123456789012:observabilityconfiguration/example-observability-config/1/a1b2c3d4567890ab"
+  }
+}
+
+resource "aws_apprunner_observability_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the App Runner observability configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner Observability Configuration using the `arn`. For example:
 
@@ -96,4 +118,4 @@ Using `terraform import`, import App Runner Observability Configuration using th
 % terraform import aws_apprunner_observability_configuration.example arn:aws:apprunner:us-east-1:1234567890:observabilityconfiguration/example/1/d75bc7ea55b71e724fe5c23452fe22a1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8e5cebb86212015c055222a001ff7c401e6fd39752f296bb53ad2acf1c736b46 -->
+<!-- cache-key: cdktf-0.20.8 input-ee10de3e3649cc800c69373d9972a19e25470f4743a6edf4f9225f70a051c51a -->

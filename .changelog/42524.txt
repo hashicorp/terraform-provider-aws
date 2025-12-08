@@ -1,0 +1,3 @@
+```release-note:note
+data-source/aws_kms_secret: This data source will be removed in a future version
+```

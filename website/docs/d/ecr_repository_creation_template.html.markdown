@@ -22,6 +22,7 @@ data "aws_ecr_repository_creation_template" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `prefix` - (Required) The repository name prefix that the template matches against.
 
 ## Attribute Reference
@@ -33,6 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - The description for this template.
 * `encryption_configuration` - Encryption configuration for any created repositories. See [Encryption Configuration](#encryption-configuration) below.
 * `image_tag_mutability` - The tag mutability setting for any created repositories.
+* `image_tag_mutability_exclusion_filter` - Block that defines filters to specify which image tags can override the default tag mutability setting.
 * `lifecycle_policy` - The lifecycle policy document to apply to any created repositories.
 * `registry_id` - The registry ID the repository creation template applies to.
 * `repository_policy` - The registry policy document to apply to any created repositories.
@@ -42,3 +44,8 @@ This data source exports the following attributes in addition to the arguments a
 
 * `encryption_type` - Encryption type to use for any created repositories, either `AES256` or `KMS`.
 * `kms_key` - If `encryption_type` is `KMS`, the ARN of the KMS key used.
+
+### Image Tag Mutability Exclusion Filter
+
+* `filter` - The filter pattern to use for excluding image tags from the mutability setting.
+* `filter_type` - The type of filter to use.

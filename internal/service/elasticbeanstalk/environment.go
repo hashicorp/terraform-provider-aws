@@ -33,7 +33,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -51,6 +50,7 @@ func settingSchema() *schema.Resource {
 			"resource": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "", // This default is required to work around an error seen is some situations with Unknown values
 			},
 			names.AttrValue: {
 				Type:     schema.TypeString,
@@ -95,10 +95,8 @@ func resourceEnvironment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		SchemaVersion: 1,
-		MigrateState:  EnvironmentMigrateState,
+		MigrateState:  environmentMigrateState,
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -222,7 +220,7 @@ func resourceEnvironment() *schema.Resource {
 	}
 }
 
-func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
@@ -313,7 +311,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
@@ -337,19 +335,17 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s) resources: %s", d.Id(), err)
 	}
 
-	applicationName := aws.ToString(env.ApplicationName)
-	environmentName := aws.ToString(env.EnvironmentName)
-	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
-		ApplicationName: aws.String(applicationName),
-		EnvironmentName: aws.String(environmentName),
+	input := elasticbeanstalk.DescribeConfigurationSettingsInput{
+		ApplicationName: env.ApplicationName,
+		EnvironmentName: env.EnvironmentName,
 	}
-	configurationSettings, err := findConfigurationSettings(ctx, conn, input)
+	configurationSettings, err := findConfigurationSettings(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s) configuration settings: %s", d.Id(), err)
 	}
 
-	d.Set("application", applicationName)
+	d.Set("application", env.ApplicationName)
 	d.Set(names.AttrARN, env.EnvironmentArn)
 	if err := d.Set("autoscaling_groups", flattenAutoScalingGroups(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting autoscaling_groups: %s", err)
@@ -378,7 +374,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("load_balancers", flattenLoadBalancers(resources.EnvironmentResources.LoadBalancers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting load_balancers: %s", err)
 	}
-	d.Set(names.AttrName, environmentName)
+	d.Set(names.AttrName, env.EnvironmentName)
 	d.Set("platform_arn", env.PlatformArn)
 	if err := d.Set("queues", flattenQueues(resources.EnvironmentResources.Queues)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting queues: %s", err)
@@ -390,17 +386,17 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("version_label", env.VersionLabel)
 
-	var configuredSettings []interface{}
+	var configuredSettings []any
 	if v, ok := d.GetOk("setting"); ok && v.(*schema.Set).Len() > 0 {
 		configuredSettings = v.(*schema.Set).List()
 	}
 	apiSettings := flattenConfigurationOptionSettings(ctx, meta, configurationSettings.OptionSettings)
-	var settings []interface{}
+	var settings []any
 
 	for _, apiSetting := range apiSettings {
-		tfMap := apiSetting.(map[string]interface{})
-		isMatch := func(v interface{}) bool {
-			m := v.(map[string]interface{})
+		tfMap := apiSetting.(map[string]any)
+		isMatch := func(v any) bool {
+			m := v.(map[string]any)
 
 			return m[names.AttrNamespace].(string) == tfMap[names.AttrNamespace].(string) &&
 				m[names.AttrName].(string) == tfMap[names.AttrName].(string) &&
@@ -422,7 +418,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
@@ -550,7 +546,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
@@ -702,7 +698,7 @@ func findEvents(ctx context.Context, conn *elasticbeanstalk.Client, input *elast
 }
 
 func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -757,8 +753,8 @@ func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, 
 	return nil, err
 }
 
-func hashSettingsValue(v interface{}) int {
-	tfMap := v.(map[string]interface{})
+func hashSettingsValue(v any) int {
+	tfMap := v.(map[string]any)
 	var str strings.Builder
 
 	str.WriteString(tfMap[names.AttrNamespace].(string))
@@ -782,7 +778,7 @@ func hashSettingsValue(v interface{}) int {
 	return create.StringHashcode(str.String())
 }
 
-func expandConfigurationOptionSettings(tfList []interface{}) []awstypes.ConfigurationOptionSetting {
+func expandConfigurationOptionSettings(tfList []any) []awstypes.ConfigurationOptionSetting {
 	apiObjects := []awstypes.ConfigurationOptionSetting{}
 
 	if tfList == nil {
@@ -790,7 +786,7 @@ func expandConfigurationOptionSettings(tfList []interface{}) []awstypes.Configur
 	}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.ConfigurationOptionSetting{
 			Namespace:  aws.String(tfMap[names.AttrNamespace].(string)),
 			OptionName: aws.String(tfMap[names.AttrName].(string)),
@@ -809,11 +805,11 @@ func expandConfigurationOptionSettings(tfList []interface{}) []awstypes.Configur
 	return apiObjects
 }
 
-func flattenConfigurationOptionSettings(ctx context.Context, meta interface{}, apiObjects []awstypes.ConfigurationOptionSetting) []interface{} {
-	var tfList []interface{}
+func flattenConfigurationOptionSettings(ctx context.Context, meta any, apiObjects []awstypes.ConfigurationOptionSetting) []any {
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.Namespace != nil {
 			tfMap[names.AttrNamespace] = aws.ToString(apiObject.Namespace)

@@ -35,13 +35,9 @@ func newWorkspaceServiceAccountResource(_ context.Context) (resource.ResourceWit
 }
 
 type workspaceServiceAccountResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[workspaceServiceAccountResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (*workspaceServiceAccountResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_grafana_workspace_service_account"
 }
 
 func (r *workspaceServiceAccountResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -239,6 +235,7 @@ func findWorkspaceServiceAccountByTwoPartKey(ctx context.Context, conn *grafana.
 }
 
 type workspaceServiceAccountResourceModel struct {
+	framework.WithRegionModel
 	GrafanaRole      fwtypes.StringEnum[awstypes.Role] `tfsdk:"grafana_role"`
 	ID               types.String                      `tfsdk:"id"`
 	Name             types.String                      `tfsdk:"name"`

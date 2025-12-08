@@ -38,13 +38,9 @@ func newCIDRCollectionResource(context.Context) (resource.ResourceWithConfigure,
 }
 
 type cidrCollectionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[cidrCollectionResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (*cidrCollectionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_route53_cidr_collection"
 }
 
 func (r *cidrCollectionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -87,7 +83,7 @@ func (r *cidrCollectionResource) Create(ctx context.Context, request resource.Cr
 	const (
 		timeout = 2 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModification](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateCidrCollection(ctx, input)
 	})
 
@@ -145,7 +141,7 @@ func (r *cidrCollectionResource) Delete(ctx context.Context, request resource.De
 
 	conn := r.Meta().Route53Client(ctx)
 
-	tflog.Debug(ctx, "deleting Route 53 CIDR Collection", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Route 53 CIDR Collection", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 

@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -304,7 +305,7 @@ func TestAccAthenaDatabase_unescaped_description(t *testing.T) {
 	})
 }
 
-func TestAccAthenaDatabase_disppears(t *testing.T) {
+func TestAccAthenaDatabase_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbName := sdkacctest.RandString(8)
@@ -323,6 +324,79 @@ func TestAccAthenaDatabase_disppears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfathena.ResourceDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAthenaDatabase_withWorkgroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dbName := sdkacctest.RandString(8)
+	wgName := sdkacctest.RandString(8)
+
+	resourceName := "aws_athena_database.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabaseConfig_withWorkgroup(rName, dbName, true, wgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAthenaDatabase_upgradeV6_5_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dbName := sdkacctest.RandString(8)
+	resourceName := "aws_athena_database.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.AthenaServiceID),
+		CheckDestroy: testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.5.0",
+					},
+				},
+				Config: testAccDatabaseConfig_basic(rName, dbName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccDatabaseConfig_basic(rName, dbName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -538,6 +612,7 @@ func testAccDatabaseConfig_kms(rName string, dbName string, forceDestroy bool) s
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 10
   description             = %[1]q
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -602,4 +677,25 @@ resource "aws_athena_database" "test" {
   force_destroy = %[3]t
 }
 `, rName, dbName, forceDestroy)
+}
+
+func testAccDatabaseConfig_withWorkgroup(rName string, dbName string, forceDestroy bool, wgName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name          = %[4]q
+  force_destroy = %[3]t
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_athena_database" "test" {
+  name          = %[2]q
+  bucket        = aws_s3_bucket.test.bucket
+  force_destroy = %[3]t
+  workgroup     = aws_athena_workgroup.test.id
+}
+`, rName, dbName, forceDestroy, wgName)
 }

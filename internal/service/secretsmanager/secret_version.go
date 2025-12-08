@@ -17,13 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,23 +33,20 @@ const (
 )
 
 // @SDKResource("aws_secretsmanager_secret_version", name="Secret Version")
+// @IdentityAttribute("secret_id")
+// @IdentityAttribute("version_id")
+// @Testing(preIdentityVersion="v6.10.0")
+// @ImportIDHandler("secretVersionImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/secretsmanager;secretsmanager.GetSecretValueOutput")
+// @Testing(importStateIdFunc="testAccSecretVersionImportStateIdFunc")
+// @Testing(importIgnore="has_secret_string_wo")
+// @Testing(plannableImportAction="NoOp")
 func resourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretVersionCreate,
 		ReadWithoutTimeout:   resourceSecretVersionRead,
 		UpdateWithoutTimeout: resourceSecretVersionUpdate,
 		DeleteWithoutTimeout: resourceSecretVersionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				d.Set("has_secret_string_wo", false)
-				return []*schema.ResourceData{d}, nil
-			},
-		},
-
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("secret_string"), cty.GetAttrPath("secret_string_wo")),
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -87,6 +83,7 @@ func resourceSecretVersion() *schema.Resource {
 				WriteOnly:     true,
 				Sensitive:     true,
 				ConflictsWith: []string{"secret_binary", "secret_string"},
+				RequiredWith:  []string{"secret_string_wo_version"},
 			},
 			"secret_string_wo_version": {
 				Type:         schema.TypeInt,
@@ -108,7 +105,7 @@ func resourceSecretVersion() *schema.Resource {
 	}
 }
 
-func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -120,7 +117,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("secret_binary"); ok {
 		var err error
-		input.SecretBinary, err = itypes.Base64Decode(v.(string))
+		input.SecretBinary, err = inttypes.Base64Decode(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -153,7 +150,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	versionID := aws.ToString(output.VersionId)
 	d.SetId(secretVersionCreateResourceID(secretID, versionID))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
 	})
 
@@ -164,7 +161,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceSecretVersionRead(ctx, d, meta)...)
 }
 
-func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -186,7 +183,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set(names.AttrARN, output.ARN)
-	d.Set("secret_binary", itypes.Base64EncodeOnce(output.SecretBinary))
+	d.Set("secret_binary", inttypes.Base64EncodeOnce(output.SecretBinary))
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)
@@ -212,7 +209,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -299,7 +296,7 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceSecretVersionRead(ctx, d, meta)...)
 }
 
-func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
@@ -337,7 +334,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
 
 		if err != nil {
@@ -356,25 +353,6 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return diags
-}
-
-const secretVersionIDSeparator = "|"
-
-func secretVersionCreateResourceID(secretID, versionID string) string {
-	parts := []string{secretID, versionID}
-	id := strings.Join(parts, secretVersionIDSeparator)
-
-	return id
-}
-
-func secretVersionParseResourceID(id string) (string, string, error) {
-	parts := strings.SplitN(id, secretVersionIDSeparator, 2)
-
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected SecretID%[2]sVersionID", id, secretVersionIDSeparator)
-	}
-
-	return parts[0], parts[1], nil
 }
 
 func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *secretsmanager.GetSecretValueInput) (*secretsmanager.GetSecretValueOutput, error) {
@@ -407,4 +385,47 @@ func findSecretVersionByTwoPartKey(ctx context.Context, conn *secretsmanager.Cli
 	}
 
 	return findSecretVersion(ctx, conn, input)
+}
+
+const secretVersionIDSeparator = "|"
+
+func secretVersionCreateResourceID(secretID, versionID string) string {
+	parts := []string{secretID, versionID}
+	id := strings.Join(parts, secretVersionIDSeparator)
+
+	return id
+}
+
+func secretVersionParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, secretVersionIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected SecretID%[2]sVersionID", id, secretVersionIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+var _ inttypes.SDKv2ImportID = secretVersionImportID{}
+
+type secretVersionImportID struct{}
+
+func (secretVersionImportID) Create(d *schema.ResourceData) string {
+	secretID := d.Get("secret_id").(string)
+	versionID := d.Get("version_id").(string)
+	return secretVersionCreateResourceID(secretID, versionID)
+}
+
+func (secretVersionImportID) Parse(id string) (string, map[string]string, error) {
+	secretID, versionID, err := secretVersionParseResourceID(id)
+	if err != nil {
+		return id, nil, err
+	}
+
+	results := map[string]string{
+		"secret_id":  secretID,
+		"version_id": versionID,
+	}
+
+	return id, results, nil
 }

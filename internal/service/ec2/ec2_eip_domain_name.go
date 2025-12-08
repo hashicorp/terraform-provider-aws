@@ -36,12 +36,8 @@ func newEIPDomainNameResource(_ context.Context) (resource.ResourceWithConfigure
 }
 
 type eipDomainNameResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[eipDomainNameResourceModel]
 	framework.WithTimeouts
-}
-
-func (*eipDomainNameResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_eip_domain_name"
 }
 
 func (r *eipDomainNameResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -216,6 +212,7 @@ func (r *eipDomainNameResource) Delete(ctx context.Context, request resource.Del
 }
 
 type eipDomainNameResourceModel struct {
+	framework.WithRegionModel
 	AllocationID types.String   `tfsdk:"allocation_id"`
 	ID           types.String   `tfsdk:"id"`
 	DomainName   types.String   `tfsdk:"domain_name"`

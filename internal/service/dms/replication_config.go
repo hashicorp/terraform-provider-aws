@@ -30,9 +30,11 @@ import (
 )
 
 // @SDKResource("aws_dms_replication_config", name="Replication Config")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.ReplicationConfig")
-// @Testing(importIgnore="start_replication")
+// @Testing(importIgnore="start_replication", plannableImportAction="NoOp")
 func resourceReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigCreate,
@@ -44,10 +46,6 @@ func resourceReplicationConfig() *schema.Resource {
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
-		},
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -171,12 +169,10 @@ func resourceReplicationConfig() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -190,8 +186,8 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 		TargetEndpointArn:           aws.String(d.Get("target_endpoint_arn").(string)),
 	}
 
-	if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ComputeConfig = expandComputeConfigInput(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("compute_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ComputeConfig = expandComputeConfigInput(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("replication_settings"); ok {
@@ -223,7 +219,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceReplicationConfigRead(ctx, d, meta)...)
 }
 
-func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -254,7 +250,7 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -268,8 +264,8 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("compute_config") {
-			if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ComputeConfig = expandComputeConfigInput(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("compute_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ComputeConfig = expandComputeConfigInput(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -325,7 +321,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceReplicationConfigRead(ctx, d, meta)...)
 }
 
-func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -447,7 +443,7 @@ func findReplications(ctx context.Context, conn *dms.Client, input *dms.Describe
 }
 
 func statusReplication(ctx context.Context, conn *dms.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -548,7 +544,7 @@ func startReplication(ctx context.Context, conn *dms.Client, arn string, timeout
 	replication, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
+		return fmt.Errorf("reading DMS Replication Config (%s) replication: %w", arn, err)
 	}
 
 	replicationStatus := aws.ToString(replication.Status)
@@ -586,7 +582,7 @@ func stopReplication(ctx context.Context, conn *dms.Client, arn string, timeout 
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
+		return fmt.Errorf("reading DMS Replication Config (%s) replication: %w", arn, err)
 	}
 
 	if replicationStatus := aws.ToString(replication.Status); replicationStatus == replicationStatusStopped || replicationStatus == replicationStatusCreated || replicationStatus == replicationStatusFailed {
@@ -610,12 +606,12 @@ func stopReplication(ctx context.Context, conn *dms.Client, arn string, timeout 
 	return nil
 }
 
-func flattenComputeConfig(apiObject *awstypes.ComputeConfig) []interface{} {
+func flattenComputeConfig(apiObject *awstypes.ComputeConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrAvailabilityZone:           aws.ToString(apiObject.AvailabilityZone),
 		"dns_name_servers":                   aws.ToString(apiObject.DnsNameServers),
 		names.AttrKMSKeyID:                   aws.ToString(apiObject.KmsKeyId),
@@ -627,10 +623,10 @@ func flattenComputeConfig(apiObject *awstypes.ComputeConfig) []interface{} {
 		names.AttrVPCSecurityGroupIDs:        apiObject.VpcSecurityGroupIds,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandComputeConfigInput(tfMap map[string]interface{}) *awstypes.ComputeConfig {
+func expandComputeConfigInput(tfMap map[string]any) *awstypes.ComputeConfig {
 	if tfMap == nil {
 		return nil
 	}

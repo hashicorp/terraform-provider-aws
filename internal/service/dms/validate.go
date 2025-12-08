@@ -10,7 +10,7 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-func validEndpointID(v interface{}, k string) (ws []string, es []error) {
+func validEndpointID(v any, k string) (ws []string, es []error) {
 	val := v.(string)
 
 	if len(val) > 255 {
@@ -29,7 +29,7 @@ func validEndpointID(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func validReplicationInstanceID(v interface{}, k string) (ws []string, es []error) {
+func validReplicationInstanceID(v any, k string) (ws []string, es []error) {
 	val := v.(string)
 
 	if len(val) > 63 {
@@ -48,7 +48,7 @@ func validReplicationInstanceID(v interface{}, k string) (ws []string, es []erro
 	return
 }
 
-func validReplicationSubnetGroupID(v interface{}, k string) (ws []string, es []error) {
+func validReplicationSubnetGroupID(v any, k string) (ws []string, es []error) {
 	val := v.(string)
 
 	if val == "default" {
@@ -64,7 +64,7 @@ func validReplicationSubnetGroupID(v interface{}, k string) (ws []string, es []e
 	return
 }
 
-func validReplicationTaskID(v interface{}, k string) (ws []string, es []error) {
+func validReplicationTaskID(v any, k string) (ws []string, es []error) {
 	val := v.(string)
 
 	if len(val) > 255 {

@@ -118,7 +118,7 @@ func resourceHostedPublicVirtualInterface() *schema.Resource {
 	}
 }
 
-func resourceHostedPublicVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedPublicVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -164,7 +164,7 @@ func resourceHostedPublicVirtualInterfaceCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceHostedPublicVirtualInterfaceRead(ctx, d, meta)...)
 }
 
-func resourceHostedPublicVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedPublicVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -206,11 +206,11 @@ func resourceHostedPublicVirtualInterfaceRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceHostedPublicVirtualInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedPublicVirtualInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	return virtualInterfaceDelete(ctx, d, meta)
 }
 
-func resourceHostedPublicVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceHostedPublicVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
@@ -226,7 +226,7 @@ func resourceHostedPublicVirtualInterfaceImport(ctx context.Context, d *schema.R
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceHostedPublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceHostedPublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	if diff.Id() == "" {
 		// New resource.
 		if addressFamily := diff.Get("address_family").(string); addressFamily == string(awstypes.AddressFamilyIPv4) {

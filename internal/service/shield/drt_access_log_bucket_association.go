@@ -39,14 +39,10 @@ func newDRTAccessLogBucketAssociationResource(context.Context) (resource.Resourc
 }
 
 type drtAccessLogBucketAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[drtAccessLogBucketAssociationResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *drtAccessLogBucketAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_shield_drt_access_log_bucket_association"
 }
 
 func (r *drtAccessLogBucketAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -104,7 +100,7 @@ func (r *drtAccessLogBucketAssociationResource) Create(ctx context.Context, requ
 	// Set values for unknowns.
 	data.setID()
 
-	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return findDRTLogBucketAssociation(ctx, conn, logBucket)
 	})
 
@@ -177,7 +173,7 @@ func (r *drtAccessLogBucketAssociationResource) Delete(ctx context.Context, requ
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return findDRTLogBucketAssociation(ctx, conn, logBucket)
 	})
 

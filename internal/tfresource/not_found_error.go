@@ -6,6 +6,7 @@ package tfresource
 import (
 	"errors"
 	"fmt"
+	"iter"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -13,12 +14,12 @@ import (
 )
 
 type EmptyResultError struct {
-	LastRequest interface{}
+	LastRequest any
 }
 
 var ErrEmptyResult = &EmptyResultError{}
 
-func NewEmptyResultError(lastRequest interface{}) error {
+func NewEmptyResultError(lastRequest any) error {
 	return &EmptyResultError{
 		LastRequest: lastRequest,
 	}
@@ -33,7 +34,7 @@ func (e *EmptyResultError) Is(err error) bool {
 	return ok
 }
 
-func (e *EmptyResultError) As(target interface{}) bool {
+func (e *EmptyResultError) As(target any) bool {
 	t, ok := target.(**retry.NotFoundError)
 	if !ok {
 		return false
@@ -49,12 +50,12 @@ func (e *EmptyResultError) As(target interface{}) bool {
 
 type TooManyResultsError struct {
 	Count       int
-	LastRequest interface{}
+	LastRequest any
 }
 
 var ErrTooManyResults = &TooManyResultsError{}
 
-func NewTooManyResultsError(count int, lastRequest interface{}) error {
+func NewTooManyResultsError(count int, lastRequest any) error {
 	return &TooManyResultsError{
 		Count:       count,
 		LastRequest: lastRequest,
@@ -70,7 +71,7 @@ func (e *TooManyResultsError) Is(err error) bool {
 	return ok
 }
 
-func (e *TooManyResultsError) As(target interface{}) bool {
+func (e *TooManyResultsError) As(target any) bool {
 	t, ok := target.(**retry.NotFoundError)
 	if !ok {
 		return false
@@ -128,6 +129,43 @@ func AssertSingleValueResult[T any](a []T, fs ...foundFunc[T]) (*T, error) {
 		}
 		return v, nil
 	}
+}
+
+// AssertSingleValueResultIterErr returns either a pointer to the single value in the iterator or the error value from the iterator.
+// If there are not exactly one value, returns a `NotFound` error.
+func AssertSingleValueResultIterErr[T any](i iter.Seq2[T, error]) (*T, error) {
+	next, stop := iter.Pull2(i)
+	defer stop()
+
+	v, err, ok := next()
+	if !ok {
+		return nil, NewEmptyResultError(nil)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err, ok = next()
+	if !ok {
+		return &v, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	n := 2
+	for {
+		_, err, ok = next()
+		if !ok {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		n++
+	}
+	return nil, NewTooManyResultsError(n, nil)
 }
 
 // AssertFirstValueResult returns a pointer to the first value in the specified slice of values.

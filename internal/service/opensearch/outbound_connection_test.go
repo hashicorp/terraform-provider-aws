@@ -196,13 +196,13 @@ resource "aws_opensearch_outbound_connection" "test" {
 
   local_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
-    region      = data.aws_region.current.name
+    region      = data.aws_region.current.region
     domain_name = aws_opensearch_domain.domain_1.domain_name
   }
 
   remote_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
-    region      = data.aws_region.current.name
+    region      = data.aws_region.current.region
     domain_name = aws_opensearch_domain.domain_2.domain_name
   }
 }
@@ -318,13 +318,13 @@ resource "aws_opensearch_outbound_connection" "test" {
 
   local_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
-    region      = data.aws_region.current.name
+    region      = data.aws_region.current.region
     domain_name = aws_opensearch_domain.domain_1.domain_name
   }
 
   remote_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
-    region      = data.aws_region.current.name
+    region      = data.aws_region.current.region
     domain_name = aws_opensearch_domain.domain_2.domain_name
   }
 }

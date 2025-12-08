@@ -5,7 +5,6 @@ package auditmanager_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfauditmanager "github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -266,39 +265,38 @@ func testAccCheckControlDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfauditmanager.FindControlByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.AuditManager, create.ErrActionCheckingDestroyed, tfauditmanager.ResNameControl, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Audit Manager Control %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckControlExists(ctx context.Context, name string, control *types.Control) resource.TestCheckFunc {
+func testAccCheckControlExists(ctx context.Context, n string, v *types.Control) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameControl, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameControl, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
-		resp, err := tfauditmanager.FindControlByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfauditmanager.FindControlByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameControl, rs.Primary.ID, err)
+			return err
 		}
 
-		*control = *resp
+		*v = *output
 
 		return nil
 	}

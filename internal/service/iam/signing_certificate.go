@@ -3,8 +3,7 @@
 
 package iam
 
-import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
-
+import (
 	"context"
 	"fmt"
 	"log"
@@ -14,12 +13,15 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,6 +32,7 @@ func resourceSigningCertificate() *schema.Resource {
 		ReadWithoutTimeout:   resourceSigningCertificateRead,
 		UpdateWithoutTimeout: resourceSigningCertificateUpdate,
 		DeleteWithoutTimeout: resourceSigningCertificateDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -60,51 +63,54 @@ func resourceSigningCertificate() *schema.Resource {
 	}
 }
 
-func resourceSigningCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	createOpts := &iam.UploadSigningCertificateInput{
+	userName := d.Get(names.AttrUserName).(string)
+	input := iam.UploadSigningCertificateInput{
 		CertificateBody: aws.String(d.Get("certificate_body").(string)),
-		UserName:        aws.String(d.Get(names.AttrUserName).(string)),
+		UserName:        aws.String(userName),
 	}
 
-	resp, err := conn.UploadSigningCertificate(ctx, createOpts)
+	output, err := conn.UploadSigningCertificate(ctx, &input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "uploading IAM Signing Certificate: %s", err)
 	}
 
-	cert := resp.Certificate
-	certId := cert.CertificateId
-	d.SetId(fmt.Sprintf("%s:%s", aws.ToString(certId), aws.ToString(cert.UserName)))
+	cert := output.Certificate
+	certID := aws.ToString(cert.CertificateId)
+	d.SetId(signingCertificateCreateResourceID(certID, userName))
 
 	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) != string(awstypes.StatusTypeActive) {
-		updateInput := &iam.UpdateSigningCertificateInput{
-			CertificateId: certId,
-			UserName:      aws.String(d.Get(names.AttrUserName).(string)),
+		input := iam.UpdateSigningCertificateInput{
+			CertificateId: aws.String(certID),
 			Status:        awstypes.StatusType(v.(string)),
+			UserName:      aws.String(userName),
 		}
 
-		_, err := conn.UpdateSigningCertificate(ctx, updateInput)
+		_, err := conn.UpdateSigningCertificate(ctx, &input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "settings IAM Signing Certificate status: %s", err)
+			return sdkdiag.AppendErrorf(diags, "settings IAM Signing Certificate (%s) status: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceSigningCertificateRead(ctx, d, meta)...)
 }
 
-func resourceSigningCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	certId, userName, err := DecodeSigningCertificateId(d.Id())
+	certID, userName, err := signingCertificateParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Signing Certificate (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindSigningCertificate(ctx, conn, userName, certId)
+	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.SigningCertificate, error) {
+		return findSigningCertificateByTwoPartKey(ctx, conn, userName, certID)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -117,32 +123,30 @@ func resourceSigningCertificateRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading IAM Signing Certificate (%s): %s", d.Id(), err)
 	}
 
-	resp := outputRaw.(*awstypes.SigningCertificate)
-
-	d.Set("certificate_body", resp.CertificateBody)
-	d.Set("certificate_id", resp.CertificateId)
-	d.Set(names.AttrUserName, resp.UserName)
-	d.Set(names.AttrStatus, resp.Status)
+	d.Set("certificate_body", output.CertificateBody)
+	d.Set("certificate_id", output.CertificateId)
+	d.Set(names.AttrStatus, output.Status)
+	d.Set(names.AttrUserName, output.UserName)
 
 	return diags
 }
 
-func resourceSigningCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	certId, userName, err := DecodeSigningCertificateId(d.Id())
+	certID, userName, err := signingCertificateParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating IAM Signing Certificate (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	updateInput := &iam.UpdateSigningCertificateInput{
-		CertificateId: aws.String(certId),
-		UserName:      aws.String(userName),
+	input := iam.UpdateSigningCertificateInput{
+		CertificateId: aws.String(certID),
 		Status:        awstypes.StatusType(d.Get(names.AttrStatus).(string)),
+		UserName:      aws.String(userName),
 	}
+	_, err = conn.UpdateSigningCertificate(ctx, &input)
 
-	_, err = conn.UpdateSigningCertificate(ctx, updateInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating IAM Signing Certificate (%s): %s", d.Id(), err)
 	}
@@ -150,39 +154,96 @@ func resourceSigningCertificateUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceSigningCertificateRead(ctx, d, meta)...)
 }
 
-func resourceSigningCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSigningCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
-	log.Printf("[INFO] Deleting IAM Signing Certificate: %s", d.Id())
 
-	certId, userName, err := DecodeSigningCertificateId(d.Id())
+	certID, userName, err := signingCertificateParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IAM Signing Certificate (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &iam.DeleteSigningCertificateInput{
-		CertificateId: aws.String(certId),
+	log.Printf("[INFO] Deleting IAM Signing Certificate: %s", d.Id())
+	input := iam.DeleteSigningCertificateInput{
+		CertificateId: aws.String(certID),
 		UserName:      aws.String(userName),
 	}
+	_, err = conn.DeleteSigningCertificate(ctx, &input)
 
-	if _, err := conn.DeleteSigningCertificate(ctx, input); err != nil {
-		if errs.IsA[*awstypes.NoSuchEntityException](err) {
-			return diags
-		}
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		return diags
+	}
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IAM Signing Certificate (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func DecodeSigningCertificateId(id string) (string, string, error) {
-	creds := strings.Split(id, ":")
-	if len(creds) != 2 {
-		return "", "", fmt.Errorf("unknown IAM Signing Certificate ID format")
+const signingCertificateResourceIDSeparator = ":"
+
+func signingCertificateCreateResourceID(certificateID, userName string) string {
+	parts := []string{certificateID, userName}
+	id := strings.Join(parts, signingCertificateResourceIDSeparator)
+
+	return id
+}
+
+func signingCertificateParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, signingCertificateResourceIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected CERTIFICATE-ID%[2]sUSER-NAME", id, signingCertificateResourceIDSeparator)
 	}
 
-	certId := creds[0]
-	userName := creds[1]
+	return parts[0], parts[1], nil
+}
 
-	return certId, userName, nil
+func findSigningCertificateByTwoPartKey(ctx context.Context, conn *iam.Client, userName, certID string) (*awstypes.SigningCertificate, error) {
+	input := &iam.ListSigningCertificatesInput{
+		UserName: aws.String(userName),
+	}
+
+	return findSigningCertificate(ctx, conn, input, func(v *awstypes.SigningCertificate) bool {
+		return aws.ToString(v.CertificateId) == certID
+	})
+}
+
+func findSigningCertificate(ctx context.Context, conn *iam.Client, input *iam.ListSigningCertificatesInput, filter tfslices.Predicate[*awstypes.SigningCertificate]) (*awstypes.SigningCertificate, error) {
+	output, err := findSigningCertificates(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSigningCertificates(ctx context.Context, conn *iam.Client, input *iam.ListSigningCertificatesInput, filter tfslices.Predicate[*awstypes.SigningCertificate]) ([]awstypes.SigningCertificate, error) {
+	var output []awstypes.SigningCertificate
+
+	pages := iam.NewListSigningCertificatesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Certificates {
+			if p := &v; !inttypes.IsZero(p) && filter(p) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

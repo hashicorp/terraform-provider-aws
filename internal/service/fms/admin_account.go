@@ -25,6 +25,7 @@ import (
 )
 
 // @SDKResource("aws_fms_admin_account", name="Admin Account")
+// @Region(global=true)
 func resourceAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAdminAccountCreate,
@@ -52,20 +53,24 @@ func resourceAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
-
-	// Ensure there is not an existing FMS Admin Account.
-	output, err := findAdminAccount(ctx, conn)
-
-	if !tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "FMS Admin Account (%s) already associated: import this Terraform resource to manage", aws.ToString(output.AdminAccount))
-	}
 
 	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
+	}
+
+	// Ensure there is not an existing FMS Admin Account.
+	output, err := findAdminAccount(ctx, conn)
+
+	switch {
+	case tfresource.NotFound(err):
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading FMS Admin Account (%s): %s", accountID, err)
+	default:
+		return sdkdiag.AppendErrorf(diags, "FMS Admin Account (%s) already associated: import this Terraform resource to manage", aws.ToString(output.AdminAccount))
 	}
 
 	if _, err := waitAdminAccountCreated(ctx, conn, accountID, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -77,7 +82,7 @@ func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceAdminAccountRead(ctx, d, meta)...)
 }
 
-func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
@@ -98,7 +103,7 @@ func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
@@ -152,7 +157,7 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountID string) retry.StateRefreshFunc {
 	// This is all wrapped in a StateRefreshFunc since AssociateAdminAccount returns
 	// success even though it failed if called too quickly after creating an Organization.
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &fms.AssociateAdminAccountInput{
 			AdminAccount: aws.String(accountID),
 		}
@@ -188,7 +193,7 @@ func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountI
 }
 
 func statusAdminAccount(ctx context.Context, conn *fms.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAdminAccount(ctx, conn)
 
 		if tfresource.NotFound(err) {

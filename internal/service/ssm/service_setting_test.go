@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,12 +20,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSMServiceSetting_basic(t *testing.T) {
+func TestAccSSMServiceSetting_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:     testAccServiceSetting_basic,
+		"upgradeFromV6_5_0": testAccServiceSetting_upgradeFromV6_5_0,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccServiceSetting_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var setting awstypes.ServiceSetting
 	resourceName := "aws_ssm_service_setting.test"
+	settingID := "/ssm/parameter-store/high-throughput-enabled"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -34,7 +47,9 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 				Config: testAccServiceSettingConfig_basic(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccServiceSettingExists(ctx, resourceName, &setting),
+					resource.TestCheckResourceAttr(resourceName, "setting_id", settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 				),
 			},
 			{
@@ -46,8 +61,83 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 				Config: testAccServiceSettingConfig_basic(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccServiceSettingExists(ctx, resourceName, &setting),
+					resource.TestCheckResourceAttr(resourceName, "setting_id", settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 				),
+			},
+			{
+				Config: testAccServiceSettingConfig_settingIDByARN(acctest.CtFalse),
+				Check: resource.ComposeTestCheckFunc(
+					testAccServiceSettingExists(ctx, resourceName, &setting),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "setting_id", "ssm", "servicesetting"+settingID),
+					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  acctest.ImportCheckResourceAttr("setting_id", settingID),
+				ImportStateVerifyIgnore: []string{
+					"setting_id",
+				},
+			},
+			{
+				Config: testAccServiceSettingConfig_settingIDByARN(acctest.CtTrue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccServiceSettingExists(ctx, resourceName, &setting),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "setting_id", "ssm", "servicesetting"+settingID),
+					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func testAccServiceSetting_upgradeFromV6_5_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var setting awstypes.ServiceSetting
+	resourceName := "aws_ssm_service_setting.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
+		CheckDestroy: testAccCheckServiceSettingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.5.0",
+					},
+				},
+				Config: testAccServiceSettingConfig_settingIDByARN(acctest.CtFalse),
+				Check: resource.ComposeTestCheckFunc(
+					testAccServiceSettingExists(ctx, resourceName, &setting),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccServiceSettingConfig_settingIDByARN(acctest.CtFalse),
+				Check: resource.ComposeTestCheckFunc(
+					testAccServiceSettingExists(ctx, resourceName, &setting),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -106,12 +196,21 @@ func testAccServiceSettingExists(ctx context.Context, n string, v *awstypes.Serv
 
 func testAccServiceSettingConfig_basic(settingValue string) string {
 	return fmt.Sprintf(`
+resource "aws_ssm_service_setting" "test" {
+  setting_id    = "/ssm/parameter-store/high-throughput-enabled"
+  setting_value = %[1]q
+}
+`, settingValue)
+}
+
+func testAccServiceSettingConfig_settingIDByARN(settingValue string) string {
+	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_ssm_service_setting" "test" {
-  setting_id    = "arn:${data.aws_partition.current.partition}:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:servicesetting/ssm/parameter-store/high-throughput-enabled"
+  setting_id    = "arn:${data.aws_partition.current.partition}:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:servicesetting/ssm/parameter-store/high-throughput-enabled"
   setting_value = %[1]q
 }
 `, settingValue)

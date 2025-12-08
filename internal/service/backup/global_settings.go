@@ -17,6 +17,7 @@ import (
 )
 
 // @SDKResource("aws_backup_global_settings", name="Global Settings")
+// @Region(global=true)
 func resourceGlobalSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalSettingsUpdate,
@@ -38,12 +39,12 @@ func resourceGlobalSettings() *schema.Resource {
 	}
 }
 
-func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	input := &backup.UpdateGlobalSettingsInput{
-		GlobalSettings: flex.ExpandStringValueMap(d.Get("global_settings").(map[string]interface{})),
+		GlobalSettings: flex.ExpandStringValueMap(d.Get("global_settings").(map[string]any)),
 	}
 
 	_, err := conn.UpdateGlobalSettings(ctx, input)
@@ -59,7 +60,7 @@ func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceGlobalSettingsRead(ctx, d, meta)...)
 }
 
-func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 

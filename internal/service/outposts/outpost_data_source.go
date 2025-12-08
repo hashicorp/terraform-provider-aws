@@ -77,7 +77,7 @@ func dataSourceOutpost() *schema.Resource {
 	}
 }
 
-func dataSourceOutpostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOutpostRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OutpostsClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -136,7 +136,7 @@ func dataSourceOutpostRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("site_id", outpost.SiteId)
 	d.Set("supported_hardware_type", outpost.SupportedHardwareType)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, outpost.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, outpost.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

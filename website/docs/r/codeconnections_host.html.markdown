@@ -28,6 +28,7 @@ resource "aws_codeconnections_host" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the host to be created. The name must be unique in the calling AWS account.
 * `provider_endpoint` - (Required) The endpoint of the infrastructure to be represented by the host after it is created.
 * `provider_type` - (Required) The name of the external provider where your third-party code repository is configured.
@@ -44,11 +45,32 @@ A `vpc_configuration` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The CodeConnections Host ARN.
 * `arn` - The CodeConnections Host ARN.
+* `id` - (**Deprecated**) The CodeConnections Host ARN.
 * `status` - The CodeConnections Host status. Possible values are `PENDING`, `AVAILABLE`, `VPC_CONFIG_DELETING`, `VPC_CONFIG_INITIALIZING`, and `VPC_CONFIG_FAILED_INITIALIZATION`.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codeconnections_host.example
+  identity = {
+    "arn" = "arn:aws:codeconnections:us-west-2:123456789012:host/example-host-id"
+  }
+}
+
+resource "aws_codeconnections_host" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeConnections host.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeConnections Host using the ARN. For example:
 

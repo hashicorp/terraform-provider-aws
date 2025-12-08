@@ -28,6 +28,9 @@ import (
 
 // @SDKResource("aws_networkmanager_vpc_attachment", name="VPC Attachment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.VpcAttachment")
+// @Testing(skipEmptyTags=true)
+// @Testing(generator=false)
 func resourceVPCAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCAttachmentCreate,
@@ -40,7 +43,6 @@ func resourceVPCAttachment() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 				if d.Id() == "" {
 					return nil
@@ -66,6 +68,34 @@ func resourceVPCAttachment() *schema.Resource {
 
 				if state := awstypes.AttachmentState(d.Get(names.AttrState).(string)); state == awstypes.AttachmentStatePendingAttachmentAcceptance {
 					return d.ForceNew("options.0.ipv6_support")
+				}
+				return nil
+			},
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Id() == "" {
+					return nil
+				}
+
+				if !d.HasChange("options.0.dns_support") {
+					return nil
+				}
+
+				if state := awstypes.AttachmentState(d.Get(names.AttrState).(string)); state == awstypes.AttachmentStatePendingAttachmentAcceptance {
+					return d.ForceNew("options.0.dns_support")
+				}
+				return nil
+			},
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Id() == "" {
+					return nil
+				}
+
+				if !d.HasChange("options.0.security_group_referencing_support") {
+					return nil
+				}
+
+				if state := awstypes.AttachmentState(d.Get(names.AttrState).(string)); state == awstypes.AttachmentStatePendingAttachmentAcceptance {
+					return d.ForceNew("options.0.security_group_referencing_support")
 				}
 				return nil
 			},
@@ -106,16 +136,29 @@ func resourceVPCAttachment() *schema.Resource {
 			"options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"appliance_mode_support": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
+						},
+						"dns_support": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
 						},
 						"ipv6_support": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
+						},
+						"security_group_referencing_support": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -157,7 +200,7 @@ func resourceVPCAttachment() *schema.Resource {
 	}
 }
 
-func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -170,8 +213,8 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 		VpcArn:        aws.String(vpcARN),
 	}
 
-	if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Options = expandVpcOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Options = expandVpcOptions(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateVpcAttachment(ctx, input)
@@ -189,7 +232,7 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceVPCAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -213,7 +256,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("core_network_id", attachment.CoreNetworkId)
 	d.Set("edge_location", attachment.EdgeLocation)
 	if vpcAttachment.Options != nil {
-		if err := d.Set("options", []interface{}{flattenVpcOptions(vpcAttachment.Options)}); err != nil {
+		if err := d.Set("options", []any{flattenVpcOptions(vpcAttachment.Options)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 		}
 	} else {
@@ -231,7 +274,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -241,8 +284,8 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if d.HasChange("options") {
-			if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.Options = expandVpcOptions(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.Options = expandVpcOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -264,16 +307,17 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Network Manager VPC Attachment (%s): %s", d.Id(), err)
 		}
+	}
 
-		if _, err := waitVPCAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
-		}
+	// An update (via transparent tagging) to tags can put the attachment into PENDING_NETWORK_UPDATE state.
+	if _, err := waitVPCAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceVPCAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -311,7 +355,7 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
 			AttachmentId: aws.String(d.Id()),
 		})
@@ -358,7 +402,7 @@ func findVPCAttachmentByID(ctx context.Context, conn *networkmanager.Client, id 
 }
 
 func statusVPCAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCAttachmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -437,6 +481,8 @@ func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, 
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusVPCAttachment(ctx, conn, id),
+		Delay:          2 * time.Minute,
+		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
 	}
 
@@ -453,7 +499,7 @@ func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, 
 
 func waitVPCAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.VpcAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AttachmentStateUpdating),
+		Pending: enum.Slice(awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStateUpdating),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingTagAcceptance),
 		Timeout: timeout,
 		Refresh: statusVPCAttachment(ctx, conn, id),
@@ -470,7 +516,7 @@ func waitVPCAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, 
 	return nil, err
 }
 
-func expandVpcOptions(tfMap map[string]interface{}) *awstypes.VpcOptions { // nosemgrep:ci.caps5-in-func-name
+func expandVpcOptions(tfMap map[string]any) *awstypes.VpcOptions { // nosemgrep:ci.caps5-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -478,24 +524,34 @@ func expandVpcOptions(tfMap map[string]interface{}) *awstypes.VpcOptions { // no
 	apiObject := &awstypes.VpcOptions{}
 
 	if v, ok := tfMap["appliance_mode_support"].(bool); ok {
-		apiObject.ApplianceModeSupport = v
+		apiObject.ApplianceModeSupport = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["dns_support"].(bool); ok {
+		apiObject.DnsSupport = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["ipv6_support"].(bool); ok {
-		apiObject.Ipv6Support = v
+		apiObject.Ipv6Support = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["security_group_referencing_support"].(bool); ok {
+		apiObject.SecurityGroupReferencingSupport = aws.Bool(v)
 	}
 
 	return apiObject
 }
 
-func flattenVpcOptions(apiObject *awstypes.VpcOptions) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
+func flattenVpcOptions(apiObject *awstypes.VpcOptions) map[string]any { // nosemgrep:ci.caps5-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"appliance_mode_support": apiObject.ApplianceModeSupport,
-		"ipv6_support":           apiObject.Ipv6Support,
+	tfMap := map[string]any{
+		"appliance_mode_support":             aws.ToBool(apiObject.ApplianceModeSupport),
+		"dns_support":                        aws.ToBool(apiObject.DnsSupport),
+		"ipv6_support":                       aws.ToBool(apiObject.Ipv6Support),
+		"security_group_referencing_support": aws.ToBool(apiObject.SecurityGroupReferencingSupport),
 	}
 
 	return tfMap

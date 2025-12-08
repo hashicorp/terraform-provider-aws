@@ -9,49 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func TestNormalizeNameIntoAPIRepresentation(t *testing.T) {
-	t.Parallel()
-
-	cases := []struct {
-		input, output string
-	}{
-		// Preserve escape code
-		{"a\\000c.example.com", "a\\000c.example.com"},
-		{"a\\056c.example.com", "a\\056c.example.com"}, // with escaped "."
-
-		// Preserve "-" / "_" as-is
-		{"a-b.example.com", "a-b.example.com"},
-		{"_abc.example.com", "_abc.example.com"},
-
-		// no conversion
-		{"www.example.com", "www.example.com"},
-
-		// converted into lower-case
-		{"AbC.example.com", "abc.example.com"},
-
-		// convert into escape code
-		{"*.example.com", "\\052.example.com"},
-		{"!.example.com", "\\041.example.com"},
-		{"a/b.example.com", "a\\057b.example.com"},
-		{"/.example.com", "\\057.example.com"},
-		{"~.example.com", "\\176.example.com"},
-		{"a\\2B.example.com", "a\\1342b.example.com"},
-	}
-
-	for _, tc := range cases {
-		output := normalizeDomainNameToAPI(tc.input)
-
-		if got, want := output, tc.output; got != want {
-			t.Errorf("normalizeDomainNameToAPI(%q) = %v, want %v", tc.input, got, want)
-		}
-	}
-}
-
 func TestNormalizeAliasDomainName(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		input  interface{}
+		input  any
 		output string
 	}{
 		{"www.example.com", "www.example.com"},
@@ -98,7 +60,7 @@ func TestNormalizeDomainName(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		input  interface{}
+		input  any
 		output string
 	}{
 		{"example.com", "example.com"},

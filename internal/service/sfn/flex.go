@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandEncryptionConfiguration(tfMap map[string]interface{}) *awstypes.EncryptionConfiguration {
+func expandEncryptionConfiguration(tfMap map[string]any) *awstypes.EncryptionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -31,12 +31,12 @@ func expandEncryptionConfiguration(tfMap map[string]interface{}) *awstypes.Encry
 	return apiObject
 }
 
-func flattenEncryptionConfiguration(apiObject *awstypes.EncryptionConfiguration) map[string]interface{} {
+func flattenEncryptionConfiguration(apiObject *awstypes.EncryptionConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrKMSKeyID: aws.ToString(apiObject.KmsKeyId),
 		names.AttrType:     apiObject.Type,
 	}

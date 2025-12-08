@@ -167,6 +167,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `egress` - (Optional) Configuration block for an egress rule. Detailed below.
 * `ingress` - (Optional) Configuration block for an ingress rule. Detailed below.
 * `subnet_ids` - (Optional) List of Subnet IDs to apply the ACL to. See the notes above on Managing Subnets in the Default Network ACL
@@ -186,6 +187,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_block` - (Optional) The CIDR block to match. This must be a valid network mask.
 * `icmp_code` - (Optional) The ICMP type code to be used. Default 0.
 * `icmp_type` - (Optional) The ICMP type to be used. Default 0.
@@ -230,4 +232,4 @@ Using `terraform import`, import Default Network ACLs using the `id`. For exampl
 % terraform import aws_default_network_acl.sample acl-7aaabd18
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1ee0cdf2a65fb9b81bf170ed16e018fb9c51a76e5efe0185e333f268f198ed71 -->
+<!-- cache-key: cdktf-0.20.8 input-a588ad520ce301d3578e16a8e2b5b4047dd5d6dc27322516462ae6443cd5a6a5 -->

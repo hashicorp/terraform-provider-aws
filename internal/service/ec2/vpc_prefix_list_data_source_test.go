@@ -81,7 +81,7 @@ data "aws_prefix_list" "s3_by_id" {
 }
 
 data "aws_prefix_list" "s3_by_name" {
-  name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 `
 
@@ -91,7 +91,7 @@ data "aws_region" "current" {}
 data "aws_prefix_list" "s3_by_name" {
   filter {
     name   = "prefix-list-name"
-    values = ["com.amazonaws.${data.aws_region.current.name}.s3"]
+    values = ["com.amazonaws.${data.aws_region.current.region}.s3"]
   }
 }
 
@@ -107,11 +107,11 @@ const testAccVPCPrefixListDataSourceConfig_nameDoesNotOverrideFilter = `
 data "aws_region" "current" {}
 
 data "aws_prefix_list" "test" {
-  name = "com.amazonaws.${data.aws_region.current.name}.dynamodb"
+  name = "com.amazonaws.${data.aws_region.current.region}.dynamodb"
 
   filter {
     name   = "prefix-list-name"
-    values = ["com.amazonaws.${data.aws_region.current.name}.s3"]
+    values = ["com.amazonaws.${data.aws_region.current.region}.s3"]
   }
 }
 `

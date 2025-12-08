@@ -28,19 +28,15 @@ import (
 )
 
 // @FrameworkResource("aws_paymentcryptography_key_alias",name="Key Alias")
-func newResourceKeyAlias(context.Context) (resource.ResourceWithConfigure, error) {
+func newKeyAliasResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyAliasResource{}
 
 	return r, nil
 }
 
 type keyAliasResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[keyAliasResourceModel]
 	framework.WithImportByID
-}
-
-func (*keyAliasResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_paymentcryptography_key_alias"
 }
 
 func (r *keyAliasResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -197,6 +193,7 @@ func (r *keyAliasResource) Delete(ctx context.Context, request resource.DeleteRe
 }
 
 type keyAliasResourceModel struct {
+	framework.WithRegionModel
 	KeyARN    types.String `tfsdk:"key_arn"`
 	AliasName types.String `tfsdk:"alias_name"`
 	ID        types.String `tfsdk:"id"`

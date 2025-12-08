@@ -27,17 +27,19 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_azure_blob", name="Location Microsoft Azure Blob Storage")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationAzureBlobOutput")
+// @Testing(importIgnore="sas_configuration")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(name="LocationAzureBlob")
 func resourceLocationAzureBlob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationAzureBlobCreate,
 		ReadWithoutTimeout:   resourceLocationAzureBlobRead,
 		UpdateWithoutTimeout: resourceLocationAzureBlobUpdate,
 		DeleteWithoutTimeout: resourceLocationAzureBlobDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"access_tier": {
@@ -109,12 +111,10 @@ func resourceLocationAzureBlob() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLocationAzureBlobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationAzureBlobCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -134,7 +134,7 @@ func resourceLocationAzureBlobCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("sas_configuration"); ok {
-		input.SasConfiguration = expandAzureBlobSasConfiguration(v.([]interface{}))
+		input.SasConfiguration = expandAzureBlobSasConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("subdirectory"); ok {
@@ -152,7 +152,7 @@ func resourceLocationAzureBlobCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceLocationAzureBlobRead(ctx, d, meta)...)
 }
 
-func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -193,7 +193,7 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -219,7 +219,7 @@ func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("sas_configuration") {
-			input.SasConfiguration = expandAzureBlobSasConfiguration(d.Get("sas_configuration").([]interface{}))
+			input.SasConfiguration = expandAzureBlobSasConfiguration(d.Get("sas_configuration").([]any))
 		}
 
 		if d.HasChange("subdirectory") {
@@ -236,7 +236,7 @@ func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceLocationAzureBlobRead(ctx, d, meta)...)
 }
 
-func resourceLocationAzureBlobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationAzureBlobDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -282,12 +282,12 @@ func findLocationAzureBlobByARN(ctx context.Context, conn *datasync.Client, arn 
 	return output, nil
 }
 
-func expandAzureBlobSasConfiguration(l []interface{}) *awstypes.AzureBlobSasConfiguration {
+func expandAzureBlobSasConfiguration(l []any) *awstypes.AzureBlobSasConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	apiObject := &awstypes.AzureBlobSasConfiguration{
 		Token: aws.String(m["token"].(string)),

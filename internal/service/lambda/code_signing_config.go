@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -95,25 +94,21 @@ func resourceCodeSigningConfig() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-		),
 	}
 }
 
-func resourceCodeSigningConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCodeSigningConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	input := &lambda.CreateCodeSigningConfigInput{
-		AllowedPublishers: expandAllowedPublishers(d.Get("allowed_publishers").([]interface{})),
+		AllowedPublishers: expandAllowedPublishers(d.Get("allowed_publishers").([]any)),
 		Description:       aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:              getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("policies"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("policies"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		input.CodeSigningPolicies = &awstypes.CodeSigningPolicies{
 			UntrustedArtifactOnDeployment: awstypes.CodeSigningPolicy(tfMap["untrusted_artifact_on_deployment"].(string)),
 		}
@@ -130,7 +125,7 @@ func resourceCodeSigningConfigCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceCodeSigningConfigRead(ctx, d, meta)...)
 }
 
-func resourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -160,7 +155,7 @@ func resourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceCodeSigningConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCodeSigningConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -170,7 +165,7 @@ func resourceCodeSigningConfigUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("allowed_publishers") {
-			input.AllowedPublishers = expandAllowedPublishers(d.Get("allowed_publishers").([]interface{}))
+			input.AllowedPublishers = expandAllowedPublishers(d.Get("allowed_publishers").([]any))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -178,8 +173,8 @@ func resourceCodeSigningConfigUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("policies") {
-			if v, ok := d.GetOk("policies"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				tfMap := v.([]interface{})[0].(map[string]interface{})
+			if v, ok := d.GetOk("policies"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
 				input.CodeSigningPolicies = &awstypes.CodeSigningPolicies{
 					UntrustedArtifactOnDeployment: awstypes.CodeSigningPolicy(tfMap["untrusted_artifact_on_deployment"].(string)),
 				}
@@ -196,7 +191,7 @@ func resourceCodeSigningConfigUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceCodeSigningConfigRead(ctx, d, meta)...)
 }
 
-func resourceCodeSigningConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCodeSigningConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -245,36 +240,36 @@ func findCodeSigningConfig(ctx context.Context, conn *lambda.Client, input *lamb
 	return output.CodeSigningConfig, nil
 }
 
-func expandAllowedPublishers(tfList []interface{}) *awstypes.AllowedPublishers {
+func expandAllowedPublishers(tfList []any) *awstypes.AllowedPublishers {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	return &awstypes.AllowedPublishers{
 		SigningProfileVersionArns: flex.ExpandStringValueSet(tfMap["signing_profile_version_arns"].(*schema.Set)),
 	}
 }
 
-func flattenAllowedPublishers(apiObject *awstypes.AllowedPublishers) []interface{} {
+func flattenAllowedPublishers(apiObject *awstypes.AllowedPublishers) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		"signing_profile_version_arns": apiObject.SigningProfileVersionArns,
 	}}
 }
 
-func flattenCodeSigningPolicies(apiObject *awstypes.CodeSigningPolicies) []interface{} {
+func flattenCodeSigningPolicies(apiObject *awstypes.CodeSigningPolicies) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"untrusted_artifact_on_deployment": apiObject.UntrustedArtifactOnDeployment,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

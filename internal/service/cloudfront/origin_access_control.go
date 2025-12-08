@@ -35,6 +35,10 @@ func resourceOriginAccessControl() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -69,7 +73,7 @@ func resourceOriginAccessControl() *schema.Resource {
 	}
 }
 
-func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -95,7 +99,7 @@ func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceOriginAccessControlRead(ctx, d, meta)...)
 }
 
-func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -111,6 +115,7 @@ func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Access Control (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, originAccessControlARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	config := output.OriginAccessControl.OriginAccessControlConfig
 	d.Set(names.AttrDescription, config.Description)
 	d.Set("etag", output.ETag)
@@ -122,7 +127,7 @@ func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -147,15 +152,16 @@ func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceOriginAccessControlRead(ctx, d, meta)...)
 }
 
-func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudFront Origin Access Control: %s", d.Id())
-	_, err := conn.DeleteOriginAccessControl(ctx, &cloudfront.DeleteOriginAccessControlInput{
+	input := cloudfront.DeleteOriginAccessControlInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteOriginAccessControl(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchOriginAccessControl](err) {
 		return diags
@@ -191,4 +197,9 @@ func findOriginAccessControlByID(ctx context.Context, conn *cloudfront.Client, i
 	}
 
 	return output, nil
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func originAccessControlARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "origin-access-control/"+id)
 }

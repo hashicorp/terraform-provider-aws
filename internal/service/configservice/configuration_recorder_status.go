@@ -45,7 +45,7 @@ func resourceConfigurationRecorderStatus() *schema.Resource {
 	}
 }
 
-func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -80,7 +80,7 @@ func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.Resou
 	return append(diags, resourceConfigurationRecorderStatusRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -102,13 +102,14 @@ func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceConfigurationRecorderStatusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationRecorderStatusDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	_, err := conn.StopConfigurationRecorder(ctx, &configservice.StopConfigurationRecorderInput{
+	input := configservice.StopConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.StopConfigurationRecorder(ctx, &input)
 
 	if errs.IsA[*types.NoSuchConfigurationRecorderException](err) {
 		return diags

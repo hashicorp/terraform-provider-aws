@@ -59,7 +59,7 @@ const (
 	resNameEmailIdentityMailFromAttributes = "Email Identity Mail From Attributes"
 )
 
-func resourceEmailIdentityMailFromAttributesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityMailFromAttributesCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -93,7 +93,7 @@ func resourceEmailIdentityMailFromAttributesCreate(ctx context.Context, d *schem
 	return append(diags, resourceEmailIdentityMailFromAttributesRead(ctx, d, meta)...)
 }
 
-func resourceEmailIdentityMailFromAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityMailFromAttributesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -122,7 +122,7 @@ func resourceEmailIdentityMailFromAttributesRead(ctx context.Context, d *schema.
 	return diags
 }
 
-func resourceEmailIdentityMailFromAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityMailFromAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -156,7 +156,7 @@ func resourceEmailIdentityMailFromAttributesUpdate(ctx context.Context, d *schem
 	return append(diags, resourceEmailIdentityMailFromAttributesRead(ctx, d, meta)...)
 }
 
-func resourceEmailIdentityMailFromAttributesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityMailFromAttributesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 

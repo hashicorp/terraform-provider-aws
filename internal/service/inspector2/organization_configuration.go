@@ -42,6 +42,11 @@ func resourceOrganizationConfiguration() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"code_repository": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"ec2": {
 							Type:     schema.TypeBool,
 							Required: true,
@@ -75,7 +80,7 @@ const (
 	orgConfigMutex = "f14b54d7-2b10-58c2-9c1b-c48260a4825d"
 )
 
-func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
@@ -83,7 +88,7 @@ func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceOrganizationConfigurationUpdate(ctx, d, meta)...)
 }
 
-func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -99,7 +104,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading Inspector2 Organization Configuration (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("auto_enable", []interface{}{flattenAutoEnable(output.AutoEnable)}); err != nil {
+	if err := d.Set("auto_enable", []any{flattenAutoEnable(output.AutoEnable)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_enable: %s", err)
 	}
 	d.Set("max_account_limit_reached", output.MaxAccountLimitReached)
@@ -107,11 +112,11 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
-	autoEnable := expandAutoEnable(d.Get("auto_enable").([]interface{})[0].(map[string]interface{}))
+	autoEnable := expandAutoEnable(d.Get("auto_enable").([]any)[0].(map[string]any))
 	input := &inspector2.UpdateOrganizationConfigurationInput{
 		AutoEnable: autoEnable,
 	}
@@ -137,7 +142,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -146,10 +151,11 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 
 	log.Printf("[DEBUG] Deleting Inspector2 Organization Configuration: %s", d.Id())
 	autoEnable := &awstypes.AutoEnable{
-		Ec2:        aws.Bool(false),
-		Ecr:        aws.Bool(false),
-		Lambda:     aws.Bool(false),
-		LambdaCode: aws.Bool(false),
+		CodeRepository: aws.Bool(false),
+		Ec2:            aws.Bool(false),
+		Ecr:            aws.Bool(false),
+		Lambda:         aws.Bool(false),
+		LambdaCode:     aws.Bool(false),
 	}
 	_, err := conn.UpdateOrganizationConfiguration(ctx, &inspector2.UpdateOrganizationConfigurationInput{
 		AutoEnable: autoEnable,
@@ -191,7 +197,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *inspector2.Client)
 func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, target *awstypes.AutoEnable, timeout time.Duration) (*inspector2.DescribeOrganizationConfigurationOutput, error) { //nolint:unparam
 	var output *inspector2.DescribeOrganizationConfigurationOutput
 
-	_, err := tfresource.RetryUntilEqual(ctx, timeout, true, func() (bool, error) {
+	_, err := tfresource.RetryUntilEqual(ctx, timeout, true, func(ctx context.Context) (bool, error) {
 		var err error
 		output, err = findOrganizationConfiguration(ctx, conn)
 
@@ -203,6 +209,7 @@ func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.
 		equal = equal && aws.ToBool(output.AutoEnable.Ecr) == aws.ToBool(target.Ecr)
 		equal = equal && aws.ToBool(output.AutoEnable.Lambda) == aws.ToBool(target.Lambda)
 		equal = equal && aws.ToBool(output.AutoEnable.LambdaCode) == aws.ToBool(target.LambdaCode)
+		equal = equal && aws.ToBool(output.AutoEnable.CodeRepository) == aws.ToBool(target.CodeRepository)
 
 		return equal, nil
 	})
@@ -214,12 +221,16 @@ func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.
 	return output, nil
 }
 
-func flattenAutoEnable(apiObject *awstypes.AutoEnable) map[string]interface{} {
+func flattenAutoEnable(apiObject *awstypes.AutoEnable) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
+
+	if v := apiObject.CodeRepository; v != nil {
+		tfMap["code_repository"] = aws.ToBool(v)
+	}
 
 	if v := apiObject.Ec2; v != nil {
 		tfMap["ec2"] = aws.ToBool(v)
@@ -240,12 +251,16 @@ func flattenAutoEnable(apiObject *awstypes.AutoEnable) map[string]interface{} {
 	return tfMap
 }
 
-func expandAutoEnable(tfMap map[string]interface{}) *awstypes.AutoEnable {
+func expandAutoEnable(tfMap map[string]any) *awstypes.AutoEnable {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.AutoEnable{}
+
+	if v, ok := tfMap["code_repository"].(bool); ok {
+		apiObject.CodeRepository = aws.Bool(v)
+	}
 
 	if v, ok := tfMap["ec2"].(bool); ok {
 		apiObject.Ec2 = aws.Bool(v)

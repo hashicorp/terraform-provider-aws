@@ -45,17 +45,17 @@ Data Sources use a self-registration process that adds them to the provider usin
         "github.com/hashicorp/terraform-provider-aws/internal/framework"
     )
 
-    // @FrameworkDataSource(name="Example")
-    func newResourceExample(_ context.Context) (datasource.ResourceWithConfigure, error) {
-    	return &dataSourceExample{}, nil
+    // @FrameworkDataSource("aws_something_example", name="Example")
+    func newExampleDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+    	return &exampleDataSource{}, nil
     }
 
-    type dataSourceExample struct {
-	    framework.DataSourceWithConfigure
+    type exampleDataSource struct {
+    	framework.DataSourceWithModel[exampleDataSourceModel]
     }
 
-    func (r *dataSourceExample) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-    	response.TypeName = "aws_something_example"
+    type exampleDataSourceModel {
+    	// Fields corresponding to attributes in the Schema.
     }
     ```
 

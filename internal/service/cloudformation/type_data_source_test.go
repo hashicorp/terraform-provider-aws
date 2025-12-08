@@ -189,7 +189,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 data "aws_cloudformation_type" "test" {
-  arn = "arn:${data.aws_partition.current.partition}:cloudformation:${data.aws_region.current.name}::type/resource/AWS-Athena-WorkGroup"
+  arn = "arn:${data.aws_partition.current.partition}:cloudformation:${data.aws_region.current.region}::type/resource/AWS-Athena-WorkGroup"
 }
 `
 }

@@ -5,6 +5,7 @@ package servicecatalog_test
 import (
 	"context"
 	"testing"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -17,17 +18,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -205,11 +207,12 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 
 func TestAccServiceCatalogPortfolio_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -257,8 +260,14 @@ func TestAccServiceCatalogPortfolio_tags_null(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -266,11 +275,12 @@ func TestAccServiceCatalogPortfolio_tags_null(t *testing.T) {
 
 func TestAccServiceCatalogPortfolio_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -314,8 +324,14 @@ func TestAccServiceCatalogPortfolio_tags_EmptyMap(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -323,11 +339,12 @@ func TestAccServiceCatalogPortfolio_tags_EmptyMap(t *testing.T) {
 
 func TestAccServiceCatalogPortfolio_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -406,11 +423,12 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnCreate(t *testing.T) {
 	t.Skip("Resource Portfolio does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -497,11 +515,12 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	t.Skip("Resource Portfolio does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -636,11 +655,12 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnUpdate_Replace(t *testing.T)
 	t.Skip("Resource Portfolio does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
@@ -725,11 +745,12 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnUpdate_Replace(t *testing.T)
 
 func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -906,11 +927,12 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 
 func TestAccServiceCatalogPortfolio_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1066,11 +1088,12 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nonOverlapping(t *testing.T
 
 func TestAccServiceCatalogPortfolio_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1242,11 +1265,12 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_overlapping(t *testing.T) {
 
 func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1332,11 +1356,12 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToProviderOnly(t *tes
 
 func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1423,11 +1448,12 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_emptyResourceTag(t *testing
 	t.Skip("Resource Portfolio does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1490,11 +1516,12 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_emptyProviderOnlyTag(t *tes
 	t.Skip("Resource Portfolio does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1547,11 +1574,12 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_emptyProviderOnlyTag(t *tes
 
 func TestAccServiceCatalogPortfolio_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1609,11 +1637,12 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nullOverlappingResourceTag(
 
 func TestAccServiceCatalogPortfolio_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1671,11 +1700,12 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nullNonOverlappingResourceT
 
 func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1726,11 +1756,12 @@ func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1823,11 +1854,12 @@ func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnUpdate_Add(t *testing.T) 
 
 func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1910,11 +1942,12 @@ func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnUpdate_Replace(t *testing
 
 func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -1945,7 +1978,7 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullPortfolioResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPortfolioResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -1994,7 +2027,7 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullPortfolioResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPortfolioResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2043,7 +2076,7 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullPortfolioResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPortfolioResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2072,11 +2105,12 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 
 func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandString(5)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
@@ -2105,7 +2139,7 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullPortfolioResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPortfolioResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2168,7 +2202,7 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullPortfolioResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPortfolioResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2231,7 +2265,7 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullPortfolioResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPortfolioResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
@@ -2274,9 +2308,9 @@ func TestAccServiceCatalogPortfolio_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 	})
 }
 
-func expectFullPortfolioResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func expectFullPortfolioResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Portfolio",
-	}, knownValue)
+	}), knownValue)
 }

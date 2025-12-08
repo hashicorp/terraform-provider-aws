@@ -5,12 +5,10 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -86,12 +84,10 @@ func resourceCustomerGateway() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.GatewayType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -147,9 +143,10 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceCustomerGatewayRead(ctx, d, meta)...)
 }
 
-func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	customerGateway, err := findCustomerGatewayByID(ctx, conn, d.Id())
 
@@ -163,14 +160,7 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Customer Gateway (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, customerGatewayARN(ctx, c, d.Id()))
 	d.Set("bgp_asn", customerGateway.BgpAsn)
 	d.Set("bgp_asn_extended", customerGateway.BgpAsnExtended)
 	d.Set(names.AttrCertificateARN, customerGateway.CertificateArn)
@@ -183,12 +173,12 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceCustomerGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceCustomerGatewayRead(ctx, d, meta)
 }
 
-func resourceCustomerGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -211,4 +201,8 @@ func resourceCustomerGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
+}
+
+func customerGatewayARN(ctx context.Context, c *conns.AWSClient, customerGatewayID string) string {
+	return c.RegionalARN(ctx, names.EC2, "customer-gateway/"+customerGatewayID)
 }

@@ -50,7 +50,7 @@ func resourceSnapshotScheduleAssociation() *schema.Resource {
 	}
 }
 
-func resourceSnapshotScheduleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotScheduleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -78,7 +78,7 @@ func resourceSnapshotScheduleAssociationCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceSnapshotScheduleAssociationRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotScheduleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotScheduleAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -105,7 +105,7 @@ func resourceSnapshotScheduleAssociationRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceSnapshotScheduleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSnapshotScheduleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -186,7 +186,7 @@ func findSnapshotScheduleAssociationByTwoPartKey(ctx context.Context, conn *reds
 }
 
 func statusSnapshotScheduleAssociation(ctx context.Context, conn *redshift.Client, clusterIdentifier, scheduleIdentifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 
 		if tfresource.NotFound(err) {

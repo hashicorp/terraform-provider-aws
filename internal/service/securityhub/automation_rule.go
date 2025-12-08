@@ -34,17 +34,17 @@ import (
 
 // @FrameworkResource("aws_securityhub_automation_rule", name="Automation Rule")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.AutomationRulesConfig")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newAutomationRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &automationRuleResource{}, nil
 }
 
 type automationRuleResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
-}
-
-func (r *automationRuleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securityhub_automation_rule"
+	framework.ResourceWithModel[automationRuleResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *automationRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -506,10 +506,6 @@ func (r *automationRuleResource) Delete(ctx context.Context, request resource.De
 	}
 }
 
-func (r *automationRuleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAutomationRuleByARN(ctx context.Context, conn *securityhub.Client, arn string) (*awstypes.AutomationRulesConfig, error) {
 	input := &securityhub.BatchGetAutomationRulesInput{
 		AutomationRulesArns: []string{arn},
@@ -550,6 +546,7 @@ func findAutomationRules(ctx context.Context, conn *securityhub.Client, input *s
 }
 
 type automationRuleResourceModel struct {
+	framework.WithRegionModel
 	Actions     fwtypes.SetNestedObjectValueOf[automationRulesActionModel]          `tfsdk:"actions"`
 	Criteria    fwtypes.ListNestedObjectValueOf[automationRulesFindingFiltersModel] `tfsdk:"criteria"`
 	Description types.String                                                        `tfsdk:"description"`

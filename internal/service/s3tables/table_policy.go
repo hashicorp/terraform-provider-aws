@@ -16,45 +16,35 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3tables_table_policy", name="Table Policy")
-func newResourceTablePolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceTablePolicy{}, nil
+func newTablePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &tablePolicyResource{}, nil
 }
 
-const (
-	ResNameTablePolicy = "Table Policy"
-)
-
-type resourceTablePolicy struct {
-	framework.ResourceWithConfigure
+type tablePolicyResource struct {
+	framework.ResourceWithModel[tablePolicyResourceModel]
 }
 
-func (r *resourceTablePolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_s3tables_table_policy"
-}
-
-func (r *resourceTablePolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *tablePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrName: schema.StringAttribute{
-				Required:   true,
-				Validators: tableNameValidator,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrNamespace: schema.StringAttribute{
-				Required:   true,
-				Validators: namespaceNameValidator,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -74,188 +64,167 @@ func (r *resourceTablePolicy) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceTablePolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().S3TablesClient(ctx)
-
-	var plan resourceTablePolicyModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *tablePolicyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data tablePolicyResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().S3TablesClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var input s3tables.PutTablePolicyInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := conn.PutTablePolicy(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, ResNameTablePolicy, plan.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Tables Table Policy (%s)", name), err.Error())
+
 		return
 	}
 
-	out, err := findTablePolicy(ctx, conn, plan.TableBucketARN.ValueString(), plan.Namespace.ValueString(), plan.Name.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, ResNameTableBucketPolicy, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceTablePolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().S3TablesClient(ctx)
-
-	var state resourceTablePolicyModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *tablePolicyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data tablePolicyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findTablePolicy(ctx, conn, state.TableBucketARN.ValueString(), state.Namespace.ValueString(), state.Name.ValueString())
+	conn := r.Meta().S3TablesClient(ctx)
+
+	name, namespace, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Name), fwflex.StringValueFromFramework(ctx, data.Namespace), fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
+	output, err := findTablePolicyByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, ResNameTablePolicy, state.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Policy (%s)", name), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceTablePolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().S3TablesClient(ctx)
-
-	var plan resourceTablePolicyModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *tablePolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new tablePolicyResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().S3TablesClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, new.Name)
 	var input s3tables.PutTablePolicyInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := conn.PutTablePolicy(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, ResNameTablePolicy, plan.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Tables Table Policy (%s)", name), err.Error())
+
 		return
 	}
 
-	out, err := findTablePolicy(ctx, conn, plan.TableBucketARN.ValueString(), plan.Namespace.ValueString(), plan.Name.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, ResNameTableBucketPolicy, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceTablePolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *tablePolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data tablePolicyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceTablePolicyModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	name, namespace, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Name), fwflex.StringValueFromFramework(ctx, data.Namespace), fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	input := s3tables.DeleteTablePolicyInput{
-		Name:           state.Name.ValueStringPointer(),
-		Namespace:      state.Namespace.ValueStringPointer(),
-		TableBucketARN: state.TableBucketARN.ValueStringPointer(),
-	}
-
-	_, err := conn.DeleteTablePolicy(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return
-		}
-
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionDeleting, ResNameTablePolicy, state.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
-func (r *resourceTablePolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	identifier, err := parseTableIdentifier(req.ID)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Invalid Import ID",
-			"Import IDs for S3 Tables Table Policies must use the format <table bucket ARN>"+tableIDSeparator+"<namespace>"+tableIDSeparator+"<table name>.\n"+
-				fmt.Sprintf("Had %q", req.ID),
-		)
-		return
-	}
-
-	identifier.PopulateState(ctx, &resp.State, &resp.Diagnostics)
-}
-
-func findTablePolicy(ctx context.Context, conn *s3tables.Client, bucketARN, namespace, name string) (*s3tables.GetTablePolicyOutput, error) {
-	in := s3tables.GetTablePolicyInput{
 		Name:           aws.String(name),
 		Namespace:      aws.String(namespace),
-		TableBucketARN: aws.String(bucketARN),
+		TableBucketARN: aws.String(tableBucketARN),
+	}
+	_, err := conn.DeleteTablePolicy(ctx, &input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return
 	}
 
-	out, err := conn.GetTablePolicy(ctx, &in)
 	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Tables Table Policy (%s)", name), err.Error())
 
+		return
+	}
+}
+
+func (r *tablePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	identifier, err := parseTableIdentifier(request.ID)
+	if err != nil {
+		response.Diagnostics.AddError(
+			"Invalid Import ID",
+			"Import IDs for S3 Tables Table Policies must use the format <table bucket ARN>"+tableIDSeparator+"<namespace>"+tableIDSeparator+"<table name>.\n"+
+				fmt.Sprintf("Had %q", request.ID),
+		)
+		return
+	}
+
+	identifier.PopulateState(ctx, &response.State, &response.Diagnostics)
+}
+
+func findTablePolicyByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*s3tables.GetTablePolicyOutput, error) {
+	input := s3tables.GetTablePolicyInput{
+		Name:           aws.String(name),
+		Namespace:      aws.String(namespace),
+		TableBucketARN: aws.String(tableBucketARN),
+	}
+
+	return findTablePolicy(ctx, conn, &input)
+}
+
+func findTablePolicy(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTablePolicyInput) (*s3tables.GetTablePolicyOutput, error) {
+	output, err := conn.GetTablePolicy(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || aws.ToString(output.ResourcePolicy) == "" {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
-type resourceTablePolicyModel struct {
+type tablePolicyResourceModel struct {
+	framework.WithRegionModel
 	Name           types.String      `tfsdk:"name"`
 	Namespace      types.String      `tfsdk:"namespace"`
 	ResourcePolicy fwtypes.IAMPolicy `tfsdk:"resource_policy"`

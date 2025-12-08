@@ -81,7 +81,7 @@ func dataSourceService() *schema.Resource {
 	}
 }
 
-func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -121,7 +121,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrCertificateARN, out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
 	if out.DnsEntry != nil {
-		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
+		if err := d.Set("dns_entry", []any{flattenDNSEntry(out.DnsEntry)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 		}
 	} else {

@@ -35,6 +35,9 @@ import (
 
 // @FrameworkResource("aws_codeconnections_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Connection")
+// @Testing(preIdentityVersion="v5.100.0")
 func newConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionResource{}
 
@@ -50,13 +53,9 @@ const (
 )
 
 type connectionResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[connectionResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
-}
-
-func (r *connectionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_codeconnections_connection"
 }
 
 func (r *connectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -80,7 +79,7 @@ func (r *connectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 					}...),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -269,14 +268,6 @@ func (r *connectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *connectionResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
-func (r *connectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func waitConnectionCreated(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
@@ -312,7 +303,7 @@ func waitConnectionDeleted(ctx context.Context, conn *codeconnections.Client, id
 }
 
 func statusConnection(ctx context.Context, conn *codeconnections.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findConnectionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -353,6 +344,7 @@ func findConnectionByARN(ctx context.Context, conn *codeconnections.Client, arn 
 }
 
 type connectionResourceModel struct {
+	framework.WithRegionModel
 	ConnectionArn    types.String                                  `tfsdk:"arn"`
 	ConnectionName   types.String                                  `tfsdk:"name"`
 	ConnectionStatus fwtypes.StringEnum[awstypes.ConnectionStatus] `tfsdk:"connection_status"`

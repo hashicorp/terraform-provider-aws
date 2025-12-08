@@ -41,6 +41,7 @@ func TestAccAPIGatewayV2APIDataSource_http(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "disable_execute_api_endpoint", resourceName, "disable_execute_api_endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "execution_arn", resourceName, "execution_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "protocol_type", resourceName, "protocol_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "route_selection_expression", resourceName, "route_selection_expression"),
@@ -76,6 +77,7 @@ func TestAccAPIGatewayV2APIDataSource_webSocket(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "disable_execute_api_endpoint", resourceName, "disable_execute_api_endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "execution_arn", resourceName, "execution_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "protocol_type", resourceName, "protocol_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "route_selection_expression", resourceName, "route_selection_expression"),
@@ -120,6 +122,7 @@ func testAccAPIDataSourceConfig_webSocket(rName string) string {
 resource "aws_apigatewayv2_api" "test" {
   api_key_selection_expression = "$context.authorizer.usageIdentifierKey"
   description                  = "test description"
+  ip_address_type              = "dualstack"
   name                         = %[1]q
   protocol_type                = "WEBSOCKET"
   route_selection_expression   = "$request.body.service"

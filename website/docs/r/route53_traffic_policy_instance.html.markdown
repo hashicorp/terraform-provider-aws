@@ -36,6 +36,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - Amazon Resource Name (ARN) of the traffic policy instance.
 * `id` - ID of traffic policy instance.
 
 ## Import

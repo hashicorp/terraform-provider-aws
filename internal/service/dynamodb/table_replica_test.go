@@ -465,6 +465,7 @@ func testAccTableReplicaConfig_pitrKMS(rName string, pitr bool) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -493,6 +494,7 @@ resource "aws_kms_key" "alternate" {
   provider                = awsalternate
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table_replica" "test" {
@@ -583,18 +585,21 @@ resource "aws_kms_key" "alternate" {
   description             = "Julie test KMS key A"
   multi_region            = false
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test1" {
   description             = "Julie test KMS key Z"
   multi_region            = false
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   description             = "Julie test KMS key Z"
   multi_region            = false
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test" {

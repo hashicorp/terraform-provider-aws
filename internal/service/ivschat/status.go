@@ -20,7 +20,7 @@ const (
 )
 
 func statusLoggingConfiguration(ctx context.Context, conn *ivschat.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findLoggingConfigurationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -35,7 +35,7 @@ func statusLoggingConfiguration(ctx context.Context, conn *ivschat.Client, id st
 }
 
 func statusRoom(ctx context.Context, conn *ivschat.Client, id string, updateDetails *ivschat.UpdateRoomInput) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findRoomByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

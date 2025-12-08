@@ -42,6 +42,21 @@ resource "aws_vpc_endpoint" "s3" {
 }
 ```
 
+### Cross-region enabled AWS services
+
+```terraform
+resource "aws_vpc_endpoint" "s3" {
+  region         = "us-west-2"
+  vpc_id         = aws_vpc.main.id
+  service_name   = "com.amazonaws.us-east-2.s3"
+  service_region = "us-east-2"
+
+  tags = {
+    Environment = "test"
+  }
+}
+```
+
 ### Interface Endpoint Type
 
 ```terraform
@@ -157,6 +172,7 @@ resource "aws_route53_record" "ptfe_service" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_id` - (Required) The ID of the VPC in which the endpoint will be used.
 * `auto_accept` - (Optional) Accept the VPC endpoint (the VPC endpoint and service need to be in the same AWS account).
 * `policy` - (Optional) A policy to attach to the endpoint that controls access to the service. This is a JSON formatted string. Defaults to full access. All `Gateway` and some `Interface` endpoints support policies - see the [relevant AWS documentation](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints-access.html) for more details. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
@@ -166,7 +182,7 @@ Defaults to `false`.
 * `ip_address_type` - (Optional) The IP address type for the endpoint. Valid values are `ipv4`, `dualstack`, and `ipv6`.
 * `resource_configuration_arn` - (Optional) The ARN of a Resource Configuration to connect this VPC Endpoint to. Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required.
 * `route_table_ids` - (Optional) One or more route table IDs. Applicable for endpoints of type `Gateway`.
-* `service_name` - (Optional) The service name. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`). Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required.
+* `service_name` - (Optional) The service name. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`). Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required.
 * `service_network_arn` - (Optional) The ARN of a Service Network to connect this VPC Endpoint to. Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required.
 * `service_region` - (Optional) - The AWS region of the VPC Endpoint Service. If specified, the VPC endpoint will connect to the service in the provided region. Applicable for endpoints of type `Interface`.
 * `subnet_configuration` - (Optional) Subnet configuration for the endpoint, used to select specific IPv4 and/or IPv6 addresses to the endpoint. See subnet_configuration below.
@@ -185,7 +201,7 @@ If no security groups are specified, the VPC's [default security group](https://
 
 * `ipv4` - (Optional) The IPv4 address to assign to the endpoint network interface in the subnet. You must provide an IPv4 address if the VPC endpoint supports IPv4.
 * `ipv6` - (Optional) The IPv6 address to assign to the endpoint network interface in the subnet. You must provide an IPv6 address if the VPC endpoint supports IPv6.
-* `subnet` - (Optional) The ID of the subnet. Must have a corresponding subnet in the `subnet_ids` argument.
+* `subnet_id` - (Optional) The ID of the subnet. Must have a corresponding subnet in the `subnet_ids` argument.
 
 ## Timeouts
 
@@ -217,11 +233,37 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_vpc_endpoint.example
+  identity = {
+    id = "vpce-3ecf2a57"
+  }
+}
+
+resource "aws_vpc_endpoint" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the VPC endpoint.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoints using the VPC endpoint `id`. For example:
 
 ```terraform
 import {
-  to = aws_vpc_endpoint.endpoint1
+  to = aws_vpc_endpoint.example
   id = "vpce-3ecf2a57"
 }
 ```
@@ -229,5 +271,5 @@ import {
 Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For example:
 
 ```console
-% terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
+% terraform import aws_vpc_endpoint.example vpce-3ecf2a57
 ```

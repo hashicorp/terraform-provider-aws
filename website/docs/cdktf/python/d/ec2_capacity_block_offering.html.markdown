@@ -37,8 +37,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-This resource supports the following arguments:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `capacity_duration_hours` - (Required) The amount of time of the Capacity Block reservation in hours.
 * `end_date_range` - (Optional) The date and time at which the Capacity Block Reservation expires. When a Capacity Reservation expires, the reserved capacity is released and you can no longer launch instances into it. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
 * `instance_count` - (Required) The number of instances for which to reserve capacity.
@@ -55,4 +56,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `upfront_fee` - The total price to be paid up front.
 * `tenancy` - Indicates the tenancy of the Capacity Reservation. Specify either `default` or `dedicated`.
 
-<!-- cache-key: cdktf-0.20.8 input-3f3e49fd493b5f899bfdc945acc0e7294e5feb138d1e1b0272a0552baacd8b87 -->
+<!-- cache-key: cdktf-0.20.8 input-62d6e76a757abecb80a7d29890e0ec57eb0d3c0185e23b057f036bfa0f4fe72c -->

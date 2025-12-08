@@ -38,7 +38,7 @@ const (
 	DSNameLoadBalancers = "Load Balancers Data Source"
 )
 
-func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
@@ -50,7 +50,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, DSNameLoadBalancers, "", err)
 	}
 
-	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	if len(tagsToMatch) > 0 {
 		var loadBalancers []awstypes.LoadBalancer
 

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -45,7 +45,7 @@ func dataSourceCiphertext() *schema.Resource {
 	}
 }
 
-func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -55,8 +55,8 @@ func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta 
 		Plaintext: []byte(d.Get("plaintext").(string)),
 	}
 
-	if v, ok := d.GetOk("context"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EncryptionContext = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("context"); ok && len(v.(map[string]any)) > 0 {
+		input.EncryptionContext = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	output, err := conn.Encrypt(ctx, input)
@@ -66,7 +66,7 @@ func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(output.KeyId))
-	d.Set("ciphertext_blob", itypes.Base64Encode(output.CiphertextBlob))
+	d.Set("ciphertext_blob", inttypes.Base64Encode(output.CiphertextBlob))
 
 	return diags
 }

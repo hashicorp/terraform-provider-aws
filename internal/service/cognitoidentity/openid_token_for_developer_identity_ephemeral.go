@@ -26,11 +26,7 @@ func newOpenIDTokenForDeveloperIdentityEphemeralResource(context.Context) (ephem
 }
 
 type openIDTokenForDeveloperIdentityEphemeralResource struct {
-	framework.EphemeralResourceWithConfigure
-}
-
-func (*openIDTokenForDeveloperIdentityEphemeralResource) Metadata(_ context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
-	response.TypeName = "aws_cognito_identity_openid_token_for_developer_identity"
+	framework.EphemeralResourceWithModel[openIDTokenForDeveloperIdentityEphemeralResourceModel]
 }
 
 func (e *openIDTokenForDeveloperIdentityEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
@@ -121,6 +117,7 @@ func (e *openIDTokenForDeveloperIdentityEphemeralResource) Open(ctx context.Cont
 }
 
 type openIDTokenForDeveloperIdentityEphemeralResourceModel struct {
+	framework.WithRegionModel
 	IdentityID     types.String        `tfsdk:"identity_id"`
 	IdentityPoolID types.String        `tfsdk:"identity_pool_id"`
 	Logins         fwtypes.MapOfString `tfsdk:"logins"`

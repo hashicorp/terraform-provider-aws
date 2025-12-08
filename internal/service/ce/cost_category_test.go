@@ -273,7 +273,8 @@ func testAccPreCheckPayerAccount(ctx context.Context, t *testing.T) {
 
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 
-	_, err := conn.ListCostCategoryDefinitions(ctx, &costexplorer.ListCostCategoryDefinitionsInput{})
+	input := costexplorer.ListCostCategoryDefinitionsInput{}
+	_, err := conn.ListCostCategoryDefinitions(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") ||
 		tfawserr.ErrMessageContains(err, "ValidationException", "Linked accounts can only create") {

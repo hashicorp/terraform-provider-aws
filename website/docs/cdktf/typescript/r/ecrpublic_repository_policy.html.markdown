@@ -90,6 +90,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repositoryName` - (Required) Name of the repository to apply the policy.
 * `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 
@@ -131,4 +132,4 @@ Using `terraform import`, import ECR Public Repository Policy using the reposito
 % terraform import aws_ecrpublic_repository_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5333277a8aafe52743e3f8ec371b6439d670b524be4655ccdec7e4c63f6b5fd0 -->
+<!-- cache-key: cdktf-0.20.8 input-975e13015dcaf50d8e422dc2495b34a0454a358a75478009d638f0b4aa274ccc -->

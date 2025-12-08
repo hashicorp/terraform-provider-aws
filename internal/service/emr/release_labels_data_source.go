@@ -49,15 +49,15 @@ func dataSourceReleaseLabels() *schema.Resource {
 	}
 }
 
-func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	input := &emr.ListReleaseLabelsInput{}
 
-	if v, ok := d.GetOk("filters"); ok && len(v.([]interface{})) > 0 {
-		input.Filters = expandReleaseLabelsFilters(v.([]interface{}))
+	if v, ok := d.GetOk("filters"); ok && len(v.([]any)) > 0 {
+		input.Filters = expandReleaseLabelsFilters(v.([]any))
 	}
 
 	releaseLabels, err := findReleaseLabels(ctx, conn, input)
@@ -76,12 +76,12 @@ func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func expandReleaseLabelsFilters(filters []interface{}) *awstypes.ReleaseLabelFilter {
+func expandReleaseLabelsFilters(filters []any) *awstypes.ReleaseLabelFilter {
 	if len(filters) == 0 || filters[0] == nil {
 		return nil
 	}
 
-	m := filters[0].(map[string]interface{})
+	m := filters[0].(map[string]any)
 	app := &awstypes.ReleaseLabelFilter{}
 
 	if v, ok := m["application"].(string); ok && v != "" {

@@ -34,7 +34,7 @@ func resourceRuleV0() *schema.Resource {
 			"event_pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := ruleEventPatternJSONDecoder(v.(string))
 					return json
 				},

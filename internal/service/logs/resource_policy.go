@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -31,7 +32,7 @@ func resourceResourcePolicy() *schema.Resource {
 		DeleteWithoutTimeout: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set("policy_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
@@ -48,7 +49,7 @@ func resourceResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -76,13 +77,13 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	resourcePolicy, err := findResourcePolicyByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Resource Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -107,7 +108,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
@@ -145,7 +146,7 @@ func findResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.Client, 
 }
 
 func findResourcePolicy(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, filter tfslices.Predicate[*awstypes.ResourcePolicy]) (*awstypes.ResourcePolicy, error) {
-	output, err := findResourcePolicies(ctx, conn, input, filter)
+	output, err := findResourcePolicies(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
 
 	if err != nil {
 		return nil, err
@@ -154,8 +155,9 @@ func findResourcePolicy(ctx context.Context, conn *cloudwatchlogs.Client, input 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, filter tfslices.Predicate[*awstypes.ResourcePolicy]) ([]awstypes.ResourcePolicy, error) {
+func findResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, filter tfslices.Predicate[*awstypes.ResourcePolicy], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.ResourcePolicy, error) {
 	var output []awstypes.ResourcePolicy
+	opts := tfslices.NewFinderOptions(optFns)
 
 	err := describeResourcePoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
 		if page == nil {
@@ -165,6 +167,9 @@ func findResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, inpu
 		for _, v := range page.ResourcePolicies {
 			if filter(&v) {
 				output = append(output, v)
+				if opts.ReturnFirstMatch() {
+					return false
+				}
 			}
 		}
 

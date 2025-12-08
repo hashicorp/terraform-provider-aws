@@ -69,14 +69,12 @@ import { TerraformStack } from "cdktf";
 import { SecurityGroupRule } from "./.gen/providers/aws/security-group-rule";
 import { VpcEndpoint } from "./.gen/providers/aws/vpc-endpoint";
 interface MyConfig {
-  serviceName: any;
   vpcId: any;
 }
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string, config: MyConfig) {
     super(scope, name);
     const myEndpoint = new VpcEndpoint(this, "my_endpoint", {
-      serviceName: config.serviceName,
       vpcId: config.vpcId,
     });
     new SecurityGroupRule(this, "allow_all", {
@@ -111,7 +109,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     const current = new DataAwsRegion(this, "current", {});
     const s3 = new DataAwsPrefixList(this, "s3", {
-      name: "com.amazonaws.${" + current.name + "}.s3",
+      name: "com.amazonaws.${" + current.region + "}.s3",
     });
     new SecurityGroupRule(this, "s3_gateway_egress", {
       description: "S3 Gateway Egress",
@@ -129,8 +127,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fromPort` - (Required) Start port (or ICMP type number if protocol is "icmp" or "icmpv6").
 * `protocol` - (Required) Protocol. If not icmp, icmpv6, tcp, udp, or all use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
 * `securityGroupId` - (Required) Security group to apply this rule to.
@@ -140,6 +139,7 @@ or `egress` (outbound).
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 ~> **Note** Although `cidrBlocks`, `ipv6CidrBlocks`, `prefixListIds`, and `sourceSecurityGroupId` are all marked as optional, you _must_ provide one of them in order to configure the source of the traffic.
 
 * `cidrBlocks` - (Optional) List of CIDR blocks. Cannot be specified with `sourceSecurityGroupId` or `self`.
@@ -382,4 +382,4 @@ Import a rule that has itself and an IPv6 CIDR block as sources:
 % terraform import aws_security_group_rule.rule_name sg-656c65616e6f72_ingress_tcp_80_80_self_2001:db8::/48
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-578806f64d2eb20469073fe581e9aac81f7b9a5a2def695b71e0eb1736fd3507 -->
+<!-- cache-key: cdktf-0.20.8 input-404769c8224b238d376812dbcce66e6e4526200026487201eb9a559700c3f558 -->

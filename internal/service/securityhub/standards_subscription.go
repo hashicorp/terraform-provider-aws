@@ -33,7 +33,6 @@ func resourceStandardsSubscription() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
 		Schema: map[string]*schema.Schema{
 			"standards_arn": {
 				Type:         schema.TypeString,
@@ -42,10 +41,14 @@ func resourceStandardsSubscription() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
+		},
 	}
 }
 
-func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -64,14 +67,14 @@ func resourceStandardsSubscriptionCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.ToString(output.StandardsSubscriptions[0].StandardsSubscriptionArn))
 
-	if _, err := waitStandardsSubscriptionCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitStandardsSubscriptionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Standards Subscription (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceStandardsSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -92,7 +95,7 @@ func resourceStandardsSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -105,7 +108,7 @@ func resourceStandardsSubscriptionDelete(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "disabling Security Hub Standard (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitStandardsSubscriptionDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitStandardsSubscriptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Standards Subscription (%s) delete: %s", d.Id(), err)
 	}
 
@@ -168,7 +171,7 @@ func findStandardsSubscriptions(ctx context.Context, conn *securityhub.Client, i
 }
 
 func statusStandardsSubscriptionCreate(ctx context.Context, conn *securityhub.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStandardsSubscriptionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -184,7 +187,7 @@ func statusStandardsSubscriptionCreate(ctx context.Context, conn *securityhub.Cl
 }
 
 func statusStandardsSubscriptionDelete(ctx context.Context, conn *securityhub.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStandardsSubscriptionByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -203,10 +206,7 @@ func statusStandardsSubscriptionDelete(ctx context.Context, conn *securityhub.Cl
 	}
 }
 
-func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Client, arn string) (*types.StandardsSubscription, error) {
-	const (
-		timeout = 3 * time.Minute
-	)
+func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Client, arn string, timeout time.Duration) (*types.StandardsSubscription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.StandardsStatusPending),
 		Target:  enum.Slice(types.StandardsStatusReady, types.StandardsStatusIncomplete),
@@ -227,10 +227,7 @@ func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Cli
 	return nil, err
 }
 
-func waitStandardsSubscriptionDeleted(ctx context.Context, conn *securityhub.Client, arn string) (*types.StandardsSubscription, error) {
-	const (
-		timeout = 3 * time.Minute
-	)
+func waitStandardsSubscriptionDeleted(ctx context.Context, conn *securityhub.Client, arn string, timeout time.Duration) (*types.StandardsSubscription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.StandardsStatusDeleting),
 		Target:  []string{},

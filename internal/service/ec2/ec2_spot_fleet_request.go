@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -43,7 +42,7 @@ func resourceSpotFleetRequest() *schema.Resource {
 		UpdateWithoutTimeout: resourceSpotFleetRequestUpdate,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set("instance_pools_to_use_count", 1)
 				return []*schema.ResourceData{d}, nil
 			},
@@ -338,7 +337,7 @@ func resourceSpotFleetRequest() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
-							StateFunc: func(v interface{}) string {
+							StateFunc: func(v any) string {
 								switch v := v.(type) {
 								case string:
 									return userDataHashSum(v)
@@ -354,9 +353,10 @@ func resourceSpotFleetRequest() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"weighted_capacity": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         nullable.TypeNullableFloat,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: nullable.ValidateTypeStringNullableFloat,
 						},
 					},
 				},
@@ -868,12 +868,10 @@ func resourceSpotFleetRequest() *schema.Resource {
 				Default:  false,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -922,7 +920,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("spot_maintenance_strategies"); ok {
-		spotFleetConfig.SpotMaintenanceStrategies = expandSpotMaintenanceStrategies(v.([]interface{}))
+		spotFleetConfig.SpotMaintenanceStrategies = expandSpotMaintenanceStrategies(v.([]any))
 	}
 
 	// InvalidSpotFleetConfig: SpotMaintenanceStrategies option is only available with the spot fleet type maintain.
@@ -1000,7 +998,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", d.Id())
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.RequestSpotFleet(ctx, &input)
 		},
 		errCodeInvalidSpotFleetRequestConfig, "SpotFleetRequestConfig.IamFleetRole",
@@ -1025,7 +1023,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceSpotFleetRequestRead(ctx, d, meta)...)
 }
 
-func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -1117,7 +1115,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -1154,7 +1152,7 @@ func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceSpotFleetRequestRead(ctx, d, meta)...)
 }
 
-func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -1188,7 +1186,7 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		input := ec2.DescribeSpotFleetInstancesInput{
 			SpotFleetRequestId: aws.String(d.Id()),
 		}
@@ -1212,7 +1210,7 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interface{}, meta interface{}) (awstypes.SpotFleetLaunchSpecification, error) {
+func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]any, meta any) (awstypes.SpotFleetLaunchSpecification, error) {
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	opts := awstypes.SpotFleetLaunchSpecification{
@@ -1270,9 +1268,10 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 		opts.KeyName = aws.String(v.(string))
 	}
 
-	if v, ok := d["weighted_capacity"]; ok && v != "" {
-		wc, _ := strconv.ParseFloat(v.(string), 64)
-		opts.WeightedCapacity = aws.Float64(wc)
+	if v, ok := d["weighted_capacity"].(string); ok {
+		if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
+			opts.WeightedCapacity = aws.Float64(v)
+		}
 	}
 
 	var securityGroupIds []string
@@ -1284,10 +1283,10 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 		}
 	}
 
-	if m, ok := d[names.AttrTags].(map[string]interface{}); ok && len(m) > 0 {
+	if m, ok := d[names.AttrTags].(map[string]any); ok && len(m) > 0 {
 		tagsSpec := make([]awstypes.SpotFleetTagSpecification, 0)
 
-		tags := Tags(tftags.New(ctx, m).IgnoreAWS())
+		tags := svcTags(tftags.New(ctx, m).IgnoreAWS())
 
 		spec := awstypes.SpotFleetTagSpecification{
 			ResourceType: awstypes.ResourceTypeInstance,
@@ -1340,13 +1339,13 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 	return opts, nil
 }
 
-func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[string]interface{}, conn *ec2.Client) ([]awstypes.BlockDeviceMapping, error) {
+func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[string]any, conn *ec2.Client) ([]awstypes.BlockDeviceMapping, error) {
 	blockDevices := make([]awstypes.BlockDeviceMapping, 0)
 
 	if v, ok := d["ebs_block_device"]; ok {
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
-			bd := v.(map[string]interface{})
+			bd := v.(map[string]any)
 			ebs := &awstypes.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
@@ -1389,7 +1388,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 	if v, ok := d["ephemeral_block_device"]; ok {
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
-			bd := v.(map[string]interface{})
+			bd := v.(map[string]any)
 			blockDevices = append(blockDevices, awstypes.BlockDeviceMapping{
 				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
 				VirtualName: aws.String(bd[names.AttrVirtualName].(string)),
@@ -1403,7 +1402,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 			return nil, fmt.Errorf("Cannot specify more than one root_block_device.")
 		}
 		for _, v := range vL {
-			bd := v.(map[string]interface{})
+			bd := v.(map[string]any)
 			ebs := &awstypes.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
@@ -1452,11 +1451,11 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 	return blockDevices, nil
 }
 
-func buildSpotFleetLaunchSpecifications(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]awstypes.SpotFleetLaunchSpecification, error) {
+func buildSpotFleetLaunchSpecifications(ctx context.Context, d *schema.ResourceData, meta any) ([]awstypes.SpotFleetLaunchSpecification, error) {
 	userSpecs := d.Get("launch_specification").(*schema.Set).List()
 	specs := make([]awstypes.SpotFleetLaunchSpecification, len(userSpecs))
 	for i, userSpec := range userSpecs {
-		userSpecMap := userSpec.(map[string]interface{})
+		userSpecMap := userSpec.(map[string]any)
 		// panic: interface conversion: interface {} is map[string]interface {}, not *schema.ResourceData
 		opts, err := buildSpotFleetLaunchSpecification(ctx, userSpecMap, meta)
 		if err != nil {
@@ -1468,11 +1467,11 @@ func buildSpotFleetLaunchSpecifications(ctx context.Context, d *schema.ResourceD
 	return specs, nil
 }
 
-func expandLaunchTemplateConfig(tfMap map[string]interface{}) awstypes.LaunchTemplateConfig {
+func expandLaunchTemplateConfig(tfMap map[string]any) awstypes.LaunchTemplateConfig {
 	apiObject := awstypes.LaunchTemplateConfig{}
 
-	if v, ok := tfMap["launch_template_specification"].([]interface{}); ok && len(v) > 0 {
-		apiObject.LaunchTemplateSpecification = expandFleetLaunchTemplateSpecification(v[0].(map[string]interface{}))
+	if v, ok := tfMap["launch_template_specification"].([]any); ok && len(v) > 0 {
+		apiObject.LaunchTemplateSpecification = expandFleetLaunchTemplateSpecification(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["overrides"].(*schema.Set); ok && v.Len() > 0 {
@@ -1482,7 +1481,7 @@ func expandLaunchTemplateConfig(tfMap map[string]interface{}) awstypes.LaunchTem
 	return apiObject
 }
 
-func expandLaunchTemplateConfigs(tfList []interface{}) []awstypes.LaunchTemplateConfig {
+func expandLaunchTemplateConfigs(tfList []any) []awstypes.LaunchTemplateConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1490,7 +1489,7 @@ func expandLaunchTemplateConfigs(tfList []interface{}) []awstypes.LaunchTemplate
 	var apiObjects []awstypes.LaunchTemplateConfig
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1502,7 +1501,7 @@ func expandLaunchTemplateConfigs(tfList []interface{}) []awstypes.LaunchTemplate
 	return apiObjects
 }
 
-func expandFleetLaunchTemplateSpecification(tfMap map[string]interface{}) *awstypes.FleetLaunchTemplateSpecification {
+func expandFleetLaunchTemplateSpecification(tfMap map[string]any) *awstypes.FleetLaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -1524,15 +1523,15 @@ func expandFleetLaunchTemplateSpecification(tfMap map[string]interface{}) *awsty
 	return apiObject
 }
 
-func expandLaunchTemplateOverrides(tfMap map[string]interface{}) awstypes.LaunchTemplateOverrides {
+func expandLaunchTemplateOverrides(tfMap map[string]any) awstypes.LaunchTemplateOverrides {
 	apiObject := awstypes.LaunchTemplateOverrides{}
 
 	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
-	if v, ok := tfMap["instance_requirements"].([]interface{}); ok && len(v) > 0 {
-		apiObject.InstanceRequirements = expandInstanceRequirements(v[0].(map[string]interface{}))
+	if v, ok := tfMap["instance_requirements"].([]any); ok && len(v) > 0 {
+		apiObject.InstanceRequirements = expandInstanceRequirements(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
@@ -1558,7 +1557,7 @@ func expandLaunchTemplateOverrides(tfMap map[string]interface{}) awstypes.Launch
 	return apiObject
 }
 
-func expandLaunchTemplateOverrideses(tfList []interface{}) []awstypes.LaunchTemplateOverrides {
+func expandLaunchTemplateOverrideses(tfList []any) []awstypes.LaunchTemplateOverrides {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1566,7 +1565,7 @@ func expandLaunchTemplateOverrideses(tfList []interface{}) []awstypes.LaunchTemp
 	var apiObjects []awstypes.LaunchTemplateOverrides
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1578,15 +1577,15 @@ func expandLaunchTemplateOverrideses(tfList []interface{}) []awstypes.LaunchTemp
 	return apiObjects
 }
 
-func expandInstanceRequirements(tfMap map[string]interface{}) *awstypes.InstanceRequirements {
+func expandInstanceRequirements(tfMap map[string]any) *awstypes.InstanceRequirements {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.InstanceRequirements{}
 
-	if v, ok := tfMap["accelerator_count"].([]interface{}); ok && len(v) > 0 {
-		apiObject.AcceleratorCount = expandAcceleratorCount(v[0].(map[string]interface{}))
+	if v, ok := tfMap["accelerator_count"].([]any); ok && len(v) > 0 {
+		apiObject.AcceleratorCount = expandAcceleratorCount(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["accelerator_manufacturers"].(*schema.Set); ok && v.Len() > 0 {
@@ -1597,8 +1596,8 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *awstypes.Instance
 		apiObject.AcceleratorNames = flex.ExpandStringyValueSet[awstypes.AcceleratorName](v)
 	}
 
-	if v, ok := tfMap["accelerator_total_memory_mib"].([]interface{}); ok && len(v) > 0 {
-		apiObject.AcceleratorTotalMemoryMiB = expandAcceleratorTotalMemoryMiB(v[0].(map[string]interface{}))
+	if v, ok := tfMap["accelerator_total_memory_mib"].([]any); ok && len(v) > 0 {
+		apiObject.AcceleratorTotalMemoryMiB = expandAcceleratorTotalMemoryMiB(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["accelerator_types"].(*schema.Set); ok && v.Len() > 0 {
@@ -1613,8 +1612,8 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *awstypes.Instance
 		apiObject.BareMetal = awstypes.BareMetal(v)
 	}
 
-	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 {
-		apiObject.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbps(v[0].(map[string]interface{}))
+	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]any); ok && len(v) > 0 {
+		apiObject.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbps(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["burstable_performance"].(string); ok && v != "" {
@@ -1641,16 +1640,16 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *awstypes.Instance
 		apiObject.LocalStorageTypes = flex.ExpandStringyValueSet[awstypes.LocalStorageType](v)
 	}
 
-	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 {
-		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPU(v[0].(map[string]interface{}))
+	if v, ok := tfMap["memory_gib_per_vcpu"].([]any); ok && len(v) > 0 {
+		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPU(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 {
-		apiObject.MemoryMiB = expandMemoryMiB(v[0].(map[string]interface{}))
+	if v, ok := tfMap["memory_mib"].([]any); ok && len(v) > 0 {
+		apiObject.MemoryMiB = expandMemoryMiB(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 {
-		apiObject.NetworkInterfaceCount = expandNetworkInterfaceCount(v[0].(map[string]interface{}))
+	if v, ok := tfMap["network_interface_count"].([]any); ok && len(v) > 0 {
+		apiObject.NetworkInterfaceCount = expandNetworkInterfaceCount(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["on_demand_max_price_percentage_over_lowest_price"].(int); ok && v != 0 {
@@ -1665,18 +1664,18 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *awstypes.Instance
 		apiObject.SpotMaxPricePercentageOverLowestPrice = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["total_local_storage_gb"].([]interface{}); ok && len(v) > 0 {
-		apiObject.TotalLocalStorageGB = expandTotalLocalStorageGB(v[0].(map[string]interface{}))
+	if v, ok := tfMap["total_local_storage_gb"].([]any); ok && len(v) > 0 {
+		apiObject.TotalLocalStorageGB = expandTotalLocalStorageGB(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 {
-		apiObject.VCpuCount = expandVCPUCountRange(v[0].(map[string]interface{}))
+	if v, ok := tfMap["vcpu_count"].([]any); ok && len(v) > 0 {
+		apiObject.VCpuCount = expandVCPUCountRange(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandAcceleratorCount(tfMap map[string]interface{}) *awstypes.AcceleratorCount {
+func expandAcceleratorCount(tfMap map[string]any) *awstypes.AcceleratorCount {
 	if tfMap == nil {
 		return nil
 	}
@@ -1694,7 +1693,7 @@ func expandAcceleratorCount(tfMap map[string]interface{}) *awstypes.AcceleratorC
 	return apiObject
 }
 
-func expandAcceleratorTotalMemoryMiB(tfMap map[string]interface{}) *awstypes.AcceleratorTotalMemoryMiB {
+func expandAcceleratorTotalMemoryMiB(tfMap map[string]any) *awstypes.AcceleratorTotalMemoryMiB {
 	if tfMap == nil {
 		return nil
 	}
@@ -1712,7 +1711,7 @@ func expandAcceleratorTotalMemoryMiB(tfMap map[string]interface{}) *awstypes.Acc
 	return apiObject
 }
 
-func expandBaselineEBSBandwidthMbps(tfMap map[string]interface{}) *awstypes.BaselineEbsBandwidthMbps {
+func expandBaselineEBSBandwidthMbps(tfMap map[string]any) *awstypes.BaselineEbsBandwidthMbps {
 	if tfMap == nil {
 		return nil
 	}
@@ -1730,7 +1729,7 @@ func expandBaselineEBSBandwidthMbps(tfMap map[string]interface{}) *awstypes.Base
 	return apiObject
 }
 
-func expandMemoryGiBPerVCPU(tfMap map[string]interface{}) *awstypes.MemoryGiBPerVCpu {
+func expandMemoryGiBPerVCPU(tfMap map[string]any) *awstypes.MemoryGiBPerVCpu {
 	if tfMap == nil {
 		return nil
 	}
@@ -1748,7 +1747,7 @@ func expandMemoryGiBPerVCPU(tfMap map[string]interface{}) *awstypes.MemoryGiBPer
 	return apiObject
 }
 
-func expandMemoryMiB(tfMap map[string]interface{}) *awstypes.MemoryMiB {
+func expandMemoryMiB(tfMap map[string]any) *awstypes.MemoryMiB {
 	if tfMap == nil {
 		return nil
 	}
@@ -1766,7 +1765,7 @@ func expandMemoryMiB(tfMap map[string]interface{}) *awstypes.MemoryMiB {
 	return apiObject
 }
 
-func expandNetworkInterfaceCount(tfMap map[string]interface{}) *awstypes.NetworkInterfaceCount {
+func expandNetworkInterfaceCount(tfMap map[string]any) *awstypes.NetworkInterfaceCount {
 	if tfMap == nil {
 		return nil
 	}
@@ -1784,7 +1783,7 @@ func expandNetworkInterfaceCount(tfMap map[string]interface{}) *awstypes.Network
 	return apiObject
 }
 
-func expandTotalLocalStorageGB(tfMap map[string]interface{}) *awstypes.TotalLocalStorageGB {
+func expandTotalLocalStorageGB(tfMap map[string]any) *awstypes.TotalLocalStorageGB {
 	if tfMap == nil {
 		return nil
 	}
@@ -1802,7 +1801,7 @@ func expandTotalLocalStorageGB(tfMap map[string]interface{}) *awstypes.TotalLoca
 	return apiObject
 }
 
-func expandVCPUCountRange(tfMap map[string]interface{}) *awstypes.VCpuCountRange {
+func expandVCPUCountRange(tfMap map[string]any) *awstypes.VCpuCountRange {
 	if tfMap == nil {
 		return nil
 	}
@@ -1820,26 +1819,26 @@ func expandVCPUCountRange(tfMap map[string]interface{}) *awstypes.VCpuCountRange
 	return apiObject
 }
 
-func expandSpotMaintenanceStrategies(l []interface{}) *awstypes.SpotMaintenanceStrategies {
+func expandSpotMaintenanceStrategies(l []any) *awstypes.SpotMaintenanceStrategies {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	fleetSpotMaintenanceStrategies := &awstypes.SpotMaintenanceStrategies{
-		CapacityRebalance: expandSpotCapacityRebalance(m["capacity_rebalance"].([]interface{})),
+		CapacityRebalance: expandSpotCapacityRebalance(m["capacity_rebalance"].([]any)),
 	}
 
 	return fleetSpotMaintenanceStrategies
 }
 
-func expandSpotCapacityRebalance(l []interface{}) *awstypes.SpotCapacityRebalance {
+func expandSpotCapacityRebalance(l []any) *awstypes.SpotCapacityRebalance {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	capacityRebalance := &awstypes.SpotCapacityRebalance{}
 
@@ -1863,8 +1862,8 @@ func launchSpecsToSet(ctx context.Context, conn *ec2.Client, launchSpecs []awsty
 	return specSet, nil
 }
 
-func launchSpecToMap(ctx context.Context, l awstypes.SpotFleetLaunchSpecification, rootDevName *string) map[string]interface{} {
-	m := make(map[string]interface{})
+func launchSpecToMap(ctx context.Context, l awstypes.SpotFleetLaunchSpecification, rootDevName *string) map[string]any {
+	m := make(map[string]any)
 
 	m["root_block_device"] = rootBlockDeviceToSet(l.BlockDeviceMappings, rootDevName)
 	m["ebs_block_device"] = ebsBlockDevicesToSet(l.BlockDeviceMappings, rootDevName)
@@ -1930,7 +1929,7 @@ func launchSpecToMap(ctx context.Context, l awstypes.SpotFleetLaunchSpecificatio
 	m[names.AttrVPCSecurityGroupIDs] = securityGroupIds
 
 	if l.WeightedCapacity != nil {
-		m["weighted_capacity"] = strconv.FormatFloat(*l.WeightedCapacity, 'f', 0, 64)
+		m["weighted_capacity"] = flex.Float64ToStringValue(l.WeightedCapacity)
 	}
 
 	if l.TagSpecifications != nil {
@@ -1950,7 +1949,7 @@ func ebsBlockDevicesToSet(bdm []awstypes.BlockDeviceMapping, rootDevName *string
 
 	for _, val := range bdm {
 		if val.Ebs != nil {
-			m := make(map[string]interface{})
+			m := make(map[string]any)
 
 			ebs := val.Ebs
 
@@ -2006,7 +2005,7 @@ func ephemeralBlockDevicesToSet(bdm []awstypes.BlockDeviceMapping) *schema.Set {
 
 	for _, val := range bdm {
 		if val.VirtualName != nil {
-			m := make(map[string]interface{})
+			m := make(map[string]any)
 			m[names.AttrVirtualName] = aws.ToString(val.VirtualName)
 
 			if val.DeviceName != nil {
@@ -2026,7 +2025,7 @@ func rootBlockDeviceToSet(bdm []awstypes.BlockDeviceMapping, rootDevName *string
 	if rootDevName != nil {
 		for _, val := range bdm {
 			if aws.ToString(val.DeviceName) == aws.ToString(rootDevName) {
-				m := make(map[string]interface{})
+				m := make(map[string]any)
 				if val.Ebs.DeleteOnTermination != nil {
 					m[names.AttrDeleteOnTermination] = aws.ToBool(val.Ebs.DeleteOnTermination)
 				}
@@ -2063,51 +2062,51 @@ func rootBlockDeviceToSet(bdm []awstypes.BlockDeviceMapping, rootDevName *string
 	return set
 }
 
-func hashEphemeralBlockDevice(v interface{}) int {
+func hashEphemeralBlockDevice(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
+	m := v.(map[string]any)
+	fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrVirtualName].(string))
 	return create.StringHashcode(buf.String())
 }
 
-func hashRootBlockDevice(v interface{}) int {
+func hashRootBlockDevice(v any) int {
 	// there can be only one root device; no need to hash anything
 	return 0
 }
 
-func hashLaunchSpecification(v interface{}) int {
+func hashLaunchSpecification(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["ami"].(string)))
+	m := v.(map[string]any)
+	fmt.Fprintf(&buf, "%s-", m["ami"].(string))
 	if v, ok := m[names.AttrAvailabilityZone].(string); ok && v != "" {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 	if v, ok := m[names.AttrSubnetID].(string); ok && v != "" {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrInstanceType]))
-	buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrInstanceType])
+	fmt.Fprintf(&buf, "%s-", m["spot_price"].(string))
 	return create.StringHashcode(buf.String())
 }
 
-func hashEBSBlockDevice(v interface{}) int {
+func hashEBSBlockDevice(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 	if name, ok := m[names.AttrDeviceName]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", name.(string)))
+		fmt.Fprintf(&buf, "%s-", name.(string))
 	}
 	if id, ok := m[names.AttrSnapshotID]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", id.(string)))
+		fmt.Fprintf(&buf, "%s-", id.(string))
 	}
 	return create.StringHashcode(buf.String())
 }
 
-func flattenLaunchTemplateConfig(apiObject awstypes.LaunchTemplateConfig) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenLaunchTemplateConfig(apiObject awstypes.LaunchTemplateConfig) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.LaunchTemplateSpecification; v != nil {
-		tfMap["launch_template_specification"] = []interface{}{flattenFleetLaunchTemplateSpecificationForSpotFleetRequest(v)}
+		tfMap["launch_template_specification"] = []any{flattenFleetLaunchTemplateSpecificationForSpotFleetRequest(v)}
 	}
 
 	if v := apiObject.Overrides; v != nil {
@@ -2117,12 +2116,12 @@ func flattenLaunchTemplateConfig(apiObject awstypes.LaunchTemplateConfig) map[st
 	return tfMap
 }
 
-func flattenLaunchTemplateConfigs(apiObjects []awstypes.LaunchTemplateConfig) []interface{} {
+func flattenLaunchTemplateConfigs(apiObjects []awstypes.LaunchTemplateConfig) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenLaunchTemplateConfig(apiObject))
@@ -2131,12 +2130,12 @@ func flattenLaunchTemplateConfigs(apiObjects []awstypes.LaunchTemplateConfig) []
 	return tfList
 }
 
-func flattenFleetLaunchTemplateSpecificationForSpotFleetRequest(apiObject *awstypes.FleetLaunchTemplateSpecification) map[string]interface{} {
+func flattenFleetLaunchTemplateSpecificationForSpotFleetRequest(apiObject *awstypes.FleetLaunchTemplateSpecification) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.LaunchTemplateId; v != nil {
 		tfMap[names.AttrID] = aws.ToString(v)
@@ -2153,15 +2152,15 @@ func flattenFleetLaunchTemplateSpecificationForSpotFleetRequest(apiObject *awsty
 	return tfMap
 }
 
-func flattenLaunchTemplateOverrides(apiObject awstypes.LaunchTemplateOverrides) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenLaunchTemplateOverrides(apiObject awstypes.LaunchTemplateOverrides) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
 		tfMap[names.AttrAvailabilityZone] = aws.ToString(v)
 	}
 
 	if v := apiObject.InstanceRequirements; v != nil {
-		tfMap["instance_requirements"] = []interface{}{flattenInstanceRequirements(v)}
+		tfMap["instance_requirements"] = []any{flattenInstanceRequirements(v)}
 	}
 
 	if v := apiObject.InstanceType; v != "" {
@@ -2187,12 +2186,12 @@ func flattenLaunchTemplateOverrides(apiObject awstypes.LaunchTemplateOverrides) 
 	return tfMap
 }
 
-func flattenLaunchTemplateOverrideses(apiObjects []awstypes.LaunchTemplateOverrides) []interface{} {
+func flattenLaunchTemplateOverrideses(apiObjects []awstypes.LaunchTemplateOverrides) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenLaunchTemplateOverrides(apiObject))
@@ -2201,26 +2200,26 @@ func flattenLaunchTemplateOverrideses(apiObjects []awstypes.LaunchTemplateOverri
 	return tfList
 }
 
-func flattenSpotMaintenanceStrategies(spotMaintenanceStrategies *awstypes.SpotMaintenanceStrategies) []interface{} {
+func flattenSpotMaintenanceStrategies(spotMaintenanceStrategies *awstypes.SpotMaintenanceStrategies) []any {
 	if spotMaintenanceStrategies == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"capacity_rebalance": flattenSpotCapacityRebalance(spotMaintenanceStrategies.CapacityRebalance),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenSpotCapacityRebalance(spotCapacityRebalance *awstypes.SpotCapacityRebalance) []interface{} {
+func flattenSpotCapacityRebalance(spotCapacityRebalance *awstypes.SpotCapacityRebalance) []any {
 	if spotCapacityRebalance == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"replacement_strategy": spotCapacityRebalance.ReplacementStrategy,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

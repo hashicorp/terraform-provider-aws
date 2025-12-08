@@ -87,13 +87,13 @@ func resourceVPCEndpoint() *schema.Resource {
 	}
 }
 
-func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	input := &elasticsearchservice.CreateVpcEndpointInput{
 		DomainArn:  aws.String(d.Get("domain_arn").(string)),
-		VpcOptions: expandVPCOptions(d.Get("vpc_options").([]interface{})[0].(map[string]interface{})),
+		VpcOptions: expandVPCOptions(d.Get("vpc_options").([]any)[0].(map[string]any)),
 	}
 
 	output, err := conn.CreateVpcEndpoint(ctx, input)
@@ -111,7 +111,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
@@ -130,7 +130,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("domain_arn", endpoint.DomainArn)
 	d.Set(names.AttrEndpoint, endpoint.Endpoint)
 	if endpoint.VpcOptions != nil {
-		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(endpoint.VpcOptions)}); err != nil {
+		if err := d.Set("vpc_options", []any{flattenVPCDerivedInfo(endpoint.VpcOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 	} else {
@@ -140,12 +140,12 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	input := &elasticsearchservice.UpdateVpcEndpointInput{
-		VpcOptions:    expandVPCOptions(d.Get("vpc_options").([]interface{})[0].(map[string]interface{})),
+		VpcOptions:    expandVPCOptions(d.Get("vpc_options").([]any)[0].(map[string]any)),
 		VpcEndpointId: aws.String(d.Id()),
 	}
 
@@ -162,7 +162,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
@@ -275,7 +275,7 @@ func findVPCEndpoints(ctx context.Context, conn *elasticsearchservice.Client, in
 }
 
 func statusVPCEndpoint(ctx context.Context, conn *elasticsearchservice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

@@ -82,7 +82,7 @@ func ResourceSipRule() *schema.Resource {
 	}
 }
 
-func resourceSipRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSipRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -108,7 +108,7 @@ func resourceSipRuleCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceSipRuleRead(ctx, d, meta)...)
 }
 
-func resourceSipRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSipRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -134,7 +134,7 @@ func resourceSipRuleRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceSipRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSipRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -158,7 +158,7 @@ func resourceSipRuleUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceSipRuleRead(ctx, d, meta)...)
 }
 
-func resourceSipRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSipRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -177,11 +177,11 @@ func resourceSipRuleDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func expandSipRuleTargetApplications(data []interface{}) []awstypes.SipRuleTargetApplication {
+func expandSipRuleTargetApplications(data []any) []awstypes.SipRuleTargetApplication {
 	var targetApplications []awstypes.SipRuleTargetApplication
 
 	for _, rItem := range data {
-		item := rItem.(map[string]interface{})
+		item := rItem.(map[string]any)
 		application := awstypes.SipRuleTargetApplication{
 			SipMediaApplicationId: aws.String(item["sip_media_application_id"].(string)),
 			Priority:              aws.Int32(int32(item[names.AttrPriority].(int))),
@@ -194,11 +194,11 @@ func expandSipRuleTargetApplications(data []interface{}) []awstypes.SipRuleTarge
 	return targetApplications
 }
 
-func flattenSipRuleTargetApplications(apiObject []awstypes.SipRuleTargetApplication) []interface{} {
-	var rawSipRuleTargetApplications []interface{}
+func flattenSipRuleTargetApplications(apiObject []awstypes.SipRuleTargetApplication) []any {
+	var rawSipRuleTargetApplications []any
 
 	for _, e := range apiObject {
-		rawTargetApplication := map[string]interface{}{
+		rawTargetApplication := map[string]any{
 			"sip_media_application_id": aws.ToString(e.SipMediaApplicationId),
 			names.AttrPriority:         e.Priority,
 			"aws_region":               aws.ToString(e.AwsRegion),

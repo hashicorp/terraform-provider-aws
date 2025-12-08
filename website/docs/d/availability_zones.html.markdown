@@ -72,6 +72,7 @@ data "aws_availability_zones" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `all_availability_zones` - (Optional) Set to `true` to include all Availability Zones and Local Zones regardless of your opt in status.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `exclude_names` - (Optional) List of Availability Zone names to exclude.

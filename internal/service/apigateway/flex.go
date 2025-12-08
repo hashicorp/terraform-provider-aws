@@ -17,8 +17,8 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 	operations := make([]types.PatchOperation, 0)
 
 	oldParameters, newParameters := d.GetChange(key)
-	oldParametersMap := oldParameters.(map[string]interface{})
-	newParametersMap := newParameters.(map[string]interface{})
+	oldParametersMap := oldParameters.(map[string]any)
+	newParametersMap := newParameters.(map[string]any)
 
 	for k, kV := range oldParametersMap {
 		keyValueUnchanged := false
@@ -76,8 +76,8 @@ func expandRequestResponseModelOperations(d *schema.ResourceData, key string, pr
 	operations := make([]types.PatchOperation, 0)
 
 	oldModels, newModels := d.GetChange(key)
-	oldModelMap := oldModels.(map[string]interface{})
-	newModelMap := newModels.(map[string]interface{})
+	oldModelMap := oldModels.(map[string]any)
+	newModelMap := newModels.(map[string]any)
 
 	for k := range oldModelMap {
 		operation := types.PatchOperation{

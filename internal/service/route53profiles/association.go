@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -36,8 +35,8 @@ import (
 
 // @FrameworkResource("aws_route53profiles_association", name="Association")
 // @Tags(identifierAttribute="arn")
-func newResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAssociation{}
+func newAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &associationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute) // tags only
@@ -55,18 +54,13 @@ var (
 	resourceAssociationNameRegex = regexache.MustCompile("(^[^0-9][a-zA-Z0-9\\-_' ']+$)")
 )
 
-type resourceAssociation struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[associationResourceModel]
+type associationResource struct {
+	framework.ResourceWithModel[associationResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_route53profiles_association"
-}
-
-func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *associationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -125,7 +119,7 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *associationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
 	var data associationResourceModel
@@ -178,7 +172,7 @@ func (r *resourceAssociation) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
-func (r *resourceAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *associationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
 	var state associationResourceModel
@@ -211,7 +205,7 @@ func (r *resourceAssociation) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *associationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
 	var state associationResourceModel
@@ -246,10 +240,6 @@ func (r *resourceAssociation) Delete(ctx context.Context, req resource.DeleteReq
 		)
 		return
 	}
-}
-
-func (r *resourceAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitAssociationCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileAssociation, error) {
@@ -287,7 +277,7 @@ func waitAssociationDeleted(ctx context.Context, conn *route53profiles.Client, i
 }
 
 func statusAssociation(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findAssociationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -299,10 +289,6 @@ func statusAssociation(ctx context.Context, conn *route53profiles.Client, id str
 
 		return out, string(out.Status), nil
 	}
-}
-
-func (r *resourceAssociation) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findAssociationByID(ctx context.Context, conn *route53profiles.Client, id string) (*awstypes.ProfileAssociation, error) {
@@ -330,6 +316,7 @@ func findAssociationByID(ctx context.Context, conn *route53profiles.Client, id s
 }
 
 type associationResourceModel struct {
+	framework.WithRegionModel
 	ARN           types.String                               `tfsdk:"arn"`
 	ID            types.String                               `tfsdk:"id"`
 	ResourceID    types.String                               `tfsdk:"resource_id"`

@@ -59,7 +59,7 @@ const (
 	resourceAssociationResourceIDPartCount = 2
 )
 
-func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -101,7 +101,7 @@ func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceResourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -129,7 +129,7 @@ func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -218,7 +218,7 @@ func findResourceShareAssociations(ctx context.Context, conn *ram.Client, input 
 }
 
 func statusResourceAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
 
 		if tfresource.NotFound(err) {

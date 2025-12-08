@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,6 +22,16 @@ import (
 )
 
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
+// @SingletonIdentity
+// @IdentityVersion(1, sdkV2IdentityUpgraders="imageBlockPublicAccessIdentityUpgradeV0")
+// @V60SDKv2Fix
+// @NoImport
+// @Testing(checkDestroyNoop=true)
+// @Testing(hasExistsFunction=false)
+// @Testing(generator=false)
+// @Testing(identityTest=false)
+// @Testing(identityVersion="0;v6.0.0")
+// @Testing(identityVersion="1;v6.21.0")
 func resourceImageBlockPublicAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageBlockPublicAccessPut,
@@ -43,7 +53,7 @@ func resourceImageBlockPublicAccess() *schema.Resource {
 	}
 }
 
-func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -51,7 +61,7 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 
 	if slices.Contains(imageBlockPublicAccessEnabledState_Values(), state) {
 		input := ec2.EnableImageBlockPublicAccessInput{
-			ImageBlockPublicAccessState: types.ImageBlockPublicAccessEnabledState(state),
+			ImageBlockPublicAccessState: awstypes.ImageBlockPublicAccessEnabledState(state),
 		}
 
 		_, err := conn.EnableImageBlockPublicAccess(ctx, &input)
@@ -70,7 +80,7 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).Region(ctx))
+		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	}
 
 	if err := waitImageBlockPublicAccessState(ctx, conn, state, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -80,7 +90,7 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceImageBlockPublicAccessRead(ctx, d, meta)...)
 }
 
-func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -101,12 +111,20 @@ func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
+var imageBlockPublicAccessIdentityUpgradeV0 = schema.IdentityUpgrader{
+	Version: 0,
+	Upgrade: func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+		rawState[names.AttrRegion] = meta.(*conns.AWSClient).Region(ctx)
+		return rawState, nil
+	},
+}
+
 func imageBlockPublicAccessDisabledState_Values() []string {
-	return enum.Values[types.ImageBlockPublicAccessDisabledState]()
+	return enum.Values[awstypes.ImageBlockPublicAccessDisabledState]()
 }
 
 func imageBlockPublicAccessEnabledState_Values() []string {
-	return enum.Values[types.ImageBlockPublicAccessEnabledState]()
+	return enum.Values[awstypes.ImageBlockPublicAccessEnabledState]()
 }
 
 func imageBlockPublicAccessState_Values() []string {

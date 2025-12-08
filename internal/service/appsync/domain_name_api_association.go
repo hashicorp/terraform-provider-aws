@@ -9,6 +9,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
@@ -19,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -49,7 +52,7 @@ func resourceDomainNameAPIAssociation() *schema.Resource {
 	}
 }
 
-func resourceDomainNameAPIAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameAPIAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -62,32 +65,32 @@ func resourceDomainNameAPIAssociationCreate(ctx context.Context, d *schema.Resou
 	output, err := conn.AssociateApi(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Appsync Domain Name API Association (%s): %s", domainName, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, domainName)
 	}
 
 	d.SetId(aws.ToString(output.ApiAssociation.DomainName))
 
 	if _, err := waitDomainNameAPIAssociation(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Appsync Domain Name API Association (%s) create: %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	return append(diags, resourceDomainNameAPIAssociationRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceDomainNameAPIAssociationRead(ctx, d, meta))
 }
 
-func resourceDomainNameAPIAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameAPIAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	association, err := findDomainNameAPIAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Appsync Domain Name API Association (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && intretry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Appsync Domain Name API Association (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set("api_id", association.ApiId)
@@ -96,7 +99,7 @@ func resourceDomainNameAPIAssociationRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceDomainNameAPIAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameAPIAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -108,17 +111,17 @@ func resourceDomainNameAPIAssociationUpdate(ctx context.Context, d *schema.Resou
 	_, err := conn.AssociateApi(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Appsync Domain Name API Association (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	if _, err := waitDomainNameAPIAssociation(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Appsync Domain Name API Association (%s) update: %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	return append(diags, resourceDomainNameAPIAssociationRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceDomainNameAPIAssociationRead(ctx, d, meta))
 }
 
-func resourceDomainNameAPIAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameAPIAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -133,11 +136,11 @@ func resourceDomainNameAPIAssociationDelete(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Appsync Domain Name API Association (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	if _, err := waitDomainNameAPIDisassociation(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Appsync Domain Name API Association (%s) delete: %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -151,33 +154,30 @@ func findDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.Client,
 	output, err := conn.GetApiAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil || output.ApiAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
 	return output.ApiAssociation, nil
 }
 
 func statusDomainNameAPIAssociation(ctx context.Context, conn *appsync.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDomainNameAPIAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if intretry.NotFound(err) {
 			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return output, string(output.AssociationStatus), nil
@@ -199,10 +199,10 @@ func waitDomainNameAPIAssociation(ctx context.Context, conn *appsync.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.ApiAssociation); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.DeploymentDetail)))
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitDomainNameAPIDisassociation(ctx context.Context, conn *appsync.Client, id string) (*awstypes.ApiAssociation, error) {
@@ -220,8 +220,8 @@ func waitDomainNameAPIDisassociation(ctx context.Context, conn *appsync.Client, 
 
 	if output, ok := outputRaw.(*awstypes.ApiAssociation); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.DeploymentDetail)))
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }

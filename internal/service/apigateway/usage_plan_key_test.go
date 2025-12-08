@@ -214,7 +214,12 @@ resource "aws_api_gateway_deployment" "test" {
 
   description = "This is a test"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = "test"
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "test"
+  deployment_id = aws_api_gateway_deployment.test.id
 }
 `, rName)
 }
@@ -232,7 +237,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    stage  = aws_api_gateway_stage.test.stage_name
   }
 }
 
@@ -259,7 +264,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    stage  = aws_api_gateway_stage.test.stage_name
   }
 }
 

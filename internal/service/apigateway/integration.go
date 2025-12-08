@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,7 +37,7 @@ func resourceIntegration() *schema.Resource {
 		DeleteWithoutTimeout: resourceIntegrationDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD", d.Id())
@@ -95,6 +96,11 @@ func resourceIntegration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validHTTPMethod(),
 			},
+			"integration_target": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"passthrough_behavior": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -121,16 +127,21 @@ func resourceIntegration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"response_transfer_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.ResponseTransferMode](),
+			},
 			"rest_api_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 			"timeout_milliseconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(50, 300000),
-				Default:      29000,
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  29000,
 			},
 			"tls_config": {
 				Type:     schema.TypeList,
@@ -156,10 +167,40 @@ func resourceIntegration() *schema.Resource {
 				Optional: true,
 			},
 		},
+		CustomizeDiff: validateTimeoutMilliseconds,
 	}
 }
 
-func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func validateTimeoutMilliseconds(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+	const minTimeoutMilliseconds = 50
+	const maxTimeoutMillisecondsResponseTransferModeBuffered = 300000
+	const maxTimeoutMillisecondsResponseTransferModeStream = 900000
+
+	timeoutMilliseconds := diff.Get("timeout_milliseconds").(int)
+	if timeoutMilliseconds < minTimeoutMilliseconds {
+		return fmt.Errorf("timeout_milliseconds must be at least %d", minTimeoutMilliseconds)
+	}
+
+	responseTransferMode := diff.Get("response_transfer_mode").(string)
+	if responseTransferMode == "" {
+		responseTransferMode = string(types.ResponseTransferModeBuffered)
+	}
+
+	switch types.ResponseTransferMode(responseTransferMode) {
+	case types.ResponseTransferModeBuffered:
+		if timeoutMilliseconds > maxTimeoutMillisecondsResponseTransferModeBuffered {
+			return fmt.Errorf("timeout_milliseconds must be at most %d when response_transfer_mode is BUFFERED", maxTimeoutMillisecondsResponseTransferModeBuffered)
+		}
+	case types.ResponseTransferModeStream:
+		if timeoutMilliseconds > maxTimeoutMillisecondsResponseTransferModeStream {
+			return fmt.Errorf("timeout_milliseconds must be at most %d when response_transfer_mode is STREAM", maxTimeoutMillisecondsResponseTransferModeStream)
+		}
+	}
+
+	return nil
+}
+
+func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -200,24 +241,32 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.IntegrationHttpMethod = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("integration_target"); ok {
+		input.IntegrationTarget = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("passthrough_behavior"); ok {
 		input.PassthroughBehavior = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("request_parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.RequestParameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("request_parameters"); ok && len(v.(map[string]any)) > 0 {
+		input.RequestParameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("request_templates"); ok && len(v.(map[string]interface{})) > 0 {
-		input.RequestTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("request_templates"); ok && len(v.(map[string]any)) > 0 {
+		input.RequestTemplates = flex.ExpandStringValueMap(v.(map[string]any))
+	}
+
+	if v, ok := d.GetOk("response_transfer_mode"); ok {
+		input.ResponseTransferMode = types.ResponseTransferMode(v.(string))
 	}
 
 	if v, ok := d.GetOk("timeout_milliseconds"); ok {
 		input.TimeoutInMillis = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("tls_config"); ok && len(v.([]interface{})) > 0 {
-		input.TlsConfig = expandTLSConfig(v.([]interface{}))
+	if v, ok := d.GetOk("tls_config"); ok && len(v.([]any)) > 0 {
+		input.TlsConfig = expandTLSConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrURI); ok {
@@ -234,7 +283,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -260,14 +309,15 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("content_handling", integration.ContentHandling)
 	d.Set("credentials", integration.Credentials)
 	d.Set("integration_http_method", integration.HttpMethod)
+	d.Set("integration_target", integration.IntegrationTarget)
 	d.Set("passthrough_behavior", integration.PassthroughBehavior)
 	d.Set("request_parameters", integration.RequestParameters)
-	// We need to explicitly convert key = nil values into key = "", which aws.ToStringMap() removes
-	requestTemplates := make(map[string]string)
-	for k, v := range integration.RequestTemplates {
-		requestTemplates[k] = v
+	d.Set("request_templates", integration.RequestTemplates)
+	if integration.ResponseTransferMode == "" {
+		d.Set("response_transfer_mode", types.ResponseTransferModeBuffered)
+	} else {
+		d.Set("response_transfer_mode", integration.ResponseTransferMode)
 	}
-	d.Set("request_templates", requestTemplates)
 	d.Set("timeout_milliseconds", integration.TimeoutInMillis)
 	d.Set(names.AttrType, integration.Type)
 	d.Set(names.AttrURI, integration.Uri)
@@ -279,7 +329,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -290,8 +340,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("request_templates") {
 		o, n := d.GetChange("request_templates")
 
-		os := o.(map[string]interface{})
-		ns := n.(map[string]interface{})
+		os := o.(map[string]any)
+		ns := n.(map[string]any)
 
 		// Handle Removal
 		for k := range os {
@@ -327,8 +377,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("request_parameters") {
 		o, n := d.GetChange("request_parameters")
 
-		os := o.(map[string]interface{})
-		ns := n.(map[string]interface{})
+		os := o.(map[string]any)
+		ns := n.(map[string]any)
 
 		// Handle Removal
 		for k, v := range os {
@@ -408,25 +458,6 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		})
 	}
 
-	// The documentation https://docs.aws.amazon.com/apigateway/api-reference/link-relation/integration-update/ says
-	// that uri changes are only supported for non-mock types. Because the uri value is not used in mock
-	// resources, it means that the uri can always be updated
-	if d.HasChange(names.AttrURI) {
-		operations = append(operations, types.PatchOperation{
-			Op:    types.OpReplace,
-			Path:  aws.String("/uri"),
-			Value: aws.String(d.Get(names.AttrURI).(string)),
-		})
-	}
-
-	if d.HasChange("content_handling") {
-		operations = append(operations, types.PatchOperation{
-			Op:    types.OpReplace,
-			Path:  aws.String("/contentHandling"),
-			Value: aws.String(d.Get("content_handling").(string)),
-		})
-	}
-
 	if d.HasChange("connection_type") {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
@@ -443,6 +474,34 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		})
 	}
 
+	if d.HasChange("content_handling") {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/contentHandling"),
+			Value: aws.String(d.Get("content_handling").(string)),
+		})
+	}
+
+	if d.HasChange("integration_target") {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/integrationTarget"),
+			Value: aws.String(d.Get("integration_target").(string)),
+		})
+	}
+
+	if d.HasChange("response_transfer_mode") {
+		responseTransferMode := d.Get("response_transfer_mode").(string)
+		if responseTransferMode == "" {
+			responseTransferMode = string(types.ResponseTransferModeBuffered)
+		}
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/responseTransferMode"),
+			Value: aws.String(responseTransferMode),
+		})
+	}
+
 	if d.HasChange("timeout_milliseconds") {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
@@ -452,8 +511,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("tls_config") {
-		if v, ok := d.GetOk("tls_config"); ok && len(v.([]interface{})) > 0 {
-			m := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := d.GetOk("tls_config"); ok && len(v.([]any)) > 0 {
+			m := v.([]any)[0].(map[string]any)
 
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
@@ -461,6 +520,17 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				Value: aws.String(strconv.FormatBool(m["insecure_skip_verification"].(bool))),
 			})
 		}
+	}
+
+	// The documentation https://docs.aws.amazon.com/apigateway/api-reference/link-relation/integration-update/ says
+	// that uri changes are only supported for non-mock types. Because the uri value is not used in mock
+	// resources, it means that the uri can always be updated
+	if d.HasChange(names.AttrURI) {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/uri"),
+			Value: aws.String(d.Get(names.AttrURI).(string)),
+		})
 	}
 
 	// Updating, Stage 1: Everything except cache key parameters
@@ -590,7 +660,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -635,7 +705,11 @@ func findIntegrationByThreePartKey(ctx context.Context, conn *apigateway.Client,
 		RestApiId:  aws.String(apiID),
 	}
 
-	output, err := conn.GetIntegration(ctx, &input)
+	return findIntegration(ctx, conn, &input)
+}
+
+func findIntegration(ctx context.Context, conn *apigateway.Client, input *apigateway.GetIntegrationInput) (*apigateway.GetIntegrationOutput, error) {
+	output, err := conn.GetIntegration(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -655,26 +729,27 @@ func findIntegrationByThreePartKey(ctx context.Context, conn *apigateway.Client,
 	return output, nil
 }
 
-func expandTLSConfig(vConfig []interface{}) *types.TlsConfig {
-	config := &types.TlsConfig{}
+func expandTLSConfig(tfList []any) *types.TlsConfig {
+	apiObject := &types.TlsConfig{}
 
-	if len(vConfig) == 0 || vConfig[0] == nil {
-		return config
+	if len(tfList) == 0 || tfList[0] == nil {
+		return apiObject
 	}
-	mConfig := vConfig[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
-	if insecureSkipVerification, ok := mConfig["insecure_skip_verification"].(bool); ok {
-		config.InsecureSkipVerification = insecureSkipVerification
+	if insecureSkipVerification, ok := tfMap["insecure_skip_verification"].(bool); ok {
+		apiObject.InsecureSkipVerification = insecureSkipVerification
 	}
-	return config
+
+	return apiObject
 }
 
-func flattenTLSConfig(config *types.TlsConfig) []interface{} {
-	if config == nil {
+func flattenTLSConfig(apiObject *types.TlsConfig) []any {
+	if apiObject == nil {
 		return nil
 	}
 
-	return []interface{}{map[string]interface{}{
-		"insecure_skip_verification": config.InsecureSkipVerification,
+	return []any{map[string]any{
+		"insecure_skip_verification": apiObject.InsecureSkipVerification,
 	}}
 }

@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -43,10 +42,6 @@ func resourceNamespace() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath("admin_user_password"), cty.GetAttrPath("admin_user_password_wo")),
-		},
-
 		Schema: map[string]*schema.Schema{
 			"admin_password_secret_arn": {
 				Type:     schema.TypeString,
@@ -69,6 +64,7 @@ func resourceNamespace() *schema.Resource {
 				Optional:      true,
 				WriteOnly:     true,
 				ConflictsWith: []string{"admin_user_password", "manage_admin_password"},
+				RequiredWith:  []string{"admin_user_password_wo_version"},
 			},
 			"admin_user_password_wo_version": {
 				Type:         schema.TypeInt,
@@ -136,12 +132,10 @@ func resourceNamespace() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -208,7 +202,7 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -232,14 +226,14 @@ func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("default_iam_role_arn", output.DefaultIamRoleArn)
 	d.Set("iam_roles", flattenNamespaceIAMRoles(output.IamRoles))
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
-	d.Set("log_exports", flex.FlattenStringyValueSet[awstypes.LogExport](output.LogExports))
+	d.Set("log_exports", output.LogExports)
 	d.Set("namespace_id", output.NamespaceId)
 	d.Set("namespace_name", output.NamespaceName)
 
 	return diags
 }
 
-func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -304,13 +298,13 @@ func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, namespaceDeletedTimeout,
-		func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, namespaceDeletedTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteNamespace(ctx, &redshiftserverless.DeleteNamespaceInput{
 				NamespaceName: aws.String(d.Id()),
 			})
@@ -364,7 +358,7 @@ func findNamespaceByName(ctx context.Context, conn *redshiftserverless.Client, n
 }
 
 func statusNamespace(ctx context.Context, conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findNamespaceByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

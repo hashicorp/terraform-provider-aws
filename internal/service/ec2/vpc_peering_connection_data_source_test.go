@@ -53,26 +53,21 @@ func TestAccVPCPeeringConnectionDataSource_id(t *testing.T) {
 				Config: testAccVPCPeeringConnectionDataSourceConfig_id(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					// resource.TestCheckResourceAttrPair(dataSourceName, "cidr_block", resourceName, "cidr_block"), // not in resource
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCIDRBlock, requesterVpcResourceName, names.AttrCIDRBlock),
-					// resource.TestCheckResourceAttrPair(dataSourceName, "cidr_block_set.#", resourceName, "cidr_block_set.#"), // not in resource
 					resource.TestCheckResourceAttr(dataSourceName, "cidr_block_set.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cidr_block_set.*.cidr_block", requesterVpcResourceName, names.AttrCIDRBlock),
 					resource.TestCheckResourceAttr(dataSourceName, "ipv6_cidr_block_set.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ipv6_cidr_block_set.*.ipv6_cidr_block", requesterVpcResourceName, "ipv6_cidr_block"),
-					// resource.TestCheckResourceAttrPair(dataSourceName, "region", resourceName, "region"), // not in resource
-					// resource.TestCheckResourceAttrPair(dataSourceName, "peer_cidr_block", resourceName, "peer_cidr_block"), // not in resource
 					resource.TestCheckResourceAttrPair(dataSourceName, "peer_cidr_block", accepterVpcResourceName, names.AttrCIDRBlock),
-					// resource.TestCheckResourceAttrPair(dataSourceName, "peer_cidr_block_set.#", resourceName, "peer_cidr_block_set.#"), // not in resource
 					resource.TestCheckResourceAttr(dataSourceName, "peer_cidr_block_set.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "peer_cidr_block_set.*.cidr_block", accepterVpcResourceName, names.AttrCIDRBlock),
 					resource.TestCheckResourceAttr(dataSourceName, "peer_ipv6_cidr_block_set.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "peer_ipv6_cidr_block_set.*.ipv6_cidr_block", accepterVpcResourceName, "ipv6_cidr_block"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "peer_owner_id", resourceName, "peer_owner_id"),
-					// resource.TestCheckResourceAttrPair(dataSourceName, "peer_region", resourceName, "peer_region"), //not in resource
+					resource.TestCheckResourceAttr(dataSourceName, "peer_region", acctest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "peer_vpc_id", resourceName, "peer_vpc_id"),
-					// resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"), // not in resource
-					// resource.TestCheckResourceAttrPair(dataSourceName, "region", resourceName, "region"), // not in resource
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
+					resource.TestCheckResourceAttr(dataSourceName, "requester_region", acctest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),
