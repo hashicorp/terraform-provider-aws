@@ -1366,9 +1366,9 @@ resource "opensearch_index" "vector_index" {
       }
     }
   })
-  
+
   lifecycle {
-    ignore_changes = [ mappings ]
+    ignore_changes = [mappings]
   }
 
   depends_on = [aws_opensearch_domain.knowledge_base]
