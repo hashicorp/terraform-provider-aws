@@ -30,6 +30,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to       = aws_iam_outbound_web_identity_federation.example
+  identity = {}
+}
+
+resource "aws_iam_outbound_web_identity_federation" "example" {}
+```
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Outbound Web Identity Federation resources using the AWS account ID. For example:
 
 ```terraform
@@ -43,15 +54,4 @@ Using `terraform import`, import IAM Outbound Web Identity Federation resources 
 
 ```console
 % terraform import aws_iam_outbound_web_identity_federation.example 123456789012
-```
-
-In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
-
-```terraform
-import {
-  to       = aws_iam_outbound_web_identity_federation.example
-  identity = {}
-}
-
-resource "aws_iam_outbound_web_identity_federation" "example" {}
 ```
