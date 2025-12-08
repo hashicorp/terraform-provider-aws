@@ -120,6 +120,26 @@ func resourceApplication() *schema.Resource {
 									},
 								},
 							},
+							"application_encryption_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"key_id": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"key_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.KeyType](),
+										},
+									},
+								},
+							},
 							"application_snapshot_configuration": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -314,26 +334,6 @@ func resourceApplication() *schema.Resource {
 									},
 								},
 								ConflictsWith: []string{"application_configuration.0.sql_application_configuration"},
-							},
-							"application_encryption_configuration": {
-								Type:     schema.TypeList,
-								Optional: true,
-								Computed: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"key_type": {
-											Type:             schema.TypeString,
-											Required:         true,
-											ValidateDiagFunc: enum.Validate[awstypes.KeyType](),
-										},
-										"key_id": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											ValidateFunc: verify.ValidARN,
-										},
-									},
-								},
 							},
 							"sql_application_configuration": {
 								Type:     schema.TypeList,
@@ -1843,6 +1843,10 @@ func expandApplicationConfiguration(vApplicationConfiguration []any) *awstypes.A
 		applicationConfiguration.ApplicationCodeConfiguration = applicationCodeConfiguration
 	}
 
+	if vApplicationEncryptionConfiguration, ok := mApplicationConfiguration["application_encryption_configuration"].([]any); ok && len(vApplicationEncryptionConfiguration) > 0 && vApplicationEncryptionConfiguration[0] != nil {
+		applicationConfiguration.ApplicationEncryptionConfiguration = expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguration)
+	}
+
 	if vApplicationSnapshotConfiguration, ok := mApplicationConfiguration["application_snapshot_configuration"].([]any); ok && len(vApplicationSnapshotConfiguration) > 0 && vApplicationSnapshotConfiguration[0] != nil {
 		applicationSnapshotConfiguration := &awstypes.ApplicationSnapshotConfiguration{}
 
@@ -1865,11 +1869,6 @@ func expandApplicationConfiguration(vApplicationConfiguration []any) *awstypes.A
 		}
 
 		applicationConfiguration.EnvironmentProperties = environmentProperties
-	}
-
-	// Handle application encryption configuration
-	if vApplicationEncryptionConfiguration, ok := mApplicationConfiguration["application_encryption_configuration"].([]any); ok && len(vApplicationEncryptionConfiguration) > 0 && vApplicationEncryptionConfiguration[0] != nil {
-		applicationConfiguration.ApplicationEncryptionConfiguration = expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguration)
 	}
 
 	if vFlinkApplicationConfiguration, ok := mApplicationConfiguration["flink_application_configuration"].([]any); ok && len(vFlinkApplicationConfiguration) > 0 && vFlinkApplicationConfiguration[0] != nil {
@@ -2735,6 +2734,10 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 		mApplicationConfiguration["application_code_configuration"] = []any{mApplicationCodeConfiguration}
 	}
 
+	if applicationEncryptionConfigurationDescription := applicationConfigurationDescription.ApplicationEncryptionConfigurationDescription; applicationEncryptionConfigurationDescription != nil {
+		mApplicationConfiguration["application_encryption_configuration"] = flattenApplicationEncryptionConfigurationDescription(applicationEncryptionConfigurationDescription)
+	}
+
 	if applicationSnapshotConfigurationDescription := applicationConfigurationDescription.ApplicationSnapshotConfigurationDescription; applicationSnapshotConfigurationDescription != nil {
 		mApplicationSnapshotConfiguration := map[string]any{
 			"snapshots_enabled": aws.ToBool(applicationSnapshotConfigurationDescription.SnapshotsEnabled),
@@ -2760,18 +2763,6 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 		mEnvironmentProperties["property_group"] = vPropertyGroups
 
 		mApplicationConfiguration["environment_properties"] = []any{mEnvironmentProperties}
-	}
-
-	// Add application encryption configuration if present
-	if appConfigDesc := applicationConfigurationDescription; appConfigDesc != nil {
-		if encConfig := appConfigDesc.ApplicationEncryptionConfigurationDescription; encConfig != nil {
-			// Convert the description to the format expected by the helper function
-			encryptionConfig := &awstypes.ApplicationEncryptionConfiguration{
-				KeyType: encConfig.KeyType,
-				KeyId:   encConfig.KeyId,
-			}
-			mApplicationConfiguration["application_encryption_configuration"] = flattenApplicationEncryptionConfiguration(encryptionConfig)
-		}
 	}
 
 	if flinkApplicationConfigurationDescription := applicationConfigurationDescription.FlinkApplicationConfigurationDescription; flinkApplicationConfigurationDescription != nil {
@@ -3156,13 +3147,13 @@ func expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguratio
 	return applicationEncryptionConfiguration
 }
 
-func flattenApplicationEncryptionConfiguration(applicationEncryptionConfiguration *awstypes.ApplicationEncryptionConfiguration) []any {
+func flattenApplicationEncryptionConfigurationDescription(applicationEncryptionConfiguration *awstypes.ApplicationEncryptionConfigurationDescription) []any {
 	if applicationEncryptionConfiguration == nil {
 		return []any{}
 	}
 
 	mApplicationEncryptionConfiguration := map[string]any{
-		"key_type": string(applicationEncryptionConfiguration.KeyType),
+		"key_type": applicationEncryptionConfiguration.KeyType,
 	}
 
 	if applicationEncryptionConfiguration.KeyId != nil {
