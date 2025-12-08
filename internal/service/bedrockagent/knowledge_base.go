@@ -283,13 +283,13 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"database_name": schema.StringAttribute{
+									names.AttrDatabaseName: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"endpoint": schema.StringAttribute{
+									names.AttrEndpoint: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
