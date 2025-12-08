@@ -82,13 +82,11 @@ func (r *modelInvocationLoggingConfigurationResource) Schema(ctx context.Context
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrLogGroupName: schema.StringAttribute{
-										// Must set to optional to avoid validation error
-										// See: https://github.com/hashicorp/terraform-plugin-framework/issues/740
-										Optional: true,
+										Required: true,
 									},
 									names.AttrRoleARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
-										Optional:   true,
+										Required:   true,
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -100,7 +98,7 @@ func (r *modelInvocationLoggingConfigurationResource) Schema(ctx context.Context
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												names.AttrBucketName: schema.StringAttribute{
-													Optional: true,
+													Required: true,
 												},
 												"key_prefix": schema.StringAttribute{
 													Optional: true,
@@ -119,7 +117,7 @@ func (r *modelInvocationLoggingConfigurationResource) Schema(ctx context.Context
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrBucketName: schema.StringAttribute{
-										Optional: true,
+										Required: true,
 									},
 									"key_prefix": schema.StringAttribute{
 										Optional: true,
