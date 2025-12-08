@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_key_pair: Add `public_key_wo(write-only)` and `public_key_wo_version` argument
+```
