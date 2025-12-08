@@ -44,3 +44,14 @@ Using `terraform import`, import IAM Outbound Web Identity Federation resources 
 ```console
 % terraform import aws_iam_outbound_web_identity_federation.example 123456789012
 ```
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to       = aws_iam_outbound_web_identity_federation.example
+  identity = {}
+}
+
+resource "aws_iam_outbound_web_identity_federation" "example" {}
+```
