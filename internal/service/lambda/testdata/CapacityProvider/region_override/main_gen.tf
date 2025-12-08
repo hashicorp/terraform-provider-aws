@@ -1,5 +1,9 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_lambda_capacity_provider" "test" {
-{{- template "region" }}
+  region = var.region
+
   name = var.rName
 
   vpc_config {
@@ -11,8 +15,6 @@ resource "aws_lambda_capacity_provider" "test" {
     capacity_provider_operator_role_arn = aws_iam_role.test.arn
   }
 
-{{- template "tags" . }}
-
   depends_on = [
     aws_iam_role_policy.iam_policy_for_lambda
   ]
@@ -21,7 +23,8 @@ resource "aws_lambda_capacity_provider" "test" {
 data "aws_partition" "current" {}
 
 data "aws_availability_zones" "available" {
-{{- template "region" }}
+  region = var.region
+
   exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
   state            = "available"
 
@@ -111,7 +114,8 @@ EOF
 }
 
 resource "aws_vpc" "test" {
-{{- template "region" }}
+  region = var.region
+
   cidr_block                       = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
@@ -121,7 +125,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-{{- template "region" }}
+  region = var.region
+
   count = 2
 
   vpc_id            = aws_vpc.test.id
@@ -138,7 +143,8 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-{{- template "region" }}
+  region = var.region
+
   name        = var.rName
   description = "Allow all inbound traffic for lambda test"
   vpc_id      = aws_vpc.test.id
@@ -160,4 +166,15 @@ resource "aws_security_group" "test" {
   tags = {
     Name = var.rName
   }
+}
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
