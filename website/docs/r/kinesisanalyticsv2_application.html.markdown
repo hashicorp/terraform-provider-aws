@@ -271,8 +271,6 @@ The `application_configuration` object supports the following:
 
 * `application_code_configuration` - (Required) The code location and type parameters for the application.
 * `application_encryption_configuration` - (Optional) The encryption configuration for the application. This can be used to encrypt data at rest in the application.
-  * `key_type` - (Required) The type of encryption key to use. Valid values: `CUSTOMER_MANAGED_CMK`, `AWS_OWNED_CMK`.
-  * `key_id` - (Optional) The ARN of the KMS key to use for encryption. Required when `key_type` is set to `CUSTOMER_MANAGED_CMK`. The KMS key must be in the same region as the application.
 * `application_snapshot_configuration` - (Optional) Describes whether snapshots are enabled for a Flink-based application.
 * `environment_properties` - (Optional) Describes execution properties for a Flink-based application.
 * `flink_application_configuration` - (Optional) The configuration of a Flink-based application.
@@ -284,6 +282,11 @@ The `application_code_configuration` object supports the following:
 
 * `code_content_type` - (Required) Specifies whether the code content is in text or zip format. Valid values: `PLAINTEXT`, `ZIPFILE`.
 * `code_content` - (Optional) The location and type of the application code.
+
+The `application_encryption_configuration` object supports the following:
+
+* `key_type` - (Required) The type of encryption key to use. Valid values: `CUSTOMER_MANAGED_CMK`, `AWS_OWNED_CMK`.
+* `key_id` - (Optional) The ARN of the KMS key to use for encryption. Required when `key_type` is set to `CUSTOMER_MANAGED_CMK`. The KMS key must be in the same region as the application.
 
 The `code_content` object supports the following:
 
