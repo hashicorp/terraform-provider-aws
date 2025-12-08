@@ -768,9 +768,29 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.ObjectLockEnabledForBucket = aws.Bool(true)
 	}
 
+	// Tag on create requires the s3:TagResource IAM permission
+	tagOnCreate := true
+	if input.CreateBucketConfiguration == nil {
+		input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
+			Tags: getTagsIn(ctx),
+		}
+	} else {
+		input.CreateBucketConfiguration.Tags = getTagsIn(ctx)
+	}
+
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateBucket(ctx, input)
 	}, errCodeOperationAborted)
+
+	if errs.Contains(err, "is not authorized to perform: s3:TagResource") {
+		// Remove tags and try again
+		input.CreateBucketConfiguration.Tags = nil
+		tagOnCreate = false
+
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+			return conn.CreateBucket(ctx, input)
+		}, errCodeOperationAborted)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s): %s", bucket, err)
@@ -786,8 +806,10 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket (%s) create: %s", d.Id(), err)
 	}
 
-	if err := bucketCreateTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting S3 Bucket (%s) tags: %s", d.Id(), err)
+	if !tagOnCreate {
+		if err := bucketCreateTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting S3 Bucket (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceBucketUpdate(ctx, d, meta)...)

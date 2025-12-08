@@ -56,7 +56,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -111,7 +111,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest(t *testing.T) {
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -164,7 +164,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -222,7 +222,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
@@ -254,7 +254,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange(t *
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "4"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "4"),
@@ -307,7 +307,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ign
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
@@ -339,7 +339,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_capacityChange_ign
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
@@ -392,7 +392,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -429,7 +429,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -487,7 +487,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -524,7 +524,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_onDemandThroughput
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -582,7 +582,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_billingPayPerRequest_warmThroughput(t *
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -672,7 +672,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -709,7 +709,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_payPerRequest_to_provisioned(t *testing
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
@@ -762,7 +762,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
@@ -794,7 +794,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_provisioned_to_payPerRequest(t *testing
 						"key_type":       "RANGE",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -851,7 +851,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -906,7 +906,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -926,13 +926,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
 					acctest.ImportCheckResourceAttr(names.AttrName, rNameTable),
 					acctest.ImportCheckResourceAttr("attribute.#", "3"),
 					acctest.ImportCheckResourceAttr("attribute.0.%", "2"),
-					acctest.ImportCheckResourceAttrSet("attribute.0.name", true),
+					acctest.ImportCheckResourceAttrSet("attribute.0.name"),
 					acctest.ImportCheckResourceAttr("attribute.0.type", "S"),
 					acctest.ImportCheckResourceAttr("attribute.1.%", "2"),
-					acctest.ImportCheckResourceAttrSet("attribute.1.name", true),
+					acctest.ImportCheckResourceAttrSet("attribute.1.name"),
 					acctest.ImportCheckResourceAttr("attribute.1.type", "S"),
 					acctest.ImportCheckResourceAttr("attribute.2.%", "2"),
-					acctest.ImportCheckResourceAttrSet("attribute.2.name", true),
+					acctest.ImportCheckResourceAttrSet("attribute.2.name"),
 					acctest.ImportCheckResourceAttr("attribute.2.type", "S"),
 				),
 			},
@@ -981,7 +981,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1013,7 +1013,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "non_key_attributes.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "projection_type", "INCLUDE"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1070,7 +1070,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_create(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName1, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName1, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName1, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName1, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName1, "write_capacity", "1"),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName2, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
@@ -1084,7 +1084,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_create(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName2, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName2, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName2, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName2, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName2, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1136,7 +1136,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName1, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName1, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName1, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName1, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName1, "write_capacity", "1"),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName2, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
@@ -1150,7 +1150,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName2, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName2, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName2, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName2, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName2, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1178,7 +1178,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName1, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName1, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName1, "read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName1, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName1, "write_capacity", "2"),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName2, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
@@ -1192,7 +1192,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_update(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName2, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName2, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName2, "read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName2, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName2, "write_capacity", "2"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1244,7 +1244,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_delete(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName1, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName1, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName1, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName1, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName1, "write_capacity", "1"),
 
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName2, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
@@ -1258,7 +1258,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_multipleGsi_delete(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName2, "non_key_attributes"),
 					resource.TestCheckResourceAttr(resourceName2, "projection_type", "ALL"),
 					resource.TestCheckResourceAttr(resourceName2, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName2, "table_name", rNameTable),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrTableName, rNameTable),
 					resource.TestCheckResourceAttr(resourceName2, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1364,6 +1364,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple(t *testing.T) {
 				ImportStatePersist: true,
 				ImportStateVerify:  false,
 			},
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
 				Config:   testAccGlobalSecondaryIndexConfig_multipleGsi_create(rNameTable, rName1, rName2),
 				PlanOnly: true,
@@ -1417,6 +1418,7 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_partial(t *testing.T) {
 				ImportStatePersist: true,
 				ImportStateVerify:  false,
 			},
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
 				Config:   testAccGlobalSecondaryIndexConfig_migrate_partial(rNameTable, rName1, rName2),
 				PlanOnly: true,
@@ -1446,7 +1448,7 @@ func testAccCheckGSIExists(ctx context.Context, t *testing.T, n string, gsi *aws
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
-		tableName := rs.Primary.Attributes["table_name"]
+		tableName := rs.Primary.Attributes[names.AttrTableName]
 		indexName := rs.Primary.Attributes["index_name"]
 
 		output, err := tfdynamodb.FindGSIByTwoPartKey(ctx, conn, tableName, indexName)
@@ -1467,7 +1469,7 @@ func testAccCheckGSINotExists(ctx context.Context, t *testing.T, n string) resou
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
-		tableName := rs.Primary.Attributes["table_name"]
+		tableName := rs.Primary.Attributes[names.AttrTableName]
 		indexName := rs.Primary.Attributes["index_name"]
 		output, err := tfdynamodb.FindGSIByTwoPartKey(ctx, conn, tableName, indexName)
 

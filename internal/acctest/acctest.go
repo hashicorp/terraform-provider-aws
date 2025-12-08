@@ -2079,7 +2079,7 @@ func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 	}
 }
 
-func CheckVPCExists(ctx context.Context, n string, v *ec2types.Vpc) resource.TestCheckFunc {
+func CheckVPCExists(ctx context.Context, t *testing.T, n string, v *ec2types.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2090,7 +2090,7 @@ func CheckVPCExists(ctx context.Context, n string, v *ec2types.Vpc) resource.Tes
 			return fmt.Errorf("no VPC ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
 
@@ -2180,12 +2180,7 @@ func CheckResourceAttrIsJSONString(n, key string) resource.TestCheckFunc {
 // The variable's value is returned.
 func SkipIfEnvVarNotSet(t *testing.T, key string) string {
 	t.Helper()
-
-	v := os.Getenv(key)
-	if v == "" {
-		t.Skipf("Environment variable %s is not set, skipping test", key)
-	}
-	return v
+	return envvar.SkipIfEmpty(t, key, "")
 }
 
 // SkipIfExeNotOnPath skips the current test if the specified executable is not found in the directories named by the PATH environment variable.

@@ -93,7 +93,7 @@ func (r *resourceGlobalSecondaryIndex) Schema(ctx context.Context, request resou
 				Optional: true,
 				Computed: true,
 			},
-			"table_name": schema.StringAttribute{
+			names.AttrTableName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

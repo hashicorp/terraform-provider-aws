@@ -69,6 +69,7 @@ func testAccDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-directory-%[1]s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "tenancy", string(types.TenancyShared)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "ALLOW"),
@@ -1256,6 +1257,44 @@ func testAccDirectory_poolsWorkspaceCreationAD(t *testing.T) {
 	})
 }
 
+func testAccDirectory_tenancy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.WorkspaceDirectory
+	rName := sdkacctest.RandString(8)
+	domain := acctest.RandomDomainName()
+
+	resourceName := "aws_workspaces_directory.main"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_sharedTenancy(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_type", "PERSONAL"),
+					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "AWS_DIRECTORY_SERVICE"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tenancy", string(types.TenancyShared)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccDirectoryConfig_basePools(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -1465,4 +1504,24 @@ resource "aws_workspaces_directory" "pool" {
   }
 }
 `, rName, domain))
+}
+
+func testAccDirectoryConfig_sharedTenancy(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_base(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+  tenancy      = "SHARED"
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+
+data "aws_iam_role" "workspaces-default" {
+  name = "workspaces_DefaultRole"
+}
+`, rName),
+	)
 }

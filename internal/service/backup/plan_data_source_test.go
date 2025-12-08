@@ -33,6 +33,7 @@ func TestAccBackupPlanDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtRulePound, resourceName, acctest.CtRulePound),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrRule, resourceName, names.AttrRule),
+					resource.TestCheckResourceAttrPair(datasourceName, "scan_setting", resourceName, "scan_setting"),
 				),
 			},
 		},

@@ -28,6 +28,7 @@ func TestAccLogsGroupDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrPair(dataSourceName, "deletion_protection_enabled", resourceName, "deletion_protection_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "log_group_class", resourceName, "log_group_class"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),

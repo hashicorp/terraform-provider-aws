@@ -203,6 +203,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// arczonalshift
+
+				"arczonalshift": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// athena
 
 				"athena": {
@@ -1498,6 +1506,14 @@ func endpointsSchema() *schema.Schema {
 				// mwaa
 
 				"mwaa": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// mwaaserverless
+
+				"mwaaserverless": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

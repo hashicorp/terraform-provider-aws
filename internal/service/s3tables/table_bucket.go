@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -92,16 +92,16 @@ func (r *tableBucketResource) Schema(ctx context.Context, request resource.Schem
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 63),
-					stringMustContainLowerCaseLettersNumbersHypens,
-					stringMustStartWithLetterOrNumber,
-					stringMustEndWithLetterOrNumber,
-					validators.PrefixNoneOf(
+					tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersHyphens,
+					tfstringvalidator.StartsWithLetterOrNumber,
+					tfstringvalidator.EndsWithLetterOrNumber,
+					tfstringvalidator.PrefixNoneOf(
 						"xn--",
 						"sthree-",
 						"sthree-configurator",
 						"amzn-s3-demo-",
 					),
-					validators.SuffixNoneOf(
+					tfstringvalidator.SuffixNoneOf(
 						"-s3alias",
 						"--ol-s3",
 						".mrap",

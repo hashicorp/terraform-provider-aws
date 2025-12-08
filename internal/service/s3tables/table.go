@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1001,9 +1002,9 @@ func (id tableIdentifier) PopulateState(ctx context.Context, s *tfsdk.State, dia
 
 var tableNameValidator = []validator.String{
 	stringvalidator.LengthBetween(1, 255),
-	stringMustContainLowerCaseLettersNumbersUnderscores,
-	stringMustStartWithLetterOrNumber,
-	stringMustEndWithLetterOrNumber,
+	tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersUnderscores,
+	tfstringvalidator.StartsWithLetterOrNumber,
+	tfstringvalidator.EndsWithLetterOrNumber,
 }
 
 type tableMetadataModel struct {

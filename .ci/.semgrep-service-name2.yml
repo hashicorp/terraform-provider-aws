@@ -2363,6 +2363,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)MWAA"
     severity: WARNING
+  - id: mwaaserverless-in-func-name
+    languages:
+      - go
+    message: Do not use "MWAAServerless" in func name inside mwaaserverless package
+    paths:
+      include:
+        - "/internal/service/mwaaserverless"
+      exclude:
+        - "/internal/service/mwaaserverless/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MWAAServerless"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: mwaaserverless-in-test-name
+    languages:
+      - go
+    message: Include "MWAAServerless" in test name
+    paths:
+      include:
+        - "/internal/service/mwaaserverless/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccMWAAServerless"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: mwaaserverless-in-const-name
+    languages:
+      - go
+    message: Do not use "MWAAServerless" in const name inside mwaaserverless package
+    paths:
+      include:
+        - "/internal/service/mwaaserverless"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MWAAServerless"
+    severity: WARNING
+  - id: mwaaserverless-in-var-name
+    languages:
+      - go
+    message: Do not use "MWAAServerless" in var name inside mwaaserverless package
+    paths:
+      include:
+        - "/internal/service/mwaaserverless"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)MWAAServerless"
+    severity: WARNING
   - id: neptune-in-func-name
     languages:
       - go
@@ -4461,32 +4522,4 @@ rules:
             - pattern-regex: "(?i)rdsdataservice"
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: rdsdataservice-in-const-name
-    languages:
-      - go
-    message: Do not use "rdsdataservice" in const name inside rdsdata package
-    paths:
-      include:
-        - "/internal/service/rdsdata"
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)rdsdataservice"
-    severity: WARNING
-  - id: rdsdataservice-in-var-name
-    languages:
-      - go
-    message: Do not use "rdsdataservice" in var name inside rdsdata package
-    paths:
-      include:
-        - "/internal/service/rdsdata"
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)rdsdataservice"
     severity: WARNING
