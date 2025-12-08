@@ -37,7 +37,7 @@ func testAccIAMOutboundWebIdentityFederation_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy:             testAccCheckOutboundWebIdentityFederationDestroy(ctx),
+		CheckDestroy:             testAccCheckOutboundWebIdentityFederationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func testAccIAMOutboundWebIdentityFederation_Identity_Basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/OutboundWebIdentityFederation/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOutboundWebIdentityFederationExists(ctx, resourceName),
+					testAccCheckOutboundWebIdentityFederationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
