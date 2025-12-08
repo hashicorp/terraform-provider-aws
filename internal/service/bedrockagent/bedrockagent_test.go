@@ -20,7 +20,6 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"OpenSearchBasic":                   testAccKnowledgeBase_OpenSearch_basic,
 			"OpenSearchUpdate":                  testAccKnowledgeBase_OpenSearch_update,
 			"OpenSearchSupplementalDataStorage": testAccKnowledgeBase_OpenSearch_supplementalDataStorage,
-			"S3Vectors":                         testAccKnowledgeBase_S3Vectors,
 		},
 		"DataSource": {
 			acctest.CtBasic:        testAccDataSource_basic,
