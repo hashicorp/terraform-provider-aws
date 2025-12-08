@@ -1132,7 +1132,7 @@ resource "aws_iam_role" "bedrock_kb_role" {
         Action = "sts:AssumeRole"
         Condition = {
           StringEquals = {
-            "aws:SourceAccount": data.aws_caller_identity.current.account_id
+            "aws:SourceAccount" : data.aws_caller_identity.current.account_id
           },
         }
       }
@@ -1289,7 +1289,7 @@ locals {
         Principal = {
           AWS = "*"
         }
-        Action = "es:*"
+        Action   = "es:*"
         Resource = "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:domain/${substr(%[1]q, 0, 28)}/*"
       }
     ]
@@ -1342,27 +1342,27 @@ resource "opensearch_index" "vector_index" {
 
   # Mappings for Bedrock Knowledge Base compatibility
   mappings = jsonencode({
-    "properties": {
-      "vector_embedding": {
-        "type": "knn_vector",
-        "dimension": 1024,
-        "space_type": "l2",
-        "method": {
-          "name": "hnsw",
-          "engine": "faiss",
-          "parameters": {
-            "ef_construction": 128,
-            "m": 24
+    "properties" : {
+      "vector_embedding" : {
+        "type" : "knn_vector",
+        "dimension" : 1024,
+        "space_type" : "l2",
+        "method" : {
+          "name" : "hnsw",
+          "engine" : "faiss",
+          "parameters" : {
+            "ef_construction" : 128,
+            "m" : 24
           }
         }
       },
-      "text": {
-        "type": "text",
-        "index": true
+      "text" : {
+        "type" : "text",
+        "index" : true
       },
-      "metadata": {
-        "type": "text",
-        "index": false
+      "metadata" : {
+        "type" : "text",
+        "index" : false
       }
     }
   })
@@ -1371,7 +1371,7 @@ resource "opensearch_index" "vector_index" {
     ignore_changes = [ mappings ]
   }
 
-  depends_on = [ aws_opensearch_domain.knowledge_base ]
+  depends_on = [aws_opensearch_domain.knowledge_base]
 }
 `, rName, model)
 }
