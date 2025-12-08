@@ -24,7 +24,6 @@ import (
 
 // @FrameworkResource("aws_iam_outbound_web_identity_federation", name="Outbound Web Identity Federation")
 // @SingletonIdentity
-// @WrappedImport(false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
 // @Testing(generator=false)
@@ -38,6 +37,7 @@ func newOutboundWebIdentityFederationResource(_ context.Context) (resource.Resou
 type outboundWebIdentityFederationResource struct {
 	framework.ResourceWithModel[outboundWebIdentityFederationResourceModel]
 	framework.WithNoUpdate
+	framework.WithImportByIdentity
 }
 
 func (r *outboundWebIdentityFederationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -116,8 +116,10 @@ func (r *outboundWebIdentityFederationResource) Delete(ctx context.Context, req 
 }
 
 func (r *outboundWebIdentityFederationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	// Something must be set in state to prevent "Missing Resource Import State" errors.
-	resource.ImportStatePassthroughID(ctx, path.Root("issuer_identifier"), request, response)
+	r.WithImportByIdentity.ImportState(ctx, request, response)
+
+	// Touch a value to bypass a Framework check
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("issuer_identifier"), types.StringUnknown())...)
 }
 
 func findOutboundWebIdentityFederation(ctx context.Context, conn *iam.Client) (*iam.GetOutboundWebIdentityFederationInfoOutput, error) {
