@@ -44,7 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/batch v1.58.9
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.8
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.51.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.9.3
@@ -108,7 +108,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.275.1
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.54.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.7
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.69.2
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.69.3
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.7
 	github.com/aws/aws-sdk-go-v2/service/eks v1.76.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.6
@@ -137,11 +137,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.7
-	github.com/aws/aws-sdk-go-v2/service/iam v1.52.3
+	github.com/aws/aws-sdk-go-v2/service/iam v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.50.2
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.14
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.45.3
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/iot v1.69.14
@@ -157,7 +157,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/kms v1.49.2
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.46.2
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.85.0
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.86.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.13.15
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.59.1
@@ -230,7 +230,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.227.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.228.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.15
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.40.3
@@ -242,7 +242,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.39.19
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.33.10
 	github.com/aws/aws-sdk-go-v2/service/ses v1.34.15
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.55.2
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/shield v1.34.15
 	github.com/aws/aws-sdk-go-v2/service/signer v1.31.15
