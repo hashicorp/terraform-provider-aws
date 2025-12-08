@@ -243,10 +243,9 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 	})
 }
 
-func testAccKnowledgeBase_OpenSearch_basic(t *testing.T) {
+func testAccKnowledgeBase_OpenSearchServerless_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
-
 	var knowledgebase awstypes.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
@@ -261,7 +260,7 @@ func testAccKnowledgeBase_OpenSearch_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_OpenSearch_basic(rName, collectionName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_OpenSearchServerless_basic(rName, collectionName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -287,10 +286,9 @@ func testAccKnowledgeBase_OpenSearch_basic(t *testing.T) {
 	})
 }
 
-func testAccKnowledgeBase_OpenSearch_update(t *testing.T) {
+func testAccKnowledgeBase_OpenSearchServerless_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
-
 	var knowledgebase awstypes.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
@@ -305,7 +303,7 @@ func testAccKnowledgeBase_OpenSearch_update(t *testing.T) {
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_OpenSearch_basic(rName, collectionName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_OpenSearchServerless_basic(rName, collectionName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -329,7 +327,7 @@ func testAccKnowledgeBase_OpenSearch_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKnowledgeBaseConfig_OpenSearch_update(rName, collectionName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_OpenSearchServerless_update(rName, collectionName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-updated"),
@@ -357,10 +355,9 @@ func testAccKnowledgeBase_OpenSearch_update(t *testing.T) {
 	})
 }
 
-func testAccKnowledgeBase_OpenSearch_supplementalDataStorage(t *testing.T) {
+func testAccKnowledgeBase_OpenSearchServerless_supplementalDataStorage(t *testing.T) {
 	ctx := acctest.Context(t)
 	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
-
 	var knowledgebase awstypes.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
@@ -375,7 +372,7 @@ func testAccKnowledgeBase_OpenSearch_supplementalDataStorage(t *testing.T) {
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_OpenSearch_supplementalDataStorage(rName, collectionName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_OpenSearchServerless_supplementalDataStorage(rName, collectionName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
@@ -449,16 +446,6 @@ func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
-	testExternalProviders := map[string]resource.ExternalProvider{
-		"opensearch": {
-			Source:            "opensearch-project/opensearch",
-			VersionConstraint: "~> 2.2.0",
-		},
-		"random": {
-			Source:            "hashicorp/random",
-			VersionConstraint: "~> 3.5.0",
-		},
-	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -467,36 +454,42 @@ func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders:        testExternalProviders,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"opensearch": {
+				Source:            "opensearch-project/opensearch",
+				VersionConstraint: "~> 2.2.0",
+			},
+		},
+		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "OPENSEARCH_MANAGED_CLUSTER"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.vector_index_name", "knowledge-index"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.0.vector_field", "vector_embedding"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.0.text_field", "text"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.0.metadata_field", "metadata"),
 				),
-			},
-			{
-				Config:          testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, foundationModel),
-				ResourceName:    resourceName,
-				ImportStateKind: resource.ImportBlockWithID,
-				ImportState:     true,
-				ImportPlanChecks: resource.ImportPlanChecks{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"opensearch_managed_cluster_configuration": knownvalue.ListSizeExact(1),
+							"opensearch_serverless_configuration":      knownvalue.ListSizeExact(0),
+							names.AttrType:                             tfknownvalue.StringExact(awstypes.KnowledgeBaseStorageTypeOpensearchManagedCluster),
+							"pinecone_configuration":                   knownvalue.ListSizeExact(0),
+							"rds_configuration":                        knownvalue.ListSizeExact(0),
+							"redis_enterprise_cloud_configuration":     knownvalue.ListSizeExact(0),
+						}),
+					})),
 				},
 			},
 		},
@@ -746,7 +739,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 `, rName, model, tag1Key, tag1Value, tag2Key, tag2Value))
 }
 
-func testAccKnowledgeBaseConfigBase_openSearch(rName, collectionName, model string) string {
+func testAccKnowledgeBaseConfig_baseOpenSearchServerless(rName, collectionName, model string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
@@ -884,10 +877,8 @@ resource "aws_opensearchserverless_access_policy" "test" {
 `, rName, collectionName, model)
 }
 
-func testAccKnowledgeBaseConfig_OpenSearch_basic(rName, collectionName, model string) string {
-	return acctest.ConfigCompose(
-		testAccKnowledgeBaseConfigBase_openSearch(rName, collectionName, model),
-		fmt.Sprintf(`
+func testAccKnowledgeBaseConfig_OpenSearchServerless_basic(rName, collectionName, model string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearchServerless(rName, collectionName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   depends_on = [
     aws_iam_role_policy_attachment.test,
@@ -920,10 +911,8 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 `, rName, model))
 }
 
-func testAccKnowledgeBaseConfig_OpenSearch_update(rName, collectionName, model string) string {
-	return acctest.ConfigCompose(
-		testAccKnowledgeBaseConfigBase_openSearch(rName, collectionName, model),
-		fmt.Sprintf(`
+func testAccKnowledgeBaseConfig_OpenSearchServerless_update(rName, collectionName, model string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearchServerless(rName, collectionName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   depends_on = [
     aws_iam_role_policy_attachment.test,
@@ -957,10 +946,8 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 `, rName, model))
 }
 
-func testAccKnowledgeBaseConfig_OpenSearch_supplementalDataStorage(rName, collectionName, model string) string {
-	return acctest.ConfigCompose(
-		testAccKnowledgeBaseConfigBase_openSearch(rName, collectionName, model),
-		fmt.Sprintf(`
+func testAccKnowledgeBaseConfig_OpenSearchServerless_supplementalDataStorage(rName, collectionName, model string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearchServerless(rName, collectionName, model), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -1121,10 +1108,6 @@ terraform {
       source  = "opensearch-project/opensearch"
       version = "~> 2.2.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.5.0"
-    }
   }
 }
 
@@ -1158,7 +1141,7 @@ resource "aws_iam_role" "bedrock_kb_role" {
 }
 
 resource "aws_iam_policy" "bedrock_models_access" {
-  name.       = "bedrock-%[1]s"
+  name        = "bedrock-%[1]s"
   description = "IAM policy for Amazon Bedrock to access embedding models"
 
   policy = jsonencode({
@@ -1235,21 +1218,6 @@ resource "aws_iam_role_policy_attachment" "opensearch_access" {
   policy_arn = aws_iam_policy.opensearch_access.arn
 }
 
-resource "random_password" "opensearch_master" {
-  length           = 16
-  special          = true
-  min_lower        = 1
-  min_numeric      = 1
-  min_special      = 1
-  min_upper        = 1
-  override_special = "!#$&*()-_=+"
-
-  # Don't replace the password on each apply
-  lifecycle {
-    ignore_changes = [length, special, override_special]
-  }
-}
-
 resource "aws_opensearch_domain" "knowledge_base" {
   domain_name     = substr(%[1]q, 0, 28)
   engine_version  = "OpenSearch_3.1"
@@ -1292,7 +1260,7 @@ resource "aws_opensearch_domain" "knowledge_base" {
 
     master_user_options {
       master_user_name     = "admin"
-      master_user_password = random_password.opensearch_master.result
+      master_user_password = "Barbarbarbar1!"
     }
   }
 
@@ -1331,7 +1299,7 @@ locals {
 provider "opensearch" {
   url               = "https://${aws_opensearch_domain.knowledge_base.endpoint}"
   username          = "admin"
-  password          = random_password.opensearch_master.result
+  password          = aws_opensearch_domain.knowledge_base.advanced_security_options[0].master_user_options[0].master_user_password
   insecure          = false
   aws_region        = data.aws_region.current.region
   healthcheck       = false

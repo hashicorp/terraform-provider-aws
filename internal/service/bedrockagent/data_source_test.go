@@ -834,7 +834,7 @@ resource "aws_bedrockagent_data_source" "test" {
 }
 
 func testAccDataSourceConfig_webConfiguration(rName, collectionName, embeddingModel string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_OpenSearch_basic(rName, collectionName, embeddingModel), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_OpenSearchServerless_basic(rName, collectionName, embeddingModel), fmt.Sprintf(`
 resource "aws_bedrockagent_data_source" "test" {
   name              = %[1]q
   knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
