@@ -482,6 +482,7 @@ func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
+							"mongo_db_atlas_configuration":             knownvalue.ListSizeExact(0),
 							"opensearch_managed_cluster_configuration": knownvalue.ListSizeExact(1),
 							"opensearch_serverless_configuration":      knownvalue.ListSizeExact(0),
 							names.AttrType:                             tfknownvalue.StringExact(awstypes.KnowledgeBaseStorageTypeOpensearchManagedCluster),
@@ -525,6 +526,7 @@ func testAccKnowledgeBase_S3Vectors_update(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
+							"mongo_db_atlas_configuration":             knownvalue.ListSizeExact(0),
 							"opensearch_managed_cluster_configuration": knownvalue.ListSizeExact(0),
 							"opensearch_serverless_configuration":      knownvalue.ListSizeExact(0),
 							names.AttrType:                             tfknownvalue.StringExact(awstypes.KnowledgeBaseStorageTypeS3Vectors),
@@ -554,6 +556,7 @@ func testAccKnowledgeBase_S3Vectors_update(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
+							"mongo_db_atlas_configuration":             knownvalue.ListSizeExact(0),
 							"opensearch_managed_cluster_configuration": knownvalue.ListSizeExact(0),
 							"opensearch_serverless_configuration":      knownvalue.ListSizeExact(0),
 							names.AttrType:                             tfknownvalue.StringExact(awstypes.KnowledgeBaseStorageTypeS3Vectors),

@@ -251,11 +251,12 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"opensearch_managed_cluster_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[openSearchManagedClusterConfigurationModel](ctx),
+						"mongo_db_atlas_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[mongoDBAtlasConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("mongo_db_atlas_configuration"),
 									path.MatchRelative().AtParent().AtName("opensearch_managed_cluster_configuration"),
 									path.MatchRelative().AtParent().AtName("opensearch_serverless_configuration"),
 									path.MatchRelative().AtParent().AtName("pinecone_configuration"),
@@ -263,6 +264,97 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									path.MatchRelative().AtParent().AtName("redis_enterprise_cloud_configuration"),
 									path.MatchRelative().AtParent().AtName("s3_vectors_configuration"),
 								),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"collection_name": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"credentials_secret_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"database_name": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"endpoint": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"endpoint_service_name": schema.StringAttribute{
+										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"text_index_name": schema.StringAttribute{
+										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"vector_index_name": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"field_mapping": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[mongoDBAtlasFieldMappingModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"metadata_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"text_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"vector_field": schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"opensearch_managed_cluster_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[openSearchManagedClusterConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.RequiresReplace(),
@@ -1010,13 +1102,31 @@ type kendraKnowledgeBaseConfigurationModel struct {
 }
 
 type storageConfigurationModel struct {
-	OpensearchManagedClusterConfiguration fwtypes.ListNestedObjectValueOf[openSearchManagedClusterConfigurationModel] `tfsdk:"opensearch_managed_cluster_configuration"`
-	OpensearchServerlessConfiguration     fwtypes.ListNestedObjectValueOf[openSearchServerlessConfigurationModel]     `tfsdk:"opensearch_serverless_configuration"`
+	MongoDBAtlasConfiguration             fwtypes.ListNestedObjectValueOf[mongoDBAtlasConfigurationModel]             `tfsdk:"mongo_db_atlas_configuration"`
+	OpenSearchManagedClusterConfiguration fwtypes.ListNestedObjectValueOf[openSearchManagedClusterConfigurationModel] `tfsdk:"opensearch_managed_cluster_configuration"`
+	OpenSearchServerlessConfiguration     fwtypes.ListNestedObjectValueOf[openSearchServerlessConfigurationModel]     `tfsdk:"opensearch_serverless_configuration"`
 	PineconeConfiguration                 fwtypes.ListNestedObjectValueOf[pineconeConfigurationModel]                 `tfsdk:"pinecone_configuration"`
 	RDSConfiguration                      fwtypes.ListNestedObjectValueOf[rdsConfigurationModel]                      `tfsdk:"rds_configuration"`
 	RedisEnterpriseCloudConfiguration     fwtypes.ListNestedObjectValueOf[redisEnterpriseCloudConfigurationModel]     `tfsdk:"redis_enterprise_cloud_configuration"`
 	S3VectorsConfiguration                fwtypes.ListNestedObjectValueOf[s3VectorsConfigurationModel]                `tfsdk:"s3_vectors_configuration"`
 	Type                                  fwtypes.StringEnum[awstypes.KnowledgeBaseStorageType]                       `tfsdk:"type"`
+}
+
+type mongoDBAtlasConfigurationModel struct {
+	CollectionName       types.String                                                   `tfsdk:"collection_name"`
+	CredentialsSecretARN fwtypes.ARN                                                    `tfsdk:"credentials_secret_arn"`
+	DatabaseName         types.String                                                   `tfsdk:"database_name"`
+	Endpoint             types.String                                                   `tfsdk:"endpoint"`
+	EndpointServiceName  types.String                                                   `tfsdk:"endpoint_service_name"`
+	FieldMapping         fwtypes.ListNestedObjectValueOf[mongoDBAtlasFieldMappingModel] `tfsdk:"field_mapping"`
+	TextIndexName        types.String                                                   `tfsdk:"text_index_name"`
+	VectorIndexName      types.String                                                   `tfsdk:"vector_index_name"`
+}
+
+type mongoDBAtlasFieldMappingModel struct {
+	MetadataField types.String `tfsdk:"metadata_field"`
+	TextField     types.String `tfsdk:"text_field"`
+	VectorField   types.String `tfsdk:"vector_field"`
 }
 
 type openSearchManagedClusterConfigurationModel struct {
