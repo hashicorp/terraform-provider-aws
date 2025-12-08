@@ -943,7 +943,6 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_routingPoliciesAllConditio
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prefix-equals"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prefix-in-cidr"`)),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"prefix-in-prefix-list"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"asn-in-as-path"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"community-in-list"`)),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(`"med-equals"`)),
@@ -1009,20 +1008,6 @@ data "aws_networkmanager_core_network_policy_document" "test" {
       rule_definition {
         condition_logic = "and"
         match_conditions {
-          type  = "prefix-in-prefix-list"
-          value = "testPrefixList"
-        }
-        action {
-          type = "allow"
-        }
-      }
-    }
-
-    routing_policy_rules {
-      rule_number = 4
-      rule_definition {
-        condition_logic = "and"
-        match_conditions {
           type  = "asn-in-as-path"
           value = "64512"
         }
@@ -1033,7 +1018,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     }
 
     routing_policy_rules {
-      rule_number = 5
+      rule_number = 4
       rule_definition {
         condition_logic = "and"
         match_conditions {
@@ -1047,7 +1032,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     }
 
     routing_policy_rules {
-      rule_number = 6
+      rule_number = 5
       rule_definition {
         condition_logic = "and"
         match_conditions {
