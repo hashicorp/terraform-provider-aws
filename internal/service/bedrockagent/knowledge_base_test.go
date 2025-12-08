@@ -133,7 +133,7 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
 // * jq for parsing output from aws cli to retrieve postgres password
-func testAccKnowledgeBase_RDS_basic(t *testing.T) {
+func testAccKnowledgeBase_RDS_update(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
 	acctest.SkipIfExeNotOnPath(t, "aws")
