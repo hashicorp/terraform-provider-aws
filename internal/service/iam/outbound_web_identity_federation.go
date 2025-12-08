@@ -28,6 +28,7 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
 // @Testing(generator=false)
+// @Testing(identityTest=false)
 func newOutboundWebIdentityFederationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &outboundWebIdentityFederationResource{}
 
