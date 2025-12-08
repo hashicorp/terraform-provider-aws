@@ -62,6 +62,7 @@ func testAccOutboundWebIdentityFederation_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    importStateIDAccountID(resourceName),
 				ImportStateVerifyIdentifierAttribute: "issuer_identifier",
 			},
 		},
@@ -137,6 +138,10 @@ func testAccCheckOutboundWebIdentityFederationExists(ctx context.Context, n stri
 
 		return err
 	}
+}
+
+func importStateIDAccountID(_ string) resource.ImportStateIdFunc {
+	return acctest.ImportStateIDAccountID(context.Background())
 }
 
 const testAccOutboundWebIdentityFederationConfig_basic = `
