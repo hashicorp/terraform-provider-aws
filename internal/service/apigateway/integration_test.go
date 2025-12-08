@@ -6,7 +6,6 @@ package apigateway_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -638,7 +637,7 @@ func TestAccAPIGatewayIntegration_responseTransferMode(t *testing.T) {
 			{
 				// Invalid: Stream with timeout > 900000
 				Config:      testAccIntegrationConfig_responseTransferModeWithTimeout(rName, string(awstypes.ResponseTransferModeStream), 900001),
-				ExpectError: regexp.MustCompile(`timeout_milliseconds must be at most 900000 when response_transfer_mode is STREAM`),
+				ExpectError: regexache.MustCompile(`timeout_milliseconds must be at most 900000 when response_transfer_mode is STREAM`),
 			},
 		},
 	})
