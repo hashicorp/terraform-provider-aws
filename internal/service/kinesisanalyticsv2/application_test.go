@@ -4262,7 +4262,7 @@ func TestAccKinesisAnalyticsV2Application_ApplicationEncryptionConfiguration_upd
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.0.key_type", "AWS_OWNED_CMK"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.0.key_type", "AWS_OWNED_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.0.key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", "3"),

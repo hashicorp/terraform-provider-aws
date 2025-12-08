@@ -990,6 +990,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				updateApplication = true
 			}
 
+			if d.HasChange("application_configuration.0.application_encryption_configuration") {
+				applicationConfigurationUpdate.ApplicationEncryptionConfigurationUpdate = expandApplicationEncryptionConfigurationUpdate(d.Get("application_configuration.0.application_encryption_configuration").([]any))
+
+				updateApplication = true
+			}
+
 			if d.HasChange("application_configuration.0.application_snapshot_configuration") {
 				applicationConfigurationUpdate.ApplicationSnapshotConfigurationUpdate = expandApplicationSnapshotConfigurationUpdate(d.Get("application_configuration.0.application_snapshot_configuration").([]any))
 
@@ -3142,6 +3148,25 @@ func expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguratio
 
 	if vKeyID, ok := mApplicationEncryptionConfiguration[names.AttrKeyID].(string); ok && vKeyID != "" {
 		applicationEncryptionConfiguration.KeyId = aws.String(vKeyID)
+	}
+
+	return applicationEncryptionConfiguration
+}
+
+func expandApplicationEncryptionConfigurationUpdate(vApplicationEncryptionConfiguration []any) *awstypes.ApplicationEncryptionConfigurationUpdate {
+	if len(vApplicationEncryptionConfiguration) == 0 || vApplicationEncryptionConfiguration[0] == nil {
+		return nil
+	}
+
+	mApplicationEncryptionConfiguration := vApplicationEncryptionConfiguration[0].(map[string]any)
+	applicationEncryptionConfiguration := &awstypes.ApplicationEncryptionConfigurationUpdate{}
+
+	if vKeyType, ok := mApplicationEncryptionConfiguration["key_type"].(string); ok && vKeyType != "" {
+		applicationEncryptionConfiguration.KeyTypeUpdate = awstypes.KeyType(vKeyType)
+	}
+
+	if vKeyID, ok := mApplicationEncryptionConfiguration[names.AttrKeyID].(string); ok && vKeyID != "" {
+		applicationEncryptionConfiguration.KeyIdUpdate = aws.String(vKeyID)
 	}
 
 	return applicationEncryptionConfiguration
