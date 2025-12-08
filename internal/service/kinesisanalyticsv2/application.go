@@ -127,7 +127,7 @@ func resourceApplication() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"key_id": {
+										names.AttrKeyID: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: verify.ValidARN,
@@ -3140,7 +3140,7 @@ func expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguratio
 		applicationEncryptionConfiguration.KeyType = awstypes.KeyType(vKeyType)
 	}
 
-	if vKeyID, ok := mApplicationEncryptionConfiguration["key_id"].(string); ok && vKeyID != "" {
+	if vKeyID, ok := mApplicationEncryptionConfiguration[names.AttrKeyID].(string); ok && vKeyID != "" {
 		applicationEncryptionConfiguration.KeyId = aws.String(vKeyID)
 	}
 
@@ -3157,7 +3157,7 @@ func flattenApplicationEncryptionConfigurationDescription(applicationEncryptionC
 	}
 
 	if applicationEncryptionConfiguration.KeyId != nil {
-		mApplicationEncryptionConfiguration["key_id"] = aws.ToString(applicationEncryptionConfiguration.KeyId)
+		mApplicationEncryptionConfiguration[names.AttrKeyID] = aws.ToString(applicationEncryptionConfiguration.KeyId)
 	}
 
 	return []any{mApplicationEncryptionConfiguration}
