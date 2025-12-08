@@ -4,10 +4,13 @@ ENHANCEMENTS:
 
 * resource/aws_bedrockagent_agent: Add `session_summary_configuration.max_recent_sessions` argument ([#45449](https://github.com/hashicorp/terraform-provider-aws/issues/45449))
 * resource/aws_lambda_capacity_provider: Add resource identity support ([#45456](https://github.com/hashicorp/terraform-provider-aws/issues/45456))
+* resource/aws_s3vectors_index: Add `encryption_configuration` block ([#45470](https://github.com/hashicorp/terraform-provider-aws/issues/45470))
+* resource/aws_s3vectors_index: Add `metadata_configuration` block ([#45470](https://github.com/hashicorp/terraform-provider-aws/issues/45470))
 
 BUG FIXES:
 
 * data-source/aws_ec2_transit_gateway: Fix potential crash when reading `encryption_support`. This addresses a regression introduced in [v6.25.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6250-december-4-2025). ([#45462](https://github.com/hashicorp/terraform-provider-aws/issues/45462))
+* resource/aws_api_gateway_integration: Fix `timeout_milliseconds` validation to allow up to 900,000 ms when `response_transfer_mode` is `STREAM` ([#45482](https://github.com/hashicorp/terraform-provider-aws/issues/45482))
 * resource/aws_ec2_transit_gateway: Fix potential crash when setting `encryption_support`. This addresses a regression introduced in [v6.25.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#6250-december-4-2025). ([#45462](https://github.com/hashicorp/terraform-provider-aws/issues/45462))
 
 ## 6.25.0 (December 4, 2025)
