@@ -37,7 +37,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(originalSegmentValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), originalSegmentValue)),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), originalSegmentValue)),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, "aws_networkmanager_core_network.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
@@ -52,7 +52,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(updatedSegmentValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), updatedSegmentValue)),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), updatedSegmentValue)),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, "aws_networkmanager_core_network.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
@@ -103,7 +103,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(segmentValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), segmentValue)),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"dns-support\":true,\"edge-locations\":[{\"location\":\"%s\"}],\"security-group-referencing-support\":false,\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), segmentValue)),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, "aws_networkmanager_core_network.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
@@ -131,7 +131,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachmentMultiRegion(t
 				Config: testAccCoreNetworkPolicyAttachmentConfig_vpcAttachmentMultiRegionCreate(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(fmt.Sprintf(`{"core-network-configuration":{"asn-ranges":\["65022-65534"\],"edge-locations":\[{"location":"%s"},{"location":"%s"}\],"vpn-ecmp-support":true},"segment-actions":\[{"action":"create-route","destination-cidr-blocks":\["10.0.0.0/16"\],"destinations":\["attachment-.+"\],"segment":"segment"},{"action":"create-route","destination-cidr-blocks":\["10.1.0.0/16"\],"destinations":\["attachment-.+"\],"segment":"segment2"}\],"segments":\[{"isolate-attachments":false,"name":"segment","require-attachment-acceptance":false},{"isolate-attachments":false,"name":"segment2","require-attachment-acceptance":false}\],"version":"2021.12"}`, acctest.Region(), acctest.AlternateRegion()))),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(fmt.Sprintf(`{"attachment-policies":\[{"action":{"association-method":"constant","segment":"segment"},"condition-logic":"or","conditions":\[{"operator":"equals","type":"resource-id","value":"attachment-.+"}\],"rule-number":1},{"action":{"association-method":"constant","segment":"segment2"},"condition-logic":"or","conditions":\[{"operator":"equals","type":"resource-id","value":"attachment-.+"}\],"rule-number":2}\],"core-network-configuration":{"asn-ranges":\["64512-65534"\],"dns-support":true,"edge-locations":\[{"location":"%s"},{"location":"%s"}\],"security-group-referencing-support":false,"vpn-ecmp-support":true},"segment-actions":\[{"action":"create-route","destination-cidr-blocks":\["10.0.0.0/16"\],"destinations":\["attachment-.+"\],"segment":"segment"},{"action":"create-route","destination-cidr-blocks":\["10.1.0.0/16"\],"destinations":\["attachment-.+"\],"segment":"segment2"}\],"segments":\[{"isolate-attachments":false,"name":"segment","require-attachment-acceptance":false},{"isolate-attachments":false,"name":"segment2","require-attachment-acceptance":false}\],"version":"2021.12"}`, acctest.Region(), acctest.AlternateRegion()))),
 					// use test below if the order of locations is unordered
 					// resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"},{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"description\":\"base-policy\",\"isolate-attachments\":false,\"name\":\"segment\",\"require-attachment-acceptance\":false}],\"version\":\"2021.12\"}", acctest.AlternateRegion(), acctest.Region())),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
@@ -193,7 +193,7 @@ resource "aws_networkmanager_global_network" "test" {}
 
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
-    asn_ranges = ["65022-65534"]
+    asn_ranges = ["64512-65534"]
 
     edge_locations {
       location = %[2]q
@@ -243,7 +243,7 @@ resource "aws_networkmanager_global_network" "test" {}
 
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
-    asn_ranges = ["65022-65534"]
+    asn_ranges = ["64512-65534"]
 
     edge_locations {
       location = %[1]q
@@ -315,7 +315,7 @@ resource "aws_networkmanager_global_network" "test" {}
 
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
-    asn_ranges = ["65022-65534"]
+    asn_ranges = ["64512-65534"]
 
     edge_locations {
       location = %[1]q
@@ -400,7 +400,7 @@ resource "aws_networkmanager_global_network" "test" {}
 
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
-    asn_ranges = ["65022-65534"]
+    asn_ranges = ["64512-65534"]
 
     edge_locations {
       location = %[1]q
@@ -419,6 +419,38 @@ data "aws_networkmanager_core_network_policy_document" "test" {
   segments {
     name                          = "segment2"
     require_attachment_acceptance = false
+  }
+
+  attachment_policies {
+    rule_number     = 1
+    condition_logic = "or"
+
+    conditions {
+      type     = "resource-id"
+      operator = "equals"
+      value    = aws_networkmanager_vpc_attachment.test.id
+    }
+
+    action {
+      association_method = "constant"
+      segment            = "segment"
+    }
+  }
+
+  attachment_policies {
+    rule_number     = 2
+    condition_logic = "or"
+
+    conditions {
+      type     = "resource-id"
+      operator = "equals"
+      value    = aws_networkmanager_vpc_attachment.alternate_region.id
+    }
+
+    action {
+      association_method = "constant"
+      segment            = "segment2"
+    }
   }
 
   segment_actions {
@@ -947,6 +979,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     routing_policy_rules {
       rule_number = 1
       rule_definition {
+        condition_logic = "and"
         match_conditions {
           type  = "prefix-equals"
           value = "10.0.0.0/16"
@@ -960,6 +993,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     routing_policy_rules {
       rule_number = 2
       rule_definition {
+        condition_logic = "and"
         match_conditions {
           type  = "prefix-in-cidr"
           value = "192.168.0.0/16"
@@ -973,6 +1007,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     routing_policy_rules {
       rule_number = 3
       rule_definition {
+        condition_logic = "and"
         match_conditions {
           type  = "prefix-in-prefix-list"
           value = "testPrefixList"
@@ -986,6 +1021,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     routing_policy_rules {
       rule_number = 4
       rule_definition {
+        condition_logic = "and"
         match_conditions {
           type  = "asn-in-as-path"
           value = "64512"
@@ -999,6 +1035,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     routing_policy_rules {
       rule_number = 5
       rule_definition {
+        condition_logic = "and"
         match_conditions {
           type  = "community-in-list"
           value = "65000:100"
@@ -1012,6 +1049,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     routing_policy_rules {
       rule_number = 6
       rule_definition {
+        condition_logic = "and"
         match_conditions {
           type  = "med-equals"
           value = "50"

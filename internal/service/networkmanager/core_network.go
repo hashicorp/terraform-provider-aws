@@ -577,10 +577,6 @@ func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.CoreNetworkPolicy); ok {
-		return output, err
-	}
-
-	if output, ok := outputRaw.(*awstypes.CoreNetworkPolicy); ok {
 		if state, v := output.ChangeSetState, output.PolicyErrors; state == awstypes.ChangeSetStateFailedGeneration && len(v) > 0 {
 			var errs []error
 
