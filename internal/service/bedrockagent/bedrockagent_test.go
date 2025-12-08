@@ -14,7 +14,7 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"KnowledgeBase": {
-			acctest.CtBasic:              testAccKnowledgeBase_basic,
+			"RDSBasic":                   testAccKnowledgeBase_RDS_basic,
 			acctest.CtDisappears:         testAccKnowledgeBase_disappears,
 			"tags":                       testAccKnowledgeBase_tags,
 			"OpenSearchServerlessBasic":  testAccKnowledgeBase_OpenSearchServerless_basic,
