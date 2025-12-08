@@ -315,7 +315,6 @@ The `redis_enterprise_cloud_configuration` configuration block supports the foll
     * `vector_field` - (Required) Name of the field in which Amazon Bedrock stores the vector embeddings for your data sources.
 * `vector_index_name` - (Required) Name of the vector index.
 
-
 ### `s3_vectors_configuration` block
 
 The `s3_vectors_configuration` configuration block supports the following arguments.
