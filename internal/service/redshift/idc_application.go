@@ -4,122 +4,202 @@
 package redshift
 
 import (
-	"bytes"
 	"context"
-	"fmt"
-	"log"
+	"errors"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshift_idc_application", name="IDC Application")
-// @Tags(identifierAttribute="arn")
-func resourceIdcApplication() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceIdcApplicationCreate,
-		ReadWithoutTimeout:   resourceIdcApplicationRead,
-		UpdateWithoutTimeout: resourceIdcApplicationUpdate,
-		DeleteWithoutTimeout: resourceIdcApplicationDelete,
+// @FrameworkResource("aws_redshift_idc_application", name="IDC Application")
+func newResourceIDCApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceIDCApplication{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	return r, nil
+}
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(75 * time.Minute),
-			Update: schema.DefaultTimeout(75 * time.Minute),
-			Delete: schema.DefaultTimeout(40 * time.Minute),
-		},
+const (
+	ResNameIDCApplication = "IDC Application"
+)
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authorized_token_issuer_list": {
-				Type:     schema.TypeSet,
+type resourceIDCApplication struct {
+	framework.ResourceWithModel[resourceIDCApplicationModel]
+}
+
+func (r *resourceIDCApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authorized_audiences_list": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			names.AttrIAMRoleARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+			},
+			"idc_display_name": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 127),
+					stringvalidator.RegexMatches(regexache.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
+				},
+			},
+			"idc_instance_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"identity_namespace": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 127),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_+.#@$-]+$`), "must match ^[a-zA-Z0-9_+.#@$-]+$"),
+				},
+			},
+			"redshift_idc_application_name": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 63),
+					stringvalidator.RegexMatches(regexache.MustCompile(`[a-z][a-z0-9]*(-[a-z0-9]+)*`), "must match [a-z][a-z0-9]*(-[a-z0-9]+)*"),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"authorized_token_issuer_list": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[authorizedTokenIssuerListModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"authorized_audiences_list": schema.ListAttribute{
+							ElementType: types.StringType,
+							Optional:    true,
 						},
-						"trusted_token_issuer_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+						"trusted_token_issuer_arn": schema.StringAttribute{
+							Optional:   true,
+							CustomType: fwtypes.ARNType,
 						},
 					},
 				},
 			},
-			"iam_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"idc_display_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 127),
-					validation.StringMatch(regexache.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
-				),
-			},
-			"idc_instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"identity_namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 127),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_+.#@$-]+$`), "must match ^[a-zA-Z0-9_+.#@$-]+$"),
-				),
-			},
-			"redshift_idc_application_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`[a-z][a-z0-9]*(-[a-z0-9]+)*`), "must match [a-z][a-z0-9]*(-[a-z0-9]+)"),
-				),
-			},
-			"service_integrations": {
-				Optional: true,
-				Type:     schema.TypeSet,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"lake_formation": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lake_formation_query": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+			"service_integrations": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[serviceIntegrationsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"lake_formation": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[lakeFormationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"lake_formation_scope": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[lakeFormationScopeModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"lake_formation_query": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[lakeFormationQueryModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"authorization": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.ServiceAuthorization](),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"redshift": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"connect": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[connectModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"authorization": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.ServiceAuthorization](),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"s3_access_grants": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3AccessGrantsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"read_write_access": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[readWriteAccessModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"authorization": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.ServiceAuthorization](),
+												},
+											},
 										},
 									},
 								},
@@ -127,309 +207,290 @@ func resourceIdcApplication() *schema.Resource {
 						},
 					},
 				},
-				Set: serviceIntegrationsHash,
 			},
-
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceIdcApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+func (r *resourceIDCApplication) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().RedshiftClient(ctx)
 
-	input := &redshift.CreateRedshiftIdcApplicationInput{
-		RedshiftIdcApplicationName: aws.String(d.Get("redshift_idc_application_name").(string)),
-		IamRoleArn:                 aws.String(d.Get("iam_role_arn").(string)),
-		IdcInstanceArn:             aws.String(d.Get("idc_instance_arn").(string)),
-		IdcDisplayName:             aws.String(d.Get("idc_display_name").(string)),
+	var plan resourceIDCApplicationModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("authorized_token_issuer_list"); ok {
-		input.AuthorizedTokenIssuerList = expandAuthorizedTokenIssuerList(v.(*schema.Set).List())
+	var input redshift.CreateRedshiftIdcApplicationInput
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("service_integrations"); ok {
-		input.ServiceIntegrations = expandServiceIntegrations(v.(*schema.Set).List())
-	}
-
-	if v, ok := d.GetOk("identity_namespace"); ok {
-		input.IdentityNamespace = aws.String(v.(string))
-	}
-
-	log.Printf("[DEBUG] creating Redshift IDC Application: %s", input)
-	output, err := conn.CreateRedshiftIdcApplicationWithContext(ctx, input)
+	out, err := conn.CreateRedshiftIdcApplication(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift IDC Application (%s): %s", "", err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RedshiftIDCApplicationName.String())
+		return
 	}
-	d.SetId(aws.StringValue(output.RedshiftIdcApplication.RedshiftIdcApplicationArn))
+	if out == nil || out.RedshiftIdcApplication == nil {
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.RedshiftIDCApplicationName.String())
+		return
+	}
 
-	return append(diags, resourceIdcApplicationRead(ctx, d, meta)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func resourceIdcApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+func (r *resourceIDCApplication) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().RedshiftClient(ctx)
 
-	rsIdc, err := findIDCApplicationByARN(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Redshift IDC Application (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	var state resourceIDCApplicationModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
+	out, err := findIDCApplicationByID(ctx, conn, state.ID.ValueString())
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Redshift IDC Application (%s): %s", d.Id(), err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		return
 	}
-	d.Set("authorized_token_issuer_list", flattenAuthorizedTokenIssuerList(rsIdc.AuthorizedTokenIssuerList))
-	d.Set("iam_role_arn", rsIdc.IamRoleArn)
-	d.Set("idc_display_name", rsIdc.IdcDisplayName)
-	d.Set("idc_instance_arn", rsIdc.IdcInstanceArn)
-	d.Set("identity_namespace", rsIdc.IdentityNamespace)
-	d.Set("redshift_idc_application_name", rsIdc.RedshiftIdcApplicationName)
-	d.Set("service_integrations", flatternServiceIntegrations(rsIdc.ServiceIntegrations))
 
-	d.Set(names.AttrARN, rsIdc.RedshiftIdcApplicationArn)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	return diags
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func resourceIdcApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+func (r *resourceIDCApplication) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().RedshiftClient(ctx)
 
-	input := &redshift.ModifyRedshiftIdcApplicationInput{
-		RedshiftIdcApplicationArn: aws.String(d.Id()),
+	var plan, state resourceIDCApplicationModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if d.HasChange("authorized_token_issuer_list") {
-		input.AuthorizedTokenIssuerList = expandAuthorizedTokenIssuerList(d.Get("authorized_token_issuer_list").(*schema.Set).List())
+	diff, d := flex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if d.HasChange("iam_role_arn") {
-		input.IamRoleArn = aws.String(d.Get("iam_role_arn").(string))
+	if diff.HasChanges() {
+		var input redshift.UpdateIDCApplicationInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		out, err := conn.UpdateIDCApplication(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			return
+		}
+		if out == nil || out.IDCApplication == nil {
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
+			return
+		}
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
-	if d.HasChange("idc_display_name") {
-		input.IdcDisplayName = aws.String(d.Get("idc_display_name").(string))
-	}
-
-	if d.HasChange("identity_namespace") {
-		input.IdentityNamespace = aws.String(d.Get("identity_namespace").(string))
-	}
-
-	if d.HasChange("service_integrations") {
-		input.ServiceIntegrations = expandServiceIntegrations(d.Get("service_integrations").(*schema.Set).List())
-	}
-
-	_, err := conn.ModifyRedshiftIdcApplicationWithContext(ctx, input)
-
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	_, err := waitIDCApplicationUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Redshift IDC Application (%s): %s", d.Id(), err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		return
 	}
 
-	return append(diags, resourceIdcApplicationRead(ctx, d, meta)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func resourceIdcApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+func (r *resourceIDCApplication) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().RedshiftClient(ctx)
 
-	log.Printf("[DEBUG] deleting Redshift IDC Application: %s", d.Id())
-	_, err := conn.DeleteRedshiftIdcApplicationWithContext(ctx, &redshift.DeleteRedshiftIdcApplicationInput{
-		RedshiftIdcApplicationArn: aws.String(d.Id()),
-	})
-
-	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeRedshiftIdcApplicationNotExistsFault) {
-		return diags
+	var state resourceIDCApplicationModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
+	input := redshift.DeleteIDCApplicationInput{
+		IDCApplicationId: state.ID.ValueStringPointer(),
+	}
+
+	_, err := conn.DeleteIDCApplication(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Redshift IDC Application (%s): %s", d.Id(), err)
-	}
-
-	return diags
-}
-
-func expandAuthorizedTokenIssuerList(vAuthorizedTokenIssuerList []interface{}) []*redshift.AuthorizedTokenIssuer {
-	if len(vAuthorizedTokenIssuerList) == 0 || vAuthorizedTokenIssuerList[0] == nil {
-		return nil
-	}
-
-	authorizedTokenIssuerList := []*redshift.AuthorizedTokenIssuer{}
-
-	for _, v := range vAuthorizedTokenIssuerList {
-		authorizedTokenIssuer := &redshift.AuthorizedTokenIssuer{}
-		m := v.(map[string]interface{})
-		if v, ok := m["authorized_audiences_list"].([]interface{}); ok && len(v) > 0 && v[0] != "" {
-			authorizedTokenIssuer.AuthorizedAudiencesList = expandAuthorizedAudiences(v)
-		}
-		if vTrustedTokenIssuerArn, ok := m["trusted_token_issuer_arn"].(string); ok && vTrustedTokenIssuerArn != "" {
-			authorizedTokenIssuer.TrustedTokenIssuerArn = aws.String(vTrustedTokenIssuerArn)
-		}
-		authorizedTokenIssuerList = append(authorizedTokenIssuerList, authorizedTokenIssuer)
-	}
-	return authorizedTokenIssuerList
-}
-
-func expandAuthorizedAudiences(v []interface{}) []*string {
-	var authorizedAudiencesList []*string
-	for _, v := range v {
-		authorizedAudiencesList = append(authorizedAudiencesList, aws.String(v.(string)))
-	}
-	return authorizedAudiencesList
-}
-
-func flattenAuthorizedTokenIssuerList(v []*redshift.AuthorizedTokenIssuer) *schema.Set {
-	s := &schema.Set{F: authorizedTokenIssuerListHash}
-	if len(v) == 0 {
-		return nil
-	}
-
-	for _, v := range v {
-		var authorizedToeknIsuser interface{}
-		authorizedAudiences := flatternAuthorizedAudiences(v.AuthorizedAudiencesList)
-		authorizedToeknIsuser = map[string]interface{}{
-			"authorized_audiences_list": authorizedAudiences,
-			"trusted_token_issuer_arn":  aws.StringValue(v.TrustedTokenIssuerArn),
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
 		}
 
-		s.Add(authorizedToeknIsuser)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		return
 	}
 
-	return s
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err = waitIDCApplicationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		return
+	}
 }
 
-func expandServiceIntegrations(v []interface{}) []*redshift.ServiceIntegrationsUnion {
-	if len(v) == 0 || v[0] == nil {
-		return nil
+func (r *resourceIDCApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
+}
+
+func findIDCApplicationByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.RedshiftIdcApplication, error) {
+	input := redshift.DescribeRedshiftIdcApplicationsInput{
+		RedshiftIdcApplicationArn: aws.String(id),
 	}
 
-	serviceIntegrations := []*redshift.ServiceIntegrationsUnion{}
-
-	for _, v := range v {
-		serviceIntegration := &redshift.ServiceIntegrationsUnion{}
-		m := v.(map[string]interface{})
-		if v, ok := m["lake_formation"].(*schema.Set); ok && v.Len() > 0 {
-			serviceIntegration.LakeFormation = expandLakeFormation(v.List())
+	out, err := conn.DescribeRedshiftIdcApplications(ctx, &input)
+	if err != nil {
+		if errs.IsA[*awstypes.RedshiftIdcApplicationNotExistsFault](err) {
+			return nil, smarterr.NewError(&retry.NotFoundError{
+				LastError:   err,
+				LastRequest: &input,
+			})
 		}
-		serviceIntegrations = append(serviceIntegrations, serviceIntegration)
+
+		return nil, smarterr.NewError(err)
 	}
-	return serviceIntegrations
+
+	if out == nil || out.RedshiftIdcApplications == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+	}
+
+	return &out.RedshiftIdcApplications[0], nil
 }
 
-func expandLakeFormation(v []interface{}) []*redshift.LakeFormationScopeUnion {
-	if len(v) == 0 || v[0] == nil {
-		return nil
-	}
-
-	lakeFormation := []*redshift.LakeFormationScopeUnion{}
-	for _, v := range v {
-		lakeFormationScopeUnion := expandLakeFormationScopeUnion(v.(map[string]interface{}))
-		lakeFormation = append(lakeFormation, lakeFormationScopeUnion)
-	}
-	return lakeFormation
+type resourceIDCApplicationModel struct {
+	framework.WithRegionModel
+	ARN                        fwtypes.ARN                                                     `tfsdk:"arn"`
+	AuthorizedTokenIssuerList  fwtypes.ListNestedObjectValueOf[authorizedTokenIssuerListModel] `tfsdk:"authorized_token_issuer_list"`
+	Description                types.String                                                    `tfsdk:"description"`
+	IAMRoleARN                 fwtypes.ARN                                                     `tfsdk:"iam_role_arn"`
+	IDCDisplayName             types.String                                                    `tfsdk:"idc_display_name"`
+	IDCInstanceARN             fwtypes.ARN                                                     `tfsdk:"idc_instance_arn"`
+	IdentityNamespace          types.String                                                    `tfsdk:"identity_namespace"`
+	RedshiftIDCApplicationName types.String                                                    `tfsdk:"redshift_idc_application_name"`
+	ServiceIntegrations        fwtypes.ListNestedObjectValueOf[serviceIntegrationsModel]       `tfsdk:"service_integrations"`
+	Tags                       tftags.Map                                                      `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                      `tfsdk:"tags_all"`
 }
 
-func expandLakeFormationScopeUnion(v map[string]interface{}) *redshift.LakeFormationScopeUnion {
-	lakeFormationScopeUnion := &redshift.LakeFormationScopeUnion{}
-	if v, ok := v["lake_formation_query"].(map[string]interface{}); ok {
-		lakeFormationScopeUnion.LakeFormationQuery = expandLakeFormationQuery(v)
-	}
-	return lakeFormationScopeUnion
+type authorizedTokenIssuerListModel struct {
+	AuthorizedAudiencesList fwtypes.ListOfString `tfsdk:"authorized_audiences_list"`
+	TrustedTokenIssuerARN   fwtypes.ARN          `tfsdk:"trusted_token_issuer_arn"`
 }
 
-func expandLakeFormationQuery(v map[string]interface{}) *redshift.LakeFormationQuery {
-	lakeFormationQuery := &redshift.LakeFormationQuery{}
-	if v, ok := v["authorization"].(string); ok && v != "" {
-		lakeFormationQuery.Authorization = aws.String(v)
-	}
-	return lakeFormationQuery
+type serviceIntegrationsModel struct {
+	LakeFormation  fwtypes.ListNestedObjectValueOf[lakeFormationModel]  `tfsdk:"lake_formation"`
+	Redshift       fwtypes.ListNestedObjectValueOf[redshiftModel]       `tfsdk:"redshift"`
+	S3AccessGrants fwtypes.ListNestedObjectValueOf[s3AccessGrantsModel] `tfsdk:"s3_access_grants"`
 }
 
-func flatternAuthorizedAudiences(v []*string) []interface{} {
-	var authorizedAudiencesList []interface{}
-	for _, v := range v {
-		authorizedAudiencesList = append(authorizedAudiencesList, v)
-	}
-	return authorizedAudiencesList
-}
-
-func flatternServiceIntegrations(v []*redshift.ServiceIntegrationsUnion) *schema.Set {
-	serviceIntegrations := []interface{}{}
-	if len(v) == 0 {
-		return nil
-	}
-
-	for _, v := range v {
-		serviceIntegrationsUnion := flatternServiceIntegrationsUnion(v)
-		serviceIntegrations = append(serviceIntegrations, serviceIntegrationsUnion)
-	}
-	return schema.NewSet(serviceIntegrationsHash, serviceIntegrations)
-}
-
-func flatternServiceIntegrationsUnion(v *redshift.ServiceIntegrationsUnion) map[string]interface{} {
-	mServiceIntegrationsUnion := make(map[string]interface{})
-	if lakeFormation := v.LakeFormation; lakeFormation != nil {
-		mServiceIntegrationsUnion["lake_formation"] = flatternLakeFormation(v.LakeFormation)
-	}
-	return mServiceIntegrationsUnion
-}
-
-func flatternLakeFormation(v []*redshift.LakeFormationScopeUnion) []interface{} {
-	lakeFormation := []interface{}{}
-	if len(v) == 0 {
-		return nil
-	}
-	for _, v := range v {
-		lakeFormationScopeUnion := flatternLakeFormationScopeUnion(v)
-		lakeFormation = append(lakeFormation, lakeFormationScopeUnion)
-	}
-
-	return lakeFormation
-}
-
-func flatternLakeFormationScopeUnion(v *redshift.LakeFormationScopeUnion) map[string]interface{} {
-	mLakeFormationScopeUnion := make(map[string]interface{})
-	if lakeFormationQuery := v.LakeFormationQuery; lakeFormationQuery != nil {
-		mLakeFormationScopeUnion["lake_formation_query"] = flatternLakeFormationQuery(v.LakeFormationQuery)
-	}
-	return mLakeFormationScopeUnion
-}
-
-func flatternLakeFormationQuery(v *redshift.LakeFormationQuery) map[string]interface{} {
-	lakeFormationQuery := make(map[string]interface{})
-	lakeFormationQuery["authorization"] = aws.StringValue(v.Authorization)
-
-	return lakeFormationQuery
-}
-
-func authorizedTokenIssuerListHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["authorized_audiences_list"].([]interface{})))
-	buf.WriteString(fmt.Sprintf("%s-", m["trusted_token_issuer_arn"].(string)))
-
-	return create.StringHashcode(buf.String())
-}
-
-func serviceIntegrationsHash(vServiceIntegrations interface{}) int {
-	var buf bytes.Buffer
-
-	if vLakeformation, ok := vServiceIntegrations.(map[string]interface{})["lake_formation"].([]map[string]interface{}); ok && len(vLakeformation) > 0 && vLakeformation[0] != nil {
-		for _, v := range vLakeformation {
-			if vLakeFormationQuery, ok := v["lake_formation_query"].(map[string]interface{}); ok && len(vLakeFormationQuery) > 0 {
-				if v, ok := vLakeFormationQuery["authorization"].(string); ok && v != "" {
-					buf.WriteString(fmt.Sprintf("%s-", v))
-				}
-			}
+func (m serviceIntegrationsModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.LakeFormation.IsNull():
+		lakeFormationData, d := m.LakeFormation.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
 		}
+
+		var r awstypes.ServiceIntegrationsUnionMemberLakeFormation
+		diags.Append(flex.Expand(ctx, lakeFormationData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+	
+	case !m.Redshift.IsNull():
+		redshiftData, d := m.Redshift.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.ServiceIntegrationsUnionMemberRedshift
+		diags.Append(flex.Expand(ctx, redshiftData, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
+
+	case !m.S3AccessGrants.IsNull():
+		s3AccessGrants, d := m.S3AccessGrants.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.ServiceIntegrationsUnionMemberS3AccessGrants
+		diags.Append(flex.Expand(ctx, s3AccessGrants, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &r, diags
 	}
 
-	return create.StringHashcode(buf.String())
+	return nil, diags
+}
+
+func (m *serviceIntegrationsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch t := v.(type) {
+		case awstypes.
+	}
+}
+
+type lakeFormationModel struct {
+	LakeFormationScope fwtypes.ListNestedObjectValueOf[lakeFormationScopeModel] `tfsdk:"lake_formation_scope"`
+}
+
+type lakeFormationScopeModel struct {
+	LakeFormationQuery fwtypes.ListNestedObjectValueOf[lakeFormationQueryModel] `tfsdk:"lake_formation_query"`
+}
+
+type lakeFormationQueryModel struct {
+	Authorization fwtypes.StringEnum[awstypes.ServiceAuthorization] `tfsdk:"authorization"`
+}
+
+type redshiftModel struct {
+	Connect fwtypes.ListNestedObjectValueOf[connectModel] `tfsdk:"connect"`
+}
+
+type connectModel struct {
+	Authorization fwtypes.StringEnum[awstypes.ServiceAuthorization] `tfsdk:"authorization"`
+}
+
+type s3AccessGrantsModel struct {
+	ReadWriteAccess fwtypes.ListNestedObjectValueOf[readWriteAccessModel] `tfsdk:"read_write_access"`
+}
+
+type readWriteAccessModel struct {
+	Authorization fwtypes.StringEnum[awstypes.ServiceAuthorization] `tfsdk:"authorization"`
 }

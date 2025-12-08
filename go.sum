@@ -23,6 +23,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
+github.com/aws/aws-sdk-go v1.55.8 h1:JRmEUbU52aJQZ2AjX4q4Wu7t4uZjOu71uyNmaWlUkJQ=
+github.com/aws/aws-sdk-go v1.55.8/go.mod h1:ZkViS9AqA6otK+JBBNH2++sx1sgxrPKcSzPPvQkUtXk=
 github.com/aws/aws-sdk-go-v2 v1.40.0 h1:/WMUA0kjhZExjOQN2z3oLALDREea1A7TobfuiBrKlwc=
 github.com/aws/aws-sdk-go-v2 v1.40.0/go.mod h1:c9pm7VwuW0UPxAEYGyTmyurVcNrbF6Rt/wixFqDhcjE=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.3 h1:DHctwEM8P8iTXFxC/QK0MRjwEpWQeM9yzidCRjldUz0=
@@ -639,6 +641,8 @@ github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.23.0 h1:l16/Vr
 github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.23.0/go.mod h1:HAmscHyzSOfB1Dr16KLc177KNbn83wscnZC+N7WyaM8=
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.68 h1:az84QLx3MwAMrOMjRpGjKQFY9/JkXveoc5TPbr8XHDQ=
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.68/go.mod h1:naAMUZYs95/rPa/UchEe9VR/wa3RdTO5mQC5lKUWTmM=
+github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.69 h1:jIeLQWz27dBB/zbh6NXlnKUY82TZfVtOkZFNXB9+olc=
+github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.69/go.mod h1:OSQssuqo5JkYi9jwA/bNwnx8oG3HPRVe5Co9+8IZdmU=
 github.com/hashicorp/awspolicyequivalence v1.7.0 h1:HxwPEw2/31BqQa73PinGciTfG2uJ/ATelvDG8X1gScU=
 github.com/hashicorp/awspolicyequivalence v1.7.0/go.mod h1:+oCTxQEYt+GcRalqrqTCBcJf100SQYiWQ4aENNYxYe0=
 github.com/hashicorp/cli v1.1.7 h1:/fZJ+hNdwfTSfsxMBa9WWMlfjUZbX8/LnUxgAd7lCVU=
@@ -900,7 +904,8 @@ gopkg.in/warnings.v0 v0.1.2 h1:wFXVbFY8DY5/xOe1ECiWdKCzZlxgshcYVNkBHstARME=
 gopkg.in/warnings.v0 v0.1.2/go.mod h1:jksf8JmL6Qr/oQM2OXTHunEvvTAsrWBLb6OOjuVWRNI=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v2 v2.2.8/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
-gopkg.in/yaml.v2 v2.3.0 h1:clyUAQHOM3G0M3f5vQj7LuJrETvjVot3Z5el9nffUtU=
 gopkg.in/yaml.v2 v2.3.0/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
+gopkg.in/yaml.v2 v2.4.0 h1:D8xgwECY7CYvx+Y2n4sBz93Jn9JRvxdiyyo8CTfuKaY=
+gopkg.in/yaml.v2 v2.4.0/go.mod h1:RDklbk79AGWmwhnvt/jBztapEOGDOx6ZbXqjP6csGnQ=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
