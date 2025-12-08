@@ -138,7 +138,9 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if .IsRegionalSingleton -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
 		{{ else if .IsGlobalSingleton -}}
-			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
+			{{ if .HasIdentityDuplicateAttrs -}}
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
+			{{ end -}}
 		{{ else if .HasIDAttrDuplicates -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), knownvalue.NotNull()),
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
@@ -181,7 +183,9 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if .IsRegionalSingleton -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
 		{{ else if .IsGlobalSingleton -}}
-			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
+			{{ if .HasIdentityDuplicateAttrs -}}
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
+			{{ end -}}
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
@@ -272,7 +276,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 						{{ end -}}
 					{{ end -}}
 					{{ if .IsGlobalSingleton -}}
-						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
+						{{ if .HasIdentityDuplicateAttrs -}}
+							statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
+						{{ end -}}
 					{{ else if .HasIdentityDuplicateAttrs -}}
 						{{ range .IdentityDuplicateAttrs -}}
 							statecheck.CompareValuePairs(resourceName, tfjsonpath.New({{ . }}), resourceName, tfjsonpath.New({{ $.IdentityAttribute }}), compare.ValuesSame()),
