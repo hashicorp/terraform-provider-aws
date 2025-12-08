@@ -328,7 +328,7 @@ See the assume role documentation [section on web identities](https://docs.aws.a
 
 ## Custom User-Agent Information
 
-By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. 
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions.
 To provide additional information in the User-Agent headers, set the `TF_APPEND_USER_AGENT` environment variable, or use the `user_agent` block.
 
 When using the environment variable, the value will be directly appended to the User-Agent header.
@@ -540,7 +540,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   This setting is ignored for any service with a custom endpoint specified.
   Note that not all services or regions have valid FIPS endpoints.
   The parameter `endpoints` can be used to override a particular service's endpoint if there is no valid FIPS endpoint.
-- `user_agent` (Optional) Product details to append to the User-Agent string sent in all AWS API calls.
+* `user_agent` (Optional) Product details to append to the User-Agent string sent in all AWS API calls.
 
 ### assume_role Configuration Block
 
