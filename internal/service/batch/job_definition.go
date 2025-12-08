@@ -15,6 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,12 +26,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1110,7 +1117,7 @@ func validJobContainerProperties(v any, k string) (ws []string, errors []error) 
 	value := v.(string)
 	_, err := expandContainerProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job container_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job container_properties is invalid: %w", err))
 	}
 	return
 }
@@ -1119,7 +1126,7 @@ func validJobECSProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandECSProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job ecs_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job ecs_properties is invalid: %w", err))
 	}
 	return
 }
@@ -1128,7 +1135,7 @@ func validJobNodeProperties(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := expandJobNodeProperties(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job node_properties is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("AWS Batch Job node_properties is invalid: %w", err))
 	}
 	return
 }
@@ -1758,4 +1765,93 @@ func flattenEKSVolumes(apiObjects []awstypes.EksVolume) []any {
 	}
 
 	return tfList
+}
+
+// @SDKListResource("aws_batch_job_definition")
+func jobDefinitionResourceAsListResource() inttypes.ListResourceForSDK {
+	l := jobDefinitionListResource{}
+	l.SetResourceSchema(resourceJobDefinition())
+	return &l
+}
+
+type jobDefinitionListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+	framework.ListResourceWithSDKv2Tags
+}
+
+type jobDefinitionListResourceModel struct {
+	framework.WithRegionModel
+}
+
+func (l *jobDefinitionListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+		Blocks:     map[string]listschema.Block{},
+	}
+}
+
+func (l *jobDefinitionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.BatchClient(ctx)
+
+	var query jobDefinitionListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	var input batch.DescribeJobDefinitionsInput
+
+	tflog.Info(ctx, "Listing Batch job definitions")
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		pages := batch.NewDescribeJobDefinitionsPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			for _, jobDef := range page.JobDefinitions {
+				arn := aws.ToString(jobDef.JobDefinitionArn)
+				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), arn)
+
+				result := request.NewListResult(ctx)
+				rd := l.ResourceData()
+				rd.SetId(arn)
+
+				tflog.Info(ctx, "Reading Batch job definition")
+				diags := resourceJobDefinitionRead(ctx, rd, awsClient)
+				if diags.HasError() {
+					result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading Batch job definition %s", arn))
+					yield(result)
+					return
+				}
+
+				err = l.SetTags(ctx, awsClient, rd)
+				if err != nil {
+					result = fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+
+				result.DisplayName = aws.ToString(jobDef.JobDefinitionName)
+
+				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				if !yield(result) {
+					return
+				}
+			}
+		}
+	}
 }

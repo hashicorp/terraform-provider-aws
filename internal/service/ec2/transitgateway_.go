@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -100,6 +99,12 @@ func resourceTransitGateway() *schema.Resource {
 				Optional:         true,
 				Default:          awstypes.DnsSupportValueEnable,
 				ValidateDiagFunc: enum.Validate[awstypes.DnsSupportValue](),
+			},
+			"encryption_support": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.EncryptionSupportOptionValue](),
 			},
 			"multicast_support": {
 				Type:             schema.TypeString,
@@ -191,6 +196,18 @@ func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway (%s) create: %s", d.Id(), err)
 	}
 
+	if v, ok := d.GetOk("encryption_support"); ok && v.(string) == string(awstypes.EncryptionSupportOptionValueEnable) {
+		input := &ec2.ModifyTransitGatewayInput{
+			TransitGatewayId: output.TransitGateway.TransitGatewayId,
+			Options: &awstypes.ModifyTransitGatewayOptions{
+				EncryptionSupport: awstypes.EncryptionSupportOptionValue(v.(string)),
+			},
+		}
+		if _, err := conn.ModifyTransitGateway(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Transit Gateway (%s) encryption support: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceTransitGatewayRead(ctx, d, meta)...)
 }
 
@@ -218,6 +235,18 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
 	d.Set(names.AttrDescription, transitGateway.Description)
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
+
+	if transitGateway.Options.EncryptionSupport != nil {
+		var encryptionSupport string
+		encryptionState := transitGateway.Options.EncryptionSupport.EncryptionState
+		if encryptionState == awstypes.EncryptionStateValueEnabled || encryptionState == awstypes.EncryptionStateValueEnabling {
+			encryptionSupport = string(awstypes.EncryptionSupportOptionValueEnable)
+		} else {
+			encryptionSupport = string(awstypes.EncryptionSupportOptionValueDisable)
+		}
+		d.Set("encryption_support", encryptionSupport)
+	}
+
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set(names.AttrOwnerID, transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
@@ -262,6 +291,10 @@ func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if d.HasChange("dns_support") {
 			input.Options.DnsSupport = awstypes.DnsSupportValue(d.Get("dns_support").(string))
+		}
+
+		if d.HasChange("encryption_support") {
+			input.Options.EncryptionSupport = awstypes.EncryptionSupportOptionValue(d.Get("encryption_support").(string))
 		}
 
 		if d.HasChange("security_group_referencing_support") {
@@ -324,24 +357,4 @@ func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
-}
-
-func waitTransitGatewayDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGateway, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:        enum.Slice(awstypes.TransitGatewayStateAvailable, awstypes.TransitGatewayStateDeleting),
-		Target:         []string{},
-		Refresh:        statusTransitGateway(ctx, conn, id),
-		Timeout:        timeout,
-		Delay:          2 * time.Minute,
-		MinTimeout:     10 * time.Second,
-		NotFoundChecks: 1,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.TransitGateway); ok {
-		return output, err
-	}
-
-	return nil, err
 }

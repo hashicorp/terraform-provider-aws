@@ -32,7 +32,7 @@ func sweepClusters(region string) error {
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DocDBElasticClient(ctx)
 	input := &docdbelastic.ListClustersInput{}

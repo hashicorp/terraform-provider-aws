@@ -259,3 +259,56 @@ func TestAccIVSChatRoom_Identity_ExistingResource(t *testing.T) {
 		},
 	})
 }
+
+// Resource Identity was added after v6.5.0
+func TestAccIVSChatRoom_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v ivschat.GetRoomOutput
+	resourceName := "aws_ivschat_room.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IVSChatServiceID),
+		CheckDestroy: testAccCheckRoomDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Room/basic_v6.5.0/"),
+				ConfigVariables: config.Variables{},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoomExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Room/basic/"),
+				ConfigVariables:          config.Variables{},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+		},
+	})
+}

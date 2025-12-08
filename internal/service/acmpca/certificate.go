@@ -177,7 +177,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(outputRaw.(*acmpca.IssueCertificateOutput).CertificateArn))
 
 	// Wait for certificate status to become ISSUED.
-	_, err = tfresource.RetryWhenIsA[*types.RequestInProgressException](ctx, certificateIssueTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *types.RequestInProgressException](ctx, certificateIssueTimeout, func(ctx context.Context) (any, error) {
 		return findCertificateByTwoPartKey(ctx, conn, d.Id(), certificateAuthorityARN)
 	})
 

@@ -299,7 +299,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 		timeout = 5 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting EventBridge Rule: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteRule(ctx, input)
 	}, errCodeValidationException, "Rule can't be deleted since it has targets")
 
@@ -315,7 +315,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 }
 
 func retryPutRule(ctx context.Context, conn *eventbridge.Client, input *eventbridge.PutRuleInput) (string, error) {
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutRule(ctx, input)
 	}, errCodeValidationException, "cannot be assumed by principal")
 

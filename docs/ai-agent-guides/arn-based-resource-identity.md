@@ -53,7 +53,37 @@ data "aws_region" "current" {
 
 Repeat steps 2 and 3 for each resource in the service. When all resources are complete, proceed to the next section.
 
-## 4. Submit a pull request
+## 4. Update import documentation
+
+- Update the import section of the registry documentation for each resource following the template below.
+
+````markdown
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = <resource-name>.example
+  identity = {
+    "arn" = <example-arn-value>
+  }
+}
+
+resource "<resource-name>" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) <description here>.
+````
+
+- The instructions for importing by `identity`, including the identity schema, should appear before instructions for import blocks with an `id` argument or importing via the CLI.
+- Refer to `website/docs/r/acm_certificate.html.markdown` for a reference implementation.
+
+## 5. Submit a pull request
 
 **!!!Important!!!**: Ask for confirmation before proceeding with this step.
 
@@ -97,6 +127,7 @@ Relates #42984
 - Ensure template files are in the correct location (`testdata/tmpl`)
 - Verify template file names match the resource name
 - If identity tests are not generated, verify that the `identitytests` generator is being called within the service's `generate.go` file. If it isn't, add the following line to `generate.go` next to the existing `go:generate` directives.
+- If a generated test does not reference the `var.rName` variable, add an `// @Testing(generator=false)` annotation to remove it from the generated configuration.
 
 ```go
 //go:generate go run ../../generate/identitytests/main.go

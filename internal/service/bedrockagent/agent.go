@@ -514,8 +514,8 @@ func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockag
 }
 
 func updateAgentWithRetry(ctx context.Context, conn *bedrockagent.Client, input bedrockagent.UpdateAgentInput, timeout time.Duration) (*bedrockagent.UpdateAgentOutput, error) {
-	return tfresource.RetryGWhen(ctx, timeout,
-		func() (*bedrockagent.UpdateAgentOutput, error) {
+	return tfresource.RetryWhen(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.UpdateAgentOutput, error) {
 			return conn.UpdateAgent(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -732,8 +732,13 @@ type guardrailConfigurationModel struct {
 }
 
 type memoryConfigurationModel struct {
-	EnabledMemoryTypes fwtypes.ListValueOf[fwtypes.StringEnum[awstypes.MemoryType]] `tfsdk:"enabled_memory_types"`
-	StorageDays        types.Int32                                                  `tfsdk:"storage_days"`
+	EnabledMemoryTypes          fwtypes.ListValueOf[fwtypes.StringEnum[awstypes.MemoryType]]      `tfsdk:"enabled_memory_types"`
+	SessionSummaryConfiguration fwtypes.ListNestedObjectValueOf[sessionSummaryConfigurationModel] `tfsdk:"session_summary_configuration"`
+	StorageDays                 types.Int32                                                       `tfsdk:"storage_days"`
+}
+
+type sessionSummaryConfigurationModel struct {
+	MaxRecentSessions types.Int64 `tfsdk:"max_recent_sessions"`
 }
 
 type promptOverrideConfigurationModel struct {

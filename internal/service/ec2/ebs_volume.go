@@ -114,7 +114,7 @@ func resourceEBSVolume() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(125, 1000),
+				ValidateFunc: validation.IntBetween(125, 2000),
 			},
 			names.AttrType: {
 				Type:     schema.TypeString,
@@ -292,7 +292,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta a
 		}
 
 		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.CreateSnapshot(ctx, &input)
 			},
 			errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")

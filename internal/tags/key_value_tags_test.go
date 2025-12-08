@@ -1952,6 +1952,91 @@ func TestKeyValueTagsContainsAll(t *testing.T) {
 	}
 }
 
+func TestKeyValueTagsContainsAllKeys(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	testCases := []struct {
+		name   string
+		source KeyValueTags
+		target KeyValueTags
+		want   bool
+	}{
+		{
+			name:   "empty",
+			source: New(ctx, map[string]string{}),
+			target: New(ctx, map[string]string{}),
+			want:   true,
+		},
+		{
+			name:   "source_empty",
+			source: New(ctx, map[string]string{}),
+			target: New(ctx, map[string]string{
+				"key1": "value1",
+			}),
+			want: false,
+		},
+		{
+			name: "target_empty",
+			source: New(ctx, map[string]string{
+				"key1": "value1",
+			}),
+			target: New(ctx, map[string]string{}),
+			want:   true,
+		},
+		{
+			name: "exact_match",
+			source: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+			}),
+			target: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+			}),
+			want: true,
+		},
+		{
+			name: "source_contains_all",
+			source: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			target: New(ctx, map[string]string{
+				"key1": "value1",
+				"key3": "value3",
+			}),
+			want: true,
+		},
+		{
+			name: "source_does_not_contain_all",
+			source: New(ctx, map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			target: New(ctx, map[string]string{
+				"key1": "value1",
+				"key4": "value4",
+			}),
+			want: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.source.ContainsAllKeys(testCase.target)
+
+			if got != testCase.want {
+				t.Errorf("unexpected ContainsAllKeys: %t", got)
+			}
+		})
+	}
+}
+
 func TestKeyValueTagsEqual(t *testing.T) {
 	t.Parallel()
 

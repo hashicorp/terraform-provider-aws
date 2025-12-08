@@ -332,22 +332,22 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 		input.Token = aws.String(v.(string))
 	}
 
-	err := retry.RetryContext(ctx, bucketPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, bucketPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.PutBucketReplication(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, errCodeInvalidRequest, "Versioning must be 'Enabled' on the bucket") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutBucketReplication(ctx, input)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Replication Configuration: %s", bucket, err)
 	}
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "ReplicationConfiguration is not valid, expected CreateBucketConfiguration") {

@@ -653,7 +653,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateElasticsearchDomain(ctx, &input)
 		},
 		func(err error) (bool, error) {

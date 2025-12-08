@@ -92,11 +92,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_parameter.example
+  identity = {
+    name = "/my_path/my_paramname"
+  }
+}
+
+resource "aws_ssm_parameter" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` - (String) Name of the parameter.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Parameters using the parameter store `name`. For example:
 
 ```terraform
 import {
-  to = aws_ssm_parameter.my_param
+  to = aws_ssm_parameter.example
   id = "/my_path/my_paramname"
 }
 ```
@@ -104,5 +130,5 @@ import {
 Using `terraform import`, import SSM Parameters using the parameter store `name`. For example:
 
 ```console
-% terraform import aws_ssm_parameter.my_param /my_path/my_paramname
+% terraform import aws_ssm_parameter.example /my_path/my_paramname
 ```

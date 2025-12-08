@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_servicecatalog_provisioned_product: Restore `timeouts.read` arguments removed in v6.12.0
+```

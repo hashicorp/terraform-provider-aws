@@ -24,8 +24,9 @@ func testAccOrganizationsResourcePolicy_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccOrganizationsResourcePolicy_Identity_Basic,
-		"ExistingResource": testAccOrganizationsResourcePolicy_Identity_ExistingResource,
+		acctest.CtBasic:             testAccOrganizationsResourcePolicy_Identity_Basic,
+		"ExistingResource":          testAccOrganizationsResourcePolicy_Identity_ExistingResource,
+		"ExistingResourceNoRefresh": testAccOrganizationsResourcePolicy_Identity_ExistingResource_NoRefresh_NoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -163,6 +164,65 @@ func testAccOrganizationsResourcePolicy_Identity_ExistingResource(t *testing.T) 
 						names.AttrID:        knownvalue.NotNull(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrID)),
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity was added after v6.4.0
+func testAccOrganizationsResourcePolicy_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.ResourcePolicy
+	resourceName := "aws_organizations_resource_policy.test"
+	providers := make(map[string]*schema.Provider)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderNameAlternate),
+				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/basic_v6.4.0/"),
+				ConfigVariables:          config.Variables{},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourcePolicyExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/basic/"),
+				ConfigVariables:          config.Variables{},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
 				},
 			},
 		},

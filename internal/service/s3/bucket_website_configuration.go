@@ -26,16 +26,16 @@ import (
 )
 
 // @SDKResource("aws_s3_bucket_website_configuration", name="Bucket Website Configuration")
+// @IdentityAttribute("bucket")
+// @IdentityAttribute("expected_bucket_owner", optional="true")
+// @ImportIDHandler("resourceImportID")
+// @Testing(preIdentityVersion="v6.9.0")
 func resourceBucketWebsiteConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketWebsiteConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketWebsiteConfigurationRead,
 		UpdateWithoutTimeout: resourceBucketWebsiteConfigurationUpdate,
 		DeleteWithoutTimeout: resourceBucketWebsiteConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrBucket: {

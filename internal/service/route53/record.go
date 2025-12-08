@@ -365,7 +365,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		HostedZoneId: aws.String(cleanZoneID(aws.ToString(zoneRecord.HostedZone.Id))),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchHostedZone](ctx, 1*time.Minute, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.NoSuchHostedZone](ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.ChangeResourceRecordSets(ctx, input)
 	})
 

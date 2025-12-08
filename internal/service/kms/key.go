@@ -33,18 +33,16 @@ import (
 
 // @SDKResource("aws_kms_key", name="Key")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
 // @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check")
+// @Testing(preIdentityVersion="v6.10.0")
 func resourceKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyCreate,
 		ReadWithoutTimeout:   resourceKeyRead,
 		UpdateWithoutTimeout: resourceKeyUpdate,
 		DeleteWithoutTimeout: resourceKeyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(iamPropagationTimeout),
@@ -446,7 +444,7 @@ func findDefaultKeyARNForService(ctx context.Context, conn *kms.Client, service,
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("reading KMS Key (%s): %s", keyID, err)
+		return "", fmt.Errorf("reading KMS Key (%s): %w", keyID, err)
 	}
 
 	return aws.ToString(key.Arn), nil
@@ -526,7 +524,7 @@ func updateKeyDescription(ctx context.Context, conn *kms.Client, resourceTypeNam
 func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool) error {
 	var action string
 
-	updateFunc := func() (any, error) {
+	updateFunc := func(ctx context.Context) (any, error) {
 		var err error
 
 		if enabled {
@@ -548,7 +546,7 @@ func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, k
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, updateFunc); err != nil {
 		return fmt.Errorf("%s %s (%s): %w", action, resourceTypeName, keyID, err)
 	}
 

@@ -5,6 +5,7 @@ package logs
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 )
@@ -13,7 +14,7 @@ func describeAccountPoliciesPages(ctx context.Context, conn *cloudwatchlogs.Clie
 	for {
 		output, err := conn.DescribeAccountPolicies(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -29,7 +30,7 @@ func describeIndexPoliciesPages(ctx context.Context, conn *cloudwatchlogs.Client
 	for {
 		output, err := conn.DescribeIndexPolicies(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -45,7 +46,7 @@ func describeQueryDefinitionsPages(ctx context.Context, conn *cloudwatchlogs.Cli
 	for {
 		output, err := conn.DescribeQueryDefinitions(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""
@@ -61,7 +62,7 @@ func describeResourcePoliciesPages(ctx context.Context, conn *cloudwatchlogs.Cli
 	for {
 		output, err := conn.DescribeResourcePolicies(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.NextToken) == ""

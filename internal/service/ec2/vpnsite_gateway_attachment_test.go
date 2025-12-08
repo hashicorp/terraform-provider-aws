@@ -32,7 +32,7 @@ func TestAccSiteVPNGatewayAttachment_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayAttachmentConfig_basic(rName),
+				Config: testAccVPNGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayAttachmentExists(ctx, resourceName, &v),
 				),
@@ -54,7 +54,7 @@ func TestAccSiteVPNGatewayAttachment_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayAttachmentConfig_basic(rName),
+				Config: testAccVPNGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayAttachmentExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNGatewayAttachment(), resourceName),
@@ -116,7 +116,7 @@ func testAccCheckVPNGatewayAttachmentDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccSiteVPNGatewayAttachmentConfig_basic(rName string) string {
+func testAccVPNGatewayAttachmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

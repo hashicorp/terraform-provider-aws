@@ -66,7 +66,42 @@ data "aws_region" "current" {
 
 Repeat steps 2 and 3 for each resource in the service. When all resources are complete, proceed to the next section.
 
-## 4. Submit a pull request
+## 4. Update import documentation
+
+- Update the import section of the registry documentation for each resource following the template below.
+
+````markdown
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = <resource-name>.example
+  identity = {
+    <required key/value pairs here>
+  }
+}
+
+resource "<resource-name>" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+<required attributes here>
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+````
+
+- The instructions for importing by `identity`, including the identity schema, should appear before instructions for import blocks with an `id` argument or importing via the CLI.
+- Refer to `website/docs/r/kms_key.html.markdown` for a reference implementation.
+
+## 5. Submit a pull request
 
 **!!!Important!!!**: Ask for confirmation before proceeding with this step.
 
@@ -110,6 +145,7 @@ Relates #42988
 - Ensure template files are in the correct location (`testdata/tmpl`)
 - Verify template file names match the resource name
 - If identity tests are not generated, verify that the `identitytests` generator is being called within the service's `generate.go` file. If it isn't, add the following line to `generate.go` next to the existing `go:generate` directives.
+- If a generated test does not reference the `var.rName` variable, add an `// @Testing(generator=false)` annotation to remove it from the generated configuration.
 
 ```go
 //go:generate go run ../../generate/identitytests/main.go
@@ -124,6 +160,7 @@ Relates #42988
 ### Import Test Failures
 
 - If identity tests are failing because they expect an update during import but get a no-op, add an `// @Testing(plannableImportAction="NoOp")` annotation and re-generate the test files.
+- If identity tests are failing import verification due to missing attribute values, check the `_basic` test implementation for the presence of an `ImportStateVerifyIgnore` field in the import test step. If present, add an `// @Testing(importIgnore="arg1")` annotation where `arg1` is replaced with the argument name(s) from the verify ignore slice. If mutiple fields are ignored, separate field names with a `;`, e.g. `arg1;arg2`.
 - If a region override test is failing and a custom import fuction is configured, ensure the appropriate helper function from the `importer` package is used.
     - `RegionalSingleParameterized` - regional resources whose identity is made up of a single parameter.
     - `GlobalSingleParameterized` - global resources whose identity is made up of a single parameter.

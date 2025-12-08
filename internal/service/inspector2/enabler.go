@@ -114,14 +114,14 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta any
 	id := enablerID(accountIDs, typeEnable)
 
 	var out *inspector2.EnableOutput
-	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = conn.Enable(ctx, in)
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		if out == nil {
-			return retry.RetryableError(tfresource.NewEmptyResultError(nil))
+			return tfresource.RetryableError(tfresource.NewEmptyResultError(nil))
 		}
 
 		if len(out.FailedAccounts) == 0 {
@@ -142,14 +142,12 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 			return false
 		}) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
-		return retry.NonRetryableError(err)
+		return tfresource.NonRetryableError(err)
 	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.Enable(ctx, in)
-	}
+
 	if err != nil {
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, err)
 	}

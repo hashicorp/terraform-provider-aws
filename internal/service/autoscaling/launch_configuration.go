@@ -28,7 +28,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -404,7 +404,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return autoscalingconn.CreateLaunchConfiguration(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -516,8 +516,8 @@ func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Launch Configuration: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUseFault](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceInUseFault](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteLaunchConfiguration(ctx, &autoscaling.DeleteLaunchConfigurationInput{
 				LaunchConfigurationName: aws.String(d.Id()),
 			})
@@ -772,7 +772,7 @@ func userDataHashSum(userData string) string {
 	// Check whether the user_data is not Base64 encoded.
 	// Always calculate hash of base64 decoded value since we
 	// check against double-encoding when setting it.
-	v, err := itypes.Base64Decode(userData)
+	v, err := inttypes.Base64Decode(userData)
 	if err != nil {
 		v = []byte(userData)
 	}

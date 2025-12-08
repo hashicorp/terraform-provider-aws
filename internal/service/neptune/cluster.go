@@ -29,7 +29,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -711,7 +711,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBCluster(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -901,7 +901,7 @@ func statusDBCluster(ctx context.Context, conn *neptune.Client, id string, waitN
 
 		status := aws.ToString(output.Status)
 
-		if status == clusterStatusAvailable && waitNoPendingModifiedValues && !itypes.IsZero(output.PendingModifiedValues) {
+		if status == clusterStatusAvailable && waitNoPendingModifiedValues && !inttypes.IsZero(output.PendingModifiedValues) {
 			status = clusterStatusAvailableWithPendingModifiedValues
 		}
 

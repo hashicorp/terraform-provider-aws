@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_synthetics_canary: Add `run_config.ephemeral_storage` argument.
+```

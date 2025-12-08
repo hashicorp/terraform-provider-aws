@@ -438,40 +438,37 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	// Retry for IAM eventual consistency
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err = glueConn.CreateCrawler(ctx, crawlerInput)
 		if err != nil {
 			// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
 			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Insufficient Lake Formation permission") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
 			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Service is unable to assume provided role") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
 			// InvalidInputException: com.amazonaws.services.glue.model.AccessDeniedException: You need to enable AWS Security Token Service for this region. . Please verify the role's TrustPolicy.
 			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Please verify the role's TrustPolicy") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
 			// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
 			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "is not authorized") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
 			// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
 			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "SQS queue") && errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "does not exist or the role provided does not have access to it") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = glueConn.CreateCrawler(ctx, crawlerInput)
-	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Crawler (%s): %s", name, err)
 	}
@@ -585,41 +582,37 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		// Retry for IAM eventual consistency
-		err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+		err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 			_, err := glueConn.UpdateCrawler(ctx, updateCrawlerInput)
 			if err != nil {
 				// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
 				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Insufficient Lake Formation permission") {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 
 				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Service is unable to assume provided role") {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 
 				// InvalidInputException: com.amazonaws.services.glue.model.AccessDeniedException: You need to enable AWS Security Token Service for this region. . Please verify the role's TrustPolicy.
 				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Please verify the role's TrustPolicy") {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 
 				// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
 				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "is not authorized") {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 
 				// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
 				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "SQS queue") && errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "does not exist or the role provided does not have access to it") {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			return nil
 		})
-
-		if tfresource.TimedOut(err) {
-			_, err = glueConn.UpdateCrawler(ctx, updateCrawlerInput)
-		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Crawler (%s): %s", d.Id(), err)
@@ -703,7 +696,7 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		configuration, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return nil, fmt.Errorf("configuration contains an invalid JSON: %v", err)
+			return nil, fmt.Errorf("configuration contains an invalid JSON: %w", err)
 		}
 		crawlerInput.Configuration = aws.String(configuration)
 	}
@@ -755,7 +748,7 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		configuration, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return nil, fmt.Errorf("Configuration contains an invalid JSON: %v", err)
+			return nil, fmt.Errorf("Configuration contains an invalid JSON: %w", err)
 		}
 		crawlerInput.Configuration = aws.String(configuration)
 	} else {

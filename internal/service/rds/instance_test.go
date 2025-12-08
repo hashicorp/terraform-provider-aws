@@ -3065,7 +3065,6 @@ func TestAccRDSInstance_ReplicateSourceDB_mssqlDomain(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
-
 	domain := acctest.RandomDomain().String()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -5571,6 +5570,88 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_PerformanceInsights_kmsKeyID_UpdateMode(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, tfrds.InstanceEngineMySQL)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_performanceInsightsKMSKeyIDUpdateMode(rName, string(types.DatabaseInsightsModeStandard)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "database_insights_mode", string(types.DatabaseInsightsModeStandard)),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrPassword,
+					"skip_final_snapshot",
+					names.AttrFinalSnapshotIdentifier,
+				},
+			},
+			{
+				Config: testAccInstanceConfig_performanceInsightsKMSKeyIDUpdateMode(rName, string(types.DatabaseInsightsModeAdvanced)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "database_insights_mode", string(types.DatabaseInsightsModeAdvanced)),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_performanceInsightsKMSKeyIDUpdateMode(rName, string(types.DatabaseInsightsModeStandard)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "database_insights_mode", string(types.DatabaseInsightsModeStandard)),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_PerformanceInsights_retentionPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -6536,7 +6617,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName),
+				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
@@ -6544,7 +6625,60 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName),
+				Config: testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, parameterGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"latest_restorable_time", // This causes intermittent failures when the value increments
+					"blue_green_update",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroupNonTFamilyInstances(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	parameterGroupResourceName := "aws_db_parameter_group.test"
+	parameterGroupDataSource := "data.aws_db_parameter_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, parameterGroupDataSource, names.AttrName),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
@@ -7093,7 +7227,7 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 						SkipFinalSnapshot:    aws.Bool(true),
 					}
 					_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
-						func() (any, error) {
+						func(ctx context.Context) (any, error) {
 							return conn.DeleteDBInstance(ctx, deleteInput)
 						},
 						func(err error) (bool, error) {
@@ -11030,11 +11164,10 @@ resource "aws_security_group_rule" "test" {
 }
 
 resource "aws_directory_service_directory" "directory" {
-  name                = %[2]q
-  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version = 1
-  type                = "MicrosoftAD"
-  edition             = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -13492,6 +13625,55 @@ resource "aws_db_instance" "test" {
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
 }
 
+func testAccInstanceConfig_performanceInsightsKMSKeyIDUpdateMode(rName, mode string) string {
+	var retentionPeriod int
+	switch mode {
+	case string(types.DatabaseInsightsModeStandard):
+		retentionPeriod = 7
+	case string(types.DatabaseInsightsModeAdvanced):
+		retentionPeriod = 465
+	}
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                        = data.aws_rds_engine_version.default.engine
+  engine_version                = data.aws_rds_engine_version.default.version
+  license_model                 = "general-public-license"
+  storage_type                  = "standard"
+  supports_performance_insights = true
+  preferred_instance_classes    = [%[2]s]
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage                     = 5
+  backup_retention_period               = 0
+  database_insights_mode                = %[4]q
+  db_name                               = "mydb"
+  engine                                = data.aws_rds_engine_version.default.engine
+  engine_version                        = data.aws_rds_engine_version.default.version
+  identifier                            = %[3]q
+  instance_class                        = data.aws_rds_orderable_db_instance.test.instance_class
+  password_wo                           = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version                   = 1
+  performance_insights_enabled          = true
+  performance_insights_kms_key_id       = aws_kms_key.test.arn
+  performance_insights_retention_period = %[5]d
+  skip_final_snapshot                   = true
+  username                              = "foo"
+}
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, mode, retentionPeriod))
+}
+
 func testAccInstanceConfig_performanceInsightsRetentionPeriod(rName string, performanceInsightsRetentionPeriod int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
@@ -14037,10 +14219,14 @@ resource "aws_db_instance" "test" {
 `, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName))
 }
 
-func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string) string {
+func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string, excludeTFamilyInstances bool) string {
+	instanceConfig := testAccInstanceConfig_orderableClassMySQL()
+	if excludeTFamilyInstances {
+		instanceConfig = strings.Replace(instanceConfig, "db.t", "frodo", -1)
+	}
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClassMySQL(),
+		instanceConfig,
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier              = %[1]q
@@ -14103,10 +14289,14 @@ resource "aws_db_instance" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccInstanceConfig_BlueGreenDeployment_basic(rName string) string {
+func testAccInstanceConfig_BlueGreenDeployment_basic(rName string, excludeTFamilyInstances bool) string {
+	instanceConfig := testAccInstanceConfig_orderableClassMySQL()
+	if excludeTFamilyInstances {
+		instanceConfig = strings.Replace(instanceConfig, "db.t", "frodo", -1)
+	}
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClassMySQL(),
+		instanceConfig,
 		fmt.Sprintf(`
 data "aws_db_parameter_group" "test" {
   name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"

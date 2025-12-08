@@ -226,7 +226,7 @@ func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("default_iam_role_arn", output.DefaultIamRoleArn)
 	d.Set("iam_roles", flattenNamespaceIAMRoles(output.IamRoles))
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
-	d.Set("log_exports", flex.FlattenStringyValueSet[awstypes.LogExport](output.LogExports))
+	d.Set("log_exports", output.LogExports)
 	d.Set("namespace_id", output.NamespaceId)
 	d.Set("namespace_name", output.NamespaceName)
 

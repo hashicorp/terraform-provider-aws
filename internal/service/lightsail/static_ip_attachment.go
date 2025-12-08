@@ -23,6 +23,10 @@ func ResourceStaticIPAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceStaticIPAttachmentRead,
 		DeleteWithoutTimeout: resourceStaticIPAttachmentDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"static_ip_name": {
 				Type:     schema.TypeString,
@@ -65,7 +69,7 @@ func resourceStaticIPAttachmentRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	staticIpName := d.Get("static_ip_name").(string)
+	staticIpName := d.Id()
 	log.Printf("[INFO] Reading Lightsail Static IP Attachment: %q", staticIpName)
 	out, err := conn.GetStaticIp(ctx, &lightsail.GetStaticIpInput{
 		StaticIpName: aws.String(staticIpName),
@@ -86,6 +90,7 @@ func resourceStaticIPAttachmentRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("instance_name", out.StaticIp.AttachedTo)
 	d.Set(names.AttrIPAddress, out.StaticIp.IpAddress)
+	d.Set("static_ip_name", out.StaticIp.Name)
 
 	return diags
 }

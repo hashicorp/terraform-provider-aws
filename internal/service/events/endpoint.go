@@ -167,7 +167,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateEndpoint(ctx, input)
 	}, errCodeValidationException, "cannot be assumed by principal")
 

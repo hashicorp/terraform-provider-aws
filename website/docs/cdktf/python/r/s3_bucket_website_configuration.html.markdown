@@ -145,6 +145,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_website_configuration.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_website_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `expected_bucket_owner` (String) Account ID of the expected bucket owner.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket website configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 
 If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
@@ -195,4 +222,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_website_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2871104537b7983a713e83a9ccf4b05ca2d748865bf7d8e813f83a1fc4241dc8 -->
+<!-- cache-key: cdktf-0.20.8 input-59f9f5ba0b39845b9547687111ca3a2d7bbe0896101555a59b73d668c2d75a7c -->

@@ -4,9 +4,9 @@ rules:
     message: Don't implement a Metadata method
     paths:
       include:
-        - "internal/service/*/*.go"
+        - "/internal/service/*/*.go"
       exclude:
-        - "internal/service/*/*_test.go"
+        - "/internal/service/*/*_test.go"
     patterns:
       - pattern: func $FUNC(...) { ... }
       - metavariable-regex:

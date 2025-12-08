@@ -102,8 +102,8 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 		input.DestinationConfiguration.VpcConfiguration = expandVPCDestinationConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-		func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.CreateTopicRuleDestination(ctx, input)
 		})
 
@@ -405,11 +405,11 @@ func flattenVPCDestinationProperties(apiObject *awstypes.VpcDestinationPropertie
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap[names.AttrSecurityGroups] = aws.StringSlice(v)
+		tfMap[names.AttrSecurityGroups] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap[names.AttrSubnetIDs] = aws.StringSlice(v)
+		tfMap[names.AttrSubnetIDs] = v
 	}
 
 	if v := apiObject.VpcId; v != nil {

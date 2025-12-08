@@ -50,7 +50,7 @@ func resourceClusterRoleAssociation() *schema.Resource {
 			},
 			"feature_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			names.AttrRoleARN: {
@@ -72,16 +72,19 @@ func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.Resourc
 	id := clusterRoleAssociationCreateResourceID(dbClusterID, roleARN)
 	input := rds.AddRoleToDBClusterInput{
 		DBClusterIdentifier: aws.String(dbClusterID),
-		FeatureName:         aws.String(d.Get("feature_name").(string)),
 		RoleArn:             aws.String(roleARN),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	if v, ok := d.GetOk("feature_name"); ok {
+		input.FeatureName = aws.String(v.(string))
+	}
+
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.AddRoleToDBCluster(ctx, &input)
 	})
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, errIAMRolePropagationMessage) {
-		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.AddRoleToDBCluster(ctx, &input)
 		}, errCodeInvalidParameterValue, errIAMRolePropagationMessage)
 	}
@@ -142,7 +145,7 @@ func resourceClusterRoleAssociationDelete(ctx context.Context, d *schema.Resourc
 		FeatureName:         aws.String(d.Get("feature_name").(string)),
 		RoleArn:             aws.String(roleARN),
 	}
-	_, err = tfresource.RetryWhenIsA[*types.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *types.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.RemoveRoleFromDBCluster(ctx, &input)
 	})
 

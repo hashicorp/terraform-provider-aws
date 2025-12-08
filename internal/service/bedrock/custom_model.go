@@ -285,7 +285,7 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 	input.CustomModelTags = getTagsIn(ctx)
 	input.JobTags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateModelCustomizationJob(ctx, input)
 	}, errCodeValidationException, "Could not assume provided IAM role")
 

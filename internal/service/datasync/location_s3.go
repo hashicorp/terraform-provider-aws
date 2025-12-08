@@ -127,7 +127,7 @@ func resourceLocationS3Create(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateLocationS3(ctx, input)
 		},
 		func(err error) (bool, error) {

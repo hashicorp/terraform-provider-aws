@@ -92,6 +92,10 @@ func dataSourceNetworkInterface() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -244,6 +248,10 @@ func flattenNetworkInterfaceAttachmentForDataSource(apiObject *awstypes.NetworkI
 
 	if v := apiObject.InstanceOwnerId; v != nil {
 		tfMap["instance_owner_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.NetworkCardIndex; v != nil {
+		tfMap["network_card_index"] = aws.ToInt32(v)
 	}
 
 	return tfMap

@@ -41,7 +41,7 @@ func (e expectGlobalARNFormatCheck) CheckState(ctx context.Context, request stat
 
 	knownCheck := acctest.GlobalARN(e.arnService, arnString)
 	if err = knownCheck.CheckValue(value); err != nil { //nolint:contextcheck // knownCheck implements an interface
-		response.Error = fmt.Errorf("checking value for attribute at path: %s.%s, err: %s", e.base.ResourceAddress(), e.attributePath, err)
+		response.Error = fmt.Errorf("checking value for attribute at path: %s.%s, err: %w", e.base.ResourceAddress(), e.attributePath, err)
 		return
 	}
 }

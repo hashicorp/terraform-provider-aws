@@ -217,7 +217,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateConnectPeer(ctx, input)
 		},
 		func(err error) (bool, error) {

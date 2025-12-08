@@ -552,8 +552,8 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	input := acm.DeleteCertificateInput{
 		CertificateArn: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, certificateCrossServicePropagationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, certificateCrossServicePropagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteCertificate(ctx, &input)
 		})
 

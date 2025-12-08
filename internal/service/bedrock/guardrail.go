@@ -152,9 +152,39 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[guardrailContentFilterConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"input_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailContentFilterAction](),
+									},
+									"input_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
+									"input_modalities": schema.ListAttribute{
+										Optional:    true,
+										CustomType:  fwtypes.ListOfStringEnumType[awstypes.GuardrailModality](),
+										ElementType: types.StringType,
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+										},
+									},
 									"input_strength": schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailFilterStrength](),
+									},
+									"output_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailContentFilterAction](),
+									},
+									"output_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
+									"output_modalities": schema.ListAttribute{
+										Optional:    true,
+										CustomType:  fwtypes.ListOfStringEnumType[awstypes.GuardrailModality](),
+										ElementType: types.StringType,
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+										},
 									},
 									"output_strength": schema.StringAttribute{
 										Required:   true,
@@ -395,6 +425,20 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 							CustomType: fwtypes.NewListNestedObjectTypeOf[managedWordListsConfig](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"input_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailWordAction](),
+									},
+									"input_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
+									"output_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailWordAction](),
+									},
+									"output_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
 									names.AttrType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailManagedWordsType](),
@@ -404,8 +448,26 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 						},
 						"words_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[wordsConfig](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(10000),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"input_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailWordAction](),
+									},
+									"input_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
+									"output_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailWordAction](),
+									},
+									"output_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
 									"text": schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
@@ -767,9 +829,15 @@ type guardrailContentPolicyConfigModel struct {
 }
 
 type guardrailContentFilterConfigModel struct {
-	InputStrength  fwtypes.StringEnum[awstypes.GuardrailFilterStrength]    `tfsdk:"input_strength"`
-	OutputStrength fwtypes.StringEnum[awstypes.GuardrailFilterStrength]    `tfsdk:"output_strength"`
-	Type           fwtypes.StringEnum[awstypes.GuardrailContentFilterType] `tfsdk:"type"`
+	InputAction      fwtypes.StringEnum[awstypes.GuardrailContentFilterAction] `tfsdk:"input_action"`
+	InputEnabled     types.Bool                                                `tfsdk:"input_enabled"`
+	InputModalities  fwtypes.ListOfStringEnum[awstypes.GuardrailModality]      `tfsdk:"input_modalities"`
+	InputStrength    fwtypes.StringEnum[awstypes.GuardrailFilterStrength]      `tfsdk:"input_strength"`
+	OutputAction     fwtypes.StringEnum[awstypes.GuardrailContentFilterAction] `tfsdk:"output_action"`
+	OutputEnabled    types.Bool                                                `tfsdk:"output_enabled"`
+	OutputModalities fwtypes.ListOfStringEnum[awstypes.GuardrailModality]      `tfsdk:"output_modalities"`
+	OutputStrength   fwtypes.StringEnum[awstypes.GuardrailFilterStrength]      `tfsdk:"output_strength"`
+	Type             fwtypes.StringEnum[awstypes.GuardrailContentFilterType]   `tfsdk:"type"`
 }
 
 type guardrailContentFiltersTierConfigModel struct {
@@ -836,9 +904,17 @@ type wordPolicyConfig struct {
 }
 
 type managedWordListsConfig struct {
-	Type fwtypes.StringEnum[awstypes.GuardrailManagedWordsType] `tfsdk:"type"`
+	InputAction   fwtypes.StringEnum[awstypes.GuardrailWordAction]       `tfsdk:"input_action"`
+	InputEnabled  types.Bool                                             `tfsdk:"input_enabled"`
+	OutputAction  fwtypes.StringEnum[awstypes.GuardrailWordAction]       `tfsdk:"output_action"`
+	OutputEnabled types.Bool                                             `tfsdk:"output_enabled"`
+	Type          fwtypes.StringEnum[awstypes.GuardrailManagedWordsType] `tfsdk:"type"`
 }
 
 type wordsConfig struct {
-	Text types.String `tfsdk:"text"`
+	InputAction   fwtypes.StringEnum[awstypes.GuardrailWordAction] `tfsdk:"input_action"`
+	InputEnabled  types.Bool                                       `tfsdk:"input_enabled"`
+	OutputAction  fwtypes.StringEnum[awstypes.GuardrailWordAction] `tfsdk:"output_action"`
+	OutputEnabled types.Bool                                       `tfsdk:"output_enabled"`
+	Text          types.String                                     `tfsdk:"text"`
 }

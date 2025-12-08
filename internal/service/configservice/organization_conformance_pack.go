@@ -157,7 +157,7 @@ func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.Re
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutOrganizationConformancePack(ctx, input)
 	})
 
@@ -255,7 +255,7 @@ func resourceOrganizationConformancePackDelete(ctx context.Context, d *schema.Re
 		timeout = 5 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Organization Conformance Pack: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteOrganizationConformancePack(ctx, &configservice.DeleteOrganizationConformancePackInput{
 			OrganizationConformancePackName: aws.String(d.Id()),
 		})
@@ -364,7 +364,7 @@ func findOrganizationConformancePackStatuses(ctx context.Context, conn *configse
 		const (
 			timeout = 15 * time.Second
 		)
-		outputRaw, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, timeout, func() (any, error) {
+		outputRaw, err := tfresource.RetryWhenIsA[any, *types.OrganizationAccessDeniedException](ctx, timeout, func(ctx context.Context) (any, error) {
 			return pages.NextPage(ctx)
 		})
 

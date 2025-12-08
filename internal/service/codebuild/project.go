@@ -13,6 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,10 +23,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -124,6 +131,12 @@ func resourceProject() *schema.Resource {
 						},
 					},
 				},
+			},
+			"auto_retry_limit": {
+				Description: "Maximum number of additional automatic retries after a failed build. The default value is 0.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
 			},
 			"badge_enabled": {
 				Type:     schema.TypeBool,
@@ -816,6 +829,10 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.Artifacts = expandProjectArtifacts(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("auto_retry_limit"); ok {
+		input.AutoRetryLimit = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("badge_enabled"); ok {
 		input.BadgeEnabled = aws.Bool(v.(bool))
 	}
@@ -938,6 +955,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	} else {
 		d.Set("artifacts", nil)
 	}
+	d.Set("auto_retry_limit", project.AutoRetryLimit)
 	if project.Badge != nil {
 		d.Set("badge_enabled", project.Badge.BadgeEnabled)
 		d.Set("badge_url", project.Badge.BadgeRequestUrl)
@@ -1030,6 +1048,10 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			if v, ok := d.GetOk("artifacts"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.Artifacts = expandProjectArtifacts(v.([]any)[0].(map[string]any))
 			}
+		}
+
+		if d.HasChange("auto_retry_limit") {
+			input.AutoRetryLimit = aws.Int32(int32(d.Get("auto_retry_limit").(int)))
 		}
 
 		if d.HasChange("badge_enabled") {
@@ -2178,4 +2200,93 @@ func validProjectS3LogsLocation(v any, k string) (ws []string, errors []error) {
 	}
 
 	return
+}
+
+// @SDKListResource("aws_codebuild_project")
+func projectResourceAsListResource() inttypes.ListResourceForSDK {
+	l := projectListResource{}
+	l.SetResourceSchema(resourceProject())
+	return &l
+}
+
+type projectListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+	framework.ListResourceWithSDKv2Tags
+}
+
+type projectListResourceModel struct {
+	framework.WithRegionModel
+}
+
+func (l *projectListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+		Blocks:     map[string]listschema.Block{},
+	}
+}
+
+func (l *projectListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.CodeBuildClient(ctx)
+
+	var query projectListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	var input codebuild.ListProjectsInput
+
+	tflog.Info(ctx, "Listing CodeBuild projects")
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		pages := codebuild.NewListProjectsPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			for _, projectName := range page.Projects {
+				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), projectName)
+
+				result := request.NewListResult(ctx)
+
+				rd := l.ResourceData()
+				rd.SetId(projectName)
+
+				tflog.Info(ctx, "Reading CodeBuild project")
+				diags := resourceProjectRead(ctx, rd, awsClient)
+				if diags.HasError() {
+					result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading CodeBuild project %s", projectName))
+					yield(result)
+					return
+				}
+
+				err = l.SetTags(ctx, awsClient, rd)
+				if err != nil {
+					result = fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+
+				result.DisplayName = projectName
+
+				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				if !yield(result) {
+					return
+				}
+			}
+		}
+	}
 }

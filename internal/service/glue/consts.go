@@ -15,5 +15,11 @@ const (
 )
 
 const (
+	jobCommandNameApacheSparkETL          = "glueetl"
+	jobCommandNameApacheSparkStreamingETL = "gluestreaming"
+	jobCommandNameRay                     = "glueray"
+)
+
+const (
 	propagationTimeout = 2 * time.Minute
 )

@@ -6,9 +6,9 @@ rules:
     message: Do not use "AccessAnalyzer" in func name inside accessanalyzer package
     paths:
       include:
-        - internal/service/accessanalyzer
+        - "/internal/service/accessanalyzer"
       exclude:
-        - internal/service/accessanalyzer/list_pages_gen.go
+        - "/internal/service/accessanalyzer/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -24,7 +24,7 @@ rules:
     message: Include "AccessAnalyzer" in test name
     paths:
       include:
-        - internal/service/accessanalyzer/*_test.go
+        - "/internal/service/accessanalyzer/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -39,7 +39,7 @@ rules:
     message: Do not use "AccessAnalyzer" in const name inside accessanalyzer package
     paths:
       include:
-        - internal/service/accessanalyzer
+        - "/internal/service/accessanalyzer"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -53,7 +53,7 @@ rules:
     message: Do not use "AccessAnalyzer" in var name inside accessanalyzer package
     paths:
       include:
-        - internal/service/accessanalyzer
+        - "/internal/service/accessanalyzer"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -67,9 +67,9 @@ rules:
     message: Do not use "Account" in func name inside account package
     paths:
       include:
-        - internal/service/account
+        - "/internal/service/account"
       exclude:
-        - internal/service/account/list_pages_gen.go
+        - "/internal/service/account/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -85,7 +85,7 @@ rules:
     message: Include "Account" in test name
     paths:
       include:
-        - internal/service/account/*_test.go
+        - "/internal/service/account/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -100,7 +100,7 @@ rules:
     message: Do not use "Account" in const name inside account package
     paths:
       include:
-        - internal/service/account
+        - "/internal/service/account"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -114,7 +114,7 @@ rules:
     message: Do not use "Account" in var name inside account package
     paths:
       include:
-        - internal/service/account
+        - "/internal/service/account"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -128,9 +128,9 @@ rules:
     message: Do not use "ACM" in func name inside acm package
     paths:
       include:
-        - internal/service/acm
+        - "/internal/service/acm"
       exclude:
-        - internal/service/acm/list_pages_gen.go
+        - "/internal/service/acm/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -146,7 +146,7 @@ rules:
     message: Include "ACM" in test name
     paths:
       include:
-        - internal/service/acm/*_test.go
+        - "/internal/service/acm/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -161,7 +161,7 @@ rules:
     message: Do not use "ACM" in const name inside acm package
     paths:
       include:
-        - internal/service/acm
+        - "/internal/service/acm"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -175,7 +175,7 @@ rules:
     message: Do not use "ACM" in var name inside acm package
     paths:
       include:
-        - internal/service/acm
+        - "/internal/service/acm"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -189,9 +189,9 @@ rules:
     message: Do not use "ACMPCA" in func name inside acmpca package
     paths:
       include:
-        - internal/service/acmpca
+        - "/internal/service/acmpca"
       exclude:
-        - internal/service/acmpca/list_pages_gen.go
+        - "/internal/service/acmpca/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -207,7 +207,7 @@ rules:
     message: Include "ACMPCA" in test name
     paths:
       include:
-        - internal/service/acmpca/*_test.go
+        - "/internal/service/acmpca/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -222,7 +222,7 @@ rules:
     message: Do not use "ACMPCA" in const name inside acmpca package
     paths:
       include:
-        - internal/service/acmpca
+        - "/internal/service/acmpca"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -236,7 +236,7 @@ rules:
     message: Do not use "ACMPCA" in var name inside acmpca package
     paths:
       include:
-        - internal/service/acmpca
+        - "/internal/service/acmpca"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -250,9 +250,9 @@ rules:
     message: Do not use "amg" in func name inside grafana package
     paths:
       include:
-        - internal/service/grafana
+        - "/internal/service/grafana"
       exclude:
-        - internal/service/grafana/list_pages_gen.go
+        - "/internal/service/grafana/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -268,7 +268,7 @@ rules:
     message: Do not use "amg" in const name inside grafana package
     paths:
       include:
-        - internal/service/grafana
+        - "/internal/service/grafana"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -282,7 +282,7 @@ rules:
     message: Do not use "amg" in var name inside grafana package
     paths:
       include:
-        - internal/service/grafana
+        - "/internal/service/grafana"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -296,9 +296,9 @@ rules:
     message: Do not use "AMP" in func name inside amp package
     paths:
       include:
-        - internal/service/amp
+        - "/internal/service/amp"
       exclude:
-        - internal/service/amp/list_pages_gen.go
+        - "/internal/service/amp/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -314,7 +314,7 @@ rules:
     message: Include "AMP" in test name
     paths:
       include:
-        - internal/service/amp/*_test.go
+        - "/internal/service/amp/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -329,7 +329,7 @@ rules:
     message: Do not use "AMP" in const name inside amp package
     paths:
       include:
-        - internal/service/amp
+        - "/internal/service/amp"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -343,7 +343,7 @@ rules:
     message: Do not use "AMP" in var name inside amp package
     paths:
       include:
-        - internal/service/amp
+        - "/internal/service/amp"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -357,9 +357,9 @@ rules:
     message: Do not use "Amplify" in func name inside amplify package
     paths:
       include:
-        - internal/service/amplify
+        - "/internal/service/amplify"
       exclude:
-        - internal/service/amplify/list_pages_gen.go
+        - "/internal/service/amplify/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -375,7 +375,7 @@ rules:
     message: Include "Amplify" in test name
     paths:
       include:
-        - internal/service/amplify/*_test.go
+        - "/internal/service/amplify/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -390,7 +390,7 @@ rules:
     message: Do not use "Amplify" in const name inside amplify package
     paths:
       include:
-        - internal/service/amplify
+        - "/internal/service/amplify"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -404,7 +404,7 @@ rules:
     message: Do not use "Amplify" in var name inside amplify package
     paths:
       include:
-        - internal/service/amplify
+        - "/internal/service/amplify"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -418,9 +418,9 @@ rules:
     message: Do not use "APIGateway" in func name inside apigateway package
     paths:
       include:
-        - internal/service/apigateway
+        - "/internal/service/apigateway"
       exclude:
-        - internal/service/apigateway/list_pages_gen.go
+        - "/internal/service/apigateway/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -436,7 +436,7 @@ rules:
     message: Include "APIGateway" in test name
     paths:
       include:
-        - internal/service/apigateway/*_test.go
+        - "/internal/service/apigateway/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -451,7 +451,7 @@ rules:
     message: Do not use "APIGateway" in const name inside apigateway package
     paths:
       include:
-        - internal/service/apigateway
+        - "/internal/service/apigateway"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -465,7 +465,7 @@ rules:
     message: Do not use "APIGateway" in var name inside apigateway package
     paths:
       include:
-        - internal/service/apigateway
+        - "/internal/service/apigateway"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -479,9 +479,9 @@ rules:
     message: Do not use "APIGatewayV2" in func name inside apigatewayv2 package
     paths:
       include:
-        - internal/service/apigatewayv2
+        - "/internal/service/apigatewayv2"
       exclude:
-        - internal/service/apigatewayv2/list_pages_gen.go
+        - "/internal/service/apigatewayv2/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -497,7 +497,7 @@ rules:
     message: Include "APIGatewayV2" in test name
     paths:
       include:
-        - internal/service/apigatewayv2/*_test.go
+        - "/internal/service/apigatewayv2/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -512,7 +512,7 @@ rules:
     message: Do not use "APIGatewayV2" in const name inside apigatewayv2 package
     paths:
       include:
-        - internal/service/apigatewayv2
+        - "/internal/service/apigatewayv2"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -526,7 +526,7 @@ rules:
     message: Do not use "APIGatewayV2" in var name inside apigatewayv2 package
     paths:
       include:
-        - internal/service/apigatewayv2
+        - "/internal/service/apigatewayv2"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -540,9 +540,9 @@ rules:
     message: Do not use "AppAutoScaling" in func name inside appautoscaling package
     paths:
       include:
-        - internal/service/appautoscaling
+        - "/internal/service/appautoscaling"
       exclude:
-        - internal/service/appautoscaling/list_pages_gen.go
+        - "/internal/service/appautoscaling/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -558,7 +558,7 @@ rules:
     message: Include "AppAutoScaling" in test name
     paths:
       include:
-        - internal/service/appautoscaling/*_test.go
+        - "/internal/service/appautoscaling/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -573,7 +573,7 @@ rules:
     message: Do not use "AppAutoScaling" in const name inside appautoscaling package
     paths:
       include:
-        - internal/service/appautoscaling
+        - "/internal/service/appautoscaling"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -587,7 +587,7 @@ rules:
     message: Do not use "AppAutoScaling" in var name inside appautoscaling package
     paths:
       include:
-        - internal/service/appautoscaling
+        - "/internal/service/appautoscaling"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -601,9 +601,9 @@ rules:
     message: Do not use "AppConfig" in func name inside appconfig package
     paths:
       include:
-        - internal/service/appconfig
+        - "/internal/service/appconfig"
       exclude:
-        - internal/service/appconfig/list_pages_gen.go
+        - "/internal/service/appconfig/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -619,7 +619,7 @@ rules:
     message: Include "AppConfig" in test name
     paths:
       include:
-        - internal/service/appconfig/*_test.go
+        - "/internal/service/appconfig/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -634,7 +634,7 @@ rules:
     message: Do not use "AppConfig" in const name inside appconfig package
     paths:
       include:
-        - internal/service/appconfig
+        - "/internal/service/appconfig"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -648,7 +648,7 @@ rules:
     message: Do not use "AppConfig" in var name inside appconfig package
     paths:
       include:
-        - internal/service/appconfig
+        - "/internal/service/appconfig"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -662,9 +662,9 @@ rules:
     message: Do not use "AppFabric" in func name inside appfabric package
     paths:
       include:
-        - internal/service/appfabric
+        - "/internal/service/appfabric"
       exclude:
-        - internal/service/appfabric/list_pages_gen.go
+        - "/internal/service/appfabric/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -680,7 +680,7 @@ rules:
     message: Include "AppFabric" in test name
     paths:
       include:
-        - internal/service/appfabric/*_test.go
+        - "/internal/service/appfabric/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -695,7 +695,7 @@ rules:
     message: Do not use "AppFabric" in const name inside appfabric package
     paths:
       include:
-        - internal/service/appfabric
+        - "/internal/service/appfabric"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -709,7 +709,7 @@ rules:
     message: Do not use "AppFabric" in var name inside appfabric package
     paths:
       include:
-        - internal/service/appfabric
+        - "/internal/service/appfabric"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -723,9 +723,9 @@ rules:
     message: Do not use "AppFlow" in func name inside appflow package
     paths:
       include:
-        - internal/service/appflow
+        - "/internal/service/appflow"
       exclude:
-        - internal/service/appflow/list_pages_gen.go
+        - "/internal/service/appflow/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -741,7 +741,7 @@ rules:
     message: Include "AppFlow" in test name
     paths:
       include:
-        - internal/service/appflow/*_test.go
+        - "/internal/service/appflow/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -756,7 +756,7 @@ rules:
     message: Do not use "AppFlow" in const name inside appflow package
     paths:
       include:
-        - internal/service/appflow
+        - "/internal/service/appflow"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -770,7 +770,7 @@ rules:
     message: Do not use "AppFlow" in var name inside appflow package
     paths:
       include:
-        - internal/service/appflow
+        - "/internal/service/appflow"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -784,9 +784,9 @@ rules:
     message: Do not use "AppIntegrations" in func name inside appintegrations package
     paths:
       include:
-        - internal/service/appintegrations
+        - "/internal/service/appintegrations"
       exclude:
-        - internal/service/appintegrations/list_pages_gen.go
+        - "/internal/service/appintegrations/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -802,7 +802,7 @@ rules:
     message: Include "AppIntegrations" in test name
     paths:
       include:
-        - internal/service/appintegrations/*_test.go
+        - "/internal/service/appintegrations/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -817,7 +817,7 @@ rules:
     message: Do not use "AppIntegrations" in const name inside appintegrations package
     paths:
       include:
-        - internal/service/appintegrations
+        - "/internal/service/appintegrations"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -831,7 +831,7 @@ rules:
     message: Do not use "AppIntegrations" in var name inside appintegrations package
     paths:
       include:
-        - internal/service/appintegrations
+        - "/internal/service/appintegrations"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -845,9 +845,9 @@ rules:
     message: Do not use "appintegrationsservice" in func name inside appintegrations package
     paths:
       include:
-        - internal/service/appintegrations
+        - "/internal/service/appintegrations"
       exclude:
-        - internal/service/appintegrations/list_pages_gen.go
+        - "/internal/service/appintegrations/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -863,7 +863,7 @@ rules:
     message: Do not use "appintegrationsservice" in const name inside appintegrations package
     paths:
       include:
-        - internal/service/appintegrations
+        - "/internal/service/appintegrations"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -877,7 +877,7 @@ rules:
     message: Do not use "appintegrationsservice" in var name inside appintegrations package
     paths:
       include:
-        - internal/service/appintegrations
+        - "/internal/service/appintegrations"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -891,9 +891,9 @@ rules:
     message: Do not use "applicationautoscaling" in func name inside appautoscaling package
     paths:
       include:
-        - internal/service/appautoscaling
+        - "/internal/service/appautoscaling"
       exclude:
-        - internal/service/appautoscaling/list_pages_gen.go
+        - "/internal/service/appautoscaling/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -909,7 +909,7 @@ rules:
     message: Do not use "applicationautoscaling" in const name inside appautoscaling package
     paths:
       include:
-        - internal/service/appautoscaling
+        - "/internal/service/appautoscaling"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -923,7 +923,7 @@ rules:
     message: Do not use "applicationautoscaling" in var name inside appautoscaling package
     paths:
       include:
-        - internal/service/appautoscaling
+        - "/internal/service/appautoscaling"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -937,9 +937,9 @@ rules:
     message: Do not use "ApplicationInsights" in func name inside applicationinsights package
     paths:
       include:
-        - internal/service/applicationinsights
+        - "/internal/service/applicationinsights"
       exclude:
-        - internal/service/applicationinsights/list_pages_gen.go
+        - "/internal/service/applicationinsights/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -955,7 +955,7 @@ rules:
     message: Include "ApplicationInsights" in test name
     paths:
       include:
-        - internal/service/applicationinsights/*_test.go
+        - "/internal/service/applicationinsights/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -970,7 +970,7 @@ rules:
     message: Do not use "ApplicationInsights" in const name inside applicationinsights package
     paths:
       include:
-        - internal/service/applicationinsights
+        - "/internal/service/applicationinsights"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -984,7 +984,7 @@ rules:
     message: Do not use "ApplicationInsights" in var name inside applicationinsights package
     paths:
       include:
-        - internal/service/applicationinsights
+        - "/internal/service/applicationinsights"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -998,9 +998,9 @@ rules:
     message: Do not use "ApplicationSignals" in func name inside applicationsignals package
     paths:
       include:
-        - internal/service/applicationsignals
+        - "/internal/service/applicationsignals"
       exclude:
-        - internal/service/applicationsignals/list_pages_gen.go
+        - "/internal/service/applicationsignals/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1016,7 +1016,7 @@ rules:
     message: Include "ApplicationSignals" in test name
     paths:
       include:
-        - internal/service/applicationsignals/*_test.go
+        - "/internal/service/applicationsignals/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1031,7 +1031,7 @@ rules:
     message: Do not use "ApplicationSignals" in const name inside applicationsignals package
     paths:
       include:
-        - internal/service/applicationsignals
+        - "/internal/service/applicationsignals"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1045,7 +1045,7 @@ rules:
     message: Do not use "ApplicationSignals" in var name inside applicationsignals package
     paths:
       include:
-        - internal/service/applicationsignals
+        - "/internal/service/applicationsignals"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1059,9 +1059,9 @@ rules:
     message: Do not use "AppMesh" in func name inside appmesh package
     paths:
       include:
-        - internal/service/appmesh
+        - "/internal/service/appmesh"
       exclude:
-        - internal/service/appmesh/list_pages_gen.go
+        - "/internal/service/appmesh/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1077,7 +1077,7 @@ rules:
     message: Include "AppMesh" in test name
     paths:
       include:
-        - internal/service/appmesh/*_test.go
+        - "/internal/service/appmesh/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1092,7 +1092,7 @@ rules:
     message: Do not use "AppMesh" in const name inside appmesh package
     paths:
       include:
-        - internal/service/appmesh
+        - "/internal/service/appmesh"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1106,7 +1106,7 @@ rules:
     message: Do not use "AppMesh" in var name inside appmesh package
     paths:
       include:
-        - internal/service/appmesh
+        - "/internal/service/appmesh"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1120,9 +1120,9 @@ rules:
     message: Do not use "appregistry" in func name inside servicecatalogappregistry package
     paths:
       include:
-        - internal/service/servicecatalogappregistry
+        - "/internal/service/servicecatalogappregistry"
       exclude:
-        - internal/service/servicecatalogappregistry/list_pages_gen.go
+        - "/internal/service/servicecatalogappregistry/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1138,7 +1138,7 @@ rules:
     message: Do not use "appregistry" in const name inside servicecatalogappregistry package
     paths:
       include:
-        - internal/service/servicecatalogappregistry
+        - "/internal/service/servicecatalogappregistry"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1152,7 +1152,7 @@ rules:
     message: Do not use "appregistry" in var name inside servicecatalogappregistry package
     paths:
       include:
-        - internal/service/servicecatalogappregistry
+        - "/internal/service/servicecatalogappregistry"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1166,9 +1166,9 @@ rules:
     message: Do not use "AppRunner" in func name inside apprunner package
     paths:
       include:
-        - internal/service/apprunner
+        - "/internal/service/apprunner"
       exclude:
-        - internal/service/apprunner/list_pages_gen.go
+        - "/internal/service/apprunner/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1184,7 +1184,7 @@ rules:
     message: Include "AppRunner" in test name
     paths:
       include:
-        - internal/service/apprunner/*_test.go
+        - "/internal/service/apprunner/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1199,7 +1199,7 @@ rules:
     message: Do not use "AppRunner" in const name inside apprunner package
     paths:
       include:
-        - internal/service/apprunner
+        - "/internal/service/apprunner"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1213,7 +1213,7 @@ rules:
     message: Do not use "AppRunner" in var name inside apprunner package
     paths:
       include:
-        - internal/service/apprunner
+        - "/internal/service/apprunner"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1227,9 +1227,9 @@ rules:
     message: Do not use "AppStream" in func name inside appstream package
     paths:
       include:
-        - internal/service/appstream
+        - "/internal/service/appstream"
       exclude:
-        - internal/service/appstream/list_pages_gen.go
+        - "/internal/service/appstream/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1245,7 +1245,7 @@ rules:
     message: Include "AppStream" in test name
     paths:
       include:
-        - internal/service/appstream/*_test.go
+        - "/internal/service/appstream/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1260,7 +1260,7 @@ rules:
     message: Do not use "AppStream" in const name inside appstream package
     paths:
       include:
-        - internal/service/appstream
+        - "/internal/service/appstream"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1274,7 +1274,7 @@ rules:
     message: Do not use "AppStream" in var name inside appstream package
     paths:
       include:
-        - internal/service/appstream
+        - "/internal/service/appstream"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1288,9 +1288,9 @@ rules:
     message: Do not use "AppSync" in func name inside appsync package
     paths:
       include:
-        - internal/service/appsync
+        - "/internal/service/appsync"
       exclude:
-        - internal/service/appsync/list_pages_gen.go
+        - "/internal/service/appsync/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1306,7 +1306,7 @@ rules:
     message: Include "AppSync" in test name
     paths:
       include:
-        - internal/service/appsync/*_test.go
+        - "/internal/service/appsync/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1321,7 +1321,7 @@ rules:
     message: Do not use "AppSync" in const name inside appsync package
     paths:
       include:
-        - internal/service/appsync
+        - "/internal/service/appsync"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1335,7 +1335,7 @@ rules:
     message: Do not use "AppSync" in var name inside appsync package
     paths:
       include:
-        - internal/service/appsync
+        - "/internal/service/appsync"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1343,15 +1343,137 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppSync"
     severity: WARNING
+  - id: arcregionswitch-in-func-name
+    languages:
+      - go
+    message: Do not use "ARCRegionSwitch" in func name inside arcregionswitch package
+    paths:
+      include:
+        - "/internal/service/arcregionswitch"
+      exclude:
+        - "/internal/service/arcregionswitch/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ARCRegionSwitch"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: arcregionswitch-in-test-name
+    languages:
+      - go
+    message: Include "ARCRegionSwitch" in test name
+    paths:
+      include:
+        - "/internal/service/arcregionswitch/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccARCRegionSwitch"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: arcregionswitch-in-const-name
+    languages:
+      - go
+    message: Do not use "ARCRegionSwitch" in const name inside arcregionswitch package
+    paths:
+      include:
+        - "/internal/service/arcregionswitch"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ARCRegionSwitch"
+    severity: WARNING
+  - id: arcregionswitch-in-var-name
+    languages:
+      - go
+    message: Do not use "ARCRegionSwitch" in var name inside arcregionswitch package
+    paths:
+      include:
+        - "/internal/service/arcregionswitch"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ARCRegionSwitch"
+    severity: WARNING
+  - id: arczonalshift-in-func-name
+    languages:
+      - go
+    message: Do not use "ARCZonalShift" in func name inside arczonalshift package
+    paths:
+      include:
+        - "/internal/service/arczonalshift"
+      exclude:
+        - "/internal/service/arczonalshift/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ARCZonalShift"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: arczonalshift-in-test-name
+    languages:
+      - go
+    message: Include "ARCZonalShift" in test name
+    paths:
+      include:
+        - "/internal/service/arczonalshift/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccARCZonalShift"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: arczonalshift-in-const-name
+    languages:
+      - go
+    message: Do not use "ARCZonalShift" in const name inside arczonalshift package
+    paths:
+      include:
+        - "/internal/service/arczonalshift"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ARCZonalShift"
+    severity: WARNING
+  - id: arczonalshift-in-var-name
+    languages:
+      - go
+    message: Do not use "ARCZonalShift" in var name inside arczonalshift package
+    paths:
+      include:
+        - "/internal/service/arczonalshift"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ARCZonalShift"
+    severity: WARNING
   - id: athena-in-func-name
     languages:
       - go
     message: Do not use "Athena" in func name inside athena package
     paths:
       include:
-        - internal/service/athena
+        - "/internal/service/athena"
       exclude:
-        - internal/service/athena/list_pages_gen.go
+        - "/internal/service/athena/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1367,7 +1489,7 @@ rules:
     message: Include "Athena" in test name
     paths:
       include:
-        - internal/service/athena/*_test.go
+        - "/internal/service/athena/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1382,7 +1504,7 @@ rules:
     message: Do not use "Athena" in const name inside athena package
     paths:
       include:
-        - internal/service/athena
+        - "/internal/service/athena"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1396,7 +1518,7 @@ rules:
     message: Do not use "Athena" in var name inside athena package
     paths:
       include:
-        - internal/service/athena
+        - "/internal/service/athena"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1410,9 +1532,9 @@ rules:
     message: Do not use "AuditManager" in func name inside auditmanager package
     paths:
       include:
-        - internal/service/auditmanager
+        - "/internal/service/auditmanager"
       exclude:
-        - internal/service/auditmanager/list_pages_gen.go
+        - "/internal/service/auditmanager/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1428,7 +1550,7 @@ rules:
     message: Include "AuditManager" in test name
     paths:
       include:
-        - internal/service/auditmanager/*_test.go
+        - "/internal/service/auditmanager/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1443,7 +1565,7 @@ rules:
     message: Do not use "AuditManager" in const name inside auditmanager package
     paths:
       include:
-        - internal/service/auditmanager
+        - "/internal/service/auditmanager"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1457,7 +1579,7 @@ rules:
     message: Do not use "AuditManager" in var name inside auditmanager package
     paths:
       include:
-        - internal/service/auditmanager
+        - "/internal/service/auditmanager"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1471,9 +1593,9 @@ rules:
     message: Do not use "AutoScaling" in func name inside autoscaling package
     paths:
       include:
-        - internal/service/autoscaling
+        - "/internal/service/autoscaling"
       exclude:
-        - internal/service/autoscaling/list_pages_gen.go
+        - "/internal/service/autoscaling/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1489,7 +1611,7 @@ rules:
     message: Include "AutoScaling" in test name
     paths:
       include:
-        - internal/service/autoscaling/*_test.go
+        - "/internal/service/autoscaling/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1504,7 +1626,7 @@ rules:
     message: Do not use "AutoScaling" in const name inside autoscaling package
     paths:
       include:
-        - internal/service/autoscaling
+        - "/internal/service/autoscaling"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1518,7 +1640,7 @@ rules:
     message: Do not use "AutoScaling" in var name inside autoscaling package
     paths:
       include:
-        - internal/service/autoscaling
+        - "/internal/service/autoscaling"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1532,9 +1654,9 @@ rules:
     message: Do not use "AutoScalingPlans" in func name inside autoscalingplans package
     paths:
       include:
-        - internal/service/autoscalingplans
+        - "/internal/service/autoscalingplans"
       exclude:
-        - internal/service/autoscalingplans/list_pages_gen.go
+        - "/internal/service/autoscalingplans/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1550,7 +1672,7 @@ rules:
     message: Include "AutoScalingPlans" in test name
     paths:
       include:
-        - internal/service/autoscalingplans/*_test.go
+        - "/internal/service/autoscalingplans/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1565,7 +1687,7 @@ rules:
     message: Do not use "AutoScalingPlans" in const name inside autoscalingplans package
     paths:
       include:
-        - internal/service/autoscalingplans
+        - "/internal/service/autoscalingplans"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1579,7 +1701,7 @@ rules:
     message: Do not use "AutoScalingPlans" in var name inside autoscalingplans package
     paths:
       include:
-        - internal/service/autoscalingplans
+        - "/internal/service/autoscalingplans"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1593,9 +1715,9 @@ rules:
     message: Do not use "Backup" in func name inside backup package
     paths:
       include:
-        - internal/service/backup
+        - "/internal/service/backup"
       exclude:
-        - internal/service/backup/list_pages_gen.go
+        - "/internal/service/backup/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1611,7 +1733,7 @@ rules:
     message: Include "Backup" in test name
     paths:
       include:
-        - internal/service/backup/*_test.go
+        - "/internal/service/backup/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1626,7 +1748,7 @@ rules:
     message: Do not use "Backup" in const name inside backup package
     paths:
       include:
-        - internal/service/backup
+        - "/internal/service/backup"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1640,7 +1762,7 @@ rules:
     message: Do not use "Backup" in var name inside backup package
     paths:
       include:
-        - internal/service/backup
+        - "/internal/service/backup"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1654,9 +1776,9 @@ rules:
     message: Do not use "Batch" in func name inside batch package
     paths:
       include:
-        - internal/service/batch
+        - "/internal/service/batch"
       exclude:
-        - internal/service/batch/list_pages_gen.go
+        - "/internal/service/batch/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1672,7 +1794,7 @@ rules:
     message: Include "Batch" in test name
     paths:
       include:
-        - internal/service/batch/*_test.go
+        - "/internal/service/batch/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1687,7 +1809,7 @@ rules:
     message: Do not use "Batch" in const name inside batch package
     paths:
       include:
-        - internal/service/batch
+        - "/internal/service/batch"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1701,7 +1823,7 @@ rules:
     message: Do not use "Batch" in var name inside batch package
     paths:
       include:
-        - internal/service/batch
+        - "/internal/service/batch"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1715,9 +1837,9 @@ rules:
     message: Do not use "BCMDataExports" in func name inside bcmdataexports package
     paths:
       include:
-        - internal/service/bcmdataexports
+        - "/internal/service/bcmdataexports"
       exclude:
-        - internal/service/bcmdataexports/list_pages_gen.go
+        - "/internal/service/bcmdataexports/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1733,7 +1855,7 @@ rules:
     message: Include "BCMDataExports" in test name
     paths:
       include:
-        - internal/service/bcmdataexports/*_test.go
+        - "/internal/service/bcmdataexports/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1748,7 +1870,7 @@ rules:
     message: Do not use "BCMDataExports" in const name inside bcmdataexports package
     paths:
       include:
-        - internal/service/bcmdataexports
+        - "/internal/service/bcmdataexports"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1762,7 +1884,7 @@ rules:
     message: Do not use "BCMDataExports" in var name inside bcmdataexports package
     paths:
       include:
-        - internal/service/bcmdataexports
+        - "/internal/service/bcmdataexports"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1776,9 +1898,9 @@ rules:
     message: Do not use "beanstalk" in func name inside elasticbeanstalk package
     paths:
       include:
-        - internal/service/elasticbeanstalk
+        - "/internal/service/elasticbeanstalk"
       exclude:
-        - internal/service/elasticbeanstalk/list_pages_gen.go
+        - "/internal/service/elasticbeanstalk/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1794,7 +1916,7 @@ rules:
     message: Do not use "beanstalk" in const name inside elasticbeanstalk package
     paths:
       include:
-        - internal/service/elasticbeanstalk
+        - "/internal/service/elasticbeanstalk"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1808,7 +1930,7 @@ rules:
     message: Do not use "beanstalk" in var name inside elasticbeanstalk package
     paths:
       include:
-        - internal/service/elasticbeanstalk
+        - "/internal/service/elasticbeanstalk"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1822,9 +1944,9 @@ rules:
     message: Do not use "Bedrock" in func name inside bedrock package
     paths:
       include:
-        - internal/service/bedrock
+        - "/internal/service/bedrock"
       exclude:
-        - internal/service/bedrock/list_pages_gen.go
+        - "/internal/service/bedrock/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1840,7 +1962,7 @@ rules:
     message: Include "Bedrock" in test name
     paths:
       include:
-        - internal/service/bedrock/*_test.go
+        - "/internal/service/bedrock/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1855,7 +1977,7 @@ rules:
     message: Do not use "Bedrock" in const name inside bedrock package
     paths:
       include:
-        - internal/service/bedrock
+        - "/internal/service/bedrock"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1869,7 +1991,7 @@ rules:
     message: Do not use "Bedrock" in var name inside bedrock package
     paths:
       include:
-        - internal/service/bedrock
+        - "/internal/service/bedrock"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1883,9 +2005,9 @@ rules:
     message: Do not use "BedrockAgent" in func name inside bedrockagent package
     paths:
       include:
-        - internal/service/bedrockagent
+        - "/internal/service/bedrockagent"
       exclude:
-        - internal/service/bedrockagent/list_pages_gen.go
+        - "/internal/service/bedrockagent/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1901,7 +2023,7 @@ rules:
     message: Include "BedrockAgent" in test name
     paths:
       include:
-        - internal/service/bedrockagent/*_test.go
+        - "/internal/service/bedrockagent/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1916,7 +2038,7 @@ rules:
     message: Do not use "BedrockAgent" in const name inside bedrockagent package
     paths:
       include:
-        - internal/service/bedrockagent
+        - "/internal/service/bedrockagent"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1930,7 +2052,7 @@ rules:
     message: Do not use "BedrockAgent" in var name inside bedrockagent package
     paths:
       include:
-        - internal/service/bedrockagent
+        - "/internal/service/bedrockagent"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -1944,9 +2066,9 @@ rules:
     message: Do not use "BedrockAgentCore" in func name inside bedrockagentcore package
     paths:
       include:
-        - internal/service/bedrockagentcore
+        - "/internal/service/bedrockagentcore"
       exclude:
-        - internal/service/bedrockagentcore/list_pages_gen.go
+        - "/internal/service/bedrockagentcore/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1962,7 +2084,7 @@ rules:
     message: Include "BedrockAgentCore" in test name
     paths:
       include:
-        - internal/service/bedrockagentcore/*_test.go
+        - "/internal/service/bedrockagentcore/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -1977,7 +2099,7 @@ rules:
     message: Do not use "BedrockAgentCore" in const name inside bedrockagentcore package
     paths:
       include:
-        - internal/service/bedrockagentcore
+        - "/internal/service/bedrockagentcore"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -1991,7 +2113,7 @@ rules:
     message: Do not use "BedrockAgentCore" in var name inside bedrockagentcore package
     paths:
       include:
-        - internal/service/bedrockagentcore
+        - "/internal/service/bedrockagentcore"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2005,9 +2127,9 @@ rules:
     message: Do not use "Billing" in func name inside billing package
     paths:
       include:
-        - internal/service/billing
+        - "/internal/service/billing"
       exclude:
-        - internal/service/billing/list_pages_gen.go
+        - "/internal/service/billing/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2023,7 +2145,7 @@ rules:
     message: Include "Billing" in test name
     paths:
       include:
-        - internal/service/billing/*_test.go
+        - "/internal/service/billing/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2038,7 +2160,7 @@ rules:
     message: Do not use "Billing" in const name inside billing package
     paths:
       include:
-        - internal/service/billing
+        - "/internal/service/billing"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2052,7 +2174,7 @@ rules:
     message: Do not use "Billing" in var name inside billing package
     paths:
       include:
-        - internal/service/billing
+        - "/internal/service/billing"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2066,9 +2188,9 @@ rules:
     message: Do not use "Budgets" in func name inside budgets package
     paths:
       include:
-        - internal/service/budgets
+        - "/internal/service/budgets"
       exclude:
-        - internal/service/budgets/list_pages_gen.go
+        - "/internal/service/budgets/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2084,7 +2206,7 @@ rules:
     message: Include "Budgets" in test name
     paths:
       include:
-        - internal/service/budgets/*_test.go
+        - "/internal/service/budgets/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2099,7 +2221,7 @@ rules:
     message: Do not use "Budgets" in const name inside budgets package
     paths:
       include:
-        - internal/service/budgets
+        - "/internal/service/budgets"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2113,7 +2235,7 @@ rules:
     message: Do not use "Budgets" in var name inside budgets package
     paths:
       include:
-        - internal/service/budgets
+        - "/internal/service/budgets"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2127,9 +2249,9 @@ rules:
     message: Do not use "CE" in func name inside ce package
     paths:
       include:
-        - internal/service/ce
+        - "/internal/service/ce"
       exclude:
-        - internal/service/ce/list_pages_gen.go
+        - "/internal/service/ce/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2148,7 +2270,7 @@ rules:
     message: Include "CE" in test name
     paths:
       include:
-        - internal/service/ce/*_test.go
+        - "/internal/service/ce/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2163,7 +2285,7 @@ rules:
     message: Do not use "CE" in const name inside ce package
     paths:
       include:
-        - internal/service/ce
+        - "/internal/service/ce"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2178,7 +2300,7 @@ rules:
     message: Do not use "CE" in var name inside ce package
     paths:
       include:
-        - internal/service/ce
+        - "/internal/service/ce"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2194,9 +2316,9 @@ rules:
     message: Do not use "Chatbot" in func name inside chatbot package
     paths:
       include:
-        - internal/service/chatbot
+        - "/internal/service/chatbot"
       exclude:
-        - internal/service/chatbot/list_pages_gen.go
+        - "/internal/service/chatbot/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2212,7 +2334,7 @@ rules:
     message: Include "Chatbot" in test name
     paths:
       include:
-        - internal/service/chatbot/*_test.go
+        - "/internal/service/chatbot/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2227,7 +2349,7 @@ rules:
     message: Do not use "Chatbot" in const name inside chatbot package
     paths:
       include:
-        - internal/service/chatbot
+        - "/internal/service/chatbot"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2241,7 +2363,7 @@ rules:
     message: Do not use "Chatbot" in var name inside chatbot package
     paths:
       include:
-        - internal/service/chatbot
+        - "/internal/service/chatbot"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2255,9 +2377,9 @@ rules:
     message: Do not use "Chime" in func name inside chime package
     paths:
       include:
-        - internal/service/chime
+        - "/internal/service/chime"
       exclude:
-        - internal/service/chime/list_pages_gen.go
+        - "/internal/service/chime/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2273,7 +2395,7 @@ rules:
     message: Include "Chime" in test name
     paths:
       include:
-        - internal/service/chime/*_test.go
+        - "/internal/service/chime/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2288,7 +2410,7 @@ rules:
     message: Do not use "Chime" in const name inside chime package
     paths:
       include:
-        - internal/service/chime
+        - "/internal/service/chime"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2302,7 +2424,7 @@ rules:
     message: Do not use "Chime" in var name inside chime package
     paths:
       include:
-        - internal/service/chime
+        - "/internal/service/chime"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2316,9 +2438,9 @@ rules:
     message: Do not use "ChimeSDKMediaPipelines" in func name inside chimesdkmediapipelines package
     paths:
       include:
-        - internal/service/chimesdkmediapipelines
+        - "/internal/service/chimesdkmediapipelines"
       exclude:
-        - internal/service/chimesdkmediapipelines/list_pages_gen.go
+        - "/internal/service/chimesdkmediapipelines/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2334,7 +2456,7 @@ rules:
     message: Include "ChimeSDKMediaPipelines" in test name
     paths:
       include:
-        - internal/service/chimesdkmediapipelines/*_test.go
+        - "/internal/service/chimesdkmediapipelines/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2349,7 +2471,7 @@ rules:
     message: Do not use "ChimeSDKMediaPipelines" in const name inside chimesdkmediapipelines package
     paths:
       include:
-        - internal/service/chimesdkmediapipelines
+        - "/internal/service/chimesdkmediapipelines"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2363,7 +2485,7 @@ rules:
     message: Do not use "ChimeSDKMediaPipelines" in var name inside chimesdkmediapipelines package
     paths:
       include:
-        - internal/service/chimesdkmediapipelines
+        - "/internal/service/chimesdkmediapipelines"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2377,9 +2499,9 @@ rules:
     message: Do not use "ChimeSDKVoice" in func name inside chimesdkvoice package
     paths:
       include:
-        - internal/service/chimesdkvoice
+        - "/internal/service/chimesdkvoice"
       exclude:
-        - internal/service/chimesdkvoice/list_pages_gen.go
+        - "/internal/service/chimesdkvoice/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2395,7 +2517,7 @@ rules:
     message: Include "ChimeSDKVoice" in test name
     paths:
       include:
-        - internal/service/chimesdkvoice/*_test.go
+        - "/internal/service/chimesdkvoice/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2410,7 +2532,7 @@ rules:
     message: Do not use "ChimeSDKVoice" in const name inside chimesdkvoice package
     paths:
       include:
-        - internal/service/chimesdkvoice
+        - "/internal/service/chimesdkvoice"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2424,7 +2546,7 @@ rules:
     message: Do not use "ChimeSDKVoice" in var name inside chimesdkvoice package
     paths:
       include:
-        - internal/service/chimesdkvoice
+        - "/internal/service/chimesdkvoice"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2438,9 +2560,9 @@ rules:
     message: Do not use "CleanRooms" in func name inside cleanrooms package
     paths:
       include:
-        - internal/service/cleanrooms
+        - "/internal/service/cleanrooms"
       exclude:
-        - internal/service/cleanrooms/list_pages_gen.go
+        - "/internal/service/cleanrooms/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2456,7 +2578,7 @@ rules:
     message: Include "CleanRooms" in test name
     paths:
       include:
-        - internal/service/cleanrooms/*_test.go
+        - "/internal/service/cleanrooms/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2471,7 +2593,7 @@ rules:
     message: Do not use "CleanRooms" in const name inside cleanrooms package
     paths:
       include:
-        - internal/service/cleanrooms
+        - "/internal/service/cleanrooms"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2485,7 +2607,7 @@ rules:
     message: Do not use "CleanRooms" in var name inside cleanrooms package
     paths:
       include:
-        - internal/service/cleanrooms
+        - "/internal/service/cleanrooms"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2499,9 +2621,9 @@ rules:
     message: Do not use "Cloud9" in func name inside cloud9 package
     paths:
       include:
-        - internal/service/cloud9
+        - "/internal/service/cloud9"
       exclude:
-        - internal/service/cloud9/list_pages_gen.go
+        - "/internal/service/cloud9/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2517,7 +2639,7 @@ rules:
     message: Include "Cloud9" in test name
     paths:
       include:
-        - internal/service/cloud9/*_test.go
+        - "/internal/service/cloud9/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2532,7 +2654,7 @@ rules:
     message: Do not use "Cloud9" in const name inside cloud9 package
     paths:
       include:
-        - internal/service/cloud9
+        - "/internal/service/cloud9"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2546,7 +2668,7 @@ rules:
     message: Do not use "Cloud9" in var name inside cloud9 package
     paths:
       include:
-        - internal/service/cloud9
+        - "/internal/service/cloud9"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2560,9 +2682,9 @@ rules:
     message: Do not use "CloudControl" in func name inside cloudcontrol package
     paths:
       include:
-        - internal/service/cloudcontrol
+        - "/internal/service/cloudcontrol"
       exclude:
-        - internal/service/cloudcontrol/list_pages_gen.go
+        - "/internal/service/cloudcontrol/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2578,7 +2700,7 @@ rules:
     message: Include "CloudControl" in test name
     paths:
       include:
-        - internal/service/cloudcontrol/*_test.go
+        - "/internal/service/cloudcontrol/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2593,7 +2715,7 @@ rules:
     message: Do not use "CloudControl" in const name inside cloudcontrol package
     paths:
       include:
-        - internal/service/cloudcontrol
+        - "/internal/service/cloudcontrol"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2607,7 +2729,7 @@ rules:
     message: Do not use "CloudControl" in var name inside cloudcontrol package
     paths:
       include:
-        - internal/service/cloudcontrol
+        - "/internal/service/cloudcontrol"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2621,9 +2743,9 @@ rules:
     message: Do not use "cloudcontrolapi" in func name inside cloudcontrol package
     paths:
       include:
-        - internal/service/cloudcontrol
+        - "/internal/service/cloudcontrol"
       exclude:
-        - internal/service/cloudcontrol/list_pages_gen.go
+        - "/internal/service/cloudcontrol/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2639,7 +2761,7 @@ rules:
     message: Do not use "cloudcontrolapi" in const name inside cloudcontrol package
     paths:
       include:
-        - internal/service/cloudcontrol
+        - "/internal/service/cloudcontrol"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2653,7 +2775,7 @@ rules:
     message: Do not use "cloudcontrolapi" in var name inside cloudcontrol package
     paths:
       include:
-        - internal/service/cloudcontrol
+        - "/internal/service/cloudcontrol"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2667,9 +2789,9 @@ rules:
     message: Do not use "CloudFormation" in func name inside cloudformation package
     paths:
       include:
-        - internal/service/cloudformation
+        - "/internal/service/cloudformation"
       exclude:
-        - internal/service/cloudformation/list_pages_gen.go
+        - "/internal/service/cloudformation/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2685,7 +2807,7 @@ rules:
     message: Include "CloudFormation" in test name
     paths:
       include:
-        - internal/service/cloudformation/*_test.go
+        - "/internal/service/cloudformation/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2700,7 +2822,7 @@ rules:
     message: Do not use "CloudFormation" in const name inside cloudformation package
     paths:
       include:
-        - internal/service/cloudformation
+        - "/internal/service/cloudformation"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2714,7 +2836,7 @@ rules:
     message: Do not use "CloudFormation" in var name inside cloudformation package
     paths:
       include:
-        - internal/service/cloudformation
+        - "/internal/service/cloudformation"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2728,9 +2850,9 @@ rules:
     message: Do not use "CloudFront" in func name inside cloudfront package
     paths:
       include:
-        - internal/service/cloudfront
+        - "/internal/service/cloudfront"
       exclude:
-        - internal/service/cloudfront/list_pages_gen.go
+        - "/internal/service/cloudfront/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2746,7 +2868,7 @@ rules:
     message: Include "CloudFront" in test name
     paths:
       include:
-        - internal/service/cloudfront/*_test.go
+        - "/internal/service/cloudfront/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2761,7 +2883,7 @@ rules:
     message: Do not use "CloudFront" in const name inside cloudfront package
     paths:
       include:
-        - internal/service/cloudfront
+        - "/internal/service/cloudfront"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2775,7 +2897,7 @@ rules:
     message: Do not use "CloudFront" in var name inside cloudfront package
     paths:
       include:
-        - internal/service/cloudfront
+        - "/internal/service/cloudfront"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2789,9 +2911,9 @@ rules:
     message: Do not use "CloudFrontKeyValueStore" in func name inside cloudfrontkeyvaluestore package
     paths:
       include:
-        - internal/service/cloudfrontkeyvaluestore
+        - "/internal/service/cloudfrontkeyvaluestore"
       exclude:
-        - internal/service/cloudfrontkeyvaluestore/list_pages_gen.go
+        - "/internal/service/cloudfrontkeyvaluestore/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2807,7 +2929,7 @@ rules:
     message: Include "CloudFrontKeyValueStore" in test name
     paths:
       include:
-        - internal/service/cloudfrontkeyvaluestore/*_test.go
+        - "/internal/service/cloudfrontkeyvaluestore/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2822,7 +2944,7 @@ rules:
     message: Do not use "CloudFrontKeyValueStore" in const name inside cloudfrontkeyvaluestore package
     paths:
       include:
-        - internal/service/cloudfrontkeyvaluestore
+        - "/internal/service/cloudfrontkeyvaluestore"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2836,7 +2958,7 @@ rules:
     message: Do not use "CloudFrontKeyValueStore" in var name inside cloudfrontkeyvaluestore package
     paths:
       include:
-        - internal/service/cloudfrontkeyvaluestore
+        - "/internal/service/cloudfrontkeyvaluestore"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2850,9 +2972,9 @@ rules:
     message: Do not use "cloudhsm" in func name inside cloudhsmv2 package
     paths:
       include:
-        - internal/service/cloudhsmv2
+        - "/internal/service/cloudhsmv2"
       exclude:
-        - internal/service/cloudhsmv2/list_pages_gen.go
+        - "/internal/service/cloudhsmv2/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2868,7 +2990,7 @@ rules:
     message: Do not use "cloudhsm" in const name inside cloudhsmv2 package
     paths:
       include:
-        - internal/service/cloudhsmv2
+        - "/internal/service/cloudhsmv2"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2882,7 +3004,7 @@ rules:
     message: Do not use "cloudhsm" in var name inside cloudhsmv2 package
     paths:
       include:
-        - internal/service/cloudhsmv2
+        - "/internal/service/cloudhsmv2"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2896,9 +3018,9 @@ rules:
     message: Do not use "CloudHSMV2" in func name inside cloudhsmv2 package
     paths:
       include:
-        - internal/service/cloudhsmv2
+        - "/internal/service/cloudhsmv2"
       exclude:
-        - internal/service/cloudhsmv2/list_pages_gen.go
+        - "/internal/service/cloudhsmv2/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2914,7 +3036,7 @@ rules:
     message: Include "CloudHSMV2" in test name
     paths:
       include:
-        - internal/service/cloudhsmv2/*_test.go
+        - "/internal/service/cloudhsmv2/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2929,7 +3051,7 @@ rules:
     message: Do not use "CloudHSMV2" in const name inside cloudhsmv2 package
     paths:
       include:
-        - internal/service/cloudhsmv2
+        - "/internal/service/cloudhsmv2"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -2943,7 +3065,7 @@ rules:
     message: Do not use "CloudHSMV2" in var name inside cloudhsmv2 package
     paths:
       include:
-        - internal/service/cloudhsmv2
+        - "/internal/service/cloudhsmv2"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -2957,9 +3079,9 @@ rules:
     message: Do not use "CloudSearch" in func name inside cloudsearch package
     paths:
       include:
-        - internal/service/cloudsearch
+        - "/internal/service/cloudsearch"
       exclude:
-        - internal/service/cloudsearch/list_pages_gen.go
+        - "/internal/service/cloudsearch/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2975,7 +3097,7 @@ rules:
     message: Include "CloudSearch" in test name
     paths:
       include:
-        - internal/service/cloudsearch/*_test.go
+        - "/internal/service/cloudsearch/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -2990,7 +3112,7 @@ rules:
     message: Do not use "CloudSearch" in const name inside cloudsearch package
     paths:
       include:
-        - internal/service/cloudsearch
+        - "/internal/service/cloudsearch"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3004,7 +3126,7 @@ rules:
     message: Do not use "CloudSearch" in var name inside cloudsearch package
     paths:
       include:
-        - internal/service/cloudsearch
+        - "/internal/service/cloudsearch"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3018,9 +3140,9 @@ rules:
     message: Do not use "CloudTrail" in func name inside cloudtrail package
     paths:
       include:
-        - internal/service/cloudtrail
+        - "/internal/service/cloudtrail"
       exclude:
-        - internal/service/cloudtrail/list_pages_gen.go
+        - "/internal/service/cloudtrail/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3037,7 +3159,7 @@ rules:
     message: Include "CloudTrail" in test name
     paths:
       include:
-        - internal/service/cloudtrail/*_test.go
+        - "/internal/service/cloudtrail/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3052,7 +3174,7 @@ rules:
     message: Do not use "CloudTrail" in const name inside cloudtrail package
     paths:
       include:
-        - internal/service/cloudtrail
+        - "/internal/service/cloudtrail"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3066,7 +3188,7 @@ rules:
     message: Do not use "CloudTrail" in var name inside cloudtrail package
     paths:
       include:
-        - internal/service/cloudtrail
+        - "/internal/service/cloudtrail"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3080,9 +3202,9 @@ rules:
     message: Do not use "CloudWatch" in func name inside cloudwatch package
     paths:
       include:
-        - internal/service/cloudwatch
+        - "/internal/service/cloudwatch"
       exclude:
-        - internal/service/cloudwatch/list_pages_gen.go
+        - "/internal/service/cloudwatch/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3098,7 +3220,7 @@ rules:
     message: Include "CloudWatch" in test name
     paths:
       include:
-        - internal/service/cloudwatch/*_test.go
+        - "/internal/service/cloudwatch/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3113,7 +3235,7 @@ rules:
     message: Do not use "CloudWatch" in const name inside cloudwatch package
     paths:
       include:
-        - internal/service/cloudwatch
+        - "/internal/service/cloudwatch"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3127,7 +3249,7 @@ rules:
     message: Do not use "CloudWatch" in var name inside cloudwatch package
     paths:
       include:
-        - internal/service/cloudwatch
+        - "/internal/service/cloudwatch"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3141,9 +3263,9 @@ rules:
     message: Do not use "cloudwatchevents" in func name inside events package
     paths:
       include:
-        - internal/service/events
+        - "/internal/service/events"
       exclude:
-        - internal/service/events/list_pages_gen.go
+        - "/internal/service/events/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3159,7 +3281,7 @@ rules:
     message: Do not use "cloudwatchevents" in const name inside events package
     paths:
       include:
-        - internal/service/events
+        - "/internal/service/events"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3173,7 +3295,7 @@ rules:
     message: Do not use "cloudwatchevents" in var name inside events package
     paths:
       include:
-        - internal/service/events
+        - "/internal/service/events"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3187,9 +3309,9 @@ rules:
     message: Do not use "cloudwatchevidently" in func name inside evidently package
     paths:
       include:
-        - internal/service/evidently
+        - "/internal/service/evidently"
       exclude:
-        - internal/service/evidently/list_pages_gen.go
+        - "/internal/service/evidently/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3205,7 +3327,7 @@ rules:
     message: Do not use "cloudwatchevidently" in const name inside evidently package
     paths:
       include:
-        - internal/service/evidently
+        - "/internal/service/evidently"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3219,7 +3341,7 @@ rules:
     message: Do not use "cloudwatchevidently" in var name inside evidently package
     paths:
       include:
-        - internal/service/evidently
+        - "/internal/service/evidently"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3233,9 +3355,9 @@ rules:
     message: Do not use "cloudwatchlog" in func name inside logs package
     paths:
       include:
-        - internal/service/logs
+        - "/internal/service/logs"
       exclude:
-        - internal/service/logs/list_pages_gen.go
+        - "/internal/service/logs/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3251,7 +3373,7 @@ rules:
     message: Do not use "cloudwatchlog" in const name inside logs package
     paths:
       include:
-        - internal/service/logs
+        - "/internal/service/logs"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3265,7 +3387,7 @@ rules:
     message: Do not use "cloudwatchlog" in var name inside logs package
     paths:
       include:
-        - internal/service/logs
+        - "/internal/service/logs"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3279,9 +3401,9 @@ rules:
     message: Do not use "cloudwatchlogs" in func name inside logs package
     paths:
       include:
-        - internal/service/logs
+        - "/internal/service/logs"
       exclude:
-        - internal/service/logs/list_pages_gen.go
+        - "/internal/service/logs/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3297,7 +3419,7 @@ rules:
     message: Do not use "cloudwatchlogs" in const name inside logs package
     paths:
       include:
-        - internal/service/logs
+        - "/internal/service/logs"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3311,7 +3433,7 @@ rules:
     message: Do not use "cloudwatchlogs" in var name inside logs package
     paths:
       include:
-        - internal/service/logs
+        - "/internal/service/logs"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3325,9 +3447,9 @@ rules:
     message: Do not use "cloudwatchobservabilityaccessmanager" in func name inside oam package
     paths:
       include:
-        - internal/service/oam
+        - "/internal/service/oam"
       exclude:
-        - internal/service/oam/list_pages_gen.go
+        - "/internal/service/oam/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3343,7 +3465,7 @@ rules:
     message: Do not use "cloudwatchobservabilityaccessmanager" in const name inside oam package
     paths:
       include:
-        - internal/service/oam
+        - "/internal/service/oam"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3357,7 +3479,7 @@ rules:
     message: Do not use "cloudwatchobservabilityaccessmanager" in var name inside oam package
     paths:
       include:
-        - internal/service/oam
+        - "/internal/service/oam"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3371,9 +3493,9 @@ rules:
     message: Do not use "cloudwatchrum" in func name inside rum package
     paths:
       include:
-        - internal/service/rum
+        - "/internal/service/rum"
       exclude:
-        - internal/service/rum/list_pages_gen.go
+        - "/internal/service/rum/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3389,7 +3511,7 @@ rules:
     message: Do not use "cloudwatchrum" in const name inside rum package
     paths:
       include:
-        - internal/service/rum
+        - "/internal/service/rum"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3403,7 +3525,7 @@ rules:
     message: Do not use "cloudwatchrum" in var name inside rum package
     paths:
       include:
-        - internal/service/rum
+        - "/internal/service/rum"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3417,9 +3539,9 @@ rules:
     message: Do not use "CodeArtifact" in func name inside codeartifact package
     paths:
       include:
-        - internal/service/codeartifact
+        - "/internal/service/codeartifact"
       exclude:
-        - internal/service/codeartifact/list_pages_gen.go
+        - "/internal/service/codeartifact/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3435,7 +3557,7 @@ rules:
     message: Include "CodeArtifact" in test name
     paths:
       include:
-        - internal/service/codeartifact/*_test.go
+        - "/internal/service/codeartifact/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3450,7 +3572,7 @@ rules:
     message: Do not use "CodeArtifact" in const name inside codeartifact package
     paths:
       include:
-        - internal/service/codeartifact
+        - "/internal/service/codeartifact"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3464,7 +3586,7 @@ rules:
     message: Do not use "CodeArtifact" in var name inside codeartifact package
     paths:
       include:
-        - internal/service/codeartifact
+        - "/internal/service/codeartifact"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3478,9 +3600,9 @@ rules:
     message: Do not use "CodeBuild" in func name inside codebuild package
     paths:
       include:
-        - internal/service/codebuild
+        - "/internal/service/codebuild"
       exclude:
-        - internal/service/codebuild/list_pages_gen.go
+        - "/internal/service/codebuild/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3496,7 +3618,7 @@ rules:
     message: Include "CodeBuild" in test name
     paths:
       include:
-        - internal/service/codebuild/*_test.go
+        - "/internal/service/codebuild/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3511,7 +3633,7 @@ rules:
     message: Do not use "CodeBuild" in const name inside codebuild package
     paths:
       include:
-        - internal/service/codebuild
+        - "/internal/service/codebuild"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3525,7 +3647,7 @@ rules:
     message: Do not use "CodeBuild" in var name inside codebuild package
     paths:
       include:
-        - internal/service/codebuild
+        - "/internal/service/codebuild"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3539,9 +3661,9 @@ rules:
     message: Do not use "CodeCatalyst" in func name inside codecatalyst package
     paths:
       include:
-        - internal/service/codecatalyst
+        - "/internal/service/codecatalyst"
       exclude:
-        - internal/service/codecatalyst/list_pages_gen.go
+        - "/internal/service/codecatalyst/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3557,7 +3679,7 @@ rules:
     message: Include "CodeCatalyst" in test name
     paths:
       include:
-        - internal/service/codecatalyst/*_test.go
+        - "/internal/service/codecatalyst/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3572,7 +3694,7 @@ rules:
     message: Do not use "CodeCatalyst" in const name inside codecatalyst package
     paths:
       include:
-        - internal/service/codecatalyst
+        - "/internal/service/codecatalyst"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3586,7 +3708,7 @@ rules:
     message: Do not use "CodeCatalyst" in var name inside codecatalyst package
     paths:
       include:
-        - internal/service/codecatalyst
+        - "/internal/service/codecatalyst"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3600,9 +3722,9 @@ rules:
     message: Do not use "CodeCommit" in func name inside codecommit package
     paths:
       include:
-        - internal/service/codecommit
+        - "/internal/service/codecommit"
       exclude:
-        - internal/service/codecommit/list_pages_gen.go
+        - "/internal/service/codecommit/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3618,7 +3740,7 @@ rules:
     message: Include "CodeCommit" in test name
     paths:
       include:
-        - internal/service/codecommit/*_test.go
+        - "/internal/service/codecommit/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3633,7 +3755,7 @@ rules:
     message: Do not use "CodeCommit" in const name inside codecommit package
     paths:
       include:
-        - internal/service/codecommit
+        - "/internal/service/codecommit"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3647,7 +3769,7 @@ rules:
     message: Do not use "CodeCommit" in var name inside codecommit package
     paths:
       include:
-        - internal/service/codecommit
+        - "/internal/service/codecommit"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3661,9 +3783,9 @@ rules:
     message: Do not use "CodeConnections" in func name inside codeconnections package
     paths:
       include:
-        - internal/service/codeconnections
+        - "/internal/service/codeconnections"
       exclude:
-        - internal/service/codeconnections/list_pages_gen.go
+        - "/internal/service/codeconnections/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3679,7 +3801,7 @@ rules:
     message: Include "CodeConnections" in test name
     paths:
       include:
-        - internal/service/codeconnections/*_test.go
+        - "/internal/service/codeconnections/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3694,7 +3816,7 @@ rules:
     message: Do not use "CodeConnections" in const name inside codeconnections package
     paths:
       include:
-        - internal/service/codeconnections
+        - "/internal/service/codeconnections"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3708,7 +3830,7 @@ rules:
     message: Do not use "CodeConnections" in var name inside codeconnections package
     paths:
       include:
-        - internal/service/codeconnections
+        - "/internal/service/codeconnections"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3722,9 +3844,9 @@ rules:
     message: Do not use "codedeploy" in func name inside deploy package
     paths:
       include:
-        - internal/service/deploy
+        - "/internal/service/deploy"
       exclude:
-        - internal/service/deploy/list_pages_gen.go
+        - "/internal/service/deploy/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3740,7 +3862,7 @@ rules:
     message: Do not use "codedeploy" in const name inside deploy package
     paths:
       include:
-        - internal/service/deploy
+        - "/internal/service/deploy"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3754,7 +3876,7 @@ rules:
     message: Do not use "codedeploy" in var name inside deploy package
     paths:
       include:
-        - internal/service/deploy
+        - "/internal/service/deploy"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3768,9 +3890,9 @@ rules:
     message: Do not use "CodeGuruProfiler" in func name inside codeguruprofiler package
     paths:
       include:
-        - internal/service/codeguruprofiler
+        - "/internal/service/codeguruprofiler"
       exclude:
-        - internal/service/codeguruprofiler/list_pages_gen.go
+        - "/internal/service/codeguruprofiler/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3786,7 +3908,7 @@ rules:
     message: Include "CodeGuruProfiler" in test name
     paths:
       include:
-        - internal/service/codeguruprofiler/*_test.go
+        - "/internal/service/codeguruprofiler/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3801,7 +3923,7 @@ rules:
     message: Do not use "CodeGuruProfiler" in const name inside codeguruprofiler package
     paths:
       include:
-        - internal/service/codeguruprofiler
+        - "/internal/service/codeguruprofiler"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3815,7 +3937,7 @@ rules:
     message: Do not use "CodeGuruProfiler" in var name inside codeguruprofiler package
     paths:
       include:
-        - internal/service/codeguruprofiler
+        - "/internal/service/codeguruprofiler"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3829,9 +3951,9 @@ rules:
     message: Do not use "CodeGuruReviewer" in func name inside codegurureviewer package
     paths:
       include:
-        - internal/service/codegurureviewer
+        - "/internal/service/codegurureviewer"
       exclude:
-        - internal/service/codegurureviewer/list_pages_gen.go
+        - "/internal/service/codegurureviewer/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3847,7 +3969,7 @@ rules:
     message: Include "CodeGuruReviewer" in test name
     paths:
       include:
-        - internal/service/codegurureviewer/*_test.go
+        - "/internal/service/codegurureviewer/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3862,7 +3984,7 @@ rules:
     message: Do not use "CodeGuruReviewer" in const name inside codegurureviewer package
     paths:
       include:
-        - internal/service/codegurureviewer
+        - "/internal/service/codegurureviewer"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3876,7 +3998,7 @@ rules:
     message: Do not use "CodeGuruReviewer" in var name inside codegurureviewer package
     paths:
       include:
-        - internal/service/codegurureviewer
+        - "/internal/service/codegurureviewer"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3890,9 +4012,9 @@ rules:
     message: Do not use "CodePipeline" in func name inside codepipeline package
     paths:
       include:
-        - internal/service/codepipeline
+        - "/internal/service/codepipeline"
       exclude:
-        - internal/service/codepipeline/list_pages_gen.go
+        - "/internal/service/codepipeline/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3908,7 +4030,7 @@ rules:
     message: Include "CodePipeline" in test name
     paths:
       include:
-        - internal/service/codepipeline/*_test.go
+        - "/internal/service/codepipeline/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3923,7 +4045,7 @@ rules:
     message: Do not use "CodePipeline" in const name inside codepipeline package
     paths:
       include:
-        - internal/service/codepipeline
+        - "/internal/service/codepipeline"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3937,7 +4059,7 @@ rules:
     message: Do not use "CodePipeline" in var name inside codepipeline package
     paths:
       include:
-        - internal/service/codepipeline
+        - "/internal/service/codepipeline"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -3951,9 +4073,9 @@ rules:
     message: Do not use "CodeStarConnections" in func name inside codestarconnections package
     paths:
       include:
-        - internal/service/codestarconnections
+        - "/internal/service/codestarconnections"
       exclude:
-        - internal/service/codestarconnections/list_pages_gen.go
+        - "/internal/service/codestarconnections/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3969,7 +4091,7 @@ rules:
     message: Include "CodeStarConnections" in test name
     paths:
       include:
-        - internal/service/codestarconnections/*_test.go
+        - "/internal/service/codestarconnections/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -3984,7 +4106,7 @@ rules:
     message: Do not use "CodeStarConnections" in const name inside codestarconnections package
     paths:
       include:
-        - internal/service/codestarconnections
+        - "/internal/service/codestarconnections"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -3998,7 +4120,7 @@ rules:
     message: Do not use "CodeStarConnections" in var name inside codestarconnections package
     paths:
       include:
-        - internal/service/codestarconnections
+        - "/internal/service/codestarconnections"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -4012,9 +4134,9 @@ rules:
     message: Do not use "CodeStarNotifications" in func name inside codestarnotifications package
     paths:
       include:
-        - internal/service/codestarnotifications
+        - "/internal/service/codestarnotifications"
       exclude:
-        - internal/service/codestarnotifications/list_pages_gen.go
+        - "/internal/service/codestarnotifications/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4030,7 +4152,7 @@ rules:
     message: Include "CodeStarNotifications" in test name
     paths:
       include:
-        - internal/service/codestarnotifications/*_test.go
+        - "/internal/service/codestarnotifications/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4045,7 +4167,7 @@ rules:
     message: Do not use "CodeStarNotifications" in const name inside codestarnotifications package
     paths:
       include:
-        - internal/service/codestarnotifications
+        - "/internal/service/codestarnotifications"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -4059,7 +4181,7 @@ rules:
     message: Do not use "CodeStarNotifications" in var name inside codestarnotifications package
     paths:
       include:
-        - internal/service/codestarnotifications
+        - "/internal/service/codestarnotifications"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -4073,9 +4195,9 @@ rules:
     message: Do not use "CognitoIdentity" in func name inside cognitoidentity package
     paths:
       include:
-        - internal/service/cognitoidentity
+        - "/internal/service/cognitoidentity"
       exclude:
-        - internal/service/cognitoidentity/list_pages_gen.go
+        - "/internal/service/cognitoidentity/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4091,7 +4213,7 @@ rules:
     message: Include "CognitoIdentity" in test name
     paths:
       include:
-        - internal/service/cognitoidentity/*_test.go
+        - "/internal/service/cognitoidentity/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4106,7 +4228,7 @@ rules:
     message: Do not use "CognitoIdentity" in const name inside cognitoidentity package
     paths:
       include:
-        - internal/service/cognitoidentity
+        - "/internal/service/cognitoidentity"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -4120,7 +4242,7 @@ rules:
     message: Do not use "CognitoIdentity" in var name inside cognitoidentity package
     paths:
       include:
-        - internal/service/cognitoidentity
+        - "/internal/service/cognitoidentity"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -4134,9 +4256,9 @@ rules:
     message: Do not use "cognitoidentityprovider" in func name inside cognitoidp package
     paths:
       include:
-        - internal/service/cognitoidp
+        - "/internal/service/cognitoidp"
       exclude:
-        - internal/service/cognitoidp/list_pages_gen.go
+        - "/internal/service/cognitoidp/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4152,7 +4274,7 @@ rules:
     message: Do not use "cognitoidentityprovider" in const name inside cognitoidp package
     paths:
       include:
-        - internal/service/cognitoidp
+        - "/internal/service/cognitoidp"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -4166,7 +4288,7 @@ rules:
     message: Do not use "cognitoidentityprovider" in var name inside cognitoidp package
     paths:
       include:
-        - internal/service/cognitoidp
+        - "/internal/service/cognitoidp"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -4180,9 +4302,9 @@ rules:
     message: Do not use "CognitoIDP" in func name inside cognitoidp package
     paths:
       include:
-        - internal/service/cognitoidp
+        - "/internal/service/cognitoidp"
       exclude:
-        - internal/service/cognitoidp/list_pages_gen.go
+        - "/internal/service/cognitoidp/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4198,7 +4320,7 @@ rules:
     message: Include "CognitoIDP" in test name
     paths:
       include:
-        - internal/service/cognitoidp/*_test.go
+        - "/internal/service/cognitoidp/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4213,7 +4335,7 @@ rules:
     message: Do not use "CognitoIDP" in const name inside cognitoidp package
     paths:
       include:
-        - internal/service/cognitoidp
+        - "/internal/service/cognitoidp"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -4227,7 +4349,7 @@ rules:
     message: Do not use "CognitoIDP" in var name inside cognitoidp package
     paths:
       include:
-        - internal/service/cognitoidp
+        - "/internal/service/cognitoidp"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -4241,9 +4363,9 @@ rules:
     message: Do not use "Comprehend" in func name inside comprehend package
     paths:
       include:
-        - internal/service/comprehend
+        - "/internal/service/comprehend"
       exclude:
-        - internal/service/comprehend/list_pages_gen.go
+        - "/internal/service/comprehend/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4259,7 +4381,7 @@ rules:
     message: Include "Comprehend" in test name
     paths:
       include:
-        - internal/service/comprehend/*_test.go
+        - "/internal/service/comprehend/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4274,7 +4396,7 @@ rules:
     message: Do not use "Comprehend" in const name inside comprehend package
     paths:
       include:
-        - internal/service/comprehend
+        - "/internal/service/comprehend"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -4288,7 +4410,7 @@ rules:
     message: Do not use "Comprehend" in var name inside comprehend package
     paths:
       include:
-        - internal/service/comprehend
+        - "/internal/service/comprehend"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -4302,9 +4424,9 @@ rules:
     message: Do not use "ComputeOptimizer" in func name inside computeoptimizer package
     paths:
       include:
-        - internal/service/computeoptimizer
+        - "/internal/service/computeoptimizer"
       exclude:
-        - internal/service/computeoptimizer/list_pages_gen.go
+        - "/internal/service/computeoptimizer/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4320,7 +4442,7 @@ rules:
     message: Include "ComputeOptimizer" in test name
     paths:
       include:
-        - internal/service/computeoptimizer/*_test.go
+        - "/internal/service/computeoptimizer/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4335,7 +4457,7 @@ rules:
     message: Do not use "ComputeOptimizer" in const name inside computeoptimizer package
     paths:
       include:
-        - internal/service/computeoptimizer
+        - "/internal/service/computeoptimizer"
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -4349,7 +4471,7 @@ rules:
     message: Do not use "ComputeOptimizer" in var name inside computeoptimizer package
     paths:
       include:
-        - internal/service/computeoptimizer
+        - "/internal/service/computeoptimizer"
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -4363,9 +4485,9 @@ rules:
     message: Do not use "ConfigService" in func name inside configservice package
     paths:
       include:
-        - internal/service/configservice
+        - "/internal/service/configservice"
       exclude:
-        - internal/service/configservice/list_pages_gen.go
+        - "/internal/service/configservice/list_pages_gen.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4381,7 +4503,7 @@ rules:
     message: Include "ConfigService" in test name
     paths:
       include:
-        - internal/service/configservice/*_test.go
+        - "/internal/service/configservice/*_test.go"
     patterns:
       - pattern: func $NAME( ... )
       - metavariable-pattern:
@@ -4396,23 +4518,9 @@ rules:
     message: Do not use "ConfigService" in const name inside configservice package
     paths:
       include:
-        - internal/service/configservice
+        - "/internal/service/configservice"
     patterns:
       - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: configservice-in-var-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in var name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: var $NAME = ...
       - metavariable-pattern:
           metavariable: $NAME
           patterns:

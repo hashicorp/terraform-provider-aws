@@ -21,21 +21,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_notification", name="Bucket Notification")
+// @IdentityAttribute("bucket")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetBucketNotificationConfigurationOutput")
 func resourceBucketNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketNotificationPut,
 		ReadWithoutTimeout:   resourceBucketNotificationRead,
 		UpdateWithoutTimeout: resourceBucketNotificationPut,
 		DeleteWithoutTimeout: resourceBucketNotificationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrBucket: {
@@ -423,7 +422,7 @@ func findBucketNotificationConfiguration(ctx context.Context, conn *s3.Client, b
 		return nil, err
 	}
 
-	if itypes.IsZero(output) {
+	if inttypes.IsZero(output) {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

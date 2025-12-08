@@ -6,6 +6,7 @@ package framework
 import (
 	"context"
 	"fmt"
+	"slices"
 	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -31,7 +32,7 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, opts interceptorOpt
 		return
 	}
 
-	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return
 	}
@@ -86,7 +87,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, opts interceptorOpt
 		return
 	}
 
-	sp, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, _, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return
 	}
@@ -123,7 +124,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, opts interceptorOptio
 		return
 	}
 
-	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return
 	}
@@ -155,7 +156,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, opts interceptorOptio
 		response.State.GetAttribute(ctx, path.Root(names.AttrTags), &stateTags)
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
-		if v := apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).ResolveDuplicatesFramework(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), response, &opts.response.Diagnostics).Map(); len(v) > 0 {
+		if v := apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).ResolveDuplicatesFramework(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), stateTags, &opts.response.Diagnostics).Map(); len(v) > 0 {
 			stateTags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMapLegacy(ctx, v))
 		}
 		opts.response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
@@ -179,7 +180,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, opts interceptorOpt
 		return
 	}
 
-	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
+	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, c)
 	if !ok {
 		return
 	}
@@ -259,5 +260,76 @@ func resourceTransparentTagging(servicePackageResourceTags unique.Handle[inttype
 } {
 	return &tagsResourceInterceptor{
 		HTags: interceptors.HTags(servicePackageResourceTags),
+	}
+}
+
+// resourceValidateRequiredTags validates that required tags are present for a given resource type.
+func resourceValidateRequiredTags() resourceModifyPlanInterceptor {
+	return &resourceValidateRequiredTagsInterceptor{}
+}
+
+type resourceValidateRequiredTagsInterceptor struct{}
+
+func (r resourceValidateRequiredTagsInterceptor) modifyPlan(ctx context.Context, opts interceptorOptions[resource.ModifyPlanRequest, resource.ModifyPlanResponse]) {
+	c := opts.c
+
+	_, _, _, typeName, _, ok := interceptors.InfoFromContext(ctx, c) //nolint:dogsled // legitimate use as-is, signature to be refactored
+	if !ok {
+		return
+	}
+
+	policy := c.TagPolicyConfig(ctx)
+	if policy == nil {
+		return
+	}
+	reqTags, ok := policy.RequiredTags[typeName]
+	if !ok {
+		return
+	}
+
+	switch request, _, when := opts.request, opts.response, opts.when; when {
+	case Before:
+		// If the entire plan is null, the resource is planned for destruction.
+		if request.Plan.Raw.IsNull() {
+			return
+		}
+
+		var planTags, stateTags tftags.Map
+		opts.response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
+		opts.response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
+		if opts.response.Diagnostics.HasError() {
+			return
+		}
+
+		if !planTags.IsWhollyKnown() {
+			return
+		}
+
+		allPlanTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags))
+		allStateTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, stateTags))
+
+		isCreate := request.State.Raw.IsNull()
+		hasTagsChange := !allPlanTags.Equal(allStateTags)
+
+		if !isCreate && !hasTagsChange {
+			return
+		}
+
+		if allPlanTags.ContainsAllKeys(reqTags) {
+			return
+		}
+
+		missing := reqTags.Removed(allPlanTags).Keys()
+		slices.Sort(missing)
+
+		summary := "Missing Required Tags"
+		detail := fmt.Sprintf("An organizational tag policy requires the following tags for %s: %s", typeName, missing)
+
+		switch policy.Severity {
+		case "warning":
+			opts.response.Diagnostics.AddAttributeWarning(path.Root(names.AttrTags), summary, detail)
+		default:
+			opts.response.Diagnostics.AddAttributeError(path.Root(names.AttrTags), summary, detail)
+		}
 	}
 }

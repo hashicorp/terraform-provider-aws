@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/internal/yaml"
+	tfyaml "github.com/hashicorp/terraform-provider-aws/internal/yaml"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -542,10 +542,10 @@ func apiInvokeARN(ctx context.Context, c *conns.AWSClient, apiID string) string 
 func decodeOpenAPIDefinition(v string) (map[string]any, error) {
 	var output map[string]any
 
-	err := json.DecodeFromString(v, &output)
+	err := tfjson.DecodeFromString(v, &output)
 
 	if err != nil {
-		err = yaml.DecodeFromString(v, &output)
+		err = tfyaml.DecodeFromString(v, &output)
 	}
 
 	if err != nil {

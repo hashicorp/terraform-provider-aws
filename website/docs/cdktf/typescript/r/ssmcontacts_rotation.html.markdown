@@ -244,6 +244,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssmcontacts_rotation.example
+  identity = {
+    "arn" = "arn:aws:ssm-contacts:us-east-1:123456789012:rotation/example-rotation"
+  }
+}
+
+resource "aws_ssmcontacts_rotation" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the SSM Contacts rotation.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSMContacts Rotation using the `arn`. For example:
 
 ```typescript
@@ -274,4 +295,4 @@ Using `terraform import`, import CodeGuru Profiler Profiling Group using the `ar
 % terraform import aws_ssmcontacts_rotation.example arn:aws:ssm-contacts:us-east-1:012345678910:rotation/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2e2edf36791edc8caddea4f4ccea70b4d5ad0e5341a2046477c28f1c52337f18 -->
+<!-- cache-key: cdktf-0.20.8 input-1b964f8a5559cf795714322d3ee63647490b3155c39beb6bd8ca8fe9bc7c7b68 -->

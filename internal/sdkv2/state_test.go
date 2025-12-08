@@ -47,3 +47,16 @@ func TestToUpperSchemaStateFunc(t *testing.T) {
 		t.Errorf("unexpected diff (+want, -got): %s", diff)
 	}
 }
+
+func TestTrimSpaceSchemaStateFunc(t *testing.T) {
+	t.Parallel()
+
+	var input any = " in-state  "
+	want := "in-state"
+
+	got := TrimSpaceSchemaStateFunc(input)
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected diff (+want, -got): %s", diff)
+	}
+}

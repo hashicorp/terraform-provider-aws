@@ -11,6 +11,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -132,6 +133,51 @@ func TestAccElasticBeanstalkConfigurationTemplate_settings(t *testing.T) {
 						names.AttrValue: "m1.small",
 					}),
 				),
+			},
+		},
+	})
+}
+
+func TestAccElasticBeanstalkConfigurationTemplate_migrate_settingsResourceDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	var config awstypes.ConfigurationSettingsDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elastic_beanstalk_configuration_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
+		CheckDestroy: testAccCheckConfigurationTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.14.1",
+					},
+				},
+				Config: testAccConfigurationTemplateConfig_setting(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccConfigurationTemplateConfig_setting(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})

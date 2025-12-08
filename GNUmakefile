@@ -23,16 +23,45 @@ TEST_COUNT                   ?= 1
 #    - docs/makefile-cheat-sheet.md
 #    - docs/continuous-integration.md
 
+# VARIABLE REFERENCE:
+# Service-specific variables (interchangeable for user convenience):
+#   PKG=<service>     - Service name (e.g., ses, lambda, s3) - traditional usage
+#   K=<service>       - Service name (e.g., ses, lambda, s3) - shorter alias
+# 
+# Test-specific variables:
+#   T=<pattern>       - Test name pattern (e.g., TestAccLambda) - preferred
+#   TESTS=<pattern>   - Test name pattern - legacy alias for T
+#
+# Derived variables (set automatically based on above):
+#   PKG_NAME          - Full package path (e.g., internal/service/ses)
+#   SVC_DIR           - Service directory path (e.g., ./internal/service/ses)  
+#   TEST              - Test path pattern (e.g., ./internal/service/ses/...)
+#
+# Examples:
+#   make quick-fix PKG=ses     # Fix code in SES service
+#   make quick-fix K=lambda    # Same as above, but shorter (both work)
+#   make t T=TestAccRole PKG=iam  # Run specific test in IAM service
+
+# Variable consolidation for backward compatibility and user convenience:
+# - PKG and K both refer to service names (e.g., 'ses', 'lambda')  
+# - If one is provided, automatically set the other for consistency
+# - This allows 'make quick-fix PKG=ses' and 'make quick-fix K=ses' to work identically
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
 	SVC_DIR = ./internal/service/$(PKG)
 	TEST = ./$(PKG_NAME)/...
+	# Auto-set K for compatibility
+	K = $(PKG)
 endif
 
 ifneq ($(origin K), undefined)
 	PKG_NAME = internal/service/$(K)
-	SVC_DIR = ./internal/service/$(PKG)
+	SVC_DIR = ./internal/service/$(K)
 	TEST = ./$(PKG_NAME)/...
+	# Auto-set PKG for compatibility (only if not already set)
+	ifeq ($(origin PKG), undefined)
+		PKG = $(K)
+	endif
 endif
 
 ifneq ($(origin TESTS), undefined)
@@ -383,8 +412,11 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
 
-quick-fix: fmt testacc-lint-fix fix-imports modern-fix semgrep-fix ## Some quick fixes
+quick-fix-heading: ## Just a heading for quick-fix
 	@echo "make: Quick fixes..."
+	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
+
+quick-fix: quick-fix-heading fmt testacc-lint-fix fix-imports modern-fix semgrep-fix website-terrafmt-fix ## Some quick fixes
 
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
@@ -411,7 +443,7 @@ sane: prereq-go ## Run sane check
 		./internal/service/ecs/... \
 		./internal/service/elbv2/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsGroup_basic$$|^TestAccLogsGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -438,7 +470,7 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/ecs/... \
 		./internal/service/elbv2/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsGroup_basic$$|^TestAccLogsGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
 	passes=$$(( 33-$$tot_fails )) ; \
@@ -626,10 +658,13 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 		(echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
 t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
 
 test: prereq-go fmt-check ## Run unit tests
-	@echo "make: Running unit tests..."
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	printf "make: Running unit tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	$(GO_VER) test $(TEST) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout 15m -vet=off
 
 test-compile: prereq-go ## Test package compilation
@@ -641,6 +676,8 @@ test-compile: prereq-go ## Test package compilation
 	$(GO_VER) test -c $(TEST) $(TESTARGS) -vet=off
 
 testacc: prereq-go fmt-check ## Run acceptance tests
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	printf "make: Running acceptance tests on branch: \033[1m%s\033[0m...\n" "🌿 $$branch 🌿"
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
 		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
@@ -730,6 +767,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
+	cd .ci/tools && $(GO_VER) install golang.org/x/tools/cmd/stringer
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
 ts: testacc-short ## Alias to testacc-short
@@ -832,6 +870,15 @@ website-terrafmt: ## [CI] Website Checks / terrafmt
 	@echo "make: Website Checks / terrafmt..."
 	@terrafmt diff ./website --check --pattern '*.markdown'
 
+website-terrafmt-fix: ## [CI] Fix Website / terrafmt
+	@echo "make: Fix Website / terrafmt..."
+	@echo "make: Fixing website/docs root files with terrafmt..."
+	@find ./website/docs -maxdepth 1 -type f -name '*.markdown' -exec terrafmt fmt {} \;
+	@for dir in $$(find ./website/docs -maxdepth 1 -type d ! -name docs ! -name cdktf | sort); do \
+		echo "make: Fixing $$dir with terrafmt..."; \
+		terrafmt fmt $$dir --pattern '*.markdown'; \
+	done
+
 website-tflint: tflint-init ## [CI] Website Checks / tflint
 	@echo "make: Website Checks / tflint..."
 	@exit_code=0 ; \
@@ -851,7 +898,6 @@ website-tflint: tflint-init ## [CI] Website Checks / tflint
 		"--disable-rule=aws_s3_object_copy_invalid_source" \
 		"--disable-rule=aws_servicecatalog_portfolio_share_invalid_type" \
 		"--disable-rule=aws_transfer_ssh_key_invalid_body" \
-		"--disable-rule=aws_worklink_website_certificate_authority_association_invalid_certificate" \
 		"--disable-rule=terraform_unused_declarations" \
 		"--disable-rule=terraform_typed_variables" \
 	) ; \
@@ -935,6 +981,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	provider-lint \
 	provider-markdown-lint \
 	quick-fix \
+	quick-fix-heading \
 	sane \
 	sanity \
 	semgrep \
@@ -983,5 +1030,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	website-markdown-lint \
 	website-misspell \
 	website-terrafmt \
+	website-terrafmt-fix \
 	website-tflint \
 	yamllint

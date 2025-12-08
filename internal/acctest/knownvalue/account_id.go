@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package statecheck
+package knownvalue
 
 import (
 	"context"
@@ -34,7 +34,7 @@ func (v accountID) CheckValue(other any) error {
 
 // String returns the string representation of the value.
 func (v accountID) String() string {
-	return "Who Knows"
+	return "Account ID"
 }
 
 func AccountID() knownvalue.Check {

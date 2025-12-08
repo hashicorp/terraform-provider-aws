@@ -921,7 +921,7 @@ func testAccCheckQueuePolicyAttribute(ctx context.Context, queueAttributes *map[
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicy)
 		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
+			return fmt.Errorf("Error testing policy equivalence: %w", err)
 		}
 		if !equivalent {
 			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n", expectedPolicy, actualPolicyText)

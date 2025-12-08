@@ -28,7 +28,6 @@ import (
 )
 
 // @FrameworkResource("aws_quicksight_account_settings", name="Account Settings")
-// @Region(global=true)
 func newAccountSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accountSettingsResource{}
 
@@ -37,10 +36,6 @@ func newAccountSettingsResource(_ context.Context) (resource.ResourceWithConfigu
 
 	return r, nil
 }
-
-const (
-	ResNameAccountSettings = "Account Settings"
-)
 
 type accountSettingsResource struct {
 	framework.ResourceWithModel[accountSettingsResourceModel]
@@ -165,8 +160,8 @@ func (r *accountSettingsResource) ImportState(ctx context.Context, request resou
 }
 
 func updateAccountSettings(ctx context.Context, conn *quicksight.Client, input *quicksight.UpdateAccountSettingsInput, timeout time.Duration) (*awstypes.AccountSettings, error) {
-	return tfresource.RetryGWhen(ctx, timeout,
-		func() (*awstypes.AccountSettings, error) {
+	return tfresource.RetryWhen(ctx, timeout,
+		func(ctx context.Context) (*awstypes.AccountSettings, error) {
 			_, err := conn.UpdateAccountSettings(ctx, input)
 
 			if err != nil {
@@ -224,6 +219,7 @@ func findAccountSettingsByID(ctx context.Context, conn *quicksight.Client, id st
 }
 
 type accountSettingsResourceModel struct {
+	framework.WithRegionModel
 	AWSAccountID                 types.String   `tfsdk:"aws_account_id"`
 	DefaultNamespace             types.String   `tfsdk:"default_namespace"`
 	TerminationProtectionEnabled types.Bool     `tfsdk:"termination_protection_enabled"`

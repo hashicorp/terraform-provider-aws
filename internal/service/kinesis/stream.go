@@ -124,6 +124,12 @@ func resourceStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"max_record_size_in_kib": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1024, 10240),
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -173,6 +179,10 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	name := d.Get(names.AttrName).(string)
 	input := kinesis.CreateStreamInput{
 		StreamName: aws.String(name),
+	}
+
+	if v, ok := d.GetOk("max_record_size_in_kib"); ok {
+		input.MaxRecordSizeInKiB = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("stream_mode_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -285,6 +295,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrARN, stream.StreamARN)
 	d.Set("encryption_type", stream.EncryptionType)
 	d.Set(names.AttrKMSKeyID, stream.KeyId)
+	d.Set("max_record_size_in_kib", stream.MaxRecordSizeInKiB)
 	d.Set(names.AttrName, stream.StreamName)
 	d.Set(names.AttrRetentionPeriod, stream.RetentionPeriodHours)
 	streamMode := types.StreamModeProvisioned
@@ -477,6 +488,25 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		default:
 			return sdkdiag.AppendErrorf(diags, "unsupported encryption type: %s", newEncryptionType)
+		}
+	}
+
+	if d.HasChange("max_record_size_in_kib") {
+		_, n := d.GetChange("max_record_size_in_kib")
+
+		input := kinesis.UpdateMaxRecordSizeInput{
+			MaxRecordSizeInKiB: aws.Int32(int32(n.(int))),
+			StreamARN:          aws.String(d.Id()),
+		}
+
+		_, err := conn.UpdateMaxRecordSize(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "update Kinesis Stream (%s) max record size: %s", name, err)
+		}
+
+		if _, err := waitStreamUpdated(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream (%s) update (UpdateMaxRecordSize): %s", name, err)
 		}
 	}
 

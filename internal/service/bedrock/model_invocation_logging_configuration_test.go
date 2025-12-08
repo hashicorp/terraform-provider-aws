@@ -219,6 +219,9 @@ resource "aws_s3_bucket" "test" {
   }
 }
 
+# Use "data.aws_region.current.name" instead of "data.aws_region.current.region" as this configguration
+# is used in a v6.0.0 upgrade test and must work in pre-v6.0.0 scenarios.
+
 resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -241,7 +244,7 @@ resource "aws_s3_bucket_policy" "test" {
         "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
       },
       "ArnLike": {
-        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
       }
     }
   }]
@@ -270,7 +273,7 @@ resource "aws_iam_role" "test" {
         "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
       },
       "ArnLike": {
-        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
       }
     }
   }]

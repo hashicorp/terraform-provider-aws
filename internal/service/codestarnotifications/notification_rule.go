@@ -273,7 +273,7 @@ func cleanupNotificationRuleTargets(ctx context.Context, conn *codestarnotificat
 			TargetAddress:       aws.String(target[names.AttrAddress].(string)),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, targetSubscriptionTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, targetSubscriptionTimeout, func(ctx context.Context) (any, error) {
 			return conn.DeleteTarget(ctx, input)
 		}, "ValidationException", notificationRuleErrorSubscribed)
 

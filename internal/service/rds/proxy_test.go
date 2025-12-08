@@ -48,11 +48,12 @@ func TestAccRDSProxy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
 						"auth_scheme":               "SECRETS",
-						"client_password_auth_type": "MYSQL_NATIVE_PASSWORD",
+						"client_password_auth_type": "MYSQL_CACHING_SHA2_PASSWORD",
 						names.AttrDescription:       "test",
 						"iam_auth":                  "DISABLED",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "debug_logging", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_auth_scheme", string(types.DefaultAuthSchemeNone)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "1800"),
 					resource.TestCheckResourceAttr(resourceName, "require_tls", acctest.CtTrue),
@@ -440,6 +441,97 @@ func TestAccRDSProxy_authSecretARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auth.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "auth.*.secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "auth.*.secret_arn", "aws_secretsmanager_secret.test2", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSProxy_defaultAuthScheme(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBProxy
+	resourceName := "aws_db_proxy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProxyConfig_defaultAuthSchemeIAMAUTH(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProxyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "engine_family", "MYSQL"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`db-proxy:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "auth.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "debug_logging", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_auth_scheme", string(types.DefaultAuthSchemeIamAuth)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
+					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "1800"),
+					resource.TestCheckResourceAttr(resourceName, "require_tls", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProxyConfig_defaultAuthSchemeNONE(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProxyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "engine_family", "MYSQL"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`db-proxy:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
+						"auth_scheme":               "SECRETS",
+						"client_password_auth_type": "MYSQL_CACHING_SHA2_PASSWORD",
+						names.AttrDescription:       "test",
+						"iam_auth":                  "DISABLED",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "debug_logging", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_auth_scheme", string(types.DefaultAuthSchemeNone)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
+					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "1800"),
+					resource.TestCheckResourceAttr(resourceName, "require_tls", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", names.AttrID),
+				),
+			},
+			{
+				Config: testAccProxyConfig_defaultAuthSchemeIAMAUTH(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProxyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "engine_family", "MYSQL"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`db-proxy:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "auth.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "debug_logging", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_auth_scheme", string(types.DefaultAuthSchemeIamAuth)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
+					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "1800"),
+					resource.TestCheckResourceAttr(resourceName, "require_tls", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", names.AttrID),
 				),
 			},
 		},
@@ -953,6 +1045,57 @@ resource "aws_secretsmanager_secret_version" "test2" {
   secret_string = "{\"username\":\"db_user\",\"password\":\"db_user_password\"}"
 }
 `, rName, nName))
+}
+
+func testAccProxyConfig_defaultAuthSchemeIAMAUTH(rName string) string {
+	return acctest.ConfigCompose(testAccProxyConfig_base(rName), fmt.Sprintf(`
+resource "aws_db_proxy" "test" {
+  depends_on = [
+    aws_secretsmanager_secret_version.test,
+    aws_iam_role_policy.test
+  ]
+
+  name                   = %[1]q
+  debug_logging          = false
+  engine_family          = "MYSQL"
+  idle_client_timeout    = 1800
+  require_tls            = true
+  role_arn               = aws_iam_role.test.arn
+  vpc_security_group_ids = [aws_security_group.test.id]
+  vpc_subnet_ids         = aws_subnet.test[*].id
+
+  default_auth_scheme = "IAM_AUTH"
+}
+`, rName))
+}
+
+func testAccProxyConfig_defaultAuthSchemeNONE(rName string) string {
+	return acctest.ConfigCompose(testAccProxyConfig_base(rName), fmt.Sprintf(`
+resource "aws_db_proxy" "test" {
+  depends_on = [
+    aws_secretsmanager_secret_version.test,
+    aws_iam_role_policy.test
+  ]
+
+  name                   = %[1]q
+  debug_logging          = false
+  engine_family          = "MYSQL"
+  idle_client_timeout    = 1800
+  require_tls            = true
+  role_arn               = aws_iam_role.test.arn
+  vpc_security_group_ids = [aws_security_group.test.id]
+  vpc_subnet_ids         = aws_subnet.test[*].id
+
+  auth {
+    auth_scheme = "SECRETS"
+    description = "test"
+    iam_auth    = "DISABLED"
+    secret_arn  = aws_secretsmanager_secret.test.arn
+  }
+
+  default_auth_scheme = "NONE"
+}
+`, rName))
 }
 
 func testAccProxyConfig_tags1(rName, tagKey1, tagValue1 string) string {

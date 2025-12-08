@@ -90,7 +90,13 @@ func statusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.Cli
 			return nil, statusUnavailable, fmt.Errorf("describing portfolio share status: empty response")
 		}
 
-		return output, string(output.Status), err
+		status := output.Status
+		if (status == awstypes.ShareStatusCompletedWithErrors || status == awstypes.ShareStatusError) &&
+			output.ShareDetails != nil && output.ShareDetails.ShareErrors != nil && len(output.ShareDetails.ShareErrors) > 0 {
+			return output, string(status), fmt.Errorf("portfolio share status: %+v", output.ShareDetails.ShareErrors)
+		}
+
+		return output, string(status), err
 	}
 }
 
@@ -318,39 +324,6 @@ func statusLaunchPaths(ctx context.Context, conn *servicecatalog.Client, acceptL
 		}
 
 		return output, string(awstypes.StatusAvailable), nil
-	}
-}
-
-func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		input := &servicecatalog.DescribeProvisionedProductInput{}
-
-		if acceptLanguage != "" {
-			input.AcceptLanguage = aws.String(acceptLanguage)
-		}
-
-		// one or the other but not both
-		if id != "" {
-			input.Id = aws.String(id)
-		} else if name != "" {
-			input.Name = aws.String(name)
-		}
-
-		output, err := conn.DescribeProvisionedProduct(ctx, input)
-
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil || output.ProvisionedProductDetail == nil {
-			return nil, "", nil
-		}
-
-		return output, string(output.ProvisionedProductDetail.Status), err
 	}
 }
 

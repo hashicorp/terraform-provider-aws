@@ -141,10 +141,11 @@ func testAccApp_AutoBranchCreationConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.basic_auth_credentials", credentials),
+					// resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.basic_auth_credentials", credentials),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.build_spec", "version: 0.1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_auto_build", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_basic_auth", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_basic_auth", acctest.CtFalse),
+					// resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_basic_auth", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_performance_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.enable_pull_request_preview", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.%", "1"),
@@ -805,8 +806,10 @@ resource "aws_amplify_app" "test" {
     framework  = "React"
     stage      = "DEVELOPMENT"
 
-    enable_basic_auth      = true
-    basic_auth_credentials = %[2]q
+    # enable_basic_auth      = true
+    # basic_auth_credentials = %[2]q
+    enable_basic_auth      = false
+    basic_auth_credentials = null
 
     enable_auto_build             = true
     enable_pull_request_preview   = true

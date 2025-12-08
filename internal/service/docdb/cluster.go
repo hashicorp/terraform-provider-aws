@@ -29,7 +29,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -235,6 +235,12 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
 			},
 			names.AttrPort: {
 				Type:         schema.TypeInt,
@@ -486,6 +492,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			requiresModifyDbCluster = true
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
@@ -512,7 +522,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.RestoreDBClusterFromSnapshot(ctx, &input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -557,6 +567,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
@@ -573,7 +587,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.RestoreDBClusterToPointInTime(ctx, &input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 		if err != nil {
@@ -649,6 +663,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
@@ -677,7 +695,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.CreateDBCluster(ctx, &input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -768,6 +786,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		d.Set("master_user_secret", nil)
 	}
 	d.Set("master_username", dbc.MasterUsername)
+	d.Set("network_type", dbc.NetworkType)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
@@ -838,6 +857,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
+		if d.HasChange("network_type") {
+			input.NetworkType = aws.String(d.Get("network_type").(string))
+		}
+
 		if d.HasChange("preferred_backup_window") {
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		}
@@ -868,7 +891,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			timeout = 5 * time.Minute
 		)
 		_, err := tfresource.RetryWhen(ctx, timeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBCluster(ctx, &input)
 			},
 			func(err error) (bool, error) {
@@ -943,7 +966,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster: %s", d.Id())
 	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteDBCluster(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -1123,7 +1146,7 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 		}
 
 		for _, v := range page.DBClusters {
-			if !itypes.IsZero(&v) && filter(&v) {
+			if !inttypes.IsZero(&v) && filter(&v) {
 				output = append(output, v)
 			}
 		}

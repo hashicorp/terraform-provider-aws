@@ -226,7 +226,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	// IAM propagation
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateInput(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -323,7 +323,7 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		rawOutput, err := tfresource.RetryWhen(ctx, 2*time.Minute,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateInput(ctx, in)
 			},
 			func(err error) (bool, error) {

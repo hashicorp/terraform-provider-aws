@@ -63,7 +63,7 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync
 	})
 }
 
-func testAccTransitGatewayPeeringAttachment_options(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayPeeringAttachment_options(t *testing.T, semaphore tfsync.Semaphore) { //nolint:unparam
 	acctest.Skip(t, "IncorrectState: You cannot create a dynamic peering attachment")
 
 	ctx := acctest.Context(t)
