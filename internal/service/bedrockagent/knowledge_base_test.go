@@ -59,36 +59,24 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 	})
 }
 
-// Prerequisites:
-// * psql run via null_resource/provisioner "local-exec"
-// * jq for parsing output from aws cli to retrieve postgres password
 func testAccKnowledgeBase_tags(t *testing.T) {
-	acctest.SkipIfExeNotOnPath(t, "psql")
-	acctest.SkipIfExeNotOnPath(t, "jq")
-	acctest.SkipIfExeNotOnPath(t, "aws")
-
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
-	foundationModel := "amazon.titan-embed-text-v1"
+	foundationModel := "amazon.titan-embed-text-v2:0"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"null": {
-				Source:            "hashicorp/null",
-				VersionConstraint: "3.2.2",
-			},
-		},
-		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -99,9 +87,6 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-				),
 			},
 			{
 				ResourceName:      resourceName,
@@ -110,6 +95,9 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 			},
 			{
 				Config: testAccKnowledgeBaseConfig_tags2(rName, foundationModel, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -121,12 +109,12 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
 				},
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-				),
 			},
 			{
 				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -137,9 +125,6 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
 				},
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-				),
 			},
 		},
 	})
@@ -728,71 +713,73 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 }
 
 func testAccKnowledgeBaseConfig_tags1(rName, model, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(acctest.ConfigBedrockAgentKnowledgeBaseRDSBase(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseS3Vectors(rName), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
   knowledge_base_configuration {
+    type = "VECTOR"
+
     vector_knowledge_base_configuration {
       embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
+      embedding_model_configuration {
+        bedrock_embedding_model_configuration {
+          dimensions          = 256
+          embedding_data_type = "FLOAT32"
+        }
+      }
     }
-    type = "VECTOR"
   }
 
   storage_configuration {
-    type = "RDS"
-    rds_configuration {
-      resource_arn           = aws_rds_cluster.test.arn
-      credentials_secret_arn = tolist(aws_rds_cluster.test.master_user_secret)[0].secret_arn
-      database_name          = aws_rds_cluster.test.database_name
-      table_name             = "bedrock_integration.bedrock_kb"
-      field_mapping {
-        vector_field          = "embedding"
-        text_field            = "chunks"
-        metadata_field        = "metadata"
-        primary_key_field     = "id"
-        custom_metadata_field = "custom_metadata"
-      }
+    type = "S3_VECTORS"
+
+    s3_vectors_configuration {
+      index_arn = aws_s3vectors_index.test.index_arn
     }
   }
 
   tags = {
     %[3]q = %[4]q
   }
-
-  depends_on = [aws_iam_role_policy.test, null_resource.db_setup]
 }
 `, rName, model, tag1Key, tag1Value))
 }
 
 func testAccKnowledgeBaseConfig_tags2(rName, model, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(acctest.ConfigBedrockAgentKnowledgeBaseRDSBase(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseS3Vectors(rName), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
   knowledge_base_configuration {
+    type = "VECTOR"
+
     vector_knowledge_base_configuration {
       embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
+      embedding_model_configuration {
+        bedrock_embedding_model_configuration {
+          dimensions          = 256
+          embedding_data_type = "FLOAT32"
+        }
+      }
     }
-    type = "VECTOR"
   }
 
   storage_configuration {
-    type = "RDS"
-    rds_configuration {
-      resource_arn           = aws_rds_cluster.test.arn
-      credentials_secret_arn = tolist(aws_rds_cluster.test.master_user_secret)[0].secret_arn
-      database_name          = aws_rds_cluster.test.database_name
-      table_name             = "bedrock_integration.bedrock_kb"
-      field_mapping {
-        vector_field          = "embedding"
-        text_field            = "chunks"
-        metadata_field        = "metadata"
-        primary_key_field     = "id"
-        custom_metadata_field = "custom_metadata"
-      }
+    type = "S3_VECTORS"
+
+    s3_vectors_configuration {
+      index_arn = aws_s3vectors_index.test.index_arn
     }
   }
 
@@ -800,8 +787,6 @@ resource "aws_bedrockagent_knowledge_base" "test" {
     %[3]q = %[4]q
     %[5]q = %[6]q
   }
-
-  depends_on = [aws_iam_role_policy.test, null_resource.db_setup]
 }
 `, rName, model, tag1Key, tag1Value, tag2Key, tag2Value))
 }
