@@ -45,6 +45,7 @@ resource "aws_bedrockagent_knowledge_base" "example" {
 resource "aws_bedrockagent_knowledge_base" "kendra_example" {
   name     = "example-kendra-kb"
   role_arn = aws_iam_role.example.arn
+
   knowledge_base_configuration {
     type = "KENDRA"
     kendra_knowledge_base_configuration {
@@ -60,18 +61,21 @@ resource "aws_bedrockagent_knowledge_base" "kendra_example" {
 resource "aws_bedrockagent_knowledge_base" "example" {
   name     = "example"
   role_arn = aws_iam_role.example.arn
+
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
       embedding_model_arn = "arn:aws:bedrock:us-west-2::foundation-model/amazon.titan-embed-text-v2:0"
     }
     type = "VECTOR"
   }
+
   storage_configuration {
     type = "OPENSEARCH_MANAGED_CLUSTER"
     opensearch_managed_cluster_configuration {
       domain_arn        = "arn:aws:es:us-west-2:123456789012:domain/example-domain"
       domain_endpoint   = "https://search-example-domain.us-west-2.es.amazonaws.com"
       vector_index_name = "example_index"
+
       field_mapping {
         metadata_field = "metadata"
         text_field     = "chunks"
@@ -111,6 +115,7 @@ resource "aws_bedrockagent_knowledge_base" "example" {
     }
     type = "VECTOR"
   }
+
   storage_configuration {
     type = "OPENSEARCH_SERVERLESS"
     opensearch_serverless_configuration {
@@ -121,6 +126,48 @@ resource "aws_bedrockagent_knowledge_base" "example" {
         text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
         metadata_field = "AMAZON_BEDROCK_METADATA"
       }
+    }
+  }
+}
+```
+
+### S3 Vectors Configuration
+
+```terraform
+resource "aws_s3vectors_vector_bucket" "example" {
+  vector_bucket_name = "example-bucket"
+}
+
+resource "aws_s3vectors_index" "example" {
+  index_name         = "example-index"
+  vector_bucket_name = aws_s3vectors_vector_bucket.example.vector_bucket_name
+
+  data_type       = "float32"
+  dimension       = 256
+  distance_metric = "euclidean"
+}
+
+resource "aws_bedrockagent_knowledge_base" "example" {
+  name     = "example-s3vectors-kb"
+  role_arn = aws_iam_role.example.arn
+
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:aws:bedrock:us-west-2::foundation-model/amazon.titan-embed-text-v2:0"
+      embedding_model_configuration {
+        bedrock_embedding_model_configuration {
+          dimensions          = 256
+          embedding_data_type = "FLOAT32"
+        }
+      }
+    }
+    type = "VECTOR"
+  }
+
+  storage_configuration {
+    type = "S3_VECTORS"
+    s3_vectors_configuration {
+      index_arn = aws_s3vectors_index.example.index_arn
     }
   }
 }
@@ -199,12 +246,13 @@ The `s3_location` configuration block supports the following arguments:
 
 The `storage_configuration` configuration block supports the following arguments:
 
-* `type` - (Required) Vector store service in which the knowledge base is stored. Valid Values: `OPENSEARCH_SERVERLESS`, `OPENSEARCH_MANAGED_CLUSTER`, `PINECONE`, `REDIS_ENTERPRISE_CLOUD`, `RDS`.
+* `type` - (Required) Vector store service in which the knowledge base is stored. Valid Values: `OPENSEARCH_SERVERLESS`, `OPENSEARCH_MANAGED_CLUSTER`, `PINECONE`, `REDIS_ENTERPRISE_CLOUD`, `RDS`, `S3_VECTORS`.
 * `opensearch_managed_cluster_configuration` - (Optional) The storage configuration of the knowledge base in Amazon OpenSearch Service Managed Cluster. See [`opensearch_managed_cluster_configuration` block](#opensearch_managed_cluster_configuration-block) for details.
 * `opensearch_serverless_configuration` - (Optional) The storage configuration of the knowledge base in Amazon OpenSearch Service Serverless. See [`opensearch_serverless_configuration` block](#opensearch_serverless_configuration-block) for details.
 * `pinecone_configuration` - (Optional)  The storage configuration of the knowledge base in Pinecone. See [`pinecone_configuration` block](#pinecone_configuration-block) for details.
 * `rds_configuration` - (Optional) Details about the storage configuration of the knowledge base in Amazon RDS. For more information, see [Create a vector index in Amazon RDS](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-setup.html). See [`rds_configuration` block](#rds_configuration-block) for details.
 * `redis_enterprise_cloud_configuration` - (Optional) The storage configuration of the knowledge base in Redis Enterprise Cloud. See [`redis_enterprise_cloud_configuration` block](#redis_enterprise_cloud_configuration-block) for details.
+* `s3_vectors_configuration` - (Optional) The storage configuration of the knowledge base in Amazon S3 Vectors. See [`s3_vectors_configuration` block](#s3_vectors_configuration-block) for details.
 
 ### `opensearch_managed_cluster_configuration` block
 
@@ -266,6 +314,16 @@ The `redis_enterprise_cloud_configuration` configuration block supports the foll
     * `text_field` - (Required) Name of the field in which Amazon Bedrock stores the raw text from your data. The text is split according to the chunking strategy you choose.
     * `vector_field` - (Required) Name of the field in which Amazon Bedrock stores the vector embeddings for your data sources.
 * `vector_index_name` - (Required) Name of the vector index.
+
+
+### `s3_vectors_configuration` block
+
+The `s3_vectors_configuration` configuration block supports the following arguments.
+Either `index_arn`, or both `index_name` and `vector_bucket_arn` must be specified.
+
+* `index_arn` - (Optional) ARN of the S3 Vectors index. Conflicts with `index_name` and `vector_bucket_arn`.
+* `index_name` - (Optional) Name of the S3 Vectors index. Must be specified with `vector_bucket_arn`. Conflicts with `index_arn`.
+* `vector_bucket_arn` - (Optional) ARN of the S3 Vectors vector bucket. Must be specified with `index_name`. Conflicts with `index_arn`.
 
 ## Attribute Reference
 
