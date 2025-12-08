@@ -6320,6 +6320,56 @@ func TestAccEC2Instance_CapacityReservation_modifyTarget(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_CapacityReservation_capacityBlocksForML(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+
+	startDate := time.Now().UTC().Add(25 * time.Hour).Format(time.RFC3339)
+	endDate := time.Now().UTC().Add(720 * time.Hour).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_capacityReservation_capacityBlocksForML(startDate, endDate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capacity_reservation_specification"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"capacity_reservation_preference": tfknownvalue.StringExact(""),
+							"capacity_reservation_target": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"capacity_reservation_id":                 knownvalue.NotNull(),
+									"capacity_reservation_resource_group_arn": tfknownvalue.StringLegacyNull(),
+								}),
+							}),
+						}),
+					})),
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("capacity_reservation_specification").AtSliceIndex(0).AtMapKey("capacity_reservation_target").AtSliceIndex(0).AtMapKey("capacity_reservation_id"),
+						"aws_ec2_capacity_block_reservation.test", tfjsonpath.New("id"),
+						compare.ValuesSame(),
+					),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringLegacyNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("spot_instance_request_id"), tfknownvalue.StringLegacyNull()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_spot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
@@ -10135,6 +10185,38 @@ resource "aws_ec2_capacity_reservation" "test" {
   }
 }
 `, rName, awstypes.CapacityReservationInstancePlatformLinuxUnix))
+}
+
+func testAccInstanceConfig_capacityReservation_capacityBlocksForML(startDate, endDate string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.AvailableEC2InstanceTypeForRegion("p5.4xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  capacity_reservation_specification {
+    capacity_reservation_target {
+      capacity_reservation_id = aws_ec2_capacity_block_reservation.test.id
+    }
+  }
+}
+
+resource "aws_ec2_capacity_block_reservation" "test" {
+  capacity_block_offering_id = data.aws_ec2_capacity_block_offering.test.id
+  instance_platform          = "Linux/UNIX"
+}
+
+data "aws_ec2_capacity_block_offering" "test" {
+  instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
+  capacity_duration_hours = 24
+  instance_count    = 1
+  start_date_range        = %[1]q
+  end_date_range          = %[2]q
+}
+`, startDate, endDate))
 }
 
 func testAccInstanceConfig_templateBasic(rName string) string {
