@@ -223,6 +223,30 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[odbNetworkManagedServicesResourceModel](ctx),
 				Description: "The managed services configuration for the ODB network.",
 			},
+			"kms_access": schema.StringAttribute{
+				Optional:    true,
+				CustomType:  fwtypes.StringEnumType[odbtypes.Access](),
+				Description: "Specifies the configuration for Amazon S3 access from the ODB network.",
+			},
+			"sts_access": schema.StringAttribute{
+				Optional:    true,
+				CustomType:  fwtypes.StringEnumType[odbtypes.Access](),
+				Description: "Specifies the configuration for Amazon S3 access from the ODB network.",
+			},
+			"kms_policy_document": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "Specifies the endpoint policy for Amazon S3 access from the ODB network.",
+			},
+			"sts_policy_document": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "Specifies the endpoint policy for Amazon S3 access from the ODB network.",
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -322,6 +346,28 @@ func (r *resourceNetwork) Create(ctx context.Context, req resource.CreateRequest
 	plan.S3Access = fwtypes.StringEnumValue(readS3AccessStatus)
 	plan.S3PolicyDocument = types.StringPointerValue(createdOdbNetwork.ManagedServices.S3Access.S3PolicyDocument)
 
+	readSTSAccessStatus, err := mapManagedServiceStatusToAccessStatus(createdOdbNetwork.ManagedServices.StsAccess.Status)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetwork, plan.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	plan.StsAccess = fwtypes.StringEnumValue(readSTSAccessStatus)
+	plan.StsPolicyDocument = types.StringPointerValue(createdOdbNetwork.ManagedServices.StsAccess.StsPolicyDocument)
+
+	readKMSAccessStatus, err := mapManagedServiceStatusToAccessStatus(createdOdbNetwork.ManagedServices.KmsAccess.Status)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetwork, plan.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	plan.KmsAccess = fwtypes.StringEnumValue(readKMSAccessStatus)
+	plan.KmsPolicyDocument = types.StringPointerValue(createdOdbNetwork.ManagedServices.KmsAccess.KmsPolicyDocument)
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdOdbNetwork, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -377,6 +423,29 @@ func (r *resourceNetwork) Read(ctx context.Context, req resource.ReadRequest, re
 			return
 		}
 		state.ZeroEtlAccess = fwtypes.StringEnumValue(readZeroEtlAccessStatus)
+
+		readStsAccessStatus, err := mapManagedServiceStatusToAccessStatus(out.ManagedServices.StsAccess.Status)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetwork, state.OdbNetworkId.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		state.StsAccess = fwtypes.StringEnumValue(readStsAccessStatus)
+		state.StsPolicyDocument = types.StringPointerValue(out.ManagedServices.StsAccess.StsPolicyDocument)
+
+		readKmsAccessStatus, err := mapManagedServiceStatusToAccessStatus(out.ManagedServices.KmsAccess.Status)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetwork, state.OdbNetworkId.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		state.KmsAccess = fwtypes.StringEnumValue(readKmsAccessStatus)
+		state.KmsPolicyDocument = types.StringPointerValue(out.ManagedServices.KmsAccess.KmsPolicyDocument)
+
 	}
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -463,6 +532,39 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 	}
 	plan.S3Access = fwtypes.StringEnumValue(readS3AccessStatus)
 	plan.S3PolicyDocument = types.StringPointerValue(updatedOdbNwk.ManagedServices.S3Access.S3PolicyDocument)
+
+	//sts access
+	_, err = waitForManagedService(ctx, plan.ZeroEtlAccess.ValueEnum(), conn, plan.OdbNetworkId.ValueString(), managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
+		return managedService.StsAccess.Status
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForUpdate, ResNameNetwork, plan.OdbNetworkId.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	readStsAccessStatus, err := mapManagedServiceStatusToAccessStatus(updatedOdbNwk.ManagedServices.StsAccess.Status)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetwork, state.OdbNetworkId.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	plan.StsAccess = fwtypes.StringEnumValue(readStsAccessStatus)
+	plan.StsPolicyDocument = types.StringPointerValue(updatedOdbNwk.ManagedServices.StsAccess.StsPolicyDocument)
+
+	readKmsAccessStatus, err := mapManagedServiceStatusToAccessStatus(updatedOdbNwk.ManagedServices.KmsAccess.Status)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetwork, state.OdbNetworkId.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	plan.KmsAccess = fwtypes.StringEnumValue(readKmsAccessStatus)
+	plan.KmsPolicyDocument = types.StringPointerValue(updatedOdbNwk.ManagedServices.KmsAccess.KmsPolicyDocument)
 
 	readZeroEtlAccessStatus, err := mapManagedServiceStatusToAccessStatus(updatedOdbNwk.ManagedServices.ZeroEtlAccess.Status)
 	if err != nil {
@@ -674,6 +776,10 @@ type odbNetworkResourceModel struct {
 	DefaultDnsPrefix          types.String                                                               `tfsdk:"default_dns_prefix"`
 	S3Access                  fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"s3_access" autoflex:",noflatten"`
 	ZeroEtlAccess             fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"zero_etl_access" autoflex:",noflatten"`
+	StsAccess                 fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"sts_access" autoflex:",noflatten"`
+	StsPolicyDocument         types.String                                                               `tfsdk:"sts_policy_document" autoflex:",noflatten"`
+	KmsAccess                 fwtypes.StringEnum[odbtypes.Access]                                        `tfsdk:"kms_access" autoflex:",noflatten"`
+	KmsPolicyDocument         types.String                                                               `tfsdk:"kms_policy_document" autoflex:",noflatten"`
 	S3PolicyDocument          types.String                                                               `tfsdk:"s3_policy_document" autoflex:",noflatten"`
 	OdbNetworkId              types.String                                                               `tfsdk:"id"`
 	PeeredCidrs               fwtypes.SetValueOf[types.String]                                           `tfsdk:"peered_cidrs"`
@@ -707,6 +813,8 @@ type odbNetworkManagedServicesResourceModel struct {
 	ManagedS3BackupAccess    fwtypes.ListNestedObjectValueOf[managedS3BackupAccessOdbNetworkResourceModel]  `tfsdk:"managed_s3_backup_access"`
 	ZeroEtlAccess            fwtypes.ListNestedObjectValueOf[zeroEtlAccessOdbNetworkResourceModel]          `tfsdk:"zero_etl_access"`
 	S3Access                 fwtypes.ListNestedObjectValueOf[s3AccessOdbNetworkResourceModel]               `tfsdk:"s3_access"`
+	StsAccess                fwtypes.ListNestedObjectValueOf[StsAccessOdbNetworkResourceModel]              `tfsdk:"sts_access"`
+	KmsAccess                fwtypes.ListNestedObjectValueOf[KmsAccessOdbNetworkResourceModel]              `tfsdk:"kms_access"`
 }
 
 type serviceNetworkEndpointOdbNetworkResourceModel struct {
@@ -729,4 +837,18 @@ type s3AccessOdbNetworkResourceModel struct {
 	Ipv4Addresses    fwtypes.SetOfString                                `tfsdk:"ipv4_addresses"`
 	DomainName       types.String                                       `tfsdk:"domain_name"`
 	S3PolicyDocument types.String                                       `tfsdk:"s3_policy_document"`
+}
+
+type KmsAccessOdbNetworkResourceModel struct {
+	Status            fwtypes.StringEnum[odbtypes.ManagedResourceStatus] `tfsdk:"status"`
+	Ipv4Addresses     fwtypes.SetOfString                                `tfsdk:"ipv4_addresses"`
+	DomainName        types.String                                       `tfsdk:"domain_name"`
+	KmsPolicyDocument types.String                                       `tfsdk:"kms_policy_document"`
+}
+
+type StsAccessOdbNetworkResourceModel struct {
+	Status            fwtypes.StringEnum[odbtypes.ManagedResourceStatus] `tfsdk:"status"`
+	Ipv4Addresses     fwtypes.SetOfString                                `tfsdk:"ipv4_addresses"`
+	DomainName        types.String                                       `tfsdk:"domain_name"`
+	StsPolicyDocument types.String                                       `tfsdk:"sts_policy_document"`
 }

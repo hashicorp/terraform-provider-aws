@@ -429,6 +429,8 @@ resource "aws_odb_network" "test" {
   backup_subnet_cidr          = "10.2.1.0/24"
   s3_access                   = "DISABLED"
   zero_etl_access             = "DISABLED"
+  sts_access            = "DISABLED"
+  kms_access      = "DISABLED"
   delete_associated_resources = true
 }
 
@@ -464,6 +466,8 @@ resource "aws_odb_network" "test" {
   backup_subnet_cidr   = "10.2.1.0/24"
   s3_access            = "DISABLED"
   zero_etl_access      = "DISABLED"
+  sts_access           = "DISABLED"
+  kms_access           = "DISABLED"
 }
 
 
@@ -494,6 +498,8 @@ resource "aws_odb_network" "test" {
   backup_subnet_cidr          = "10.2.1.0/24"
   s3_access                   = "ENABLED"
   zero_etl_access             = "ENABLED"
+  sts_access                  = "ENABLED"
+  kms_access                  = "ENABLED"
   delete_associated_resources = true
 }
 
@@ -521,6 +527,8 @@ resource "aws_odb_network" "test" {
   backup_subnet_cidr          = "10.2.1.0/24"
   s3_access                   = "DISABLED"
   zero_etl_access             = "DISABLED"
+  sts_access                  = "DISABLED"
+  kms_access                  = "DISABLED"
   custom_domain_name          = %[2]q
   delete_associated_resources = true
 }
@@ -549,6 +557,8 @@ resource "aws_odb_network" "test" {
   backup_subnet_cidr          = "10.2.1.0/24"
   s3_access                   = "DISABLED"
   zero_etl_access             = "DISABLED"
+  sts_access                  = "DISABLED"
+  kms_access                  = "DISABLED"
   delete_associated_resources = true
   tags = {
     "env" = "dev"
