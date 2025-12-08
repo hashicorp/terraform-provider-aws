@@ -4231,12 +4231,12 @@ func TestAccKinesisAnalyticsV2Application_ApplicationEncryptionConfiguration_upd
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_encryptionConfiguration(rName, "CUSTOMER_MANAGED_CMK", 0),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccApplicationConfig_encryptionConfiguration(rName, "CUSTOMER_MANAGED_KEY", 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.0.key_type", "CUSTOMER_MANAGED_CMK"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.0.key_type", "CUSTOMER_MANAGED_KEY"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_encryption_configuration.0.key_id", kmsKey1ResourceName, names.AttrARN),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, names.AttrARN),
@@ -4245,20 +4245,20 @@ func TestAccKinesisAnalyticsV2Application_ApplicationEncryptionConfiguration_upd
 				),
 			},
 			{
-				Config: testAccApplicationConfig_encryptionConfiguration(rName, "CUSTOMER_MANAGED_CMK", 1),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccApplicationConfig_encryptionConfiguration(rName, "CUSTOMER_MANAGED_KEY", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.0.key_type", "CUSTOMER_MANAGED_CMK"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.0.key_type", "CUSTOMER_MANAGED_KEY"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.application_encryption_configuration.0.key_id", kmsKey2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 				),
 			},
 			{
-				Config: testAccApplicationConfig_encryptionConfiguration(rName, "AWS_OWNED_CMK", 0),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccApplicationConfig_encryptionConfiguration(rName, "AWS_OWNED_KEY", 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_encryption_configuration.#", "1"),
@@ -6223,27 +6223,38 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccApplicationConfig_encryptionConfiguration(rName, keyType string, keyIndex int) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
 		testAccApplicationConfig_baseKMSKeys(rName, 2),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime_environment    = "SQL-1_0"
+  runtime_environment    = "FLINK-1_20"
   service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
+    application_code_configuration {
+      code_content {
+        s3_content_location {
+          bucket_arn = aws_s3_bucket.test.arn
+          file_key   = aws_s3_object.test[0].key
+        }
+      }
+
+      code_content_type = "ZIPFILE"
+    }
+
     application_encryption_configuration {
       key_type = %[2]q
       %[3]s
     }
   }
 }
-`, rName, keyType,
-			func() string {
-				if keyType == "CUSTOMER_MANAGED_CMK" {
-					return fmt.Sprintf(`key_id = aws_kms_key.test[%d].arn`, keyIndex)
-				}
-				return ""
-			}()))
+`, rName, keyType, func() string {
+			if keyType == "CUSTOMER_MANAGED_KEY" {
+				return fmt.Sprintf(`key_id = aws_kms_key.test[%d].arn`, keyIndex)
+			}
+			return ""
+		}()))
 }
 
 func testAccApplicationConfig_baseKMSKeys(rName string, count int) string {
@@ -6253,6 +6264,42 @@ resource "aws_kms_key" "test" {
 
   description             = "%[1]s-${count.index}"
   deletion_window_in_days = 7
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key_policy" "test" {
+  count = %[2]d
+
+  key_id = aws_kms_key.test[count.index].id
+  policy = jsonencode({
+    Id = %[1]q
+    Statement = [
+      {
+        Action = "kms:*"
+        Effect = "Allow"
+        Principal = {
+          AWS = data.aws_caller_identity.current.arn
+        }
+
+        Resource = "*"
+        Sid      = "Enable IAM User Permissions"
+      },
+      {
+        Action = [
+          "kms:*",
+        ]
+        Effect = "Allow"
+        Principal = {
+          Service = ["kinesisanalytics.amazonaws.com", "infrastructure.kinesisanalytics.amazonaws.com"]
+        }
+
+        Resource = "*"
+        Sid      = "Enable IAM MSF Permissions"
+      },
+    ]
+    Version = "2012-10-17"
+  })
 }
 `, rName, count)
 }
