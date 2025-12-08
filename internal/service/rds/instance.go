@@ -2890,9 +2890,7 @@ func statusDBInstance(conn *rds.Client, id string, optFns ...func(*rds.Options))
 
 func waitDBInstanceAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.DBInstance, error) {
 	options := tfresource.Options{
-		PollInterval:              10 * time.Second,
-		Delay:                     1 * time.Minute,
-		ContinuousTargetOccurence: 3,
+		PollInterval: 10 * time.Second,
 	}
 	for _, fn := range optFns {
 		fn(&options)
@@ -2952,12 +2950,10 @@ func waitDBInstanceStopped(ctx context.Context, conn *rds.Client, id string, tim
 			instanceStatusStorageFull,
 			instanceStatusUpgrading,
 		},
-		Target:                    []string{instanceStatusStopped},
-		Refresh:                   statusDBInstance(conn, id),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: 2,
-		Delay:                     10 * time.Second,
-		MinTimeout:                3 * time.Second,
+		Target:     []string{instanceStatusStopped},
+		Refresh:    statusDBInstance(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 3 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -2971,9 +2967,7 @@ func waitDBInstanceStopped(ctx context.Context, conn *rds.Client, id string, tim
 
 func waitDBInstanceDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.DBInstance, error) {
 	options := tfresource.Options{
-		PollInterval:              10 * time.Second,
-		Delay:                     1 * time.Minute,
-		ContinuousTargetOccurence: 3,
+		PollInterval: 10 * time.Second,
 	}
 	for _, fn := range optFns {
 		fn(&options)
