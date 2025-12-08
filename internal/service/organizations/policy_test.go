@@ -933,23 +933,23 @@ resource "aws_bedrock_guardrail_version" "test" {
 resource "aws_organizations_policy" "test" {
   # Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_bedrock_syntax.html
   content = jsonencode({
-    "bedrock": {
-        "guardrail_inference": {
-            "${data.aws_region.current.region}": {
-                "config_1": {
-                    "identifier": {
-                        "@@assign": "${aws_bedrock_guardrail.test.guardrail_arn}:${aws_bedrock_guardrail_version.test.version}"
-                    },
-                    "input_tags": {
-                        "@@assign": "honor"
-                    }
-                }
+    "bedrock" : {
+      "guardrail_inference" : {
+        (data.aws_region.current.region) : {
+          "config_1" : {
+            "identifier" : {
+              "@@assign" : "${aws_bedrock_guardrail.test.guardrail_arn}:${aws_bedrock_guardrail_version.test.version}"
+            },
+            "input_tags" : {
+              "@@assign" : "honor"
             }
+          }
         }
+      }
     }
-})
-  name    = %[1]q
-  type    = "BEDROCK_POLICY"
+  })
+  name = %[1]q
+  type = "BEDROCK_POLICY"
 }
 `, rName)
 }
