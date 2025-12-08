@@ -800,6 +800,38 @@ func TestAccLogsLogGroup_deletionProtectionEnabled(t *testing.T) {
 	})
 }
 
+// A smoke test to verify setting provider_meta does not trigger unexpected
+// behavior for Plugin SDK V2 based resources
+func TestAccLogsLogGroup_providerMeta(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigProviderMeta(),
+					testAccGroupConfig_basic(rName),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckLogGroupExists(ctx context.Context, t *testing.T, n string, v *types.LogGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
