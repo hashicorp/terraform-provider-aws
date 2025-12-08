@@ -26,8 +26,8 @@ import (
 // @SingletonIdentity
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
+// @Testing(importStateIdFunc=importStateIDAccountID", importStateIdAttribute="issuer_identifier")
 // @Testing(generator=false)
-// @Testing(identityTest=false)
 func newOutboundWebIdentityFederationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &outboundWebIdentityFederationResource{}
 
