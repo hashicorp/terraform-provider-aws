@@ -1410,11 +1410,9 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_partial(t *testing.T) {
 				Config:       testAccGlobalSecondaryIndexConfig_migrate_partial(rNameTable, rName1, rName2),
 				ResourceName: resourceName,
 				ImportState:  true,
-				ImportStateIdFunc: func(t *awstypes.TableDescription, idxName string) resource.ImportStateIdFunc {
-					return func(s *terraform.State) (string, error) {
-						return fmt.Sprintf("%s/index/%s", *conf.TableArn, rName1), nil
-					}
-				}(&conf, rName1),
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					return fmt.Sprintf("%s/index/%s", *conf.TableArn, rName1), nil
+				},
 				ImportStatePersist: true,
 				ImportStateVerify:  false,
 			},
@@ -1471,10 +1469,12 @@ func testAccCheckGSINotExists(ctx context.Context, t *testing.T, n string) resou
 		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
 		tableName := rs.Primary.Attributes[names.AttrTableName]
 		indexName := rs.Primary.Attributes["index_name"]
-		output, err := tfdynamodb.FindGSIByTwoPartKey(ctx, conn, tableName, indexName)
-
-		if err != nil || output == nil {
+		_, err := tfdynamodb.FindGSIByTwoPartKey(ctx, conn, tableName, indexName)
+		if retry.NotFound(err) {
 			return nil
+		}
+		if err != nil {
+			return err
 		}
 
 		return fmt.Errorf("Found: %s", n)
