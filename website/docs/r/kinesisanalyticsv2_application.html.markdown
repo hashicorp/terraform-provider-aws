@@ -285,8 +285,8 @@ The `application_code_configuration` object supports the following:
 
 The `application_encryption_configuration` object supports the following:
 
-* `key_type` - (Required) The type of encryption key to use. Valid values: `CUSTOMER_MANAGED_CMK`, `AWS_OWNED_CMK`.
-* `key_id` - (Optional) The ARN of the KMS key to use for encryption. Required when `key_type` is set to `CUSTOMER_MANAGED_CMK`. The KMS key must be in the same region as the application.
+* `key_type` - (Required) The type of encryption key to use. Valid values: `CUSTOMER_MANAGED_KEY`, `AWS_OWNED_KEY`.
+* `key_id` - (Optional) The ARN of the KMS key to use for encryption. Required when `key_type` is set to `CUSTOMER_MANAGED_KEY`. The KMS key must be in the same region as the application.
 
 The `code_content` object supports the following:
 
