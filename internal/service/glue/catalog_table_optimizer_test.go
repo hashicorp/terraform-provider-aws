@@ -123,6 +123,59 @@ func testAccCatalogTableOptimizer_disappears(t *testing.T) {
 	})
 }
 
+func testAccCatalogTableOptimizer_CompactionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var catalogTableOptimizer glue.GetTableOptimizerOutput
+
+	resourceName := "aws_glue_catalog_table_optimizer.test"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableOptimizerConfig_compactionConfiguration(rName, 100),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.strategy", "binpack"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.delete_file_threshold", "100"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.min_input_files", "10"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateIdFunc:                    testAccCatalogTableOptimizerStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrTableName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+			},
+			{
+				Config: testAccCatalogTableOptimizerConfig_compactionConfiguration(rName, 1000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.strategy", "binpack"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.delete_file_threshold", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.min_input_files", "10"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var catalogTableOptimizer glue.GetTableOptimizerOutput
@@ -365,7 +418,6 @@ func testAccCheckCatalogTableOptimizerExists(ctx context.Context, resourceName s
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 		resp, err := tfglue.FindCatalogTableOptimizer(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName],
 			rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes[names.AttrType])
-
 		if err != nil {
 			return create.Error(names.Glue, create.ErrActionCheckingExistence, tfglue.ResNameCatalogTableOptimizer, rs.Primary.ID, err)
 		}
@@ -539,11 +591,18 @@ resource "aws_glue_catalog_table_optimizer" "test" {
   configuration {
     role_arn = aws_iam_role.test.arn
     enabled  = true
+
+    compaction_configuration {
+      iceberg_configuration {
+        strategy = "binpack"
+      }
+    }
   }
 }
 `,
 	)
 }
+
 func testAccCatalogTableOptimizerConfig_update(rName string, enabled bool) string {
 	return acctest.ConfigCompose(
 		testAccCatalogTableOptimizerConfig_baseConfig(rName),
@@ -557,9 +616,41 @@ resource "aws_glue_catalog_table_optimizer" "test" {
   configuration {
     role_arn = aws_iam_role.test.arn
     enabled  = %[1]t
+
+    compaction_configuration {
+      iceberg_configuration {
+        strategy = "binpack"
+      }
+    }
   }
 }
 `, enabled))
+}
+
+func testAccCatalogTableOptimizerConfig_compactionConfiguration(rName string, deleteFileThreshold int) string {
+	return acctest.ConfigCompose(
+		testAccCatalogTableOptimizerConfig_baseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_glue_catalog_table_optimizer" "test" {
+  catalog_id    = data.aws_caller_identity.current.account_id
+  database_name = aws_glue_catalog_database.test.name
+  table_name    = aws_glue_catalog_table.test.name
+  type          = "compaction"
+
+  configuration {
+    role_arn = aws_iam_role.test.arn
+    enabled  = true
+
+    compaction_configuration {
+      iceberg_configuration {
+        strategy              = "binpack"
+        delete_file_threshold = %[1]d
+        min_input_files       = 10
+      }
+    }
+  }
+}
+`, deleteFileThreshold))
 }
 
 func testAccCatalogTableOptimizerConfig_retentionConfiguration(rName string, retentionPeriod int) string {
