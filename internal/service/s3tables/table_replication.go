@@ -251,7 +251,7 @@ func findTableReplication(ctx context.Context, conn *s3tables.Client, input *s3t
 	}
 
 	if output == nil || output.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
