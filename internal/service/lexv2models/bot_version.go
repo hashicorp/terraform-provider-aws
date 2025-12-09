@@ -248,7 +248,7 @@ func findBotVersionByTwoPartKey(ctx context.Context, conn *lexmodelsv2.Client, b
 	}
 
 	if output == nil || output.BotVersion == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

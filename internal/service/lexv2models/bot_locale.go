@@ -323,7 +323,7 @@ func findBotLocaleByThreePartKey(ctx context.Context, conn *lexmodelsv2.Client, 
 	}
 
 	if output == nil || output.LocaleId == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
