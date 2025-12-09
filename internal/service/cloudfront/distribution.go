@@ -1208,7 +1208,7 @@ func deleteDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 		return fmt.Errorf("deleting CloudFront Distribution (%s): %w", id, err)
 	}
 
-	if _, err := waitDistributionDeleted(ctx, conn, id); err != nil {
+	if err := waitDistributionDeleted(ctx, conn, id); err != nil {
 		return fmt.Errorf("waiting for CloudFront Distribution (%s) delete: %w", id, err)
 	}
 
@@ -1334,7 +1334,7 @@ func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id s
 	return nil, err
 }
 
-func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
+func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{distributionStatusInProgress, distributionStatusDeployed},
 		Target:     []string{},
@@ -1344,13 +1344,9 @@ func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id st
 		Delay:      15 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudfront.GetDistributionOutput); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConfig {
