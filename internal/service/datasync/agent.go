@@ -314,7 +314,7 @@ func findAgentByARN(ctx context.Context, conn *datasync.Client, arn string) (*da
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

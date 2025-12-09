@@ -413,7 +413,7 @@ func findLocationHDFSByARN(ctx context.Context, conn *datasync.Client, arn strin
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

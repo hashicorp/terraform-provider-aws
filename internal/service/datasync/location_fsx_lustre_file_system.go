@@ -210,7 +210,7 @@ func findLocationFSxLustreByARN(ctx context.Context, conn *datasync.Client, arn 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
