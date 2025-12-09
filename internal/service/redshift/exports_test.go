@@ -17,6 +17,7 @@ var (
 	ResourceHSMClientCertificate         = resourceHSMClientCertificate
 	ResourceHSMConfiguration             = resourceHSMConfiguration
 	ResourceIntegration                  = newIntegrationResource
+	ResourceIdcApplication               = resourceIdcApplication
 	ResourceLogging                      = newLoggingResource
 	ResourceParameterGroup               = resourceParameterGroup
 	ResourcePartner                      = resourcePartner
@@ -40,6 +41,7 @@ var (
 	FindHSMClientCertificateByID                = findHSMClientCertificateByID
 	FindHSMConfigurationByID                    = findHSMConfigurationByID
 	FindIntegrationByARN                        = findIntegrationByARN
+	FindIDCApplicationByARN                     = findIDCApplicationByARN
 	FindLoggingByID                             = findLoggingByID
 	FindParameterGroupByName                    = findParameterGroupByName
 	FindPartnerByID                             = findPartnerByID

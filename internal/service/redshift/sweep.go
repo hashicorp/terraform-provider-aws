@@ -481,3 +481,25 @@ func sweepAuthenticationProfiles(region string) error {
 
 	return nil
 }
+
+func sweepIDCApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := redshift.ListIDCApplicationsInput{}
+	conn := client.RedshiftClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := redshift.NewListIDCApplicationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.IDCApplications {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceIDCApplication, client,
+				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.IDCApplicationId))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
