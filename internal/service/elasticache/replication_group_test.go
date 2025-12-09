@@ -611,6 +611,64 @@ func TestAccElastiCacheReplicationGroup_updateUserGroups(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_authToRbacMigration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+	token1 := sdkacctest.RandString(16)
+	userGroup := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	userId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_ForMigrationAuthTokenSetup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+			{
+				// When adding an auth_token to a previously passwordless replication
+				// group, the SET strategy can be used.
+				Config: testAccReplicationGroupConfig_ForMigrationAuthToken(rName, token1, string(awstypes.AuthTokenUpdateStrategyTypeSet)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auth_token", token1),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", string(awstypes.AuthTokenUpdateStrategyTypeSet)),
+				),
+			},
+			{
+				// To migrate from AUTH to RBAC, modify request should not include the auth_token and
+				// need to keep DELETE auth_token_update_strategy
+				// Ref: https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/Clusters.RBAC.html#Migrate-From-RBAC-to-Auth
+				Config: testAccReplicationGroupConfig_ForMigrationUserGroup(rName, userId, userGroup),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					testAccCheckReplicationGroupUserGroup(ctx, t, resourceName, userGroup),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_group_ids.*", userGroup),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", string(awstypes.AuthTokenUpdateStrategyTypeDelete)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_updateNodeSize(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4665,6 +4723,136 @@ resource "aws_security_group" "test" {
   }
 }
 `, rName, authToken, updateStrategy))
+}
+
+func testAccReplicationGroupConfig_ForMigrationAuthTokenSetup(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t2.micro"
+  num_cache_clusters   = "1"
+  port                 = 6379
+  subnet_group_name    = aws_elasticache_subnet_group.test.name
+  security_group_ids   = [aws_security_group.test.id]
+  engine_version             = "6.2"
+  parameter_group_name       = "default.redis6.x"
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName))
+}
+
+func testAccReplicationGroupConfig_ForMigrationAuthToken(rName string, authToken string, updateStrategy string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  engine_version             = "6.2"
+  parameter_group_name       = "default.redis6.x"
+  transit_encryption_enabled = true
+  auth_token                 = %[2]q
+  auth_token_update_strategy = %[3]q
+  apply_immediately    		 = true
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName, authToken, updateStrategy))
+}
+
+func testAccReplicationGroupConfig_ForMigrationUserGroup(rName string, userId string, userGroup string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = %[2]q
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "redis"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group" "test" {
+  user_group_id = %[3]q
+  engine        = "redis"
+  user_ids      = [aws_elasticache_user.test.user_id]
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  engine_version             = "6.2"
+  parameter_group_name       = "default.redis6.x"
+  transit_encryption_enabled = true
+  auth_token_update_strategy = "DELETE"
+  user_group_ids             = [aws_elasticache_user_group.test.id]
+  apply_immediately    		 = true
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName, userId, userGroup))
 }
 
 func testAccReplicationGroupConfig_numberCacheClusters(rName string, numberCacheClusters int) string {
