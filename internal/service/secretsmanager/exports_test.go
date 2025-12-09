@@ -10,8 +10,8 @@ var (
 	ResourceSecretRotation = resourceSecretRotation
 	ResourceSecretVersion  = resourceSecretVersion
 
-	FindSecretByID                       = findSecretByID
-	FindSecretPolicyByID                 = findSecretPolicyByID
-	FindSecretVersionByTwoPartKey        = findSecretVersionByTwoPartKey
-	FindSecretVersionEntryByTwoPartKey   = findSecretVersionEntryByTwoPartKey
+	FindSecretByID                     = findSecretByID
+	FindSecretPolicyByID               = findSecretPolicyByID
+	FindSecretVersionByTwoPartKey      = findSecretVersionByTwoPartKey
+	FindSecretVersionEntryByTwoPartKey = findSecretVersionEntryByTwoPartKey
 )

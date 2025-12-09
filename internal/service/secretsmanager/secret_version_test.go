@@ -6,7 +6,6 @@ package secretsmanager_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"reflect"
 	"testing"
 
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -345,7 +343,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnlyLimitedPermissions(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, resourceName, &version),
 					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret"),
-					resource.TestCheckResourceAttr(resourceName, "has_secret_string_wo", "true"),
+					resource.TestCheckResourceAttr(resourceName, "has_secret_string_wo", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
 				),
 			},
@@ -585,25 +583,13 @@ func testAccSecretVersionConfig_stringWriteOnlyLimitedPermissions(rName, secret 
 }`
 
 	return acctest.ConfigCompose(
-		fmt.Sprintf(`
-provider "aws" {
-  alias = "limited"
-
-  assume_role {
-    role_arn = %[1]q
-    policy   = <<POLICY
-%[2]s
-POLICY
-  }
-}
-`, os.Getenv(envvar.AccAssumeRoleARN), policy),
+		acctest.ConfigAssumeRolePolicy(policy),
 		fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  provider                 = aws.limited
   secret_id                = aws_secretsmanager_secret.test.id
   secret_string_wo         = %[2]q
   secret_string_wo_version = %[3]d
