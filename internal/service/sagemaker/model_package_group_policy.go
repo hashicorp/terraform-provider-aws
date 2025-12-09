@@ -146,7 +146,7 @@ func findModelPackageGroupPolicyByName(ctx context.Context, conn *sagemaker.Clie
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
