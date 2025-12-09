@@ -314,7 +314,7 @@ func findServiceIntegration(ctx context.Context, conn *devopsguru.Client) (*awst
 	}
 
 	if out == nil || out.ServiceIntegration == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ServiceIntegration, nil
