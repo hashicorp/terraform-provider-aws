@@ -209,7 +209,7 @@ func findSecretPolicyByID(ctx context.Context, conn *secretsmanager.Client, id s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

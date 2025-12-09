@@ -448,7 +448,7 @@ func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
