@@ -539,6 +539,8 @@ resource "aws_apigatewayv2_domain_name" "test" {
     endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }
+
+  routing_mode = "ROUTING_RULE_THEN_API_MAPPING"
 }
 `, rName, index))
 }
