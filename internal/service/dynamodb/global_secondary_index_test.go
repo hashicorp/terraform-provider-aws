@@ -1345,11 +1345,9 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple(t *testing.T) {
 				Config:       testAccGlobalSecondaryIndexConfig_multipleGsi_create(rNameTable, rName1, rName2),
 				ResourceName: resourceName1,
 				ImportState:  true,
-				ImportStateIdFunc: func(t *awstypes.TableDescription, idxName string) resource.ImportStateIdFunc {
-					return func(s *terraform.State) (string, error) {
-						return fmt.Sprintf("%s/index/%s", *conf.TableArn, rName1), nil
-					}
-				}(&conf, rName1),
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					return fmt.Sprintf("%s/index/%s", *conf.TableArn, rName1), nil
+				},
 				ImportStatePersist: true,
 				ImportStateVerify:  false,
 			},
@@ -1357,11 +1355,9 @@ func TestAccDynamoDBGlobalSecondaryIndex_migrate_multiple(t *testing.T) {
 				Config:       testAccGlobalSecondaryIndexConfig_multipleGsi_create(rNameTable, rName1, rName2),
 				ResourceName: resourceName2,
 				ImportState:  true,
-				ImportStateIdFunc: func(t *awstypes.TableDescription, idxName string) resource.ImportStateIdFunc {
-					return func(s *terraform.State) (string, error) {
-						return fmt.Sprintf("%s/index/%s", *conf.TableArn, idxName), nil
-					}
-				}(&conf, rName2),
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					return fmt.Sprintf("%s/index/%s", *conf.TableArn, rName1), nil
+				},
 				ImportStatePersist: true,
 				ImportStateVerify:  false,
 			},
