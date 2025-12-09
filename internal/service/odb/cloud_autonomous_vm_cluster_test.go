@@ -261,7 +261,7 @@ func (autonomousVMClusterResourceTest) findAVMC(ctx context.Context, conn *odb.C
 	}
 
 	if out == nil || out.CloudAutonomousVmCluster == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.CloudAutonomousVmCluster, nil
