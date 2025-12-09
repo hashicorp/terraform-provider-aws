@@ -172,7 +172,11 @@ func SkipIfEmpty(t testing.T, name string, usageMessage string) string {
 	value := os.Getenv(name)
 
 	if value == "" {
-		t.Skipf("skipping test; environment variable %s must be set. Usage: %s", name, usageMessage)
+		msg := fmt.Sprintf("skipping test; environment variable %s must be set", name)
+		if usageMessage != "" {
+			msg += ". Usage: " + usageMessage
+		}
+		t.Skip(msg)
 	}
 
 	return value

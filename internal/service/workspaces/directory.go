@@ -194,6 +194,13 @@ func resourceDirectory() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tenancy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.Tenancy](),
+			},
 			"user_identity_type": {
 				Type:             schema.TypeString,
 				Computed:         true,
@@ -360,12 +367,15 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	workspaceType := types.WorkspaceType(d.Get("workspace_type").(string))
 	input := workspaces.RegisterWorkspaceDirectoryInput{
 		Tags:          getTagsIn(ctx),
-		Tenancy:       types.TenancyShared,
 		WorkspaceType: workspaceType,
 	}
 
 	if v, ok := d.GetOk(names.AttrSubnetIDs); ok {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("tenancy"); ok {
+		input.Tenancy = types.Tenancy(v.(string))
 	}
 
 	switch workspaceType {
@@ -534,6 +544,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("workspace_directory_name", directory.WorkspaceDirectoryName)
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
 	d.Set("workspace_type", directory.WorkspaceType)
+	d.Set("tenancy", directory.Tenancy)
 
 	return diags
 }

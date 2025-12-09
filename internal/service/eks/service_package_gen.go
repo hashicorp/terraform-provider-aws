@@ -42,6 +42,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newCapabilityResource,
+			TypeName: "aws_eks_capability",
+			Name:     "Capability",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newPodIdentityAssociationResource,
 			TypeName: "aws_eks_pod_identity_association",
 			Name:     "Pod Identity Association",

@@ -115,7 +115,7 @@ jobs:
     needs:
       - get-go-version
       - set-product-version
-    runs-on: custom-ubuntu-22.04-medium
+    runs-on: custom-ubuntu-22.04-large
     strategy:
       fail-fast: true
       matrix:

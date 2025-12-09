@@ -4,17 +4,21 @@
 package s3tables
 
 var (
-	ResourceNamespace         = newNamespaceResource
-	ResourceTable             = newTableResource
-	ResourceTableBucket       = newTableBucketResource
-	ResourceTableBucketPolicy = newTableBucketPolicyResource
-	ResourceTablePolicy       = newTablePolicyResource
+	ResourceNamespace              = newNamespaceResource
+	ResourceTable                  = newTableResource
+	ResourceTableBucket            = newTableBucketResource
+	ResourceTableBucketPolicy      = newTableBucketPolicyResource
+	ResourceTableBucketReplication = newTableBucketReplicationResource
+	ResourceTablePolicy            = newTablePolicyResource
+	ResourceTableReplication       = newTableReplicationResource
 
-	FindNamespaceByTwoPartKey     = findNamespaceByTwoPartKey
-	FindTableByThreePartKey       = findTableByThreePartKey
-	FindTableBucketByARN          = findTableBucketByARN
-	FindTableBucketPolicyByARN    = findTableBucketPolicyByARN
-	FindTablePolicyByThreePartKey = findTablePolicyByThreePartKey
+	FindNamespaceByTwoPartKey       = findNamespaceByTwoPartKey
+	FindTableByThreePartKey         = findTableByThreePartKey
+	FindTableBucketByARN            = findTableBucketByARN
+	FindTableBucketPolicyByARN      = findTableBucketPolicyByARN
+	FindTableBucketReplicationByARN = findTableBucketReplicationByARN
+	FindTablePolicyByThreePartKey   = findTablePolicyByThreePartKey
+	FindTableReplicationByARN       = findTableReplicationByARN
 
 	TableIDFromTableARN = tableIDFromTableARN
 )
