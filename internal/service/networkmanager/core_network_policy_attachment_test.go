@@ -271,8 +271,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 }
 
 resource "aws_networkmanager_core_network" "test" {
-  global_network_id  = aws_networkmanager_global_network.test.id
-  create_base_policy = true
+  global_network_id = aws_networkmanager_global_network.test.id
 }
 
 resource "aws_networkmanager_core_network_policy_attachment" "test" {
@@ -354,8 +353,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 }
 
 resource "aws_networkmanager_core_network" "test" {
-  global_network_id  = aws_networkmanager_global_network.test.id
-  create_base_policy = true
+  global_network_id = aws_networkmanager_global_network.test.id
 }
 
 resource "aws_networkmanager_core_network_policy_attachment" "test" {
