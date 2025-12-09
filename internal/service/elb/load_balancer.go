@@ -775,7 +775,7 @@ func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbala
 	}
 
 	if output == nil || output.LoadBalancerAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LoadBalancerAttributes, nil
