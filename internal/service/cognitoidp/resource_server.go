@@ -237,7 +237,7 @@ func findResourceServerByTwoPartKey(ctx context.Context, conn *cognitoidentitypr
 	}
 
 	if output == nil || output.ResourceServer == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResourceServer, nil

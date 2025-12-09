@@ -443,7 +443,7 @@ func findRiskConfigurationByTwoPartKey(ctx context.Context, conn *cognitoidentit
 	}
 
 	if output == nil || output.RiskConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RiskConfiguration, nil

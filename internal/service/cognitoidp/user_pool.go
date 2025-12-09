@@ -1325,7 +1325,7 @@ func findUserPoolByID(ctx context.Context, conn *cognitoidentityprovider.Client,
 	}
 
 	if output == nil || output.UserPool == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UserPool, nil
@@ -1350,7 +1350,7 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

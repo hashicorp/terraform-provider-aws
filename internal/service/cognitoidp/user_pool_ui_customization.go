@@ -199,7 +199,7 @@ func findUserPoolUICustomizationByTwoPartKey(ctx context.Context, conn *cognitoi
 	// The GetUICustomization API operation will return an empty struct
 	// if nothing is present rather than nil or an error, so we equate that with nil.
 	if output == nil || output.UICustomization == nil || inttypes.IsZero(output.UICustomization) {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UICustomization, nil
