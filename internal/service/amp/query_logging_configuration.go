@@ -282,7 +282,7 @@ func findQueryLoggingConfigurationByID(ctx context.Context, conn *amp.Client, id
 	}
 
 	if output == nil || output.QueryLoggingConfiguration == nil || output.QueryLoggingConfiguration.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.QueryLoggingConfiguration, nil
