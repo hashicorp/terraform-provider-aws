@@ -291,7 +291,7 @@ func findDomainAssociationByTwoPartKey(ctx context.Context, conn *amplify.Client
 	}
 
 	if output == nil || output.DomainAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainAssociation, nil
