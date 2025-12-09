@@ -231,7 +231,7 @@ func findTrafficPolicyByID(ctx context.Context, conn *route53.Client, id string)
 	}
 
 	if output == nil || output.TrafficPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(inputLTP)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TrafficPolicy, nil
