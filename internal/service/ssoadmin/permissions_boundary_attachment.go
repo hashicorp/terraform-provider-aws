@@ -230,7 +230,7 @@ func findPermissionsBoundaryByTwoPartKey(ctx context.Context, conn *ssoadmin.Cli
 	}
 
 	if output == nil || output.PermissionsBoundary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PermissionsBoundary, nil

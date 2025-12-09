@@ -184,7 +184,7 @@ func findInstanceAttributeControlAttributesByARN(ctx context.Context, conn *ssoa
 	}
 
 	if output == nil || output.InstanceAccessControlAttributeConfiguration == nil || len(output.InstanceAccessControlAttributeConfiguration.AccessControlAttributes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
