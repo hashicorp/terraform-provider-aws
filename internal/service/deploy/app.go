@@ -243,7 +243,7 @@ func findApplicationByName(ctx context.Context, conn *codedeploy.Client, name st
 	}
 
 	if output == nil || output.Application == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Application, nil
