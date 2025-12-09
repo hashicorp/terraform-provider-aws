@@ -254,7 +254,7 @@ func findStudioSessionMappingByIDOrName(ctx context.Context, conn *emr.Client, i
 	}
 
 	if output == nil || output.SessionMapping == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SessionMapping, nil
