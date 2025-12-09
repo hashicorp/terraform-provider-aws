@@ -73,7 +73,7 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if out.VoiceConnector == nil || out.VoiceConnector.CdrBucket == nil {
-			return tfresource.RetryableError(tfresource.NewEmptyResultError(&chimesdkvoice.GetGlobalSettingsInput{}))
+			return tfresource.RetryableError(tfresource.NewEmptyResultError())
 		}
 
 		return nil
