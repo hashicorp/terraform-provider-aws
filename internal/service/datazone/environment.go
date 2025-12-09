@@ -489,7 +489,7 @@ func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId, i
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

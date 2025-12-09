@@ -101,7 +101,7 @@ func _findEnvironmentBlueprintByName(ctx context.Context, conn *datazone.Client,
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for i := range out.Items {
@@ -112,7 +112,7 @@ func _findEnvironmentBlueprintByName(ctx context.Context, conn *datazone.Client,
 	}
 
 	if out.NextToken == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return _findEnvironmentBlueprintByName(ctx, conn, domainId, name, managed, out.NextToken)
