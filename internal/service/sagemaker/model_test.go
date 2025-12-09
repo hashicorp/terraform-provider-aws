@@ -10,7 +10,11 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
@@ -363,10 +367,20 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 				Config: testAccModelConfig_vpcBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrSecurityGroupIDs: knownvalue.SetSizeExact(2),
+							names.AttrSubnets:          knownvalue.SetSizeExact(2),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -392,28 +406,58 @@ func TestAccSageMakerModel_vpcConfigUpdate(t *testing.T) {
 				Config: testAccModelConfig_vpcBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrSecurityGroupIDs: knownvalue.SetSizeExact(2),
+							names.AttrSubnets:          knownvalue.SetSizeExact(2),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccModelConfig_vpcSubnetsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrSecurityGroupIDs: knownvalue.SetSizeExact(2),
+							names.AttrSubnets:          knownvalue.SetSizeExact(3),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccModelConfig_vpcSecurityGroupsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "3"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_config"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrSecurityGroupIDs: knownvalue.SetSizeExact(3),
+							names.AttrSubnets:          knownvalue.SetSizeExact(3),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1137,62 +1181,62 @@ resource "aws_security_group" "test" {
 
 func testAccModelConfig_vpcSubnetsUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccModelConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
-  resource "aws_sagemaker_model" "test" {
-    name                     = %[1]q
-    execution_role_arn       = aws_iam_role.test.arn
-    enable_network_isolation = true
+resource "aws_sagemaker_model" "test" {
+  name                     = %[1]q
+  execution_role_arn       = aws_iam_role.test.arn
+  enable_network_isolation = true
 
-    primary_container {
-      image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-    }
-
-    vpc_config {
-      subnets            = aws_subnet.test[*].id
-      security_group_ids = aws_security_group.test[*].id
-    }
+  primary_container {
+    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
-  resource "aws_security_group" "test" {
-    count = 2
-
-    name   = "%[1]s-${count.index}"
-    vpc_id = aws_vpc.test.id
-
-    tags = {
-      Name = %[1]q
-    }
+  vpc_config {
+    subnets            = aws_subnet.test[*].id
+    security_group_ids = aws_security_group.test[*].id
   }
-  `, rName))
+}
+
+resource "aws_security_group" "test" {
+  count = 2
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccModelConfig_vpcSecurityGroupsUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccModelConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
-  resource "aws_sagemaker_model" "test" {
-    name                     = %[1]q
-    execution_role_arn       = aws_iam_role.test.arn
-    enable_network_isolation = true
+resource "aws_sagemaker_model" "test" {
+  name                     = %[1]q
+  execution_role_arn       = aws_iam_role.test.arn
+  enable_network_isolation = true
 
-    primary_container {
-      image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-    }
-
-    vpc_config {
-      subnets            = aws_subnet.test[*].id
-      security_group_ids = aws_security_group.test[*].id
-    }
+  primary_container {
+    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
-  resource "aws_security_group" "test" {
-    count = 3
-
-    name   = "%[1]s-${count.index}"
-    vpc_id = aws_vpc.test.id
-
-    tags = {
-      Name = %[1]q
-    }
+  vpc_config {
+    subnets            = aws_subnet.test[*].id
+    security_group_ids = aws_security_group.test[*].id
   }
-  `, rName))
+}
+
+resource "aws_security_group" "test" {
+  count = 3
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 // lintignore:AWSAT003,AWSAT005
