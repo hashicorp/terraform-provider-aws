@@ -178,7 +178,7 @@ func findRegistryPolicyByName(ctx context.Context, conn *schemas.Client, name st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
