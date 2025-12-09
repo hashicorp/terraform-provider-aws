@@ -1342,7 +1342,7 @@ func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
