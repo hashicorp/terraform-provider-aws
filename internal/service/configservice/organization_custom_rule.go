@@ -315,7 +315,7 @@ func findOrganizationCustomRuleByName(ctx context.Context, conn *configservice.C
 	}
 
 	if output.OrganizationCustomRuleMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
