@@ -300,7 +300,7 @@ func findContactFlowModule(ctx context.Context, conn *connect.Client, input *con
 	}
 
 	if output == nil || output.ContactFlowModule == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ContactFlowModule, nil

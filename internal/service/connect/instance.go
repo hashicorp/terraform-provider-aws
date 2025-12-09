@@ -345,7 +345,7 @@ func findInstance(ctx context.Context, conn *connect.Client, input *connect.Desc
 	}
 
 	if output == nil || output.Instance == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Instance, nil
@@ -375,7 +375,7 @@ func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *con
 	}
 
 	if output == nil || output.Attribute == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attribute, nil

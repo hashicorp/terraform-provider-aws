@@ -327,7 +327,7 @@ func findQuickConnect(ctx context.Context, conn *connect.Client, input *connect.
 	}
 
 	if output == nil || output.QuickConnect == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.QuickConnect, nil

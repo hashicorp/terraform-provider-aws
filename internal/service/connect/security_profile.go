@@ -258,7 +258,7 @@ func findSecurityProfile(ctx context.Context, conn *connect.Client, input *conne
 	}
 
 	if output == nil || output.SecurityProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SecurityProfile, nil
