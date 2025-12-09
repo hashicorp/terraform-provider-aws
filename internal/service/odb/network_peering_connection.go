@@ -67,7 +67,8 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
 			"odb_network_id": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -75,7 +76,8 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 					"A sample ID is odbpcx-abcdefgh12345678. Changing this will force terraform to create new resource.",
 			},
 			"peer_network_id": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -108,6 +110,7 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 
 			"odb_network_arn": schema.StringAttribute{
 				Description: "ARN of the odb network peering connection.",
+				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -116,6 +119,7 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 
 			"peer_network_arn": schema.StringAttribute{
 				Description: "ARN of the peer network peering connection.",
+				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -163,9 +167,17 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	odbNetwork := plan.OdbNetworkArn
+	if odbNetwork.IsNull() || odbNetwork.IsUnknown() {
+		odbNetwork = plan.OdbNetworkId
+	}
+	peerNetwork := plan.PeerNetworkArn
+	if peerNetwork.IsNull() || peerNetwork.IsUnknown() {
+		peerNetwork = plan.PeerNetworkId
+	}
 	input := odb.CreateOdbPeeringConnectionInput{
-		OdbNetworkId:  plan.OdbNetworkId.ValueStringPointer(),
-		PeerNetworkId: plan.PeerNetworkId.ValueStringPointer(),
+		OdbNetworkId:  odbNetwork.ValueStringPointer(),
+		PeerNetworkId: peerNetwork.ValueStringPointer(),
 		DisplayName:   plan.DisplayName.ValueStringPointer(),
 		Tags:          getTagsIn(ctx),
 	}
