@@ -1017,6 +1017,11 @@ func TestAccLambdaFunction_imageConfigNull(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.lambda_handler"),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.working_directory", "/var/task"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})

@@ -271,6 +271,30 @@ func resourceFunction() *schema.Resource {
 						},
 					},
 				},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "0" && new == "1" {
+						imageConfigPlan := d.GetRawPlan().GetAttr("image_config")
+						if !imageConfigPlan.IsNull() {
+							icSlice := imageConfigPlan.AsValueSlice()[0]
+							if !icSlice.IsNull() {
+								var suppressCommand, suppressEntryPoint, suppressWorkingDirectory bool
+								icMap := icSlice.AsValueMap()
+								if v, ok := icMap["command"]; ok && v.IsNull() {
+									suppressCommand = true
+								}
+								if v, ok := icMap["entry_point"]; ok && v.IsNull() {
+									suppressEntryPoint = true
+								}
+								if v, ok := icMap["working_directory"]; ok && v.IsNull() {
+									suppressWorkingDirectory = true
+								}
+
+								return suppressCommand && suppressEntryPoint && suppressWorkingDirectory
+							}
+						}
+					}
+					return false
+				},
 			},
 			"image_uri": {
 				Type:         schema.TypeString,
