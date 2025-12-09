@@ -1,0 +1,46 @@
+# Example configuration for IBM project
+copyright:
+  holder: "IBM Corp."
+  start_year: 2014
+  current_year: 2025
+  format: "Copyright {{.Holder}} {{.StartYear}}, {{.CurrentYear}}"
+  
+license:
+  enabled: true
+  identifier: "MPL-2.0"
+  format: "SPDX-License-Identifier: {{.Identifier}}"
+
+files:
+  extensions:
+    - ".go"
+  
+  comment_styles:
+    go: "//"
+    sh: "#"
+    py: "#" 
+    hcl: "#"
+    tf: "#"
+    yml: "#"
+    yaml: "#"
+    md: "<!--"
+    html_markdown: "<!--"
+  
+  below_frontmatter:
+    - ".md"
+    - ".html.markdown"
+
+detection:
+  skip_generated: true
+  generated_patterns:
+    - "Code generated"
+    - "DO NOT EDIT"
+  
+  replace_patterns:
+    - "Copyright.*HashiCorp"
+    - "Copyright \\(c\\).*HashiCorp"
+  max_scan_lines: 20
+
+third_party:
+  action: "above"
+  patterns:
+    - "Copyright.*[a-zA-Z0-9].*"
