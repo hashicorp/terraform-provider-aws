@@ -251,7 +251,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
-					{{ else }}
+					{{- else }}
 						inttypes.RegionalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
 								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
@@ -381,7 +381,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 							{{- end -}}
 							{{- template "CommonIdentityOpts" . -}}
 						),
-					{{ else }}
+					{{- else }}
 						inttypes.RegionalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
 								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),

@@ -359,6 +359,11 @@ func resourceNodeGroup() *schema.Resource {
 								"update_config.0.max_unavailable_percentage",
 							},
 						},
+						"update_strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.NodegroupUpdateStrategies](),
+						},
 					},
 				},
 			},
@@ -986,6 +991,10 @@ func expandNodegroupUpdateConfig(tfMap map[string]any) *types.NodegroupUpdateCon
 		apiObject.MaxUnavailablePercentage = aws.Int32(int32(v))
 	}
 
+	if v, ok := tfMap["update_strategy"].(string); ok && v != "" {
+		apiObject.UpdateStrategy = types.NodegroupUpdateStrategies(v)
+	}
+
 	return apiObject
 }
 
@@ -1237,6 +1246,10 @@ func flattenNodegroupUpdateConfig(apiObject *types.NodegroupUpdateConfig) map[st
 
 	if v := apiObject.MaxUnavailablePercentage; v != nil {
 		tfMap["max_unavailable_percentage"] = aws.ToInt32(v)
+	}
+
+	if apiObject.UpdateStrategy != "" {
+		tfMap["update_strategy"] = string(apiObject.UpdateStrategy)
 	}
 
 	return tfMap

@@ -26,6 +26,8 @@ import (
 // Multiple values can be ORed together.
 type when uint16
 
+type When = when
+
 const (
 	Before  when = 1 << iota // Interceptor is invoked before call to method in schema
 	After                    // Interceptor is invoked after successful call to method in schema

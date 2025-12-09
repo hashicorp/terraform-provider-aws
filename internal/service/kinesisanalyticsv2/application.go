@@ -120,6 +120,26 @@ func resourceApplication() *schema.Resource {
 									},
 								},
 							},
+							"application_encryption_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKeyID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"key_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.KeyType](),
+										},
+									},
+								},
+							},
 							"application_snapshot_configuration": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -966,6 +986,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 			if d.HasChange("application_configuration.0.application_code_configuration") {
 				applicationConfigurationUpdate.ApplicationCodeConfigurationUpdate = expandApplicationCodeConfigurationUpdate(d.Get("application_configuration.0.application_code_configuration").([]any))
+
+				updateApplication = true
+			}
+
+			if d.HasChange("application_configuration.0.application_encryption_configuration") {
+				applicationConfigurationUpdate.ApplicationEncryptionConfigurationUpdate = expandApplicationEncryptionConfigurationUpdate(d.Get("application_configuration.0.application_encryption_configuration").([]any))
 
 				updateApplication = true
 			}
@@ -1821,6 +1847,10 @@ func expandApplicationConfiguration(vApplicationConfiguration []any) *awstypes.A
 		}
 
 		applicationConfiguration.ApplicationCodeConfiguration = applicationCodeConfiguration
+	}
+
+	if vApplicationEncryptionConfiguration, ok := mApplicationConfiguration["application_encryption_configuration"].([]any); ok && len(vApplicationEncryptionConfiguration) > 0 && vApplicationEncryptionConfiguration[0] != nil {
+		applicationConfiguration.ApplicationEncryptionConfiguration = expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguration)
 	}
 
 	if vApplicationSnapshotConfiguration, ok := mApplicationConfiguration["application_snapshot_configuration"].([]any); ok && len(vApplicationSnapshotConfiguration) > 0 && vApplicationSnapshotConfiguration[0] != nil {
@@ -2710,6 +2740,10 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 		mApplicationConfiguration["application_code_configuration"] = []any{mApplicationCodeConfiguration}
 	}
 
+	if applicationEncryptionConfigurationDescription := applicationConfigurationDescription.ApplicationEncryptionConfigurationDescription; applicationEncryptionConfigurationDescription != nil {
+		mApplicationConfiguration["application_encryption_configuration"] = flattenApplicationEncryptionConfigurationDescription(applicationEncryptionConfigurationDescription)
+	}
+
 	if applicationSnapshotConfigurationDescription := applicationConfigurationDescription.ApplicationSnapshotConfigurationDescription; applicationSnapshotConfigurationDescription != nil {
 		mApplicationSnapshotConfiguration := map[string]any{
 			"snapshots_enabled": aws.ToBool(applicationSnapshotConfigurationDescription.SnapshotsEnabled),
@@ -3098,4 +3132,58 @@ func expandStopApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.Stop
 	}
 
 	return apiObject
+}
+
+func expandApplicationEncryptionConfiguration(vApplicationEncryptionConfiguration []any) *awstypes.ApplicationEncryptionConfiguration {
+	if len(vApplicationEncryptionConfiguration) == 0 || vApplicationEncryptionConfiguration[0] == nil {
+		return nil
+	}
+
+	mApplicationEncryptionConfiguration := vApplicationEncryptionConfiguration[0].(map[string]any)
+	applicationEncryptionConfiguration := &awstypes.ApplicationEncryptionConfiguration{}
+
+	if vKeyType, ok := mApplicationEncryptionConfiguration["key_type"].(string); ok && vKeyType != "" {
+		applicationEncryptionConfiguration.KeyType = awstypes.KeyType(vKeyType)
+	}
+
+	if vKeyID, ok := mApplicationEncryptionConfiguration[names.AttrKeyID].(string); ok && vKeyID != "" {
+		applicationEncryptionConfiguration.KeyId = aws.String(vKeyID)
+	}
+
+	return applicationEncryptionConfiguration
+}
+
+func expandApplicationEncryptionConfigurationUpdate(vApplicationEncryptionConfiguration []any) *awstypes.ApplicationEncryptionConfigurationUpdate {
+	if len(vApplicationEncryptionConfiguration) == 0 || vApplicationEncryptionConfiguration[0] == nil {
+		return nil
+	}
+
+	mApplicationEncryptionConfiguration := vApplicationEncryptionConfiguration[0].(map[string]any)
+	applicationEncryptionConfiguration := &awstypes.ApplicationEncryptionConfigurationUpdate{}
+
+	if vKeyType, ok := mApplicationEncryptionConfiguration["key_type"].(string); ok && vKeyType != "" {
+		applicationEncryptionConfiguration.KeyTypeUpdate = awstypes.KeyType(vKeyType)
+	}
+
+	if vKeyID, ok := mApplicationEncryptionConfiguration[names.AttrKeyID].(string); ok && vKeyID != "" {
+		applicationEncryptionConfiguration.KeyIdUpdate = aws.String(vKeyID)
+	}
+
+	return applicationEncryptionConfiguration
+}
+
+func flattenApplicationEncryptionConfigurationDescription(applicationEncryptionConfiguration *awstypes.ApplicationEncryptionConfigurationDescription) []any {
+	if applicationEncryptionConfiguration == nil {
+		return []any{}
+	}
+
+	mApplicationEncryptionConfiguration := map[string]any{
+		"key_type": applicationEncryptionConfiguration.KeyType,
+	}
+
+	if applicationEncryptionConfiguration.KeyId != nil {
+		mApplicationEncryptionConfiguration[names.AttrKeyID] = aws.ToString(applicationEncryptionConfiguration.KeyId)
+	}
+
+	return []any{mApplicationEncryptionConfiguration}
 }

@@ -6,6 +6,7 @@ package s3vectors_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -66,6 +67,132 @@ func TestAccS3VectorsIndex_basic(t *testing.T) {
 						"index_arn": tfknownvalue.RegionalARNRegexp("s3vectors", regexache.MustCompile(`bucket/.+/index/.+`)),
 					}),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "index_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "index_arn",
+			},
+		},
+	})
+}
+
+func TestAccS3VectorsIndex_encryptionConfigurationAES256(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Index
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3vectors_index.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexConfig_encryptionConfigurationAES256(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIndexExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration).AtSliceIndex(0).AtMapKey("sse_type"), tfknownvalue.StringExact(awstypes.SseTypeAes256)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "index_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "index_arn",
+			},
+		},
+	})
+}
+
+func TestAccS3VectorsIndex_encryptionConfigurationCMK(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Index
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3vectors_index.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexConfig_encryptionConfigurationCMK(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIndexExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration).AtSliceIndex(0).AtMapKey("sse_type"), tfknownvalue.StringExact(awstypes.SseTypeAwsKms)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration).AtSliceIndex(0).AtMapKey(names.AttrKMSKeyARN), knownvalue.NotNull()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "index_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "index_arn",
+			},
+		},
+	})
+}
+
+func TestAccS3VectorsIndex_metadataConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Index
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3vectors_index.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexConfig_metadataConfiguration(rName, []string{acctest.CtKey1, acctest.CtKey2}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIndexExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metadata_configuration").AtSliceIndex(0).AtMapKey("non_filterable_metadata_keys"), knownvalue.SetExact(
+						[]knownvalue.Check{
+							knownvalue.StringExact(acctest.CtKey1),
+							knownvalue.StringExact(acctest.CtKey2),
+						},
+					)),
 				},
 			},
 			{
@@ -228,4 +355,100 @@ resource "aws_s3vectors_index" "test" {
   distance_metric = "euclidean"
 }
 `, rName)
+}
+
+func testAccIndexConfig_encryptionConfigurationAES256(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3vectors_vector_bucket" "test" {
+  vector_bucket_name = "%[1]s-bucket"
+  force_destroy      = true
+}
+
+resource "aws_s3vectors_index" "test" {
+  index_name         = %[1]q
+  vector_bucket_name = aws_s3vectors_vector_bucket.test.vector_bucket_name
+
+  data_type       = "float32"
+  dimension       = 2
+  distance_metric = "euclidean"
+
+  encryption_configuration {
+    sse_type = "AES256"
+  }
+}
+`, rName)
+}
+
+func testAccIndexConfig_encryptionConfigurationCMK(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+data "aws_iam_policy_document" "kms_key_policy" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["indexing.s3vectors.amazonaws.com"]
+    }
+    actions   = ["kms:Decrypt"]
+    resources = ["*"]
+  }
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  policy                  = data.aws_iam_policy_document.kms_key_policy.json
+}
+
+resource "aws_s3vectors_vector_bucket" "test" {
+  vector_bucket_name = "%[1]s-bucket"
+  force_destroy      = true
+}
+
+resource "aws_s3vectors_index" "test" {
+  index_name         = %[1]q
+  vector_bucket_name = aws_s3vectors_vector_bucket.test.vector_bucket_name
+
+  data_type       = "float32"
+  dimension       = 2
+  distance_metric = "euclidean"
+
+  encryption_configuration {
+    kms_key_arn = aws_kms_key.test.arn
+    sse_type    = "aws:kms"
+  }
+}
+`, rName)
+}
+
+func testAccIndexConfig_metadataConfiguration(rName string, keys []string) string {
+	return fmt.Sprintf(`
+resource "aws_s3vectors_vector_bucket" "test" {
+  vector_bucket_name = "%[1]s-bucket"
+  force_destroy      = true
+}
+
+resource "aws_s3vectors_index" "test" {
+  index_name         = %[1]q
+  vector_bucket_name = aws_s3vectors_vector_bucket.test.vector_bucket_name
+
+  data_type       = "float32"
+  dimension       = 2
+  distance_metric = "euclidean"
+
+  metadata_configuration {
+    non_filterable_metadata_keys = ["%[2]s"]
+  }
+}
+`, rName, strings.Join(keys, `", "`))
 }

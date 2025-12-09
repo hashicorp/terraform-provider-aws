@@ -139,10 +139,9 @@ func resourceIntegration() *schema.Resource {
 				ForceNew: true,
 			},
 			"timeout_milliseconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(50, 300000),
-				Default:      29000,
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  29000,
 			},
 			"tls_config": {
 				Type:     schema.TypeList,
@@ -168,7 +167,37 @@ func resourceIntegration() *schema.Resource {
 				Optional: true,
 			},
 		},
+		CustomizeDiff: validateTimeoutMilliseconds,
 	}
+}
+
+func validateTimeoutMilliseconds(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+	const minTimeoutMilliseconds = 50
+	const maxTimeoutMillisecondsResponseTransferModeBuffered = 300000
+	const maxTimeoutMillisecondsResponseTransferModeStream = 900000
+
+	timeoutMilliseconds := diff.Get("timeout_milliseconds").(int)
+	if timeoutMilliseconds < minTimeoutMilliseconds {
+		return fmt.Errorf("timeout_milliseconds must be at least %d", minTimeoutMilliseconds)
+	}
+
+	responseTransferMode := diff.Get("response_transfer_mode").(string)
+	if responseTransferMode == "" {
+		responseTransferMode = string(types.ResponseTransferModeBuffered)
+	}
+
+	switch types.ResponseTransferMode(responseTransferMode) {
+	case types.ResponseTransferModeBuffered:
+		if timeoutMilliseconds > maxTimeoutMillisecondsResponseTransferModeBuffered {
+			return fmt.Errorf("timeout_milliseconds must be at most %d when response_transfer_mode is BUFFERED", maxTimeoutMillisecondsResponseTransferModeBuffered)
+		}
+	case types.ResponseTransferModeStream:
+		if timeoutMilliseconds > maxTimeoutMillisecondsResponseTransferModeStream {
+			return fmt.Errorf("timeout_milliseconds must be at most %d when response_transfer_mode is STREAM", maxTimeoutMillisecondsResponseTransferModeStream)
+		}
+	}
+
+	return nil
 }
 
 func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

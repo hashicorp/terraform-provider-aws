@@ -497,6 +497,11 @@ func TestAccBedrockAgentAgent_memoryConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 					resource.TestCheckResourceAttr(resourceName, "memory_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.enabled_memory_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.enabled_memory_types.0", "SESSION_SUMMARY"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.storage_days", "15"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.session_summary_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "memory_configuration.0.session_summary_configuration.0.max_recent_sessions", "5"),
 					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", acctest.CtTrue),
 				),
 			},
@@ -940,6 +945,9 @@ resource "aws_bedrockagent_agent" "test" {
   memory_configuration {
     enabled_memory_types = ["SESSION_SUMMARY"]
     storage_days         = 15
+    session_summary_configuration {
+      max_recent_sessions = 5
+    }
   }
 }
 `, rName, model, description))

@@ -151,7 +151,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(secretVersionCreateResourceID(secretID, versionID))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+		return findSecretVersionForExistence(ctx, conn, secretID, versionID, secretStringWO != "")
 	})
 
 	if err != nil {
@@ -159,6 +159,25 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return append(diags, resourceSecretVersionRead(ctx, d, meta)...)
+}
+
+type secretVersionExistsOutput struct {
+	VersionStages []string
+}
+
+func findSecretVersionForExistence(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string, hasWriteOnly bool) (*secretVersionExistsOutput, error) {
+	if hasWriteOnly {
+		_, output, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
+		if err != nil {
+			return nil, err
+		}
+		return &secretVersionExistsOutput{VersionStages: output.VersionStages}, nil
+	}
+	output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+	if err != nil {
+		return nil, err
+	}
+	return &secretVersionExistsOutput{VersionStages: output.VersionStages}, nil
 }
 
 func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -170,26 +189,6 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
-	}
-
-	d.Set(names.AttrARN, output.ARN)
-	d.Set("secret_binary", inttypes.Base64EncodeOnce(output.SecretBinary))
-	d.Set("secret_id", secretID)
-	d.Set("secret_string", output.SecretString)
-	d.Set("version_id", output.VersionId)
-	d.Set("version_stages", output.VersionStages)
-
-	// unset secret_string if the value is configured as write-only
 	hasWriteOnly := flex.HasWriteOnlyValue(d, "secret_string_wo")
 	secretStringWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("secret_string_wo"))
 	diags = append(diags, di...)
@@ -201,10 +200,44 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		hasWriteOnly = true
 	}
 
+	d.Set("secret_id", secretID)
+
 	if hasWriteOnly {
-		d.Set("has_secret_string_wo", true)
+		arn, versionEntry, err := findSecretVersionEntryByTwoPartKey(ctx, conn, secretID, versionID)
+		if !d.IsNewResource() && tfresource.NotFound(err) {
+			log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return diags
+		}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
+		}
+
+		d.Set(names.AttrARN, arn)
+		d.Set("secret_binary", nil)
 		d.Set("secret_string", nil)
+		d.Set("version_id", versionEntry.VersionId)
+		d.Set("version_stages", versionEntry.VersionStages)
+		d.Set("has_secret_string_wo", true)
+
+		return diags
 	}
+
+	output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrARN, output.ARN)
+	d.Set("secret_binary", inttypes.Base64EncodeOnce(output.SecretBinary))
+	d.Set("secret_string", output.SecretString)
+	d.Set("version_id", output.VersionId)
+	d.Set("version_stages", output.VersionStages)
 
 	return diags
 }
@@ -335,7 +368,8 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+		hasWriteOnly := flex.HasWriteOnlyValue(d, "secret_string_wo")
+		output, err := findSecretVersionForExistence(ctx, conn, secretID, versionID, hasWriteOnly)
 
 		if err != nil {
 			return nil, err
@@ -353,6 +387,49 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return diags
+}
+
+func findSecretVersionEntryByTwoPartKey(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string) (*string, *types.SecretVersionsListEntry, error) {
+	input := &secretsmanager.ListSecretVersionIdsInput{
+		SecretId:          aws.String(secretID),
+		IncludeDeprecated: aws.Bool(true),
+	}
+
+	paginator := secretsmanager.NewListSecretVersionIdsPaginator(conn, input)
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if errs.IsA[*types.ResourceNotFoundException](err) ||
+			errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
+			errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
+			return nil, nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if page == nil {
+			continue
+		}
+
+		for i := range page.Versions {
+			version := &page.Versions[i]
+
+			if aws.ToString(version.VersionId) == versionID {
+				return page.ARN, version, nil
+			}
+		}
+	}
+
+	return nil, nil, &retry.NotFoundError{
+		LastError:   tfresource.NewEmptyResultError(input),
+		LastRequest: input,
+	}
 }
 
 func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *secretsmanager.GetSecretValueInput) (*secretsmanager.GetSecretValueOutput, error) {
