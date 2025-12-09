@@ -408,6 +408,7 @@ func testAccKnowledgeBase_Kendra_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
 							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeKendra),
 							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(0),
 						}),
@@ -454,6 +455,7 @@ func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
 							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
 							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
 						}),
@@ -500,6 +502,14 @@ func testAccKnowledgeBase_S3Vectors_update(t *testing.T) {
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"kendra_knowledge_base_configuration": knownvalue.ListSizeExact(0),
+							"sql_knowledge_base_configuration":    knownvalue.ListSizeExact(0),
+							names.AttrType:                        tfknownvalue.StringExact(awstypes.KnowledgeBaseTypeVector),
+							"vector_knowledge_base_configuration": knownvalue.ListSizeExact(1),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"mongo_db_atlas_configuration":             knownvalue.ListSizeExact(0),

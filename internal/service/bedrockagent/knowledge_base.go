@@ -16,14 +16,17 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -121,6 +124,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								listvalidator.SizeAtMost(1),
 								listvalidator.ExactlyOneOf(
 									path.MatchRelative().AtParent().AtName("kendra_knowledge_base_configuration"),
+									path.MatchRelative().AtParent().AtName("sql_knowledge_base_configuration"),
 									path.MatchRelative().AtParent().AtName("vector_knowledge_base_configuration"),
 								),
 							},
@@ -134,6 +138,380 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+						"sql_knowledge_base_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[sqlKnowledgeBaseConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrType: schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.QueryEngineType](),
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"redshift_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+											listvalidator.ExactlyOneOf(
+												path.MatchRelative().AtParent().AtName("redshift_configuration"),
+											),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"query_engine_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftQueryEngineConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+														listvalidator.SizeAtMost(1),
+													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrType: schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.RedshiftQueryEngineType](),
+																Required:   true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"provisioned_configuration": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftProvisionedConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																	listvalidator.ExactlyOneOf(
+																		path.MatchRelative().AtParent().AtName("provisioned_configuration"),
+																		path.MatchRelative().AtParent().AtName("serverless_configuration"),
+																	),
+																},
+																PlanModifiers: []planmodifier.List{
+																	listplanmodifier.RequiresReplace(),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		names.AttrClusterIdentifier: schema.StringAttribute{
+																			Required: true,
+																			PlanModifiers: []planmodifier.String{
+																				stringplanmodifier.RequiresReplace(),
+																			},
+																		},
+																	},
+																	Blocks: map[string]schema.Block{
+																		"auth_configuration": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftProvisionedAuthConfigurationModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.IsRequired(),
+																				listvalidator.SizeAtLeast(1),
+																				listvalidator.SizeAtMost(1),
+																			},
+																			PlanModifiers: []planmodifier.List{
+																				listplanmodifier.RequiresReplace(),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					"database_user": schema.StringAttribute{
+																						Optional: true,
+																						PlanModifiers: []planmodifier.String{
+																							stringplanmodifier.RequiresReplace(),
+																						},
+																					},
+																					names.AttrType: schema.StringAttribute{
+																						CustomType: fwtypes.StringEnumType[awstypes.RedshiftProvisionedAuthType](),
+																						Required:   true,
+																						PlanModifiers: []planmodifier.String{
+																							stringplanmodifier.RequiresReplace(),
+																						},
+																					},
+																					"username_password_secret_arn": schema.StringAttribute{
+																						CustomType: fwtypes.ARNType,
+																						Optional:   true,
+																						PlanModifiers: []planmodifier.String{
+																							stringplanmodifier.RequiresReplace(),
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+															"serverless_configuration": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftServerlessConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																PlanModifiers: []planmodifier.List{
+																	listplanmodifier.RequiresReplace(),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"workgroup_arn": schema.StringAttribute{
+																			CustomType: fwtypes.ARNType,
+																			Required:   true,
+																			PlanModifiers: []planmodifier.String{
+																				stringplanmodifier.RequiresReplace(),
+																			},
+																		},
+																	},
+																	Blocks: map[string]schema.Block{
+																		"auth_configuration": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftServerlessAuthConfigurationModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.IsRequired(),
+																				listvalidator.SizeAtLeast(1),
+																				listvalidator.SizeAtMost(1),
+																			},
+																			PlanModifiers: []planmodifier.List{
+																				listplanmodifier.RequiresReplace(),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					names.AttrType: schema.StringAttribute{
+																						CustomType: fwtypes.StringEnumType[awstypes.RedshiftServerlessAuthType](),
+																						Required:   true,
+																						PlanModifiers: []planmodifier.String{
+																							stringplanmodifier.RequiresReplace(),
+																						},
+																					},
+																					"username_password_secret_arn": schema.StringAttribute{
+																						CustomType: fwtypes.ARNType,
+																						Optional:   true,
+																						PlanModifiers: []planmodifier.String{
+																							stringplanmodifier.RequiresReplace(),
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"query_generation_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[queryGenerationConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"execution_timeout_seconds": schema.Int64Attribute{
+																Optional: true,
+																Validators: []validator.Int64{
+																	int64validator.Between(1, 200),
+																},
+																PlanModifiers: []planmodifier.Int64{
+																	int64planmodifier.RequiresReplace(),
+																},
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"generation_context": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[queryGenerationContextModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																PlanModifiers: []planmodifier.List{
+																	listplanmodifier.RequiresReplace(),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Blocks: map[string]schema.Block{
+																		"curated_query": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[curatedQueryModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(10),
+																			},
+																			PlanModifiers: []planmodifier.List{
+																				listplanmodifier.RequiresReplace(),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					"natural_language": schema.StringAttribute{
+																						Required: true,
+																						PlanModifiers: []planmodifier.String{
+																							stringplanmodifier.RequiresReplace(),
+																						},
+																					},
+																					"sql": schema.StringAttribute{
+																						Required: true,
+																						PlanModifiers: []planmodifier.String{
+																							stringplanmodifier.RequiresReplace(),
+																						},
+																					},
+																				},
+																			},
+																		},
+																		"table": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[queryGenerationTableModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(50),
+																			},
+																			PlanModifiers: []planmodifier.List{
+																				listplanmodifier.RequiresReplace(),
+																			},
+																			NestedObject: schema.NestedBlockObject{
+																				Attributes: map[string]schema.Attribute{
+																					names.AttrDescription: schema.StringAttribute{
+																						Optional: true,
+																						Validators: []validator.String{
+																							stringvalidator.LengthBetween(1, 200),
+																						},
+																						PlanModifiers: []planmodifier.String{
+																							stringplanmodifier.RequiresReplace(),
+																						},
+																					},
+																					"inclusion": schema.StringAttribute{
+																						CustomType: fwtypes.StringEnumType[awstypes.IncludeExclude](),
+																						Optional:   true,
+																						PlanModifiers: []planmodifier.String{
+																							stringplanmodifier.RequiresReplace(),
+																						},
+																					},
+																					names.AttrName: schema.StringAttribute{
+																						Required: true,
+																						PlanModifiers: []planmodifier.String{
+																							stringplanmodifier.RequiresReplace(),
+																						},
+																					},
+																				},
+																				Blocks: map[string]schema.Block{
+																					"column": schema.ListNestedBlock{
+																						CustomType: fwtypes.NewListNestedObjectTypeOf[queryGenerationColumnModel](ctx),
+																						PlanModifiers: []planmodifier.List{
+																							listplanmodifier.RequiresReplace(),
+																						},
+																						NestedObject: schema.NestedBlockObject{
+																							Attributes: map[string]schema.Attribute{
+																								names.AttrDescription: schema.StringAttribute{
+																									Optional: true,
+																									Validators: []validator.String{
+																										stringvalidator.LengthBetween(1, 200),
+																									},
+																									PlanModifiers: []planmodifier.String{
+																										stringplanmodifier.RequiresReplace(),
+																									},
+																								},
+																								"inclusion": schema.StringAttribute{
+																									CustomType: fwtypes.StringEnumType[awstypes.IncludeExclude](),
+																									Optional:   true,
+																									PlanModifiers: []planmodifier.String{
+																										stringplanmodifier.RequiresReplace(),
+																									},
+																								},
+																								names.AttrName: schema.StringAttribute{
+																									Optional: true,
+																									PlanModifiers: []planmodifier.String{
+																										stringplanmodifier.RequiresReplace(),
+																									},
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"storage_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftQueryEngineStorageConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+														listvalidator.SizeAtMost(1),
+													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrType: schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.RedshiftQueryEngineStorageType](),
+																Required:   true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
+														Blocks: map[string]schema.Block{
+															"aws_data_catalog_configuration": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftQueryEngineAWSDataCatalogStorageConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																	listvalidator.ExactlyOneOf(
+																		path.MatchRelative().AtParent().AtName("aws_data_catalog_configuration"),
+																		path.MatchRelative().AtParent().AtName("redshift_configuration"),
+																	),
+																},
+																PlanModifiers: []planmodifier.List{
+																	listplanmodifier.RequiresReplace(),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		"table_names": schema.SetAttribute{
+																			CustomType: fwtypes.SetOfStringType,
+																			Required:   true,
+																			PlanModifiers: []planmodifier.Set{
+																				setplanmodifier.RequiresReplace(),
+																			},
+																		},
+																	},
+																},
+															},
+															"redshift_configuration": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[redshiftQueryEngineRedshiftStorageConfigurationModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
+																PlanModifiers: []planmodifier.List{
+																	listplanmodifier.RequiresReplace(),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Attributes: map[string]schema.Attribute{
+																		names.AttrDatabaseName: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 200),
+																			},
+																			PlanModifiers: []planmodifier.String{
+																				stringplanmodifier.RequiresReplace(),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
 										},
 									},
 								},
@@ -159,23 +537,37 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								},
 								Blocks: map[string]schema.Block{
 									"embedding_model_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[embeddingModelConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Blocks: map[string]schema.Block{
 												"bedrock_embedding_model_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockEmbeddingModelConfigurationModel](ctx),
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
+													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"dimensions": schema.Int64Attribute{
 																Optional: true,
+																PlanModifiers: []planmodifier.Int64{
+																	int64planmodifier.RequiresReplace(),
+																},
 															},
 															"embedding_data_type": schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.EmbeddingDataType](),
 																Optional:   true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
 															},
 														},
 													},
@@ -184,27 +576,43 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										},
 									},
 									"supplemental_data_storage_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[supplementalDataStorageConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Blocks: map[string]schema.Block{
 												"storage_location": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[storageLocationModel](ctx),
 													Validators: []validator.List{
 														listvalidator.IsRequired(),
 														listvalidator.SizeAtLeast(1),
+														listvalidator.SizeAtMost(1),
+													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															names.AttrType: schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.SupplementalDataStorageLocationType](),
 																Required:   true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
 															},
 														},
 														Blocks: map[string]schema.Block{
 															"s3_location": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[s3LocationModel](ctx),
 																Validators: []validator.List{
 																	listvalidator.SizeAtMost(1),
+																},
+																PlanModifiers: []planmodifier.List{
+																	listplanmodifier.RequiresReplace(),
 																},
 																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
@@ -215,6 +623,9 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 																					regexache.MustCompile(`^s3://[a-z0-9.-]+(/.*)?$`),
 																					"must be a valid S3 URI",
 																				),
+																			},
+																			PlanModifiers: []planmodifier.String{
+																				stringplanmodifier.RequiresReplace(),
 																			},
 																		},
 																	},
@@ -370,14 +781,14 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									},
 									"domain_endpoint": schema.StringAttribute{
 										Required: true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
 										Validators: []validator.String{
 											stringvalidator.RegexMatches(
 												regexache.MustCompile(`^https://.*$`),
 												"must be a valid HTTPS URL",
 											),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
 										},
 									},
 									"vector_index_name": schema.StringAttribute{
@@ -712,32 +1123,32 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									"index_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Optional:   true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
 										Validators: []validator.String{
 											stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("index_name"), path.MatchRelative().AtParent().AtName("vector_bucket_arn")),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
 										},
 									},
 									"index_name": schema.StringAttribute{
 										Optional: true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
 										Validators: []validator.String{
 											stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("vector_bucket_arn")),
 											stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("index_arn")),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
 										},
 									},
 									"vector_bucket_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Optional:   true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
 										Validators: []validator.String{
 											stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("index_name")),
 											stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("index_arn")),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
 										},
 									},
 								},
@@ -1069,8 +1480,93 @@ type knowledgeBaseResourceModel struct {
 
 type knowledgeBaseConfigurationModel struct {
 	KendraKnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[kendraKnowledgeBaseConfigurationModel] `tfsdk:"kendra_knowledge_base_configuration"`
+	SQLKnowledgeBaseConfiguration    fwtypes.ListNestedObjectValueOf[sqlKnowledgeBaseConfigurationModel]    `tfsdk:"sql_knowledge_base_configuration"`
 	Type                             fwtypes.StringEnum[awstypes.KnowledgeBaseType]                         `tfsdk:"type"`
 	VectorKnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[vectorKnowledgeBaseConfigurationModel] `tfsdk:"vector_knowledge_base_configuration"`
+}
+
+type kendraKnowledgeBaseConfigurationModel struct {
+	KendraIndexARN fwtypes.ARN `tfsdk:"kendra_index_arn"`
+}
+
+type sqlKnowledgeBaseConfigurationModel struct {
+	RedshiftConfiguration fwtypes.ListNestedObjectValueOf[redshiftConfigurationModel] `tfsdk:"redshift_configuration"`
+	Type                  fwtypes.StringEnum[awstypes.QueryEngineType]                `tfsdk:"type"`
+}
+
+type redshiftConfigurationModel struct {
+	QueryEngineConfiguration     fwtypes.ListNestedObjectValueOf[redshiftQueryEngineConfigurationModel]        `tfsdk:"query_engine_configuration"`
+	QueryGenerationConfiguration fwtypes.ListNestedObjectValueOf[queryGenerationConfigurationModel]            `tfsdk:"query_generation_configuration"`
+	StorageConfigurations        fwtypes.ListNestedObjectValueOf[redshiftQueryEngineStorageConfigurationModel] `tfsdk:"storage_configuration"`
+}
+
+type redshiftQueryEngineConfigurationModel struct {
+	ProvisionedConfiguration fwtypes.ListNestedObjectValueOf[redshiftProvisionedConfigurationModel] `tfsdk:"provisioned_configuration"`
+	ServerlessConfiguration  fwtypes.ListNestedObjectValueOf[redshiftServerlessConfigurationModel]  `tfsdk:"serverless_configuration"`
+	Type                     fwtypes.StringEnum[awstypes.RedshiftQueryEngineType]                   `tfsdk:"type"`
+}
+
+type redshiftProvisionedConfigurationModel struct {
+	AuthConfiguration fwtypes.ListNestedObjectValueOf[redshiftProvisionedAuthConfigurationModel] `tfsdk:"auth_configuration"`
+	ClusterIdentifier types.String                                                               `tfsdk:"cluster_identifier"`
+}
+
+type redshiftProvisionedAuthConfigurationModel struct {
+	DatabaseUser              types.String                                             `tfsdk:"database_user"`
+	Type                      fwtypes.StringEnum[awstypes.RedshiftProvisionedAuthType] `tfsdk:"type"`
+	UsernamePasswordSecretARN fwtypes.ARN                                              `tfsdk:"username_password_secret_arn"`
+}
+
+type redshiftServerlessConfigurationModel struct {
+	AuthConfiguration fwtypes.ListNestedObjectValueOf[redshiftServerlessAuthConfigurationModel] `tfsdk:"auth_configuration"`
+	WorkgroupARN      fwtypes.ARN                                                               `tfsdk:"workgroup_arn"`
+}
+
+type redshiftServerlessAuthConfigurationModel struct {
+	Type                      fwtypes.StringEnum[awstypes.RedshiftServerlessAuthType] `tfsdk:"type"`
+	UsernamePasswordSecretARN fwtypes.ARN                                             `tfsdk:"username_password_secret_arn"`
+}
+
+type queryGenerationConfigurationModel struct {
+	ExecutionTimeoutSeconds types.Int64                                                  `tfsdk:"execution_timeout_seconds"`
+	GenerationContext       fwtypes.ListNestedObjectValueOf[queryGenerationContextModel] `tfsdk:"generation_context"`
+}
+
+type queryGenerationContextModel struct {
+	CuratedQueries fwtypes.ListNestedObjectValueOf[curatedQueryModel]         `tfsdk:"curated_query"`
+	Tables         fwtypes.ListNestedObjectValueOf[queryGenerationTableModel] `tfsdk:"table"`
+}
+
+type curatedQueryModel struct {
+	NaturalLanguage types.String `tfsdk:"natural_language"`
+	SQL             types.String `tfsdk:"sql"`
+}
+
+type queryGenerationTableModel struct {
+	Columns     fwtypes.ListNestedObjectValueOf[queryGenerationColumnModel] `tfsdk:"column"`
+	Description types.String                                                `tfsdk:"description"`
+	Inclusion   fwtypes.StringEnum[awstypes.IncludeExclude]                 `tfsdk:"inclusion"`
+	Name        types.String                                                `tfsdk:"name"`
+}
+
+type queryGenerationColumnModel struct {
+	Description types.String                                `tfsdk:"description"`
+	Inclusion   fwtypes.StringEnum[awstypes.IncludeExclude] `tfsdk:"inclusion"`
+	Name        types.String                                `tfsdk:"name"`
+}
+
+type redshiftQueryEngineStorageConfigurationModel struct {
+	AWSDataCatalogConfiguration fwtypes.ListNestedObjectValueOf[redshiftQueryEngineAWSDataCatalogStorageConfigurationModel] `tfsdk:"aws_data_catalog_configuration"`
+	RedshiftConfiguration       fwtypes.ListNestedObjectValueOf[redshiftQueryEngineRedshiftStorageConfigurationModel]       `tfsdk:"redshift_configuration"`
+	Type                        fwtypes.StringEnum[awstypes.RedshiftQueryEngineStorageType]                                 `tfsdk:"type"`
+}
+
+type redshiftQueryEngineAWSDataCatalogStorageConfigurationModel struct {
+	TableNames fwtypes.SetOfString `tfsdk:"table_names"`
+}
+
+type redshiftQueryEngineRedshiftStorageConfigurationModel struct {
+	DatabaseName types.String `tfsdk:"database_name"`
 }
 
 type vectorKnowledgeBaseConfigurationModel struct {
@@ -1095,10 +1591,6 @@ type supplementalDataStorageConfigurationModel struct {
 type storageLocationModel struct {
 	S3Location fwtypes.ListNestedObjectValueOf[s3LocationModel]                 `tfsdk:"s3_location"`
 	Type       fwtypes.StringEnum[awstypes.SupplementalDataStorageLocationType] `tfsdk:"type"`
-}
-
-type kendraKnowledgeBaseConfigurationModel struct {
-	KendraIndexARN fwtypes.ARN `tfsdk:"kendra_index_arn"`
 }
 
 type storageConfigurationModel struct {

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagent_knowledge_base: Add `knowledge_base_configuration.sql_knowledge_base_configuration` argument
+```
+
+```release-note:bug
+resource/aws_bedrockagent_knowledge_base: Mark `knowledge_base_configuration.vector_knowledge_base_configuration.embedding_model_configuration` and `knowledge_base_configuration.vector_knowledge_base_configuration.supplemental_data_storage_configuration` as `ForceNew`
+```
