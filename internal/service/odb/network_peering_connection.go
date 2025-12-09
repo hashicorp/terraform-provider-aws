@@ -76,8 +76,7 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 					"A sample ID is odbpcx-abcdefgh12345678. Changing this will force terraform to create new resource.",
 			},
 			"peer_network_id": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -119,7 +118,6 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 
 			"peer_network_arn": schema.StringAttribute{
 				Description: "ARN of the peer network peering connection.",
-				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -172,7 +170,7 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 	if odbNetwork.IsNull() || odbNetwork.IsUnknown() {
 		odbNetwork = plan.OdbNetworkId
 	}
-	
+
 	input := odb.CreateOdbPeeringConnectionInput{
 		OdbNetworkId:  odbNetwork.ValueStringPointer(),
 		PeerNetworkId: plan.PeerNetworkId.ValueStringPointer(),
