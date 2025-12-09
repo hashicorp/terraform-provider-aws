@@ -576,7 +576,7 @@ func findBucketMetadataConfiguration(ctx context.Context, conn *s3.Client, input
 	}
 
 	if output == nil || output.GetBucketMetadataConfigurationResult == nil || output.GetBucketMetadataConfigurationResult.MetadataConfigurationResult == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GetBucketMetadataConfigurationResult.MetadataConfigurationResult, nil

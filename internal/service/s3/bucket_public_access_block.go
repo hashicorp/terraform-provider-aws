@@ -234,7 +234,7 @@ func findPublicAccessBlockConfiguration(ctx context.Context, conn *s3.Client, bu
 	}
 
 	if output == nil || output.PublicAccessBlockConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PublicAccessBlockConfiguration, nil

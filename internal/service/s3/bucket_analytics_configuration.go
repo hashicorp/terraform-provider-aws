@@ -464,7 +464,7 @@ func findAnalyticsConfiguration(ctx context.Context, conn *s3.Client, bucket, id
 	}
 
 	if output == nil || output.AnalyticsConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AnalyticsConfiguration, nil
