@@ -279,13 +279,13 @@ func resourceFunction() *schema.Resource {
 							if !icSlice.IsNull() {
 								var suppressCommand, suppressEntryPoint, suppressWorkingDirectory bool
 								icMap := icSlice.AsValueMap()
-								if v, ok := icMap["command"]; ok && v.IsNull() {
+								if v, ok := icMap["command"]; ok && (v.IsNull() || len(v.AsValueSlice()) == 0) {
 									suppressCommand = true
 								}
-								if v, ok := icMap["entry_point"]; ok && v.IsNull() {
+								if v, ok := icMap["entry_point"]; ok && (v.IsNull() || len(v.AsValueSlice()) == 0) {
 									suppressEntryPoint = true
 								}
-								if v, ok := icMap["working_directory"]; ok && v.IsNull() {
+								if v, ok := icMap["working_directory"]; ok && (v.IsNull() || len(v.AsString()) == 0) {
 									suppressWorkingDirectory = true
 								}
 
