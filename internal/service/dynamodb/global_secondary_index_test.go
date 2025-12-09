@@ -948,7 +948,49 @@ func TestAccDynamoDBGlobalSecondaryIndex_differentKeys(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes(t *testing.T) {
+func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	var gsi awstypes.GlobalSecondaryIndexDescription
+
+	resourceNameTable := "aws_dynamodb_table.test"
+	resourceName := "aws_dynamodb_global_secondary_index.test"
+
+	rNameTable := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalSecondaryIndexConfig_nonKeyAttributes(rNameTable, rName, []string{"test1", "test2"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
+					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("non_key_attributes"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("test1"),
+						knownvalue.StringExact("test2"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection_type"), knownvalue.StringExact("INCLUDE")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes_onUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TableDescription
 	var gsi awstypes.GlobalSecondaryIndexDescription
@@ -970,24 +1012,10 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
-
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckNoResourceAttr(resourceName, "non_key_attributes"),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("non_key_attributes"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection_type"), knownvalue.StringExact("ALL")),
 				},
 			},
 			{
@@ -1002,24 +1030,13 @@ func TestAccDynamoDBGlobalSecondaryIndex_nonKeyAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceNameTable, &conf),
 					testAccCheckGSIExists(ctx, t, resourceName, &gsi),
-
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{table_name}/index/{index_name}"),
-					resource.TestCheckResourceAttr(resourceName, "key_schema.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "key_schema.*", map[string]string{
-						"attribute_name": rNameTable,
-						"attribute_type": "S",
-						"key_type":       "HASH",
-					}),
-					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "non_key_attributes.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "projection_type", "INCLUDE"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rNameTable),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_demand_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("warm_throughput"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("non_key_attributes"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("test1"),
+						knownvalue.StringExact("test2"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("projection_type"), knownvalue.StringExact("INCLUDE")),
 				},
 			},
 			{
