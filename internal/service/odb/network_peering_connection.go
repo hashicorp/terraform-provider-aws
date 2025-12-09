@@ -167,17 +167,15 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	odbNetwork := plan.OdbNetworkArn
 	if odbNetwork.IsNull() || odbNetwork.IsUnknown() {
 		odbNetwork = plan.OdbNetworkId
 	}
-	peerNetwork := plan.PeerNetworkArn
-	if peerNetwork.IsNull() || peerNetwork.IsUnknown() {
-		peerNetwork = plan.PeerNetworkId
-	}
+	
 	input := odb.CreateOdbPeeringConnectionInput{
 		OdbNetworkId:  odbNetwork.ValueStringPointer(),
-		PeerNetworkId: peerNetwork.ValueStringPointer(),
+		PeerNetworkId: plan.PeerNetworkId.ValueStringPointer(),
 		DisplayName:   plan.DisplayName.ValueStringPointer(),
 		Tags:          getTagsIn(ctx),
 	}
