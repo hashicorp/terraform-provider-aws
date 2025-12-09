@@ -370,7 +370,7 @@ func findResourceSetByID(ctx context.Context, conn *fms.Client, id string) (*fms
 	}
 
 	if out == nil || out.ResourceSet == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
