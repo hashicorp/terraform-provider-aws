@@ -331,7 +331,7 @@ func findRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.GetR
 	}
 
 	if output == nil || output.Identifier == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
