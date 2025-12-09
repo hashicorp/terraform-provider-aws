@@ -359,7 +359,7 @@ func findClassifierByName(ctx context.Context, conn *glue.Client, name string) (
 	}
 
 	if output == nil || output.Classifier == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Classifier, nil

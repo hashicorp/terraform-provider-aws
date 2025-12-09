@@ -527,7 +527,7 @@ func findDevEndpointByName(ctx context.Context, conn *glue.Client, name string) 
 	}
 
 	if output == nil || output.DevEndpoint == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DevEndpoint, nil
