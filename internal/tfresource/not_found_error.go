@@ -20,10 +20,8 @@ type emptyResultError struct {
 
 var ErrEmptyResult = &emptyResultError{}
 
-func NewEmptyResultError(lastRequest any) error {
-	return &emptyResultError{
-		LastRequest: lastRequest,
-	}
+func NewEmptyResultError() error {
+	return &emptyResultError{}
 }
 
 func (e *emptyResultError) Error() string {
@@ -124,14 +122,14 @@ func AssertMaybeSingleValueResult[T any](a []T) (option.Option[T], error) {
 // Returns a `NotFound` error otherwise.
 func AssertSingleValueResult[T any](a []T, fs ...foundFunc[T]) (*T, error) {
 	if l := len(a); l == 0 {
-		return nil, NewEmptyResultError(nil)
+		return nil, NewEmptyResultError()
 	} else if l > 1 {
 		return nil, NewTooManyResultsError(l, nil)
 	} else {
 		v := &a[0]
 		for _, f := range fs {
 			if !f(v) {
-				return nil, NewEmptyResultError(nil)
+				return nil, NewEmptyResultError()
 			}
 		}
 		return v, nil
@@ -146,7 +144,7 @@ func AssertSingleValueResultIterErr[T any](i iter.Seq2[T, error]) (*T, error) {
 
 	v, err, ok := next()
 	if !ok {
-		return nil, NewEmptyResultError(nil)
+		return nil, NewEmptyResultError()
 	}
 
 	if err != nil {
@@ -179,7 +177,7 @@ func AssertSingleValueResultIterErr[T any](i iter.Seq2[T, error]) (*T, error) {
 // Returns a `NotFound` error otherwise.
 func AssertFirstValueResult[T any](a []T) (*T, error) {
 	if l := len(a); l == 0 {
-		return nil, NewEmptyResultError(nil)
+		return nil, NewEmptyResultError()
 	}
 	return &a[0], nil
 }

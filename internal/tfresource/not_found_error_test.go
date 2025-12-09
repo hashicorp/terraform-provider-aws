@@ -18,7 +18,7 @@ func TestEmptyResultErrorAsSdkNotFoundError(t *testing.T) {
 	t.Parallel()
 
 	lastRequest := 123
-	err := NewEmptyResultError(lastRequest)
+	err := NewEmptyResultError()
 
 	var nfe *sdkretry.NotFoundError
 	ok := errors.As(err, &nfe)
@@ -37,8 +37,7 @@ func TestEmptyResultErrorAsSdkNotFoundError(t *testing.T) {
 func TestEmptyResultErrorAsRetryNotFoundError(t *testing.T) {
 	t.Parallel()
 
-	lastRequest := 123
-	err := NewEmptyResultError(lastRequest)
+	err := NewEmptyResultError()
 
 	var nfe *retry.NotFoundError
 	ok := errors.As(err, &nfe)
@@ -208,7 +207,7 @@ func TestAssertSingleValueResult(t *testing.T) {
 	}{
 		"empty slice": {
 			input:         []int{},
-			expectedError: NewEmptyResultError(nil),
+			expectedError: NewEmptyResultError(),
 		},
 		"single element": {
 			input:         []int{42},
@@ -258,7 +257,7 @@ func TestAssertSingleValueResultIterErr(t *testing.T) {
 	}{
 		"empty slice": {
 			input:         tfiter.Null2[int, error](),
-			expectedError: NewEmptyResultError(nil),
+			expectedError: NewEmptyResultError(),
 		},
 		"single element": {
 			input:         valuesWithErrors([]int{42}),
