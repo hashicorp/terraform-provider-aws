@@ -179,7 +179,7 @@ func findServiceNetwork(ctx context.Context, conn *vpclattice.Client, input *vpc
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
