@@ -97,6 +97,30 @@ func dataSourceIPAMPool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"source_resource": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrResourceID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrResourceOwner: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"resource_region": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrResourceType: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -147,6 +171,17 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("pool_depth", pool.PoolDepth)
 	d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
+	if pool.SourceResource != nil {
+		tfMap := map[string]any{
+			names.AttrResourceID:    aws.ToString(pool.SourceResource.ResourceId),
+			names.AttrResourceOwner: aws.ToString(pool.SourceResource.ResourceOwner),
+			"resource_region":       aws.ToString(pool.SourceResource.ResourceRegion),
+			names.AttrResourceType:  string(pool.SourceResource.ResourceType),
+		}
+		d.Set("source_resource", []any{tfMap})
+	} else {
+		d.Set("source_resource", nil)
+	}
 	d.Set(names.AttrState, pool.State)
 
 	setTagsOut(ctx, pool.Tags)
